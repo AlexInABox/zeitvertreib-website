@@ -184,3 +184,9 @@ a {
 
 }
 
+.preloader {
+    z-index: -1;
+    position: relative;
+    width: 0px;
+    height: 0px;
+}
