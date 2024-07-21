@@ -15,7 +15,7 @@
 body {
     margin: 0;
     color: var(--primaryColor);
-    background-color: var(--secondaryBackground);
+    background-color: #000;
     height: 100%;
     /* 
         overflow disabled when screen smaller than 620px
@@ -73,13 +73,15 @@ main::before {
     height: 99%;
     width: 100%;
     overflow: hidden;
-    background-image: url("/assets/backgrounds/0.png");
+    background-image: url("/assets/backgrounds/0.jpg");
     background-attachment: fixed;
     z-index: 1;
     background-position: 50%;
+    background-repeat: no-repeat;
+}
 
+.animatedMain::before {
     animation: background 20s forwards 0s infinite;
-
 }
 
 nav>a {
@@ -95,39 +97,39 @@ nav>a>img {
 
 @keyframes background {
     0% {
-        background-image: url("/assets/backgrounds/0.png");
+        background-image: url("/assets/backgrounds/0.jpg");
     }
 
     23% {
-        background-image: url("/assets/backgrounds/0.png");
+        background-image: url("/assets/backgrounds/0.jpg");
     }
 
     25% {
-        background-image: url("/assets/backgrounds/1.png");
+        background-image: url("/assets/backgrounds/1.jpg");
     }
 
     48% {
-        background-image: url("/assets/backgrounds/1.png");
+        background-image: url("/assets/backgrounds/1.jpg");
     }
 
     50% {
-        background-image: url("/assets/backgrounds/2.png");
+        background-image: url("/assets/backgrounds/2.jpg");
     }
 
     73% {
-        background-image: url("/assets/backgrounds/2.png");
+        background-image: url("/assets/backgrounds/2.jpg");
     }
 
     75% {
-        background-image: url("/assets/backgrounds/3.png");
+        background-image: url("/assets/backgrounds/3.jpg");
     }
 
     98% {
-        background-image: url("/assets/backgrounds/3.png");
+        background-image: url("/assets/backgrounds/3.jpg");
     }
 
     100% {
-        background-image: url("/assets/backgrounds/0.png");
+        background-image: url("/assets/backgrounds/0.jpg");
     }
 }
 
