@@ -9,10 +9,13 @@
     <link rel="shortcut icon" href="/assets/logos/logo_full_color_1to1.png" type="image/x-icon">
     <link rel="stylesheet" href="/css/index.css">
 
-    <meta content="SCP Zeitvertreib" property="og:title">
-    <meta content="dsc.gg/zeit" property="og:description">
+    <meta content="SCP:SL Zeitvertreib" property="og:title">
+    <meta content="Discord-Server: https://dsc.gg/zeit" property="og:description">
     <meta content="https://zeitvertreib.vip/" property="og:url">
     <meta content="#8c0688" data-react-helmet="true" name="theme-color">
+    <meta property="og:image" content="https://zeitvertreib.vip/assets/logos/logo_full_color_1to1.png" />
+
+    <script src="/js/index.js"></script>
 </head>
 
 <body>
@@ -61,7 +64,7 @@
                     </b>
                     <span style="color:#f9f9fbff">|</span>
                     <b>
-                        <span style="color:#2aef99ff">Anfängerfreundlich</span>
+                        <span style="color:#2aef99ff">Anf&auml;ngerfreundlich</span>
                     </b>
                     <b>
                         <span style="color:#fafafcff">|</span>
@@ -88,7 +91,13 @@
         </div>
     </main>
 
-    <script src="/js/index.js"></script>
+    <div class="preloader">
+        <img src="/assets/backgrounds/0.jpg" style="width: 0; height: 0;">
+        <img src="/assets/backgrounds/1.jpg" style="width: 0; height: 0;">
+        <img src="/assets/backgrounds/2.jpg" style="width: 0; height: 0;">
+        <img src="/assets/backgrounds/3.jpg" style="width: 0; height: 0;" onload="startAnim();">
+    </div>
+    
 </body>
 
 </html>
