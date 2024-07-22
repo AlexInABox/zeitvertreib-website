@@ -15,6 +15,7 @@
     <meta content="#8c0688" data-react-helmet="true" name="theme-color">
     <meta property="og:image" content="https://zeitvertreib.vip/assets/logos/logo_full_color_1to1.png" />
 
+    <script src="/js/lib/blurhash.js"></script>
     <script src="/js/index.js"></script>
 </head>
 
@@ -35,6 +36,8 @@
         </div>
     </header>
     <main>
+        <canvas></canvas>
+        <div class="canvasFilter"></div>
         <div class="content">
             <p class="title">Willkommen auf der Website</p>
             <p class="title">des <strong>Zeitvertreib</strong> <a
@@ -90,13 +93,6 @@
             </p>
         </div>
     </main>
-
-    <div class="preloader">
-        <img src="/assets/backgrounds/0.jpg" style="width: 0; height: 0;" onload="queueAnim();">
-        <img src="/assets/backgrounds/1.jpg" style="width: 0; height: 0;" onload="queueAnim();">
-        <img src="/assets/backgrounds/2.jpg" style="width: 0; height: 0;" onload="queueAnim();">
-        <img src="/assets/backgrounds/3.jpg" style="width: 0; height: 0;" onload="queueAnim();">
-    </div>
 
 </body>
 
