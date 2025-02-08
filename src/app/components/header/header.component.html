@@ -1,0 +1,30 @@
+<p-menubar [model]="items">
+    <ng-template #start>
+        <img id="logo-svg" src="/assets/logo_full_1to1.svg" alt="Logo" />
+    </ng-template>
+    <ng-template #item let-item>
+        <ng-container *ngIf="item.route; else urlRef">
+            <a [routerLink]="item.route" class="p-menubar-item-link">
+                <span [class]="item.icon"></span>
+                <span class="ml-2">{{ item.label }}</span>
+            </a>
+        </ng-container>
+        <ng-template #urlRef>
+            <a *ngIf="item.url; else noLink" [href]="item.url" class="p-menubar-item-link">
+                <span [class]="item.icon"></span>
+                <span class="ml-2">{{ item.label }}</span>
+            </a>
+        </ng-template>
+        <ng-template #noLink>
+            <div class="p-menubar-item-link">
+                <span [class]="item.icon"></span>
+                <span class="ml-2">{{ item.label }}</span>
+                <span class="pi pi-fw pi-angle-down ml-2"></span>
+            </div>
+        </ng-template>
+    </ng-template>
+    <ng-template #end>
+        <p-button id="darkModeToggleButton" [icon]="isDarkMode ? 'pi pi-moon' : 'pi pi-sun'"
+            (onClick)="toggleDarkMode()"></p-button>
+    </ng-template>
+</p-menubar>
