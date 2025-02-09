@@ -1,0 +1,45 @@
+.title-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    transform: translateY(10%);
+}
+
+.right-title {
+    margin-left: auto;
+}
+
+:host ::ng-deep .red-card .p-card {
+    border: 2px dashed;
+    margin-bottom: 15px;
+    transform: translateY(-38%);
+}
+
+p-timeline {
+    padding: 50px;
+    transform: translateX(-23%);
+    overflow: hidden;
+}
+
+.timeline-container {
+    display: flex;
+    justify-content: left;
+    /* Center the whole structure */
+    width: 100%;
+}
+
+.timeline-icon {
+    border-radius: 50%;
+    width: 23px;
+    height: 23px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    scale: 1;
+}
+
+p-progressbar {
+    padding: 50px;
+    display: flex;
+    justify-content: center;
+}

@@ -5,12 +5,26 @@
     --surface-a: #121212 !important;
     --surface-b: #1e1e1e !important;
     --text-color: #ffffff !important;
-  }
+}
 
 @font-face {
-    font-family: BerlinTypeWeb-Regular;
-    src: url(/BerlinFont/BerlinTypeWeb-Regular.woff);
+    font-family: 'BerlinTypeWeb';
+    src: url('/BerlinFont/BerlinTypeWeb-Regular.woff2') format('woff2'),
+        url('/BerlinFont/BerlinTypeWeb-Regular.woff') format('woff');
+    font-weight: normal;
 }
+
+@font-face {
+    font-family: 'BerlinTypeWeb';
+    src: url('/BerlinFont/BerlinTypeWeb-Bold.woff2') format('woff2'),
+        url('/BerlinFont/BerlinTypeWeb-Bold.woff') format('woff');
+    font-weight: bold;
+}
+
 body {
-    font-family: 'BerlinTypeWeb-Regular';
+    font-family: 'BerlinTypeWeb', sans-serif;
+}
+
+strong {
+    font-weight: bold;
 }

@@ -1,8 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { Timeline } from 'primeng/timeline';
 import { AccountingComponent } from './accounting.component';
 
-describe('AccountingComponent', () => {
+interface EventItem {
+  status?: string;
+  date?: string;
+  icon?: string;
+  color?: string;
+  image?: string;
+}
+
+describe('HeaderComponent', () => {
   let component: AccountingComponent;
   let fixture: ComponentFixture<AccountingComponent>;
 
@@ -10,7 +18,7 @@ describe('AccountingComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AccountingComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(AccountingComponent);
     component = fixture.componentInstance;

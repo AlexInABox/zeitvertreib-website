@@ -1,1 +1,29 @@
-<p>accounting works!</p>
+<p-progressbar [value]="valueCapped" [style]=" { 'width': '50%'}">
+    <ng-template #content let-value>
+        <span>{{trueValue}}%</span>
+    </ng-template>
+</p-progressbar>
+
+<p-timeline [value]="events" align="left">
+
+    <ng-template #opposite let-event>
+        <small class="text-surface-500 dark:text-surface-400">{{ event.date.toLocaleDateString() }}</small>
+    </ng-template>
+
+    <ng-template #marker let-event>
+        <div class="timeline-icon">
+            <i [class]="event.icon"></i>
+        </div>
+    </ng-template>
+
+    <ng-template #content let-event>
+        <p-card class="red-card" [style]=" { 'border-color': event.color }">
+            <ng-template #title>
+                <div class="title-container">
+                    <span>{{ event.title }}</span>
+                    <span class="right-title">{{event.sign}} <strong>€{{ event.amount }}</strong> EUR</span>
+                </div>
+            </ng-template>
+        </p-card>
+    </ng-template>
+</p-timeline>
