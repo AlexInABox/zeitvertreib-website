@@ -1,29 +1,40 @@
-<p-progressbar [value]="valueCapped" [style]=" { 'width': '50%'}">
-    <ng-template #content let-value>
-        <span>{{trueValue}}%</span>
-    </ng-template>
-</p-progressbar>
+<div id="progressbar-container">
+    3-Month Coverage
+    <p-progressbar [value]="valueCapped">
+        <ng-template #content let-value>
+            <span>{{trueValue}}%</span>
+        </ng-template>
+    </p-progressbar>
+    <p-tag id="surplus" severity="success" value="+ €{{absoluteThreeMonthTotal}} EUR" />
+    <p-tag id="deficit" severity="danger" value="- €{{absoluteThreeMonthTotal}} EUR" />
+</div>
 
-<p-timeline [value]="events" align="left">
+<div id="timeline-container">
+    <p-timeline [value]="events" align="left">
 
-    <ng-template #opposite let-event>
-        <small class="text-surface-500 dark:text-surface-400">{{ event.date.toLocaleDateString() }}</small>
-    </ng-template>
+        <ng-template #opposite let-event>
+            <small class="text-surface-500 dark:text-surface-400">{{ event.date.toLocaleDateString() }}</small>
+        </ng-template>
 
-    <ng-template #marker let-event>
-        <div class="timeline-icon">
-            <i [class]="event.icon"></i>
-        </div>
-    </ng-template>
+        <ng-template #marker let-event>
+            <div class="timeline-icon">
+                <i [class]="event.icon"></i>
+            </div>
+        </ng-template>
 
-    <ng-template #content let-event>
-        <p-card class="red-card" [style]=" { 'border-color': event.color }">
-            <ng-template #title>
-                <div class="title-container">
-                    <span>{{ event.title }}</span>
-                    <span class="right-title">{{event.sign}} <strong>€{{ event.amount }}</strong> EUR</span>
-                </div>
-            </ng-template>
-        </p-card>
-    </ng-template>
-</p-timeline>
+        <ng-template #content let-event>
+            <p-card class="red-card" [style]=" { 'border-color': event.color }">
+                <ng-template #title>
+                    <div class="title-container">
+                        <span class="left-title">{{ event.service }} </span>
+                        <span class="right-title"> {{event.sign}} <strong>€{{ event.amount }}</strong> EUR</span>
+                    </div>
+                </ng-template>
+                <ng-template #subtitle>
+                    <small class="text-surface-500 dark:text-surface-400">{{
+                        event.description }}</small>
+                </ng-template>
+            </p-card>
+        </ng-template>
+    </p-timeline>
+</div>
