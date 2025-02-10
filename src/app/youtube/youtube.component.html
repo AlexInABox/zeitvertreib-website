@@ -1,0 +1,64 @@
+<p-tabs value="0" scrollable>
+    <p-tablist>
+        <ng-template #previcon>
+            <i class="pi pi-minus"></i>
+        </ng-template>
+        <p-tab value="0">
+            <p-avatar image="/youtube/waldbin_avatar.jpg" shape="circle" />
+            <span class="font-bold whitespace-nowrap">Waldbin</span>
+        </p-tab>
+        <p-tab value="1">
+            <p-avatar image="/youtube/drwaechter_avatar.jpg" shape="circle" />
+            <span class="font-bold whitespace-nowrap">DrWaechter</span>
+            <p-tag severity="info" value="Neues Video!" />
+        </p-tab>
+        <p-tab value="2">
+            <p-avatar image="/youtube/opsdasoupguy_avatar.jpg" shape="circle" />
+            <span class="font-bold whitespace-nowrap">OpsDaSoupGuy</span>
+
+        </p-tab>
+        <ng-template #nexticon>
+            <i class="pi pi-plus"></i>
+        </ng-template>
+    </p-tablist>
+    <p-tabpanels>
+        <p-tabpanel value="0">
+            <p class="m-0">
+                Auf meinem Kanal gibt es sehr differenten Content. <br />
+                Sprachen: Deutsch, Englisch (Untertitel), Schweizerdeutsch<br />
+                <br />
+                -Vorallem findet man auf meinem Kanal Phasmophobia und SCP Secret Laboratory.<br />
+                -Zudem gibt es Honkai Star Rail, Lethal Company und anderes.<br />
+                <br />
+                <br />
+                There is quite a lot of different content on my channel.<br />
+                Channel-languages: English (Subtitles), German, Swissgerman<br />
+                <br />
+                -Mostly Phasmophobia and SCP Secret Laboratory<br />
+                -Sometimes Lethal Company, Honkai Star Rail and other stuff.<br />
+            </p>
+            <p-divider />
+            <iframe width="600" height="340"
+                src="https://www.youtube.com/embed?listType=playlist&list=UUZ3NhwtYzllolkMhZbI2TtQ" frameborder="0"
+                allowfullscreen></iframe>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+            <p class="m-0">
+                Ich bin schlecht in Videospielen.
+            </p>
+            <p-divider />
+            <iframe width="600" height="340"
+                src="https://www.youtube.com/embed?listType=playlist&list=UUD4T_g5LmyOsXm5h8uq1sZg" frameborder="0"
+                allowfullscreen></iframe>
+        </p-tabpanel>
+        <p-tabpanel value="2">
+            <p class="m-0">
+                Virtual insanity
+            </p>
+            <p-divider />
+            <iframe width="600" height="340"
+                src="https://www.youtube.com/embed?listType=playlist&list=UUTDNK8J3EmSsvFrD_ntuthA" frameborder="0"
+                allowfullscreen></iframe>
+        </p-tabpanel>
+    </p-tabpanels>
+</p-tabs>
