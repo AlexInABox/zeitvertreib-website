@@ -8,5 +8,9 @@ export const routes: Routes = [
   {
     path: 'youtube',
     loadComponent: () => import('./youtube/youtube.component').then((m) => m.YoutubeComponent)
-  }
+  },
+  {
+    path: '',
+    loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent)
+  },
 ];

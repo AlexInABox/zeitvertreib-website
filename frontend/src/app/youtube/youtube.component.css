@@ -1,10 +1,16 @@
 p-tabs {
-    padding: 10px;
-    max-width: 800px;
+  padding: 10px;
+  max-width: 800px;
 }
 
 .latest-video {
-    max-width: 750px;
-    width: 100%;
-    aspect-ratio: 16 / 9;
+  max-width: 750px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

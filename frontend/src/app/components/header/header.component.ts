@@ -49,9 +49,9 @@ export class HeaderComponent implements OnInit {
       const logoImg = document.getElementById('logo-svg');
       if (logoImg instanceof HTMLImageElement) {
         if (this.isDarkMode) {
-          logoImg.src = '/assets/logo_full_1to1_inverted.png';
+          logoImg.src = '/assets/logos/logo_full_1to1_inverted.png';
         } else {
-          logoImg.src = '/assets/logo_full_1to1.svg';
+          logoImg.src = '/assets/logos/logo_full_1to1.svg';
         }
       }
 

@@ -3,6 +3,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { providePrimeNG } from 'primeng/config';
 import { provideRouter } from '@angular/router';
 import { definePreset } from '@primeng/themes';
+import { provideHttpClient } from '@angular/common/http';
 
 import Aura from '@primeng/themes/aura';
 import { routes } from './app.routes';
@@ -28,6 +29,7 @@ const MyPreset = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimationsAsync(),
+    provideHttpClient(),
     providePrimeNG({
       theme: {
         preset: MyPreset,

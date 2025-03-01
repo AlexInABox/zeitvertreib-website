@@ -1,0 +1,43 @@
+<div class="image-container">
+  <p-image
+    class="centered-image"
+    src="/assets/logos/logo_full_16to9.png"
+    width="100%"
+  ></p-image>
+</div>
+<div class="welcome-container">
+  <p-card header="Was ist Zeitvertreib?">
+    <p>
+      Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy
+      eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam
+      voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet
+      clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit
+      amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam
+      nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed
+      diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.
+      Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor
+      sit amet.
+    </p>
+  </p-card>
+  <p-galleria
+    [value]="images"
+    [autoPlay]="true"
+    [circular]="true"
+    [responsiveOptions]="responsiveOptions"
+    [numVisible]="5"
+    [containerStyle]="{ width: '98%', margin: '1%' }"
+  >
+    <ng-template #item let-item>
+      <img
+        [src]="'/assets/showcase/full/' + item"
+        style="width: 100%; display: block"
+      />
+    </ng-template>
+    <ng-template #thumbnail let-item>
+      <img
+        [src]="'/assets/showcase/tiny/' + item"
+        style="width: 100px; display: block"
+      />
+    </ng-template>
+  </p-galleria>
+</div>

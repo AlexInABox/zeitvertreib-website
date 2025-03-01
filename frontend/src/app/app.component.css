@@ -1,0 +1,4 @@
+app-header {
+  position: sticky;
+  top: 10px; /* Make the header stick to the top */
+}
