@@ -14,7 +14,15 @@ export class HeaderComponent implements OnInit {
   items: MenuItem[] | undefined;
   isDarkMode: boolean = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {
+    function isSystemDark(): boolean {
+      return window?.matchMedia?.('(prefers-color-scheme:dark)')?.matches;
+    }
+
+    if (isSystemDark()) {
+      this.toggleDarkMode();
+    }
+  }
 
 
   ngOnInit() {
@@ -33,6 +41,11 @@ export class HeaderComponent implements OnInit {
         label: 'Accounting',
         icon: PrimeIcons.WALLET,
         route: '/accounting'
+      },
+      {
+        label: 'Dashboard',
+        icon: PrimeIcons.USER,
+        route: '/dashboard'
       },
     ];
 
