@@ -61,12 +61,15 @@ export class HeaderComponent implements OnInit {
     if (element) {
       this.isDarkMode = element.classList.toggle('my-app-dark');
 
+
       if (this.isDarkMode) {
         this.inverted = "logo_full_1to1_inverted.png";
         localStorage['theme'] = "dark";
+        element.classList.add('dark');
       } else {
         this.inverted = "logo_full_1to1.svg";
         localStorage['theme'] = "light";
+        element.classList.remove('dark');
       }
     }
   }
@@ -77,10 +80,12 @@ export class HeaderComponent implements OnInit {
       const element = document.querySelector('html');
       if (element) {
         this.isDarkMode = element.classList.toggle('my-app-dark');
+        element.classList.add('dark');
       }
     } else {
       this.inverted = "logo_full_1to1.svg";
       localStorage['theme'] = "light";
+
     }
   }
 

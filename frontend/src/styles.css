@@ -3,6 +3,8 @@
 @import "tailwindcss";
 @import "tailwindcss-primeui";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --surface-a: #121212 !important;
   --surface-b: #1e1e1e !important;

@@ -79,7 +79,15 @@ app.get('/auth/steam/return',
 
 app.get('/stats', (req, res) => {
     if (req.isAuthenticated()) {
-        res.json({ "success": true, "stats": { /* Your stats data here */ } });
+        res.json({
+            "success": true, "stats": {
+                username: "alex",
+                kills: 25,
+                deaths: 153,
+                experience: 20345,
+                playtime: 30.3
+            }
+        });
     } else {
         res.status(401).json({ "error": "Unauthorized, please log in first" });
     }
