@@ -1,11 +1,35 @@
 {
   "name": "zeitvertreib-website-backend",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node dist/index.js",
+    "build": "npx tsc && node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express-session": "^1.18.1",
+    "@types/node": "^22.13.10",
+    "@types/passport": "^1.0.17",
+    "@types/passport-steam": "^1.0.6",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-jwt": "^8.5.1",
+    "express-session": "^1.18.1",
+    "http": "^0.0.1-security",
+    "mongoose": "^8.13.0",
+    "passport": "^0.7.0",
+    "passport-steam": "^1.0.18",
+    "socket.io": "^4.8.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
 }
