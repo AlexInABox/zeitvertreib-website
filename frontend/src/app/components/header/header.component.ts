@@ -13,6 +13,7 @@ import { RouterModule, Router } from '@angular/router';
 export class HeaderComponent implements OnInit {
   items: MenuItem[] | undefined;
   isDarkMode: boolean = false;
+  inverted: string = "logo_full_1to1_inverted.png";
 
   constructor(private router: Router) {
     function isSystemDark(): boolean {
@@ -48,8 +49,6 @@ export class HeaderComponent implements OnInit {
         route: '/dashboard'
       },
     ];
-
-    this.applyLogoInvert();
   }
 
   toggleDarkMode() {
@@ -58,33 +57,10 @@ export class HeaderComponent implements OnInit {
     if (element) {
       this.isDarkMode = element.classList.toggle('my-app-dark');
 
-
-      const logoImg = document.getElementById('logo-svg');
-      if (logoImg instanceof HTMLImageElement) {
-        if (this.isDarkMode) {
-          logoImg.src = '/assets/logos/logo_full_1to1_inverted.png';
-        } else {
-          logoImg.src = '/assets/logos/logo_full_1to1.svg';
-        }
-      }
-
-      const darkModeToggleButton = document.getElementById('darkModeToggleButton');
-      if (darkModeToggleButton) {
-        if (this.isDarkMode) {
-
-        }
-      }
-    }
-  }
-
-
-  applyLogoInvert() {
-    const logoImg = document.getElementById('logo-svg');
-    if (logoImg instanceof HTMLImageElement) {
-      if (document.body.classList.contains('my-app-dark')) {
-        logoImg.src = '/assets/logo_full_1to1.svg';
+      if (this.isDarkMode) {
+        this.inverted = "logo_full_1to1_inverted.png";
       } else {
-        logoImg.src = '/assets/logo_full_1to1_inverted.png';
+        this.inverted = "logo_full_1to1.svg";
       }
     }
   }

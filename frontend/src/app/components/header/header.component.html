@@ -1,6 +1,6 @@
 <p-menubar [model]="items">
   <ng-template #start>
-    <img id="logo-svg" src="/assets/logos/logo_full_1to1.svg" alt="Logo" />
+    <img id="logo-svg" src="/assets/logos/{{ inverted }}" alt="Logo" />
   </ng-template>
   <ng-template #item let-item>
     <ng-container *ngIf="item.route; else urlRef">
