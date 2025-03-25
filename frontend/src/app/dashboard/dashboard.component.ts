@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { environment } from '../../environments/environment';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -11,12 +13,12 @@ export class DashboardComponent {
   constructor() {
   }
   login() {
-    window.location.href = "http://localhost:3000/auth/login";
+    window.location.href = `${environment.apiUrl}/auth/login`;
   }
   logout() {
-    window.location.href = "http://localhost:3000/auth/logout";
+    window.location.href = `${environment.apiUrl}/auth/logout`;
   }
   stats() {
-    window.location.href = "http://localhost:3000/stats";
+    window.location.href = `${environment.apiUrl}/stats`;
   }
 }
