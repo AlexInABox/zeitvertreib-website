@@ -50,8 +50,43 @@
     </p-card>
   </div>
   <div class="col-span-1 row-span-3 p-4">
-    <p-card header="Welcome back, {{ userStatistics.username }}!">
-      <p class="m-0">Wanna change your name?</p>
+    <p-card [style]="{ width: '25rem', overflow: 'hidden' }">
+      <ng-template #header>
+        <img
+          class="w-full h-45 object-cover object-center"
+          [src]="userStatistics.avatarFull"
+        />
+      </ng-template>
+      <ng-template #title>
+        Welcome back, {{ userStatistics.username }}
+      </ng-template>
+      <ng-template #subtitle>
+        Platz #{{ userStatistics.leaderboardPositionHistory[4] }}
+      </ng-template>
+      <div style="display: flex; justify-content: space-between">
+        <p>Gespielte Runden:</p>
+        <p>{{ userStatistics.roundsPlayed }}</p>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <p>Level:</p>
+        <p>{{ userStatistics.level }}</p>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <p>Benutzte Medkits:</p>
+        <p>{{ userStatistics.usedMedkits }}</p>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <p>Getrunkene Colas:</p>
+        <p>{{ userStatistics.usedColas }}</p>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <p>Pocket Dimensions entkommen:</p>
+        <p>{{ userStatistics.escapedPocketDimensions }}</p>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <p>Benutzte Adrenalin:</p>
+        <p>{{ userStatistics.usedAdrenaline }}</p>
+      </div>
     </p-card>
   </div>
   <div class="col-span-2 row-span-2 p-4">
@@ -66,7 +101,17 @@
   </div>
   <div class="col-span-1 row-span-3 p-4">
     <p-card header="These people killed you!">
-      <p class="m-0">Are you angry?</p>
+      <div
+        *ngFor="let killer of userStatistics.lastKillers; let i = index"
+        class="flex justify-between mt-6 items-center"
+      >
+        <p-avatar
+          [image]="killer.avatarMedium"
+          class="mr-4 w-13 h-13"
+          shape="circle"
+        ></p-avatar>
+        <p class="text-xl font-bold">{{ killer.displayName }}</p>
+      </div>
     </p-card>
   </div>
 </div>

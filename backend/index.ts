@@ -85,7 +85,29 @@ app.get('/stats', (req, res) => {
                 kills: 25,
                 deaths: 153,
                 experience: 20345,
-                playtime: 30.3
+                playtime: 30.3,
+                leaderboardPositionHistory: [10, 5, 7, 2, 1],
+                avatarFull: (req as any).user.photos[2].value,
+                roundsPlayed: 670,
+                level: 41,
+                usedMedkits: 281,
+                usedColas: 36,
+                escapedPocketDimensions: 17,
+                usedAdrenaline: 146,
+                lastKillers: [
+                    {
+                        displayName: "max.bambus",
+                        avatarMedium: "https://avatars.fastly.steamstatic.com/96b9b714ea5f18400b2afdfcbf4f75bb83c99109_full.jpg"
+                    },
+                    {
+                        displayName: "Fear",
+                        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+                    },
+                    {
+                        displayName: "Waldbin",
+                        avatarMedium: "https://avatars.fastly.steamstatic.com/7c9f2c3c58df7e6c05a16ae03aa3344666c5f077_full.jpg"
+                    },
+                ]
             }
         });
     } else {
@@ -105,11 +127,11 @@ app.get('/auth/logout', (req, res) => {
 app.get('/auth/status', (req, res) => {
     if (req.isAuthenticated()) {
         res.status(200).json({
-            "id": (req as any).user.id,
-            "displayName": (req as any).user.displayName,
-            "avatarIcon": (req as any).user.photos[0].value,
-            "avatarMedium": (req as any).user.photos[1].value,
-            "avatarFull": (req as any).user.photos[2].value,
+            id: (req as any).user.id,
+            displayName: (req as any).user.displayName,
+            avatarIcon: (req as any).user.photos[0].value,
+            avatarMedium: (req as any).user.photos[1].value,
+            avatarFull: (req as any).user.photos[2].value,
         });
     } else {
         res.sendStatus(403);
