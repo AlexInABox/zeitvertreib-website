@@ -1,4 +1,4 @@
-<div class="m-2">
+<div class="m-3">
   <p-menubar [model]="items">
     <ng-template #start>
       <img id="logo-svg" src="/assets/logos/{{ inverted }}" alt="Logo" />
@@ -39,13 +39,10 @@
         </a>
         <button
           class="relative overflow-hidden w-full border-0 bg-transparent flex items-start p-2 pl-4 rounded-xl cursor-pointer transition-colors duration-200"
+          (click)="menu.toggle($event)"
         >
           <ng-container *ngIf="userLoggedIn; else showIcon">
-            <p-avatar
-              image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png"
-              class="mr-2"
-              shape="circle"
-            />
+            <p-avatar [image]="avatarIcon" class="mr-2" shape="circle" />
           </ng-container>
 
           <ng-template #showIcon>
@@ -53,6 +50,7 @@
             <!-- This is the icon to show when not logged in -->
           </ng-template>
         </button>
+        <p-tieredmenu #menu [model]="userItems" [popup]="true" />
         <p-button
           id="darkModeToggleButton"
           [icon]="isDarkMode ? 'pi pi-moon' : 'pi pi-sun'"

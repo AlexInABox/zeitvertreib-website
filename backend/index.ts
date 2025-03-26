@@ -81,7 +81,7 @@ app.get('/stats', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
             "success": true, "stats": {
-                username: "alex",
+                username: (req as any).user.displayName,
                 kills: 25,
                 deaths: 153,
                 experience: 20345,
@@ -104,7 +104,13 @@ app.get('/auth/logout', (req, res) => {
 
 app.get('/auth/status', (req, res) => {
     if (req.isAuthenticated()) {
-        res.sendStatus(200);
+        res.status(200).json({
+            "id": (req as any).user.id,
+            "displayName": (req as any).user.displayName,
+            "avatarIcon": (req as any).user.photos[0].value,
+            "avatarMedium": (req as any).user.photos[1].value,
+            "avatarFull": (req as any).user.photos[2].value,
+        });
     } else {
         res.sendStatus(403);
     }
