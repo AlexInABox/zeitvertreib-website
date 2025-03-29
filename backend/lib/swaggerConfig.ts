@@ -9,7 +9,7 @@ const options = {
         },
         servers: [
             {
-                url: "https://bcnd.toolify.m1productions.de", // For production
+                url: "https://bcnd.zeitvertreib.vip", // For production
                 description: "Production server"
             },
             {

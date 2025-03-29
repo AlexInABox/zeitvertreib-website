@@ -1,0 +1,6 @@
+services:
+  app:
+    build: .
+    image: alexinabox/zeitvertreib-backend
+    environment:
+      NODE_ENV: development

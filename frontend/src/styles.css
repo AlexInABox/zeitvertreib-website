@@ -34,12 +34,11 @@ strong {
 }
 
 body {
-  background-image: linear-gradient(
-      0deg,
-      rgb(92, 92, 92, 0.5) 2px,
-      transparent 1px
-    ),
-    linear-gradient(90deg, rgba(92, 92, 92, 0.5) 2px, transparent 1px);
-  background-size: 100px 100px; /* Grid spacing */
-  background-position: center; /* Centers the grid pattern */
+  background: linear-gradient(
+    45deg,
+    hsla(273, 97%, 31%, 1) 27%,
+    hsla(319, 73%, 41%, 1) 100%
+  );
+  background-attachment: fixed;
+  background-size: cover;
 }
