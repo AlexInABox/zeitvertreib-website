@@ -16,6 +16,7 @@
     "@types/node": "^22.13.10",
     "@types/passport": "^1.0.17",
     "@types/passport-steam": "^1.0.6",
+    "@types/pg": "^8.11.11",
     "typescript": "^5.8.2"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "mongoose": "^8.13.0",
     "passport": "^0.7.0",
     "passport-steam": "^1.0.18",
+    "pg": "^8.14.1",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"

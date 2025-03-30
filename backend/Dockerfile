@@ -22,6 +22,7 @@ RUN npm install --only=production
 
 # Copy compiled JavaScript files
 COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/init.sql /app/init.sql
 
 EXPOSE 3000
 

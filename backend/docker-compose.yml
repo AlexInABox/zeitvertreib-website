@@ -5,21 +5,18 @@ services:
       - "3000:3000"
     depends_on:
       - db
-    environment:
-      DATABASE_URL: "postgres://user:password@db:5432/zeitvertreibdata"
+    env_file:
+      - .env
 
   db:
     image: postgres:16
     restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: zeitvertreibdata
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Mount the SQL script
 
 volumes:
   db-data:

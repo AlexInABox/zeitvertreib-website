@@ -4,13 +4,14 @@ CREATE TABLE IF NOT EXISTS playerStatistics (
     deaths INT DEFAULT 0,
     experience INT DEFAULT 0,
     playtime INT DEFAULT 0,
-    roundsPlayed INT DEFAULT 0,
+    roundsplayed INT DEFAULT 0,
     level INT DEFAULT 0,
-    usedMedkits INT DEFAULT 0,
-    usedColas INT DEFAULT 0,
-    pocketEscapes INT DEFAULT 0,
-    usedAdrenaline INT DEFAULT 0,
+    leaderboardposition INT DEFAULT 0,
+    usedmedkits INT DEFAULT 0,
+    usedcolas INT DEFAULT 0,
+    pcoketescapes INT DEFAULT 0,
+    usedadrenaline INT DEFAULT 0,
     fakerank TEXT,
-    lastKillers TEXT[],
-    lastKills TEXT[]
+    lastkillers JSONB,
+    lastkills JSONB
 );

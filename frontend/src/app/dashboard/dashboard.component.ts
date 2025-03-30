@@ -13,15 +13,16 @@ interface Statistics {
   deaths: number,
   experience: number,
   playtime: number,
-  leaderboardPositionHistory: Array<number>,
   avatarFull: string,
-  roundsPlayed: number,
+  roundsplayed: number,
   level: number,
-  usedMedkits: number,
-  usedColas: number,
-  escapedPocketDimensions: number,
-  usedAdrenaline: number,
-  lastKillers: Array<{ displayName: string, avatarMedium: string }>,
+  leaderboardposition: number,
+  usedmedkits: number,
+  usedcolas: number,
+  pocketescapes: number,
+  usedadrenaline: number,
+  lastkillers: Array<{ displayname: string, avatarmedium: string }>,
+  lastkills: Array<{ displayname: string, avatarmedium: string }>,
 }
 
 @Component({
@@ -37,42 +38,59 @@ export class DashboardComponent {
     deaths: 0,
     experience: 0,
     playtime: 0,
-    leaderboardPositionHistory: [0, 0, 0, 0, 0],
     avatarFull: "",
-    roundsPlayed: 0,
+    roundsplayed: 0,
     level: 0,
-    usedMedkits: 0,
-    usedColas: 0,
-    escapedPocketDimensions: 0,
-    usedAdrenaline: 0,
-    lastKillers: [
+    leaderboardposition: 0,
+    usedmedkits: 0,
+    usedcolas: 0,
+    pocketescapes: 0,
+    usedadrenaline: 0,
+    lastkillers: [
       {
-        displayName: "rudeGuysxxXX",
-        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+        displayname: "rudeGuysxxXX",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
       },
       {
-        displayName: "ehehIdidIt!",
-        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+        displayname: "ehehIdidIt!",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
       },
       {
-        displayName: "max.bambus",
-        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+        displayname: "max.bambus",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
       },
       {
-        displayName: "Fear",
-        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+        displayname: "Fear",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
       },
       {
-        displayName: "Waldbin",
-        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+        displayname: "Waldbin",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+      },
+    ],
+    lastkills: [
+      {
+        displayname: "rudeGuysxxXX",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+      },
+      {
+        displayname: "ehehIdidIt!",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+      },
+      {
+        displayname: "max.bambus",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+      },
+      {
+        displayname: "Fear",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
+      },
+      {
+        displayname: "Waldbin",
+        avatarmedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
       },
     ]
   };
-  leaderboardHistoryData: any;
-  leaderboardHistoryOptions: any;
-
-
-
 
 
 
@@ -83,7 +101,12 @@ export class DashboardComponent {
     }).subscribe({
       next: response => {
         if (response.status === 200 && response.body) {
-          this.userStatistics = { ...response.body.stats };
+          if ((response.body as any).kills)
+            this.userStatistics = { ...response.body.stats };
+          else {
+            this.userStatistics.username = response.body.stats.username;
+            this.userStatistics.avatarFull = response.body.stats.avatarFull;
+          }
         }
       },
       error: () => {
@@ -91,56 +114,4 @@ export class DashboardComponent {
       }
     });
   }
-  initChart() {
-    console.log(this.userStatistics.leaderboardPositionHistory);
-    this.leaderboardHistoryData = {
-      labels: ['January', 'February', 'March', 'April', 'May'],
-      datasets: [
-        {
-          label: 'Leaderboard Position',
-          data: this.userStatistics.leaderboardPositionHistory,
-          fill: false,
-          borderColor: "#007bff", // Bright blue
-          backgroundColor: "#007bff",
-          pointBorderColor: "#ffffff",
-          pointBackgroundColor: "#007bff",
-          tension: 0.4
-        },
-      ]
-    };
-
-    this.leaderboardHistoryOptions = {
-      maintainAspectRatio: false,
-      aspectRatio: 0.6,
-      plugins: {
-        legend: {
-          labels: {
-            color: "#ffffff" // White for better contrast
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: "#ffffff" // White for visibility
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.2)", // Faint white grid
-            drawBorder: false
-          }
-        },
-        y: {
-          ticks: {
-            color: "#ffffff"
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.2)",
-            drawBorder: false
-          },
-          reverse: true // Flip the Y-axis
-        }
-      }
-    };
-  }
-
 }

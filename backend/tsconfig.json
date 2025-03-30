@@ -10,6 +10,7 @@
     "./index.ts",
     "lib/Logging.ts",
     "lib/swaggerConfig.ts",
-    "lib/swaggerDocs.ts"
+    "lib/swaggerDocs.ts",
+    "lib/DatabaseWrapper.ts"
   ]
 }

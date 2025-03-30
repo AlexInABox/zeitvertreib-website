@@ -1,4 +1,5 @@
 import Logging from "./lib/Logging.js";
+import DatabaseWrapper, { getPlayerStatisticsById } from "./lib/DatabaseWrapper.js";
 import express, { Request, Response } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -77,37 +78,18 @@ app.get('/auth/steam/return',
     }
 );
 
-app.get('/stats', (req, res) => {
+app.get('/stats', async (req, res) => {
+
     if (req.isAuthenticated()) {
+        const stats = await getPlayerStatisticsById((req as any).user.id);
+        console.log(stats);
+
         res.json({
-            "success": true, "stats": {
+            success: true,
+            stats: {
                 username: (req as any).user.displayName,
-                kills: 25,
-                deaths: 153,
-                experience: 20345,
-                playtime: 30.3,
-                leaderboardPositionHistory: [10, 5, 7, 2, 1],
                 avatarFull: (req as any).user.photos[2].value,
-                roundsPlayed: 670,
-                level: 41,
-                usedMedkits: 281,
-                usedColas: 36,
-                escapedPocketDimensions: 17,
-                usedAdrenaline: 146,
-                lastKillers: [
-                    {
-                        displayName: "max.bambus",
-                        avatarMedium: "https://avatars.fastly.steamstatic.com/96b9b714ea5f18400b2afdfcbf4f75bb83c99109_full.jpg"
-                    },
-                    {
-                        displayName: "Fear",
-                        avatarMedium: "https://avatars.steamstatic.com/adffdb027bcea56c8ec6e77266865293eccb481c_medium.jpg"
-                    },
-                    {
-                        displayName: "Waldbin",
-                        avatarMedium: "https://avatars.fastly.steamstatic.com/7c9f2c3c58df7e6c05a16ae03aa3344666c5f077_full.jpg"
-                    },
-                ]
+                ...stats
             }
         });
     } else {
