@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS playerStatistics (
     leaderboardposition INT DEFAULT 0,
     usedmedkits INT DEFAULT 0,
     usedcolas INT DEFAULT 0,
-    pcoketescapes INT DEFAULT 0,
+    pocketescapes INT DEFAULT 0,
     usedadrenaline INT DEFAULT 0,
     fakerank TEXT,
     lastkillers JSONB,

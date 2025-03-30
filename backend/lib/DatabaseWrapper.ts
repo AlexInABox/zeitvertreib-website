@@ -57,7 +57,7 @@ await runInitScript();
         ]);
 
         await client.query(
-            `INSERT INTO playerStatistics (id, kills, deaths, experience, playtime, roundsPlayed, level, usedMedkits, usedColas, pocketEscapes, usedAdrenaline, fakerank, lastKillers, lastKills)
+            `INSERT INTO playerStatistics (id, kills, deaths, experience, playtime, roundsplayed, level, usedmedkits, usedcolas, pocketescapes, usedadrenaline, fakerank, lastkillers, lastkills)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14::jsonb);`,
             [testId, 10, 5, 200, 300, 20, 3, 2, 1, 4, 0, 'TestRank', lastKillers, lastKills]
         );
