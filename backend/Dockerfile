@@ -24,6 +24,6 @@ RUN npm install --only=production
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/init.sql /app/init.sql
 
-EXPOSE 3000
+EXPOSE 3000 3001
 
 CMD ["node", "dist/index.js"]

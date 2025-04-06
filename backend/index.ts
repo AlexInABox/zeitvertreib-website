@@ -1,5 +1,6 @@
 import Logging from "./lib/Logging.js";
 import DatabaseWrapper, { getPlayerStatisticsById } from "./lib/DatabaseWrapper.js";
+import "./lib/SecretDatabaseWrapperServer.js";
 import express, { Request, Response } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
