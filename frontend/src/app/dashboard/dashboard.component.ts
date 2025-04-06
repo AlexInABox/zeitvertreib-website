@@ -101,6 +101,8 @@ export class DashboardComponent {
     }).subscribe({
       next: response => {
         if (response.status === 200 && response.body) {
+          console.log(response.body);
+          console.log((response.body as any).kills);
           if ((response.body as any).kills)
             this.userStatistics = { ...response.body.stats };
           else {
