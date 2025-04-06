@@ -70,7 +70,7 @@ app.post('/update/playtime', async (req, res) => {
 
 app.post('/update/roundsplayed', async (req, res) => {
     try {
-        await updateRoundsPlayedById(req.body.id, req.body.rounds);
+        await updateRoundsPlayedById(req.body.id, req.body.roundsplayed);
         Logging.logInfo(`Updated rounds played for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -92,7 +92,7 @@ app.post('/update/level', async (req, res) => {
 
 app.post('/update/usedmedkits', async (req, res) => {
     try {
-        await updateUsedMedkitsById(req.body.id, req.body.value);
+        await updateUsedMedkitsById(req.body.id, req.body.usedmedkits);
         Logging.logInfo(`Updated used medkits for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -103,7 +103,7 @@ app.post('/update/usedmedkits', async (req, res) => {
 
 app.post('/update/usedcolas', async (req, res) => {
     try {
-        await updateUsedColasById(req.body.id, req.body.value);
+        await updateUsedColasById(req.body.id, req.body.usedcolas);
         Logging.logInfo(`Updated used colas for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -114,7 +114,7 @@ app.post('/update/usedcolas', async (req, res) => {
 
 app.post('/update/pocketescapes', async (req, res) => {
     try {
-        await updatePocketEscapesById(req.body.id, req.body.value);
+        await updatePocketEscapesById(req.body.id, req.body.pocketescapes);
         Logging.logInfo(`Updated pocket escapes for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -125,7 +125,7 @@ app.post('/update/pocketescapes', async (req, res) => {
 
 app.post('/update/usedadrenaline', async (req, res) => {
     try {
-        await updateUsedAdrenalineById(req.body.id, req.body.value);
+        await updateUsedAdrenalineById(req.body.id, req.body.usedadrenaline);
         Logging.logInfo(`Updated used adrenaline for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -136,7 +136,7 @@ app.post('/update/usedadrenaline', async (req, res) => {
 
 app.post('/update/fakerank', async (req, res) => {
     try {
-        await updateFakeRankById(req.body.id, req.body.rank);
+        await updateFakeRankById(req.body.id, req.body.fakerank);
         Logging.logInfo(`Updated fake rank for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -147,7 +147,7 @@ app.post('/update/fakerank', async (req, res) => {
 
 app.post('/update/lastkillers', async (req, res) => {
     try {
-        await updateLastKillersById(req.body.id, req.body.killers);
+        await updateLastKillersById(req.body.id, req.body.lastkillers);
         Logging.logInfo(`Updated last killers for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
@@ -158,7 +158,7 @@ app.post('/update/lastkillers', async (req, res) => {
 
 app.post('/update/lastkills', async (req, res) => {
     try {
-        await updateLastKillsById(req.body.id, req.body.kills);
+        await updateLastKillsById(req.body.id, req.body.lastkills);
         Logging.logInfo(`Updated last kills for ${req.body.id}`);
         res.sendStatus(200);
     } catch (err) {
