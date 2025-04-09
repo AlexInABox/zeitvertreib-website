@@ -1,5 +1,5 @@
 import Cloudflare from 'cloudflare';
-import Logging from './Logging';
+import Logging from './Logging.js';
 
 const client = new Cloudflare({
     apiToken: process.env['CLOUDFLARE_API_TOKEN'],
@@ -14,7 +14,6 @@ async function query(sql, params = []) {
         sql,
         params,
     });
-    Logging.logInfo("Query debug: " + response.result);
     return response.result[0].results || [];
 }
 
