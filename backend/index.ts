@@ -90,7 +90,7 @@ app.get('/stats', async (req, res) => {
             stats: {
                 username: (req as any).user.displayName,
                 avatarFull: (req as any).user.photos[2].value,
-                ...stats
+                ...(typeof stats === 'object' && stats !== null ? stats : {})
             }
         });
     } else {
