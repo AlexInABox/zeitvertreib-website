@@ -22,6 +22,7 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "chart.js": "^4.4.8",
+    "cloudflare": "^4.2.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "express-jwt": "^8.5.1",
