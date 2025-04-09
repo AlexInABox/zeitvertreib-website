@@ -21,121 +21,62 @@ export async function getPlayerStatisticsById(id) {
     return rows.length > 0 ? rows[0] : null;
 }
 
+function buildUpdateQuery(column) {
+    return `INSERT INTO playerdata (id, ${column}) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET ${column} = ?;`;
+}
+
 export async function updateKillsById(id, kills) {
-    await query(
-        `INSERT INTO playerdata (id, kills)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET kills = excluded.kills;`,
-        [id, kills]
-    );
+    await query(buildUpdateQuery('kills'), [id, kills, kills]);
 }
 
 export async function updateDeathsById(id, deaths) {
-    await query(
-        `INSERT INTO playerdata (id, deaths)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET deaths = excluded.deaths;`,
-        [id, deaths]
-    );
+    await query(buildUpdateQuery('deaths'), [id, deaths, deaths]);
 }
 
 export async function updateExperienceById(id, experience) {
-    await query(
-        `INSERT INTO playerdata (id, experience)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET experience = excluded.experience;`,
-        [id, experience]
-    );
+    await query(buildUpdateQuery('experience'), [id, experience, experience]);
 }
 
 export async function updatePlaytimeById(id, playtime) {
-    await query(
-        `INSERT INTO playerdata (id, playtime)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET playtime = excluded.playtime;`,
-        [id, playtime]
-    );
+    await query(buildUpdateQuery('playtime'), [id, playtime, playtime]);
 }
 
 export async function updateRoundsPlayedById(id, rounds) {
-    await query(
-        `INSERT INTO playerdata (id, roundsplayed)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET roundsplayed = excluded.roundsplayed;`,
-        [id, rounds]
-    );
+    await query(buildUpdateQuery('roundsplayed'), [id, rounds, rounds]);
 }
 
 export async function updateLevelById(id, level) {
-    await query(
-        `INSERT INTO playerdata (id, level)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET level = excluded.level;`,
-        [id, level]
-    );
+    await query(buildUpdateQuery('level'), [id, level, level]);
 }
 
 export async function updateUsedMedkitsById(id, value) {
-    await query(
-        `INSERT INTO playerdata (id, usedmedkits)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET usedmedkits = excluded.usedmedkits;`,
-        [id, value]
-    );
+    await query(buildUpdateQuery('usedmedkits'), [id, value, value]);
 }
 
 export async function updateUsedColasById(id, value) {
-    await query(
-        `INSERT INTO playerdata (id, usedcolas)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET usedcolas = excluded.usedcolas;`,
-        [id, value]
-    );
+    await query(buildUpdateQuery('usedcolas'), [id, value, value]);
 }
 
 export async function updatePocketEscapesById(id, value) {
-    await query(
-        `INSERT INTO playerdata (id, pocketescapes)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET pocketescapes = excluded.pocketescapes;`,
-        [id, value]
-    );
+    await query(buildUpdateQuery('pocketescapes'), [id, value, value]);
 }
 
 export async function updateUsedAdrenalineById(id, value) {
-    await query(
-        `INSERT INTO playerdata (id, usedadrenaline)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET usedadrenaline = excluded.usedadrenaline;`,
-        [id, value]
-    );
+    await query(buildUpdateQuery('usedadrenaline'), [id, value, value]);
 }
 
 export async function updateFakeRankById(id, rank) {
-    await query(
-        `INSERT INTO playerdata (id, fakerank)
-         VALUES (?, ?)
-         ON CONFLICT (id) DO UPDATE SET fakerank = excluded.fakerank;`,
-        [id, rank]
-    );
+    await query(buildUpdateQuery('fakerank'), [id, rank, rank]);
 }
 
 export async function updateLastKillersById(id, jsonArray) {
-    await query(
-        `INSERT INTO playerdata (id, lastkillers)
-         VALUES (?, ?::json)
-         ON CONFLICT (id) DO UPDATE SET lastkillers = excluded.lastkillers;`,
-        [id, JSON.stringify(jsonArray)]
-    );
+    const json = JSON.stringify(jsonArray);
+    await query(buildUpdateQuery('lastkillers'), [id, json, json]);
 }
 
 export async function updateLastKillsById(id, jsonArray) {
-    await query(
-        `INSERT INTO playerdata (id, lastkills)
-         VALUES (?, ?::json)
-         ON CONFLICT (id) DO UPDATE SET lastkills = excluded.lastkills;`,
-        [id, JSON.stringify(jsonArray)]
-    );
+    const json = JSON.stringify(jsonArray);
+    await query(buildUpdateQuery('lastkills'), [id, json, json]);
 }
 
 export default {};
