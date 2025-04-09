@@ -15,7 +15,7 @@ async function query(sql, params = []) {
         params,
     });
     Logging.logInfo("Query debug: " + response.result);
-    return response.result || [];
+    return response.result[0].results || [];
 }
 
 export async function getPlayerStatisticsById(id) {
