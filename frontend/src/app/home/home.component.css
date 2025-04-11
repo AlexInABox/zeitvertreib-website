@@ -1,16 +1,19 @@
 .image-container {
   text-align: center;
 }
+
 .centered-image {
   width: 50%;
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
+
 @media (orientation: portrait) {
   .centered-image {
     width: 100% !important;
   }
+
   .welcome-container {
     width: 100% !important;
   }
@@ -18,15 +21,22 @@
 
 .welcome-container {
   display: flex;
-  flex-direction: column; /* Stack the child elements vertically */
-  justify-content: center; /* Center the items along the main axis (vertical now) */
-  align-items: center; /* Align items horizontally at the center */
-  width: 50%;
-  margin: auto; /* Center the container itself */
-  margin-bottom: 20px; /* Space below the container */
+  flex-direction: column;
+  /* Stack the child elements vertically */
+  justify-content: center;
+  /* Center the items along the main axis (vertical now) */
+  align-items: center;
+  /* Align items horizontally at the center */
+  width: 65%;
+  margin: auto;
+  /* Center the container itself */
+  margin-bottom: 20px;
+  /* Space below the container */
 }
 
-.welcome-container > * {
-  flex-grow: 0; /* No need for flex-grow as the items are stacked vertically */
-  margin-bottom: 10px; /* Optional: Add space between child elements */
+.welcome-container>* {
+  flex-grow: 0;
+  /* No need for flex-grow as the items are stacked vertically */
+  margin-bottom: 10px;
+  /* Optional: Add space between child elements */
 }

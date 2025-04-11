@@ -60,7 +60,8 @@ export class HeaderComponent implements OnInit {
     const element = document.querySelector('html');
 
     if (element) {
-      this.isDarkMode = element.classList.toggle('my-app-dark');
+      //this.isDarkMode = element.classList.toggle('my-app-dark');
+      this.isDarkMode = false;
 
 
       if (this.isDarkMode) {

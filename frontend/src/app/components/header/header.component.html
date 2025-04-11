@@ -11,11 +11,7 @@
         </a>
       </ng-container>
       <ng-template #urlRef>
-        <a
-          *ngIf="item.url; else noLink"
-          [href]="item.url"
-          class="p-menubar-item-link"
-        >
+        <a *ngIf="item.url; else noLink" [href]="item.url" class="p-menubar-item-link">
           <span [class]="item.icon"></span>
           <span class="ml-2">{{ item.label }}</span>
         </a>
@@ -31,16 +27,11 @@
     <ng-template #end>
       <div class="flex items-center gap-2" style="white-space: nowrap">
         <a href="https://dsc.gg/zeit" target="_blank">
-          <p-button
-            label="Join Discord"
-            icon="pi pi-discord"
-            styleClass="p-button-outlined"
-          ></p-button>
+          <p-button label="Join Discord" icon="pi pi-discord" styleClass="p-button-outlined"></p-button>
         </a>
         <button
           class="relative overflow-hidden w-full border-0 bg-transparent flex items-start p-2 pl-4 rounded-xl cursor-pointer transition-colors duration-200"
-          (click)="menu.toggle($event)"
-        >
+          (click)="menu.toggle($event)">
           <ng-container *ngIf="userLoggedIn; else showIcon">
             <p-avatar [image]="avatarIcon" class="mr-2" shape="circle" />
           </ng-container>
@@ -51,11 +42,8 @@
           </ng-template>
         </button>
         <p-tieredmenu #menu [model]="userItems" [popup]="true" />
-        <p-button
-          id="darkModeToggleButton"
-          [icon]="isDarkMode ? 'pi pi-moon' : 'pi pi-sun'"
-          (onClick)="toggleDarkMode()"
-        ></p-button>
+        <p-button id="darkModeToggleButton" [icon]="isDarkMode ? 'pi pi-moon' : 'pi pi-sun'"
+          (onClick)="toggleDarkMode()"></p-button>
       </div>
     </ng-template>
   </p-menubar>
