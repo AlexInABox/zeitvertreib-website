@@ -11,11 +11,11 @@
 
 @media (orientation: portrait) {
   .centered-image {
-    width: 100% !important;
+    width: 90% !important;
   }
 
   .welcome-container {
-    width: 100% !important;
+    width: 90% !important;
   }
 }
 
