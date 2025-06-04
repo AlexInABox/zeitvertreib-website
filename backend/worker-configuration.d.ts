@@ -10,6 +10,7 @@ interface Env extends Cloudflare.Env {
     STEAM_API_KEY: string;
 }
 
+
 // Begin runtime types
 /*! *****************************************************************************
 Copyright (c) Cloudflare. All rights reserved.
