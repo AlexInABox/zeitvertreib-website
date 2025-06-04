@@ -155,7 +155,7 @@ async function handleSteamCallback(request: Request, env: Env): Promise<Response
 		status: 302,
 		headers: {
 			'Location': frontendUrl,
-			'Set-Cookie': `session=${sessionId}; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.floor(SESSION_DURATION / 1000)}; Path=/`
+			'Set-Cookie': `session=${sessionId}; HttpOnly; Secure; SameSite=None; Max-Age=${Math.floor(SESSION_DURATION / 1000)}; Path=/`
 		}
 	});
 
@@ -163,11 +163,17 @@ async function handleSteamCallback(request: Request, env: Env): Promise<Response
 }
 
 async function handleGetUser(request: Request, env: Env): Promise<Response> {
+	const corsHeaders = {
+		'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
+		'Access-Control-Allow-Credentials': 'true',
+		'Content-Type': 'application/json'
+	};
+
 	const sessionId = getSessionId(request);
 	if (!sessionId) {
 		return new Response(JSON.stringify({ error: 'No session found' }), {
 			status: 401,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 	}
 
@@ -175,7 +181,7 @@ async function handleGetUser(request: Request, env: Env): Promise<Response> {
 	if (!sessionData) {
 		return new Response(JSON.stringify({ error: 'Invalid session' }), {
 			status: 401,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 	}
 
@@ -186,28 +192,34 @@ async function handleGetUser(request: Request, env: Env): Promise<Response> {
 		await env.SESSIONS.delete(sessionId);
 		return new Response(JSON.stringify({ error: 'Session expired' }), {
 			status: 401,
-			headers: { 'Content-Type': 'application/json' }
+			headers: corsHeaders
 		});
 	}
 
 	return new Response(JSON.stringify({ user: session.steamUser }), {
-		headers: { 'Content-Type': 'application/json' }
+		headers: corsHeaders
 	});
 }
 
 async function handleLogout(request: Request, env: Env): Promise<Response> {
+	const corsHeaders = {
+		'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
+		'Access-Control-Allow-Credentials': 'true',
+		'Content-Type': 'application/json'
+	};
+
 	const sessionId = getSessionId(request);
 	if (sessionId) {
 		await env.SESSIONS.delete(sessionId);
 	}
 
 	const response = new Response(JSON.stringify({ success: true }), {
-		headers: { 'Content-Type': 'application/json' }
+		headers: corsHeaders
 	});
 
 	// Clear the session cookie
 	response.headers.set('Set-Cookie',
-		'session=; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Path=/'
+		'session=; HttpOnly; Secure; SameSite=None; Max-Age=0; Path=/'
 	);
 
 	return response;
@@ -215,6 +227,7 @@ async function handleLogout(request: Request, env: Env): Promise<Response> {
 
 function getSessionId(request: Request): string | null {
 	const cookieHeader = request.headers.get('Cookie');
+	console.log('Cookie header:', cookieHeader); // Debug log
 	if (!cookieHeader) return null;
 
 	const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
@@ -223,5 +236,6 @@ function getSessionId(request: Request): string | null {
 		return acc;
 	}, {} as Record<string, string>);
 
+	console.log('Parsed cookies:', cookies); // Debug log
 	return cookies.session || null;
 }
