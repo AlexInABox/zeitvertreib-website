@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    apiUrl: 'https://bcnd.zeitvertreib.vip' // Change to your production backend URL
+    apiUrl: 'https://zeitvertreib-website-backend.main-1a2.workers.dev'
 };

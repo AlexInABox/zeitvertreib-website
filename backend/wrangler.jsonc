@@ -13,6 +13,9 @@
 			"id": "d0dc321532ca43349d87f88483a78105"
 		}
 	],
+	"vars": {
+		"FRONTEND_URL": "http://localhost:4200",
+	},
 	"observability": {
 		"enabled": true
 	}

@@ -25,9 +25,10 @@ export default {
 
 		// CORS headers
 		const corsHeaders = {
-			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
 			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+			'Access-Control-Allow-Credentials': 'true',
 		};
 
 		if (request.method === 'OPTIONS') {
@@ -146,14 +147,9 @@ async function handleSteamCallback(request: Request, env: Env): Promise<Response
 		expirationTtl: Math.floor(SESSION_DURATION / 1000),
 	});
 
-	// Return success with session cookie
-	const response = new Response(JSON.stringify({
-		success: true,
-		user: steamUser,
-		sessionId
-	}), {
-		headers: { 'Content-Type': 'application/json' }
-	});
+	// Redirect back to frontend with session cookie
+	const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
+	const response = Response.redirect(frontendUrl, 302);
 
 	// Set secure HTTP-only cookie
 	response.headers.set('Set-Cookie',

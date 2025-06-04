@@ -1,15 +1,14 @@
-import { Component, OnInit, ɵɵqueryRefresh } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { Menubar } from 'primeng/menubar';
-import { Button, ButtonModule } from 'primeng/button'; import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { Button, ButtonModule } from 'primeng/button';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { TieredMenuModule } from 'primeng/tieredmenu';
-import { firstValueFrom } from 'rxjs';
-
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
-import { environment } from '../../../environments/environment';
+import { AuthService, SteamUser } from '../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -17,17 +16,18 @@ import { environment } from '../../../environments/environment';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   items: MenuItem[] | undefined;
   userItems: MenuItem[] | undefined;
   isDarkMode: boolean = false;
   inverted: string = "logo_full_1to1_inverted.png";
   userLoggedIn: boolean = false;
   avatarIcon: string = "";
+  currentUser: SteamUser | null = null;
+  private authSubscription?: Subscription;
 
-  constructor(private http: HttpClient) {
+  constructor(private authService: AuthService) {
     this.applyDarkModePreference();
-    this.checkAuthStatus();
   }
 
 
@@ -54,6 +54,58 @@ export class HeaderComponent implements OnInit {
         route: '/dashboard'
       },
     ];
+
+    // Subscribe to authentication state changes
+    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
+      this.currentUser = user;
+      this.userLoggedIn = !!user;
+      this.avatarIcon = user?.avatarfull || "";
+      this.updateUserMenu();
+    });
+  }
+
+  ngOnDestroy() {
+    this.authSubscription?.unsubscribe();
+  }
+
+  private updateUserMenu() {
+    if (this.userLoggedIn && this.currentUser) {
+      this.userItems = [
+        {
+          label: 'Settings',
+          icon: PrimeIcons.COG,
+          items: [
+            {
+              label: 'Profile',
+              icon: PrimeIcons.USER,
+              command: () => {
+                window.open(this.currentUser?.profileurl, '_blank');
+              }
+            },
+          ]
+        },
+        {
+          separator: true
+        },
+        {
+          label: 'Logout',
+          icon: PrimeIcons.SIGN_OUT,
+          command: () => {
+            this.logout();
+          }
+        }
+      ];
+    } else {
+      this.userItems = [
+        {
+          label: 'Login with Steam',
+          icon: PrimeIcons.USER,
+          command: () => {
+            this.login();
+          }
+        }
+      ];
+    }
   }
 
   toggleDarkMode() {
@@ -91,75 +143,20 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  checkAuthStatus(): void {
-    this.http.get(`${environment.apiUrl}/auth/status`, { observe: 'response', withCredentials: true, responseType: 'text', headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } })
-      .subscribe({
-        next: response => {
-          if (response.status === 200) {
-            this.userLoggedIn = true;
-            this.avatarIcon = JSON.parse(response.body as string).avatarIcon;
-
-            this.userItems = [
-              {
-                label: 'Settings',
-                icon: PrimeIcons.COG,
-                items: [
-                  {
-                    label: 'Delete Account',
-                    icon: PrimeIcons.TIMES,
-                    command: () => {
-                      this.requestDeletion();
-                    }
-                  },
-                ]
-              },
-              {
-                separator: true
-              },
-              {
-                label: 'Logout',
-                icon: PrimeIcons.ARROW_LEFT,
-                command: () => {
-                  this.logout();
-                }
-              }
-            ]
-          }
-        },
-        error: (e) => {
-          console.log(e);
-          this.userLoggedIn = false;
-          this.userItems = [
-            {
-              label: 'Login with Steam!',
-              icon: PrimeIcons.USER,
-              command: () => {
-                this.login();
-              }
-            }
-          ]
-        }
-      });
-  }
   login() {
-    window.location.href = `${environment.apiUrl}/auth/login`;
+    this.authService.login();
   }
-  async logout() {
-    try {
-      await firstValueFrom(this.http.get(`${environment.apiUrl}/auth/logout`, { withCredentials: true }));
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      location.reload();
-    }
-  }
-  async requestDeletion() {
-    try {
-      await firstValueFrom(this.http.get(`${environment.apiUrl}/pleaseDelete`, { withCredentials: true }));
-    } catch (error) {
-      console.error('Account deletion request failed:', error);
-    } finally {
-      location.reload();
-    }
+
+  logout() {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.authService.checkAuthStatus();
+        location.reload();
+      },
+      error: (error: any) => {
+        console.error('Logout failed:', error);
+        location.reload();
+      }
+    });
   }
 }
