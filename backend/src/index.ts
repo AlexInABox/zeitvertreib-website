@@ -149,12 +149,15 @@ async function handleSteamCallback(request: Request, env: Env): Promise<Response
 
 	// Redirect back to frontend with session cookie
 	const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
-	const response = Response.redirect(frontendUrl, 302);
 
-	// Set secure HTTP-only cookie
-	response.headers.set('Set-Cookie',
-		`session=${sessionId}; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.floor(SESSION_DURATION / 1000)}; Path=/`
-	);
+	// Create redirect response with cookie header
+	const response = new Response(null, {
+		status: 302,
+		headers: {
+			'Location': frontendUrl,
+			'Set-Cookie': `session=${sessionId}; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.floor(SESSION_DURATION / 1000)}; Path=/`
+		}
+	});
 
 	return response;
 }
