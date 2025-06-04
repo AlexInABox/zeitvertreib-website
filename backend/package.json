@@ -1,40 +1,15 @@
 {
-  "name": "zeitvertreib-website-backend",
-  "type": "module",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "npx tsc && node dist/index.js",
-    "build": "npx tsc",
-    "deploy": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/express-session": "^1.18.1",
-    "@types/node": "^22.13.10",
-    "@types/passport": "^1.0.17",
-    "@types/passport-steam": "^1.0.6",
-    "@types/pg": "^8.11.11",
-    "typescript": "^5.8.2"
-  },
-  "dependencies": {
-    "chalk": "^5.4.1",
-    "chart.js": "^4.4.8",
-    "cloudflare": "^4.2.0",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "express-jwt": "^8.5.1",
-    "express-session": "^1.18.1",
-    "http": "^0.0.1-security",
-    "mongoose": "^8.13.0",
-    "passport": "^0.7.0",
-    "passport-steam": "^1.0.18",
-    "pg": "^8.14.1",
-    "socket.io": "^4.8.1",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
-  }
+	"name": "backend",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"cf-typegen": "wrangler types"
+	},
+	"devDependencies": {
+		"typescript": "^5.5.2",
+		"wrangler": "^4.19.1"
+	}
 }
