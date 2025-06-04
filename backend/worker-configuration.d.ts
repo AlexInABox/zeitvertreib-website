@@ -4,7 +4,7 @@
 declare namespace Cloudflare {
     interface Env {
         SESSIONS: KVNamespace;
-        FRONTEND_URL: "http://localhost:4200";
+        FRONTEND_URL: string;
 
     }
 }
