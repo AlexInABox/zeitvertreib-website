@@ -4,10 +4,11 @@
 declare namespace Cloudflare {
     interface Env {
         SESSIONS: KVNamespace;
-        STEAM_API_KEY: string;
     }
 }
-interface Env extends Cloudflare.Env { }
+interface Env extends Cloudflare.Env {
+    STEAM_API_KEY: string;
+}
 
 // Begin runtime types
 /*! *****************************************************************************
