@@ -5,6 +5,7 @@ declare namespace Cloudflare {
     interface Env {
         SESSIONS: KVNamespace;
         FRONTEND_URL: "https://dev.zeitvertreib.vip";
+        "zeitvertreib-data": D1Database;
     }
 }
 interface Env extends Cloudflare.Env {

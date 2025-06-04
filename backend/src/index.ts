@@ -14,6 +14,24 @@ interface SessionData {
 	expiresAt: number;
 }
 
+interface Statistics {
+	username: string;
+	kills: number;
+	deaths: number;
+	experience: number;
+	playtime: number;
+	avatarFull: string;
+	roundsplayed: number;
+	level: number;
+	leaderboardposition: number;
+	usedmedkits: number;
+	usedcolas: number;
+	pocketescapes: number;
+	usedadrenaline: number;
+	lastkillers: Array<{ displayname: string; avatarmedium: string }>;
+	lastkills: Array<{ displayname: string; avatarmedium: string }>;
+}
+
 const STEAM_OPENID_URL = 'https://steamcommunity.com/openid/login';
 const STEAM_API_URL = 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/';
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
@@ -45,6 +63,8 @@ export default {
 					return handleGetUser(request, env);
 				case '/auth/logout':
 					return handleLogout(request, env);
+				case '/stats':
+					return handleGetStats(request, env);
 				default:
 					return new Response('Not Found', { status: 404, headers: corsHeaders });
 			}
@@ -239,4 +259,105 @@ function getSessionId(request: Request): string | null {
 
 	console.log('Parsed cookies:', cookies); // Debug log
 	return cookies.session || null;
+}
+
+async function handleGetStats(request: Request, env: Env): Promise<Response> {
+	const corsHeaders = {
+		'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
+		'Access-Control-Allow-Credentials': 'true',
+		'Content-Type': 'application/json'
+	};
+
+	// Get session to verify user is authenticated
+	const sessionId = getSessionId(request);
+	if (!sessionId) {
+		return new Response(JSON.stringify({ error: 'No session found' }), {
+			status: 401,
+			headers: corsHeaders
+		});
+	}
+
+	const sessionData = await env.SESSIONS.get(sessionId);
+	if (!sessionData) {
+		return new Response(JSON.stringify({ error: 'Invalid session' }), {
+			status: 401,
+			headers: corsHeaders
+		});
+	}
+
+	const session: SessionData = JSON.parse(sessionData);
+
+	// Check if session is expired
+	if (Date.now() > session.expiresAt) {
+		await env.SESSIONS.delete(sessionId);
+		return new Response(JSON.stringify({ error: 'Session expired' }), {
+			status: 401,
+			headers: corsHeaders
+		});
+	}
+
+	try {
+		// Query the database for player statistics using the Steam ID
+		const steamId = session.steamId;
+		const playerDataQuery = `SELECT * FROM playerdata WHERE id = ?`;
+		const result = await env['zeitvertreib-data'].prepare(playerDataQuery)
+			.bind(`${steamId}@steam`)
+			.first();
+
+		if (!result) {
+			// Return default stats with user info if no player data found
+			const defaultStats: Statistics = {
+				username: session.steamUser.personaname,
+				kills: 0,
+				deaths: 0,
+				experience: 0,
+				playtime: 0,
+				avatarFull: session.steamUser.avatarfull,
+				roundsplayed: 0,
+				level: 0,
+				leaderboardposition: 0,
+				usedmedkits: 0,
+				usedcolas: 0,
+				pocketescapes: 0,
+				usedadrenaline: 0,
+				lastkillers: [],
+				lastkills: []
+			};
+
+			return new Response(JSON.stringify({ stats: defaultStats }), {
+				headers: corsHeaders
+			});
+		}
+
+		// Map database result to Statistics interface
+		const playerData = result as any; // Type assertion for database result
+		const stats: Statistics = {
+			username: session.steamUser.personaname,
+			kills: Number(playerData.kills) || 0,
+			deaths: Number(playerData.deaths) || 0,
+			experience: Number(playerData.experience) || 0,
+			playtime: Number(playerData.playtime) || 0,
+			avatarFull: session.steamUser.avatarfull,
+			roundsplayed: Number(playerData.roundsplayed) || 0,
+			level: Number(playerData.level) || 0,
+			leaderboardposition: 0, // Not available in database schema, set to default
+			usedmedkits: Number(playerData.usedmedkits) || 0,
+			usedcolas: Number(playerData.usedcolas) || 0,
+			pocketescapes: Number(playerData.pocketescapes) || 0,
+			usedadrenaline: Number(playerData.usedadrenaline) || 0,
+			lastkillers: playerData.lastkillers ? JSON.parse(String(playerData.lastkillers)) : [],
+			lastkills: playerData.lastkills ? JSON.parse(String(playerData.lastkills)) : []
+		};
+
+		return new Response(JSON.stringify({ stats }), {
+			headers: corsHeaders
+		});
+
+	} catch (error) {
+		console.error('Database error:', error);
+		return new Response(JSON.stringify({ error: 'Failed to fetch player statistics' }), {
+			status: 500,
+			headers: corsHeaders
+		});
+	}
 }
