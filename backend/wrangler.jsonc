@@ -13,9 +13,6 @@
 			"id": "d0dc321532ca43349d87f88483a78105"
 		}
 	],
-	"vars": {
-		"STEAM_API_KEY": ""
-	},
 	"observability": {
 		"enabled": true
 	}
