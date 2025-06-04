@@ -147,15 +147,16 @@ async function handleSteamCallback(request: Request, env: Env): Promise<Response
 		expirationTtl: Math.floor(SESSION_DURATION / 1000),
 	});
 
-	// Redirect back to frontend with session cookie
+	// Redirect back to frontend with session token as URL parameter
 	const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
+	const redirectUrl = new URL(frontendUrl);
+	redirectUrl.searchParams.set('token', sessionId);
 
-	// Create redirect response with cookie header
+	// Create redirect response
 	const response = new Response(null, {
 		status: 302,
 		headers: {
-			'Location': frontendUrl,
-			'Set-Cookie': `session=${sessionId}; HttpOnly; Secure; SameSite=None; Max-Age=${Math.floor(SESSION_DURATION / 1000)}; Path=/`
+			'Location': redirectUrl.toString()
 		}
 	});
 
@@ -213,19 +214,19 @@ async function handleLogout(request: Request, env: Env): Promise<Response> {
 		await env.SESSIONS.delete(sessionId);
 	}
 
-	const response = new Response(JSON.stringify({ success: true }), {
+	return new Response(JSON.stringify({ success: true }), {
 		headers: corsHeaders
 	});
-
-	// Clear the session cookie
-	response.headers.set('Set-Cookie',
-		'session=; HttpOnly; Secure; SameSite=None; Max-Age=0; Path=/'
-	);
-
-	return response;
 }
 
 function getSessionId(request: Request): string | null {
+	// First, try to get from Authorization header
+	const authHeader = request.headers.get('Authorization');
+	if (authHeader && authHeader.startsWith('Bearer ')) {
+		return authHeader.substring(7);
+	}
+
+	// Fallback to cookie for backward compatibility
 	const cookieHeader = request.headers.get('Cookie');
 	console.log('Cookie header:', cookieHeader); // Debug log
 	if (!cookieHeader) return null;

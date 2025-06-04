@@ -148,15 +148,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.authService.logout().subscribe({
-      next: () => {
-        this.authService.checkAuthStatus();
-        location.reload();
-      },
-      error: (error: any) => {
-        console.error('Logout failed:', error);
-        location.reload();
-      }
-    });
+    this.authService.performLogout();
+    location.reload();
   }
 }
