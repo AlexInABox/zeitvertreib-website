@@ -105,7 +105,7 @@
     </p-card>
   </div>
   <div class="col-span-1 row-span-3 p-4">
-    <p-card header="These people killed you!">
+    <p-card header="These people killed you!" [style]="{ width: '25rem', overflow: 'hidden' }">
       <div
         *ngFor="let killer of userStatistics.lastkillers; let i = index"
         class="flex justify-between mt-6 items-center"
