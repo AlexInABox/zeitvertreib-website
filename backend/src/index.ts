@@ -1,32 +1,52 @@
-import { routes } from './routes/index.js';
-import { createOptionsResponse } from './utils/cors.js';
-import { createErrorResponse } from './utils/response.js';
+import { handleSteamLogin, handleSteamCallback, handleGetUser, handleLogout } from './routes/auth.js';
+import { handleGetStats } from './routes/stats.js';
+
+// Simple response helper for internal use
+function createResponse(data: any, status = 200, origin?: string | null): Response {
+	const headers: Record<string, string> = {
+		'Access-Control-Allow-Origin': origin || '*',
+		'Access-Control-Allow-Credentials': 'true',
+		'Content-Type': 'application/json'
+	};
+
+	return new Response(JSON.stringify(data), { status, headers });
+}
+
+// Route handlers
+const routes: Record<string, (request: Request, env: Env) => Promise<Response>> = {
+	'/auth/steam': handleSteamLogin,
+	'/auth/steam/callback': handleSteamCallback,
+	'/auth/me': handleGetUser,
+	'/auth/logout': handleLogout,
+	'/stats': handleGetStats,
+};
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
-		const path = url.pathname;
 		const origin = request.headers.get('Origin');
 
 		// Handle preflight OPTIONS requests
 		if (request.method === 'OPTIONS') {
-			return createOptionsResponse(origin);
+			return new Response(null, {
+				headers: {
+					'Access-Control-Allow-Origin': origin || '*',
+					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+					'Access-Control-Allow-Credentials': 'true',
+				}
+			});
 		}
 
 		try {
-			// Find matching route handler
-			const handler = routes[path as keyof typeof routes];
-
+			const handler = routes[url.pathname];
 			if (handler) {
 				return await handler(request, env);
 			}
-
-			// Route not found
-			return createErrorResponse('Not Found', 404, origin);
-
+			return createResponse({ error: 'Not Found' }, 404, origin);
 		} catch (error) {
 			console.error('Request error:', error);
-			return createErrorResponse('Internal Server Error', 500, origin);
+			return createResponse({ error: 'Internal Server Error' }, 500, origin);
 		}
 	},
 } satisfies ExportedHandler<Env>;

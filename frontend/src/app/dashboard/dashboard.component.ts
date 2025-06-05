@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
-import { HttpClient } from '@angular/common/http';
 import { ChartModule } from 'primeng/chart';
 import { AvatarModule } from 'primeng/avatar';
 import { CommonModule, NgForOf } from '@angular/common';
+import { AuthService } from '../services/auth.service';
 
 interface Statistics {
   username: string,
@@ -92,26 +92,33 @@ export class DashboardComponent {
     ]
   };
 
+  constructor(private authService: AuthService) {
+    this.loadUserStats();
+  }
 
-
-  constructor(private http: HttpClient) {
-    this.http.get<{ stats: Statistics }>(`${environment.apiUrl}/stats`, {
-      observe: 'response',
-      withCredentials: true
-    }).subscribe({
-      next: response => {
-        if (response.status === 200 && response.body) {
-          if ((response.body.stats as any).kills)
-            this.userStatistics = { ...response.body.stats };
-          else {
-            this.userStatistics.username = response.body.stats.username;
-            this.userStatistics.avatarFull = response.body.stats.avatarFull;
+  private loadUserStats(): void {
+    this.authService.authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`)
+      .subscribe({
+        next: response => {
+          if (response?.stats) {
+            if ((response.stats as any).kills) {
+              this.userStatistics = { ...response.stats };
+            } else {
+              this.userStatistics.username = response.stats.username;
+              this.userStatistics.avatarFull = response.stats.avatarFull;
+            }
           }
+        },
+        error: (error) => {
+          console.error('Failed to load user statistics:', error);
+          // You might want to show an error message to the user here
         }
-      },
-      error: () => {
+      });
+  }
 
-      }
-    });
+  // Public method to refresh stats (can be called from template)
+  refreshStats(): void {
+    this.userStatistics.username = "LOADING...";
+    this.loadUserStats();
   }
 }

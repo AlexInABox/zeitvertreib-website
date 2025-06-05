@@ -2,83 +2,65 @@ import {
     generateSteamLoginUrl,
     verifySteamResponse,
     extractSteamId,
-    fetchSteamUserData
-} from '../utils/steam.js';
-import { validateSession, createSession, deleteSession } from '../utils/session.js';
-import { createErrorResponse, createSuccessResponse, createRedirectResponse } from '../utils/response.js';
-import { DEFAULT_FRONTEND_URL } from '../config/constants.js';
+    fetchSteamUserData,
+    validateSession,
+    createSession,
+    deleteSession,
+    createResponse
+} from '../utils.js';
 
-/**
- * Handle Steam login initiation
- */
-export async function handleSteamLogin(request: Request, env: Env): Promise<Response> {
-    const loginUrl = generateSteamLoginUrl(request);
-    return createRedirectResponse(loginUrl);
+export async function handleSteamLogin(request: Request): Promise<Response> {
+    return createResponse(generateSteamLoginUrl(request), 302);
 }
 
-/**
- * Handle Steam authentication callback
- */
 export async function handleSteamCallback(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const params = Object.fromEntries(url.searchParams.entries());
     const origin = request.headers.get('Origin');
 
-    // Verify the OpenID response
-    const isValid = await verifySteamResponse(params);
-    if (!isValid) {
-        return createErrorResponse('Steam authentication failed', 401, origin);
+    // Verify Steam response
+    if (!await verifySteamResponse(params)) {
+        return createResponse({ error: 'Steam authentication failed' }, 401, origin);
     }
 
     // Extract Steam ID
     const steamId = extractSteamId(params['openid.identity']);
     if (!steamId) {
-        return createErrorResponse('Could not extract Steam ID', 400, origin);
+        return createResponse({ error: 'Could not extract Steam ID' }, 400, origin);
     }
 
-    // Get Steam user info
-    const steamApiKey = env.STEAM_API_KEY;
-    if (!steamApiKey) {
-        return createErrorResponse('Steam API key not configured', 500, origin);
+    // Get Steam user data
+    if (!env.STEAM_API_KEY) {
+        return createResponse({ error: 'Steam API key not configured' }, 500, origin);
     }
 
-    const steamUser = await fetchSteamUserData(steamId, steamApiKey);
+    const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY);
     if (!steamUser) {
-        return createErrorResponse('Could not fetch user data', 500, origin);
+        return createResponse({ error: 'Could not fetch user data' }, 500, origin);
     }
 
-    // Create session
+    // Create session and redirect
     const sessionId = await createSession(steamId, steamUser, env);
-
-    // Redirect back to frontend with session token
-    const frontendUrl = env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
+    const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
     const redirectUrl = new URL(frontendUrl);
     redirectUrl.searchParams.set('token', sessionId);
 
-    return createRedirectResponse(redirectUrl.toString());
+    return createResponse(redirectUrl.toString(), 302);
 }
 
-/**
- * Get current user information
- */
 export async function handleGetUser(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get('Origin');
     const { isValid, session, error } = await validateSession(request, env);
 
     if (!isValid) {
-        return createErrorResponse(error!, 401, origin);
+        return createResponse({ error: error! }, 401, origin);
     }
 
-    return createSuccessResponse({ user: session!.steamUser }, origin);
+    return createResponse({ user: session!.steamUser }, 200, origin);
 }
 
-/**
- * Handle user logout
- */
 export async function handleLogout(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get('Origin');
-
     await deleteSession(request, env);
-
-    return createSuccessResponse({ success: true }, origin);
+    return createResponse({ success: true }, 200, origin);
 }

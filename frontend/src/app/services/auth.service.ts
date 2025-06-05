@@ -81,12 +81,10 @@ export class AuthService {
     }
 
     logout(): Observable<any> {
-        return this.http.post(`${environment.apiUrl}/auth/logout`, {}, {
-            headers: this.getAuthHeaders(),
-            withCredentials: true
-        }).pipe(
-            catchError(() => of(null))
-        );
+        return this.authenticatedPost(`${environment.apiUrl}/auth/logout`)
+            .pipe(
+                catchError(() => of(null))
+            );
     }
 
     performLogout(): void {
@@ -102,5 +100,20 @@ export class AuthService {
 
     getCurrentUser(): SteamUser | null {
         return this.currentUserSubject.value;
+    }
+
+    // Helper method for making authenticated API calls
+    authenticatedGet<T>(url: string): Observable<T> {
+        return this.http.get<T>(url, {
+            headers: this.getAuthHeaders(),
+            withCredentials: true
+        });
+    }
+
+    authenticatedPost<T>(url: string, body?: any): Observable<T> {
+        return this.http.post<T>(url, body, {
+            headers: this.getAuthHeaders(),
+            withCredentials: true
+        });
     }
 }
