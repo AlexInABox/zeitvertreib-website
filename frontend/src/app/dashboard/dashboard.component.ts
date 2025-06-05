@@ -101,12 +101,7 @@ export class DashboardComponent {
       .subscribe({
         next: response => {
           if (response?.stats) {
-            if ((response.stats as any).kills) {
-              this.userStatistics = { ...response.stats };
-            } else {
-              this.userStatistics.username = response.stats.username;
-              this.userStatistics.avatarFull = response.stats.avatarFull;
-            }
+            this.userStatistics = { ...response.stats };
           }
         },
         error: (error) => {
