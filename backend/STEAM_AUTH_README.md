@@ -119,6 +119,26 @@ async function logout() {
 - ✅ CORS support
 - ✅ TypeScript support
 - ✅ Automatic session cleanup
+- ✅ Steam API rate limit handling with intelligent caching
+
+## Steam API Caching
+
+To handle Steam API rate limiting (HTTP 429 errors), the system implements intelligent caching:
+
+### Caching Strategy
+- **Fresh Data**: Steam user data is considered fresh for 1 hour
+- **Cache Duration**: Data is cached for up to 24 hours
+- **Rate Limit Handling**: On rate limits (429) or service unavailable (503), serves stale cached data
+- **Fallback**: Uses stale cache as last resort on any API error
+
+### Benefits
+- Prevents authentication failures during Steam API rate limits
+- Reduces API calls for frequently accessed users
+- Improves response times for cached users
+- Graceful degradation when Steam API is unavailable
+
+### Cache Keys
+Steam user data is cached using the pattern: `steam_user:{steamId}`
 
 ## Session Storage
 

@@ -34,7 +34,7 @@ export async function handleSteamCallback(request: Request, env: Env): Promise<R
         return createResponse({ error: 'Steam API key not configured' }, 500, origin);
     }
 
-    const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY);
+    const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
     if (!steamUser) {
         return createResponse({ error: 'Could not fetch user data' }, 500, origin);
     }

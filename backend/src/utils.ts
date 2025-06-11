@@ -109,7 +109,42 @@ export function extractSteamId(identity?: string): string | null {
     return identity?.replace('https://steamcommunity.com/openid/id/', '') || null;
 }
 
-export async function fetchSteamUserData(steamId: string, apiKey: string): Promise<SteamUser | null> {
+/**
+ * Fetches Steam user data with intelligent caching to handle rate limiting.
+ * 
+ * Caching strategy:
+ * - Fresh data is preferred for up to 1 hour
+ * - Cached data is kept for up to 24 hours
+ * - On rate limits (429) or service unavailable (503), serves stale cache if available
+ * - Falls back to stale cache on any error as last resort
+ * 
+ * @param steamId - The Steam ID to fetch data for
+ * @param apiKey - Steam API key
+ * @param env - Cloudflare environment with KV access
+ * @returns Steam user data or null if not found
+ */
+export async function fetchSteamUserData(steamId: string, apiKey: string, env: Env): Promise<SteamUser | null> {
+    const cacheKey = `steam_user:${steamId}`;
+
+    // Try to get cached data first
+    try {
+        const cachedData = await env.SESSIONS.get(cacheKey);
+        if (cachedData) {
+            const cached = JSON.parse(cachedData) as { userData: SteamUser; cachedAt: number };
+            const cacheAge = Date.now() - cached.cachedAt;
+            const maxCacheAge = 60 * 60 * 1000; // 1 hour cache
+
+            if (cacheAge < maxCacheAge) {
+                console.log(`Using cached Steam user data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`);
+                return cached.userData;
+            }
+
+            console.log(`Cache expired for Steam user ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`);
+        }
+    } catch (cacheError) {
+        console.warn('Failed to read from cache:', cacheError);
+    }
+
     try {
         const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`;
         console.log('Fetching Steam user data from:', url.replace(apiKey, '***'));
@@ -121,6 +156,22 @@ export async function fetchSteamUserData(steamId: string, apiKey: string): Promi
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Steam API error response:', errorText);
+
+            // If we get a 429 (rate limit) or 503 (service unavailable), try to return stale cache if available
+            if (response.status === 429 || response.status === 503) {
+                console.log('Rate limited or service unavailable, checking for stale cache...');
+                try {
+                    const staleData = await env.SESSIONS.get(cacheKey);
+                    if (staleData) {
+                        const stale = JSON.parse(staleData) as { userData: SteamUser; cachedAt: number };
+                        console.log('Using stale cached data due to rate limiting');
+                        return stale.userData;
+                    }
+                } catch (staleCacheError) {
+                    console.warn('Failed to read stale cache:', staleCacheError);
+                }
+            }
+
             throw new Error(`Steam API returned ${response.status}: ${errorText}`);
         }
 
@@ -136,11 +187,62 @@ export async function fetchSteamUserData(steamId: string, apiKey: string): Promi
             throw new Error(`Steam API returned invalid JSON: ${responseText.substring(0, 100)}`);
         }
 
-        return data.response?.players?.[0] || null;
+        const userData = data.response?.players?.[0] || null;
+
+        // Cache the successful response
+        if (userData) {
+            try {
+                const cacheData = {
+                    userData,
+                    cachedAt: Date.now()
+                };
+
+                // Cache for 24 hours (but prefer fresh data after 1 hour)
+                await env.SESSIONS.put(cacheKey, JSON.stringify(cacheData), {
+                    expirationTtl: 24 * 60 * 60 // 24 hours
+                });
+
+                console.log(`Cached Steam user data for ${steamId}`);
+            } catch (cacheError) {
+                console.warn('Failed to cache Steam user data:', cacheError);
+            }
+        }
+
+        return userData;
     } catch (error) {
         console.error('Error fetching Steam user data:', error);
+
+        // Try to return stale cache as a last resort
+        try {
+            const fallbackData = await env.SESSIONS.get(cacheKey);
+            if (fallbackData) {
+                const fallback = JSON.parse(fallbackData) as { userData: SteamUser; cachedAt: number };
+                console.log('Using stale cached data as fallback');
+                return fallback.userData;
+            }
+        } catch (fallbackError) {
+            console.warn('Failed to read fallback cache:', fallbackError);
+        }
+
         return null;
     }
+}
+
+// Steam user cache helpers
+export async function clearSteamUserCache(steamId: string, env: Env): Promise<void> {
+    const cacheKey = `steam_user:${steamId}`;
+    try {
+        await env.SESSIONS.delete(cacheKey);
+        console.log(`Cleared Steam user cache for ${steamId}`);
+    } catch (error) {
+        console.warn('Failed to clear Steam user cache:', error);
+    }
+}
+
+export async function refreshSteamUserData(steamId: string, apiKey: string, env: Env): Promise<SteamUser | null> {
+    // Clear cache first, then fetch fresh data
+    await clearSteamUserCache(steamId, env);
+    return fetchSteamUserData(steamId, apiKey, env);
 }
 
 // Database helpers
