@@ -78,20 +78,42 @@
     right: 0;
     bottom: 0;
     background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: shimmer 2s infinite;
+    animation: shimmer 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
 }
 
 @keyframes shimmer {
     0% {
         top: -100%;
+        animation-timing-function: ease-in;
+    }
+
+    10% {
+        top: -80%;
+        animation-timing-function: ease-in-out;
+    }
+
+    25% {
+        top: -40%;
+        animation-timing-function: ease-out;
     }
 
     50% {
-        top: 100%;
+        top: 0%;
+        animation-timing-function: ease-in;
+    }
+
+    75% {
+        top: -40%;
+        animation-timing-function: ease-in-out;
+    }
+
+    90% {
+        top: -80%;
+        animation-timing-function: ease-out;
     }
 
     100% {
-        top: 100%;
+        top: -100%;
     }
 }
 
@@ -130,9 +152,9 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #f59e0b, #ef4444, #8b5cf6);
+    background: linear-gradient(90deg, var(--random-color-1, #f59e0b), var(--random-color-2, #ef4444), var(--random-color-3, #8b5cf6));
     background-size: 200% 100%;
-    animation: gradientShift 3s ease-in-out infinite;
+    animation: gradientShift 5s ease-in-out infinite;
 }
 
 @keyframes gradientShift {
@@ -314,7 +336,7 @@
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6);
+    background: linear-gradient(135deg, var(--random-color-1, #f59e0b), var(--random-color-2, #ef4444), var(--random-color-3, #8b5cf6));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

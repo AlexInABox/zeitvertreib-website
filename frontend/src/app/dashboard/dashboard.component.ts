@@ -58,8 +58,10 @@ export class DashboardComponent {
   isLoading = true;
   hasError = false;
   errorMessage = '';
+  randomColors: string[] = [];
 
   constructor(private authService: AuthService) {
+    this.generateRandomColors();
     this.loadUserStats();
   }
 
@@ -115,6 +117,46 @@ export class DashboardComponent {
     return killer?.displayname || index.toString();
   }
 
+  // Generate random colors for gradients
+  generateRandomColors(): void {
+    this.randomColors = [
+      this.getRandomColor(),
+      this.getRandomColor(),
+      this.getRandomColor()
+    ];
+    this.applyRandomColors();
+  }
+
+  // Generate a random hex color
+  private getRandomColor(): string {
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = Math.floor(Math.random() * 40) + 60; // 60-100% for vibrant colors
+    const lightness = Math.floor(Math.random() * 30) + 45; // 45-75% for good contrast
+    return this.hslToHex(hue, saturation, lightness);
+  }
+
+  // Convert HSL to HEX
+  private hslToHex(h: number, s: number, l: number): string {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  }
+
+  // Apply random colors to CSS custom properties
+  private applyRandomColors(): void {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.style.setProperty('--random-color-1', this.randomColors[0]);
+      root.style.setProperty('--random-color-2', this.randomColors[1]);
+      root.style.setProperty('--random-color-3', this.randomColors[2]);
+    }
+  }
+
   private loadUserStats(): void {
     this.isLoading = true;
     this.hasError = false;
@@ -141,6 +183,12 @@ export class DashboardComponent {
 
   // Öffentliche Methode zum Aktualisieren der Statistiken (kann vom Template aufgerufen werden)
   refreshStats(): void {
+    this.generateRandomColors();
     this.loadUserStats();
+  }
+
+  // Public method to regenerate colors only
+  regenerateColors(): void {
+    this.generateRandomColors();
   }
 }
