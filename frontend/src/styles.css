@@ -3,8 +3,6 @@
 @import "tailwindcss";
 @import "tailwindcss-primeui";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 :root {
   --surface-a: #121212 !important;
   --surface-b: #1e1e1e !important;
@@ -27,11 +25,13 @@
   font-display: swap;
 }
 
-body {
-  font-family: "BerlinTypeWeb", sans-serif;
+html, body {
+  font-family: "BerlinTypeWeb", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-strong {
+strong, .font-bold {
   font-weight: bold;
 }
 
@@ -43,4 +43,5 @@ body {
   );
   background-attachment: fixed;
   background-size: cover;
+  min-height: 100vh;
 }
