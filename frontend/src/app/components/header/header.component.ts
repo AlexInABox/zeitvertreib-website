@@ -34,7 +34,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.items = [
       {
-        label: 'Home',
+        label: 'Startseite',
         icon: PrimeIcons.HOME,
         route: '/'
       },
@@ -44,7 +44,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         route: '/youtube'
       },
       {
-        label: 'Accounting',
+        label: 'Finanzen',
         icon: PrimeIcons.WALLET,
         route: '/accounting'
       },
@@ -55,7 +55,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-    // Subscribe to authentication state changes
+    // Auf Authentifizierungsstatusänderungen abonnieren
     this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
       this.currentUser = user;
       this.userLoggedIn = !!user;
@@ -72,11 +72,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.userLoggedIn && this.currentUser) {
       this.userItems = [
         {
-          label: 'Settings',
+          label: 'Einstellungen',
           icon: PrimeIcons.COG,
           items: [
             {
-              label: 'Profile',
+              label: 'Profil',
               icon: PrimeIcons.USER,
               command: () => {
                 window.open(this.currentUser?.profileurl, '_blank');
@@ -88,7 +88,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           separator: true
         },
         {
-          label: 'Logout',
+          label: 'Abmelden',
           icon: PrimeIcons.SIGN_OUT,
           command: () => {
             this.logout();
@@ -98,7 +98,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     } else {
       this.userItems = [
         {
-          label: 'Login with Steam',
+          label: 'Mit Steam anmelden',
           icon: PrimeIcons.USER,
           command: () => {
             this.login();

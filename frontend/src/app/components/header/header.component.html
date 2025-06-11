@@ -27,7 +27,7 @@
     <ng-template #end>
       <div class="flex items-center gap-2" style="white-space: nowrap">
         <a href="https://dsc.gg/zeit" target="_blank">
-          <p-button label="Join Discord" icon="pi pi-discord" styleClass="p-button-outlined"></p-button>
+          <p-button label="Discord beitreten" icon="pi pi-discord" styleClass="p-button-outlined"></p-button>
         </a>
         <button
           class="relative overflow-hidden w-full border-0 bg-transparent flex items-start p-2 pl-4 rounded-xl cursor-pointer transition-colors duration-200"
@@ -38,7 +38,7 @@
 
           <ng-template #showIcon>
             <i class="pi pi-user mr-2"></i>
-            <!-- This is the icon to show when not logged in -->
+            <!-- Dies ist das Symbol, das angezeigt wird, wenn nicht angemeldet -->
           </ng-template>
         </button>
         <p-tieredmenu #menu [model]="userItems" [popup]="true" />

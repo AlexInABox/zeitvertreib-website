@@ -33,7 +33,7 @@ interface Statistics {
 })
 export class DashboardComponent {
   userStatistics: Statistics = {
-    username: "LOADING...",
+    username: "LÄDT...",
     kills: 0,
     deaths: 0,
     experience: 0,
@@ -105,15 +105,15 @@ export class DashboardComponent {
           }
         },
         error: (error) => {
-          console.error('Failed to load user statistics:', error);
-          // You might want to show an error message to the user here
+          console.error('Fehler beim Laden der Benutzerstatistiken:', error);
+          // Hier könnte eine Fehlermeldung für den Benutzer angezeigt werden
         }
       });
   }
 
-  // Public method to refresh stats (can be called from template)
+  // Öffentliche Methode zum Aktualisieren der Statistiken (kann vom Template aufgerufen werden)
   refreshStats(): void {
-    this.userStatistics.username = "LOADING...";
+    this.userStatistics.username = "LÄDT...";
     this.loadUserStats();
   }
 }

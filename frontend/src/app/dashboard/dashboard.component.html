@@ -5,7 +5,7 @@
         <div class="flex items-center gap-3 min-w-44">
           <div class="w-1.5 h-13 rounded-full bg-emerald-500"></div>
           <div>
-            <h5 class="text-surface-500 dark:text-white/72">Kills</h5>
+            <h5 class="text-surface-500 dark:text-white/72">Abschüsse</h5>
             <p
               class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
             >
@@ -16,7 +16,7 @@
         <div class="flex items-center gap-3 min-w-44">
           <div class="w-1.5 h-13 rounded-full bg-blue-500"></div>
           <div>
-            <h5 class="text-surface-500 dark:text-white/72">Deaths</h5>
+            <h5 class="text-surface-500 dark:text-white/72">Todesfälle</h5>
             <p
               class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
             >
@@ -27,7 +27,7 @@
         <div class="flex items-center gap-3 min-w-44">
           <div class="w-1.5 h-13 rounded-full bg-orange-500"></div>
           <div>
-            <h5 class="text-surface-500 dark:text-white/72">Experience</h5>
+            <h5 class="text-surface-500 dark:text-white/72">Erfahrung</h5>
             <p
               class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
             >
@@ -38,7 +38,7 @@
         <div class="flex items-center gap-3 min-w-44">
           <div class="w-1.5 h-13 rounded-full bg-rose-500"></div>
           <div>
-            <h5 class="text-surface-500 dark:text-white/72">Playtime</h5>
+            <h5 class="text-surface-500 dark:text-white/72">Spielzeit</h5>
             <p
               class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
             >
@@ -58,13 +58,13 @@
         />
       </ng-template>
       <ng-template #title>
-        Welcome back, {{ userStatistics.username }}
+        Willkommen zurück, {{ userStatistics.username }}
       </ng-template>
       <ng-template #subtitle>
         {{
           userStatistics.leaderboardposition
             ? "Platz #" + userStatistics.leaderboardposition
-            : "NOT ENOUGH DATA"
+            : "NICHT GENÜGEND DATEN"
         }}
       </ng-template>
 
@@ -95,17 +95,17 @@
     </p-card>
   </div>
   <div class="col-span-2 row-span-2 p-4">
-    <p-card header="Some Nice Overwiev Graphs!">
-      <p class="m-0">Woah maths!</p>
+    <p-card header="Schöne Übersichtsgrafiken!">
+      <p class="m-0">Wow, Mathematik!</p>
     </p-card>
   </div>
   <div class="col-span-2 row-span-3 p-4">
-    <p-card header="More History. recent sessuions?">
-      <p class="m-0">Wanna change your name?</p>
+    <p-card header="Mehr Verlauf. Kürzliche Sitzungen?">
+      <p class="m-0">Möchtest du deinen Namen ändern?</p>
     </p-card>
   </div>
   <div class="col-span-1 row-span-3 p-4">
-    <p-card header="These people killed you!" [style]="{ width: '25rem', overflow: 'hidden' }">
+    <p-card header="Diese Leute haben dich getötet!" [style]="{ width: '25rem', overflow: 'hidden' }">
       <div
         *ngFor="let killer of userStatistics.lastkillers; let i = index"
         class="flex justify-between mt-6 items-center"
