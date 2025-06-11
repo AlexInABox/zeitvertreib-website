@@ -44,6 +44,7 @@ export interface PlayerData {
     usedcolas?: number;
     pocketescapes?: number;
     usedadrenaline?: number;
+    fakerank?: string;
     lastkillers?: string;
     lastkills?: string;
 }

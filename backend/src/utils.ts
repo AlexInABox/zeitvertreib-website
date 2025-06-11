@@ -111,8 +111,31 @@ export function extractSteamId(identity?: string): string | null {
 
 export async function fetchSteamUserData(steamId: string, apiKey: string): Promise<SteamUser | null> {
     try {
-        const response = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`);
-        const data = await response.json() as { response: { players: SteamUser[] } };
+        const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`;
+        console.log('Fetching Steam user data from:', url.replace(apiKey, '***'));
+
+        const response = await fetch(url);
+        console.log('Steam API response status:', response.status);
+        console.log('Steam API response headers:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Steam API error response:', errorText);
+            throw new Error(`Steam API returned ${response.status}: ${errorText}`);
+        }
+
+        const responseText = await response.text();
+        console.log('Steam API response body:', responseText.substring(0, 200));
+
+        let data;
+        try {
+            data = JSON.parse(responseText) as { response: { players: SteamUser[] } };
+        } catch (parseError) {
+            console.error('Failed to parse Steam API response as JSON:', parseError);
+            console.error('Response was:', responseText);
+            throw new Error(`Steam API returned invalid JSON: ${responseText.substring(0, 100)}`);
+        }
+
         return data.response?.players?.[0] || null;
     } catch (error) {
         console.error('Error fetching Steam user data:', error);
@@ -123,10 +146,16 @@ export async function fetchSteamUserData(steamId: string, apiKey: string): Promi
 // Database helpers
 export async function getPlayerData(steamId: string, env: Env): Promise<PlayerData | null> {
     try {
-        return await env['zeitvertreib-data']
+        const playerId = `${steamId}@steam`;
+        console.log('Fetching player data for ID:', playerId);
+
+        const result = await env['zeitvertreib-data']
             .prepare('SELECT * FROM playerdata WHERE id = ?')
-            .bind(`${steamId}@steam`)
+            .bind(playerId)
             .first() as PlayerData | null;
+
+        console.log('Player data result:', result);
+        return result;
     } catch (error) {
         console.error('Database error:', error);
         throw new Error('Failed to fetch player data');

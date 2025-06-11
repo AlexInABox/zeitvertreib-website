@@ -1,122 +1,205 @@
-<div class="grid grid-cols-3 grid-rows-6 gap-2 p-4">
-  <div class="col-span-2 row-span-1 p-4">
-    <p-card>
-      <div class="flex justify-between w-full">
-        <div class="flex items-center gap-3 min-w-44">
-          <div class="w-1.5 h-13 rounded-full bg-emerald-500"></div>
-          <div>
-            <h5 class="text-surface-500 dark:text-white/72">Abschüsse</h5>
-            <p
-              class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
-            >
-              {{ userStatistics.kills }}
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 min-w-44">
-          <div class="w-1.5 h-13 rounded-full bg-blue-500"></div>
-          <div>
-            <h5 class="text-surface-500 dark:text-white/72">Todesfälle</h5>
-            <p
-              class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
-            >
-              {{ userStatistics.deaths }}
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 min-w-44">
-          <div class="w-1.5 h-13 rounded-full bg-orange-500"></div>
-          <div>
-            <h5 class="text-surface-500 dark:text-white/72">Erfahrung</h5>
-            <p
-              class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
-            >
-              {{ userStatistics.experience }}XP
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 min-w-44">
-          <div class="w-1.5 h-13 rounded-full bg-rose-500"></div>
-          <div>
-            <h5 class="text-surface-500 dark:text-white/72">Spielzeit</h5>
-            <p
-              class="mt-1 text-xl font-medium text-surface-950 dark:text-surface-0"
-            >
-              {{ (userStatistics.playtime / 60 / 60).toFixed(2) }}h
-            </p>
-          </div>
-        </div>
-      </div>
-    </p-card>
-  </div>
-  <div class="col-span-1 row-span-3 p-4">
-    <p-card [style]="{ width: '25rem', overflow: 'hidden' }">
-      <ng-template #header>
-        <img
-          class="w-full h-45 object-cover object-center"
-          [src]="userStatistics.avatarFull"
-        />
-      </ng-template>
-      <ng-template #title>
-        Willkommen zurück, {{ userStatistics.username }}
-      </ng-template>
-      <ng-template #subtitle>
-        {{
-          userStatistics.leaderboardposition
-            ? "Platz #" + userStatistics.leaderboardposition
-            : "NICHT GENÜGEND DATEN"
-        }}
-      </ng-template>
+<div class="dashboard-container">
+  <div class="grid grid-cols-3 grid-rows-6 gap-4 p-6 dashboard-grid relative z-10">
 
-      <div style="display: flex; justify-content: space-between">
-        <p>Gespielte Runden:</p>
-        <p>{{ userStatistics.roundsplayed }}</p>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="col-span-3 row-span-6 flex items-center justify-center">
+      <div class="text-center text-white">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-xl font-medium">Lade Statistiken...</p>
       </div>
-      <div style="display: flex; justify-content: space-between">
-        <p>Level:</p>
-        <p>{{ userStatistics.level }}</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="col-span-3 row-span-6 flex items-center justify-center">
+      <div class="error-message max-w-md">
+        <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
+        <p class="mb-4">{{ errorMessage }}</p>
+        <button (click)="refreshStats()" class="refresh-button">
+          Erneut versuchen
+        </button>
       </div>
-      <div style="display: flex; justify-content: space-between">
-        <p>Benutzte Medkits:</p>
-        <p>{{ userStatistics.usedmedkits }}</p>
+    </div>
+
+    <!-- Main Content -->
+    <ng-container *ngIf="!isLoading && !hasError">
+
+      <!-- Stats Overview -->
+      <div class="col-span-2 row-span-1 stats-overview">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 h-full">
+
+            <!-- Kills -->
+            <div class="stat-item" style="--stat-color: #10b981; --stat-color-light: #34d399;">
+              <div class="flex items-center gap-4">
+                <div class="stat-indicator"></div>
+                <div class="flex-1 min-w-0">
+                  <h5 class="stat-label">Abschüsse</h5>
+                  <p class="stat-value">
+                    {{ userStatistics.kills | number:'1.0-0' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deaths -->
+            <div class="stat-item" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa;">
+              <div class="flex items-center gap-4">
+                <div class="stat-indicator"></div>
+                <div class="flex-1 min-w-0">
+                  <h5 class="stat-label">Todesfälle</h5>
+                  <p class="stat-value">
+                    {{ userStatistics.deaths | number:'1.0-0' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Experience -->
+            <div class="stat-item" style="--stat-color: #f59e0b; --stat-color-light: #fbbf24;">
+              <div class="flex items-center gap-4">
+                <div class="stat-indicator"></div>
+                <div class="flex-1 min-w-0">
+                  <h5 class="stat-label">Erfahrung</h5>
+                  <p class="stat-value">
+                    {{ userStatistics.experience | number:'1.0-0' }}XP
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- K/D Ratio -->
+            <div class="stat-item" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa;">
+              <div class="flex items-center gap-4">
+                <div class="stat-indicator"></div>
+                <div class="flex-1 min-w-0">
+                  <h5 class="stat-label">K/D Ratio</h5>
+                  <p class="stat-value">
+                    {{ kdRatio }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
-      <div style="display: flex; justify-content: space-between">
-        <p>Getrunkene Colas:</p>
-        <p>{{ userStatistics.usedcolas }}</p>
+
+      <!-- Player Card -->
+      <div class="col-span-1 row-span-3 player-card-container">
+        <div class="player-card h-full">
+
+          <!-- Avatar Header -->
+          <div class="player-avatar-container" *ngIf="userStatistics?.avatarFull">
+            <img class="player-avatar" [src]="getAvatarUrl(userStatistics.avatarFull)"
+              [alt]="userStatistics.username || 'Player Avatar'" loading="lazy" (error)="onImageError($event)" />
+          </div>
+
+          <!-- Player Info -->
+          <div class="p-6">
+            <h2 class="text-2xl font-bold text-white mb-2">
+              Willkommen zurück,<br>
+              <span class="text-gradient">{{ userStatistics.username || 'Spieler' }}</span>
+            </h2>
+
+            <p class="text-lg text-gray-300 mb-6">
+              {{ leaderboardText }}
+            </p>
+
+            <!-- Stats List -->
+            <div class="space-y-3">
+              <div class="player-info-item">
+                <span class="player-info-label">Gespielte Runden:</span>
+                <span class="player-info-value">{{ userStatistics.roundsplayed | number:'1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Level:</span>
+                <span class="player-info-value">{{ userStatistics.level | number:'1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Spielzeit:</span>
+                <span class="player-info-value">{{ playtimeFormatted }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Benutzte Medkits:</span>
+                <span class="player-info-value">{{ userStatistics.usedmedkits | number:'1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Getrunkene Colas:</span>
+                <span class="player-info-value">{{ userStatistics.usedcolas | number:'1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Pocket Escapes:</span>
+                <span class="player-info-value">{{ userStatistics.pocketescapes | number:'1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Benutzte Adrenalin:</span>
+                <span class="player-info-value">{{ userStatistics.usedadrenaline | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="display: flex; justify-content: space-between">
-        <p>Pocket Dimensions entkommen:</p>
-        <p>{{ userStatistics.pocketescapes }}</p>
+
+      <!-- Charts Section -->
+      <div class="col-span-2 row-span-2 charts-container">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <h3 class="text-2xl font-bold text-white mb-4">Performance Übersicht</h3>
+          <div class="chart-placeholder">
+            <div class="text-6xl mb-4">📊</div>
+            <p class="text-lg">Schöne Übersichtsgrafiken kommen bald!</p>
+            <p class="text-sm mt-2 opacity-75">Hier werden detaillierte Statistiken und Trends angezeigt</p>
+          </div>
+        </div>
       </div>
-      <div style="display: flex; justify-content: space-between">
-        <p>Benutzte Adrenalin:</p>
-        <p>{{ userStatistics.usedadrenaline }}</p>
+
+      <!-- Session History -->
+      <div class="col-span-2 row-span-3 history-container">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold text-white">Verlauf & Sitzungen</h3>
+            <button (click)="refreshStats()" class="refresh-button">
+              Aktualisieren
+            </button>
+          </div>
+          <div class="chart-placeholder">
+            <div class="text-6xl mb-4">📈</div>
+            <p class="text-lg">Kürzliche Sitzungen und Verlauf</p>
+            <p class="text-sm mt-2 opacity-75">Detaillierte Spielverlaufsdaten werden hier angezeigt</p>
+          </div>
+        </div>
       </div>
-    </p-card>
-  </div>
-  <div class="col-span-2 row-span-2 p-4">
-    <p-card header="Schöne Übersichtsgrafiken!">
-      <p class="m-0">Wow, Mathematik!</p>
-    </p-card>
-  </div>
-  <div class="col-span-2 row-span-3 p-4">
-    <p-card header="Mehr Verlauf. Kürzliche Sitzungen?">
-      <p class="m-0">Möchtest du deinen Namen ändern?</p>
-    </p-card>
-  </div>
-  <div class="col-span-1 row-span-3 p-4">
-    <p-card header="Diese Leute haben dich getötet!" [style]="{ width: '25rem', overflow: 'hidden' }">
-      <div
-        *ngFor="let killer of userStatistics.lastkillers; let i = index"
-        class="flex justify-between mt-6 items-center"
-      >
-        <p-avatar
-          [image]="killer.avatarmedium"
-          class="mr-4 w-13 h-13"
-          shape="circle"
-        ></p-avatar>
-        <p class="text-xl font-bold">{{ killer.displayname }}</p>
+
+      <!-- Last Killers -->
+      <div class="col-span-1 row-span-3 killers-container">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <h3 class="text-xl font-bold text-white mb-4">Diese Leute haben dich getötet!</h3>
+
+          <div *ngIf="!hasKillers" class="text-center py-8">
+            <div class="text-4xl mb-4">🎯</div>
+            <p class="text-gray-300">Noch keine Killer-Daten verfügbar</p>
+          </div>
+
+          <div *ngIf="hasKillers" class="killers-list">
+            <div *ngFor="let killer of userStatistics?.lastkillers; let i = index; trackBy: trackByKiller"
+              class="killer-item">
+              <img class="killer-avatar" [src]="getAvatarUrl(killer?.avatarmedium)"
+                [alt]="killer?.displayname || 'Unknown Player'" loading="lazy" (error)="onImageError($event)" />
+              <div class="flex-1 min-w-0">
+                <p class="killer-name" [title]="killer?.displayname">
+                  {{ truncateDisplayName(killer?.displayname) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </p-card>
+
+    </ng-container>
   </div>
 </div>
