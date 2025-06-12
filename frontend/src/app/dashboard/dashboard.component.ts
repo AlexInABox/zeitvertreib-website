@@ -99,14 +99,14 @@ export class DashboardComponent {
 
   // Safe method to get avatar with fallback
   getAvatarUrl(avatarUrl?: string): string {
-    return avatarUrl || '/assets/logos/logo_1to1.gif';
+    return avatarUrl || '/assets/logos/logo_full_color_1to1.png';
   }
 
   // Handle image loading errors
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target) {
-      target.src = '/assets/logos/logo_1to1.gif';
+      target.src = '/assets/logos/logo_full_color_1to1.png';
     }
   }
 
