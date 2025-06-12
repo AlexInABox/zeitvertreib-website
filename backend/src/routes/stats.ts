@@ -10,10 +10,12 @@ export async function handleGetStats(request: Request, env: Env): Promise<Respon
 
     try {
         const playerData = await getPlayerData(session!.steamId, env);
-        const stats = mapPlayerDataToStats(
+        const stats = await mapPlayerDataToStats(
             playerData,
             session!.steamUser.personaname,
-            session!.steamUser.avatarfull
+            session!.steamUser.avatarfull,
+            session!.steamId,
+            env
         );
 
         return createResponse({ stats }, 200, origin);

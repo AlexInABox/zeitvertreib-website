@@ -1,5 +1,5 @@
 // Consolidated utilities
-import { SessionData, SteamUser, Statistics, PlayerData } from './types/index.js';
+import { SessionData, SteamUser, Statistics, PlayerData, KillRecord } from './types/index.js';
 
 // Response helpers
 export function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -264,40 +264,157 @@ export async function getPlayerData(steamId: string, env: Env): Promise<PlayerDa
     }
 }
 
-export function mapPlayerDataToStats(playerData: PlayerData | null, username: string, avatarFull: string): Statistics {
-    const parseJson = (jsonString?: string) => {
-        if (!jsonString) return [];
-        try {
-            return JSON.parse(String(jsonString));
-        } catch {
+// New kills table helpers
+export async function getPlayerKillsCount(steamId: string, env: Env): Promise<number> {
+    try {
+        const playerId = `${steamId}@steam`;
+        const result = await env['zeitvertreib-data']
+            .prepare('SELECT COUNT(*) as count FROM kills WHERE attacker = ?')
+            .bind(playerId)
+            .first() as { count: number } | null;
+
+        return result?.count || 0;
+    } catch (error) {
+        console.error('Error fetching kills count:', error);
+        return 0;
+    }
+}
+
+export async function getPlayerDeathsCount(steamId: string, env: Env): Promise<number> {
+    try {
+        const playerId = `${steamId}@steam`;
+        const result = await env['zeitvertreib-data']
+            .prepare('SELECT COUNT(*) as count FROM kills WHERE target = ?')
+            .bind(playerId)
+            .first() as { count: number } | null;
+
+        return result?.count || 0;
+    } catch (error) {
+        console.error('Error fetching deaths count:', error);
+        return 0;
+    }
+}
+
+export async function getPlayerLastKillers(steamId: string, env: Env): Promise<Array<{ displayname: string; avatarmedium: string }>> {
+    try {
+        const playerId = `${steamId}@steam`;
+        const results = await env['zeitvertreib-data']
+            .prepare('SELECT attacker FROM kills WHERE target = ? ORDER BY timestamp DESC LIMIT 5')
+            .bind(playerId)
+            .all() as { results: Array<{ attacker: string }> };
+
+        if (!results.results || results.results.length === 0) {
             return [];
         }
-    };
+
+        // Get Steam user data for each unique attacker (excluding anonymous)
+        const uniqueAttackers = [...new Set(results.results.map(r => r.attacker))]
+            .filter(attacker => attacker !== 'anonymous');
+
+        const killersData = await Promise.all(
+            uniqueAttackers.map(async (attacker) => {
+                const steamId = attacker.replace('@steam', '');
+                const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+                return {
+                    displayname: steamUser?.personaname || 'Unknown Player',
+                    avatarmedium: steamUser?.avatarmedium || ''
+                };
+            })
+        );
+
+        // Map back to preserve order and handle anonymous attackers
+        return results.results.map(r => {
+            if (r.attacker === 'anonymous') {
+                return { displayname: 'Anonymous', avatarmedium: '' };
+            }
+            const index = uniqueAttackers.indexOf(r.attacker);
+            return killersData[index] || { displayname: 'Unknown Player', avatarmedium: '' };
+        });
+    } catch (error) {
+        console.error('Error fetching last killers:', error);
+        return [];
+    }
+}
+
+export async function getPlayerLastKills(steamId: string, env: Env): Promise<Array<{ displayname: string; avatarmedium: string }>> {
+    try {
+        const playerId = `${steamId}@steam`;
+        const results = await env['zeitvertreib-data']
+            .prepare('SELECT target FROM kills WHERE attacker = ? ORDER BY timestamp DESC LIMIT 5')
+            .bind(playerId)
+            .all() as { results: Array<{ target: string }> };
+
+        if (!results.results || results.results.length === 0) {
+            return [];
+        }
+
+        // Get Steam user data for each unique target (excluding anonymous)
+        const uniqueTargets = [...new Set(results.results.map(r => r.target))]
+            .filter(target => target !== 'anonymous');
+
+        const targetsData = await Promise.all(
+            uniqueTargets.map(async (target) => {
+                const steamId = target.replace('@steam', '');
+                const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+                return {
+                    displayname: steamUser?.personaname || 'Unknown Player',
+                    avatarmedium: steamUser?.avatarmedium || ''
+                };
+            })
+        );
+
+        // Map back to preserve order and handle anonymous targets
+        return results.results.map(r => {
+            if (r.target === 'anonymous') {
+                return { displayname: 'Anonymous', avatarmedium: '' };
+            }
+            const index = uniqueTargets.indexOf(r.target);
+            return targetsData[index] || { displayname: 'Unknown Player', avatarmedium: '' };
+        });
+    } catch (error) {
+        console.error('Error fetching last kills:', error);
+        return [];
+    }
+}
+
+export async function mapPlayerDataToStats(
+    playerData: PlayerData | null,
+    username: string,
+    avatarFull: string,
+    steamId: string,
+    env: Env
+): Promise<Statistics> {
+    // Get kills and deaths data from the kills table
+    const [kills, deaths, lastKillers, lastKills] = await Promise.all([
+        getPlayerKillsCount(steamId, env),
+        getPlayerDeathsCount(steamId, env),
+        getPlayerLastKillers(steamId, env),
+        getPlayerLastKills(steamId, env)
+    ]);
 
     if (!playerData) {
         return {
             username, avatarFull,
-            kills: 0, deaths: 0, experience: 0, playtime: 0, roundsplayed: 0, level: 0,
+            kills, deaths, experience: 0, playtime: 0, roundsplayed: 0,
             leaderboardposition: 0, usedmedkits: 0, usedcolas: 0, pocketescapes: 0,
-            usedadrenaline: 0, lastkillers: [], lastkills: []
+            usedadrenaline: 0, lastkillers: lastKillers, lastkills: lastKills
         };
     }
 
     return {
         username,
         avatarFull,
-        kills: Number(playerData.kills) || 0,
-        deaths: Number(playerData.deaths) || 0,
+        kills,
+        deaths,
         experience: Number(playerData.experience) || 0,
         playtime: Number(playerData.playtime) || 0,
         roundsplayed: Number(playerData.roundsplayed) || 0,
-        level: Number(playerData.level) || 0,
         leaderboardposition: 0,
         usedmedkits: Number(playerData.usedmedkits) || 0,
         usedcolas: Number(playerData.usedcolas) || 0,
         pocketescapes: Number(playerData.pocketescapes) || 0,
         usedadrenaline: Number(playerData.usedadrenaline) || 0,
-        lastkillers: parseJson(playerData.lastkillers),
-        lastkills: parseJson(playerData.lastkills)
+        lastkillers: lastKillers,
+        lastkills: lastKills
     };
 }

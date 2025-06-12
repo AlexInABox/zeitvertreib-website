@@ -22,7 +22,6 @@ export interface Statistics {
     playtime: number;
     avatarFull: string;
     roundsplayed: number;
-    level: number;
     leaderboardposition: number;
     usedmedkits: number;
     usedcolas: number;
@@ -34,17 +33,18 @@ export interface Statistics {
 
 export interface PlayerData {
     id: string;
-    kills?: number;
-    deaths?: number;
     experience?: number;
     playtime?: number;
     roundsplayed?: number;
-    level?: number;
     usedmedkits?: number;
     usedcolas?: number;
     pocketescapes?: number;
     usedadrenaline?: number;
     fakerank?: string;
-    lastkillers?: string;
-    lastkills?: string;
+}
+
+export interface KillRecord {
+    attacker: string;
+    target: string;
+    timestamp: number;
 }

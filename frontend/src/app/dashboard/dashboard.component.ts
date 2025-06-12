@@ -20,7 +20,6 @@ interface Statistics {
   playtime?: number;
   avatarFull?: string;
   roundsplayed?: number;
-  level?: number;
   leaderboardposition?: number | null;
   usedmedkits?: number;
   usedcolas?: number;
@@ -45,7 +44,6 @@ export class DashboardComponent {
     playtime: 0,
     avatarFull: "",
     roundsplayed: 0,
-    level: 0,
     leaderboardposition: null,
     usedmedkits: 0,
     usedcolas: 0,

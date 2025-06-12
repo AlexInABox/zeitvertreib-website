@@ -3,31 +3,44 @@
 
 CREATE TABLE IF NOT EXISTS playerdata (
     id TEXT PRIMARY KEY,
-    kills INTEGER DEFAULT 0,
-    deaths INTEGER DEFAULT 0,
     experience INTEGER DEFAULT 0,
     playtime INTEGER DEFAULT 0,
     roundsplayed INTEGER DEFAULT 0,
-    level INTEGER DEFAULT 0,
     usedmedkits INTEGER DEFAULT 0,
     usedcolas INTEGER DEFAULT 0,
     pocketescapes INTEGER DEFAULT 0,
     usedadrenaline INTEGER DEFAULT 0,
-    fakerank TEXT,
-    lastkillers TEXT,
-    lastkills TEXT
+    fakerank TEXT
+);
+
+-- Kills table to track all kill events
+CREATE TABLE IF NOT EXISTS kills (
+    attacker TEXT,
+    target TEXT,
+    timestamp INTEGER
 );
 
 -- Sample data for testing (optional)
 INSERT OR IGNORE INTO playerdata (
-    id, kills, deaths, experience, playtime, roundsplayed, level,
+    id, experience, playtime, roundsplayed,
     usedmedkits, usedcolas, pocketescapes, usedadrenaline,
-    fakerank, lastkillers, lastkills
+    fakerank
 ) VALUES (
-    '76561198000000000@steam',
-    100, 50, 5000, 3600, 25, 10,
-    15, 8, 3, 5,
-    NULL,
-    '[{"displayname": "TestPlayer1", "avatarmedium": "https://example.com/avatar1.jpg"}]',
-    '[{"displayname": "TestPlayer2", "avatarmedium": "https://example.com/avatar2.jpg"}]'
+    '76561198354414854@steam',
+    12500, 7200, 45,
+    25, 18, 7, 12,
+    'Elite Commander'
 );
+
+-- Sample kills data for testing
+INSERT OR IGNORE INTO kills (attacker, target, timestamp) VALUES
+    ('76561198354414854@steam', '76561198000000001@steam', 1703980800),
+    ('76561198354414854@steam', '76561198000000002@steam', 1703981200),
+    ('76561198354414854@steam', 'anonymous', 1703981600),
+    ('76561198354414854@steam', '76561198000000003@steam', 1703982000),
+    ('76561198354414854@steam', '76561198000000004@steam', 1703982400),
+    ('76561198000000005@steam', '76561198354414854@steam', 1703983000),
+    ('76561198000000006@steam', '76561198354414854@steam', 1703983400),
+    ('anonymous', '76561198354414854@steam', 1703983800),
+    ('76561198000000007@steam', '76561198354414854@steam', 1703984200),
+    ('76561198000000008@steam', '76561198354414854@steam', 1703984600);
