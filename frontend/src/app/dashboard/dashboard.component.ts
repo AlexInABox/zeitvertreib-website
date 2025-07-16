@@ -261,30 +261,33 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    const formData = new FormData();
-    formData.append('image', this.selectedFile);
+    // Process the image to create 400x400 and 50x50 versions
+    this.processImageForUpload(this.selectedFile)
+      .then(({ largeImage, smallImage }) => {
+        const formData = new FormData();
+        formData.append('largeImage', largeImage); // 400x400 for pixel art
+        formData.append('smallImage', smallImage); // 50x50 for storage
 
-    this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
-      .subscribe({
-        next: (response: any) => {
-          this.sprayUploadLoading = false;
-          this.sprayUploadSuccess = true;
-          this.sprayUploadError = '';
-          this.selectedFile = null;
+        return this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
+      })
+      .then((response: any) => {
+        this.sprayUploadLoading = false;
+        this.sprayUploadSuccess = true;
+        this.sprayUploadError = '';
+        this.selectedFile = null;
 
-          // Reset file input
-          const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
-          if (fileInput) fileInput.value = '';
+        // Reset file input
+        const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
 
-          // Reload spray image
-          this.loadCurrentSpray();
-        },
-        error: (error) => {
-          console.error('Spray upload error:', error);
-          this.sprayUploadLoading = false;
-          this.sprayUploadError = error.error?.error || 'Fehler beim Hochladen des Sprays';
-          this.sprayUploadSuccess = false;
-        }
+        // Reload spray image
+        this.loadCurrentSpray();
+      })
+      .catch((error) => {
+        console.error('Spray upload error:', error);
+        this.sprayUploadLoading = false;
+        this.sprayUploadError = error.error?.error || error.message || 'Fehler beim Hochladen des Sprays';
+        this.sprayUploadSuccess = false;
       });
   }
 
@@ -306,13 +309,13 @@ export class DashboardComponent implements OnDestroy {
           this.sprayDeleteSuccess = true;
           this.sprayUploadSuccess = false;
           this.sprayUploadError = '';
-          
+
           // Clear the cached image URL to avoid browser caching issues
           if (this.currentSprayImage) {
             URL.revokeObjectURL(this.currentSprayImage);
           }
           this.currentSprayImage = null;
-          
+
           // Clear any selected file as well
           this.selectedFile = null;
           const fileInput = document.getElementById('sprayFileInputMini') as HTMLInputElement;
@@ -341,5 +344,66 @@ export class DashboardComponent implements OnDestroy {
     if (this.currentSprayImage) {
       URL.revokeObjectURL(this.currentSprayImage);
     }
+  }
+
+  // Process image to create 400x400 and 50x50 versions
+  private async processImageForUpload(file: File): Promise<{ largeImage: Blob; smallImage: Blob }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Create 400x400 version (keeping aspect ratio)
+          const largeCanvas = document.createElement('canvas');
+          const largeCtx = largeCanvas.getContext('2d');
+          if (!largeCtx) throw new Error('Could not get 2D context for large canvas');
+
+          // Calculate size keeping aspect ratio for 400x400 max
+          let { width: largeWidth, height: largeHeight } = this.calculateAspectRatioFit(img.width, img.height, 400, 400);
+          largeCanvas.width = largeWidth;
+          largeCanvas.height = largeHeight;
+          largeCtx.drawImage(img, 0, 0, largeWidth, largeHeight);
+
+          // Create 50x50 version (ignoring aspect ratio)
+          const smallCanvas = document.createElement('canvas');
+          const smallCtx = smallCanvas.getContext('2d');
+          if (!smallCtx) throw new Error('Could not get 2D context for small canvas');
+
+          smallCanvas.width = 50;
+          smallCanvas.height = 50;
+          smallCtx.drawImage(img, 0, 0, 50, 50);
+
+          // Convert canvases to blobs
+          largeCanvas.toBlob((largeBlob) => {
+            if (!largeBlob) {
+              reject(new Error('Failed to create large image blob'));
+              return;
+            }
+
+            smallCanvas.toBlob((smallBlob) => {
+              if (!smallBlob) {
+                reject(new Error('Failed to create small image blob'));
+                return;
+              }
+
+              resolve({ largeImage: largeBlob, smallImage: smallBlob });
+            }, 'image/jpeg', 0.8);
+          }, 'image/jpeg', 0.9);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  // Calculate dimensions that fit within max width/height while keeping aspect ratio
+  private calculateAspectRatioFit(srcWidth: number, srcHeight: number, maxWidth: number, maxHeight: number): { width: number; height: number } {
+    const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+    return {
+      width: Math.floor(srcWidth * ratio),
+      height: Math.floor(srcHeight * ratio)
+    };
   }
 }
