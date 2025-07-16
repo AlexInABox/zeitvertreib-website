@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
@@ -35,7 +35,7 @@ interface Statistics {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnDestroy {
   userStatistics: Statistics = {
     username: "LÄDT...",
     kills: 0,
@@ -62,6 +62,7 @@ export class DashboardComponent {
   sprayUploadLoading = false;
   sprayUploadError = '';
   sprayUploadSuccess = false;
+  sprayDeleteSuccess = false;
   currentSprayImage: string | null = null;
   selectedFile: File | null = null;
 
@@ -189,9 +190,15 @@ export class DashboardComponent {
 
   // Load the current spray image
   private loadCurrentSpray(): void {
-    this.authService.authenticatedGetBlob(`${environment.apiUrl}/spray/image`)
+    // Add cache-busting parameter to avoid browser caching issues
+    const timestamp = new Date().getTime();
+    this.authService.authenticatedGetBlob(`${environment.apiUrl}/spray/image?t=${timestamp}`)
       .subscribe({
         next: (response: Blob) => {
+          // Clean up previous object URL to prevent memory leaks
+          if (this.currentSprayImage) {
+            URL.revokeObjectURL(this.currentSprayImage);
+          }
           // Convert blob to object URL for display
           this.currentSprayImage = URL.createObjectURL(response);
         },
@@ -199,6 +206,10 @@ export class DashboardComponent {
           // No spray found is fine, just don't set an image
           if (error.status !== 404) {
             console.error('Error loading spray:', error);
+          }
+          // Clean up previous object URL
+          if (this.currentSprayImage) {
+            URL.revokeObjectURL(this.currentSprayImage);
           }
           this.currentSprayImage = null;
         }
@@ -223,6 +234,7 @@ export class DashboardComponent {
       this.selectedFile = target.files[0];
       this.sprayUploadError = '';
       this.sprayUploadSuccess = false;
+      this.sprayDeleteSuccess = false;
     }
   }
 
@@ -247,6 +259,7 @@ export class DashboardComponent {
 
     this.sprayUploadLoading = true;
     this.sprayUploadError = '';
+    this.sprayDeleteSuccess = false;
 
     const formData = new FormData();
     formData.append('image', this.selectedFile);
@@ -258,7 +271,7 @@ export class DashboardComponent {
           this.sprayUploadSuccess = true;
           this.sprayUploadError = '';
           this.selectedFile = null;
-          
+
           // Reset file input
           const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
           if (fileInput) fileInput.value = '';
@@ -277,9 +290,42 @@ export class DashboardComponent {
 
   // Method to remove current spray
   removeSpray(): void {
-    // For now, we don't have a delete endpoint, so we'll just clear the current image
-    // In a full implementation, you'd want to add a delete endpoint
-    this.currentSprayImage = null;
+    if (!this.hasSpray) {
+      return;
+    }
+
+    this.sprayUploadLoading = true;
+    this.sprayUploadError = '';
+    this.sprayUploadSuccess = false;
+    this.sprayDeleteSuccess = false;
+
+    this.authService.authenticatedDelete(`${environment.apiUrl}/spray/delete`)
+      .subscribe({
+        next: (response: any) => {
+          this.sprayUploadLoading = false;
+          this.sprayDeleteSuccess = true;
+          this.sprayUploadSuccess = false;
+          this.sprayUploadError = '';
+          
+          // Clear the cached image URL to avoid browser caching issues
+          if (this.currentSprayImage) {
+            URL.revokeObjectURL(this.currentSprayImage);
+          }
+          this.currentSprayImage = null;
+          
+          // Clear any selected file as well
+          this.selectedFile = null;
+          const fileInput = document.getElementById('sprayFileInputMini') as HTMLInputElement;
+          if (fileInput) fileInput.value = '';
+        },
+        error: (error: any) => {
+          console.error('Spray deletion error:', error);
+          this.sprayUploadLoading = false;
+          this.sprayUploadError = error.error?.error || 'Fehler beim Löschen des Sprays';
+          this.sprayUploadSuccess = false;
+          this.sprayDeleteSuccess = false;
+        }
+      });
   }
 
   get hasSpray(): boolean {
@@ -288,5 +334,12 @@ export class DashboardComponent {
 
   get selectedFileName(): string {
     return this.selectedFile?.name || '';
+  }
+
+  ngOnDestroy(): void {
+    // Clean up object URLs to prevent memory leaks
+    if (this.currentSprayImage) {
+      URL.revokeObjectURL(this.currentSprayImage);
+    }
   }
 }

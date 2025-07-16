@@ -117,6 +117,13 @@ export class AuthService {
         });
     }
 
+    authenticatedDelete<T>(url: string): Observable<T> {
+        return this.http.delete<T>(url, {
+            headers: this.getAuthHeaders(),
+            withCredentials: true
+        });
+    }
+
     // Helper method for binary responses like images
     authenticatedGetBlob(url: string): Observable<Blob> {
         return this.http.get(url, {

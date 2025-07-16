@@ -1,8 +1,10 @@
 <div class="dashboard-container">
-  <div class="grid grid-cols-3 grid-rows-7 gap-4 p-6 dashboard-grid relative z-10">
-
+  <div class="grid grid-cols-3 gap-4 p-6 dashboard-grid relative z-10">
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="col-span-3 row-span-7 flex items-center justify-center">
+    <div
+      *ngIf="isLoading"
+      class="col-span-3 flex items-center justify-center min-h-96"
+    >
       <div class="text-center text-white">
         <div class="loading-spinner mx-auto mb-4"></div>
         <p class="text-xl font-medium">Lade Statistiken...</p>
@@ -10,7 +12,10 @@
     </div>
 
     <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="col-span-3 row-span-7 flex items-center justify-center">
+    <div
+      *ngIf="hasError && !isLoading"
+      class="col-span-3 flex items-center justify-center min-h-96"
+    >
       <div class="error-message max-w-md">
         <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
         <p class="mb-4">{{ errorMessage }}</p>
@@ -22,53 +27,63 @@
 
     <!-- Main Content -->
     <ng-container *ngIf="!isLoading && !hasError">
-
       <!-- Stats Overview -->
-      <div class="col-span-2 row-span-1 stats-overview">
-        <div class="stats-card p-6 rounded-2xl h-full">
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 h-full">
-
+      <div class="col-span-2 stats-overview">
+        <div class="stats-card p-6 rounded-2xl">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Kills -->
-            <div class="stat-item" style="--stat-color: #10b981; --stat-color-light: #34d399;">
+            <div
+              class="stat-item"
+              style="--stat-color: #10b981; --stat-color-light: #34d399"
+            >
               <div class="flex items-center gap-4">
                 <div class="stat-indicator"></div>
                 <div class="flex-1 min-w-0">
                   <h5 class="stat-label">Abschüsse</h5>
                   <p class="stat-value">
-                    {{ userStatistics.kills | number:'1.0-0' }}
+                    {{ userStatistics.kills | number : "1.0-0" }}
                   </p>
                 </div>
               </div>
             </div>
 
             <!-- Deaths -->
-            <div class="stat-item" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa;">
+            <div
+              class="stat-item"
+              style="--stat-color: #3b82f6; --stat-color-light: #60a5fa"
+            >
               <div class="flex items-center gap-4">
                 <div class="stat-indicator"></div>
                 <div class="flex-1 min-w-0">
                   <h5 class="stat-label">Todesfälle</h5>
                   <p class="stat-value">
-                    {{ userStatistics.deaths | number:'1.0-0' }}
+                    {{ userStatistics.deaths | number : "1.0-0" }}
                   </p>
                 </div>
               </div>
             </div>
 
             <!-- Experience -->
-            <div class="stat-item" style="--stat-color: #f59e0b; --stat-color-light: #fbbf24;">
+            <div
+              class="stat-item"
+              style="--stat-color: #f59e0b; --stat-color-light: #fbbf24"
+            >
               <div class="flex items-center gap-4">
                 <div class="stat-indicator"></div>
                 <div class="flex-1 min-w-0">
                   <h5 class="stat-label">Erfahrung</h5>
                   <p class="stat-value">
-                    {{ userStatistics.experience | number:'1.0-0' }}XP
+                    {{ userStatistics.experience | number : "1.0-0" }}XP
                   </p>
                 </div>
               </div>
             </div>
 
             <!-- K/D Ratio -->
-            <div class="stat-item" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa;">
+            <div
+              class="stat-item"
+              style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa"
+            >
               <div class="flex items-center gap-4">
                 <div class="stat-indicator"></div>
                 <div class="flex-1 min-w-0">
@@ -79,26 +94,34 @@
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
       <!-- Player Card -->
-      <div class="col-span-1 row-span-3 player-card-container">
+      <div class="col-span-1 player-card-container">
         <div class="player-card h-full">
-
           <!-- Avatar Header -->
-          <div class="player-avatar-container" *ngIf="userStatistics?.avatarFull">
-            <img class="player-avatar" [src]="getAvatarUrl(userStatistics.avatarFull)"
-              [alt]="userStatistics.username || 'Player Avatar'" loading="lazy" (error)="onImageError($event)" />
+          <div
+            class="player-avatar-container"
+            *ngIf="userStatistics?.avatarFull"
+          >
+            <img
+              class="player-avatar"
+              [src]="getAvatarUrl(userStatistics.avatarFull)"
+              [alt]="userStatistics.username || 'Player Avatar'"
+              loading="lazy"
+              (error)="onImageError($event)"
+            />
           </div>
 
           <!-- Player Info -->
           <div class="p-6">
             <h2 class="text-2xl font-bold text-white mb-2">
-              Willkommen zurück,<br>
-              <span class="text-gradient">{{ userStatistics.username || 'Spieler' }}</span>
+              Willkommen zurück,<br />
+              <span class="text-gradient">{{
+                userStatistics.username || "Spieler"
+              }}</span>
             </h2>
 
             <p class="text-lg text-gray-300 mb-6">
@@ -109,7 +132,9 @@
             <div class="space-y-3">
               <div class="player-info-item">
                 <span class="player-info-label">Gespielte Runden:</span>
-                <span class="player-info-value">{{ userStatistics.roundsplayed | number:'1.0-0' }}</span>
+                <span class="player-info-value">{{
+                  userStatistics.roundsplayed | number : "1.0-0"
+                }}</span>
               </div>
 
               <div class="player-info-item">
@@ -119,22 +144,99 @@
 
               <div class="player-info-item">
                 <span class="player-info-label">Benutzte Medkits:</span>
-                <span class="player-info-value">{{ userStatistics.usedmedkits | number:'1.0-0' }}</span>
+                <span class="player-info-value">{{
+                  userStatistics.usedmedkits | number : "1.0-0"
+                }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Getrunkene Colas:</span>
-                <span class="player-info-value">{{ userStatistics.usedcolas | number:'1.0-0' }}</span>
+                <span class="player-info-value">{{
+                  userStatistics.usedcolas | number : "1.0-0"
+                }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Pocket Escapes:</span>
-                <span class="player-info-value">{{ userStatistics.pocketescapes | number:'1.0-0' }}</span>
+                <span class="player-info-value">{{
+                  userStatistics.pocketescapes | number : "1.0-0"
+                }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Benutzte Adrenalin:</span>
-                <span class="player-info-value">{{ userStatistics.usedadrenaline | number:'1.0-0' }}</span>
+                <span class="player-info-value">{{
+                  userStatistics.usedadrenaline | number : "1.0-0"
+                }}</span>
+              </div>
+            </div>
+
+            <!-- Spray Section -->
+            <div class="spray-section mt-6 pt-6 border-t border-gray-600">
+              <h4 class="text-lg font-semibold text-white mb-3">Dein Spray</h4>
+
+              <!-- Current Spray Display -->
+              <div *ngIf="hasSpray" class="current-spray-mini mb-3">
+                <img
+                  [src]="currentSprayImage"
+                  alt="Current Spray"
+                  class="spray-mini-image"
+                />
+                <button
+                  (click)="removeSpray()"
+                  class="remove-spray-mini"
+                  title="Spray entfernen"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <!-- Upload Section -->
+              <div class="spray-upload-mini">
+                <input
+                  type="file"
+                  id="sprayFileInputMini"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  class="file-input-mini"
+                />
+                <label for="sprayFileInputMini" class="upload-label-mini">
+                  <div
+                    *ngIf="!sprayUploadLoading && !selectedFile"
+                    class="upload-text"
+                  >
+                    🎨 Neues Spray hochladen
+                  </div>
+                  <div
+                    *ngIf="selectedFile && !sprayUploadLoading"
+                    class="selected-file"
+                  >
+                    {{ selectedFileName }}
+                  </div>
+                  <div *ngIf="sprayUploadLoading" class="loading-text">
+                    <div class="loading-spinner-mini"></div>
+                    Lade hoch...
+                  </div>
+                </label>
+
+                <button
+                  *ngIf="selectedFile && !sprayUploadLoading"
+                  (click)="uploadSpray()"
+                  class="upload-button-mini"
+                >
+                  Hochladen
+                </button>
+              </div>
+
+              <!-- Messages -->
+              <div *ngIf="sprayUploadError" class="error-message-mini">
+                {{ sprayUploadError }}
+              </div>
+              <div *ngIf="sprayUploadSuccess" class="success-message-mini">
+                Spray erfolgreich hochgeladen!
+              </div>
+              <div *ngIf="sprayDeleteSuccess" class="success-message-mini">
+                Spray erfolgreich gelöscht!
               </div>
             </div>
           </div>
@@ -142,20 +244,24 @@
       </div>
 
       <!-- Charts Section -->
-      <div class="col-span-2 row-span-2 charts-container">
-        <div class="stats-card p-6 rounded-2xl h-full">
-          <h3 class="text-2xl font-bold text-white mb-4">Performance Übersicht</h3>
+      <div class="col-span-2 charts-container">
+        <div class="stats-card p-6 rounded-2xl">
+          <h3 class="text-2xl font-bold text-white mb-4">
+            Performance Übersicht
+          </h3>
           <div class="chart-placeholder">
             <div class="text-6xl mb-4">📊</div>
             <p class="text-lg">Schöne Übersichtsgrafiken kommen bald!</p>
-            <p class="text-sm mt-2 opacity-75">Hier werden detaillierte Statistiken und Trends angezeigt</p>
+            <p class="text-sm mt-2 opacity-75">
+              Hier werden detaillierte Statistiken und Trends angezeigt
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Session History -->
-      <div class="col-span-2 row-span-3 history-container">
-        <div class="stats-card p-6 rounded-2xl h-full">
+      <div class="col-span-2 history-container">
+        <div class="stats-card p-6 rounded-2xl">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-2xl font-bold text-white">Verlauf & Sitzungen</h3>
             <button (click)="refreshStats()" class="refresh-button">
@@ -165,15 +271,19 @@
           <div class="chart-placeholder">
             <div class="text-6xl mb-4">📈</div>
             <p class="text-lg">Kürzliche Sitzungen und Verlauf</p>
-            <p class="text-sm mt-2 opacity-75">Detaillierte Spielverlaufsdaten werden hier angezeigt</p>
+            <p class="text-sm mt-2 opacity-75">
+              Detaillierte Spielverlaufsdaten werden hier angezeigt
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Last Killers -->
-      <div class="col-span-1 row-span-3 killers-container">
-        <div class="stats-card p-6 rounded-2xl h-full">
-          <h3 class="text-xl font-bold text-white mb-4">Diese Leute haben dich getötet!</h3>
+      <div class="col-span-1 killers-container">
+        <div class="stats-card p-6 rounded-2xl">
+          <h3 class="text-xl font-bold text-white mb-4">
+            Diese Leute haben dich getötet!
+          </h3>
 
           <div *ngIf="!hasKillers" class="text-center py-8">
             <div class="text-4xl mb-4">🎯</div>
@@ -181,10 +291,21 @@
           </div>
 
           <div *ngIf="hasKillers" class="killers-list">
-            <div *ngFor="let killer of userStatistics?.lastkillers; let i = index; trackBy: trackByKiller"
-              class="killer-item">
-              <img class="killer-avatar" [src]="getAvatarUrl(killer?.avatarmedium)"
-                [alt]="killer?.displayname || 'Unknown Player'" loading="lazy" (error)="onImageError($event)" />
+            <div
+              *ngFor="
+                let killer of userStatistics?.lastkillers;
+                let i = index;
+                trackBy: trackByKiller
+              "
+              class="killer-item"
+            >
+              <img
+                class="killer-avatar"
+                [src]="getAvatarUrl(killer?.avatarmedium)"
+                [alt]="killer?.displayname || 'Unknown Player'"
+                loading="lazy"
+                (error)="onImageError($event)"
+              />
               <div class="flex-1 min-w-0">
                 <p class="killer-name" [title]="killer?.displayname">
                   {{ truncateDisplayName(killer?.displayname) }}
@@ -194,84 +315,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Spray Upload Section -->
-      <div class="col-span-3 row-span-1 spray-container">
-        <div class="stats-card p-6 rounded-2xl h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-2xl font-bold text-white">Dein Spray</h3>
-            <div class="flex gap-2">
-              <button *ngIf="hasSpray" (click)="removeSpray()" class="remove-spray-button">
-                Entfernen
-              </button>
-            </div>
-          </div>
-
-          <div class="spray-content">
-            <!-- Current Spray Display -->
-            <div *ngIf="hasSpray" class="current-spray mb-4">
-              <div class="spray-preview">
-                <img [src]="currentSprayImage" alt="Current Spray" class="spray-image" />
-                <div class="spray-overlay">
-                  <p class="text-sm text-white">Aktuelles Spray</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Upload Section -->
-            <div class="spray-upload">
-              <div class="upload-area" [class.has-file]="selectedFile" [class.loading]="sprayUploadLoading">
-                <input 
-                  type="file" 
-                  id="sprayFileInput"
-                  accept="image/*" 
-                  (change)="onFileSelected($event)"
-                  class="file-input"
-                />
-                <label for="sprayFileInput" class="upload-label">
-                  <div class="upload-content">
-                    <div *ngIf="!sprayUploadLoading" class="text-4xl mb-2">🎨</div>
-                    <div *ngIf="sprayUploadLoading" class="loading-spinner mb-2"></div>
-                    
-                    <p *ngIf="!selectedFile && !sprayUploadLoading" class="text-lg font-medium">
-                      Klicke hier um ein Bild hochzuladen
-                    </p>
-                    <p *ngIf="selectedFile && !sprayUploadLoading" class="text-lg font-medium">
-                      {{ selectedFileName }}
-                    </p>
-                    <p *ngIf="sprayUploadLoading" class="text-lg font-medium">
-                      Lade hoch...
-                    </p>
-                    
-                    <p class="text-sm text-gray-300 mt-2">
-                      Max 10MB • Wird auf 400x400px skaliert
-                    </p>
-                  </div>
-                </label>
-              </div>
-
-              <!-- Upload Actions -->
-              <div *ngIf="selectedFile && !sprayUploadLoading" class="upload-actions mt-4">
-                <button (click)="uploadSpray()" class="upload-button">
-                  Spray hochladen
-                </button>
-                <button (click)="selectedFile = null" class="cancel-button ml-2">
-                  Abbrechen
-                </button>
-              </div>
-
-              <!-- Messages -->
-              <div *ngIf="sprayUploadError" class="error-message mt-4">
-                {{ sprayUploadError }}
-              </div>
-              <div *ngIf="sprayUploadSuccess" class="success-message mt-4">
-                Spray erfolgreich hochgeladen!
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </ng-container>
   </div>
 </div>

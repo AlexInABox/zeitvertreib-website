@@ -1,6 +1,6 @@
 import { handleSteamLogin, handleSteamCallback, handleGetUser, handleLogout } from './routes/auth.js';
 import { handleGetStats } from './routes/stats.js';
-import { handleUploadSpray, handleGetSpray, handleGetSprayString } from './routes/spray.js';
+import { handleUploadSpray, handleGetSpray, handleGetSprayString, handleDeleteSpray } from './routes/spray.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -23,6 +23,7 @@ const routes: Record<string, (request: Request, env: Env) => Promise<Response>> 
 	'/spray/upload': handleUploadSpray,
 	'/spray/image': handleGetSpray,
 	'/spray/string': handleGetSprayString,
+	'/spray/delete': handleDeleteSpray,
 };
 
 export default {
@@ -35,7 +36,7 @@ export default {
 			return new Response(null, {
 				headers: {
 					'Access-Control-Allow-Origin': origin || '*',
-					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+					'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
 					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 					'Access-Control-Allow-Credentials': 'true',
 				}
@@ -52,7 +53,10 @@ export default {
 				if ((url.pathname === '/spray/image' || url.pathname === '/spray/string') && request.method !== 'GET') {
 					return createResponse({ error: 'Method Not Allowed' }, 405, origin);
 				}
-				
+				if (url.pathname === '/spray/delete' && request.method !== 'DELETE') {
+					return createResponse({ error: 'Method Not Allowed' }, 405, origin);
+				}
+
 				return await handler(request, env);
 			}
 			return createResponse({ error: 'Not Found' }, 404, origin);
