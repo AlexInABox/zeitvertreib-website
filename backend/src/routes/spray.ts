@@ -171,7 +171,7 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
         // Check image content safety with SightEngine before processing
         const isSafe = await checkImageSafety(smallImage, env);
         if (!isSafe) {
-            return createResponse({ error: 'Image content not allowed. Please choose a different image.' }, 400, origin);
+            return createResponse({ error: 'Bildinhalt nicht erlaubt. Bitte wähle ein anderes Bild.' }, 400, origin);
         }
 
         // Process the pre-resized images and use pre-computed pixel data:
