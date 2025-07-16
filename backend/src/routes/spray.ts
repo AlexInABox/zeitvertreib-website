@@ -88,7 +88,7 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
             return createResponse({ error: 'Invalid file type. Please upload an image.' }, 400, origin);
         }        // Validate file size
         const maxSmallSize = 10 * 1024; // 10KB for 50x50 thumbnail
-        
+
         if (smallImage.size > maxSmallSize) {
             return createResponse({ error: 'Thumbnail too big. A 50x50 thumbnail should be under 10KB.' }, 400, origin);
         }

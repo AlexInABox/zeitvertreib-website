@@ -426,13 +426,13 @@ export class DashboardComponent implements OnDestroy {
         const b = data[index + 2];
         const alpha = data[index + 3];
 
-        // Handle transparency like the C# code (alpha < 25 becomes space)
+        // Handle transparency like the C# code (alpha < 25 becomes transparent block)
         if (alpha < 25) {
           if (consecutiveCount > 0 && currentColor) {
             line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
             consecutiveCount = 0;
           }
-          line += ' ';
+          line += '<color=#00000000>█</color>'; // Transparent unicode block
           currentColor = '';
           continue;
         }
