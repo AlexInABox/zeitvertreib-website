@@ -358,20 +358,18 @@ export class DashboardComponent implements OnDestroy {
           if (!smallCtx) throw new Error('Could not get 2D context for small canvas');
 
           smallCanvas.width = 50;
-          smallCanvas.height = 50;
-
-          // Calculate size keeping aspect ratio for 50x50 max
-          const { width: fitWidth, height: fitHeight } = this.calculateAspectRatioFit(img.width, img.height, 50, 50);
+          smallCanvas.height = 50;          // Scale so the longest side becomes 50px
+          const { width: scaledWidth, height: scaledHeight } = this.scaleToLongestSide(img.width, img.height, 50);
 
           // Center the image in the 50x50 canvas
-          const offsetX = (50 - fitWidth) / 2;
-          const offsetY = (50 - fitHeight) / 2;
+          const offsetX = (50 - scaledWidth) / 2;
+          const offsetY = (50 - scaledHeight) / 2;
 
           // Clear canvas with transparent background
           smallCtx.clearRect(0, 0, 50, 50);
 
           // Draw the image centered and properly sized
-          smallCtx.drawImage(img, offsetX, offsetY, fitWidth, fitHeight);
+          smallCtx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
 
           // Extract pixel data from small canvas to create pixel art string
           const pixelData = this.createPixelArtFromCanvas(smallCtx, 50, 50);
@@ -449,6 +447,17 @@ export class DashboardComponent implements OnDestroy {
     }
 
     return result;
+  }
+
+  // Scale image so the longest side becomes the target size
+  private scaleToLongestSide(srcWidth: number, srcHeight: number, targetSize: number): { width: number; height: number } {
+    const longestSide = Math.max(srcWidth, srcHeight);
+    const scaleFactor = targetSize / longestSide;
+
+    return {
+      width: Math.floor(srcWidth * scaleFactor),
+      height: Math.floor(srcHeight * scaleFactor)
+    };
   }
 
   // Calculate dimensions that fit within max width/height while keeping aspect ratio
