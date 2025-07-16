@@ -58,6 +58,81 @@ async function createFallbackImage(imageBuffer: ArrayBuffer): Promise<string> {
     return `data:image/png;base64,${base64}`;
 }
 
+// Check image safety using SightEngine API
+async function checkImageSafety(imageFile: File, env: Env): Promise<boolean> {
+    try {
+        const formData = new FormData();
+        formData.append('media', imageFile);
+        formData.append('workflow', env.SIGHTENGINE_WORKFLOW_ID);
+        formData.append('api_user', env.SIGHTENGINE_API_USER);
+        formData.append('api_secret', env.SIGHTENGINE_API_SECRET);
+
+        const response = await fetch('https://api.sightengine.com/1.0/check-workflow.json', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            console.error('SightEngine API error:', response.status, response.statusText);
+            // If API fails, be conservative and reject the image
+            return false;
+        }
+
+        const result = await response.json() as any;
+
+        // Check workflow summary - if any issues detected, reject
+        if (result.summary?.action === 'reject') {
+            console.log('Image rejected by SightEngine workflow:', result.summary?.reject_reason || 'Workflow determined content unsafe');
+            return false;
+        }
+
+        // Additional checks based on workflow response structure
+        // Check for unsafe content based on SightEngine response
+        // Reject if nudity probability is high
+        if (result.nudity?.sexual_activity > 0.5 || result.nudity?.sexual_display > 0.5 || result.nudity?.erotica > 0.5) {
+            console.log('Image rejected: nudity detected');
+            return false;
+        }
+
+        // Reject if weapons detected
+        if (result.weapon > 0.5) {
+            console.log('Image rejected: weapon detected');
+            return false;
+        }
+
+        // Reject if drugs detected
+        if (result.recreational_drug > 0.5) {
+            console.log('Image rejected: recreational drug detected');
+            return false;
+        }
+
+        // Reject if offensive content detected
+        if (result.offensive?.prob > 0.7) {
+            console.log('Image rejected: offensive content detected');
+            return false;
+        }
+
+        // Reject if gore detected
+        if (result.gore?.prob > 0.5) {
+            console.log('Image rejected: gore detected');
+            return false;
+        }
+
+        // Reject if violence detected
+        if (result.violence > 0.5) {
+            console.log('Image rejected: violence detected');
+            return false;
+        }
+
+        // If we get here, image is considered safe
+        return true;
+
+    } catch (error) {
+        console.error('Error checking image safety:', error);
+        // If there's an error with the safety check, be conservative and reject
+        return false;
+    }
+}
 
 export async function handleUploadSpray(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get('Origin');
@@ -91,6 +166,12 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
 
         if (smallImage.size > maxSmallSize) {
             return createResponse({ error: 'Thumbnail too big. A 50x50 thumbnail should be under 10KB.' }, 400, origin);
+        }
+
+        // Check image content safety with SightEngine before processing
+        const isSafe = await checkImageSafety(smallImage, env);
+        if (!isSafe) {
+            return createResponse({ error: 'Image content not allowed. Please choose a different image.' }, 400, origin);
         }
 
         // Process the pre-resized images and use pre-computed pixel data:

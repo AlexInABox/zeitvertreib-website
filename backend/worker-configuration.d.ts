@@ -10,6 +10,9 @@ declare namespace Cloudflare {
 }
 interface Env extends Cloudflare.Env {
     STEAM_API_KEY: string;
+    SIGHTENGINE_API_USER: string;
+    SIGHTENGINE_API_SECRET: string;
+    SIGHTENGINE_WORKFLOW_ID: string;
 }
 
 // Begin runtime types
