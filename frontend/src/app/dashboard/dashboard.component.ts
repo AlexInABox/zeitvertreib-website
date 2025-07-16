@@ -261,12 +261,13 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    // Process the image to create 400x400 and 50x50 versions
+    // Process the image to create 400x400 and 50x50 versions plus pixel data
     this.processImageForUpload(this.selectedFile)
-      .then(({ largeImage, smallImage }) => {
+      .then(({ largeImage, smallImage, pixelData }) => {
         const formData = new FormData();
-        formData.append('largeImage', largeImage); // 400x400 for pixel art
+        formData.append('largeImage', largeImage); // 400x400 for fallback
         formData.append('smallImage', smallImage); // 50x50 for storage
+        formData.append('pixelData', pixelData); // Pre-computed pixel art string
 
         return this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
       })
@@ -346,8 +347,8 @@ export class DashboardComponent implements OnDestroy {
     }
   }
 
-  // Process image to create 400x400 and 50x50 versions
-  private async processImageForUpload(file: File): Promise<{ largeImage: Blob; smallImage: Blob }> {
+  // Process image to create 400x400 and 50x50 versions plus pixel data
+  private async processImageForUpload(file: File): Promise<{ largeImage: Blob; smallImage: Blob; pixelData: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -372,6 +373,9 @@ export class DashboardComponent implements OnDestroy {
           smallCanvas.height = 50;
           smallCtx.drawImage(img, 0, 0, 50, 50);
 
+          // Extract pixel data from small canvas to create pixel art string
+          const pixelData = this.createPixelArtFromCanvas(smallCtx, 50, 50);
+
           // Convert canvases to blobs
           largeCanvas.toBlob((largeBlob) => {
             if (!largeBlob) {
@@ -385,7 +389,7 @@ export class DashboardComponent implements OnDestroy {
                 return;
               }
 
-              resolve({ largeImage: largeBlob, smallImage: smallBlob });
+              resolve({ largeImage: largeBlob, smallImage: smallBlob, pixelData });
             }, 'image/jpeg', 0.8);
           }, 'image/jpeg', 0.9);
         } catch (error) {
@@ -396,6 +400,62 @@ export class DashboardComponent implements OnDestroy {
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(file);
     });
+  }
+
+  // Create pixel art string from canvas data (like the C# version)
+  private createPixelArtFromCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): string {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data; // RGBA array
+    let result = '';
+
+    for (let y = 0; y < height; y++) {
+      let line = '';
+      let currentColor = '';
+      let consecutiveCount = 0;
+
+      for (let x = 0; x < width; x++) {
+        const index = (y * width + x) * 4; // 4 bytes per pixel (RGBA)
+        const r = data[index];
+        const g = data[index + 1];
+        const b = data[index + 2];
+        const alpha = data[index + 3];
+
+        // Handle transparency like the C# code (alpha < 25 becomes space)
+        if (alpha < 25) {
+          if (consecutiveCount > 0 && currentColor) {
+            line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
+            consecutiveCount = 0;
+          }
+          line += ' ';
+          currentColor = '';
+          continue;
+        }
+
+        // Convert to hex color
+        const pixelColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+
+        if (pixelColor === currentColor) {
+          consecutiveCount++;
+        } else {
+          // Flush previous color group
+          if (consecutiveCount > 0 && currentColor) {
+            line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
+          }
+          currentColor = pixelColor;
+          consecutiveCount = 1;
+        }
+      }
+
+      // Flush remaining pixels for this line
+      if (consecutiveCount > 0 && currentColor) {
+        line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
+      }
+
+      // Always add the line and a newline, like the C# version
+      result += line + '\n';
+    }
+
+    return result;
   }
 
   // Calculate dimensions that fit within max width/height while keeping aspect ratio

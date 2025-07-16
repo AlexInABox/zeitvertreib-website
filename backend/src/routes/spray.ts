@@ -1,25 +1,5 @@
 import { validateSession, createResponse } from '../utils.js';
 
-// Process pre-resized images from the frontend
-async function processPreResizedImages(largeImageBuffer: ArrayBuffer, smallImageBuffer: ArrayBuffer): Promise<{ pixelString: string; processedImageData: string }> {
-    try {
-        // Create pixel art from the 400x400 image
-        const pixelString = await createPixelArtFromImage(largeImageBuffer);
-
-        // Convert the 50x50 image to base64 data URL for storage
-        const processedImageData = await convertImageToDataURL(smallImageBuffer);
-
-        return { pixelString, processedImageData };
-    } catch (error) {
-        console.error('Image processing error:', error);
-        // Fallback to placeholder
-        const pixelString = createPlaceholderPixelArt();
-        const fallbackImageData = await createFallbackImage(smallImageBuffer);
-
-        return { pixelString, processedImageData: fallbackImageData };
-    }
-}
-
 // Convert image buffer to data URL for storage
 async function convertImageToDataURL(imageBuffer: ArrayBuffer): Promise<string> {
     try {
@@ -78,109 +58,6 @@ async function createFallbackImage(imageBuffer: ArrayBuffer): Promise<string> {
     return `data:image/png;base64,${base64}`;
 }
 
-// Create pixel art representation from image buffer with accurate colors
-async function createPixelArtFromImage(imageBuffer: ArrayBuffer): Promise<string> {
-    try {
-        const data = new Uint8Array(imageBuffer);
-        let result = '';
-
-        // Create a 40x40 grid for the pixel art
-        const gridSize = 40;
-        const bytesPerPixel = 4; // Assuming RGBA
-        const estimatedWidth = Math.sqrt(data.length / bytesPerPixel);
-        const scaleFactor = estimatedWidth / gridSize;
-
-        for (let y = 0; y < gridSize; y++) {
-            let line = '';
-            let currentColor = '';
-            let consecutiveCount = 0;
-
-            for (let x = 0; x < gridSize; x++) {
-                // Calculate approximate pixel position in the original image data
-                const sourceX = Math.floor(x * scaleFactor);
-                const sourceY = Math.floor(y * scaleFactor);
-                const sourceIndex = (sourceY * Math.floor(estimatedWidth) + sourceX) * bytesPerPixel;
-
-                let pixelColor = '#000000'; // Default black
-
-                if (sourceIndex + 2 < data.length) {
-                    // Extract RGB values (assuming the data contains some color information)
-                    let r, g, b;
-
-                    if (data.length > sourceIndex + 2) {
-                        // Try to extract meaningful color data
-                        r = data[sourceIndex] || data[sourceIndex % data.length];
-                        g = data[sourceIndex + 1] || data[(sourceIndex + 1) % data.length];
-                        b = data[sourceIndex + 2] || data[(sourceIndex + 2) % data.length];
-                    } else {
-                        // Fallback to pseudo-random colors based on position and data
-                        const seed = (x + y * gridSize + data[Math.min(sourceIndex, data.length - 1)]) % 256;
-                        r = (seed * 37) % 256;
-                        g = (seed * 73) % 256;
-                        b = (seed * 149) % 256;
-                    }
-
-                    // Convert to hex with full spectrum
-                    pixelColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-                }
-
-                if (pixelColor === currentColor) {
-                    consecutiveCount++;
-                } else {
-                    // Flush previous color group
-                    if (consecutiveCount > 0 && currentColor) {
-                        line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
-                    }
-                    currentColor = pixelColor;
-                    consecutiveCount = 1;
-                }
-            }
-
-            // Flush remaining pixels for this line
-            if (consecutiveCount > 0 && currentColor) {
-                line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
-            }
-
-            if (line) {
-                result += line + '\n';
-            }
-        }
-
-        return result;
-    } catch (error) {
-        console.error('Error creating pixel art:', error);
-        return createPlaceholderPixelArt();
-    }
-}
-
-// Create a sample pixel art string as placeholder with full hex colors
-function createPlaceholderPixelArt(): string {
-    const colors = [
-        '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff',
-        '#ffa500', '#800080', '#ffc0cb', '#a52a2a', '#808080', '#000000'
-    ];
-    let result = '';
-
-    for (let y = 0; y < 20; y++) {
-        let line = '';
-        let currentColor = colors[y % colors.length];
-        let pixelCount = Math.floor(Math.random() * 10) + 1;
-
-        for (let group = 0; group < 5; group++) {
-            line += `<color=${currentColor}>${'█'.repeat(pixelCount)}</color>`;
-            // Generate more varied colors for placeholder
-            const r = Math.floor(Math.random() * 256);
-            const g = Math.floor(Math.random() * 256);
-            const b = Math.floor(Math.random() * 256);
-            currentColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-            pixelCount = Math.floor(Math.random() * 8) + 1;
-        }
-
-        result += line + '\n';
-    }
-
-    return result;
-}
 
 export async function handleUploadSpray(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get('Origin');
@@ -201,11 +78,12 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
         }
 
         const formData = await request.formData();
-        const largeImage = formData.get('largeImage') as File; // 400x400 for pixel art
+        const largeImage = formData.get('largeImage') as File; // 400x400 for fallback
         const smallImage = formData.get('smallImage') as File; // 50x50 for storage
+        const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art
 
-        if (!largeImage || !smallImage) {
-            return createResponse({ error: 'Both largeImage (400x400) and smallImage (50x50) are required' }, 400, origin);
+        if (!largeImage || !smallImage || !pixelData) {
+            return createResponse({ error: 'largeImage, smallImage, and pixelData are all required' }, 400, origin);
         }
 
         // Validate file types
@@ -213,22 +91,25 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
             return createResponse({ error: 'Invalid file type. Please upload images.' }, 400, origin);
         }
 
-        // Validate file sizes (max 5MB for large, 1MB for small)
-        const maxLargeSize = 5 * 1024 * 1024; // 5MB
-        const maxSmallSize = 1 * 1024 * 1024; // 1MB
+        // Validate file sizes
+        const maxLargeSize = 5 * 1024 * 1024; // 5MB for 400x400 image
+        const maxSmallSize = 10 * 1024; // 10KB for 50x50 image (should be much smaller)
+
         if (largeImage.size > maxLargeSize) {
             return createResponse({ error: 'Large image too big. Maximum size is 5MB.' }, 400, origin);
         }
         if (smallImage.size > maxSmallSize) {
-            return createResponse({ error: 'Small image too big. Maximum size is 1MB.' }, 400, origin);
+            return createResponse({ error: 'Small image too big. A 50x50 image should be under 10KB.' }, 400, origin);
         }
 
-        // Process the pre-resized images:
-        // 1. Generate pixel art from the 400x400 image
+        // Process the pre-resized images and use pre-computed pixel data:
+        // 1. Use the pre-computed pixel art string from frontend
         // 2. Store the 50x50 image directly
-        const largeImageBuffer = await largeImage.arrayBuffer();
         const smallImageBuffer = await smallImage.arrayBuffer();
-        const { pixelString, processedImageData } = await processPreResizedImages(largeImageBuffer, smallImageBuffer);
+        const processedImageData = await convertImageToDataURL(smallImageBuffer);
+
+        // Use the pixel data sent from frontend (computed from actual canvas pixels)
+        const pixelString = pixelData;
 
         // Store both the pixel string and processed image data in KV
         const sprayKey = `spray_${steamId}`;
