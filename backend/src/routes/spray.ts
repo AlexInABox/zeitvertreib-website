@@ -76,7 +76,7 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
         if (!contentType?.includes('multipart/form-data')) {
             return createResponse({ error: 'Multipart form data required' }, 400, origin);
         } const formData = await request.formData();
-        const smallImage = formData.get('smallImage') as File; // 50x50 for storage
+        const smallImage = formData.get('smallImage') as File; // 50x50 thumbnail for storage
         const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art
 
         if (!smallImage || !pixelData) {
@@ -86,18 +86,16 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
         // Validate file type
         if (!smallImage.type.startsWith('image/')) {
             return createResponse({ error: 'Invalid file type. Please upload an image.' }, 400, origin);
-        }
-
-        // Validate file size
-        const maxSmallSize = 10 * 1024; // 10KB for 50x50 image (should be much smaller)
-
+        }        // Validate file size
+        const maxSmallSize = 10 * 1024; // 10KB for 50x50 thumbnail
+        
         if (smallImage.size > maxSmallSize) {
-            return createResponse({ error: 'Small image too big. A 50x50 image should be under 10KB.' }, 400, origin);
+            return createResponse({ error: 'Thumbnail too big. A 50x50 thumbnail should be under 10KB.' }, 400, origin);
         }
 
         // Process the pre-resized images and use pre-computed pixel data:
-        // 1. Use the pre-computed pixel art string from frontend
-        // 2. Store the 50x50 image directly
+        // 1. Use the high-quality pre-computed pixel art string from frontend
+        // 2. Store the 50x50 thumbnail directly
         const smallImageBuffer = await smallImage.arrayBuffer();
         const processedImageData = await convertImageToDataURL(smallImageBuffer);
 

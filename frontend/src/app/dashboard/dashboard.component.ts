@@ -261,12 +261,12 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    // Process the image to create 50x50 version plus pixel data  
+    // Process the image to create 50x50 thumbnail plus high-quality pixel data  
     this.processImageForUpload(this.selectedFile)
       .then(({ smallImage, pixelData }) => {
         const formData = new FormData();
-        formData.append('smallImage', smallImage); // 50x50 for storage
-        formData.append('pixelData', pixelData); // Pre-computed pixel art string
+        formData.append('smallImage', smallImage); // 50x50 thumbnail for storage
+        formData.append('pixelData', pixelData); // High-quality pre-computed pixel art string
 
         return this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
       })
@@ -346,38 +346,53 @@ export class DashboardComponent implements OnDestroy {
     }
   }
 
-  // Process image to create 400x400 and 50x50 versions plus pixel data
+  // Process image to create 50x50 thumbnail and high-quality pixel data
   private async processImageForUpload(file: File): Promise<{ smallImage: Blob; pixelData: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         try {
-          // Create 50x50 version (keeping aspect ratio, centered)
-          const smallCanvas = document.createElement('canvas');
-          const smallCtx = smallCanvas.getContext('2d');
-          if (!smallCtx) throw new Error('Could not get 2D context for small canvas');
+          const pixelArtQuality = 100; // Quality for unicode block generation
 
-          smallCanvas.width = 50;
-          smallCanvas.height = 50;          // Scale so the longest side becomes 50px
-          const { width: scaledWidth, height: scaledHeight } = this.scaleToLongestSide(img.width, img.height, 50);
+          // Create 50x50 thumbnail (for storage/display)
+          const thumbnailCanvas = document.createElement('canvas');
+          const thumbnailCtx = thumbnailCanvas.getContext('2d');
+          if (!thumbnailCtx) throw new Error('Could not get 2D context for thumbnail canvas');
 
-          // Center the image in the 50x50 canvas
-          const offsetX = (50 - scaledWidth) / 2;
-          const offsetY = (50 - scaledHeight) / 2;
+          thumbnailCanvas.width = 50;
+          thumbnailCanvas.height = 50;
 
-          // Clear canvas with transparent background
-          smallCtx.clearRect(0, 0, 50, 50);
+          // Scale thumbnail so the longest side becomes 50px
+          const { width: thumbWidth, height: thumbHeight } = this.scaleToLongestSide(img.width, img.height, 50);
+          const thumbOffsetX = (50 - thumbWidth) / 2;
+          const thumbOffsetY = (50 - thumbHeight) / 2;
 
-          // Draw the image centered and properly sized
-          smallCtx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+          thumbnailCtx.clearRect(0, 0, 50, 50);
+          thumbnailCtx.drawImage(img, thumbOffsetX, thumbOffsetY, thumbWidth, thumbHeight);
 
-          // Extract pixel data from small canvas to create pixel art string
-          const pixelData = this.createPixelArtFromCanvas(smallCtx, 50, 50);
+          // Create high-quality canvas for pixel art generation
+          const pixelCanvas = document.createElement('canvas');
+          const pixelCtx = pixelCanvas.getContext('2d');
+          if (!pixelCtx) throw new Error('Could not get 2D context for pixel canvas');
 
-          // Convert canvas to blob
-          smallCanvas.toBlob((smallBlob) => {
+          pixelCanvas.width = pixelArtQuality;
+          pixelCanvas.height = pixelArtQuality;
+
+          // Scale for pixel art so the longest side becomes pixelArtQuality
+          const { width: pixelWidth, height: pixelHeight } = this.scaleToLongestSide(img.width, img.height, pixelArtQuality);
+          const pixelOffsetX = (pixelArtQuality - pixelWidth) / 2;
+          const pixelOffsetY = (pixelArtQuality - pixelHeight) / 2;
+
+          pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
+          pixelCtx.drawImage(img, pixelOffsetX, pixelOffsetY, pixelWidth, pixelHeight);
+
+          // Extract pixel data from high-quality canvas to create pixel art string
+          const pixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
+
+          // Convert thumbnail canvas to blob for storage
+          thumbnailCanvas.toBlob((smallBlob) => {
             if (!smallBlob) {
-              reject(new Error('Failed to create small image blob'));
+              reject(new Error('Failed to create thumbnail blob'));
               return;
             }
 
