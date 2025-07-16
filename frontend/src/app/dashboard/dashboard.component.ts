@@ -5,6 +5,7 @@ import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { AvatarModule } from 'primeng/avatar';
 import { CommonModule, NgForOf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 
 interface PlayerEntry {
@@ -31,7 +32,7 @@ interface Statistics {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule],
+  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -65,11 +66,23 @@ export class DashboardComponent implements OnDestroy {
   sprayDeleteSuccess = false;
   currentSprayImage: string | null = null;
   selectedFile: File | null = null;
+  showSprayHelp = false;
+  isDragOver = false;
+
+  // Fakerank-related properties
+  currentFakerank: string | null = null;
+  isEditingFakerank = false;
+  fakerankValue = '';
+  fakerankLoading = false;
+  fakerankError = '';
+  fakerankSuccess = false;
+  showFakerankHelp = false;
 
   constructor(private authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
     this.loadCurrentSpray();
+    this.loadFakerank();
   }
 
   // Safe getter methods for template usage
@@ -238,6 +251,38 @@ export class DashboardComponent implements OnDestroy {
     }
   }
 
+  // Drag and drop methods
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        this.selectedFile = file;
+        this.sprayUploadError = '';
+        this.sprayUploadSuccess = false;
+        this.sprayDeleteSuccess = false;
+      } else {
+        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus';
+      }
+    }
+  }
+
   uploadSpray(): void {
     if (!this.selectedFile) {
       this.sprayUploadError = 'Bitte wähle eine Datei aus';
@@ -264,8 +309,13 @@ export class DashboardComponent implements OnDestroy {
     // Process the image to create 50x50 thumbnail plus high-quality pixel data  
     this.processImageForUpload(this.selectedFile)
       .then(({ smallImage, pixelData }) => {
+        if (!this.selectedFile) {
+          throw new Error('No file selected');
+        }
+
         const formData = new FormData();
         formData.append('smallImage', smallImage); // 50x50 thumbnail for storage
+        formData.append('originalImage', this.selectedFile); // Original uncompressed image for moderation
         formData.append('pixelData', pixelData); // High-quality pre-computed pixel art string
 
         return this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
@@ -482,5 +532,89 @@ export class DashboardComponent implements OnDestroy {
       width: Math.floor(srcWidth * ratio),
       height: Math.floor(srcHeight * ratio)
     };
+  }
+
+  // Fakerank methods
+  loadFakerank(): void {
+    this.authService.authenticatedGet<{ fakerank: string | null }>(`${environment.apiUrl}/fakerank`)
+      .subscribe({
+        next: response => {
+          this.currentFakerank = response?.fakerank || null;
+          this.fakerankValue = this.currentFakerank || '';
+        },
+        error: (error) => {
+          console.error('Error loading fakerank:', error);
+          this.fakerankError = 'Fehler beim Laden des Fakeranks';
+        }
+      });
+  }
+
+  startEditingFakerank(): void {
+    this.isEditingFakerank = true;
+    this.fakerankValue = this.currentFakerank || '';
+    this.fakerankError = '';
+    this.fakerankSuccess = false;
+  }
+
+  cancelEditingFakerank(): void {
+    this.isEditingFakerank = false;
+    this.fakerankValue = this.currentFakerank || '';
+    this.fakerankError = '';
+    this.fakerankSuccess = false;
+  }
+
+  saveFakerank(): void {
+    if (this.fakerankLoading) return;
+
+    this.fakerankLoading = true;
+    this.fakerankError = '';
+    this.fakerankSuccess = false;
+
+    const payload = { fakerank: this.fakerankValue.trim() };
+
+    this.authService.authenticatedPost<{ success: boolean; fakerank: string }>(`${environment.apiUrl}/fakerank`, payload)
+      .subscribe({
+        next: response => {
+          if (response?.success) {
+            this.currentFakerank = response.fakerank;
+            this.fakerankSuccess = true;
+            this.isEditingFakerank = false;
+            setTimeout(() => this.fakerankSuccess = false, 3000);
+          }
+          this.fakerankLoading = false;
+        },
+        error: (error) => {
+          console.error('Error saving fakerank:', error);
+          this.fakerankError = error?.error?.error || 'Fehler beim Speichern des Fakeranks';
+          this.fakerankLoading = false;
+        }
+      });
+  }
+
+  deleteFakerank(): void {
+    if (this.fakerankLoading) return;
+
+    this.fakerankLoading = true;
+    this.fakerankError = '';
+    this.fakerankSuccess = false;
+
+    this.authService.authenticatedDelete<{ success: boolean }>(`${environment.apiUrl}/fakerank`)
+      .subscribe({
+        next: response => {
+          if (response?.success) {
+            this.currentFakerank = null;
+            this.fakerankValue = '';
+            this.fakerankSuccess = true;
+            this.isEditingFakerank = false;
+            setTimeout(() => this.fakerankSuccess = false, 3000);
+          }
+          this.fakerankLoading = false;
+        },
+        error: (error) => {
+          console.error('Error deleting fakerank:', error);
+          this.fakerankError = error?.error?.error || 'Fehler beim Löschen des Fakeranks';
+          this.fakerankLoading = false;
+        }
+      });
   }
 }

@@ -170,91 +170,293 @@
                 }}</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Spray Section -->
-            <div class="spray-section mt-6 pt-6 border-t border-gray-600">
-              <h4 class="text-lg font-semibold text-white mb-3">Dein Spray</h4>
+      <!-- Custom Spray Card -->
+      <div class="col-span-1 spray-card-container">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <!-- Help Popup (replaces entire card content when shown) -->
+          <div *ngIf="showSprayHelp" class="help-popup h-full">
+            <div class="help-content h-full">
+              <div class="help-title">
+                Custom Spray - Dein persönliches Zeichen! 🎨
+              </div>
+              <div class="help-text">
+                Mit einem Custom Spray kannst du dein eigenes Bild als
+                persönliches Zeichen im Spiel verwenden.
+              </div>
+              <div class="help-text">
+                <strong>Wie funktioniert es?</strong><br />
+                • Lade ein beliebiges Bild hoch (PNG, JPG bis 10MB)<br />
+                • Das Bild wird automatisch optimiert und ins Spiel
+                übertragen<br />
+                • Nutze es, um Wände oder Oberflächen zu markieren
+              </div>
+              <div class="help-text">
+                <strong>Tipp:</strong> Einfache Designs und klare Formen
+                funktionieren am besten!
+              </div>
+              <button (click)="showSprayHelp = false" class="help-close-btn">
+                Verstanden! ✨
+              </button>
+            </div>
+          </div>
 
-              <!-- Current Spray Display -->
-              <div *ngIf="hasSpray" class="current-spray-mini mb-3">
-                <img
-                  [src]="currentSprayImage"
-                  alt="Current Spray"
-                  class="spray-mini-image"
-                />
+          <!-- Regular Card Content -->
+          <div *ngIf="!showSprayHelp">
+            <h3
+              class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between"
+            >
+              <div class="flex items-center gap-2">
+                🎨 <span>Custom Spray</span>
+              </div>
+              <button
+                (click)="showSprayHelp = true"
+                class="help-button"
+                title="Hilfe anzeigen"
+              >
+                ?
+              </button>
+            </h3>
+
+            <!-- Current Spray Display -->
+            <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
+              <div class="spray-preview-container mx-auto relative">
+                <div class="spray-preview">
+                  <img
+                    [src]="currentSprayImage"
+                    alt="Current Spray"
+                    class="spray-image"
+                  />
+                </div>
                 <button
                   (click)="removeSpray()"
-                  class="remove-spray-mini"
-                  title="Spray entfernen"
+                  class="remove-spray-button"
+                  [disabled]="sprayUploadLoading"
+                  title="Spray löschen"
                 >
-                  ✕
+                  ×
                 </button>
               </div>
+            </div>
 
-              <!-- Upload Section -->
-              <div class="spray-upload-mini">
+            <!-- No Spray State -->
+            <div *ngIf="!hasSpray && !selectedFile" class="text-center py-4">
+              <div class="text-4xl mb-2">🎨</div>
+              <p class="text-gray-300 text-sm">Kein Spray hochgeladen</p>
+            </div>
+
+            <!-- Upload Section with Drag & Drop -->
+            <div class="spray-upload">
+              <div
+                class="upload-area"
+                [class.has-file]="selectedFile && !sprayUploadLoading"
+                [class.loading]="sprayUploadLoading"
+                [class.drag-over]="isDragOver"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)"
+              >
                 <input
                   type="file"
-                  id="sprayFileInputMini"
+                  id="sprayFileInput"
                   accept="image/*"
                   (change)="onFileSelected($event)"
-                  class="file-input-mini"
+                  class="file-input"
                 />
-                <label for="sprayFileInputMini" class="upload-label-mini">
-                  <div
-                    *ngIf="!sprayUploadLoading && !selectedFile"
-                    class="upload-text"
-                  >
-                    🎨 Neues Spray hochladen
-                  </div>
-                  <div
-                    *ngIf="selectedFile && !sprayUploadLoading"
-                    class="selected-file"
-                  >
-                    {{ selectedFileName }}
-                  </div>
-                  <div *ngIf="sprayUploadLoading" class="loading-text">
-                    <div class="loading-spinner-mini"></div>
-                    Lade hoch...
+                <label for="sprayFileInput" class="upload-label">
+                  <div class="upload-content">
+                    <div
+                      *ngIf="!sprayUploadLoading && !selectedFile"
+                      class="text-center"
+                    >
+                      <div class="text-2xl mb-2">📁</div>
+                      <p class="font-medium">Klicken oder hierher ziehen</p>
+                      <p class="text-sm opacity-75">PNG, JPG bis 10MB</p>
+                    </div>
+                    <div
+                      *ngIf="selectedFile && !sprayUploadLoading"
+                      class="text-center"
+                    >
+                      <div class="text-2xl mb-2">✓</div>
+                      <p class="font-medium">{{ selectedFileName }}</p>
+                      <p class="text-sm opacity-75">Bereit zum Upload</p>
+                    </div>
+                    <div *ngIf="sprayUploadLoading" class="text-center">
+                      <div class="loading-spinner mx-auto mb-2"></div>
+                      <p class="font-medium">Wird hochgeladen...</p>
+                    </div>
                   </div>
                 </label>
+              </div>
 
-                <button
-                  *ngIf="selectedFile && !sprayUploadLoading"
-                  (click)="uploadSpray()"
-                  class="upload-button-mini"
-                >
+              <div
+                *ngIf="selectedFile && !sprayUploadLoading"
+                class="upload-actions mt-3"
+              >
+                <button (click)="uploadSpray()" class="upload-button">
                   Hochladen
                 </button>
+                <button (click)="selectedFile = null" class="cancel-button">
+                  Abbrechen
+                </button>
               </div>
+            </div>
 
-              <!-- Messages -->
-              <div *ngIf="sprayUploadError" class="error-message-mini">
-                {{ sprayUploadError }}
-              </div>
-              <div *ngIf="sprayUploadSuccess" class="success-message-mini">
-                Spray erfolgreich hochgeladen!
-              </div>
-              <div *ngIf="sprayDeleteSuccess" class="success-message-mini">
-                Spray erfolgreich gelöscht!
-              </div>
+            <!-- Messages -->
+            <div *ngIf="sprayUploadError" class="error-message mt-3">
+              {{ sprayUploadError }}
+            </div>
+            <div *ngIf="sprayUploadSuccess" class="success-message mt-3">
+              Spray erfolgreich hochgeladen!
+            </div>
+            <div *ngIf="sprayDeleteSuccess" class="success-message mt-3">
+              Spray erfolgreich gelöscht!
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Charts Section -->
-      <div class="col-span-2 charts-container">
-        <div class="stats-card p-6 rounded-2xl">
-          <h3 class="text-2xl font-bold text-white mb-4">
-            Performance Übersicht
+      <!-- Fakerank Card -->
+      <div class="col-span-1 fakerank-card-container">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <h3
+            class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between"
+          >
+            <div class="flex items-center gap-2">✨ <span>Fakerank</span></div>
+            <button
+              (click)="showFakerankHelp = !showFakerankHelp"
+              class="help-button"
+              title="Was ist ein Fakerank?"
+            >
+              ?
+            </button>
           </h3>
-          <div class="chart-placeholder">
-            <div class="text-6xl mb-4">📊</div>
-            <p class="text-lg">Schöne Übersichtsgrafiken kommen bald!</p>
-            <p class="text-sm mt-2 opacity-75">
-              Hier werden detaillierte Statistiken und Trends angezeigt
-            </p>
+
+          <!-- Help Popup -->
+          <div *ngIf="showFakerankHelp" class="help-popup mb-4">
+            <div class="help-content">
+              <h4 class="help-title">Was ist ein Fakerank?</h4>
+              <p class="help-text">
+                Ein Fakerank ist einfach ein cooler Spitzname, den du dir selbst
+                geben kannst! Es hat nichts mit deinem echten Rang im Spiel zu
+                tun - es ist nur zur Dekoration und macht dein Profil
+                persönlicher.
+              </p>
+              <p class="help-text">
+                <strong>Wann kannst du es nutzen?</strong><br />
+                Jederzeit! Sei kreativ - ob "Pizza Liebhaber", "Sniper Pro" oder
+                "Chaos König" - es ist dein persönlicher Touch.
+              </p>
+              <button (click)="showFakerankHelp = false" class="help-close-btn">
+                Verstanden ✓
+              </button>
+            </div>
+          </div>
+
+          <!-- Display Mode -->
+          <div *ngIf="!isEditingFakerank" class="fakerank-display">
+            <div class="nickname-container mb-4">
+              <div
+                class="nickname-preview"
+                [class.nickname-empty]="!currentFakerank"
+              >
+                <div *ngIf="currentFakerank" class="nickname-display">
+                  <div class="nickname-icon">✨</div>
+                  <div class="nickname-text">
+                    <span class="nickname-label">Dein Spitzname:</span>
+                    <span class="nickname-value">{{ currentFakerank }}</span>
+                  </div>
+                </div>
+                <div *ngIf="!currentFakerank" class="nickname-empty-state">
+                  <div class="nickname-icon">💭</div>
+                  <div class="nickname-text">
+                    <span class="nickname-label">Noch kein Spitzname</span>
+                    <span class="nickname-subtitle"
+                      >Gib dir einen coolen Namen!</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="fakerank-actions">
+              <button
+                (click)="startEditingFakerank()"
+                class="fakerank-btn fakerank-btn-primary"
+                [disabled]="fakerankLoading"
+              >
+                {{ currentFakerank ? "✏️ Ändern" : "➕ Erstellen" }}
+              </button>
+              <button
+                *ngIf="currentFakerank"
+                (click)="deleteFakerank()"
+                class="fakerank-btn fakerank-btn-danger"
+                [disabled]="fakerankLoading"
+              >
+                🗑️ Löschen
+              </button>
+            </div>
+          </div>
+
+          <!-- Edit Mode -->
+          <div *ngIf="isEditingFakerank" class="fakerank-edit">
+            <div class="nickname-editor mb-4">
+              <label class="editor-label"> ✨ Dein neuer Spitzname </label>
+              <div class="fakerank-input-container">
+                <input
+                  type="text"
+                  [(ngModel)]="fakerankValue"
+                  placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..."
+                  maxlength="50"
+                  class="nickname-input"
+                  [disabled]="fakerankLoading"
+                  (keyup.enter)="saveFakerank()"
+                  (keyup.escape)="cancelEditingFakerank()"
+                />
+                <div class="fakerank-char-count">
+                  {{ fakerankValue.length }}/50
+                </div>
+              </div>
+              <div class="editor-hint">
+                💡 Sei kreativ! Dies ist nur ein Spitzname zur Dekoration.
+              </div>
+            </div>
+            <div class="fakerank-actions">
+              <button
+                (click)="saveFakerank()"
+                class="fakerank-btn fakerank-btn-success"
+                [disabled]="
+                  fakerankLoading || fakerankValue.trim().length === 0
+                "
+              >
+                {{ fakerankLoading ? "💾 Speichern..." : "💾 Speichern" }}
+              </button>
+              <button
+                (click)="cancelEditingFakerank()"
+                class="fakerank-btn fakerank-btn-secondary"
+                [disabled]="fakerankLoading"
+              >
+                ❌ Abbrechen
+              </button>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div
+            *ngIf="fakerankSuccess"
+            class="fakerank-message fakerank-success mt-3"
+          >
+            🎉 Spitzname erfolgreich gespeichert!
+          </div>
+
+          <!-- Error Message -->
+          <div
+            *ngIf="fakerankError"
+            class="fakerank-message fakerank-error mt-3"
+          >
+            {{ fakerankError }}
           </div>
         </div>
       </div>

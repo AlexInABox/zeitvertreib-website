@@ -1,5 +1,13 @@
 import { validateSession, createResponse } from '../utils.js';
 
+// Generate SHA-256 hash of image buffer for caching moderation results
+async function generateImageHash(imageBuffer: ArrayBuffer): Promise<string> {
+    const hashBuffer = await crypto.subtle.digest('SHA-256', imageBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
 // Convert image buffer to data URL for storage
 async function convertImageToDataURL(imageBuffer: ArrayBuffer): Promise<string> {
     try {
@@ -58,9 +66,31 @@ async function createFallbackImage(imageBuffer: ArrayBuffer): Promise<string> {
     return `data:image/png;base64,${base64}`;
 }
 
-// Check image safety using SightEngine API
+// Check image safety using SightEngine API with hash-based caching
 async function checkImageSafety(imageFile: File, env: Env): Promise<boolean> {
     try {
+        // Generate hash of the image for caching
+        const imageBuffer = await imageFile.arrayBuffer();
+        const imageHash = await generateImageHash(imageBuffer);
+        const cacheKey = `moderation_${imageHash}`;
+
+        // Check if we already have a cached result for this image hash
+        const cachedResult = await env.SESSIONS.get(cacheKey);
+        if (cachedResult !== null) {
+            const { isSafe, cachedAt } = JSON.parse(cachedResult);
+            const cacheAge = Date.now() - cachedAt;
+            const cacheValidityPeriod = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+
+            // Use cached result if it's still valid
+            if (cacheAge < cacheValidityPeriod) {
+                console.log(`Using cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`);
+                return isSafe;
+            }
+        }
+
+        // No valid cache found, perform actual moderation check
+        console.log(`Performing new moderation check for image hash ${imageHash}`);
+
         const formData = new FormData();
         formData.append('media', imageFile);
         formData.append('workflow', env.SIGHTENGINE_WORKFLOW_ID);
@@ -75,61 +105,73 @@ async function checkImageSafety(imageFile: File, env: Env): Promise<boolean> {
         if (!response.ok) {
             console.error('SightEngine API error:', response.status, response.statusText);
             // If API fails, be conservative and reject the image
+            // Don't cache API failures to allow retry
             return false;
         }
 
         const result = await response.json() as any;
+        let isSafe = true;
 
         // Check workflow summary - if any issues detected, reject
         if (result.summary?.action === 'reject') {
             console.log('Image rejected by SightEngine workflow:', result.summary?.reject_reason || 'Workflow determined content unsafe');
-            return false;
+            isSafe = false;
         }
 
         // Additional checks based on workflow response structure
-        // Check for unsafe content based on SightEngine response
         // Reject if nudity probability is high
         if (result.nudity?.sexual_activity > 0.5 || result.nudity?.sexual_display > 0.5 || result.nudity?.erotica > 0.5) {
             console.log('Image rejected: nudity detected');
-            return false;
+            isSafe = false;
         }
 
         // Reject if weapons detected
         if (result.weapon > 0.5) {
             console.log('Image rejected: weapon detected');
-            return false;
+            isSafe = false;
         }
 
         // Reject if drugs detected
         if (result.recreational_drug > 0.5) {
             console.log('Image rejected: recreational drug detected');
-            return false;
+            isSafe = false;
         }
 
         // Reject if offensive content detected
         if (result.offensive?.prob > 0.7) {
             console.log('Image rejected: offensive content detected');
-            return false;
+            isSafe = false;
         }
 
         // Reject if gore detected
         if (result.gore?.prob > 0.5) {
             console.log('Image rejected: gore detected');
-            return false;
+            isSafe = false;
         }
 
         // Reject if violence detected
         if (result.violence > 0.5) {
             console.log('Image rejected: violence detected');
-            return false;
+            isSafe = false;
         }
 
-        // If we get here, image is considered safe
-        return true;
+        // Cache the moderation result for future use
+        const cacheData = {
+            isSafe,
+            cachedAt: Date.now(),
+            imageHash
+        };
+
+        // Store the result in KV cache for 7 days (TTL handled by expiration check above)
+        await env.SESSIONS.put(cacheKey, JSON.stringify(cacheData));
+        console.log(`Cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`);
+
+        return isSafe;
 
     } catch (error) {
         console.error('Error checking image safety:', error);
         // If there's an error with the safety check, be conservative and reject
+        // Don't cache errors to allow retry
         return false;
     }
 }
@@ -152,24 +194,30 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
             return createResponse({ error: 'Multipart form data required' }, 400, origin);
         } const formData = await request.formData();
         const smallImage = formData.get('smallImage') as File; // 50x50 thumbnail for storage
+        const originalImage = formData.get('originalImage') as File; // Original uncompressed image for moderation
         const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art
 
-        if (!smallImage || !pixelData) {
-            return createResponse({ error: 'smallImage and pixelData are required' }, 400, origin);
+        if (!smallImage || !originalImage || !pixelData) {
+            return createResponse({ error: 'smallImage, originalImage and pixelData are required' }, 400, origin);
         }
 
         // Validate file type
-        if (!smallImage.type.startsWith('image/')) {
-            return createResponse({ error: 'Invalid file type. Please upload an image.' }, 400, origin);
+        if (!smallImage.type.startsWith('image/') || !originalImage.type.startsWith('image/')) {
+            return createResponse({ error: 'Invalid file type. Please upload images.' }, 400, origin);
         }        // Validate file size
         const maxSmallSize = 10 * 1024; // 10KB for 50x50 thumbnail
+        const maxOriginalSize = 5 * 1024 * 1024; // 5MB for original image
 
         if (smallImage.size > maxSmallSize) {
             return createResponse({ error: 'Thumbnail too big. A 50x50 thumbnail should be under 10KB.' }, 400, origin);
         }
 
-        // Check image content safety with SightEngine before processing
-        const isSafe = await checkImageSafety(smallImage, env);
+        if (originalImage.size > maxOriginalSize) {
+            return createResponse({ error: 'Original image too big. Please upload an image under 5MB.' }, 400, origin);
+        }
+
+        // Check image content safety with SightEngine using the original uncompressed image
+        const isSafe = await checkImageSafety(originalImage, env);
         if (!isSafe) {
             return createResponse({ error: 'Bildinhalt nicht erlaubt. Bitte wähle ein anderes Bild.' }, 400, origin);
         }

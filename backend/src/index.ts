@@ -1,6 +1,7 @@
 import { handleSteamLogin, handleSteamCallback, handleGetUser, handleLogout } from './routes/auth.js';
 import { handleGetStats } from './routes/stats.js';
 import { handleUploadSpray, handleGetSpray, handleGetSprayString, handleDeleteSpray } from './routes/spray.js';
+import { handleFakerank } from './routes/profile.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -24,6 +25,7 @@ const routes: Record<string, (request: Request, env: Env) => Promise<Response>> 
 	'/spray/image': handleGetSpray,
 	'/spray/string': handleGetSprayString,
 	'/spray/delete': handleDeleteSpray,
+	'/fakerank': handleFakerank,
 };
 
 export default {
