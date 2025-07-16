@@ -1,5 +1,6 @@
 import { handleSteamLogin, handleSteamCallback, handleGetUser, handleLogout } from './routes/auth.js';
 import { handleGetStats } from './routes/stats.js';
+import { handleUploadSpray, handleGetSpray, handleGetSprayString } from './routes/spray.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -19,6 +20,9 @@ const routes: Record<string, (request: Request, env: Env) => Promise<Response>> 
 	'/auth/me': handleGetUser,
 	'/auth/logout': handleLogout,
 	'/stats': handleGetStats,
+	'/spray/upload': handleUploadSpray,
+	'/spray/image': handleGetSpray,
+	'/spray/string': handleGetSprayString,
 };
 
 export default {
@@ -41,6 +45,14 @@ export default {
 		try {
 			const handler = routes[url.pathname];
 			if (handler) {
+				// Handle method-specific routing for spray upload
+				if (url.pathname === '/spray/upload' && request.method !== 'POST') {
+					return createResponse({ error: 'Method Not Allowed' }, 405, origin);
+				}
+				if ((url.pathname === '/spray/image' || url.pathname === '/spray/string') && request.method !== 'GET') {
+					return createResponse({ error: 'Method Not Allowed' }, 405, origin);
+				}
+				
 				return await handler(request, env);
 			}
 			return createResponse({ error: 'Not Found' }, 404, origin);

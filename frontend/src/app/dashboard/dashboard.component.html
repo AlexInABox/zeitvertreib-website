@@ -1,8 +1,8 @@
 <div class="dashboard-container">
-  <div class="grid grid-cols-3 grid-rows-6 gap-4 p-6 dashboard-grid relative z-10">
+  <div class="grid grid-cols-3 grid-rows-7 gap-4 p-6 dashboard-grid relative z-10">
 
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="col-span-3 row-span-6 flex items-center justify-center">
+    <div *ngIf="isLoading" class="col-span-3 row-span-7 flex items-center justify-center">
       <div class="text-center text-white">
         <div class="loading-spinner mx-auto mb-4"></div>
         <p class="text-xl font-medium">Lade Statistiken...</p>
@@ -10,7 +10,7 @@
     </div>
 
     <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="col-span-3 row-span-6 flex items-center justify-center">
+    <div *ngIf="hasError && !isLoading" class="col-span-3 row-span-7 flex items-center justify-center">
       <div class="error-message max-w-md">
         <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
         <p class="mb-4">{{ errorMessage }}</p>
@@ -189,6 +189,83 @@
                 <p class="killer-name" [title]="killer?.displayname">
                   {{ truncateDisplayName(killer?.displayname) }}
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spray Upload Section -->
+      <div class="col-span-3 row-span-1 spray-container">
+        <div class="stats-card p-6 rounded-2xl h-full">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold text-white">Dein Spray</h3>
+            <div class="flex gap-2">
+              <button *ngIf="hasSpray" (click)="removeSpray()" class="remove-spray-button">
+                Entfernen
+              </button>
+            </div>
+          </div>
+
+          <div class="spray-content">
+            <!-- Current Spray Display -->
+            <div *ngIf="hasSpray" class="current-spray mb-4">
+              <div class="spray-preview">
+                <img [src]="currentSprayImage" alt="Current Spray" class="spray-image" />
+                <div class="spray-overlay">
+                  <p class="text-sm text-white">Aktuelles Spray</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="spray-upload">
+              <div class="upload-area" [class.has-file]="selectedFile" [class.loading]="sprayUploadLoading">
+                <input 
+                  type="file" 
+                  id="sprayFileInput"
+                  accept="image/*" 
+                  (change)="onFileSelected($event)"
+                  class="file-input"
+                />
+                <label for="sprayFileInput" class="upload-label">
+                  <div class="upload-content">
+                    <div *ngIf="!sprayUploadLoading" class="text-4xl mb-2">🎨</div>
+                    <div *ngIf="sprayUploadLoading" class="loading-spinner mb-2"></div>
+                    
+                    <p *ngIf="!selectedFile && !sprayUploadLoading" class="text-lg font-medium">
+                      Klicke hier um ein Bild hochzuladen
+                    </p>
+                    <p *ngIf="selectedFile && !sprayUploadLoading" class="text-lg font-medium">
+                      {{ selectedFileName }}
+                    </p>
+                    <p *ngIf="sprayUploadLoading" class="text-lg font-medium">
+                      Lade hoch...
+                    </p>
+                    
+                    <p class="text-sm text-gray-300 mt-2">
+                      Max 10MB • Wird auf 400x400px skaliert
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Upload Actions -->
+              <div *ngIf="selectedFile && !sprayUploadLoading" class="upload-actions mt-4">
+                <button (click)="uploadSpray()" class="upload-button">
+                  Spray hochladen
+                </button>
+                <button (click)="selectedFile = null" class="cancel-button ml-2">
+                  Abbrechen
+                </button>
+              </div>
+
+              <!-- Messages -->
+              <div *ngIf="sprayUploadError" class="error-message mt-4">
+                {{ sprayUploadError }}
+              </div>
+              <div *ngIf="sprayUploadSuccess" class="success-message mt-4">
+                Spray erfolgreich hochgeladen!
               </div>
             </div>
           </div>

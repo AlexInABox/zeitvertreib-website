@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
@@ -58,9 +58,17 @@ export class DashboardComponent {
   errorMessage = '';
   randomColors: string[] = [];
 
+  // Spray-related properties
+  sprayUploadLoading = false;
+  sprayUploadError = '';
+  sprayUploadSuccess = false;
+  currentSprayImage: string | null = null;
+  selectedFile: File | null = null;
+
   constructor(private authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
+    this.loadCurrentSpray();
   }
 
   // Safe getter methods for template usage
@@ -179,6 +187,24 @@ export class DashboardComponent {
       });
   }
 
+  // Load the current spray image
+  private loadCurrentSpray(): void {
+    this.authService.authenticatedGetBlob(`${environment.apiUrl}/spray/image`)
+      .subscribe({
+        next: (response: Blob) => {
+          // Convert blob to object URL for display
+          this.currentSprayImage = URL.createObjectURL(response);
+        },
+        error: (error) => {
+          // No spray found is fine, just don't set an image
+          if (error.status !== 404) {
+            console.error('Error loading spray:', error);
+          }
+          this.currentSprayImage = null;
+        }
+      });
+  }
+
   // Öffentliche Methode zum Aktualisieren der Statistiken (kann vom Template aufgerufen werden)
   refreshStats(): void {
     this.generateRandomColors();
@@ -188,5 +214,79 @@ export class DashboardComponent {
   // Public method to regenerate colors only
   regenerateColors(): void {
     this.generateRandomColors();
+  }
+
+  // Spray functionality methods
+  onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (target?.files?.[0]) {
+      this.selectedFile = target.files[0];
+      this.sprayUploadError = '';
+      this.sprayUploadSuccess = false;
+    }
+  }
+
+  uploadSpray(): void {
+    if (!this.selectedFile) {
+      this.sprayUploadError = 'Bitte wähle eine Datei aus';
+      return;
+    }
+
+    // Validate file type
+    if (!this.selectedFile.type.startsWith('image/')) {
+      this.sprayUploadError = 'Bitte wähle eine Bilddatei aus';
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (this.selectedFile.size > maxSize) {
+      this.sprayUploadError = 'Datei ist zu groß. Maximum sind 10MB';
+      return;
+    }
+
+    this.sprayUploadLoading = true;
+    this.sprayUploadError = '';
+
+    const formData = new FormData();
+    formData.append('image', this.selectedFile);
+
+    this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
+      .subscribe({
+        next: (response: any) => {
+          this.sprayUploadLoading = false;
+          this.sprayUploadSuccess = true;
+          this.sprayUploadError = '';
+          this.selectedFile = null;
+          
+          // Reset file input
+          const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
+          if (fileInput) fileInput.value = '';
+
+          // Reload spray image
+          this.loadCurrentSpray();
+        },
+        error: (error) => {
+          console.error('Spray upload error:', error);
+          this.sprayUploadLoading = false;
+          this.sprayUploadError = error.error?.error || 'Fehler beim Hochladen des Sprays';
+          this.sprayUploadSuccess = false;
+        }
+      });
+  }
+
+  // Method to remove current spray
+  removeSpray(): void {
+    // For now, we don't have a delete endpoint, so we'll just clear the current image
+    // In a full implementation, you'd want to add a delete endpoint
+    this.currentSprayImage = null;
+  }
+
+  get hasSpray(): boolean {
+    return !!this.currentSprayImage;
+  }
+
+  get selectedFileName(): string {
+    return this.selectedFile?.name || '';
   }
 }

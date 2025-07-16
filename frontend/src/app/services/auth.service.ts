@@ -116,4 +116,13 @@ export class AuthService {
             withCredentials: true
         });
     }
+
+    // Helper method for binary responses like images
+    authenticatedGetBlob(url: string): Observable<Blob> {
+        return this.http.get(url, {
+            headers: this.getAuthHeaders(),
+            withCredentials: true,
+            responseType: 'blob'
+        });
+    }
 }
