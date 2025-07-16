@@ -261,11 +261,10 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    // Process the image to create 400x400 and 50x50 versions plus pixel data
+    // Process the image to create 50x50 version plus pixel data  
     this.processImageForUpload(this.selectedFile)
-      .then(({ largeImage, smallImage, pixelData }) => {
+      .then(({ smallImage, pixelData }) => {
         const formData = new FormData();
-        formData.append('largeImage', largeImage); // 400x400 for fallback
         formData.append('smallImage', smallImage); // 50x50 for storage
         formData.append('pixelData', pixelData); // Pre-computed pixel art string
 
@@ -348,50 +347,44 @@ export class DashboardComponent implements OnDestroy {
   }
 
   // Process image to create 400x400 and 50x50 versions plus pixel data
-  private async processImageForUpload(file: File): Promise<{ largeImage: Blob; smallImage: Blob; pixelData: string }> {
+  private async processImageForUpload(file: File): Promise<{ smallImage: Blob; pixelData: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         try {
-          // Create 400x400 version (keeping aspect ratio)
-          const largeCanvas = document.createElement('canvas');
-          const largeCtx = largeCanvas.getContext('2d');
-          if (!largeCtx) throw new Error('Could not get 2D context for large canvas');
-
-          // Calculate size keeping aspect ratio for 400x400 max
-          let { width: largeWidth, height: largeHeight } = this.calculateAspectRatioFit(img.width, img.height, 400, 400);
-          largeCanvas.width = largeWidth;
-          largeCanvas.height = largeHeight;
-          largeCtx.drawImage(img, 0, 0, largeWidth, largeHeight);
-
-          // Create 50x50 version (ignoring aspect ratio)
+          // Create 50x50 version (keeping aspect ratio, centered)
           const smallCanvas = document.createElement('canvas');
           const smallCtx = smallCanvas.getContext('2d');
           if (!smallCtx) throw new Error('Could not get 2D context for small canvas');
 
           smallCanvas.width = 50;
           smallCanvas.height = 50;
-          smallCtx.drawImage(img, 0, 0, 50, 50);
+
+          // Calculate size keeping aspect ratio for 50x50 max
+          const { width: fitWidth, height: fitHeight } = this.calculateAspectRatioFit(img.width, img.height, 50, 50);
+
+          // Center the image in the 50x50 canvas
+          const offsetX = (50 - fitWidth) / 2;
+          const offsetY = (50 - fitHeight) / 2;
+
+          // Clear canvas with transparent background
+          smallCtx.clearRect(0, 0, 50, 50);
+
+          // Draw the image centered and properly sized
+          smallCtx.drawImage(img, offsetX, offsetY, fitWidth, fitHeight);
 
           // Extract pixel data from small canvas to create pixel art string
           const pixelData = this.createPixelArtFromCanvas(smallCtx, 50, 50);
 
-          // Convert canvases to blobs
-          largeCanvas.toBlob((largeBlob) => {
-            if (!largeBlob) {
-              reject(new Error('Failed to create large image blob'));
+          // Convert canvas to blob
+          smallCanvas.toBlob((smallBlob) => {
+            if (!smallBlob) {
+              reject(new Error('Failed to create small image blob'));
               return;
             }
 
-            smallCanvas.toBlob((smallBlob) => {
-              if (!smallBlob) {
-                reject(new Error('Failed to create small image blob'));
-                return;
-              }
-
-              resolve({ largeImage: largeBlob, smallImage: smallBlob, pixelData });
-            }, 'image/jpeg', 0.8);
-          }, 'image/jpeg', 0.9);
+            resolve({ smallImage: smallBlob, pixelData });
+          }, 'image/png', 1.0); // Use PNG to preserve transparency
         } catch (error) {
           reject(error);
         }

@@ -75,29 +75,22 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
         const contentType = request.headers.get('Content-Type');
         if (!contentType?.includes('multipart/form-data')) {
             return createResponse({ error: 'Multipart form data required' }, 400, origin);
-        }
-
-        const formData = await request.formData();
-        const largeImage = formData.get('largeImage') as File; // 400x400 for fallback
+        } const formData = await request.formData();
         const smallImage = formData.get('smallImage') as File; // 50x50 for storage
         const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art
 
-        if (!largeImage || !smallImage || !pixelData) {
-            return createResponse({ error: 'largeImage, smallImage, and pixelData are all required' }, 400, origin);
+        if (!smallImage || !pixelData) {
+            return createResponse({ error: 'smallImage and pixelData are required' }, 400, origin);
         }
 
-        // Validate file types
-        if (!largeImage.type.startsWith('image/') || !smallImage.type.startsWith('image/')) {
-            return createResponse({ error: 'Invalid file type. Please upload images.' }, 400, origin);
+        // Validate file type
+        if (!smallImage.type.startsWith('image/')) {
+            return createResponse({ error: 'Invalid file type. Please upload an image.' }, 400, origin);
         }
 
-        // Validate file sizes
-        const maxLargeSize = 5 * 1024 * 1024; // 5MB for 400x400 image
+        // Validate file size
         const maxSmallSize = 10 * 1024; // 10KB for 50x50 image (should be much smaller)
 
-        if (largeImage.size > maxLargeSize) {
-            return createResponse({ error: 'Large image too big. Maximum size is 5MB.' }, 400, origin);
-        }
         if (smallImage.size > maxSmallSize) {
             return createResponse({ error: 'Small image too big. A 50x50 image should be under 10KB.' }, 400, origin);
         }
@@ -117,7 +110,7 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
             pixelString,
             processedImageData,
             uploadedAt: Date.now(),
-            originalFileName: largeImage.name // Use the large image filename
+            originalFileName: smallImage.name
         };
 
         await env.SESSIONS.put(sprayKey, JSON.stringify(sprayData));
