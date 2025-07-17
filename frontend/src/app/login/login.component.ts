@@ -7,9 +7,9 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-login',
-    imports: [CommonModule, ButtonModule, CardModule],
-    template: `
+  selector: 'app-login',
+  imports: [CommonModule, ButtonModule, CardModule],
+  template: `
     <div class="flex items-center justify-center min-h-screen ">
       <div class="max-w-md w-full">
         <p-card>
@@ -41,7 +41,7 @@ import { Subscription } from 'rxjs';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     :host {
       display: block;
       width: 100%;
@@ -50,27 +50,33 @@ import { Subscription } from 'rxjs';
   `]
 })
 export class LoginComponent implements OnInit, OnDestroy {
-    private authSubscription?: Subscription;
+  private authSubscription?: Subscription;
 
-    constructor(
-        private authService: AuthService,
-        private router: Router
-    ) { }
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
-    ngOnInit() {
-        // If user is already logged in, redirect to dashboard
-        this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
-            if (user) {
-                this.router.navigate(['/dashboard']);
-            }
-        });
-    }
+  ngOnInit() {
+    // If user is already logged in, redirect to intended destination or dashboard
+    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
+      if (user) {
+        const redirectUrl = sessionStorage.getItem('redirectUrl');
+        if (redirectUrl) {
+          sessionStorage.removeItem('redirectUrl');
+          this.router.navigate([redirectUrl]);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
+      }
+    });
+  }
 
-    ngOnDestroy() {
-        this.authSubscription?.unsubscribe();
-    }
+  ngOnDestroy() {
+    this.authSubscription?.unsubscribe();
+  }
 
-    login() {
-        this.authService.login();
-    }
+  login() {
+    this.authService.login();
+  }
 }
