@@ -1,113 +1,655 @@
 import { Component, OnInit } from '@angular/core';
-import { Timeline } from 'primeng/timeline';
-import { ProgressBar } from 'primeng/progressbar';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PrimeIcons } from 'primeng/api';
-import { CardModule } from 'primeng/card';
-import { ButtonModule } from 'primeng/button';
-import { ChipModule } from 'primeng/chip';
-import { Tag, TagModule } from 'primeng/tag';
+import { FinancialService, FinancialTransaction, FinancialSummary, RecurringTransaction } from '../services/financial.service';
+import { AuthService } from '../services/auth.service';
 
 interface EventItem {
-  service: string,
-  amount: number,
-  description: string,
-  date: Date,
-  icon: PrimeIcons,
-  color: string,
-  sign: string
+  id?: number;
+  service: string;
+  amount: number;
+  description: string;
+  date: Date;
+  icon: string;
+  type: 'income' | 'expense';
+}
+
+interface MonthlyBreakdown {
+  name: string;
+  month: number;
+  year: number;
+  income: number;
+  expenses: number;
+  balance: number;
+  coveragePercentage: number;
 }
 
 @Component({
   selector: 'app-accounting',
-  imports: [Timeline, CardModule, ButtonModule, ProgressBar, ChipModule, TagModule, Tag],
+  imports: [CommonModule, FormsModule],
   templateUrl: './accounting.component.html',
   styleUrl: './accounting.component.css'
 })
-export class AccountingComponent {
-  trueValue: number = 100;
-  valueCapped: number = 100;
-  threeMonthTotal: number = 0;
-  absoluteThreeMonthTotal: number = 0;
-  threeMonthTotalSuccessOrDanger: "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined = "danger";
+export class AccountingComponent implements OnInit {
+  // Financial overview properties
+  currentBalance: number = 0;
+  monthlyIncome: number = 0;
+  monthlyExpenses: number = 0;
+  averageMonthlyIncome: number = 0;
+  averageMonthlyExpenses: number = 0;
+  coveragePercentage: number = 0;
+  threeMonthProjection: number = 0;
+  burnRate: number = 0;
 
-  events: EventItem[];
+  // Transaction properties
+  events: EventItem[] = [];
+  filteredEvents: EventItem[] = [];
+  currentFilter: 'all' | 'income' | 'expenses' = 'all';
 
-  constructor() {
+  // Monthly breakdown
+  monthlyBreakdown: MonthlyBreakdown[] = [];
+
+  // Help popup states
+  showSaldoHelp = false;
+  showCoverageHelp = false;
+
+  // Admin check - only admin can create/edit transactions
+  isAdmin = false;
+
+  // Modal and form properties
+  showTransactionModal = false;
+  showRecurringModal = false;
+  editingTransaction: EventItem | null = null;
+  editingRecurring: RecurringTransaction | null = null;
+  isSubmitting = false;
+  transactionFormData = {
+    type: '',
+    category: '',
+    amount: 0,
+    description: '',
+    date: '',
+    service: ''
+  };
+  recurringFormData = {
+    type: '',
+    category: '',
+    amount: 0,
+    description: '',
+    frequency: '',
+    start_date: '',
+    end_date: '',
+    service: ''
+  };
+
+  // Recurring transactions
+  recurringTransactions: RecurringTransaction[] = [];
+
+  constructor(
+    private financialService: FinancialService,
+    private authService: AuthService
+  ) {
+    this.initializeData();
+    this.checkAdminStatus();
+  }
+
+  ngOnInit() {
+    this.loadFinancialData();
+    this.loadRecurringTransactions();
+  }
+
+  private loadRecurringTransactions() {
+    this.financialService.getRecurringTransactions().subscribe({
+      next: (recurring) => {
+        this.recurringTransactions = recurring;
+        console.log('Loaded recurring transactions:', recurring);
+      },
+      error: (error) => {
+        console.error('Error loading recurring transactions:', error);
+      }
+    });
+  }
+
+  private loadFinancialData() {
+    this.financialService.getTransactions().subscribe({
+      next: (transactions) => {
+        console.log('Received transactions:', transactions);
+        
+        if (transactions && transactions.length > 0) {
+          this.events = transactions.map(transaction => ({
+            id: transaction.id,
+            service: transaction.service || transaction.category,
+            amount: transaction.amount,
+            description: transaction.description,
+            date: new Date(transaction.date || transaction.transaction_date),
+            icon: (transaction.type || transaction.transaction_type) === 'income' ? PrimeIcons.PLUS_CIRCLE : PrimeIcons.MINUS_CIRCLE,
+            type: (transaction.type || transaction.transaction_type) as 'income' | 'expense'
+          }));
+        } else {
+          console.log('No transactions received, using sample data');
+          this.initializeData();
+        }
+        
+        this.calculateFinancialMetrics();
+        this.generateMonthlyBreakdown();
+        this.filterTransactions('all');
+      },
+      error: (error) => {
+        console.error('Error loading financial data:', error);
+        // Fallback to sample data if API fails
+        this.initializeData();
+        this.calculateFinancialMetrics();
+        this.generateMonthlyBreakdown();
+        this.filterTransactions('all');
+      }
+    });
+  }
+
+  private checkAdminStatus() {
+    this.authService.currentUser$.subscribe(user => {
+      // Check if user is admin (Steam ID: 76561198354414854)
+      this.isAdmin = user?.steamid === '76561198354414854';
+    });
+  }
+
+  private initializeData() {
+    // Fallback sample data - used when API is unavailable
     this.events = [
       {
         service: 'Dedicated Server',
         amount: 35.32,
-        description: 'Hetzner',
-        date: new Date('2025-02-01'),
-        icon: PrimeIcons.MINUS_CIRCLE,
-        color: 'red',
-        sign: '-'
+        description: 'Hetzner - Monatliche Serverkosten',
+        date: new Date('2025-01-01'),
+        icon: 'pi pi-server',
+        type: 'expense'
       },
       {
-        service: 'DDoS VPS',
+        service: 'DDoS Protection',
         amount: 15.20,
-        description: 'Packets-Decreaser.NET',
-        date: new Date('2025-01-01'),
-        icon: PrimeIcons.MINUS_CIRCLE,
-        color: 'red',
-        sign: '-'
+        description: 'Cloudflare Pro Plan',
+        date: new Date('2025-01-02'),
+        icon: 'pi pi-shield',
+        type: 'expense'
+      },
+      {
+        service: 'Domain Renewal',
+        amount: 12.99,
+        description: 'zeitvertreib.dev - Jahresgebühr',
+        date: new Date('2025-01-15'),
+        icon: 'pi pi-globe',
+        type: 'expense'
+      },
+      {
+        service: 'SSL Zertifikat',
+        amount: 8.50,
+        description: 'Wildcard SSL für alle Subdomains',
+        date: new Date('2025-01-20'),
+        icon: 'pi pi-lock',
+        type: 'expense'
       },
       {
         service: 'Spende',
-        amount: 15.20,
-        description: 'fear157',
-        date: new Date('2025-01-01'),
-        icon: PrimeIcons.PLUS_CIRCLE,
-        color: 'green',
-        sign: '+'
+        amount: 25.00,
+        description: 'fear157 - PayPal Donation',
+        date: new Date('2025-01-03'),
+        icon: 'pi pi-heart',
+        type: 'income'
       },
-    ]
+      {
+        service: 'Spende',
+        amount: 10.00,
+        description: 'Anonymous - Twitch Donation',
+        date: new Date('2025-01-10'),
+        icon: 'pi pi-heart',
+        type: 'income'
+      },
+      {
+        service: 'Spende',
+        amount: 50.00,
+        description: 'CommunitySupporter - Ko-fi',
+        date: new Date('2025-01-12'),
+        icon: 'pi pi-heart',
+        type: 'income'
+      },
+      {
+        service: 'Merchandise',
+        amount: 15.99,
+        description: 'T-Shirt Verkauf',
+        date: new Date('2025-01-25'),
+        icon: 'pi pi-shopping-cart',
+        type: 'income'
+      },
+      // Previous months data
+      {
+        service: 'Dedicated Server',
+        amount: 35.32,
+        description: 'Hetzner - Dezember',
+        date: new Date('2024-12-01'),
+        icon: 'pi pi-server',
+        type: 'expense'
+      },
+      {
+        service: 'DDoS Protection',
+        amount: 15.20,
+        description: 'Cloudflare Pro Plan',
+        date: new Date('2024-12-02'),
+        icon: 'pi pi-shield',
+        type: 'expense'
+      },
+      {
+        service: 'Spende',
+        amount: 30.00,
+        description: 'GamerFriend - Dezember',
+        date: new Date('2024-12-15'),
+        icon: 'pi pi-heart',
+        type: 'income'
+      },
+      {
+        service: 'Spende',
+        amount: 20.00,
+        description: 'StreamViewer - Dezember',
+        date: new Date('2024-12-20'),
+        icon: 'pi pi-heart',
+        type: 'income'
+      },
+      // November data
+      {
+        service: 'Dedicated Server',
+        amount: 35.32,
+        description: 'Hetzner - November',
+        date: new Date('2024-11-01'),
+        icon: 'pi pi-server',
+        type: 'expense'
+      },
+      {
+        service: 'DDoS Protection',
+        amount: 15.20,
+        description: 'Cloudflare Pro Plan',
+        date: new Date('2024-11-02'),
+        icon: 'pi pi-shield',
+        type: 'expense'
+      },
+      {
+        service: 'Spende',
+        amount: 40.00,
+        description: 'TopDonator - November',
+        date: new Date('2024-11-10'),
+        icon: 'pi pi-heart',
+        type: 'income'
+      }
+    ];
 
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    // Sort events by date (newest first)
+    this.events.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
 
-    let totalExpenses = 0;
-    let totalDonations = 0;
+  private calculateFinancialMetrics() {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
 
-    this.events.filter(event => event.date >= threeMonthsAgo).forEach(event => {
-      if (event.icon === PrimeIcons.MINUS_CIRCLE) {
-        totalExpenses += event.amount;
-      } else if (event.icon === PrimeIcons.PLUS_CIRCLE) {
-        totalDonations += event.amount;
+    // Calculate current month's income and expenses
+    const currentMonthEvents = this.events.filter(event =>
+      event.date.getMonth() === currentMonth && event.date.getFullYear() === currentYear
+    );
+
+    this.monthlyIncome = currentMonthEvents
+      .filter(event => event.type === 'income')
+      .reduce((sum, event) => sum + event.amount, 0);
+
+    this.monthlyExpenses = currentMonthEvents
+      .filter(event => event.type === 'expense')
+      .reduce((sum, event) => sum + event.amount, 0);
+
+    // Calculate total balance
+    const totalIncome = this.events
+      .filter(event => event.type === 'income')
+      .reduce((sum, event) => sum + event.amount, 0);
+
+    const totalExpenses = this.events
+      .filter(event => event.type === 'expense')
+      .reduce((sum, event) => sum + event.amount, 0);
+
+    this.currentBalance = totalIncome - totalExpenses;
+
+    // Calculate averages (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const recentEvents = this.events.filter(event => event.date >= sixMonthsAgo);
+    const monthlyTotals = new Map<string, { income: number, expenses: number }>();
+
+    recentEvents.forEach(event => {
+      const monthKey = `${event.date.getFullYear()}-${event.date.getMonth()}`;
+      if (!monthlyTotals.has(monthKey)) {
+        monthlyTotals.set(monthKey, { income: 0, expenses: 0 });
+      }
+
+      const monthly = monthlyTotals.get(monthKey)!;
+      if (event.type === 'income') {
+        monthly.income += event.amount;
+      } else {
+        monthly.expenses += event.amount;
       }
     });
 
-    this.threeMonthTotal = Math.round((totalDonations - totalExpenses) * 100) / 100;
-    this.absoluteThreeMonthTotal = Math.max(this.threeMonthTotal, this.threeMonthTotal * -1);
+    const months = Array.from(monthlyTotals.values());
+    this.averageMonthlyIncome = months.reduce((sum, month) => sum + month.income, 0) / months.length || 0;
+    this.averageMonthlyExpenses = months.reduce((sum, month) => sum + month.expenses, 0) / months.length || 0;
 
-    if (totalExpenses > 0) {
-      this.trueValue = Math.round((totalDonations / totalExpenses) * 100); // Calculate the percentage
-      this.valueCapped = Math.min(this.trueValue, 100);
-    } else {
-      this.trueValue = 100;
-      this.valueCapped = 100;
+    // Calculate coverage percentage
+    this.coveragePercentage = this.averageMonthlyExpenses > 0
+      ? Math.min(100, (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100)
+      : 100;
+
+    // Calculate 3-month projection
+    this.threeMonthProjection = (this.averageMonthlyIncome - this.averageMonthlyExpenses) * 3;
+
+    // Calculate burn rate (how many months current balance will last)
+    this.burnRate = this.averageMonthlyExpenses > 0 && this.currentBalance > 0
+      ? this.currentBalance / this.averageMonthlyExpenses
+      : 0;
+  }
+
+  private generateMonthlyBreakdown() {
+    const months = new Map<string, MonthlyBreakdown>();
+
+    // Get last 6 months
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+
+      months.set(monthKey, {
+        name: date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        income: 0,
+        expenses: 0,
+        balance: 0,
+        coveragePercentage: 0
+      });
+    }
+
+    // Calculate monthly totals
+    this.events.forEach(event => {
+      const monthKey = `${event.date.getFullYear()}-${event.date.getMonth()}`;
+      const monthData = months.get(monthKey);
+
+      if (monthData) {
+        if (event.type === 'income') {
+          monthData.income += event.amount;
+        } else {
+          monthData.expenses += event.amount;
+        }
+      }
+    });
+
+    // Calculate balance and coverage for each month
+    months.forEach(monthData => {
+      monthData.balance = monthData.income - monthData.expenses;
+      monthData.coveragePercentage = monthData.expenses > 0
+        ? Math.min(100, (monthData.income / monthData.expenses) * 100)
+        : 100;
+    });
+
+    this.monthlyBreakdown = Array.from(months.values());
+  }
+
+  filterTransactions(filter: 'all' | 'income' | 'expenses') {
+    this.currentFilter = filter;
+
+    switch (filter) {
+      case 'income':
+        this.filteredEvents = this.events.filter(event => event.type === 'income');
+        break;
+      case 'expenses':
+        this.filteredEvents = this.events.filter(event => event.type === 'expense');
+        break;
+      default:
+        this.filteredEvents = [...this.events];
     }
   }
 
-  ngOnInit() {
-    if (this.threeMonthTotal >= 0) {
-      var deficitTag: HTMLElement | null = document.getElementById('deficit');
-      if (deficitTag) {
-        deficitTag.style.scale = '0';
-        deficitTag.style.width = '0';
-        deficitTag.style.height = '0';
-        deficitTag.style.padding = '0';
-        deficitTag.style.margin = '0';
-      }
-    } else {
-      var surplusTag: HTMLElement | null = document.getElementById('surplus');
-      if (surplusTag) {
-        surplusTag.style.scale = '0';
-        surplusTag.style.width = '0';
-        surplusTag.style.height = '0';
-        surplusTag.style.padding = '0';
-        surplusTag.style.margin = '0';
+  // Modal methods
+  openAddTransactionModal() {
+    this.editingTransaction = null;
+    this.resetForm();
+    this.showTransactionModal = true;
+  }
+
+  editTransaction(event: EventItem) {
+    this.editingTransaction = event;
+    this.transactionFormData = {
+      type: event.type,
+      category: event.service, // Map service back to category
+      amount: event.amount,
+      description: event.description,
+      date: event.date.toISOString().split('T')[0], // Format date for input
+      service: event.service
+    };
+    this.showTransactionModal = true;
+  }
+
+  closeTransactionModal() {
+    this.showTransactionModal = false;
+    this.editingTransaction = null;
+    this.resetForm();
+  }
+
+  deleteTransaction(event: EventItem) {
+    if (confirm('Sind Sie sicher, dass Sie diese Transaktion löschen möchten?')) {
+      // Find the transaction ID (we need to add this to EventItem interface)
+      const transactionId = (event as any).id;
+      if (transactionId) {
+        this.financialService.deleteTransaction(transactionId).subscribe({
+          next: () => {
+            console.log('Transaction deleted successfully');
+            this.loadFinancialData(); // Reload data
+          },
+          error: (error) => {
+            console.error('Error deleting transaction:', error);
+            alert('Fehler beim Löschen der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          }
+        });
+      } else {
+        alert('Transaktion ID nicht gefunden');
       }
     }
+  }
+
+  saveTransaction() {
+    if (!this.transactionFormData.type || !this.transactionFormData.category || 
+        !this.transactionFormData.amount || !this.transactionFormData.description || 
+        !this.transactionFormData.date) {
+      alert('Bitte füllen Sie alle Pflichtfelder aus.');
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const transactionData = {
+      transaction_type: this.transactionFormData.type as 'income' | 'expense',
+      category: this.transactionFormData.category,
+      amount: Number(this.transactionFormData.amount), // Ensure it's a number
+      description: this.transactionFormData.description,
+      transaction_date: this.transactionFormData.date,
+      // Optional fields
+      reference_id: '',
+      notes: this.transactionFormData.service ? `Service: ${this.transactionFormData.service}` : ''
+    };
+
+    console.log('Sending transaction data:', transactionData);
+
+    if (this.editingTransaction) {
+      // Update existing transaction
+      const transactionId = (this.editingTransaction as any).id;
+      this.financialService.updateTransaction(transactionId, transactionData).subscribe({
+        next: () => {
+          console.log('Transaction updated successfully');
+          this.loadFinancialData(); // Reload data
+          this.closeTransactionModal();
+        },
+        error: (error) => {
+          console.error('Error updating transaction:', error);
+          alert('Fehler beim Aktualisieren der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          this.isSubmitting = false; // Reset loading state on error
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
+    } else {
+      // Create new transaction
+      this.financialService.createTransaction(transactionData).subscribe({
+        next: () => {
+          console.log('Transaction created successfully');
+          this.loadFinancialData(); // Reload data
+          this.closeTransactionModal();
+        },
+        error: (error) => {
+          console.error('Error creating transaction:', error);
+          alert('Fehler beim Erstellen der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          this.isSubmitting = false; // Reset loading state on error
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
+    }
+  }
+
+  private resetForm() {
+    this.transactionFormData = {
+      type: '',
+      category: '',
+      amount: 0,
+      description: '',
+      date: new Date().toISOString().split('T')[0], // Default to today
+      service: ''
+    };
+  }
+
+  // Recurring transaction modal methods
+  openAddRecurringModal() {
+    this.editingRecurring = null;
+    this.resetRecurringForm();
+    this.showRecurringModal = true;
+  }
+
+  editRecurringTransaction(recurring: RecurringTransaction) {
+    this.editingRecurring = recurring;
+    this.recurringFormData = {
+      type: recurring.transaction_type,
+      category: recurring.category,
+      amount: recurring.amount,
+      description: recurring.description,
+      frequency: recurring.frequency,
+      start_date: recurring.start_date,
+      end_date: recurring.end_date || '',
+      service: recurring.notes || ''
+    };
+    this.showRecurringModal = true;
+  }
+
+  closeRecurringModal() {
+    this.showRecurringModal = false;
+    this.editingRecurring = null;
+    this.resetRecurringForm();
+  }
+
+  deleteRecurringTransaction(recurring: RecurringTransaction) {
+    if (confirm('Sind Sie sicher, dass Sie diese wiederkehrende Transaktion löschen möchten?')) {
+      const recurringId = recurring.id;
+      if (recurringId) {
+        this.financialService.deleteRecurringTransaction(recurringId).subscribe({
+          next: () => {
+            console.log('Recurring transaction deleted successfully');
+            this.loadRecurringTransactions(); // Reload data
+          },
+          error: (error) => {
+            console.error('Error deleting recurring transaction:', error);
+            alert('Fehler beim Löschen der wiederkehrenden Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          }
+        });
+      } else {
+        alert('Wiederkehrende Transaktion ID nicht gefunden');
+      }
+    }
+  }
+
+  saveRecurringTransaction() {
+    if (!this.recurringFormData.type || !this.recurringFormData.category || 
+        !this.recurringFormData.amount || !this.recurringFormData.description || 
+        !this.recurringFormData.frequency || !this.recurringFormData.start_date) {
+      alert('Bitte füllen Sie alle Pflichtfelder aus.');
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const recurringData = {
+      transaction_type: this.recurringFormData.type as 'income' | 'expense',
+      category: this.recurringFormData.category,
+      amount: Number(this.recurringFormData.amount),
+      description: this.recurringFormData.description,
+      frequency: this.recurringFormData.frequency as 'daily' | 'weekly' | 'monthly' | 'yearly',
+      start_date: this.recurringFormData.start_date,
+      end_date: this.recurringFormData.end_date || undefined,
+      reference_id: '',
+      notes: this.recurringFormData.service ? `Service: ${this.recurringFormData.service}` : '',
+      next_execution: this.recurringFormData.start_date // Will be calculated by backend
+    };
+
+    console.log('Sending recurring transaction data:', recurringData);
+
+    if (this.editingRecurring) {
+      // Update existing recurring transaction
+      const recurringId = this.editingRecurring.id!;
+      this.financialService.updateRecurringTransaction(recurringId, recurringData).subscribe({
+        next: () => {
+          console.log('Recurring transaction updated successfully');
+          this.loadRecurringTransactions(); // Reload data
+          this.closeRecurringModal();
+        },
+        error: (error) => {
+          console.error('Error updating recurring transaction:', error);
+          alert('Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          this.isSubmitting = false;
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
+    } else {
+      // Create new recurring transaction
+      this.financialService.createRecurringTransaction(recurringData).subscribe({
+        next: () => {
+          console.log('Recurring transaction created successfully');
+          this.loadRecurringTransactions(); // Reload data
+          this.closeRecurringModal();
+        },
+        error: (error) => {
+          console.error('Error creating recurring transaction:', error);
+          alert('Fehler beim Erstellen der wiederkehrenden Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          this.isSubmitting = false;
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        }
+      });
+    }
+  }
+
+  private resetRecurringForm() {
+    this.recurringFormData = {
+      type: '',
+      category: '',
+      amount: 0,
+      description: '',
+      frequency: '',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: '',
+      service: ''
+    };
   }
 }

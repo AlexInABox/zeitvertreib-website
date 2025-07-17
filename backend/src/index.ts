@@ -2,6 +2,7 @@ import { handleSteamLogin, handleSteamCallback, handleGetUser, handleLogout } fr
 import { handleGetStats } from './routes/stats.js';
 import { handleUploadSpray, handleGetSpray, handleGetSprayString, handleDeleteSpray } from './routes/spray.js';
 import { handleFakerank } from './routes/profile.js';
+import { handleGetTransactions, handleCreateTransaction, handleUpdateTransaction, handleDeleteTransaction, handleGetSummary, handleGetRecurringTransactions, handleCreateRecurringTransaction, handleUpdateRecurringTransaction, handleDeleteRecurringTransaction, processRecurringTransactions } from './routes/financial.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -26,7 +27,70 @@ const routes: Record<string, (request: Request, env: Env) => Promise<Response>> 
 	'/spray/string': handleGetSprayString,
 	'/spray/delete': handleDeleteSpray,
 	'/fakerank': handleFakerank,
+	'/financial/transactions': handleFinancialTransactions,
+	'/financial/recurring': handleRecurringTransactions,
+	'/financial/summary': handleGetSummary,
 };
+
+// Helper function to route recurring transactions based on method and path
+async function handleRecurringTransactions(request: Request, env: Env): Promise<Response> {
+	const url = new URL(request.url);
+	const method = request.method;
+	
+	// Handle different HTTP methods for /financial/recurring
+	if (url.pathname === '/financial/recurring') {
+		if (method === 'GET') {
+			return handleGetRecurringTransactions(request, env);
+		} else if (method === 'POST') {
+			return handleCreateRecurringTransaction(request, env);
+		}
+	}
+	
+	// Handle /financial/recurring/{id} for PUT and DELETE
+	const recurringIdMatch = url.pathname.match(/^\/financial\/recurring\/(\d+)$/);
+	if (recurringIdMatch) {
+		if (method === 'PUT') {
+			return handleUpdateRecurringTransaction(request, env);
+		} else if (method === 'DELETE') {
+			return handleDeleteRecurringTransaction(request, env);
+		}
+	}
+	
+	return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+		status: 405,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}
+
+// Helper function to route financial transactions based on method and path
+async function handleFinancialTransactions(request: Request, env: Env): Promise<Response> {
+	const url = new URL(request.url);
+	const method = request.method;
+	
+	// Handle different HTTP methods for /financial/transactions
+	if (url.pathname === '/financial/transactions') {
+		if (method === 'GET') {
+			return handleGetTransactions(request, env);
+		} else if (method === 'POST') {
+			return handleCreateTransaction(request, env);
+		}
+	}
+	
+	// Handle /financial/transactions/{id} for PUT and DELETE
+	const transactionIdMatch = url.pathname.match(/^\/financial\/transactions\/(\d+)$/);
+	if (transactionIdMatch) {
+		if (method === 'PUT') {
+			return handleUpdateTransaction(request, env);
+		} else if (method === 'DELETE') {
+			return handleDeleteTransaction(request, env);
+		}
+	}
+	
+	return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+		status: 405,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
@@ -38,7 +102,7 @@ export default {
 			return new Response(null, {
 				headers: {
 					'Access-Control-Allow-Origin': origin || '*',
-					'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 					'Access-Control-Allow-Credentials': 'true',
 				}
@@ -46,6 +110,18 @@ export default {
 		}
 
 		try {
+			const url = new URL(request.url);
+			
+			// Handle financial routes with dynamic paths
+			if (url.pathname.startsWith('/financial/transactions')) {
+				return await handleFinancialTransactions(request, env);
+			}
+			
+			// Handle recurring financial routes with dynamic paths
+			if (url.pathname.startsWith('/financial/recurring')) {
+				return await handleRecurringTransactions(request, env);
+			}
+			
 			const handler = routes[url.pathname];
 			if (handler) {
 				// Handle method-specific routing for spray upload
@@ -67,4 +143,9 @@ export default {
 			return createResponse({ error: 'Internal Server Error' }, 500, origin);
 		}
 	},
+	
+	async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+		// Process recurring transactions daily
+		ctx.waitUntil(processRecurringTransactions(env));
+	}
 } satisfies ExportedHandler<Env>;

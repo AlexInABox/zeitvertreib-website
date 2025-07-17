@@ -48,3 +48,34 @@ export interface KillRecord {
     target: string;
     timestamp: number;
 }
+
+export interface FinancialTransaction {
+    id?: number;
+    transaction_type: 'income' | 'expense';
+    category: string;
+    amount: number;
+    description: string;
+    transaction_date: string;
+    created_at?: string;
+    created_by?: string;
+    reference_id?: string;
+    notes?: string;
+}
+
+export interface RecurringTransaction {
+    id?: number;
+    transaction_type: 'income' | 'expense';
+    category: string;
+    amount: number;
+    description: string;
+    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    start_date: string;
+    end_date?: string;
+    next_execution: string;
+    is_active: boolean;
+    created_at?: string;
+    created_by?: string;
+    reference_id?: string;
+    notes?: string;
+    last_executed?: string;
+}
