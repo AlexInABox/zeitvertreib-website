@@ -4,17 +4,17 @@
     <!-- Quick Stats Cards -->
     <div class="quick-stats-section">
       <h2 class="section-title">Finanzübersicht</h2>
-      
+
       <!-- Admin Controls -->
       <div *ngIf="isAdmin" class="admin-controls">
-        <button 
+        <button
           class="admin-btn add-transaction-btn"
           (click)="openAddTransactionModal()"
         >
           <i class="pi pi-plus"></i>
           Transaktion hinzufügen
         </button>
-        <button 
+        <button
           class="admin-btn add-recurring-btn"
           (click)="openAddRecurringModal()"
         >
@@ -250,17 +250,17 @@
               <span class="date">{{ event.date | date : "dd.MM.yyyy" }}</span>
             </div>
           </div>
-          
+
           <!-- Admin Controls for each transaction -->
           <div *ngIf="isAdmin" class="transaction-admin-controls">
-            <button 
+            <button
               class="admin-btn edit-btn"
               (click)="editTransaction(event)"
               title="Bearbeiten"
             >
               <i class="pi pi-pencil"></i>
             </button>
-            <button 
+            <button
               class="admin-btn delete-btn"
               (click)="deleteTransaction(event)"
               title="Löschen"
@@ -273,9 +273,12 @@
     </div>
 
     <!-- Recurring Transactions Section -->
-    <div *ngIf="isAdmin && recurringTransactions.length > 0" class="recurring-transactions-section">
+    <div
+      *ngIf="isAdmin && recurringTransactions.length > 0"
+      class="recurring-transactions-section"
+    >
       <h3 class="section-title">Wiederkehrende Transaktionen</h3>
-      
+
       <div class="recurring-transactions-list">
         <div
           class="recurring-transaction-item"
@@ -302,21 +305,26 @@
               </span>
             </div>
             <div class="recurring-meta">
-              <span class="recurring-description">{{ recurring.description }}</span>
-              <span class="recurring-next">Nächste Ausführung: {{ recurring.next_execution | date : "dd.MM.yyyy" }}</span>
+              <span class="recurring-description">{{
+                recurring.description
+              }}</span>
+              <span class="recurring-next"
+                >Nächste Ausführung:
+                {{ recurring.next_execution | date : "dd.MM.yyyy" }}</span
+              >
             </div>
           </div>
-          
+
           <!-- Admin Controls for recurring transactions -->
           <div class="recurring-admin-controls">
-            <button 
+            <button
               class="admin-btn edit-btn"
               (click)="editRecurringTransaction(recurring)"
               title="Bearbeiten"
             >
               <i class="pi pi-pencil"></i>
             </button>
-            <button 
+            <button
               class="admin-btn delete-btn"
               (click)="deleteRecurringTransaction(recurring)"
               title="Löschen"
@@ -414,19 +422,33 @@
 </div>
 
 <!-- Transaction Modal -->
-<div *ngIf="showTransactionModal" class="modal-overlay" (click)="closeTransactionModal()">
+<div
+  *ngIf="showTransactionModal"
+  class="modal-overlay"
+  (click)="closeTransactionModal()"
+>
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editingTransaction ? 'Transaktion bearbeiten' : 'Neue Transaktion hinzufügen' }}</h3>
+      <h3>
+        {{
+          editingTransaction
+            ? "Transaktion bearbeiten"
+            : "Neue Transaktion hinzufügen"
+        }}
+      </h3>
       <button class="modal-close-btn" (click)="closeTransactionModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
-    
-    <form class="transaction-form" (ngSubmit)="saveTransaction()" #transactionForm="ngForm">
+
+    <form
+      class="transaction-form"
+      (ngSubmit)="saveTransaction()"
+      #transactionForm="ngForm"
+    >
       <div class="form-group">
         <label for="transactionType">Typ *</label>
-        <select 
+        <select
           id="transactionType"
           [(ngModel)]="transactionFormData.type"
           name="type"
@@ -438,10 +460,10 @@
           <option value="expense">Ausgabe</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="category">Kategorie *</label>
-        <select 
+        <select
           id="category"
           [(ngModel)]="transactionFormData.category"
           name="category"
@@ -457,10 +479,10 @@
           <option value="other">Sonstiges</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="amount">Betrag (€) *</label>
-        <input 
+        <input
           type="number"
           id="amount"
           [(ngModel)]="transactionFormData.amount"
@@ -472,10 +494,10 @@
           placeholder="0.00"
         />
       </div>
-      
+
       <div class="form-group">
         <label for="description">Beschreibung *</label>
-        <input 
+        <input
           type="text"
           id="description"
           [(ngModel)]="transactionFormData.description"
@@ -485,10 +507,10 @@
           placeholder="Beschreibung der Transaktion"
         />
       </div>
-      
+
       <div class="form-group">
         <label for="date">Datum *</label>
-        <input 
+        <input
           type="date"
           id="date"
           [(ngModel)]="transactionFormData.date"
@@ -497,30 +519,35 @@
           class="form-control"
         />
       </div>
-      
+
       <div class="form-group">
-        <label for="service">Service</label>
-        <input 
+        <label for="title">Titel *</label>
+        <input
           type="text"
-          id="service"
-          [(ngModel)]="transactionFormData.service"
-          name="service"
+          id="title"
+          [(ngModel)]="transactionFormData.title"
+          name="title"
+          required
           class="form-control"
-          placeholder="Service oder Anbieter"
+          placeholder="Titel oder Anbieter"
         />
       </div>
-      
+
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="closeTransactionModal()">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeTransactionModal()"
+        >
           Abbrechen
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           class="btn btn-primary"
           [disabled]="!transactionForm.valid || isSubmitting"
         >
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
-          {{ editingTransaction ? 'Speichern' : 'Hinzufügen' }}
+          {{ editingTransaction ? "Speichern" : "Hinzufügen" }}
         </button>
       </div>
     </form>
@@ -528,19 +555,33 @@
 </div>
 
 <!-- Recurring Transaction Modal -->
-<div *ngIf="showRecurringModal" class="modal-overlay" (click)="closeRecurringModal()">
+<div
+  *ngIf="showRecurringModal"
+  class="modal-overlay"
+  (click)="closeRecurringModal()"
+>
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editingRecurring ? 'Wiederkehrende Transaktion bearbeiten' : 'Neue wiederkehrende Transaktion hinzufügen' }}</h3>
+      <h3>
+        {{
+          editingRecurring
+            ? "Wiederkehrende Transaktion bearbeiten"
+            : "Neue wiederkehrende Transaktion hinzufügen"
+        }}
+      </h3>
       <button class="modal-close-btn" (click)="closeRecurringModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
-    
-    <form class="transaction-form" (ngSubmit)="saveRecurringTransaction()" #recurringForm="ngForm">
+
+    <form
+      class="transaction-form"
+      (ngSubmit)="saveRecurringTransaction()"
+      #recurringForm="ngForm"
+    >
       <div class="form-group">
         <label for="recurringType">Typ *</label>
-        <select 
+        <select
           id="recurringType"
           [(ngModel)]="recurringFormData.type"
           name="type"
@@ -552,10 +593,10 @@
           <option value="expense">Ausgabe</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="recurringCategory">Kategorie *</label>
-        <select 
+        <select
           id="recurringCategory"
           [(ngModel)]="recurringFormData.category"
           name="category"
@@ -571,10 +612,10 @@
           <option value="other">Sonstiges</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="recurringAmount">Betrag (€) *</label>
-        <input 
+        <input
           type="number"
           id="recurringAmount"
           [(ngModel)]="recurringFormData.amount"
@@ -586,10 +627,10 @@
           placeholder="0.00"
         />
       </div>
-      
+
       <div class="form-group">
         <label for="recurringDescription">Beschreibung *</label>
-        <input 
+        <input
           type="text"
           id="recurringDescription"
           [(ngModel)]="recurringFormData.description"
@@ -599,10 +640,10 @@
           placeholder="Beschreibung der wiederkehrenden Transaktion"
         />
       </div>
-      
+
       <div class="form-group">
         <label for="recurringFrequency">Häufigkeit *</label>
-        <select 
+        <select
           id="recurringFrequency"
           [(ngModel)]="recurringFormData.frequency"
           name="frequency"
@@ -616,10 +657,10 @@
           <option value="yearly">Jährlich</option>
         </select>
       </div>
-      
+
       <div class="form-group">
         <label for="recurringStartDate">Startdatum *</label>
-        <input 
+        <input
           type="date"
           id="recurringStartDate"
           [(ngModel)]="recurringFormData.start_date"
@@ -628,10 +669,10 @@
           class="form-control"
         />
       </div>
-      
+
       <div class="form-group">
         <label for="recurringEndDate">Enddatum (optional)</label>
-        <input 
+        <input
           type="date"
           id="recurringEndDate"
           [(ngModel)]="recurringFormData.end_date"
@@ -639,30 +680,35 @@
           class="form-control"
         />
       </div>
-      
+
       <div class="form-group">
-        <label for="recurringService">Service</label>
-        <input 
+        <label for="recurringTitle">Titel *</label>
+        <input
           type="text"
-          id="recurringService"
-          [(ngModel)]="recurringFormData.service"
-          name="service"
+          id="recurringTitle"
+          [(ngModel)]="recurringFormData.title"
+          name="title"
+          required
           class="form-control"
-          placeholder="Service oder Anbieter"
+          placeholder="Titel oder Anbieter"
         />
       </div>
-      
+
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="closeRecurringModal()">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeRecurringModal()"
+        >
           Abbrechen
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           class="btn btn-primary"
           [disabled]="!recurringForm.valid || isSubmitting"
         >
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
-          {{ editingRecurring ? 'Speichern' : 'Hinzufügen' }}
+          {{ editingRecurring ? "Speichern" : "Hinzufügen" }}
         </button>
       </div>
     </form>

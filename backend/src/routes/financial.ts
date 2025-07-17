@@ -66,7 +66,7 @@ export async function handleGetTransactions(request: Request, env: Env): Promise
             category: row.category,
             amount: row.amount,
             description: row.description,
-            service: row.category, // Map category to service for now
+            service: row.notes || row.category, // Use notes as service/title, fallback to category
             created_at: row.created_at
         })) || [];
 

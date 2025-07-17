@@ -69,7 +69,7 @@ export class AccountingComponent implements OnInit {
     amount: 0,
     description: '',
     date: '',
-    service: ''
+    title: ''
   };
   recurringFormData = {
     type: '',
@@ -79,7 +79,7 @@ export class AccountingComponent implements OnInit {
     frequency: '',
     start_date: '',
     end_date: '',
-    service: ''
+    title: ''
   };
 
   // Recurring transactions
@@ -114,7 +114,7 @@ export class AccountingComponent implements OnInit {
     this.financialService.getTransactions().subscribe({
       next: (transactions) => {
         console.log('Received transactions:', transactions);
-        
+
         if (transactions && transactions.length > 0) {
           this.events = transactions.map(transaction => ({
             id: transaction.id,
@@ -129,7 +129,7 @@ export class AccountingComponent implements OnInit {
           console.log('No transactions received, using sample data');
           this.initializeData();
         }
-        
+
         this.calculateFinancialMetrics();
         this.generateMonthlyBreakdown();
         this.filterTransactions('all');
@@ -421,11 +421,11 @@ export class AccountingComponent implements OnInit {
     this.editingTransaction = event;
     this.transactionFormData = {
       type: event.type,
-      category: event.service, // Map service back to category
+      category: 'other', // Default category, user will need to select the correct one
       amount: event.amount,
       description: event.description,
       date: event.date.toISOString().split('T')[0], // Format date for input
-      service: event.service
+      title: event.service || '' // Use service field as title
     };
     this.showTransactionModal = true;
   }
@@ -458,9 +458,9 @@ export class AccountingComponent implements OnInit {
   }
 
   saveTransaction() {
-    if (!this.transactionFormData.type || !this.transactionFormData.category || 
-        !this.transactionFormData.amount || !this.transactionFormData.description || 
-        !this.transactionFormData.date) {
+    if (!this.transactionFormData.type || !this.transactionFormData.category ||
+      !this.transactionFormData.amount || !this.transactionFormData.description ||
+      !this.transactionFormData.date || !this.transactionFormData.title) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
     }
@@ -473,9 +473,9 @@ export class AccountingComponent implements OnInit {
       amount: Number(this.transactionFormData.amount), // Ensure it's a number
       description: this.transactionFormData.description,
       transaction_date: this.transactionFormData.date,
-      // Optional fields
+      // Store title in notes field for proper handling
       reference_id: '',
-      notes: this.transactionFormData.service ? `Service: ${this.transactionFormData.service}` : ''
+      notes: this.transactionFormData.title
     };
 
     console.log('Sending transaction data:', transactionData);
@@ -525,7 +525,7 @@ export class AccountingComponent implements OnInit {
       amount: 0,
       description: '',
       date: new Date().toISOString().split('T')[0], // Default to today
-      service: ''
+      title: ''
     };
   }
 
@@ -546,7 +546,7 @@ export class AccountingComponent implements OnInit {
       frequency: recurring.frequency,
       start_date: recurring.start_date,
       end_date: recurring.end_date || '',
-      service: recurring.notes || ''
+      title: recurring.notes || ''
     };
     this.showRecurringModal = true;
   }
@@ -578,9 +578,10 @@ export class AccountingComponent implements OnInit {
   }
 
   saveRecurringTransaction() {
-    if (!this.recurringFormData.type || !this.recurringFormData.category || 
-        !this.recurringFormData.amount || !this.recurringFormData.description || 
-        !this.recurringFormData.frequency || !this.recurringFormData.start_date) {
+    if (!this.recurringFormData.type || !this.recurringFormData.category ||
+      !this.recurringFormData.amount || !this.recurringFormData.description ||
+      !this.recurringFormData.frequency || !this.recurringFormData.start_date ||
+      !this.recurringFormData.title) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
     }
@@ -596,7 +597,7 @@ export class AccountingComponent implements OnInit {
       start_date: this.recurringFormData.start_date,
       end_date: this.recurringFormData.end_date || undefined,
       reference_id: '',
-      notes: this.recurringFormData.service ? `Service: ${this.recurringFormData.service}` : '',
+      notes: this.recurringFormData.title,
       next_execution: this.recurringFormData.start_date // Will be calculated by backend
     };
 
@@ -649,7 +650,7 @@ export class AccountingComponent implements OnInit {
       frequency: '',
       start_date: new Date().toISOString().split('T')[0],
       end_date: '',
-      service: ''
+      title: ''
     };
   }
 }
