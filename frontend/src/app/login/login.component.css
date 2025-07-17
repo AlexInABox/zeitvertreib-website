@@ -1,0 +1,293 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.login-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--surface-ground);
+}
+
+.login-card-wrapper {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 1rem;
+}
+
+.login-card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.9); /* Softer and lighter violet */
+  border: 1px solid rgba(220, 200, 255, 0.8); /* Complementary border */
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  transition: all 0.3s ease;
+  animation: slideUp 0.8s ease-out;
+  overflow: hidden;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.logo-image {
+  width: 100px;
+  height: 100px;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.logo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(
+    circle,
+    rgba(102, 126, 234, 0.3) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.logo-container:hover .logo-image {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.welcome-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.welcome-text {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.brand-name {
+  display: block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.card-content {
+  text-align: center;
+}
+
+.description-text {
+  color: #6b7280;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.button-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 2rem;
+}
+
+.button-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.button-container:hover .button-glow {
+  opacity: 0.4;
+}
+
+:host ::ng-deep .steam-login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+:host ::ng-deep .steam-login-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+:host ::ng-deep .steam-login-btn:hover::before {
+  left: 100%;
+}
+
+:host ::ng-deep .steam-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+:host ::ng-deep .steam-login-btn:active {
+  transform: translateY(0);
+}
+
+.features-preview {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.feature-item:hover {
+  color: #667eea;
+  transform: translateY(-3px);
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  padding: 0.75rem;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.1) 100%
+  );
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover .feature-icon {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.2) 0%,
+    rgba(118, 75, 162, 0.2) 100%
+  );
+  transform: scale(1.1);
+}
+
+.feature-item span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+
+  .welcome-title {
+    font-size: 1.75rem;
+  }
+
+  .welcome-text {
+    font-size: 1.1rem;
+  }
+
+  .description-text {
+    font-size: 1rem;
+  }
+
+  .logo-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .features-preview {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .feature-item {
+    flex-direction: row;
+    justify-content: center;
+  }
+}

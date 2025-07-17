@@ -45,6 +45,16 @@ export async function handleSteamCallback(request: Request, env: Env): Promise<R
     const redirectUrl = new URL(frontendUrl);
     redirectUrl.searchParams.set('token', sessionId);
 
+    // Check if there's a redirect parameter in the return_to URL
+    const returnToUrl = params['openid.return_to'];
+    if (returnToUrl) {
+        const returnToUrlObj = new URL(returnToUrl);
+        const redirectParam = returnToUrlObj.searchParams.get('redirect');
+        if (redirectParam) {
+            redirectUrl.searchParams.set('redirect', redirectParam);
+        }
+    }
+
     return createResponse(redirectUrl.toString(), 302);
 }
 

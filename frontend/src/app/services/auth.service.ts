@@ -33,11 +33,18 @@ export class AuthService {
     private checkForTokenInUrl(): void {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
+        const redirectPath = urlParams.get('redirect');
+
         if (token) {
             this.sessionToken = token;
             localStorage.setItem('sessionToken', token);
-            // Clean up URL
+
+            // Clean up URL and redirect if needed
             window.history.replaceState({}, document.title, window.location.pathname);
+
+            if (redirectPath) {
+                window.location.href = redirectPath;
+            }
         }
     }
 
@@ -76,8 +83,9 @@ export class AuthService {
         localStorage.removeItem('sessionToken');
     }
 
-    login(): void {
-        window.location.href = `${environment.apiUrl}/auth/steam`;
+    login(redirectPath: string = '/'): void {
+        const encodedRedirectPath = encodeURIComponent(redirectPath);
+        window.location.href = `${environment.apiUrl}/auth/steam?redirect=${encodedRedirectPath}`;
     }
 
     logout(): Observable<any> {

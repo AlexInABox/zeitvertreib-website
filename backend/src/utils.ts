@@ -76,7 +76,17 @@ export async function deleteSession(request: Request, env: Env): Promise<void> {
 // Steam helpers
 export function generateSteamLoginUrl(request: Request): string {
     const url = new URL(request.url);
-    const returnUrl = url.searchParams.get('return_url') || `${url.origin}/auth/steam/callback`;
+    const redirectParam = url.searchParams.get('redirect');
+
+    let returnUrl = `${url.origin}/auth/steam/callback`;
+    if (redirectParam) {
+        returnUrl += `?redirect=${encodeURIComponent(redirectParam)}`;
+    }
+
+    const customReturnUrl = url.searchParams.get('return_url');
+    if (customReturnUrl) {
+        returnUrl = customReturnUrl;
+    }
 
     const params = new URLSearchParams({
         'openid.ns': 'http://specs.openid.net/auth/2.0',
