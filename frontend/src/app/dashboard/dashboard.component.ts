@@ -67,6 +67,7 @@ export class DashboardComponent implements OnDestroy {
   currentSprayImage: string | null = null;
   selectedFile: File | null = null;
   showSprayHelp = false;
+  showPrivacyDetails = false;
   isDragOver = false;
 
   // Fakerank-related properties

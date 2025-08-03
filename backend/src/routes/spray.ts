@@ -3,7 +3,7 @@ import { EmbedBuilder } from '@discordjs/builders';
 
 /**
  * Discord Webhook Setup Instructions:
- * 
+ *
  * 1. Create a Discord webhook URL in your channel and add it to SPRAY_MOD_WEBHOOK environment variable
  * 2. Set the BACKEND_URL environment variable to your backend URL (e.g., https://your-worker.workers.dev)
  * 3. The webhook will send accepted sprays with spoiler tags and clickable moderation buttons
@@ -20,7 +20,9 @@ async function sendSprayToDiscord(
 ): Promise<void> {
   try {
     if (!env.SPRAY_MOD_WEBHOOK) {
-      console.log('No Discord webhook URL configured, skipping Discord notification');
+      console.log(
+        'No Discord webhook URL configured, skipping Discord notification',
+      );
       return;
     }
 
@@ -65,7 +67,7 @@ async function sendSprayToDiscord(
           name: 'Timestamp',
           value: new Date().toISOString(),
           inline: false,
-        }
+        },
       )
       .setTimestamp();
 
@@ -81,28 +83,32 @@ async function sendSprayToDiscord(
           {
             type: 2, // Button
             style: 5, // Link style
-            label: "❌ DELETE",
-            url: deleteUrl
+            label: '❌ DELETE',
+            url: deleteUrl,
           },
           {
             type: 2, // Button
             style: 5, // Link style
-            label: "🔨 DELETE & BAN",
-            url: banUrl
-          }
-        ]
-      }
+            label: '🔨 DELETE & BAN',
+            url: banUrl,
+          },
+        ],
+      },
     ];
 
     const payload = {
       content: `🎨 New spray accepted and uploaded`,
       embeds: [embed.toJSON()],
-      username: "Spray Moderation System",
+      username: 'Spray Moderation System',
       components: components,
     };
 
     // Add the image file with spoiler tag (SPOILER_ prefix)
-    formData.append('file', originalImage, `SPOILER_spray_${steamId}_${Date.now()}.${originalImage.type.split('/')[1]}`);
+    formData.append(
+      'file',
+      originalImage,
+      `SPOILER_spray_${steamId}_${Date.now()}.${originalImage.type.split('/')[1]}`,
+    );
     formData.append('payload_json', JSON.stringify(payload));
 
     // Add with_components=true query parameter to enable components for non-application-owned webhooks
@@ -121,11 +127,13 @@ async function sendSprayToDiscord(
         response.status,
         response.statusText,
         'Response body:',
-        errorText
+        errorText,
       );
       console.error('Payload sent:', JSON.stringify(payload, null, 2));
     } else {
-      console.log(`Successfully sent accepted spray to Discord for Steam ID: ${steamId}`);
+      console.log(
+        `Successfully sent accepted spray to Discord for Steam ID: ${steamId}`,
+      );
     }
   } catch (error) {
     console.error('Error sending spray to Discord webhook:', error);
@@ -205,7 +213,9 @@ async function checkImageSafety(
     const banData = await env.SESSIONS.get(banKey);
     if (banData) {
       const ban = JSON.parse(banData);
-      console.log(`Steam ID ${steamId} is banned from uploading sprays: ${ban.reason}`);
+      console.log(
+        `Steam ID ${steamId} is banned from uploading sprays: ${ban.reason}`,
+      );
       return false;
     }
 
@@ -643,7 +653,9 @@ export async function handleModerationDelete(
     };
     await env.SESSIONS.put(cacheKey, JSON.stringify(blockedData));
 
-    console.log(`Moderator deleted spray for Steam ID: ${steamId}, hash: ${imageHash}`);
+    console.log(
+      `Moderator deleted spray for Steam ID: ${steamId}, hash: ${imageHash}`,
+    );
 
     return createResponse(
       {
@@ -655,7 +667,11 @@ export async function handleModerationDelete(
     );
   } catch (error) {
     console.error('Error handling moderation delete:', error);
-    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
+    return createResponse(
+      { error: 'Failed to process moderation action' },
+      500,
+      origin,
+    );
   }
 }
 
@@ -706,7 +722,9 @@ export async function handleModerationBan(
     };
     await env.SESSIONS.put(banKey, JSON.stringify(banData));
 
-    console.log(`Moderator banned Steam ID: ${steamId} and deleted spray with hash: ${imageHash}`);
+    console.log(
+      `Moderator banned Steam ID: ${steamId} and deleted spray with hash: ${imageHash}`,
+    );
 
     return createResponse(
       {
@@ -718,6 +736,10 @@ export async function handleModerationBan(
     );
   } catch (error) {
     console.error('Error handling moderation ban:', error);
-    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
+    return createResponse(
+      { error: 'Failed to process moderation action' },
+      500,
+      origin,
+    );
   }
 }

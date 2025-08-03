@@ -305,6 +305,101 @@
               </div>
             </div>
 
+            <!-- Privacy Policy Warning -->
+            <div
+              class="privacy-warning mt-4 p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
+            >
+              <!-- Compact Default State -->
+              <div *ngIf="!showPrivacyDetails" class="flex items-center gap-2">
+                <div class="text-yellow-400 text-lg">⚠️</div>
+                <div class="text-sm text-yellow-100">
+                  <strong>Datenschutzhinweis:</strong>
+                  <button
+                    class="text-yellow-300 underline hover:text-yellow-200 ml-1"
+                    (click)="showPrivacyDetails = true"
+                  >
+                    Hier klicken um die Datenschutzrichtlinie anzuzeigen
+                  </button>
+                </div>
+              </div>
+
+              <!-- Expanded Privacy Details -->
+              <div *ngIf="showPrivacyDetails" class="privacy-expanded">
+                <div class="flex items-start gap-2 mb-3">
+                  <div class="text-yellow-400 text-lg">⚠️</div>
+                  <div class="text-sm text-yellow-100 flex-1">
+                    <strong
+                      >Datenschutzhinweis - Wichtige Informationen:</strong
+                    >
+                  </div>
+                  <button
+                    class="text-yellow-300 hover:text-yellow-200 text-xs"
+                    (click)="showPrivacyDetails = false"
+                    title="Schließen"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div class="text-sm text-yellow-100 space-y-3">
+                  <p>
+                    <strong
+                      >Öffentliche Verfügbarkeit und Datenübertragung:</strong
+                    ><br />
+                    Ihr hochgeladenes Bild wird öffentlich zugänglich und wird
+                    an unseren Discord-Server übertragen, welcher auf
+                    US-amerikanischen Servern außerhalb unserer direkten
+                    Kontrolle gehostet wird. Diese Übertragung erfolgt zur
+                    technischen Bereitstellung des Services.
+                  </p>
+
+                  <p>
+                    <strong>Datenlöschung und Persistenz:</strong><br />
+                    Eine Löschung des Bildes durch Sie garantiert nicht die
+                    vollständige und endgültige Entfernung von unseren Servern,
+                    Discord-Servern oder anderen beteiligten Systemen. Kopien
+                    können in Backups, Caches oder anderen technischen Systemen
+                    verbleiben.
+                  </p>
+
+                  <p>
+                    <strong>Automatisierte Inhaltsmoderation:</strong><br />
+                    Alle hochgeladenen Bilder werden automatisch durch
+                    KI-gestützte Überprüfung mittels des Dienstes Sightengine
+                    analysiert. Dabei werden Ihre Bilddaten an Drittanbieter
+                    übertragen. Weitere Informationen zur Datenverarbeitung
+                    finden Sie in der Datenschutzerklärung von Sightengine.
+                  </p>
+
+                  <p>
+                    <strong>Moderationsmaßnahmen und Account-Sperrung:</strong
+                    ><br />
+                    Wir behalten uns das Recht vor, hochgeladene Bilder
+                    jederzeit und ohne Vorankündigung zu löschen. Ihr Account
+                    kann bei Verstößen gegen unsere Nutzungsbedingungen oder aus
+                    anderen Gründen ohne Vorwarnung und ohne Angabe von Gründen
+                    gesperrt werden.
+                  </p>
+
+                  <p>
+                    <strong>Internationale Datenübertragung:</strong><br />
+                    Durch die Nutzung von Discord-Servern und Sightengine
+                    erfolgt eine Übertragung Ihrer Daten in die USA und
+                    möglicherweise andere Drittländer, die ein anderes
+                    Datenschutzniveau als Deutschland/EU aufweisen können.
+                  </p>
+
+                  <p class="font-semibold bg-yellow-900/30 p-2 rounded">
+                    <strong>Einverständniserklärung:</strong><br />
+                    Durch das Hochladen eines Bildes erklären Sie sich
+                    ausdrücklich mit allen oben genannten Bedingungen
+                    einverstanden und bestätigen, dass Sie die rechtlichen
+                    Konsequenzen verstanden haben.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Messages -->
             <div *ngIf="sprayUploadError" class="error-message mt-3">
               {{ sprayUploadError }}
