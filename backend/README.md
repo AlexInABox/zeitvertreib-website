@@ -38,9 +38,9 @@ Uploads an image file and processes it into a 400x400 pixel spray with pixel art
 
 ```json
 {
-	"success": true,
-	"message": "Spray uploaded and processed successfully",
-	"pixelString": "<color=#ff0000>███</color><color=#00ff00>████</color>..."
+  "success": true,
+  "message": "Spray uploaded and processed successfully",
+  "pixelString": "<color=#ff0000>███</color><color=#00ff00>████</color>..."
 }
 ```
 
@@ -58,9 +58,9 @@ Returns the spray as a pixel art string with color information.
 
 ```json
 {
-	"pixelString": "<color=#ff0000>███</color><color=#00ff00>████</color>\n<color=#0000ff>██</color>...",
-	"uploadedAt": 1642579200000,
-	"originalFileName": "spray.png"
+  "pixelString": "<color=#ff0000>███</color><color=#00ff00>████</color>\n<color=#0000ff>██</color>...",
+  "uploadedAt": 1642579200000,
+  "originalFileName": "spray.png"
 }
 ```
 

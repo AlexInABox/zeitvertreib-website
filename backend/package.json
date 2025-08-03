@@ -1,18 +1,19 @@
 {
-	"name": "backend",
-	"version": "0.0.0",
-	"private": true,
-	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"cf-typegen": "wrangler types",
-		"db:init": "wrangler d1 execute zeitvertreib-data --local --file=./schema.sql",
-		"db:reset": "wrangler d1 execute zeitvertreib-data --local --command=\"DROP TABLE IF EXISTS playerdata; DROP TABLE IF EXISTS kills;\" && npm run db:init",
-		"dev:fresh": "npm run db:reset && npm run dev"
-	},
-	"devDependencies": {
-		"typescript": "^5.5.2",
-		"wrangler": "^4.24.4"
-	}
+  "name": "backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types",
+    "db:init": "wrangler d1 execute zeitvertreib-data --local --file=./schema.sql",
+    "db:reset": "wrangler d1 execute zeitvertreib-data --local --command=\"DROP TABLE IF EXISTS playerdata; DROP TABLE IF EXISTS kills;\" && npm run db:init",
+    "dev:fresh": "npm run db:reset && npm run dev"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.27.0"
+  }
 }
