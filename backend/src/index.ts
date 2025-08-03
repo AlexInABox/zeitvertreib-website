@@ -10,6 +10,8 @@ import {
   handleGetSpray,
   handleGetSprayString,
   handleDeleteSpray,
+  handleModerationDelete,
+  handleModerationBan,
 } from './routes/spray.js';
 import { handleFakerank } from './routes/profile.js';
 import {
@@ -54,6 +56,8 @@ const routes: Record<
   '/spray/image': handleGetSpray,
   '/spray/string': handleGetSprayString,
   '/spray/delete': handleDeleteSpray,
+  '/spray/moderate/delete': handleModerationDelete,
+  '/spray/moderate/ban': handleModerationBan,
   '/fakerank': handleFakerank,
   '/financial/transactions': handleFinancialTransactions,
   '/financial/recurring': handleRecurringTransactions,

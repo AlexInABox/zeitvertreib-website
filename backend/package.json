@@ -15,5 +15,8 @@
     "prettier": "3.6.2",
     "typescript": "^5.9.2",
     "wrangler": "^4.27.0"
+  },
+  "dependencies": {
+    "@discordjs/builders": "^1.11.2"
   }
 }

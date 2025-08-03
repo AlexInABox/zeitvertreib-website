@@ -1,4 +1,136 @@
 import { validateSession, createResponse } from '../utils.js';
+import { EmbedBuilder } from '@discordjs/builders';
+
+/**
+ * Discord Webhook Setup Instructions:
+ * 
+ * 1. Create a Discord webhook URL in your channel and add it to SPRAY_MOD_WEBHOOK environment variable
+ * 2. Set the BACKEND_URL environment variable to your backend URL (e.g., https://your-worker.workers.dev)
+ * 3. The webhook will send accepted sprays with spoiler tags and clickable moderation buttons
+ * 4. Moderators can click the "DELETE" or "DELETE & BAN" buttons to make direct HTTP requests to the backend
+ * 5. Buttons are formatted as raw JSON components for Discord webhook compatibility
+ */
+
+// Send accepted spray to Discord webhook for moderation tracking
+async function sendSprayToDiscord(
+  originalImage: File,
+  steamId: string,
+  env: Env,
+  isFromCache: boolean = false,
+): Promise<void> {
+  try {
+    if (!env.SPRAY_MOD_WEBHOOK) {
+      console.log('No Discord webhook URL configured, skipping Discord notification');
+      return;
+    }
+
+    // Generate image hash for the custom_id
+    const imageBuffer = await originalImage.arrayBuffer();
+    const imageHash = await generateImageHash(imageBuffer);
+
+    // Create form data for Discord webhook
+    const formData = new FormData();
+
+    // Create the embed using EmbedBuilder
+    const embed = new EmbedBuilder()
+      .setTitle('✅ Spray Accepted')
+      .setColor(0x00ff00) // Green color
+      .addFields(
+        {
+          name: 'Steam ID',
+          value: steamId,
+          inline: true,
+        },
+        {
+          name: 'Moderation Source',
+          value: isFromCache ? 'Cached Result' : 'Fresh AI Check',
+          inline: true,
+        },
+        {
+          name: 'File Size',
+          value: `${(originalImage.size / 1024).toFixed(2)} KB`,
+          inline: true,
+        },
+        {
+          name: 'File Type',
+          value: originalImage.type,
+          inline: true,
+        },
+        {
+          name: 'Image Hash',
+          value: `\`${imageHash.substring(0, 16)}...\``,
+          inline: true,
+        },
+        {
+          name: 'Timestamp',
+          value: new Date().toISOString(),
+          inline: false,
+        }
+      )
+      .setTimestamp();
+
+    // Discord webhooks support link buttons in raw JSON format
+    const deleteUrl = `${env.BACKEND_URL}/spray/moderate/delete?steamId=${encodeURIComponent(steamId)}&imageHash=${encodeURIComponent(imageHash)}`;
+    const banUrl = `${env.BACKEND_URL}/spray/moderate/ban?steamId=${encodeURIComponent(steamId)}&imageHash=${encodeURIComponent(imageHash)}`;
+
+    // Create components in Discord webhook format
+    const components = [
+      {
+        type: 1, // Action Row
+        components: [
+          {
+            type: 2, // Button
+            style: 5, // Link style
+            label: "❌ DELETE",
+            url: deleteUrl
+          },
+          {
+            type: 2, // Button
+            style: 5, // Link style
+            label: "🔨 DELETE & BAN",
+            url: banUrl
+          }
+        ]
+      }
+    ];
+
+    const payload = {
+      content: `🎨 New spray accepted and uploaded`,
+      embeds: [embed.toJSON()],
+      username: "Spray Moderation System",
+      components: components,
+    };
+
+    // Add the image file with spoiler tag (SPOILER_ prefix)
+    formData.append('file', originalImage, `SPOILER_spray_${steamId}_${Date.now()}.${originalImage.type.split('/')[1]}`);
+    formData.append('payload_json', JSON.stringify(payload));
+
+    // Add with_components=true query parameter to enable components for non-application-owned webhooks
+    const webhookUrl = new URL(env.SPRAY_MOD_WEBHOOK);
+    webhookUrl.searchParams.set('with_components', 'true');
+
+    const response = await fetch(webhookUrl.toString(), {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        'Failed to send spray to Discord webhook:',
+        response.status,
+        response.statusText,
+        'Response body:',
+        errorText
+      );
+      console.error('Payload sent:', JSON.stringify(payload, null, 2));
+    } else {
+      console.log(`Successfully sent accepted spray to Discord for Steam ID: ${steamId}`);
+    }
+  } catch (error) {
+    console.error('Error sending spray to Discord webhook:', error);
+  }
+}
 
 // Generate SHA-256 hash of image buffer for caching moderation results
 async function generateImageHash(imageBuffer: ArrayBuffer): Promise<string> {
@@ -61,24 +193,22 @@ function createMinimalValidJPEG(): string {
   return `data:image/jpeg;base64,${minimalJPEG}`;
 }
 
-// Create fallback image for error cases
-async function createFallbackImage(imageBuffer: ArrayBuffer): Promise<string> {
-  const uint8Array = new Uint8Array(imageBuffer);
-  let binaryString = '';
-  const chunkSize = 0x8000;
-
-  for (let i = 0; i < uint8Array.length; i += chunkSize) {
-    const chunk = uint8Array.subarray(i, i + chunkSize);
-    binaryString += String.fromCharCode.apply(null, Array.from(chunk));
-  }
-
-  const base64 = btoa(binaryString);
-  return `data:image/png;base64,${base64}`;
-}
-
 // Check image safety using SightEngine API with hash-based caching
-async function checkImageSafety(imageFile: File, env: Env): Promise<boolean> {
+async function checkImageSafety(
+  imageFile: File,
+  env: Env,
+  steamId: string,
+): Promise<boolean> {
   try {
+    // Check if user is banned from uploading sprays
+    const banKey = `spray_ban_${steamId}`;
+    const banData = await env.SESSIONS.get(banKey);
+    if (banData) {
+      const ban = JSON.parse(banData);
+      console.log(`Steam ID ${steamId} is banned from uploading sprays: ${ban.reason}`);
+      return false;
+    }
+
     // Generate hash of the image for caching
     const imageBuffer = await imageFile.arrayBuffer();
     const imageHash = await generateImageHash(imageBuffer);
@@ -87,15 +217,27 @@ async function checkImageSafety(imageFile: File, env: Env): Promise<boolean> {
     // Check if we already have a cached result for this image hash
     const cachedResult = await env.SESSIONS.get(cacheKey);
     if (cachedResult !== null) {
-      const { isSafe, cachedAt } = JSON.parse(cachedResult);
+      const { isSafe, cachedAt, blocked } = JSON.parse(cachedResult);
       const cacheAge = Date.now() - cachedAt;
       const cacheValidityPeriod = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+
+      // If image is blocked by moderator, always reject regardless of cache age
+      if (blocked) {
+        console.log(`Image hash ${imageHash} is blocked by moderator`);
+        return false;
+      }
 
       // Use cached result if it's still valid
       if (cacheAge < cacheValidityPeriod) {
         console.log(
           `Using cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`,
         );
+
+        // Send to Discord webhook if image is safe and we have steamId
+        if (isSafe) {
+          await sendSprayToDiscord(imageFile, steamId, env, true);
+        }
+
         return isSafe;
       }
     }
@@ -194,6 +336,11 @@ async function checkImageSafety(imageFile: File, env: Env): Promise<boolean> {
       `Cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`,
     );
 
+    // Send to Discord webhook if image is safe and we have steamId
+    if (isSafe && steamId) {
+      await sendSprayToDiscord(imageFile, steamId, env, false);
+    }
+
     return isSafe;
   } catch (error) {
     console.error('Error checking image safety:', error);
@@ -271,7 +418,7 @@ export async function handleUploadSpray(
     }
 
     // Check image content safety with SightEngine using the original uncompressed image
-    const isSafe = await checkImageSafety(originalImage, env);
+    const isSafe = await checkImageSafety(originalImage, env, steamId);
     if (!isSafe) {
       return createResponse(
         { error: 'Bildinhalt nicht erlaubt. Bitte wähle ein anderes Bild.' },
@@ -457,5 +604,120 @@ export async function handleDeleteSpray(
   } catch (error) {
     console.error('Error deleting spray:', error);
     return createResponse({ error: 'Failed to delete spray' }, 500, origin);
+  }
+}
+
+// Handle Discord moderation action - delete spray
+export async function handleModerationDelete(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const url = new URL(request.url);
+    const steamId = url.searchParams.get('steamId');
+    const imageHash = url.searchParams.get('imageHash');
+
+    if (!steamId || !imageHash) {
+      return createResponse(
+        { error: 'steamId and imageHash are required' },
+        400,
+        origin,
+      );
+    }
+
+    // Delete the spray from KV storage
+    const sprayKey = `spray_${steamId}`;
+    await env.SESSIONS.delete(sprayKey);
+
+    // Flag the image hash as blocked in cache
+    const cacheKey = `moderation_${imageHash}`;
+    const blockedData = {
+      isSafe: false,
+      cachedAt: Date.now(),
+      imageHash,
+      blocked: true,
+      blockedBy: 'moderator',
+      blockedReason: 'Deleted by Discord moderation',
+    };
+    await env.SESSIONS.put(cacheKey, JSON.stringify(blockedData));
+
+    console.log(`Moderator deleted spray for Steam ID: ${steamId}, hash: ${imageHash}`);
+
+    return createResponse(
+      {
+        success: true,
+        message: 'Spray deleted and flagged as blocked',
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Error handling moderation delete:', error);
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
+  }
+}
+
+// Handle Discord moderation action - delete spray and ban user
+export async function handleModerationBan(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const url = new URL(request.url);
+    const steamId = url.searchParams.get('steamId');
+    const imageHash = url.searchParams.get('imageHash');
+
+    if (!steamId || !imageHash) {
+      return createResponse(
+        { error: 'steamId and imageHash are required' },
+        400,
+        origin,
+      );
+    }
+
+    // Delete the spray from KV storage
+    const sprayKey = `spray_${steamId}`;
+    await env.SESSIONS.delete(sprayKey);
+
+    // Flag the image hash as blocked in cache
+    const cacheKey = `moderation_${imageHash}`;
+    const blockedData = {
+      isSafe: false,
+      cachedAt: Date.now(),
+      imageHash,
+      blocked: true,
+      blockedBy: 'moderator',
+      blockedReason: 'Deleted and banned by Discord moderation',
+    };
+    await env.SESSIONS.put(cacheKey, JSON.stringify(blockedData));
+
+    // Ban the user from uploading sprays
+    const banKey = `spray_ban_${steamId}`;
+    const banData = {
+      steamId,
+      bannedAt: Date.now(),
+      bannedBy: 'moderator',
+      reason: 'Banned via Discord moderation',
+      permanent: true,
+    };
+    await env.SESSIONS.put(banKey, JSON.stringify(banData));
+
+    console.log(`Moderator banned Steam ID: ${steamId} and deleted spray with hash: ${imageHash}`);
+
+    return createResponse(
+      {
+        success: true,
+        message: 'Spray deleted, flagged as blocked, and user banned',
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Error handling moderation ban:', error);
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }
