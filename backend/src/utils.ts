@@ -66,7 +66,7 @@ export async function createSession(
   env: Env,
 ): Promise<string> {
   const sessionId = crypto.randomUUID();
-  const duration = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const duration = 7 * 24 * 60 * 60 * 1000 * 4 * 3; // 3 months
   const now = Date.now();
 
   const sessionData: SessionData = {
