@@ -425,9 +425,14 @@ export class DashboardComponent implements OnDestroy {
           throw new Error('No frames found in GIF');
         }
 
-        // Limit to 30 frames max
-        const maxFrames = 30;
+        // Limit to 20 frames max for performance and storage
+        const maxFrames = 20;
         const framesToProcess = frames.slice(0, maxFrames);
+
+        // Check if GIF has too many frames
+        if (frames.length > maxFrames) {
+          throw new Error(`GIF has ${frames.length} frames. Maximum allowed is ${maxFrames} frames.`);
+        }
 
         // Create canvas for processing
         const canvas = document.createElement('canvas');
@@ -462,7 +467,7 @@ export class DashboardComponent implements OnDestroy {
           const pixelCtx = pixelCanvas.getContext('2d');
           if (!pixelCtx) throw new Error('Could not get 2D context for pixel canvas');
 
-          const pixelArtQuality = 100;
+          const pixelArtQuality = 80; // Reduced quality for better performance
           pixelCanvas.width = pixelArtQuality;
           pixelCanvas.height = pixelArtQuality;
 
@@ -533,7 +538,7 @@ export class DashboardComponent implements OnDestroy {
       const img = new Image();
       img.onload = () => {
         try {
-          const pixelArtQuality = 100; // Quality for unicode block generation
+          const pixelArtQuality = 80; // Reduced quality for better performance
 
           // Create 50x50 thumbnail (for storage/display)
           const thumbnailCanvas = document.createElement('canvas');

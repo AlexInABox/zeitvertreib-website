@@ -481,13 +481,17 @@ export async function handleUploadSpray(
         if (!Array.isArray(frames) || frames.length === 0) {
           throw new Error('Invalid frames data');
         }
-        // Limit number of frames to prevent excessive storage
-        if (frames.length > 30) {
-          frames = frames.slice(0, 30); // Limit to 30 frames max
+        // Limit number of frames to prevent excessive storage and improve performance
+        if (frames.length > 20) {
+          return createResponse(
+            { error: 'GIF has too many frames. Maximum allowed is 20 frames.' },
+            400,
+            origin,
+          );
         }
       } catch (e) {
         return createResponse(
-          { error: 'Invalid GIF frames data' },
+          { error: 'Invalid GIF frames data. Please upload a valid GIF file.' },
           400,
           origin,
         );
