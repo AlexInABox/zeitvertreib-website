@@ -318,7 +318,7 @@ export class DashboardComponent implements OnDestroy {
     processPromise
       .then((processedData) => {
         if (!this.selectedFile) {
-          throw new Error('No file selected');
+          throw new Error('Keine Datei ausgewählt');
         }
 
         const formData = new FormData();
@@ -422,7 +422,7 @@ export class DashboardComponent implements OnDestroy {
         const frames = decompressFrames(gif, true);
 
         if (!frames || frames.length === 0) {
-          throw new Error('No frames found in GIF');
+          throw new Error('Keine Frames in GIF gefunden');
         }
 
         // Limit to 20 frames max for performance and storage
@@ -431,13 +431,13 @@ export class DashboardComponent implements OnDestroy {
 
         // Check if GIF has too many frames
         if (frames.length > maxFrames) {
-          throw new Error(`GIF has ${frames.length} frames. Maximum allowed is ${maxFrames} frames.`);
+          throw new Error(`GIF hat ${frames.length} Frames. Maximum erlaubt sind ${maxFrames} Frames.`);
         }
 
         // Create canvas for processing
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Could not get 2D context');
+        if (!ctx) throw new Error('Konnte 2D-Kontext nicht erhalten');
 
         // Set canvas size from first frame
         const firstFrame = framesToProcess[0];
@@ -465,7 +465,7 @@ export class DashboardComponent implements OnDestroy {
           // Create high-quality pixel art for this frame
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx) throw new Error('Could not get 2D context for pixel canvas');
+          if (!pixelCtx) throw new Error('Konnte 2D-Kontext für Pixel-Canvas nicht erhalten');
 
           const pixelArtQuality = 80; // Reduced quality for better performance
           pixelCanvas.width = pixelArtQuality;
@@ -500,7 +500,7 @@ export class DashboardComponent implements OnDestroy {
         // Create temp canvas with first frame
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
-        if (!tempCtx) throw new Error('Could not get temp context');
+        if (!tempCtx) throw new Error('Konnte temporären Kontext nicht erhalten');
 
         tempCanvas.width = canvas.width;
         tempCanvas.height = canvas.height;
@@ -517,7 +517,7 @@ export class DashboardComponent implements OnDestroy {
         // Convert thumbnail to blob
         thumbnailCanvas.toBlob((smallBlob) => {
           if (!smallBlob) {
-            reject(new Error('Failed to create thumbnail blob'));
+            reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
             return;
           }
 
@@ -543,7 +543,7 @@ export class DashboardComponent implements OnDestroy {
           // Create 50x50 thumbnail (for storage/display)
           const thumbnailCanvas = document.createElement('canvas');
           const thumbnailCtx = thumbnailCanvas.getContext('2d');
-          if (!thumbnailCtx) throw new Error('Could not get 2D context for thumbnail canvas');
+          if (!thumbnailCtx) throw new Error('Konnte 2D-Kontext für Thumbnail-Canvas nicht erhalten');
 
           thumbnailCanvas.width = 50;
           thumbnailCanvas.height = 50;
@@ -559,7 +559,7 @@ export class DashboardComponent implements OnDestroy {
           // Create high-quality canvas for pixel art generation
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx) throw new Error('Could not get 2D context for pixel canvas');
+          if (!pixelCtx) throw new Error('Konnte 2D-Kontext für Pixel-Canvas nicht erhalten');
 
           pixelCanvas.width = pixelArtQuality;
           pixelCanvas.height = pixelArtQuality;
@@ -578,7 +578,7 @@ export class DashboardComponent implements OnDestroy {
           // Convert thumbnail canvas to blob for storage
           thumbnailCanvas.toBlob((smallBlob) => {
             if (!smallBlob) {
-              reject(new Error('Failed to create thumbnail blob'));
+              reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
               return;
             }
 
@@ -589,7 +589,7 @@ export class DashboardComponent implements OnDestroy {
         }
       };
 
-      img.onerror = () => reject(new Error('Failed to load image'));
+      img.onerror = () => reject(new Error('Konnte Bild nicht laden'));
       img.src = URL.createObjectURL(file);
     });
   }

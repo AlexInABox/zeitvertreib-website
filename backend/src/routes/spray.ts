@@ -395,7 +395,7 @@ export async function handleUploadSpray(
       return createResponse(
         {
           error:
-            'smallImage, originalImage and pixelData/pixelDataFrames are required',
+            'smallImage, originalImage und pixelData/pixelDataFrames sind erforderlich',
         },
         400,
         origin,
@@ -412,7 +412,7 @@ export async function handleUploadSpray(
         !originalImage.type.startsWith('image/')
       ) {
         return createResponse(
-          { error: 'Invalid file type. Please upload images.' },
+          { error: 'Ungültiger Dateityp. Bitte lade Bilder hoch.' },
           400,
           origin,
         );
@@ -421,7 +421,7 @@ export async function handleUploadSpray(
       // GIF validation
       if (originalImage.type !== 'image/gif') {
         return createResponse(
-          { error: 'Invalid file type. Expected GIF.' },
+          { error: 'Ungültiger Dateityp. GIF erwartet.' },
           400,
           origin,
         );
@@ -435,7 +435,7 @@ export async function handleUploadSpray(
     if (smallImage.size > maxSmallSize) {
       return createResponse(
         {
-          error: `Thumbnail too big. Maximum size is ${maxSmallSize / 1024}KB.`,
+          error: `Thumbnail zu groß. Maximale Größe sind ${maxSmallSize / 1024}KB.`,
         },
         400,
         origin,
@@ -445,7 +445,7 @@ export async function handleUploadSpray(
     if (originalImage.size > maxOriginalSize) {
       return createResponse(
         {
-          error: `File too big. Maximum size is ${maxOriginalSize / (1024 * 1024)}MB.`,
+          error: `Datei zu groß. Maximale Größe sind ${maxOriginalSize / (1024 * 1024)}MB.`,
         },
         400,
         origin,
@@ -484,14 +484,14 @@ export async function handleUploadSpray(
         // Limit number of frames to prevent excessive storage and improve performance
         if (frames.length > 20) {
           return createResponse(
-            { error: 'GIF has too many frames. Maximum allowed is 20 frames.' },
+            { error: 'GIF hat zu viele Frames. Maximum sind 20 Frames erlaubt.' },
             400,
             origin,
           );
         }
       } catch (e) {
         return createResponse(
-          { error: 'Invalid GIF frames data. Please upload a valid GIF file.' },
+          { error: 'Ungültige GIF-Daten. Bitte lade eine gültige GIF-Datei hoch.' },
           400,
           origin,
         );
@@ -525,7 +525,7 @@ export async function handleUploadSpray(
     return createResponse(
       {
         success: true,
-        message: 'Spray uploaded and processed successfully',
+        message: 'Spray erfolgreich hochgeladen und verarbeitet',
         isGif: isGifUpload,
         frameCount: isGifUpload ? sprayData.frameCount : undefined,
         pixelString: isGifUpload
@@ -561,7 +561,7 @@ export async function handleGetSpray(
 
     if (!sprayDataString) {
       return createResponse(
-        { error: 'No spray found for this user' },
+        { error: 'Kein Spray für diesen Benutzer gefunden' },
         404,
         origin,
       );
@@ -572,7 +572,7 @@ export async function handleGetSpray(
     // Return the processed image data
     const imageData = sprayData.processedImageData;
     if (!imageData) {
-      return createResponse({ error: 'No image data found' }, 404, origin);
+      return createResponse({ error: 'Keine Bilddaten gefunden' }, 404, origin);
     }
 
     // Extract base64 data and convert to blob
@@ -619,7 +619,7 @@ export async function handleGetSprayString(
 
     if (!sprayDataString) {
       return createResponse(
-        { error: 'No spray found for this user' },
+        { error: 'Kein Spray für diesen Benutzer gefunden' },
         404,
         origin,
       );
@@ -682,7 +682,7 @@ export async function handleDeleteSpray(
     // Check if spray exists
     const existingSpray = await env.SESSIONS.get(sprayKey);
     if (!existingSpray) {
-      return createResponse({ error: 'No spray found to delete' }, 404, origin);
+      return createResponse({ error: 'Kein Spray zum Löschen gefunden' }, 404, origin);
     }
 
     // Delete the spray from KV storage
@@ -691,7 +691,7 @@ export async function handleDeleteSpray(
     return createResponse(
       {
         success: true,
-        message: 'Spray deleted successfully',
+        message: 'Spray erfolgreich gelöscht',
       },
       200,
       origin,
@@ -716,7 +716,7 @@ export async function handleModerationDelete(
 
     if (!steamId || !imageHash) {
       return createResponse(
-        { error: 'steamId and imageHash are required' },
+        { error: 'steamId und imageHash sind erforderlich' },
         400,
         origin,
       );
@@ -774,7 +774,7 @@ export async function handleModerationBan(
 
     if (!steamId || !imageHash) {
       return createResponse(
-        { error: 'steamId and imageHash are required' },
+        { error: 'steamId und imageHash sind erforderlich' },
         400,
         origin,
       );
