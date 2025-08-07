@@ -189,14 +189,15 @@
               </div>
               <div class="help-text">
                 <strong>Wie funktioniert es?</strong><br />
-                • Lade ein beliebiges Bild hoch (PNG, JPG bis 10MB)<br />
+                • Lade ein beliebiges Bild oder GIF hoch<br />
+                • PNG/JPG bis 10MB, GIFs bis 2MB (max. 30 Frames)<br />
                 • Das Bild wird automatisch optimiert und ins Spiel
                 übertragen<br />
                 • Nutze es, um Wände oder Oberflächen zu markieren
               </div>
               <div class="help-text">
                 <strong>Tipp:</strong> Einfache Designs und klare Formen
-                funktionieren am besten!
+                funktionieren am besten! GIFs werden animiert dargestellt.
               </div>
               <button (click)="showSprayHelp = false" class="help-close-btn">
                 Verstanden! ✨
@@ -274,7 +275,10 @@
                     >
                       <div class="text-2xl mb-2">📁</div>
                       <p class="font-medium">Klicken oder hierher ziehen</p>
-                      <p class="text-sm opacity-75">PNG, JPG bis 10MB</p>
+                      <p class="text-sm opacity-75">PNG, JPG, GIF</p>
+                      <p class="text-xs opacity-60 mt-1">
+                        Max: 10MB (Bilder) / 2MB (GIFs)
+                      </p>
                     </div>
                     <div
                       *ngIf="selectedFile && !sprayUploadLoading"

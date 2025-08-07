@@ -387,33 +387,56 @@ export async function handleUploadSpray(
     const formData = await request.formData();
     const smallImage = formData.get('smallImage') as File; // 50x50 thumbnail for storage
     const originalImage = formData.get('originalImage') as File; // Original uncompressed image for moderation
-    const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art
+    const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art (single string for images)
+    const pixelDataFrames = formData.get('pixelDataFrames') as string; // Pre-computed pixel art frames (JSON array for GIFs)
+    const isGif = formData.get('isGif') as string; // Flag to indicate if it's a GIF
 
-    if (!smallImage || !originalImage || !pixelData) {
+    if (!smallImage || !originalImage || (!pixelData && !pixelDataFrames)) {
       return createResponse(
-        { error: 'smallImage, originalImage and pixelData are required' },
+        {
+          error:
+            'smallImage, originalImage and pixelData/pixelDataFrames are required',
+        },
         400,
         origin,
       );
     }
 
     // Validate file type
-    if (
-      !smallImage.type.startsWith('image/') ||
-      !originalImage.type.startsWith('image/')
-    ) {
-      return createResponse(
-        { error: 'Invalid file type. Please upload images.' },
-        400,
-        origin,
-      );
-    } // Validate file size
-    const maxSmallSize = 10 * 1024; // 10KB for 50x50 thumbnail
-    const maxOriginalSize = 5 * 1024 * 1024; // 5MB for original image
+    const isGifUpload = isGif === 'true' || originalImage.type === 'image/gif';
+
+    if (!isGifUpload) {
+      // Regular image validation
+      if (
+        !smallImage.type.startsWith('image/') ||
+        !originalImage.type.startsWith('image/')
+      ) {
+        return createResponse(
+          { error: 'Invalid file type. Please upload images.' },
+          400,
+          origin,
+        );
+      }
+    } else {
+      // GIF validation
+      if (originalImage.type !== 'image/gif') {
+        return createResponse(
+          { error: 'Invalid file type. Expected GIF.' },
+          400,
+          origin,
+        );
+      }
+    }
+
+    // Validate file size
+    const maxSmallSize = isGifUpload ? 50 * 1024 : 10 * 1024; // 50KB for GIF thumbnails, 10KB for regular
+    const maxOriginalSize = isGifUpload ? 2 * 1024 * 1024 : 5 * 1024 * 1024; // 2MB for GIFs, 5MB for regular images
 
     if (smallImage.size > maxSmallSize) {
       return createResponse(
-        { error: 'Thumbnail too big. A 50x50 thumbnail should be under 10KB.' },
+        {
+          error: `Thumbnail too big. Maximum size is ${maxSmallSize / 1024}KB.`,
+        },
         400,
         origin,
       );
@@ -421,7 +444,9 @@ export async function handleUploadSpray(
 
     if (originalImage.size > maxOriginalSize) {
       return createResponse(
-        { error: 'Original image too big. Please upload an image under 5MB.' },
+        {
+          error: `File too big. Maximum size is ${maxOriginalSize / (1024 * 1024)}MB.`,
+        },
         400,
         origin,
       );
@@ -443,17 +468,53 @@ export async function handleUploadSpray(
     const smallImageBuffer = await smallImage.arrayBuffer();
     const processedImageData = await convertImageToDataURL(smallImageBuffer);
 
-    // Use the pixel data sent from frontend (computed from actual canvas pixels)
-    const pixelString = pixelData;
-
     // Store both the pixel string and processed image data in KV
     const sprayKey = `spray_${steamId}`;
-    const sprayData = {
-      pixelString,
-      processedImageData,
-      uploadedAt: Date.now(),
-      originalFileName: smallImage.name,
-    };
+
+    let sprayData: any;
+
+    if (isGifUpload) {
+      // For GIFs, parse the frames array and store it
+      let frames: string[];
+      try {
+        frames = JSON.parse(pixelDataFrames);
+        if (!Array.isArray(frames) || frames.length === 0) {
+          throw new Error('Invalid frames data');
+        }
+        // Limit number of frames to prevent excessive storage
+        if (frames.length > 30) {
+          frames = frames.slice(0, 30); // Limit to 30 frames max
+        }
+      } catch (e) {
+        return createResponse(
+          { error: 'Invalid GIF frames data' },
+          400,
+          origin,
+        );
+      }
+
+      sprayData = {
+        pixelString: null, // No single string for GIFs
+        pixelFrames: frames, // Array of frame strings
+        processedImageData,
+        uploadedAt: Date.now(),
+        originalFileName: smallImage.name,
+        isGif: true,
+        frameCount: frames.length,
+      };
+    } else {
+      // For regular images, use the single pixel string
+      const pixelString = pixelData;
+
+      sprayData = {
+        pixelString,
+        pixelFrames: null, // No frames for regular images
+        processedImageData,
+        uploadedAt: Date.now(),
+        originalFileName: smallImage.name,
+        isGif: false,
+      };
+    }
 
     await env.SESSIONS.put(sprayKey, JSON.stringify(sprayData));
 
@@ -461,7 +522,11 @@ export async function handleUploadSpray(
       {
         success: true,
         message: 'Spray uploaded and processed successfully',
-        pixelString: pixelString.substring(0, 200) + '...', // Preview only
+        isGif: isGifUpload,
+        frameCount: isGifUpload ? sprayData.frameCount : undefined,
+        pixelString: isGifUpload
+          ? undefined
+          : sprayData.pixelString.substring(0, 200) + '...', // Preview only for regular images
       },
       200,
       origin,
@@ -558,15 +623,31 @@ export async function handleGetSprayString(
 
     const sprayData = JSON.parse(sprayDataString);
 
-    return createResponse(
-      {
-        pixelString: sprayData.pixelString,
-        uploadedAt: sprayData.uploadedAt,
-        originalFileName: sprayData.originalFileName,
-      },
-      200,
-      origin,
-    );
+    // Return appropriate data based on whether it's a GIF or regular image
+    if (sprayData.isGif) {
+      return createResponse(
+        {
+          pixelFrames: sprayData.pixelFrames,
+          uploadedAt: sprayData.uploadedAt,
+          originalFileName: sprayData.originalFileName,
+          isGif: true,
+          frameCount: sprayData.frameCount,
+        },
+        200,
+        origin,
+      );
+    } else {
+      return createResponse(
+        {
+          pixelString: sprayData.pixelString,
+          uploadedAt: sprayData.uploadedAt,
+          originalFileName: sprayData.originalFileName,
+          isGif: false,
+        },
+        200,
+        origin,
+      );
+    }
   } catch (error) {
     console.error('Error retrieving spray string:', error);
     return createResponse(

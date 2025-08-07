@@ -7,6 +7,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { CommonModule, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { parseGIF, decompressFrames } from 'gifuct-js';
 
 interface PlayerEntry {
   displayname?: string;
@@ -296,10 +297,12 @@ export class DashboardComponent implements OnDestroy {
       return;
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024;
+    const isGif = this.selectedFile.type === 'image/gif';
+
+    // Validate file size (different limits for GIFs)
+    const maxSize = isGif ? 2 * 1024 * 1024 : 10 * 1024 * 1024; // 2MB for GIFs, 10MB for regular images
     if (this.selectedFile.size > maxSize) {
-      this.sprayUploadError = 'Datei ist zu groß. Maximum sind 10MB';
+      this.sprayUploadError = `Datei ist zu groß. Maximum sind ${isGif ? '2MB für GIFs' : '10MB'}`;
       return;
     }
 
@@ -307,17 +310,27 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    // Process the image to create 50x50 thumbnail plus high-quality pixel data  
-    this.processImageForUpload(this.selectedFile)
-      .then(({ smallImage, pixelData }) => {
+    // Process the image based on type
+    const processPromise = isGif
+      ? this.processGifForUpload(this.selectedFile)
+      : this.processImageForUpload(this.selectedFile);
+
+    processPromise
+      .then((processedData) => {
         if (!this.selectedFile) {
           throw new Error('No file selected');
         }
 
         const formData = new FormData();
-        formData.append('smallImage', smallImage); // 50x50 thumbnail for storage
-        formData.append('originalImage', this.selectedFile); // Original uncompressed image for moderation
-        formData.append('pixelData', pixelData); // High-quality pre-computed pixel art string
+        formData.append('smallImage', processedData.smallImage); // Thumbnail for storage
+        formData.append('originalImage', this.selectedFile); // Original file for moderation
+        formData.append('isGif', isGif.toString());
+
+        if (isGif && 'pixelDataFrames' in processedData) {
+          formData.append('pixelDataFrames', JSON.stringify(processedData.pixelDataFrames)); // Array of frame strings for GIFs
+        } else if ('pixelData' in processedData) {
+          formData.append('pixelData', processedData.pixelData); // Single string for regular images
+        }
 
         return this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
       })
@@ -395,6 +408,123 @@ export class DashboardComponent implements OnDestroy {
     if (this.currentSprayImage) {
       URL.revokeObjectURL(this.currentSprayImage);
     }
+  }
+
+  // Process GIF to extract frames and create pixel data for each frame
+  private async processGifForUpload(file: File): Promise<{ smallImage: Blob; pixelDataFrames: string[] }> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Read file as ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
+
+        // Parse GIF
+        const gif = parseGIF(arrayBuffer);
+        const frames = decompressFrames(gif, true);
+
+        if (!frames || frames.length === 0) {
+          throw new Error('No frames found in GIF');
+        }
+
+        // Limit to 30 frames max
+        const maxFrames = 30;
+        const framesToProcess = frames.slice(0, maxFrames);
+
+        // Create canvas for processing
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Could not get 2D context');
+
+        // Set canvas size from first frame
+        const firstFrame = framesToProcess[0];
+        canvas.width = firstFrame.dims.width;
+        canvas.height = firstFrame.dims.height;
+
+        // Process each frame to create pixel art strings
+        const pixelDataFrames: string[] = [];
+        let thumbnailImageData: ImageData | null = null;
+
+        for (let i = 0; i < framesToProcess.length; i++) {
+          const frame = framesToProcess[i];
+
+          // Create ImageData from frame patch
+          const imageData = new ImageData(
+            new Uint8ClampedArray(frame.patch),
+            frame.dims.width,
+            frame.dims.height
+          );
+
+          // Clear canvas and draw frame
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.putImageData(imageData, frame.dims.left, frame.dims.top);
+
+          // Create high-quality pixel art for this frame
+          const pixelCanvas = document.createElement('canvas');
+          const pixelCtx = pixelCanvas.getContext('2d');
+          if (!pixelCtx) throw new Error('Could not get 2D context for pixel canvas');
+
+          const pixelArtQuality = 100;
+          pixelCanvas.width = pixelArtQuality;
+          pixelCanvas.height = pixelArtQuality;
+
+          // Scale frame to fit
+          const { width: pixelWidth, height: pixelHeight } = this.scaleToLongestSide(canvas.width, canvas.height, pixelArtQuality);
+          const pixelOffsetX = (pixelArtQuality - pixelWidth) / 2;
+          const pixelOffsetY = (pixelArtQuality - pixelHeight) / 2;
+
+          pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
+          pixelCtx.drawImage(canvas, pixelOffsetX, pixelOffsetY, pixelWidth, pixelHeight);
+
+          // Extract pixel data for this frame
+          const framePixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
+          pixelDataFrames.push(framePixelData);
+
+          // Use first frame for thumbnail
+          if (i === 0) {
+            thumbnailImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          }
+        }
+
+        // Create thumbnail from first frame
+        const thumbnailCanvas = document.createElement('canvas');
+        const thumbnailCtx = thumbnailCanvas.getContext('2d');
+        if (!thumbnailCtx || !thumbnailImageData) throw new Error('Could not create thumbnail');
+
+        thumbnailCanvas.width = 50;
+        thumbnailCanvas.height = 50;
+
+        // Create temp canvas with first frame
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCtx) throw new Error('Could not get temp context');
+
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCtx.putImageData(thumbnailImageData, 0, 0);
+
+        // Scale thumbnail
+        const { width: thumbWidth, height: thumbHeight } = this.scaleToLongestSide(canvas.width, canvas.height, 50);
+        const thumbOffsetX = (50 - thumbWidth) / 2;
+        const thumbOffsetY = (50 - thumbHeight) / 2;
+
+        thumbnailCtx.clearRect(0, 0, 50, 50);
+        thumbnailCtx.drawImage(tempCanvas, thumbOffsetX, thumbOffsetY, thumbWidth, thumbHeight);
+
+        // Convert thumbnail to blob
+        thumbnailCanvas.toBlob((smallBlob) => {
+          if (!smallBlob) {
+            reject(new Error('Failed to create thumbnail blob'));
+            return;
+          }
+
+          resolve({
+            smallImage: smallBlob,
+            pixelDataFrames
+          });
+        }, 'image/png', 1.0);
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   // Process image to create 50x50 thumbnail and high-quality pixel data
