@@ -477,14 +477,19 @@ export async function handleUploadSpray(
         // Limit number of frames to prevent excessive storage and improve performance
         if (frames.length > 20) {
           return createResponse(
-            { error: 'GIF hat zu viele Frames. Maximum sind 20 Frames erlaubt.' },
+            {
+              error: 'GIF hat zu viele Frames. Maximum sind 20 Frames erlaubt.',
+            },
             400,
             origin,
           );
         }
       } catch (e) {
         return createResponse(
-          { error: 'Ungültige GIF-Daten. Bitte lade eine gültige GIF-Datei hoch.' },
+          {
+            error:
+              'Ungültige GIF-Daten. Bitte lade eine gültige GIF-Datei hoch.',
+          },
           400,
           origin,
         );
@@ -675,7 +680,11 @@ export async function handleDeleteSpray(
     // Check if spray exists
     const existingSpray = await env.SESSIONS.get(sprayKey);
     if (!existingSpray) {
-      return createResponse({ error: 'Kein Spray zum Löschen gefunden' }, 404, origin);
+      return createResponse(
+        { error: 'Kein Spray zum Löschen gefunden' },
+        404,
+        origin,
+      );
     }
 
     // Delete the spray from KV storage

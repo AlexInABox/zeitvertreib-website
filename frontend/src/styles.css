@@ -49,9 +49,11 @@ strong,
 }
 
 body {
-  background: linear-gradient(45deg,
-      hsla(273, 97%, 31%, 1) 27%,
-      hsla(319, 73%, 41%, 1) 100%);
+  background: linear-gradient(
+    45deg,
+    hsla(273, 97%, 31%, 1) 27%,
+    hsla(319, 73%, 41%, 1) 100%
+  );
   background-attachment: fixed;
   background-size: cover;
   min-height: 100vh;
@@ -397,7 +399,9 @@ body {
 }
 
 .font-mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
 }
 
 .leading-relaxed {
@@ -506,7 +510,9 @@ body {
 }
 
 .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 .backdrop-blur-md {
@@ -587,19 +593,19 @@ body {
 }
 
 /* Spacing between children (space-x, space-y) */
-.space-y-6>*+* {
+.space-y-6 > * + * {
   margin-top: 1.5rem;
 }
 
-.space-y-3>*+* {
+.space-y-3 > * + * {
   margin-top: 0.75rem;
 }
 
-.space-x-4>*+* {
+.space-x-4 > * + * {
   margin-left: 1rem;
 }
 
-.space-x-2>*+* {
+.space-x-2 > * + * {
   margin-left: 0.5rem;
 }
 

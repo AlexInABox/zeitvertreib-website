@@ -74,9 +74,11 @@
   width: 6px;
   height: 52px;
   border-radius: 6px;
-  background: linear-gradient(145deg,
-      var(--stat-color, #10b981),
-      var(--stat-color-light, #34d399));
+  background: linear-gradient(
+    145deg,
+    var(--stat-color, #10b981),
+    var(--stat-color-light, #34d399)
+  );
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
   position: relative;
   overflow: hidden;
@@ -89,10 +91,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg,
-      transparent,
-      rgba(255, 255, 255, 0.4),
-      transparent);
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
   animation: shimmer 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
 }
 
@@ -153,9 +157,11 @@
 }
 
 .player-card {
-  background: linear-gradient(145deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
@@ -170,16 +176,17 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg,
-      var(--random-color-1, #f59e0b),
-      var(--random-color-2, #ef4444),
-      var(--random-color-3, #8b5cf6));
+  background: linear-gradient(
+    90deg,
+    var(--random-color-1, #f59e0b),
+    var(--random-color-2, #ef4444),
+    var(--random-color-3, #8b5cf6)
+  );
   background-size: 200% 100%;
   animation: gradientShift 5s ease-in-out infinite;
 }
 
 @keyframes gradientShift {
-
   0%,
   100% {
     background-position: 0% 50%;
@@ -357,9 +364,11 @@
 }
 
 .chart-placeholder {
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
   border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 3rem;
@@ -369,10 +378,12 @@
 }
 
 .text-gradient {
-  background: linear-gradient(135deg,
-      var(--random-color-1, #f59e0b),
-      var(--random-color-2, #ef4444),
-      var(--random-color-3, #8b5cf6));
+  background: linear-gradient(
+    135deg,
+    var(--random-color-1, #f59e0b),
+    var(--random-color-2, #ef4444),
+    var(--random-color-3, #8b5cf6)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -705,9 +716,8 @@
   color: rgba(74, 222, 128, 0.9);
 }
 
-
 /* Fix spacing issues for better card alignment */
-.dashboard-grid>* {
+.dashboard-grid > * {
   margin: 0 !important;
   /* Remove any default margins */
 }
@@ -726,7 +736,6 @@
   gap: 1rem;
   /* Smaller gap */
 }
-
 
 /* Responsive masonry adjustments */
 @media (max-width: 1024px) {
@@ -916,9 +925,11 @@
 }
 
 .help-popup {
-  background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.1),
-      rgba(79, 70, 229, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1),
+    rgba(79, 70, 229, 0.1)
+  );
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 12px;
   padding: 1rem;
@@ -979,9 +990,11 @@
 }
 
 .nickname-preview {
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.08),
-      rgba(255, 255, 255, 0.03));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.03)
+  );
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 1.25rem;

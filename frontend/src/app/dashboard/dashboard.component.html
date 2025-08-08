@@ -1,7 +1,10 @@
 <div class="dashboard-container">
   <div class="grid grid-cols-3 gap-4 p-6 dashboard-grid relative z-10">
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="col-span-3 flex items-center justify-center min-h-96">
+    <div
+      *ngIf="isLoading"
+      class="col-span-3 flex items-center justify-center min-h-96"
+    >
       <div class="text-center text-white">
         <div class="loading-spinner mx-auto mb-4"></div>
         <p class="text-xl font-medium">Lade Statistiken...</p>
@@ -9,7 +12,10 @@
     </div>
 
     <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="col-span-3 flex items-center justify-center min-h-96">
+    <div
+      *ngIf="hasError && !isLoading"
+      class="col-span-3 flex items-center justify-center min-h-96"
+    >
       <div class="error-message max-w-md">
         <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
         <p class="mb-4">{{ errorMessage }}</p>
@@ -26,7 +32,10 @@
         <div class="stats-card p-6 rounded-2xl auto-height">
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Kills -->
-            <div class="stat-item" style="--stat-color: #10b981; --stat-color-light: #34d399">
+            <div
+              class="stat-item"
+              style="--stat-color: #10b981; --stat-color-light: #34d399"
+            >
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">Abschüsse</h5>
@@ -37,7 +46,10 @@
             </div>
 
             <!-- Deaths -->
-            <div class="stat-item" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa">
+            <div
+              class="stat-item"
+              style="--stat-color: #3b82f6; --stat-color-light: #60a5fa"
+            >
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">Todesfälle</h5>
@@ -48,7 +60,10 @@
             </div>
 
             <!-- Experience -->
-            <div class="stat-item" style="--stat-color: #f59e0b; --stat-color-light: #fbbf24">
+            <div
+              class="stat-item"
+              style="--stat-color: #f59e0b; --stat-color-light: #fbbf24"
+            >
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">Erfahrung</h5>
@@ -59,7 +74,10 @@
             </div>
 
             <!-- K/D Ratio -->
-            <div class="stat-item" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa">
+            <div
+              class="stat-item"
+              style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa"
+            >
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">K/D Ratio</h5>
@@ -76,9 +94,17 @@
       <div class="col-span-1 player-card-container">
         <div class="player-card">
           <!-- Avatar Header -->
-          <div class="player-avatar-container" *ngIf="userStatistics?.avatarFull">
-            <img class="player-avatar" [src]="getAvatarUrl(userStatistics.avatarFull)"
-              [alt]="userStatistics.username || 'Player Avatar'" loading="lazy" (error)="onImageError($event)" />
+          <div
+            class="player-avatar-container"
+            *ngIf="userStatistics?.avatarFull"
+          >
+            <img
+              class="player-avatar"
+              [src]="getAvatarUrl(userStatistics.avatarFull)"
+              [alt]="userStatistics.username || 'Player Avatar'"
+              loading="lazy"
+              (error)="onImageError($event)"
+            />
           </div>
 
           <!-- Player Info -->
@@ -87,7 +113,7 @@
               Willkommen zurück,<br />
               <span class="text-gradient">{{
                 userStatistics.username || 'Spieler'
-                }}</span>
+              }}</span>
             </h2>
 
             <p class="text-lg text-gray-300 mb-6">
@@ -100,7 +126,7 @@
                 <span class="player-info-label">Gespielte Runden:</span>
                 <span class="player-info-value">{{
                   userStatistics.roundsplayed | number: '1.0-0'
-                  }}</span>
+                }}</span>
               </div>
 
               <div class="player-info-item">
@@ -112,28 +138,28 @@
                 <span class="player-info-label">Benutzte Medkits:</span>
                 <span class="player-info-value">{{
                   userStatistics.usedmedkits | number: '1.0-0'
-                  }}</span>
+                }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Getrunkene Colas:</span>
                 <span class="player-info-value">{{
                   userStatistics.usedcolas | number: '1.0-0'
-                  }}</span>
+                }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Pocket Escapes:</span>
                 <span class="player-info-value">{{
                   userStatistics.pocketescapes | number: '1.0-0'
-                  }}</span>
+                }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Benutzte Adrenalin:</span>
                 <span class="player-info-value">{{
                   userStatistics.usedadrenaline | number: '1.0-0'
-                  }}</span>
+                }}</span>
               </div>
             </div>
           </div>
@@ -173,11 +199,17 @@
 
           <!-- Regular Card Content -->
           <div *ngIf="!showSprayHelp">
-            <h3 class="text-xl font-bold text-white flex items-center justify-between cardHeader">
+            <h3
+              class="text-xl font-bold text-white flex items-center justify-between cardHeader"
+            >
               <div class="flex items-center gap-2">
                 🎨 <span>Custom Spray</span>
               </div>
-              <button (click)="showSprayHelp = true" class="help-button" title="Hilfe anzeigen">
+              <button
+                (click)="showSprayHelp = true"
+                class="help-button"
+                title="Hilfe anzeigen"
+              >
                 ?
               </button>
             </h3>
@@ -186,10 +218,18 @@
             <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
               <div class="spray-preview-container mx-auto relative">
                 <div class="spray-preview">
-                  <img [src]="currentSprayImage" alt="Current Spray" class="spray-image" />
+                  <img
+                    [src]="currentSprayImage"
+                    alt="Current Spray"
+                    class="spray-image"
+                  />
                 </div>
-                <button (click)="removeSpray()" class="remove-spray-button" [disabled]="sprayUploadLoading"
-                  title="Spray löschen">
+                <button
+                  (click)="removeSpray()"
+                  class="remove-spray-button"
+                  [disabled]="sprayUploadLoading"
+                  title="Spray löschen"
+                >
                   ×
                 </button>
               </div>
@@ -203,14 +243,28 @@
 
             <!-- Upload Section with Drag & Drop -->
             <div class="spray-upload">
-              <div class="upload-area" [class.has-file]="selectedFile && !sprayUploadLoading"
-                [class.loading]="sprayUploadLoading" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
-                (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
-                <input type="file" id="sprayFileInput" accept="image/*" (change)="onFileSelected($event)"
-                  class="file-input" />
+              <div
+                class="upload-area"
+                [class.has-file]="selectedFile && !sprayUploadLoading"
+                [class.loading]="sprayUploadLoading"
+                [class.drag-over]="isDragOver"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)"
+              >
+                <input
+                  type="file"
+                  id="sprayFileInput"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  class="file-input"
+                />
                 <label for="sprayFileInput" class="upload-label">
                   <div class="upload-content">
-                    <div *ngIf="!sprayUploadLoading && !selectedFile" class="text-center">
+                    <div
+                      *ngIf="!sprayUploadLoading && !selectedFile"
+                      class="text-center"
+                    >
                       <div class="text-2xl mb-2">📁</div>
                       <p class="font-medium">Klicken oder hierher ziehen</p>
                       <p class="text-sm opacity-75">PNG, JPG, GIF</p>
@@ -218,7 +272,10 @@
                         Max: 10MB (Bilder) / 2MB (GIFs, 20 Frames)
                       </p>
                     </div>
-                    <div *ngIf="selectedFile && !sprayUploadLoading" class="text-center">
+                    <div
+                      *ngIf="selectedFile && !sprayUploadLoading"
+                      class="text-center"
+                    >
                       <div class="text-2xl mb-2">✓</div>
                       <p class="font-medium">{{ selectedFileName }}</p>
                       <p class="text-sm opacity-75">Bereit zum Upload</p>
@@ -231,7 +288,10 @@
                 </label>
               </div>
 
-              <div *ngIf="selectedFile && !sprayUploadLoading" class="upload-actions mt-3">
+              <div
+                *ngIf="selectedFile && !sprayUploadLoading"
+                class="upload-actions mt-3"
+              >
                 <button (click)="uploadSpray()" class="upload-button">
                   Hochladen
                 </button>
@@ -242,40 +302,57 @@
             </div>
 
             <!-- Privacy Policy Notice -->
-            <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
+            <div
+              class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
+            >
               <!-- Compact Default State -->
-              <div *ngIf="!showPrivacyDetails" class="flex items-center gap-3 p-4 md:p-5">
+              <div
+                *ngIf="!showPrivacyDetails"
+                class="flex items-center gap-3 p-4 md:p-5"
+              >
                 <div class="text-yellow-400 text-xl leading-none">⚠️</div>
                 <div class="text-sm text-yellow-100 leading-relaxed">
                   <strong>Datenschutzhinweis:</strong>
                   <span
                     class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
-                    (click)="showPrivacyDetails = true">Details anzeigen
+                    (click)="showPrivacyDetails = true"
+                    >Details anzeigen
                   </span>
-
-
                 </div>
               </div>
 
               <!-- Expanded Privacy Details -->
-              <div *ngIf="showPrivacyDetails" id="privacy-details" class="privacy-expanded p-4 md:p-5">
+              <div
+                *ngIf="showPrivacyDetails"
+                id="privacy-details"
+                class="privacy-expanded p-4 md:p-5"
+              >
                 <div class="flex items-start gap-3 mb-3">
                   <div class="text-yellow-400 text-xl leading-none">⚠️</div>
-                  <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
+                  <h4
+                    class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader"
+                  >
                     Datenschutzhinweis - Wichtige Informationen
                   </h4>
 
                   <span
                     class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
-                    (click)="showPrivacyDetails = false" title="Schließen" role="button"
-                    aria-label="Datenschutzhinweis schließen" aria-expanded="true" aria-controls="privacy-details">
+                    (click)="showPrivacyDetails = false"
+                    title="Schließen"
+                    role="button"
+                    aria-label="Datenschutzhinweis schließen"
+                    aria-expanded="true"
+                    aria-controls="privacy-details"
+                  >
                     ✕
                   </span>
                 </div>
 
                 <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
                   <li class="leading-relaxed">
-                    <span class="font-semibold">Öffentliche Verfügbarkeit und Datenübertragung:</span>
+                    <span class="font-semibold"
+                      >Öffentliche Verfügbarkeit und Datenübertragung:</span
+                    >
                     Ihr hochgeladenes Bild wird öffentlich zugänglich und kann
                     an unseren Discord-Server übertragen werden, welcher auf
                     US-amerikanischen Servern außerhalb unserer direkten
@@ -284,7 +361,9 @@
                   </li>
 
                   <li class="leading-relaxed">
-                    <span class="font-semibold">Datenlöschung und Persistenz:</span>
+                    <span class="font-semibold"
+                      >Datenlöschung und Persistenz:</span
+                    >
                     Eine Löschung des Bildes durch Sie garantiert nicht die
                     vollständige und endgültige Entfernung von unseren Systemen,
                     Discord-Servern oder beteiligten Drittsystemen. Kopien
@@ -293,7 +372,9 @@
                   </li>
 
                   <li class="leading-relaxed">
-                    <span class="font-semibold">Automatisierte Inhaltsmoderation:</span>
+                    <span class="font-semibold"
+                      >Automatisierte Inhaltsmoderation:</span
+                    >
                     Alle hochgeladenen Bilder werden automatisiert mittels
                     OpenAI-Moderation (Modell „omni-moderation-latest“) geprüft.
                     Dabei können Ihre Bilddaten an OpenAI übermittelt werden.
@@ -302,7 +383,9 @@
                   </li>
 
                   <li class="leading-relaxed">
-                    <span class="font-semibold">Moderationsmaßnahmen und Account-Sperrung:</span>
+                    <span class="font-semibold"
+                      >Moderationsmaßnahmen und Account-Sperrung:</span
+                    >
                     Wir behalten uns vor, hochgeladene Bilder jederzeit und ohne
                     Vorankündigung zu löschen. Bei Verstößen gegen diese
                     Hinweise, gegen gesetzliche Vorgaben oder bei
@@ -311,7 +394,9 @@
                   </li>
 
                   <li class="leading-relaxed">
-                    <span class="font-semibold">Internationale Datenübertragung:</span>
+                    <span class="font-semibold"
+                      >Internationale Datenübertragung:</span
+                    >
                     Durch die Nutzung von Discord-Servern und die Einbindung des
                     OpenAI-Moderationsdienstes kann eine Übertragung Ihrer Daten
                     in die USA und ggf. weitere Drittländer erfolgen, in denen
@@ -363,8 +448,9 @@
                 "Chaos König" - es ist dein persönlicher Touch.
               </div>
               <div class="help-text">
-                <strong>Tipp:</strong> Wähle etwas, das deine Persönlichkeit oder
-                deinen Spielstil widerspiegelt. Andere Spieler werden es sehen können!
+                <strong>Tipp:</strong> Wähle etwas, das deine Persönlichkeit
+                oder deinen Spielstil widerspiegelt. Andere Spieler werden es
+                sehen können!
               </div>
               <button (click)="showFakerankHelp = false" class="help-close-btn">
                 Verstanden! ✨
@@ -374,9 +460,17 @@
 
           <!-- Regular Card Content -->
           <div *ngIf="!showFakerankHelp">
-            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between cardHeader">
-              <div class="flex items-center gap-2">✨ <span>Fakerank</span></div>
-              <button (click)="showFakerankHelp = true" class="help-button" title="Was ist ein Fakerank?">
+            <h3
+              class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between cardHeader"
+            >
+              <div class="flex items-center gap-2">
+                ✨ <span>Fakerank</span>
+              </div>
+              <button
+                (click)="showFakerankHelp = true"
+                class="help-button"
+                title="Was ist ein Fakerank?"
+              >
                 ?
               </button>
             </h3>
@@ -384,7 +478,10 @@
             <!-- Display Mode -->
             <div *ngIf="!isEditingFakerank" class="fakerank-display">
               <div class="nickname-container mb-4">
-                <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
+                <div
+                  class="nickname-preview"
+                  [class.nickname-empty]="!currentFakerank"
+                >
                   <div *ngIf="currentFakerank" class="nickname-display">
                     <div class="nickname-icon">✨</div>
                     <div class="nickname-text">
@@ -396,18 +493,27 @@
                     <div class="nickname-icon">💭</div>
                     <div class="nickname-text">
                       <span class="nickname-label">Noch kein Spitzname</span>
-                      <span class="nickname-subtitle">Gib dir einen coolen Namen!</span>
+                      <span class="nickname-subtitle"
+                        >Gib dir einen coolen Namen!</span
+                      >
                     </div>
                   </div>
                 </div>
               </div>
               <div class="fakerank-actions">
-                <button (click)="startEditingFakerank()" class="fakerank-btn fakerank-btn-primary"
-                  [disabled]="fakerankLoading">
+                <button
+                  (click)="startEditingFakerank()"
+                  class="fakerank-btn fakerank-btn-primary"
+                  [disabled]="fakerankLoading"
+                >
                   {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
                 </button>
-                <button *ngIf="currentFakerank" (click)="deleteFakerank()" class="fakerank-btn fakerank-btn-danger"
-                  [disabled]="fakerankLoading">
+                <button
+                  *ngIf="currentFakerank"
+                  (click)="deleteFakerank()"
+                  class="fakerank-btn fakerank-btn-danger"
+                  [disabled]="fakerankLoading"
+                >
                   🗑️ Löschen
                 </button>
               </div>
@@ -418,10 +524,16 @@
               <div class="nickname-editor mb-4">
                 <label class="editor-label"> ✨ Dein neuer Spitzname </label>
                 <div class="fakerank-input-container">
-                  <input type="text" [(ngModel)]="fakerankValue"
-                    placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..." maxlength="50" class="nickname-input"
-                    [disabled]="fakerankLoading" (keyup.enter)="saveFakerank()"
-                    (keyup.escape)="cancelEditingFakerank()" />
+                  <input
+                    type="text"
+                    [(ngModel)]="fakerankValue"
+                    placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..."
+                    maxlength="50"
+                    class="nickname-input"
+                    [disabled]="fakerankLoading"
+                    (keyup.enter)="saveFakerank()"
+                    (keyup.escape)="cancelEditingFakerank()"
+                  />
                   <div class="fakerank-char-count">
                     {{ fakerankValue.length }}/50
                   </div>
@@ -431,25 +543,38 @@
                 </div>
               </div>
               <div class="fakerank-actions">
-                <button (click)="saveFakerank()" class="fakerank-btn fakerank-btn-success" [disabled]="
+                <button
+                  (click)="saveFakerank()"
+                  class="fakerank-btn fakerank-btn-success"
+                  [disabled]="
                     fakerankLoading || fakerankValue.trim().length === 0
-                  ">
+                  "
+                >
                   {{ fakerankLoading ? '💾 Speichern...' : '💾 Speichern' }}
                 </button>
-                <button (click)="cancelEditingFakerank()" class="fakerank-btn fakerank-btn-secondary"
-                  [disabled]="fakerankLoading">
+                <button
+                  (click)="cancelEditingFakerank()"
+                  class="fakerank-btn fakerank-btn-secondary"
+                  [disabled]="fakerankLoading"
+                >
                   ❌ Abbrechen
                 </button>
               </div>
             </div>
 
             <!-- Success Message -->
-            <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">
+            <div
+              *ngIf="fakerankSuccess"
+              class="fakerank-message fakerank-success mt-3"
+            >
               🎉 Spitzname erfolgreich gespeichert!
             </div>
 
             <!-- Error Message -->
-            <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">
+            <div
+              *ngIf="fakerankError"
+              class="fakerank-message fakerank-error mt-3"
+            >
               {{ fakerankError }}
             </div>
           </div>
@@ -460,7 +585,9 @@
       <div class="col-span-2 history-container">
         <div class="stats-card p-6 rounded-2xl">
           <div class="flex justify-between items-center mb-4 cardHeader">
-            <h3 class="text-2xl font-bold text-white cardHeader">Verlauf & Sitzungen</h3>
+            <h3 class="text-2xl font-bold text-white cardHeader">
+              Verlauf & Sitzungen
+            </h3>
             <button (click)="refreshStats()" class="refresh-button">
               Aktualisieren
             </button>
@@ -488,13 +615,21 @@
           </div>
 
           <div *ngIf="hasKillers" class="killers-list">
-            <div *ngFor="
+            <div
+              *ngFor="
                 let killer of userStatistics?.lastkillers;
                 let i = index;
                 trackBy: trackByKiller
-              " class="killer-item">
-              <img class="killer-avatar" [src]="getAvatarUrl(killer?.avatarmedium)"
-                [alt]="killer?.displayname || 'Unknown Player'" loading="lazy" (error)="onImageError($event)" />
+              "
+              class="killer-item"
+            >
+              <img
+                class="killer-avatar"
+                [src]="getAvatarUrl(killer?.avatarmedium)"
+                [alt]="killer?.displayname || 'Unknown Player'"
+                loading="lazy"
+                (error)="onImageError($event)"
+              />
               <div class="flex-1 min-w-0">
                 <p class="killer-name" [title]="killer?.displayname">
                   {{ truncateDisplayName(killer?.displayname) }}

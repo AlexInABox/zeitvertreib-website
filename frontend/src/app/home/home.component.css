@@ -10,7 +10,6 @@
 }
 
 @media (orientation: portrait) {
-
   .centered-image,
   .centered-image img {
     width: 100% !important;
@@ -37,7 +36,7 @@
   /* Space below the container */
 }
 
-.welcome-container>* {
+.welcome-container > * {
   flex-grow: 0;
   /* No need for flex-grow as the items are stacked vertically */
   margin-bottom: 10px;

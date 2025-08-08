@@ -191,7 +191,11 @@ async function handleGetFakerank(
     );
   } catch (error) {
     console.error('Error fetching fakerank:', error);
-    return createResponse({ error: 'Fakerank konnte nicht abgerufen werden' }, 500, origin);
+    return createResponse(
+      { error: 'Fakerank konnte nicht abgerufen werden' },
+      500,
+      origin,
+    );
   }
 }
 
@@ -225,7 +229,11 @@ async function handleUpdateFakerank(
     const body = (await request.json()) as { fakerank: string };
 
     if (!body.fakerank && body.fakerank !== '') {
-      return createResponse({ error: 'Fakerank ist erforderlich' }, 400, origin);
+      return createResponse(
+        { error: 'Fakerank ist erforderlich' },
+        400,
+        origin,
+      );
     }
 
     // Validate fakerank length (optional, adjust as needed)
@@ -239,10 +247,28 @@ async function handleUpdateFakerank(
 
     // Validate fakerank content using profanity filter
     try {
-      const containsProfanity = profanity.exists(body.fakerank, ['en', 'de', 'fr']);
-      console.log('Contains profanity:', containsProfanity);
+      // Check built-in profanity detection
+      const containsProfanity = profanity.exists(body.fakerank);
+      const containsProfanityWithLangs = profanity.exists(body.fakerank, [
+        'en',
+        'de',
+        'fr',
+      ]);
 
-      if (containsProfanity) {
+      // Manual check against our blacklist (more reliable than library for custom words)
+      const blacklistData = await env.SESSIONS.get('fakerank_blacklist');
+      let isBlacklisted = false;
+
+      if (blacklistData) {
+        const blacklistedWords = JSON.parse(blacklistData) as string[];
+        isBlacklisted = blacklistedWords.some(
+          (word) =>
+            body.fakerank.toLowerCase().includes(word.toLowerCase()) ||
+            word.toLowerCase().includes(body.fakerank.toLowerCase()),
+        );
+      }
+
+      if (containsProfanity || containsProfanityWithLangs || isBlacklisted) {
         return createResponse(
           { error: 'Fakerank enthält unangemessene Inhalte' },
           400,
@@ -256,9 +282,7 @@ async function handleUpdateFakerank(
         500,
         origin,
       );
-    }
-
-    // Validate fakerank content using OpenAI moderation
+    } // Validate fakerank content using OpenAI moderation
     if (!env.OPENAI_API_KEY) {
       console.error('OPENAI_API_KEY is not configured');
       return createResponse(
@@ -348,29 +372,12 @@ async function handleDeleteFakerank(
   try {
     // Check if player exists in database
     const existingPlayer = await env['zeitvertreib-data']
-      .prepare('SELECT id, fakerank FROM playerdata WHERE id = ?')
+      .prepare('SELECT id FROM playerdata WHERE id = ?')
       .bind(playerId)
-      .first() as { id: string; fakerank: string | null } | null;
+      .first();
 
-    if (existingPlayer && existingPlayer.fakerank) {
-      // Add the current fakerank to blacklist before deleting
-      const blacklistKey = 'fakerank_blacklist';
-      let blacklistedWords: string[] = [];
-
-      const existingBlacklist = await env.SESSIONS.get(blacklistKey);
-      if (existingBlacklist) {
-        blacklistedWords = JSON.parse(existingBlacklist);
-      }
-
-      // Add the word if it's not already blacklisted
-      const wordLower = existingPlayer.fakerank.toLowerCase();
-      if (!blacklistedWords.includes(wordLower)) {
-        blacklistedWords.push(wordLower);
-        await env.SESSIONS.put(blacklistKey, JSON.stringify(blacklistedWords));
-        console.log(`Added "${existingPlayer.fakerank}" to blacklist during user deletion`);
-      }
-
-      // Set fakerank to NULL
+    if (existingPlayer) {
+      // Set fakerank to NULL (or empty string, depending on your preference)
       await env['zeitvertreib-data']
         .prepare('UPDATE playerdata SET fakerank = NULL WHERE id = ?')
         .bind(playerId)
@@ -396,7 +403,11 @@ async function handleDeleteFakerank(
     }
   } catch (error) {
     console.error('Error deleting fakerank:', error);
-    return createResponse({ error: 'Fakerank konnte nicht gelöscht werden' }, 500, origin);
+    return createResponse(
+      { error: 'Fakerank konnte nicht gelöscht werden' },
+      500,
+      origin,
+    );
   }
 }
 
