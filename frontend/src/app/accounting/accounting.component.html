@@ -78,9 +78,7 @@
             </div>
             <div class="stat-value">
               <span class="currency-symbol">€</span>
-              <span class="amount">{{
-                currentBalance | number : "1.2-2"
-              }}</span>
+              <span class="amount">{{ currentBalance | number: '1.2-2' }}</span>
             </div>
             <div
               class="stat-trend"
@@ -92,7 +90,7 @@
                 [class.pi-arrow-up]="currentBalance >= 0"
                 [class.pi-arrow-down]="currentBalance < 0"
               ></i>
-              <span>{{ currentBalance >= 0 ? "Überschuss" : "Defizit" }}</span>
+              <span>{{ currentBalance >= 0 ? 'Überschuss' : 'Defizit' }}</span>
             </div>
           </div>
         </div>
@@ -105,10 +103,10 @@
           </div>
           <div class="stat-value">
             <span class="currency-symbol">€</span>
-            <span class="amount">{{ monthlyIncome | number : "1.2-2" }}</span>
+            <span class="amount">{{ monthlyIncome | number: '1.2-2' }}</span>
           </div>
           <div class="stat-info">
-            <span>Ø {{ averageMonthlyIncome | number : "1.2-2" }}€/Monat</span>
+            <span>Ø {{ averageMonthlyIncome | number: '1.2-2' }}€/Monat</span>
           </div>
         </div>
 
@@ -120,12 +118,10 @@
           </div>
           <div class="stat-value">
             <span class="currency-symbol">€</span>
-            <span class="amount">{{ monthlyExpenses | number : "1.2-2" }}</span>
+            <span class="amount">{{ monthlyExpenses | number: '1.2-2' }}</span>
           </div>
           <div class="stat-info">
-            <span
-              >Ø {{ averageMonthlyExpenses | number : "1.2-2" }}€/Monat</span
-            >
+            <span>Ø {{ averageMonthlyExpenses | number: '1.2-2' }}€/Monat</span>
           </div>
         </div>
 
@@ -194,8 +190,8 @@
                 >
                   {{
                     coveragePercentage >= 100
-                      ? "Vollständig gedeckt"
-                      : "Unterdeckt"
+                      ? 'Vollständig gedeckt'
+                      : 'Unterdeckt'
                   }}
                 </span>
               </div>
@@ -240,14 +236,14 @@
                 [class.positive]="event.type === 'income'"
                 [class.negative]="event.type === 'expense'"
               >
-                {{ event.type === "income" ? "+" : "-" }}€{{
-                  event.amount | number : "1.2-2"
+                {{ event.type === 'income' ? '+' : '-' }}€{{
+                  event.amount | number: '1.2-2'
                 }}
               </span>
             </div>
             <div class="transaction-meta">
               <span class="description">{{ event.description }}</span>
-              <span class="date">{{ event.date | date : "dd.MM.yyyy" }}</span>
+              <span class="date">{{ event.date | date: 'dd.MM.yyyy' }}</span>
             </div>
           </div>
 
@@ -299,8 +295,8 @@
                 [class.positive]="recurring.transaction_type === 'income'"
                 [class.negative]="recurring.transaction_type === 'expense'"
               >
-                {{ recurring.transaction_type === "income" ? "+" : "-" }}€{{
-                  recurring.amount | number : "1.2-2"
+                {{ recurring.transaction_type === 'income' ? '+' : '-' }}€{{
+                  recurring.amount | number: '1.2-2'
                 }}
               </span>
             </div>
@@ -310,7 +306,7 @@
               }}</span>
               <span class="recurring-next"
                 >Nächste Ausführung:
-                {{ recurring.next_execution | date : "dd.MM.yyyy" }}</span
+                {{ recurring.next_execution | date: 'dd.MM.yyyy' }}</span
               >
             </div>
           </div>
@@ -349,8 +345,8 @@
               [class.positive]="month.balance >= 0"
               [class.negative]="month.balance < 0"
             >
-              {{ month.balance >= 0 ? "+" : "" }}€{{
-                month.balance | number : "1.2-2"
+              {{ month.balance >= 0 ? '+' : '' }}€{{
+                month.balance | number: '1.2-2'
               }}
             </span>
           </div>
@@ -358,13 +354,13 @@
             <div class="detail-row">
               <span class="label">Community-Support:</span>
               <span class="value positive"
-                >+€{{ month.income | number : "1.2-2" }}</span
+                >+€{{ month.income | number: '1.2-2' }}</span
               >
             </div>
             <div class="detail-row">
               <span class="label">Server-Kosten:</span>
               <span class="value negative"
-                >-€{{ month.expenses | number : "1.2-2" }}</span
+                >-€{{ month.expenses | number: '1.2-2' }}</span
               >
             </div>
           </div>
@@ -395,8 +391,8 @@
             [class.positive]="threeMonthProjection >= 0"
             [class.negative]="threeMonthProjection < 0"
           >
-            {{ threeMonthProjection >= 0 ? "+" : "" }}€{{
-              threeMonthProjection | number : "1.2-2"
+            {{ threeMonthProjection >= 0 ? '+' : '' }}€{{
+              threeMonthProjection | number: '1.2-2'
             }}
           </div>
           <div class="projection-info">
@@ -410,7 +406,7 @@
             <span class="projection-label">Server-Laufzeit</span>
           </div>
           <div class="projection-value">
-            {{ burnRate | number : "1.2-2" }} Monate
+            {{ burnRate | number: '1.2-2' }} Monate
           </div>
           <div class="projection-info">
             <span>Bei aktuellem Saldo und Server-Kosten</span>
@@ -432,8 +428,8 @@
       <h3>
         {{
           editingTransaction
-            ? "Transaktion bearbeiten"
-            : "Neue Transaktion hinzufügen"
+            ? 'Transaktion bearbeiten'
+            : 'Neue Transaktion hinzufügen'
         }}
       </h3>
       <button class="modal-close-btn" (click)="closeTransactionModal()">
@@ -547,7 +543,7 @@
           [disabled]="!transactionForm.valid || isSubmitting"
         >
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
-          {{ editingTransaction ? "Speichern" : "Hinzufügen" }}
+          {{ editingTransaction ? 'Speichern' : 'Hinzufügen' }}
         </button>
       </div>
     </form>
@@ -565,8 +561,8 @@
       <h3>
         {{
           editingRecurring
-            ? "Wiederkehrende Transaktion bearbeiten"
-            : "Neue wiederkehrende Transaktion hinzufügen"
+            ? 'Wiederkehrende Transaktion bearbeiten'
+            : 'Neue wiederkehrende Transaktion hinzufügen'
         }}
       </h3>
       <button class="modal-close-btn" (click)="closeRecurringModal()">
@@ -708,7 +704,7 @@
           [disabled]="!recurringForm.valid || isSubmitting"
         >
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
-          {{ editingRecurring ? "Speichern" : "Hinzufügen" }}
+          {{ editingRecurring ? 'Speichern' : 'Hinzufügen' }}
         </button>
       </div>
     </form>

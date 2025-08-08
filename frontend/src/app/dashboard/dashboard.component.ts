@@ -33,18 +33,25 @@ interface Statistics {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule],
+  imports: [
+    ButtonModule,
+    CardModule,
+    ChartModule,
+    AvatarModule,
+    CommonModule,
+    FormsModule,
+  ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnDestroy {
   userStatistics: Statistics = {
-    username: "LÄDT...",
+    username: 'LÄDT...',
     kills: 0,
     deaths: 0,
     experience: 0,
     playtime: 0,
-    avatarFull: "",
+    avatarFull: '',
     roundsplayed: 0,
     leaderboardposition: null,
     usedmedkits: 0,
@@ -52,7 +59,7 @@ export class DashboardComponent implements OnDestroy {
     pocketescapes: 0,
     usedadrenaline: 0,
     lastkillers: [],
-    lastkills: []
+    lastkills: [],
   };
 
   isLoading = true;
@@ -108,17 +115,22 @@ export class DashboardComponent implements OnDestroy {
   get leaderboardText(): string {
     return this.userStatistics?.leaderboardposition
       ? `Platz #${this.userStatistics.leaderboardposition}`
-      : "NICHT GENÜGEND DATEN";
+      : 'NICHT GENÜGEND DATEN';
   }
 
   get hasKillers(): boolean {
-    return Array.isArray(this.userStatistics?.lastkillers) && this.userStatistics.lastkillers.length > 0;
+    return (
+      Array.isArray(this.userStatistics?.lastkillers) &&
+      this.userStatistics.lastkillers.length > 0
+    );
   }
 
   // Safe method to truncate display names
   truncateDisplayName(name?: string, maxLength = 15): string {
     if (!name) return 'Unbekannt';
-    return name.length > maxLength ? `${name.substring(0, maxLength)}...` : name;
+    return name.length > maxLength
+      ? `${name.substring(0, maxLength)}...`
+      : name;
   }
 
   // Safe method to get avatar with fallback
@@ -144,7 +156,7 @@ export class DashboardComponent implements OnDestroy {
     this.randomColors = [
       this.getRandomColor(),
       this.getRandomColor(),
-      this.getRandomColor()
+      this.getRandomColor(),
     ];
     this.applyRandomColors();
   }
@@ -160,11 +172,13 @@ export class DashboardComponent implements OnDestroy {
   // Convert HSL to HEX
   private hslToHex(h: number, s: number, l: number): string {
     l /= 100;
-    const a = s * Math.min(l, 1 - l) / 100;
+    const a = (s * Math.min(l, 1 - l)) / 100;
     const f = (n: number) => {
       const k = (n + h / 30) % 12;
       const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(255 * color).toString(16).padStart(2, '0');
+      return Math.round(255 * color)
+        .toString(16)
+        .padStart(2, '0');
     };
     return `#${f(0)}${f(8)}${f(4)}`;
   }
@@ -183,13 +197,14 @@ export class DashboardComponent implements OnDestroy {
     this.isLoading = true;
     this.hasError = false;
 
-    this.authService.authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`)
+    this.authService
+      .authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`)
       .subscribe({
-        next: response => {
+        next: (response) => {
           if (response?.stats) {
             this.userStatistics = {
               ...this.userStatistics, // Keep defaults for missing properties
-              ...response.stats
+              ...response.stats,
             };
           }
           this.isLoading = false;
@@ -199,7 +214,7 @@ export class DashboardComponent implements OnDestroy {
           this.hasError = true;
           this.errorMessage = 'Statistiken konnten nicht geladen werden';
           this.isLoading = false;
-        }
+        },
       });
   }
 
@@ -207,7 +222,8 @@ export class DashboardComponent implements OnDestroy {
   private loadCurrentSpray(): void {
     // Add cache-busting parameter to avoid browser caching issues
     const timestamp = new Date().getTime();
-    this.authService.authenticatedGetBlob(`${environment.apiUrl}/spray/image?t=${timestamp}`)
+    this.authService
+      .authenticatedGetBlob(`${environment.apiUrl}/spray/image?t=${timestamp}`)
       .subscribe({
         next: (response: Blob) => {
           // Clean up previous object URL to prevent memory leaks
@@ -227,7 +243,7 @@ export class DashboardComponent implements OnDestroy {
             URL.revokeObjectURL(this.currentSprayImage);
           }
           this.currentSprayImage = null;
-        }
+        },
       });
   }
 
@@ -327,12 +343,17 @@ export class DashboardComponent implements OnDestroy {
         formData.append('isGif', isGif.toString());
 
         if (isGif && 'pixelDataFrames' in processedData) {
-          formData.append('pixelDataFrames', JSON.stringify(processedData.pixelDataFrames)); // Array of frame strings for GIFs
+          formData.append(
+            'pixelDataFrames',
+            JSON.stringify(processedData.pixelDataFrames),
+          ); // Array of frame strings for GIFs
         } else if ('pixelData' in processedData) {
           formData.append('pixelData', processedData.pixelData); // Single string for regular images
         }
 
-        return this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
+        return this.authService
+          .authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
+          .toPromise();
       })
       .then((response: any) => {
         this.sprayUploadLoading = false;
@@ -341,7 +362,9 @@ export class DashboardComponent implements OnDestroy {
         this.selectedFile = null;
 
         // Reset file input
-        const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
+        const fileInput = document.getElementById(
+          'sprayFileInput',
+        ) as HTMLInputElement;
         if (fileInput) fileInput.value = '';
 
         // Reload spray image
@@ -350,7 +373,10 @@ export class DashboardComponent implements OnDestroy {
       .catch((error) => {
         console.error('Spray upload error:', error);
         this.sprayUploadLoading = false;
-        this.sprayUploadError = error.error?.error || error.message || 'Fehler beim Hochladen des Sprays';
+        this.sprayUploadError =
+          error.error?.error ||
+          error.message ||
+          'Fehler beim Hochladen des Sprays';
         this.sprayUploadSuccess = false;
       });
   }
@@ -366,7 +392,8 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadSuccess = false;
     this.sprayDeleteSuccess = false;
 
-    this.authService.authenticatedDelete(`${environment.apiUrl}/spray/delete`)
+    this.authService
+      .authenticatedDelete(`${environment.apiUrl}/spray/delete`)
       .subscribe({
         next: (response: any) => {
           this.sprayUploadLoading = false;
@@ -382,16 +409,19 @@ export class DashboardComponent implements OnDestroy {
 
           // Clear any selected file as well
           this.selectedFile = null;
-          const fileInput = document.getElementById('sprayFileInputMini') as HTMLInputElement;
+          const fileInput = document.getElementById(
+            'sprayFileInputMini',
+          ) as HTMLInputElement;
           if (fileInput) fileInput.value = '';
         },
         error: (error: any) => {
           console.error('Spray deletion error:', error);
           this.sprayUploadLoading = false;
-          this.sprayUploadError = error.error?.error || 'Fehler beim Löschen des Sprays';
+          this.sprayUploadError =
+            error.error?.error || 'Fehler beim Löschen des Sprays';
           this.sprayUploadSuccess = false;
           this.sprayDeleteSuccess = false;
-        }
+        },
       });
   }
 
@@ -411,7 +441,9 @@ export class DashboardComponent implements OnDestroy {
   }
 
   // Process GIF to extract frames and create pixel data for each frame
-  private async processGifForUpload(file: File): Promise<{ smallImage: Blob; pixelDataFrames: string[] }> {
+  private async processGifForUpload(
+    file: File,
+  ): Promise<{ smallImage: Blob; pixelDataFrames: string[] }> {
     return new Promise(async (resolve, reject) => {
       try {
         // Read file as ArrayBuffer
@@ -431,7 +463,9 @@ export class DashboardComponent implements OnDestroy {
 
         // Check if GIF has too many frames
         if (frames.length > maxFrames) {
-          throw new Error(`GIF hat ${frames.length} Frames. Maximum erlaubt sind ${maxFrames} Frames.`);
+          throw new Error(
+            `GIF hat ${frames.length} Frames. Maximum erlaubt sind ${maxFrames} Frames.`,
+          );
         }
 
         // Create canvas for processing
@@ -455,7 +489,7 @@ export class DashboardComponent implements OnDestroy {
           const imageData = new ImageData(
             new Uint8ClampedArray(frame.patch),
             frame.dims.width,
-            frame.dims.height
+            frame.dims.height,
           );
 
           // Clear canvas and draw frame
@@ -465,34 +499,58 @@ export class DashboardComponent implements OnDestroy {
           // Create high-quality pixel art for this frame
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx) throw new Error('Konnte 2D-Kontext für Pixel-Canvas nicht erhalten');
+          if (!pixelCtx)
+            throw new Error(
+              'Konnte 2D-Kontext für Pixel-Canvas nicht erhalten',
+            );
 
           const pixelArtQuality = 80; // Reduced quality for better performance
           pixelCanvas.width = pixelArtQuality;
           pixelCanvas.height = pixelArtQuality;
 
           // Scale frame to fit
-          const { width: pixelWidth, height: pixelHeight } = this.scaleToLongestSide(canvas.width, canvas.height, pixelArtQuality);
+          const { width: pixelWidth, height: pixelHeight } =
+            this.scaleToLongestSide(
+              canvas.width,
+              canvas.height,
+              pixelArtQuality,
+            );
           const pixelOffsetX = (pixelArtQuality - pixelWidth) / 2;
           const pixelOffsetY = (pixelArtQuality - pixelHeight) / 2;
 
           pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
-          pixelCtx.drawImage(canvas, pixelOffsetX, pixelOffsetY, pixelWidth, pixelHeight);
+          pixelCtx.drawImage(
+            canvas,
+            pixelOffsetX,
+            pixelOffsetY,
+            pixelWidth,
+            pixelHeight,
+          );
 
           // Extract pixel data for this frame
-          const framePixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
+          const framePixelData = this.createPixelArtFromCanvas(
+            pixelCtx,
+            pixelArtQuality,
+            pixelArtQuality,
+          );
           pixelDataFrames.push(framePixelData);
 
           // Use first frame for thumbnail
           if (i === 0) {
-            thumbnailImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            thumbnailImageData = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
           }
         }
 
         // Create thumbnail from first frame
         const thumbnailCanvas = document.createElement('canvas');
         const thumbnailCtx = thumbnailCanvas.getContext('2d');
-        if (!thumbnailCtx || !thumbnailImageData) throw new Error('Could not create thumbnail');
+        if (!thumbnailCtx || !thumbnailImageData)
+          throw new Error('Could not create thumbnail');
 
         thumbnailCanvas.width = 50;
         thumbnailCanvas.height = 50;
@@ -500,32 +558,44 @@ export class DashboardComponent implements OnDestroy {
         // Create temp canvas with first frame
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
-        if (!tempCtx) throw new Error('Konnte temporären Kontext nicht erhalten');
+        if (!tempCtx)
+          throw new Error('Konnte temporären Kontext nicht erhalten');
 
         tempCanvas.width = canvas.width;
         tempCanvas.height = canvas.height;
         tempCtx.putImageData(thumbnailImageData, 0, 0);
 
         // Scale thumbnail
-        const { width: thumbWidth, height: thumbHeight } = this.scaleToLongestSide(canvas.width, canvas.height, 50);
+        const { width: thumbWidth, height: thumbHeight } =
+          this.scaleToLongestSide(canvas.width, canvas.height, 50);
         const thumbOffsetX = (50 - thumbWidth) / 2;
         const thumbOffsetY = (50 - thumbHeight) / 2;
 
         thumbnailCtx.clearRect(0, 0, 50, 50);
-        thumbnailCtx.drawImage(tempCanvas, thumbOffsetX, thumbOffsetY, thumbWidth, thumbHeight);
+        thumbnailCtx.drawImage(
+          tempCanvas,
+          thumbOffsetX,
+          thumbOffsetY,
+          thumbWidth,
+          thumbHeight,
+        );
 
         // Convert thumbnail to blob
-        thumbnailCanvas.toBlob((smallBlob) => {
-          if (!smallBlob) {
-            reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
-            return;
-          }
+        thumbnailCanvas.toBlob(
+          (smallBlob) => {
+            if (!smallBlob) {
+              reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
+              return;
+            }
 
-          resolve({
-            smallImage: smallBlob,
-            pixelDataFrames
-          });
-        }, 'image/png', 1.0);
+            resolve({
+              smallImage: smallBlob,
+              pixelDataFrames,
+            });
+          },
+          'image/png',
+          1.0,
+        );
       } catch (error) {
         reject(error);
       }
@@ -533,7 +603,9 @@ export class DashboardComponent implements OnDestroy {
   }
 
   // Process image to create 50x50 thumbnail and high-quality pixel data
-  private async processImageForUpload(file: File): Promise<{ smallImage: Blob; pixelData: string }> {
+  private async processImageForUpload(
+    file: File,
+  ): Promise<{ smallImage: Blob; pixelData: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -543,47 +615,75 @@ export class DashboardComponent implements OnDestroy {
           // Create 50x50 thumbnail (for storage/display)
           const thumbnailCanvas = document.createElement('canvas');
           const thumbnailCtx = thumbnailCanvas.getContext('2d');
-          if (!thumbnailCtx) throw new Error('Konnte 2D-Kontext für Thumbnail-Canvas nicht erhalten');
+          if (!thumbnailCtx)
+            throw new Error(
+              'Konnte 2D-Kontext für Thumbnail-Canvas nicht erhalten',
+            );
 
           thumbnailCanvas.width = 50;
           thumbnailCanvas.height = 50;
 
           // Scale thumbnail so the longest side becomes 50px
-          const { width: thumbWidth, height: thumbHeight } = this.scaleToLongestSide(img.width, img.height, 50);
+          const { width: thumbWidth, height: thumbHeight } =
+            this.scaleToLongestSide(img.width, img.height, 50);
           const thumbOffsetX = (50 - thumbWidth) / 2;
           const thumbOffsetY = (50 - thumbHeight) / 2;
 
           thumbnailCtx.clearRect(0, 0, 50, 50);
-          thumbnailCtx.drawImage(img, thumbOffsetX, thumbOffsetY, thumbWidth, thumbHeight);
+          thumbnailCtx.drawImage(
+            img,
+            thumbOffsetX,
+            thumbOffsetY,
+            thumbWidth,
+            thumbHeight,
+          );
 
           // Create high-quality canvas for pixel art generation
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx) throw new Error('Konnte 2D-Kontext für Pixel-Canvas nicht erhalten');
+          if (!pixelCtx)
+            throw new Error(
+              'Konnte 2D-Kontext für Pixel-Canvas nicht erhalten',
+            );
 
           pixelCanvas.width = pixelArtQuality;
           pixelCanvas.height = pixelArtQuality;
 
           // Scale for pixel art so the longest side becomes pixelArtQuality
-          const { width: pixelWidth, height: pixelHeight } = this.scaleToLongestSide(img.width, img.height, pixelArtQuality);
+          const { width: pixelWidth, height: pixelHeight } =
+            this.scaleToLongestSide(img.width, img.height, pixelArtQuality);
           const pixelOffsetX = (pixelArtQuality - pixelWidth) / 2;
           const pixelOffsetY = (pixelArtQuality - pixelHeight) / 2;
 
           pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
-          pixelCtx.drawImage(img, pixelOffsetX, pixelOffsetY, pixelWidth, pixelHeight);
+          pixelCtx.drawImage(
+            img,
+            pixelOffsetX,
+            pixelOffsetY,
+            pixelWidth,
+            pixelHeight,
+          );
 
           // Extract pixel data from high-quality canvas to create pixel art string
-          const pixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
+          const pixelData = this.createPixelArtFromCanvas(
+            pixelCtx,
+            pixelArtQuality,
+            pixelArtQuality,
+          );
 
           // Convert thumbnail canvas to blob for storage
-          thumbnailCanvas.toBlob((smallBlob) => {
-            if (!smallBlob) {
-              reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
-              return;
-            }
+          thumbnailCanvas.toBlob(
+            (smallBlob) => {
+              if (!smallBlob) {
+                reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
+                return;
+              }
 
-            resolve({ smallImage: smallBlob, pixelData });
-          }, 'image/png', 1.0); // Use PNG to preserve transparency
+              resolve({ smallImage: smallBlob, pixelData });
+            },
+            'image/png',
+            1.0,
+          ); // Use PNG to preserve transparency
         } catch (error) {
           reject(error);
         }
@@ -595,7 +695,11 @@ export class DashboardComponent implements OnDestroy {
   }
 
   // Create pixel art string from canvas data (like the C# version)
-  private createPixelArtFromCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): string {
+  private createPixelArtFromCanvas(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+  ): string {
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data; // RGBA array
     let result = '';
@@ -651,37 +755,49 @@ export class DashboardComponent implements OnDestroy {
   }
 
   // Scale image so the longest side becomes the target size
-  private scaleToLongestSide(srcWidth: number, srcHeight: number, targetSize: number): { width: number; height: number } {
+  private scaleToLongestSide(
+    srcWidth: number,
+    srcHeight: number,
+    targetSize: number,
+  ): { width: number; height: number } {
     const longestSide = Math.max(srcWidth, srcHeight);
     const scaleFactor = targetSize / longestSide;
 
     return {
       width: Math.floor(srcWidth * scaleFactor),
-      height: Math.floor(srcHeight * scaleFactor)
+      height: Math.floor(srcHeight * scaleFactor),
     };
   }
 
   // Calculate dimensions that fit within max width/height while keeping aspect ratio
-  private calculateAspectRatioFit(srcWidth: number, srcHeight: number, maxWidth: number, maxHeight: number): { width: number; height: number } {
+  private calculateAspectRatioFit(
+    srcWidth: number,
+    srcHeight: number,
+    maxWidth: number,
+    maxHeight: number,
+  ): { width: number; height: number } {
     const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
     return {
       width: Math.floor(srcWidth * ratio),
-      height: Math.floor(srcHeight * ratio)
+      height: Math.floor(srcHeight * ratio),
     };
   }
 
   // Fakerank methods
   loadFakerank(): void {
-    this.authService.authenticatedGet<{ fakerank: string | null }>(`${environment.apiUrl}/fakerank`)
+    this.authService
+      .authenticatedGet<{
+        fakerank: string | null;
+      }>(`${environment.apiUrl}/fakerank`)
       .subscribe({
-        next: response => {
+        next: (response) => {
           this.currentFakerank = response?.fakerank || null;
           this.fakerankValue = this.currentFakerank || '';
         },
         error: (error) => {
           console.error('Error loading fakerank:', error);
           this.fakerankError = 'Fehler beim Laden des Fakeranks';
-        }
+        },
       });
   }
 
@@ -708,22 +824,27 @@ export class DashboardComponent implements OnDestroy {
 
     const payload = { fakerank: this.fakerankValue.trim() };
 
-    this.authService.authenticatedPost<{ success: boolean; fakerank: string }>(`${environment.apiUrl}/fakerank`, payload)
+    this.authService
+      .authenticatedPost<{
+        success: boolean;
+        fakerank: string;
+      }>(`${environment.apiUrl}/fakerank`, payload)
       .subscribe({
-        next: response => {
+        next: (response) => {
           if (response?.success) {
             this.currentFakerank = response.fakerank;
             this.fakerankSuccess = true;
             this.isEditingFakerank = false;
-            setTimeout(() => this.fakerankSuccess = false, 3000);
+            setTimeout(() => (this.fakerankSuccess = false), 3000);
           }
           this.fakerankLoading = false;
         },
         error: (error) => {
           console.error('Error saving fakerank:', error);
-          this.fakerankError = error?.error?.error || 'Fehler beim Speichern des Fakeranks';
+          this.fakerankError =
+            error?.error?.error || 'Fehler beim Speichern des Fakeranks';
           this.fakerankLoading = false;
-        }
+        },
       });
   }
 
@@ -734,23 +855,27 @@ export class DashboardComponent implements OnDestroy {
     this.fakerankError = '';
     this.fakerankSuccess = false;
 
-    this.authService.authenticatedDelete<{ success: boolean }>(`${environment.apiUrl}/fakerank`)
+    this.authService
+      .authenticatedDelete<{
+        success: boolean;
+      }>(`${environment.apiUrl}/fakerank`)
       .subscribe({
-        next: response => {
+        next: (response) => {
           if (response?.success) {
             this.currentFakerank = null;
             this.fakerankValue = '';
             this.fakerankSuccess = true;
             this.isEditingFakerank = false;
-            setTimeout(() => this.fakerankSuccess = false, 3000);
+            setTimeout(() => (this.fakerankSuccess = false), 3000);
           }
           this.fakerankLoading = false;
         },
         error: (error) => {
           console.error('Error deleting fakerank:', error);
-          this.fakerankError = error?.error?.error || 'Fehler beim Löschen des Fakeranks';
+          this.fakerankError =
+            error?.error?.error || 'Fehler beim Löschen des Fakeranks';
           this.fakerankLoading = false;
-        }
+        },
       });
   }
 }

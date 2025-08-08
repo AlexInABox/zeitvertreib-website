@@ -16,9 +16,8 @@ describe('HeaderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AccountingComponent]
-    })
-      .compileComponents();
+      imports: [AccountingComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AccountingComponent);
     component = fixture.componentInstance;

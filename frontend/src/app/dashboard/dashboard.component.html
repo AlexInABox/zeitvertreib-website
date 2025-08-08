@@ -41,7 +41,7 @@
                 <div class="flex-1 min-w-0">
                   <h5 class="stat-label">Abschüsse</h5>
                   <p class="stat-value">
-                    {{ userStatistics.kills | number : "1.0-0" }}
+                    {{ userStatistics.kills | number: '1.0-0' }}
                   </p>
                 </div>
               </div>
@@ -57,7 +57,7 @@
                 <div class="flex-1 min-w-0">
                   <h5 class="stat-label">Todesfälle</h5>
                   <p class="stat-value">
-                    {{ userStatistics.deaths | number : "1.0-0" }}
+                    {{ userStatistics.deaths | number: '1.0-0' }}
                   </p>
                 </div>
               </div>
@@ -73,7 +73,7 @@
                 <div class="flex-1 min-w-0">
                   <h5 class="stat-label">Erfahrung</h5>
                   <p class="stat-value">
-                    {{ userStatistics.experience | number : "1.0-0" }}XP
+                    {{ userStatistics.experience | number: '1.0-0' }}XP
                   </p>
                 </div>
               </div>
@@ -120,7 +120,7 @@
             <h2 class="text-2xl font-bold text-white mb-2">
               Willkommen zurück,<br />
               <span class="text-gradient">{{
-                userStatistics.username || "Spieler"
+                userStatistics.username || 'Spieler'
               }}</span>
             </h2>
 
@@ -133,7 +133,7 @@
               <div class="player-info-item">
                 <span class="player-info-label">Gespielte Runden:</span>
                 <span class="player-info-value">{{
-                  userStatistics.roundsplayed | number : "1.0-0"
+                  userStatistics.roundsplayed | number: '1.0-0'
                 }}</span>
               </div>
 
@@ -145,28 +145,28 @@
               <div class="player-info-item">
                 <span class="player-info-label">Benutzte Medkits:</span>
                 <span class="player-info-value">{{
-                  userStatistics.usedmedkits | number : "1.0-0"
+                  userStatistics.usedmedkits | number: '1.0-0'
                 }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Getrunkene Colas:</span>
                 <span class="player-info-value">{{
-                  userStatistics.usedcolas | number : "1.0-0"
+                  userStatistics.usedcolas | number: '1.0-0'
                 }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Pocket Escapes:</span>
                 <span class="player-info-value">{{
-                  userStatistics.pocketescapes | number : "1.0-0"
+                  userStatistics.pocketescapes | number: '1.0-0'
                 }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Benutzte Adrenalin:</span>
                 <span class="player-info-value">{{
-                  userStatistics.usedadrenaline | number : "1.0-0"
+                  userStatistics.usedadrenaline | number: '1.0-0'
                 }}</span>
               </div>
             </div>
@@ -309,98 +309,118 @@
               </div>
             </div>
 
-            <!-- Privacy Policy Warning -->
+            <!-- Privacy Policy Notice -->
             <div
-              class="privacy-warning mt-4 p-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
+              class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
             >
               <!-- Compact Default State -->
-              <div *ngIf="!showPrivacyDetails" class="flex items-center gap-2">
-                <div class="text-yellow-400 text-lg">⚠️</div>
-                <div class="text-sm text-yellow-100">
+              <div
+                *ngIf="!showPrivacyDetails"
+                class="flex items-center gap-3 p-4 md:p-5"
+              >
+                <div class="text-yellow-400 text-xl leading-none">⚠️</div>
+                <div class="text-sm text-yellow-100 leading-relaxed">
                   <strong>Datenschutzhinweis:</strong>
                   <button
-                    class="text-yellow-300 underline hover:text-yellow-200 ml-1"
+                    class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 ml-1"
                     (click)="showPrivacyDetails = true"
+                    aria-expanded="false"
+                    aria-controls="privacy-details"
                   >
-                    Hier klicken um die Datenschutzrichtlinie anzuzeigen
+                    Details anzeigen
                   </button>
                 </div>
               </div>
 
               <!-- Expanded Privacy Details -->
-              <div *ngIf="showPrivacyDetails" class="privacy-expanded">
-                <div class="flex items-start gap-2 mb-3">
-                  <div class="text-yellow-400 text-lg">⚠️</div>
-                  <div class="text-sm text-yellow-100 flex-1">
-                    <strong
-                      >Datenschutzhinweis - Wichtige Informationen:</strong
-                    >
-                  </div>
+              <div
+                *ngIf="showPrivacyDetails"
+                id="privacy-details"
+                class="privacy-expanded p-4 md:p-5"
+              >
+                <div class="flex items-start gap-3 mb-3">
+                  <div class="text-yellow-400 text-xl leading-none">⚠️</div>
+                  <h4
+                    class="text-sm md:text-base font-semibold text-yellow-100 flex-1"
+                  >
+                    Datenschutzhinweis – Wichtige Informationen
+                  </h4>
                   <button
-                    class="text-yellow-300 hover:text-yellow-200 text-xs"
+                    class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm"
                     (click)="showPrivacyDetails = false"
                     title="Schließen"
+                    aria-label="Datenschutzhinweis schließen"
+                    aria-expanded="true"
+                    aria-controls="privacy-details"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div class="text-sm text-yellow-100 space-y-3">
-                  <p>
-                    <strong
-                      >Öffentliche Verfügbarkeit und Datenübertragung:</strong
-                    ><br />
-                    Ihr hochgeladenes Bild wird öffentlich zugänglich und wird
-                    an unseren Discord-Server übertragen, welcher auf
+                <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
+                  <li class="leading-relaxed">
+                    <span class="font-semibold"
+                      >Öffentliche Verfügbarkeit und Datenübertragung:</span
+                    >
+                    Ihr hochgeladenes Bild wird öffentlich zugänglich und kann
+                    an unseren Discord-Server übertragen werden, welcher auf
                     US-amerikanischen Servern außerhalb unserer direkten
                     Kontrolle gehostet wird. Diese Übertragung erfolgt zur
                     technischen Bereitstellung des Services.
-                  </p>
+                  </li>
 
-                  <p>
-                    <strong>Datenlöschung und Persistenz:</strong><br />
+                  <li class="leading-relaxed">
+                    <span class="font-semibold"
+                      >Datenlöschung und Persistenz:</span
+                    >
                     Eine Löschung des Bildes durch Sie garantiert nicht die
-                    vollständige und endgültige Entfernung von unseren Servern,
-                    Discord-Servern oder anderen beteiligten Systemen. Kopien
+                    vollständige und endgültige Entfernung von unseren Systemen,
+                    Discord-Servern oder beteiligten Drittsystemen. Kopien
                     können in Backups, Caches oder anderen technischen Systemen
                     verbleiben.
-                  </p>
+                  </li>
 
-                  <p>
-                    <strong>Automatisierte Inhaltsmoderation:</strong><br />
-                    Alle hochgeladenen Bilder werden automatisch durch
-                    KI-gestützte Überprüfung mittels des Dienstes Sightengine
-                    analysiert. Dabei werden Ihre Bilddaten an Drittanbieter
-                    übertragen. Weitere Informationen zur Datenverarbeitung
-                    finden Sie in der Datenschutzerklärung von Sightengine.
-                  </p>
+                  <li class="leading-relaxed">
+                    <span class="font-semibold"
+                      >Automatisierte Inhaltsmoderation:</span
+                    >
+                    Alle hochgeladenen Bilder werden automatisiert mittels
+                    OpenAI-Moderation (Modell „omni-moderation-latest“) geprüft.
+                    Dabei können Ihre Bilddaten an OpenAI übermittelt werden.
+                    Die Verarbeitung erfolgt zur Erkennung und Vermeidung
+                    unzulässiger Inhalte.
+                  </li>
 
-                  <p>
-                    <strong>Moderationsmaßnahmen und Account-Sperrung:</strong
-                    ><br />
-                    Wir behalten uns das Recht vor, hochgeladene Bilder
-                    jederzeit und ohne Vorankündigung zu löschen. Ihr Account
-                    kann bei Verstößen gegen unsere Nutzungsbedingungen oder aus
-                    anderen Gründen ohne Vorwarnung und ohne Angabe von Gründen
-                    gesperrt werden.
-                  </p>
+                  <li class="leading-relaxed">
+                    <span class="font-semibold"
+                      >Moderationsmaßnahmen und Account-Sperrung:</span
+                    >
+                    Wir behalten uns vor, hochgeladene Bilder jederzeit und ohne
+                    Vorankündigung zu löschen. Bei Verstößen gegen diese
+                    Hinweise, gegen gesetzliche Vorgaben oder bei
+                    missbräuchlicher Nutzung kann Ihr Account ohne vorherige
+                    Warnung gesperrt werden.
+                  </li>
 
-                  <p>
-                    <strong>Internationale Datenübertragung:</strong><br />
-                    Durch die Nutzung von Discord-Servern und Sightengine
-                    erfolgt eine Übertragung Ihrer Daten in die USA und
-                    möglicherweise andere Drittländer, die ein anderes
-                    Datenschutzniveau als Deutschland/EU aufweisen können.
-                  </p>
+                  <li class="leading-relaxed">
+                    <span class="font-semibold"
+                      >Internationale Datenübertragung:</span
+                    >
+                    Durch die Nutzung von Discord-Servern und die Einbindung des
+                    OpenAI-Moderationsdienstes kann eine Übertragung Ihrer Daten
+                    in die USA und ggf. weitere Drittländer erfolgen, in denen
+                    ein anderes Datenschutzniveau als in Deutschland/EU gilt.
+                  </li>
 
-                  <p class="font-semibold bg-yellow-900/30 p-2 rounded">
-                    <strong>Einverständniserklärung:</strong><br />
-                    Durch das Hochladen eines Bildes erklären Sie sich
-                    ausdrücklich mit allen oben genannten Bedingungen
-                    einverstanden und bestätigen, dass Sie die rechtlichen
-                    Konsequenzen verstanden haben.
-                  </p>
-                </div>
+                  <li
+                    class="leading-relaxed font-semibold bg-yellow-900/30 border border-yellow-500/30 p-2 rounded"
+                  >
+                    <span class="font-semibold">Einverständniserklärung:</span>
+                    Durch das Hochladen eines Bildes erklären Sie sich mit den
+                    oben genannten Bedingungen einverstanden und bestätigen,
+                    dass Sie die rechtlichen Konsequenzen verstanden haben.
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -486,7 +506,7 @@
                 class="fakerank-btn fakerank-btn-primary"
                 [disabled]="fakerankLoading"
               >
-                {{ currentFakerank ? "✏️ Ändern" : "➕ Erstellen" }}
+                {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
               </button>
               <button
                 *ngIf="currentFakerank"
@@ -530,7 +550,7 @@
                   fakerankLoading || fakerankValue.trim().length === 0
                 "
               >
-                {{ fakerankLoading ? "💾 Speichern..." : "💾 Speichern" }}
+                {{ fakerankLoading ? '💾 Speichern...' : '💾 Speichern' }}
               </button>
               <button
                 (click)="cancelEditingFakerank()"

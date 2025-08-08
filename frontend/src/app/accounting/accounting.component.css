@@ -7,7 +7,7 @@
 }
 
 .accounting-container::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -73,7 +73,7 @@
 }
 
 .stat-card::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -454,7 +454,7 @@
 }
 
 .projection-card::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -658,7 +658,7 @@
 }
 
 .help-title::before {
-  content: "💡";
+  content: '💡';
   font-size: 18px;
 }
 

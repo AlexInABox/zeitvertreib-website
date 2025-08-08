@@ -1,47 +1,47 @@
 .container {
-    min-height: 60vh;
+  min-height: 60vh;
 }
 
 .profile-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .profile-avatar {
-    border: 4px solid white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .profile-details-card {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
-    border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: none;
 }
 
 .detail-item {
-    padding: 1rem;
-    border-radius: 8px;
-    background: #f8f9fa;
-    margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #f8f9fa;
+  margin-bottom: 1rem;
 }
 
 .detail-label {
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
 }
 
 .detail-value {
-    color: #212529;
-    font-size: 1rem;
+  color: #212529;
+  font-size: 1rem;
 }
 
 .loading-state {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 3rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 3rem;
 }

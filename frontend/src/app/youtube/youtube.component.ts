@@ -10,8 +10,13 @@ import { TagModule } from 'primeng/tag';
   selector: 'app-root',
   templateUrl: './youtube.component.html',
   styleUrls: ['./youtube.component.css'],
-  imports: [CommonModule, TabsModule, BadgeModule, AvatarModule, DividerModule, TagModule]
+  imports: [
+    CommonModule,
+    TabsModule,
+    BadgeModule,
+    AvatarModule,
+    DividerModule,
+    TagModule,
+  ],
 })
-export class YoutubeComponent {
-
-}
+export class YoutubeComponent {}

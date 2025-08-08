@@ -11,52 +11,59 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
-  imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule],
+  imports: [
+    Menubar,
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    AvatarModule,
+    AvatarGroupModule,
+  ],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  styleUrl: './header.component.css',
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   items: MenuItem[] | undefined;
-  inverted: string = "logo_full_1to1.svg";
+  inverted: string = 'logo_full_1to1.svg';
   userLoggedIn: boolean = false;
-  avatarIcon: string = "";
+  avatarIcon: string = '';
   currentUser: SteamUser | null = null;
   private authSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {
-  }
-
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
     this.items = [
       {
         label: 'Startseite',
         icon: PrimeIcons.HOME,
-        route: '/'
+        route: '/',
       },
       {
         label: 'YouTube',
         icon: PrimeIcons.VIDEO,
-        route: '/youtube'
+        route: '/youtube',
       },
       {
         label: 'Finanzen',
         icon: PrimeIcons.WALLET,
-        route: '/accounting'
+        route: '/accounting',
       },
       {
         label: 'Dashboard',
         icon: PrimeIcons.USER,
-        route: '/dashboard'
+        route: '/dashboard',
       },
     ];
 
     // Auf Authentifizierungsstatusänderungen abonnieren
-    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
-      this.currentUser = user;
-      this.userLoggedIn = !!user;
-      this.avatarIcon = user?.avatarfull || "";
-    });
+    this.authSubscription = this.authService.currentUser$.subscribe(
+      (user: SteamUser | null) => {
+        this.currentUser = user;
+        this.userLoggedIn = !!user;
+        this.avatarIcon = user?.avatarfull || '';
+      },
+    );
   }
 
   ngOnDestroy() {

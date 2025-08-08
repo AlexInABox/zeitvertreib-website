@@ -2,7 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrimeIcons } from 'primeng/api';
-import { FinancialService, FinancialTransaction, FinancialSummary, RecurringTransaction } from '../services/financial.service';
+import {
+  FinancialService,
+  FinancialTransaction,
+  FinancialSummary,
+  RecurringTransaction,
+} from '../services/financial.service';
 import { AuthService } from '../services/auth.service';
 
 interface EventItem {
@@ -29,7 +34,7 @@ interface MonthlyBreakdown {
   selector: 'app-accounting',
   imports: [CommonModule, FormsModule],
   templateUrl: './accounting.component.html',
-  styleUrl: './accounting.component.css'
+  styleUrl: './accounting.component.css',
 })
 export class AccountingComponent implements OnInit {
   // Financial overview properties
@@ -69,7 +74,7 @@ export class AccountingComponent implements OnInit {
     amount: 0,
     description: '',
     date: '',
-    title: ''
+    title: '',
   };
   recurringFormData = {
     type: '',
@@ -79,7 +84,7 @@ export class AccountingComponent implements OnInit {
     frequency: '',
     start_date: '',
     end_date: '',
-    title: ''
+    title: '',
   };
 
   // Recurring transactions
@@ -87,7 +92,7 @@ export class AccountingComponent implements OnInit {
 
   constructor(
     private financialService: FinancialService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     this.initializeData();
     this.checkAdminStatus();
@@ -106,7 +111,7 @@ export class AccountingComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading recurring transactions:', error);
-      }
+      },
     });
   }
 
@@ -116,14 +121,19 @@ export class AccountingComponent implements OnInit {
         console.log('Received transactions:', transactions);
 
         if (transactions && transactions.length > 0) {
-          this.events = transactions.map(transaction => ({
+          this.events = transactions.map((transaction) => ({
             id: transaction.id,
             service: transaction.service || transaction.category,
             amount: transaction.amount,
             description: transaction.description,
             date: new Date(transaction.date || transaction.transaction_date),
-            icon: (transaction.type || transaction.transaction_type) === 'income' ? PrimeIcons.PLUS_CIRCLE : PrimeIcons.MINUS_CIRCLE,
-            type: (transaction.type || transaction.transaction_type) as 'income' | 'expense'
+            icon:
+              (transaction.type || transaction.transaction_type) === 'income'
+                ? PrimeIcons.PLUS_CIRCLE
+                : PrimeIcons.MINUS_CIRCLE,
+            type: (transaction.type || transaction.transaction_type) as
+              | 'income'
+              | 'expense',
           }));
         } else {
           console.log('No transactions received, using sample data');
@@ -141,12 +151,12 @@ export class AccountingComponent implements OnInit {
         this.calculateFinancialMetrics();
         this.generateMonthlyBreakdown();
         this.filterTransactions('all');
-      }
+      },
     });
   }
 
   private checkAdminStatus() {
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       // Check if user is admin (Steam ID: 76561198354414854)
       this.isAdmin = user?.steamid === '76561198354414854';
     });
@@ -161,15 +171,15 @@ export class AccountingComponent implements OnInit {
         description: 'Hetzner - Monatliche Serverkosten',
         date: new Date('2025-01-01'),
         icon: 'pi pi-server',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'DDoS Protection',
-        amount: 15.20,
+        amount: 15.2,
         description: 'Cloudflare Pro Plan',
         date: new Date('2025-01-02'),
         icon: 'pi pi-shield',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'Domain Renewal',
@@ -177,39 +187,39 @@ export class AccountingComponent implements OnInit {
         description: 'zeitvertreib.dev - Jahresgebühr',
         date: new Date('2025-01-15'),
         icon: 'pi pi-globe',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'SSL Zertifikat',
-        amount: 8.50,
+        amount: 8.5,
         description: 'Wildcard SSL für alle Subdomains',
         date: new Date('2025-01-20'),
         icon: 'pi pi-lock',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'Spende',
-        amount: 25.00,
+        amount: 25.0,
         description: 'fear157 - PayPal Donation',
         date: new Date('2025-01-03'),
         icon: 'pi pi-heart',
-        type: 'income'
+        type: 'income',
       },
       {
         service: 'Spende',
-        amount: 10.00,
+        amount: 10.0,
         description: 'Anonymous - Twitch Donation',
         date: new Date('2025-01-10'),
         icon: 'pi pi-heart',
-        type: 'income'
+        type: 'income',
       },
       {
         service: 'Spende',
-        amount: 50.00,
+        amount: 50.0,
         description: 'CommunitySupporter - Ko-fi',
         date: new Date('2025-01-12'),
         icon: 'pi pi-heart',
-        type: 'income'
+        type: 'income',
       },
       {
         service: 'Merchandise',
@@ -217,7 +227,7 @@ export class AccountingComponent implements OnInit {
         description: 'T-Shirt Verkauf',
         date: new Date('2025-01-25'),
         icon: 'pi pi-shopping-cart',
-        type: 'income'
+        type: 'income',
       },
       // Previous months data
       {
@@ -226,31 +236,31 @@ export class AccountingComponent implements OnInit {
         description: 'Hetzner - Dezember',
         date: new Date('2024-12-01'),
         icon: 'pi pi-server',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'DDoS Protection',
-        amount: 15.20,
+        amount: 15.2,
         description: 'Cloudflare Pro Plan',
         date: new Date('2024-12-02'),
         icon: 'pi pi-shield',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'Spende',
-        amount: 30.00,
+        amount: 30.0,
         description: 'GamerFriend - Dezember',
         date: new Date('2024-12-15'),
         icon: 'pi pi-heart',
-        type: 'income'
+        type: 'income',
       },
       {
         service: 'Spende',
-        amount: 20.00,
+        amount: 20.0,
         description: 'StreamViewer - Dezember',
         date: new Date('2024-12-20'),
         icon: 'pi pi-heart',
-        type: 'income'
+        type: 'income',
       },
       // November data
       {
@@ -259,24 +269,24 @@ export class AccountingComponent implements OnInit {
         description: 'Hetzner - November',
         date: new Date('2024-11-01'),
         icon: 'pi pi-server',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'DDoS Protection',
-        amount: 15.20,
+        amount: 15.2,
         description: 'Cloudflare Pro Plan',
         date: new Date('2024-11-02'),
         icon: 'pi pi-shield',
-        type: 'expense'
+        type: 'expense',
       },
       {
         service: 'Spende',
-        amount: 40.00,
+        amount: 40.0,
         description: 'TopDonator - November',
         date: new Date('2024-11-10'),
         icon: 'pi pi-heart',
-        type: 'income'
-      }
+        type: 'income',
+      },
     ];
 
     // Sort events by date (newest first)
@@ -288,25 +298,27 @@ export class AccountingComponent implements OnInit {
     const currentYear = new Date().getFullYear();
 
     // Calculate current month's income and expenses
-    const currentMonthEvents = this.events.filter(event =>
-      event.date.getMonth() === currentMonth && event.date.getFullYear() === currentYear
+    const currentMonthEvents = this.events.filter(
+      (event) =>
+        event.date.getMonth() === currentMonth &&
+        event.date.getFullYear() === currentYear,
     );
 
     this.monthlyIncome = currentMonthEvents
-      .filter(event => event.type === 'income')
+      .filter((event) => event.type === 'income')
       .reduce((sum, event) => sum + event.amount, 0);
 
     this.monthlyExpenses = currentMonthEvents
-      .filter(event => event.type === 'expense')
+      .filter((event) => event.type === 'expense')
       .reduce((sum, event) => sum + event.amount, 0);
 
     // Calculate total balance
     const totalIncome = this.events
-      .filter(event => event.type === 'income')
+      .filter((event) => event.type === 'income')
       .reduce((sum, event) => sum + event.amount, 0);
 
     const totalExpenses = this.events
-      .filter(event => event.type === 'expense')
+      .filter((event) => event.type === 'expense')
       .reduce((sum, event) => sum + event.amount, 0);
 
     this.currentBalance = totalIncome - totalExpenses;
@@ -315,10 +327,15 @@ export class AccountingComponent implements OnInit {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const recentEvents = this.events.filter(event => event.date >= sixMonthsAgo);
-    const monthlyTotals = new Map<string, { income: number, expenses: number }>();
+    const recentEvents = this.events.filter(
+      (event) => event.date >= sixMonthsAgo,
+    );
+    const monthlyTotals = new Map<
+      string,
+      { income: number; expenses: number }
+    >();
 
-    recentEvents.forEach(event => {
+    recentEvents.forEach((event) => {
       const monthKey = `${event.date.getFullYear()}-${event.date.getMonth()}`;
       if (!monthlyTotals.has(monthKey)) {
         monthlyTotals.set(monthKey, { income: 0, expenses: 0 });
@@ -333,21 +350,30 @@ export class AccountingComponent implements OnInit {
     });
 
     const months = Array.from(monthlyTotals.values());
-    this.averageMonthlyIncome = months.reduce((sum, month) => sum + month.income, 0) / months.length || 0;
-    this.averageMonthlyExpenses = months.reduce((sum, month) => sum + month.expenses, 0) / months.length || 0;
+    this.averageMonthlyIncome =
+      months.reduce((sum, month) => sum + month.income, 0) / months.length || 0;
+    this.averageMonthlyExpenses =
+      months.reduce((sum, month) => sum + month.expenses, 0) / months.length ||
+      0;
 
     // Calculate coverage percentage
-    this.coveragePercentage = this.averageMonthlyExpenses > 0
-      ? Math.min(100, (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100)
-      : 100;
+    this.coveragePercentage =
+      this.averageMonthlyExpenses > 0
+        ? Math.min(
+            100,
+            (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100,
+          )
+        : 100;
 
     // Calculate 3-month projection
-    this.threeMonthProjection = (this.averageMonthlyIncome - this.averageMonthlyExpenses) * 3;
+    this.threeMonthProjection =
+      (this.averageMonthlyIncome - this.averageMonthlyExpenses) * 3;
 
     // Calculate burn rate (how many months current balance will last)
-    this.burnRate = this.averageMonthlyExpenses > 0 && this.currentBalance > 0
-      ? this.currentBalance / this.averageMonthlyExpenses
-      : 0;
+    this.burnRate =
+      this.averageMonthlyExpenses > 0 && this.currentBalance > 0
+        ? this.currentBalance / this.averageMonthlyExpenses
+        : 0;
   }
 
   private generateMonthlyBreakdown() {
@@ -360,18 +386,21 @@ export class AccountingComponent implements OnInit {
       const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
 
       months.set(monthKey, {
-        name: date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
+        name: date.toLocaleDateString('de-DE', {
+          month: 'long',
+          year: 'numeric',
+        }),
         month: date.getMonth(),
         year: date.getFullYear(),
         income: 0,
         expenses: 0,
         balance: 0,
-        coveragePercentage: 0
+        coveragePercentage: 0,
       });
     }
 
     // Calculate monthly totals
-    this.events.forEach(event => {
+    this.events.forEach((event) => {
       const monthKey = `${event.date.getFullYear()}-${event.date.getMonth()}`;
       const monthData = months.get(monthKey);
 
@@ -385,11 +414,12 @@ export class AccountingComponent implements OnInit {
     });
 
     // Calculate balance and coverage for each month
-    months.forEach(monthData => {
+    months.forEach((monthData) => {
       monthData.balance = monthData.income - monthData.expenses;
-      monthData.coveragePercentage = monthData.expenses > 0
-        ? Math.min(100, (monthData.income / monthData.expenses) * 100)
-        : 100;
+      monthData.coveragePercentage =
+        monthData.expenses > 0
+          ? Math.min(100, (monthData.income / monthData.expenses) * 100)
+          : 100;
     });
 
     this.monthlyBreakdown = Array.from(months.values());
@@ -400,10 +430,14 @@ export class AccountingComponent implements OnInit {
 
     switch (filter) {
       case 'income':
-        this.filteredEvents = this.events.filter(event => event.type === 'income');
+        this.filteredEvents = this.events.filter(
+          (event) => event.type === 'income',
+        );
         break;
       case 'expenses':
-        this.filteredEvents = this.events.filter(event => event.type === 'expense');
+        this.filteredEvents = this.events.filter(
+          (event) => event.type === 'expense',
+        );
         break;
       default:
         this.filteredEvents = [...this.events];
@@ -425,7 +459,7 @@ export class AccountingComponent implements OnInit {
       amount: event.amount,
       description: event.description,
       date: event.date.toISOString().split('T')[0], // Format date for input
-      title: event.service || '' // Use service field as title
+      title: event.service || '', // Use service field as title
     };
     this.showTransactionModal = true;
   }
@@ -437,7 +471,9 @@ export class AccountingComponent implements OnInit {
   }
 
   deleteTransaction(event: EventItem) {
-    if (confirm('Sind Sie sicher, dass Sie diese Transaktion löschen möchten?')) {
+    if (
+      confirm('Sind Sie sicher, dass Sie diese Transaktion löschen möchten?')
+    ) {
       // Find the transaction ID (we need to add this to EventItem interface)
       const transactionId = (event as any).id;
       if (transactionId) {
@@ -448,8 +484,11 @@ export class AccountingComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error deleting transaction:', error);
-            alert('Fehler beim Löschen der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
-          }
+            alert(
+              'Fehler beim Löschen der Transaktion: ' +
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
+            );
+          },
         });
       } else {
         alert('Transaktion ID nicht gefunden');
@@ -458,9 +497,14 @@ export class AccountingComponent implements OnInit {
   }
 
   saveTransaction() {
-    if (!this.transactionFormData.type || !this.transactionFormData.category ||
-      !this.transactionFormData.amount || !this.transactionFormData.description ||
-      !this.transactionFormData.date || !this.transactionFormData.title) {
+    if (
+      !this.transactionFormData.type ||
+      !this.transactionFormData.category ||
+      !this.transactionFormData.amount ||
+      !this.transactionFormData.description ||
+      !this.transactionFormData.date ||
+      !this.transactionFormData.title
+    ) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
     }
@@ -475,7 +519,7 @@ export class AccountingComponent implements OnInit {
       transaction_date: this.transactionFormData.date,
       // Store title in notes field for proper handling
       reference_id: '',
-      notes: this.transactionFormData.title
+      notes: this.transactionFormData.title,
     };
 
     console.log('Sending transaction data:', transactionData);
@@ -483,21 +527,26 @@ export class AccountingComponent implements OnInit {
     if (this.editingTransaction) {
       // Update existing transaction
       const transactionId = (this.editingTransaction as any).id;
-      this.financialService.updateTransaction(transactionId, transactionData).subscribe({
-        next: () => {
-          console.log('Transaction updated successfully');
-          this.loadFinancialData(); // Reload data
-          this.closeTransactionModal();
-        },
-        error: (error) => {
-          console.error('Error updating transaction:', error);
-          alert('Fehler beim Aktualisieren der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
-          this.isSubmitting = false; // Reset loading state on error
-        },
-        complete: () => {
-          this.isSubmitting = false;
-        }
-      });
+      this.financialService
+        .updateTransaction(transactionId, transactionData)
+        .subscribe({
+          next: () => {
+            console.log('Transaction updated successfully');
+            this.loadFinancialData(); // Reload data
+            this.closeTransactionModal();
+          },
+          error: (error) => {
+            console.error('Error updating transaction:', error);
+            alert(
+              'Fehler beim Aktualisieren der Transaktion: ' +
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
+            );
+            this.isSubmitting = false; // Reset loading state on error
+          },
+          complete: () => {
+            this.isSubmitting = false;
+          },
+        });
     } else {
       // Create new transaction
       this.financialService.createTransaction(transactionData).subscribe({
@@ -508,12 +557,15 @@ export class AccountingComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating transaction:', error);
-          alert('Fehler beim Erstellen der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
+          alert(
+            'Fehler beim Erstellen der Transaktion: ' +
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
+          );
           this.isSubmitting = false; // Reset loading state on error
         },
         complete: () => {
           this.isSubmitting = false;
-        }
+        },
       });
     }
   }
@@ -525,7 +577,7 @@ export class AccountingComponent implements OnInit {
       amount: 0,
       description: '',
       date: new Date().toISOString().split('T')[0], // Default to today
-      title: ''
+      title: '',
     };
   }
 
@@ -546,7 +598,7 @@ export class AccountingComponent implements OnInit {
       frequency: recurring.frequency,
       start_date: recurring.start_date,
       end_date: recurring.end_date || '',
-      title: recurring.notes || ''
+      title: recurring.notes || '',
     };
     this.showRecurringModal = true;
   }
@@ -558,19 +610,28 @@ export class AccountingComponent implements OnInit {
   }
 
   deleteRecurringTransaction(recurring: RecurringTransaction) {
-    if (confirm('Sind Sie sicher, dass Sie diese wiederkehrende Transaktion löschen möchten?')) {
+    if (
+      confirm(
+        'Sind Sie sicher, dass Sie diese wiederkehrende Transaktion löschen möchten?',
+      )
+    ) {
       const recurringId = recurring.id;
       if (recurringId) {
-        this.financialService.deleteRecurringTransaction(recurringId).subscribe({
-          next: () => {
-            console.log('Recurring transaction deleted successfully');
-            this.loadRecurringTransactions(); // Reload data
-          },
-          error: (error) => {
-            console.error('Error deleting recurring transaction:', error);
-            alert('Fehler beim Löschen der wiederkehrenden Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
-          }
-        });
+        this.financialService
+          .deleteRecurringTransaction(recurringId)
+          .subscribe({
+            next: () => {
+              console.log('Recurring transaction deleted successfully');
+              this.loadRecurringTransactions(); // Reload data
+            },
+            error: (error) => {
+              console.error('Error deleting recurring transaction:', error);
+              alert(
+                'Fehler beim Löschen der wiederkehrenden Transaktion: ' +
+                  (error.error?.error || error.message || 'Unbekannter Fehler'),
+              );
+            },
+          });
       } else {
         alert('Wiederkehrende Transaktion ID nicht gefunden');
       }
@@ -578,10 +639,15 @@ export class AccountingComponent implements OnInit {
   }
 
   saveRecurringTransaction() {
-    if (!this.recurringFormData.type || !this.recurringFormData.category ||
-      !this.recurringFormData.amount || !this.recurringFormData.description ||
-      !this.recurringFormData.frequency || !this.recurringFormData.start_date ||
-      !this.recurringFormData.title) {
+    if (
+      !this.recurringFormData.type ||
+      !this.recurringFormData.category ||
+      !this.recurringFormData.amount ||
+      !this.recurringFormData.description ||
+      !this.recurringFormData.frequency ||
+      !this.recurringFormData.start_date ||
+      !this.recurringFormData.title
+    ) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
     }
@@ -593,12 +659,16 @@ export class AccountingComponent implements OnInit {
       category: this.recurringFormData.category,
       amount: Number(this.recurringFormData.amount),
       description: this.recurringFormData.description,
-      frequency: this.recurringFormData.frequency as 'daily' | 'weekly' | 'monthly' | 'yearly',
+      frequency: this.recurringFormData.frequency as
+        | 'daily'
+        | 'weekly'
+        | 'monthly'
+        | 'yearly',
       start_date: this.recurringFormData.start_date,
       end_date: this.recurringFormData.end_date || undefined,
       reference_id: '',
       notes: this.recurringFormData.title,
-      next_execution: this.recurringFormData.start_date // Will be calculated by backend
+      next_execution: this.recurringFormData.start_date, // Will be calculated by backend
     };
 
     console.log('Sending recurring transaction data:', recurringData);
@@ -606,38 +676,48 @@ export class AccountingComponent implements OnInit {
     if (this.editingRecurring) {
       // Update existing recurring transaction
       const recurringId = this.editingRecurring.id!;
-      this.financialService.updateRecurringTransaction(recurringId, recurringData).subscribe({
-        next: () => {
-          console.log('Recurring transaction updated successfully');
-          this.loadRecurringTransactions(); // Reload data
-          this.closeRecurringModal();
-        },
-        error: (error) => {
-          console.error('Error updating recurring transaction:', error);
-          alert('Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
-          this.isSubmitting = false;
-        },
-        complete: () => {
-          this.isSubmitting = false;
-        }
-      });
+      this.financialService
+        .updateRecurringTransaction(recurringId, recurringData)
+        .subscribe({
+          next: () => {
+            console.log('Recurring transaction updated successfully');
+            this.loadRecurringTransactions(); // Reload data
+            this.closeRecurringModal();
+          },
+          error: (error) => {
+            console.error('Error updating recurring transaction:', error);
+            alert(
+              'Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' +
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
+            );
+            this.isSubmitting = false;
+          },
+          complete: () => {
+            this.isSubmitting = false;
+          },
+        });
     } else {
       // Create new recurring transaction
-      this.financialService.createRecurringTransaction(recurringData).subscribe({
-        next: () => {
-          console.log('Recurring transaction created successfully');
-          this.loadRecurringTransactions(); // Reload data
-          this.closeRecurringModal();
-        },
-        error: (error) => {
-          console.error('Error creating recurring transaction:', error);
-          alert('Fehler beim Erstellen der wiederkehrenden Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'));
-          this.isSubmitting = false;
-        },
-        complete: () => {
-          this.isSubmitting = false;
-        }
-      });
+      this.financialService
+        .createRecurringTransaction(recurringData)
+        .subscribe({
+          next: () => {
+            console.log('Recurring transaction created successfully');
+            this.loadRecurringTransactions(); // Reload data
+            this.closeRecurringModal();
+          },
+          error: (error) => {
+            console.error('Error creating recurring transaction:', error);
+            alert(
+              'Fehler beim Erstellen der wiederkehrenden Transaktion: ' +
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
+            );
+            this.isSubmitting = false;
+          },
+          complete: () => {
+            this.isSubmitting = false;
+          },
+        });
     }
   }
 
@@ -650,7 +730,7 @@ export class AccountingComponent implements OnInit {
       frequency: '',
       start_date: new Date().toISOString().split('T')[0],
       end_date: '',
-      title: ''
+      title: '',
     };
   }
 }

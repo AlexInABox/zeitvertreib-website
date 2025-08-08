@@ -27,7 +27,9 @@
   background: rgba(255, 255, 255, 0.9); /* Softer and lighter violet */
   border: 1px solid rgba(220, 200, 255, 0.8); /* Complementary border */
   border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 8px 16px rgba(0, 0, 0, 0.1);
   padding: 2.5rem;
   transition: all 0.3s ease;
   animation: slideUp 0.8s ease-out;
@@ -48,7 +50,9 @@
 
 .login-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.2),
+    0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
@@ -180,7 +184,7 @@
 }
 
 :host ::ng-deep .steam-login-btn::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: -100%;

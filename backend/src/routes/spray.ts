@@ -1,5 +1,6 @@
 import { validateSession, createResponse } from '../utils.js';
 import { EmbedBuilder } from '@discordjs/builders';
+import OpenAI from 'openai';
 
 /**
  * Discord Webhook Setup Instructions:
@@ -201,7 +202,7 @@ function createMinimalValidJPEG(): string {
   return `data:image/jpeg;base64,${minimalJPEG}`;
 }
 
-// Check image safety using SightEngine API with hash-based caching
+// Check image safety using OpenAI Moderation API with hash-based caching
 async function checkImageSafety(
   imageFile: File,
   env: Env,
@@ -252,85 +253,59 @@ async function checkImageSafety(
       }
     }
 
-    // No valid cache found, perform actual moderation check
+    // No valid cache found, perform actual moderation check (OpenAI)
     console.log(`Performing new moderation check for image hash ${imageHash}`);
 
-    const formData = new FormData();
-    formData.append('media', imageFile);
-    formData.append('workflow', env.SIGHTENGINE_WORKFLOW_ID);
-    formData.append('api_user', env.SIGHTENGINE_API_USER);
-    formData.append('api_secret', env.SIGHTENGINE_API_SECRET);
-
-    const response = await fetch(
-      'https://api.sightengine.com/1.0/check-workflow.json',
-      {
-        method: 'POST',
-        body: formData,
-      },
-    );
-
-    if (!response.ok) {
-      console.error(
-        'SightEngine API error:',
-        response.status,
-        response.statusText,
-      );
-      // If API fails, be conservative and reject the image
-      // Don't cache API failures to allow retry
-      return false;
+    if (!env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not configured');
+      return false; // conservative
     }
 
-    const result = (await response.json()) as any;
+    // Convert original image to data URL for OpenAI moderation input
+    const dataUrl = await convertImageToDataURL(imageBuffer);
+
+    // Initialize OpenAI client with Workers-compatible fetch
+    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+
     let isSafe = true;
+    try {
+      const moderation = await openai.moderations.create({
+        model: 'omni-moderation-latest',
+        input: [
+          {
+            type: 'image_url',
+            image_url: { url: dataUrl },
+          },
+        ],
+      } as any);
 
-    // Check workflow summary - if any issues detected, reject
-    if (result.summary?.action === 'reject') {
-      console.log(
-        'Image rejected by SightEngine workflow:',
-        result.summary?.reject_reason || 'Workflow determined content unsafe',
-      );
-      isSafe = false;
-    }
-
-    // Additional checks based on workflow response structure
-    // Reject if nudity probability is high
-    if (
-      result.nudity?.sexual_activity > 0.5 ||
-      result.nudity?.sexual_display > 0.5 ||
-      result.nudity?.erotica > 0.5
-    ) {
-      console.log('Image rejected: nudity detected');
-      isSafe = false;
-    }
-
-    // Reject if weapons detected
-    if (result.weapon > 0.5) {
-      console.log('Image rejected: weapon detected');
-      isSafe = false;
-    }
-
-    // Reject if drugs detected
-    if (result.recreational_drug > 0.5) {
-      console.log('Image rejected: recreational drug detected');
-      isSafe = false;
-    }
-
-    // Reject if offensive content detected
-    if (result.offensive?.prob > 0.7) {
-      console.log('Image rejected: offensive content detected');
-      isSafe = false;
-    }
-
-    // Reject if gore detected
-    if (result.gore?.prob > 0.5) {
-      console.log('Image rejected: gore detected');
-      isSafe = false;
-    }
-
-    // Reject if violence detected
-    if (result.violence > 0.5) {
-      console.log('Image rejected: violence detected');
-      isSafe = false;
+      // Evaluate moderation response
+      const results: any[] = (moderation as any)?.results || [];
+      if (Array.isArray(results) && results.length > 0) {
+        for (const r of results) {
+          if (typeof r.flagged === 'boolean' && r.flagged) {
+            isSafe = false;
+            break;
+          }
+          // Fallback: if any category is true, consider unsafe
+          if (r.categories && typeof r.categories === 'object') {
+            for (const val of Object.values(r.categories)) {
+              if (val === true) {
+                isSafe = false;
+                break;
+              }
+            }
+            if (!isSafe) break;
+          }
+        }
+      } else {
+        // If response is unexpected, reject conservatively
+        console.warn('OpenAI moderation returned no results; rejecting image');
+        isSafe = false;
+      }
+    } catch (e) {
+      console.error('OpenAI Moderation API error:', e);
+      return false; // conservative, do not cache
     }
 
     // Cache the moderation result for future use
@@ -452,7 +427,7 @@ export async function handleUploadSpray(
       );
     }
 
-    // Check image content safety with SightEngine using the original uncompressed image
+    // Check image content safety with OpenAI using the original uncompressed image
     const isSafe = await checkImageSafety(originalImage, env, steamId);
     if (!isSafe) {
       return createResponse(

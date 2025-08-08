@@ -17,6 +17,7 @@
     "wrangler": "^4.27.0"
   },
   "dependencies": {
-    "@discordjs/builders": "^1.11.2"
+    "@discordjs/builders": "^1.11.2",
+    "openai": "^5.12.1"
   }
 }

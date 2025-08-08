@@ -9,29 +9,31 @@ import { Subscription } from 'rxjs';
   selector: 'app-login',
   imports: [CommonModule, ButtonModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) { }
+    private router: Router,
+  ) {}
 
   ngOnInit() {
     // If user is already logged in, redirect to intended destination or dashboard
-    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
-      if (user) {
-        const redirectUrl = sessionStorage.getItem('redirectUrl');
-        if (redirectUrl) {
-          sessionStorage.removeItem('redirectUrl');
-          this.router.navigate([redirectUrl]);
-        } else {
-          this.router.navigate(['/dashboard']);
+    this.authSubscription = this.authService.currentUser$.subscribe(
+      (user: SteamUser | null) => {
+        if (user) {
+          const redirectUrl = sessionStorage.getItem('redirectUrl');
+          if (redirectUrl) {
+            sessionStorage.removeItem('redirectUrl');
+            this.router.navigate([redirectUrl]);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   ngOnDestroy() {
@@ -46,6 +48,5 @@ export class LoginComponent implements OnInit, OnDestroy {
     } else {
       this.authService.login();
     }
-
   }
 }

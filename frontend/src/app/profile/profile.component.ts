@@ -11,7 +11,7 @@ import { AvatarModule } from 'primeng/avatar';
   selector: 'app-profile',
   imports: [CommonModule, ButtonModule, CardModule, AvatarModule],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.css'
+  styleUrl: './profile.component.css',
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: SteamUser | null = null;
@@ -19,17 +19,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) { }
+    private router: Router,
+  ) {}
 
   ngOnInit() {
-    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
-      this.currentUser = user;
-      if (!user) {
-        // If user is not logged in, redirect to login page
-        this.router.navigate(['/login']);
-      }
-    });
+    this.authSubscription = this.authService.currentUser$.subscribe(
+      (user: SteamUser | null) => {
+        this.currentUser = user;
+        if (!user) {
+          // If user is not logged in, redirect to login page
+          this.router.navigate(['/login']);
+        }
+      },
+    );
   }
 
   ngOnDestroy() {

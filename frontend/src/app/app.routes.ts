@@ -4,29 +4,39 @@ import { authGuard } from './guards/auth.guard';
 export const routes: Routes = [
   {
     path: 'accounting',
-    loadComponent: () => import('./accounting/accounting.component').then((m) => m.AccountingComponent),
-    canActivate: [authGuard]
+    loadComponent: () =>
+      import('./accounting/accounting.component').then(
+        (m) => m.AccountingComponent,
+      ),
+    canActivate: [authGuard],
   },
   {
     path: 'youtube',
-    loadComponent: () => import('./youtube/youtube.component').then((m) => m.YoutubeComponent)
+    loadComponent: () =>
+      import('./youtube/youtube.component').then((m) => m.YoutubeComponent),
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./dashboard/dashboard.component').then((m) => m.DashboardComponent),
-    canActivate: [authGuard]
+    loadComponent: () =>
+      import('./dashboard/dashboard.component').then(
+        (m) => m.DashboardComponent,
+      ),
+    canActivate: [authGuard],
   },
   {
     path: 'profile',
-    loadComponent: () => import('./profile/profile.component').then((m) => m.ProfileComponent),
-    canActivate: [authGuard]
+    loadComponent: () =>
+      import('./profile/profile.component').then((m) => m.ProfileComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'login',
-    loadComponent: () => import('./login/login.component').then((m) => m.LoginComponent)
+    loadComponent: () =>
+      import('./login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: '',
-    loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent)
+    loadComponent: () =>
+      import('./home/home.component').then((m) => m.HomeComponent),
   },
 ];

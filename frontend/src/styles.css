@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
-@import "primeicons/primeicons.css";
-@import "tailwindcss";
-@import "tailwindcss-primeui";
+@import 'primeicons/primeicons.css';
+@import 'tailwindcss';
+@import 'tailwindcss-primeui';
 
 :root {
   --surface-a: #121212 !important;
@@ -10,24 +10,34 @@
 }
 
 @font-face {
-  font-family: "BerlinTypeWeb";
-  src: url("/assets/BerlinFont/BerlinTypeWeb-Regular.woff2") format("woff2"),
-    url("/assets/BerlinFont/BerlinTypeWeb-Regular.woff") format("woff");
+  font-family: 'BerlinTypeWeb';
+  src:
+    url('/assets/BerlinFont/BerlinTypeWeb-Regular.woff2') format('woff2'),
+    url('/assets/BerlinFont/BerlinTypeWeb-Regular.woff') format('woff');
   font-weight: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "BerlinTypeWeb";
-  src: url("/assets/BerlinFont/BerlinTypeWeb-Bold.woff2") format("woff2"),
-    url("/assets/BerlinFont/BerlinTypeWeb-Bold.woff") format("woff");
+  font-family: 'BerlinTypeWeb';
+  src:
+    url('/assets/BerlinFont/BerlinTypeWeb-Bold.woff2') format('woff2'),
+    url('/assets/BerlinFont/BerlinTypeWeb-Bold.woff') format('woff');
   font-weight: bold;
   font-display: swap;
 }
 
 html,
 body {
-  font-family: "BerlinTypeWeb", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    'BerlinTypeWeb',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -38,9 +48,11 @@ strong,
 }
 
 body {
-  background: linear-gradient(45deg,
-      hsla(273, 97%, 31%, 1) 27%,
-      hsla(319, 73%, 41%, 1) 100%);
+  background: linear-gradient(
+    45deg,
+    hsla(273, 97%, 31%, 1) 27%,
+    hsla(319, 73%, 41%, 1) 100%
+  );
   background-attachment: fixed;
   background-size: cover;
   min-height: 100vh;
