@@ -178,6 +178,7 @@ export async function fetchSteamUserData(
         console.log(
           `Using fresh cached Steam user data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`,
         );
+        console.log("Chache data: " + cachedData);
         return cachedData.userData;
       }
 

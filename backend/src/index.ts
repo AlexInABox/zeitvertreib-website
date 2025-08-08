@@ -13,7 +13,11 @@ import {
   handleModerationDelete,
   handleModerationBan,
 } from './routes/spray.js';
-import { handleFakerank } from './routes/profile.js';
+import {
+  handleFakerank,
+  handleFakerankModerationDelete,
+  handleFakerankModerationBan,
+} from './routes/profile.js';
 import {
   handleGetTransactions,
   handleCreateTransaction,
@@ -59,6 +63,8 @@ const routes: Record<
   '/spray/moderate/delete': handleModerationDelete,
   '/spray/moderate/ban': handleModerationBan,
   '/fakerank': handleFakerank,
+  '/fakerank/moderate/delete': handleFakerankModerationDelete,
+  '/fakerank/moderate/ban': handleFakerankModerationBan,
   '/financial/transactions': handleFinancialTransactions,
   '/financial/recurring': handleRecurringTransactions,
   '/financial/summary': handleGetSummary,

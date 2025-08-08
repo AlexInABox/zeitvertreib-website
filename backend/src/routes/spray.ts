@@ -31,6 +31,19 @@ async function sendSprayToDiscord(
     const imageBuffer = await originalImage.arrayBuffer();
     const imageHash = await generateImageHash(imageBuffer);
 
+    // Get Steam user data for nickname from our KV store
+    let steamNickname = 'Unknown User';
+    try {
+      const userCacheKey = `steam_user:${steamId}`;
+      const cachedUserData = await env.SESSIONS.get(userCacheKey);
+      if (cachedUserData) {
+        const userData = JSON.parse(cachedUserData);
+        steamNickname = userData?.userData?.personaname || 'Unknown User';
+      }
+    } catch (error) {
+      console.error('Error fetching cached Steam user data:', error);
+    }
+
     // Create form data for Discord webhook
     const formData = new FormData();
 
@@ -42,6 +55,11 @@ async function sendSprayToDiscord(
         {
           name: 'Steam ID',
           value: steamId,
+          inline: true,
+        },
+        {
+          name: 'Steam Nickname',
+          value: steamNickname,
           inline: true,
         },
         {

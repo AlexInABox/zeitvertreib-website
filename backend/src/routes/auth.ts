@@ -52,6 +52,7 @@ export async function handleSteamCallback(
 
   // Create session and redirect
   const sessionId = await createSession(steamId, steamUser, env);
+
   const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
   const redirectUrl = new URL(frontendUrl);
   redirectUrl.searchParams.set('token', sessionId);
