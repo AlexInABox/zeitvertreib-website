@@ -17,6 +17,10 @@
   pointer-events: none;
 }
 
+.cardWrapper {
+  height: fit-content;
+}
+
 .stats-card {
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
@@ -56,6 +60,8 @@
   backdrop-filter: blur(5px);
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
 }
 
 .stat-item:hover {
@@ -64,14 +70,13 @@
 }
 
 .stat-indicator {
+  margin-right: 18px;
   width: 6px;
   height: 52px;
   border-radius: 6px;
-  background: linear-gradient(
-    145deg,
-    var(--stat-color, #10b981),
-    var(--stat-color-light, #34d399)
-  );
+  background: linear-gradient(145deg,
+      var(--stat-color, #10b981),
+      var(--stat-color-light, #34d399));
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
   position: relative;
   overflow: hidden;
@@ -84,12 +89,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(45deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
   animation: shimmer 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
 }
 
@@ -146,14 +149,13 @@
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 0px;
 }
 
 .player-card {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
@@ -168,17 +170,16 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--random-color-1, #f59e0b),
-    var(--random-color-2, #ef4444),
-    var(--random-color-3, #8b5cf6)
-  );
+  background: linear-gradient(90deg,
+      var(--random-color-1, #f59e0b),
+      var(--random-color-2, #ef4444),
+      var(--random-color-3, #8b5cf6));
   background-size: 200% 100%;
   animation: gradientShift 5s ease-in-out infinite;
 }
 
 @keyframes gradientShift {
+
   0%,
   100% {
     background-position: 0% 50%;
@@ -325,6 +326,16 @@
   backdrop-filter: blur(5px);
 }
 
+/* Privacy panel: remove bright backgrounds in expanded content */
+.privacy-expanded {
+  background: transparent !important;
+}
+
+.privacy-expanded .privacy-list li {
+  background: transparent;
+  border: none;
+}
+
 .refresh-button {
   background: linear-gradient(135deg, #10b981, #059669);
   border: none;
@@ -346,11 +357,9 @@
 }
 
 .chart-placeholder {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05));
   border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 3rem;
@@ -360,12 +369,10 @@
 }
 
 .text-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--random-color-1, #f59e0b),
-    var(--random-color-2, #ef4444),
-    var(--random-color-3, #8b5cf6)
-  );
+  background: linear-gradient(135deg,
+      var(--random-color-1, #f59e0b),
+      var(--random-color-2, #ef4444),
+      var(--random-color-3, #8b5cf6));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -698,22 +705,9 @@
   color: rgba(74, 222, 128, 0.9);
 }
 
-/* Dashboard Grid Layout - Masonry Style */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: max-content;
-  /* Auto-sizing rows */
-  gap: 0.75rem;
-  /* Reduced gap for tighter layout */
-  align-items: start;
-
-  /* Enable masonry layout where supported */
-  grid-template-rows: masonry;
-}
 
 /* Fix spacing issues for better card alignment */
-.dashboard-grid > * {
+.dashboard-grid>* {
   margin: 0 !important;
   /* Remove any default margins */
 }
@@ -729,23 +723,10 @@
 
 /* Reduce grid gap for tighter layout */
 .dashboard-grid {
-  gap: 0.75rem;
+  gap: 1rem;
   /* Smaller gap */
 }
 
-/* Enhanced Masonry Support */
-.dashboard-grid > * {
-  break-inside: avoid;
-  /* Prevent breaking items in multi-column layouts */
-  page-break-inside: avoid;
-}
-
-/* Fallback for browsers without masonry support */
-@supports not (grid-template-rows: masonry) {
-  .dashboard-grid {
-    grid-template-rows: repeat(auto-fit, minmax(200px, auto));
-  }
-}
 
 /* Responsive masonry adjustments */
 @media (max-width: 1024px) {
@@ -815,6 +796,10 @@
   /* Force auto height for all cards */
   min-height: fit-content;
   width: 100%;
+}
+
+.cardHeader {
+  margin-top: 0px;
 }
 
 /* Responsive adjustments */
@@ -893,6 +878,8 @@
   }
 
   .stat-value {
+    margin-top: 0px;
+    margin-bottom: 24px;
     font-size: 1.25rem;
   }
 
@@ -903,11 +890,6 @@
   .chart-placeholder {
     padding: 2rem;
   }
-}
-
-/* Fakerank Widget Styles - Nickname Focused Design */
-.fakerank-card-container {
-  grid-column: span 1;
 }
 
 /* Help Button and Popup */
@@ -934,11 +916,9 @@
 }
 
 .help-popup {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.1),
-    rgba(79, 70, 229, 0.1)
-  );
+  background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.1),
+      rgba(79, 70, 229, 0.1));
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 12px;
   padding: 1rem;
@@ -999,11 +979,9 @@
 }
 
 .nickname-preview {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.03)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 1.25rem;
@@ -1261,11 +1239,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Spray Upload Card Styles */
-.spray-card-container {
-  grid-column: span 1;
 }
 
 .spray-preview-container {
