@@ -3,6 +3,13 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
 
+/* Tell Tailwind v4 where to scan for class usage (prod builds) */
+@source "./app/**/*.{html,ts}";
+@source "./index.html";
+@source "./environments/**/*.{ts}";
+@source "../public/**/*";
+@source "../node_modules/primeng/**/*.{js,ts}";
+
 :root {
   --surface-a: #121212 !important;
   --surface-b: #1e1e1e !important;
