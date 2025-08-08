@@ -27,6 +27,7 @@ interface Statistics {
   usedcolas?: number;
   pocketescapes?: number;
   usedadrenaline?: number;
+  snakehighscore?: number;
   lastkillers?: PlayerEntry[];
   lastkills?: PlayerEntry[];
 }
@@ -58,6 +59,7 @@ export class DashboardComponent implements OnDestroy {
     usedcolas: 0,
     pocketescapes: 0,
     usedadrenaline: 0,
+    snakehighscore: 0,
     lastkillers: [],
     lastkills: [],
   };

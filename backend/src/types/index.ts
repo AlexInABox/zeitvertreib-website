@@ -27,6 +27,7 @@ export interface Statistics {
   usedcolas: number;
   pocketescapes: number;
   usedadrenaline: number;
+  snakehighscore: number;
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -40,6 +41,7 @@ export interface PlayerData {
   usedcolas?: number;
   pocketescapes?: number;
   usedadrenaline?: number;
+  snakehighscore?: number;
   fakerank?: string;
 }
 

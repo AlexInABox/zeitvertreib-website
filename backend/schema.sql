@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS playerdata (
     usedcolas INTEGER DEFAULT 0,
     pocketescapes INTEGER DEFAULT 0,
     usedadrenaline INTEGER DEFAULT 0,
+    snakehighscore INTEGER DEFAULT 0,
     fakerank TEXT
 );
 
@@ -67,12 +68,12 @@ CREATE INDEX IF NOT EXISTS idx_recurring_frequency ON recurring_transactions(fre
 INSERT OR IGNORE INTO playerdata (
     id, experience, playtime, roundsplayed,
     usedmedkits, usedcolas, pocketescapes, usedadrenaline,
-    fakerank
+    snakehighscore, fakerank
 ) VALUES (
     '76561198354414854@steam',
     12500, 7200, 45,
     25, 18, 7, 12,
-    'Elite Commander'
+    23, 'Elite Commander'
 );
 
 -- Sample kills data for testing
