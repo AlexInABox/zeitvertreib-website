@@ -348,12 +348,29 @@ async function handleDeleteFakerank(
   try {
     // Check if player exists in database
     const existingPlayer = await env['zeitvertreib-data']
-      .prepare('SELECT id FROM playerdata WHERE id = ?')
+      .prepare('SELECT id, fakerank FROM playerdata WHERE id = ?')
       .bind(playerId)
-      .first();
+      .first() as { id: string; fakerank: string | null } | null;
 
-    if (existingPlayer) {
-      // Set fakerank to NULL (or empty string, depending on your preference)
+    if (existingPlayer && existingPlayer.fakerank) {
+      // Add the current fakerank to blacklist before deleting
+      const blacklistKey = 'fakerank_blacklist';
+      let blacklistedWords: string[] = [];
+
+      const existingBlacklist = await env.SESSIONS.get(blacklistKey);
+      if (existingBlacklist) {
+        blacklistedWords = JSON.parse(existingBlacklist);
+      }
+
+      // Add the word if it's not already blacklisted
+      const wordLower = existingPlayer.fakerank.toLowerCase();
+      if (!blacklistedWords.includes(wordLower)) {
+        blacklistedWords.push(wordLower);
+        await env.SESSIONS.put(blacklistKey, JSON.stringify(blacklistedWords));
+        console.log(`Added "${existingPlayer.fakerank}" to blacklist during user deletion`);
+      }
+
+      // Set fakerank to NULL
       await env['zeitvertreib-data']
         .prepare('UPDATE playerdata SET fakerank = NULL WHERE id = ?')
         .bind(playerId)
