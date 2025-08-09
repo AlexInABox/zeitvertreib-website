@@ -337,9 +337,11 @@ function formatLeaderboardField(entries: LeaderboardEntry[]): string {
 
   return entries
     .map((entry, index) => {
-      const prefix = index === 0 ? '**' : '-# ';
-      const suffix = index === 0 ? '**' : '';
-      return `${prefix}${entry.rank}. ${entry.name} (${entry.value})${suffix}`;
+      if (index === 0) {
+        return `**${entry.rank}. ${entry.name} (${entry.value})**`;
+      } else {
+        return `-# ${entry.rank}. ${entry.name} (${entry.value})`;
+      }
     })
     .join('\n');
 }
@@ -351,10 +353,12 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
 
   return entries
     .map((entry, index) => {
-      const prefix = index === 0 ? '**' : '-# ';
-      const suffix = index === 0 ? '**' : '';
       const formattedTime = formatPlaytime(entry.value);
-      return `${prefix}${entry.rank}. ${entry.name} (${formattedTime})${suffix}`;
+      if (index === 0) {
+        return `**${entry.rank}. ${entry.name} (${formattedTime})**`;
+      } else {
+        return `-# ${entry.rank}. ${entry.name} (${formattedTime})`;
+      }
     })
     .join('\n');
 }
