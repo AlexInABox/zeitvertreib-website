@@ -1,4 +1,9 @@
-import { validateSession, createResponse, getPlayerData } from '../utils.js';
+import {
+  validateSession,
+  createResponse,
+  getPlayerData,
+  fetchDiscordWithProxy,
+} from '../utils.js';
 import OpenAI from 'openai';
 import { profanity } from '@2toad/profanity';
 import { EmbedBuilder } from '@discordjs/builders';
@@ -94,13 +99,17 @@ async function sendFakerankToDiscord(
     const webhookUrl = new URL(env.SPRAY_MOD_WEBHOOK);
     webhookUrl.searchParams.set('with_components', 'true');
 
-    const response = await fetch(webhookUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetchDiscordWithProxy(
+      webhookUrl.toString(),
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      env,
+    );
 
     if (!response.ok) {
       const errorText = await response.text();

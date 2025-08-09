@@ -1,4 +1,8 @@
-import { validateSession, createResponse } from '../utils.js';
+import {
+  validateSession,
+  createResponse,
+  fetchDiscordWithProxy,
+} from '../utils.js';
 import { EmbedBuilder } from '@discordjs/builders';
 import OpenAI from 'openai';
 
@@ -134,10 +138,14 @@ async function sendSprayToDiscord(
     const webhookUrl = new URL(env.SPRAY_MOD_WEBHOOK);
     webhookUrl.searchParams.set('with_components', 'true');
 
-    const response = await fetch(webhookUrl.toString(), {
-      method: 'POST',
-      body: formData,
-    });
+    const response = await fetchDiscordWithProxy(
+      webhookUrl.toString(),
+      {
+        method: 'POST',
+        body: formData,
+      },
+      env,
+    );
 
     if (!response.ok) {
       const errorText = await response.text();

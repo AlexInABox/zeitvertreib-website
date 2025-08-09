@@ -211,8 +211,8 @@ export default {
       ctx.waitUntil(processRecurringTransactions(env));
     }
 
-    // Update leaderboard every 5 minutes
-    if (controller.cron === '*/5 * * * *') {
+    // Update leaderboard every 30 minutes
+    if (controller.cron === '*/10 * * * *') {
       ctx.waitUntil(updateLeaderboard(env));
     }
   },

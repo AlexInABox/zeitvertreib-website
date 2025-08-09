@@ -10,6 +10,38 @@ A lightweight Cloudflare Workers backend for Steam authentication and player sta
 - `src/routes/stats.ts` - Player statistics endpoint
 - `src/types/index.ts` - TypeScript interfaces
 
+## Environment Variables
+
+### Required Variables
+
+- `STEAM_API_KEY` - Your Steam Web API key
+- `FRONTEND_URL` - Frontend application URL
+- `BACKEND_URL` - Backend worker URL
+
+### Discord Integration
+
+- `SPRAY_MOD_WEBHOOK` - Discord webhook URL for spray moderation
+- `LEADERBOARD_WEBHOOK` - Discord webhook URL for leaderboard updates
+- `LEADERBOARD_MESSAGE_ID` - Discord message ID to edit for leaderboard
+
+### Proxy Configuration (Optional)
+
+For Discord API calls, you can configure a proxy to route requests through:
+
+- `PROXY_HOST_PORT` - Proxy server address (format: `host:port`, e.g., `217.154.204.87:7432`)
+- `PROXY_USERNAME` - Proxy authentication username
+- `PROXY_PASSWORD` - Proxy authentication password
+
+**Example proxy configuration:**
+
+```bash
+PROXY_HOST_PORT=217.154.204.87:7432
+PROXY_USERNAME=cloudflare
+PROXY_PASSWORD=supersecretpassword
+```
+
+When configured, all Discord API calls will automatically route through the specified proxy. This is useful for bypassing regional restrictions or adding an additional layer of privacy.
+
 ## API Endpoints
 
 - `GET /auth/steam` - Initiate Steam login
