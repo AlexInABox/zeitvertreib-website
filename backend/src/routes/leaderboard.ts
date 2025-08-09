@@ -335,15 +335,20 @@ function formatLeaderboardField(entries: LeaderboardEntry[]): string {
     return 'Keine Daten verfügbar';
   }
 
-  return entries
+  let response = entries
     .map((entry, index) => {
       if (index === 0) {
         return `**${entry.rank}. ${entry.name} (${entry.value})**`;
+      } else if (index === 1) {
+        return `${entry.rank}. ${entry.name} (${entry.value})\n`;
       } else {
-        return `${entry.rank}. ${entry.name} (${entry.value})`;
+        return `-# ${entry.rank}. ${entry.name} (${entry.value})\n`;
       }
     })
-    .join('\n');
+    .join('')
+    .trimEnd();
+  console.log('Formatted leaderboard field:', response);
+  return response || 'Keine Daten verfügbar';
 }
 
 function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
@@ -356,11 +361,14 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
       const formattedTime = formatPlaytime(entry.value);
       if (index === 0) {
         return `**${entry.rank}. ${entry.name} (${formattedTime})**`;
+      } else if (index === 1) {
+        return `${entry.rank}. ${entry.name} (${formattedTime})\n`;
       } else {
-        return `${entry.rank}. ${entry.name} (${formattedTime})`;
+        return `-# ${entry.rank}. ${entry.name} (${formattedTime})\n`;
       }
     })
-    .join('\n');
+    .join('')
+    .trimEnd();
 }
 
 function createDiscordMessage(
