@@ -194,6 +194,7 @@ async function handleGetFakerank(
     return createResponse(
       {
         fakerank: playerData?.fakerank || null,
+        fakerankallowed: Boolean(playerData?.fakerankallowed) || false,
       },
       200,
       origin,
@@ -215,6 +216,19 @@ async function handleUpdateFakerank(
   origin: string | null,
 ): Promise<Response> {
   try {
+    // Check if user is allowed to set fakeranks
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
+    if (!playerData?.fakerankallowed) {
+      return createResponse(
+        {
+          error:
+            'Du bist noch nicht für diese Zeitvertreib-Funktion freigeschaltet! Du kannst entweder den Discord-Server boosten, über ko-fi.com spenden oder durch sehr aktives Spielen auf dem SCP-Server VIP werden. Tritt dem Discord unter dsc.gg/zeit bei für weitere Informationen.',
+        },
+        403,
+        origin,
+      );
+    }
+
     // Load blacklisted words and add them to profanity filter
     await loadBlacklist(env);
 
@@ -379,6 +393,19 @@ async function handleDeleteFakerank(
   origin: string | null,
 ): Promise<Response> {
   try {
+    // Check if user is allowed to modify fakeranks
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
+    if (!playerData?.fakerankallowed) {
+      return createResponse(
+        {
+          error:
+            'Du bist noch nicht für diese Zeitvertreib-Funktion freigeschaltet! Du kannst entweder den Discord-Server boosten, über ko-fi.com spenden oder durch sehr aktives Spielen auf dem SCP-Server VIP werden. Tritt dem Discord unter dsc.gg/zeit bei für weitere Informationen.',
+        },
+        403,
+        origin,
+      );
+    }
+
     // Check if player exists in database
     const existingPlayer = await env['zeitvertreib-data']
       .prepare('SELECT id FROM playerdata WHERE id = ?')

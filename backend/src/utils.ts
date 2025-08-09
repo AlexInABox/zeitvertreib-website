@@ -599,6 +599,7 @@ export async function mapPlayerDataToStats(
       pocketescapes: 0,
       usedadrenaline: 0,
       snakehighscore: 0,
+      fakerankallowed: false,
       lastkillers: lastKillers,
       lastkills: lastKills,
     };
@@ -618,6 +619,7 @@ export async function mapPlayerDataToStats(
     pocketescapes: Number(playerData.pocketescapes) || 0,
     usedadrenaline: Number(playerData.usedadrenaline) || 0,
     snakehighscore: Number(playerData.snakehighscore) || 0,
+    fakerankallowed: Boolean(playerData.fakerankallowed) || false,
     lastkillers: lastKillers,
     lastkills: lastKills,
   };

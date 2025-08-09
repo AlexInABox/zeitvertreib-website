@@ -28,6 +28,7 @@ interface Statistics {
   pocketescapes?: number;
   usedadrenaline?: number;
   snakehighscore?: number;
+  fakerankallowed?: boolean;
   lastkillers?: PlayerEntry[];
   lastkills?: PlayerEntry[];
 }
@@ -88,6 +89,7 @@ export class DashboardComponent implements OnDestroy {
   fakerankError = '';
   fakerankSuccess = false;
   showFakerankHelp = false;
+  fakerankAllowed = false;
 
   constructor(private authService: AuthService) {
     this.generateRandomColors();
@@ -208,6 +210,8 @@ export class DashboardComponent implements OnDestroy {
               ...this.userStatistics, // Keep defaults for missing properties
               ...response.stats,
             };
+            // Update fakerankAllowed from stats as well
+            this.fakerankAllowed = response.stats.fakerankallowed || false;
           }
           this.isLoading = false;
         },
@@ -790,11 +794,13 @@ export class DashboardComponent implements OnDestroy {
     this.authService
       .authenticatedGet<{
         fakerank: string | null;
+        fakerankallowed: boolean;
       }>(`${environment.apiUrl}/fakerank`)
       .subscribe({
         next: (response) => {
           this.currentFakerank = response?.fakerank || null;
           this.fakerankValue = this.currentFakerank || '';
+          this.fakerankAllowed = response?.fakerankallowed || false;
         },
         error: (error) => {
           console.error('Error loading fakerank:', error);

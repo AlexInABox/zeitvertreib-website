@@ -484,50 +484,81 @@
 
             <!-- Display Mode -->
             <div *ngIf="!isEditingFakerank" class="fakerank-display">
-              <div class="nickname-container mb-4">
-                <div
-                  class="nickname-preview"
-                  [class.nickname-empty]="!currentFakerank"
-                >
-                  <div *ngIf="currentFakerank" class="nickname-display">
-                    <div class="nickname-icon">✨</div>
-                    <div class="nickname-text">
-                      <span class="nickname-label">Dein Spitzname:</span>
-                      <span class="nickname-value">{{ currentFakerank }}</span>
+              <!-- Check if user is allowed to use fakeranks -->
+              <div *ngIf="fakerankAllowed">
+                <div class="nickname-container mb-4">
+                  <div
+                    class="nickname-preview"
+                    [class.nickname-empty]="!currentFakerank"
+                  >
+                    <div *ngIf="currentFakerank" class="nickname-display">
+                      <div class="nickname-icon">✨</div>
+                      <div class="nickname-text">
+                        <span class="nickname-label">Dein Spitzname:</span>
+                        <span class="nickname-value">{{
+                          currentFakerank
+                        }}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div *ngIf="!currentFakerank" class="nickname-empty-state">
-                    <div class="nickname-icon">💭</div>
-                    <div class="nickname-text">
-                      <span class="nickname-label">Noch kein Spitzname</span>
-                      <span class="nickname-subtitle"
-                        >Gib dir einen coolen Namen!</span
-                      >
+                    <div *ngIf="!currentFakerank" class="nickname-empty-state">
+                      <div class="nickname-icon">💭</div>
+                      <div class="nickname-text">
+                        <span class="nickname-label">Noch kein Spitzname</span>
+                        <span class="nickname-subtitle"
+                          >Gib dir einen coolen Namen!</span
+                        >
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div class="fakerank-actions">
+                  <button
+                    (click)="startEditingFakerank()"
+                    class="fakerank-btn fakerank-btn-primary"
+                    [disabled]="fakerankLoading"
+                  >
+                    {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
+                  </button>
+                  <button
+                    *ngIf="currentFakerank"
+                    (click)="deleteFakerank()"
+                    class="fakerank-btn fakerank-btn-danger"
+                    [disabled]="fakerankLoading"
+                  >
+                    🗑️ Löschen
+                  </button>
+                </div>
               </div>
-              <div class="fakerank-actions">
-                <button
-                  (click)="startEditingFakerank()"
-                  class="fakerank-btn fakerank-btn-primary"
-                  [disabled]="fakerankLoading"
-                >
-                  {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
-                </button>
-                <button
-                  *ngIf="currentFakerank"
-                  (click)="deleteFakerank()"
-                  class="fakerank-btn fakerank-btn-danger"
-                  [disabled]="fakerankLoading"
-                >
-                  🗑️ Löschen
-                </button>
+
+              <!-- Not allowed message -->
+              <div *ngIf="!fakerankAllowed" class="fakerank-not-allowed">
+                <div class="not-allowed-icon">🔒</div>
+                <div class="not-allowed-message">
+                  <p class="not-allowed-title">Noch nicht freigeschaltet!</p>
+                  <p class="not-allowed-text">
+                    Du bist noch nicht für diese Zeitvertreib-Funktion
+                    freigeschaltet! Du kannst entweder den Discord-Server
+                    <strong>boosten</strong>, über
+                    <strong style="white-space: nowrap">ko-fi.com</strong>
+                    spenden oder durch sehr aktives Spielen auf dem SCP-Server
+                    <strong>VIP</strong> werden.
+                  </p>
+                  <p class="not-allowed-link">
+                    Tritt dem Discord unter
+                    <a href="https://dsc.gg/zeit" style="text-decoration: none"
+                      ><strong>dsc.gg/zeit</strong></a
+                    >
+                    bei für weitere Informationen.
+                  </p>
+                </div>
               </div>
             </div>
 
             <!-- Edit Mode -->
-            <div *ngIf="isEditingFakerank" class="fakerank-edit">
+            <div
+              *ngIf="isEditingFakerank && fakerankAllowed"
+              class="fakerank-edit"
+            >
               <div class="nickname-editor mb-4">
                 <label class="editor-label"> ✨ Dein neuer Spitzname </label>
                 <div class="fakerank-input-container">

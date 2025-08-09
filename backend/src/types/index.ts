@@ -28,6 +28,7 @@ export interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
+  fakerankallowed: boolean;
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -45,6 +46,7 @@ export interface PlayerData {
   fakerank?: string;
   killcount?: number;
   deathcount?: number;
+  fakerankallowed?: boolean;
 }
 
 export interface KillRecord {

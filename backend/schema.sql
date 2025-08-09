@@ -1,7 +1,7 @@
 -- D1 Database Schema for zeitvertreib-data
 -- This file contains the database schema for the player statistics
 
-CREATE TABLE "playerdata" (   id TEXT PRIMARY KEY,   experience INTEGER DEFAULT 0,   playtime INTEGER DEFAULT 0,   roundsplayed INTEGER DEFAULT 0,   usedmedkits INTEGER DEFAULT 0,   usedcolas INTEGER DEFAULT 0,   pocketescapes INTEGER DEFAULT 0,   usedadrenaline INTEGER DEFAULT 0,   fakerank TEXT , snakehighscore INTEGER DEFAULT 0, killcount INTEGER DEFAULT 0, deathcount INTEGER DEFAULT 0);-- Kills table to track all kill events
+CREATE TABLE "playerdata" (   id TEXT PRIMARY KEY,   experience INTEGER DEFAULT 0,   playtime INTEGER DEFAULT 0,   roundsplayed INTEGER DEFAULT 0,   usedmedkits INTEGER DEFAULT 0,   usedcolas INTEGER DEFAULT 0,   pocketescapes INTEGER DEFAULT 0,   usedadrenaline INTEGER DEFAULT 0,   fakerank TEXT , snakehighscore INTEGER DEFAULT 0, killcount INTEGER DEFAULT 0, deathcount INTEGER DEFAULT 0, fakerankallowed BOOLEAN DEFAULT FALSE);
 CREATE TABLE IF NOT EXISTS kills (
     attacker TEXT,
     target TEXT,
