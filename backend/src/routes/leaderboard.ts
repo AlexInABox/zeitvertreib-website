@@ -340,7 +340,7 @@ function formatLeaderboardField(entries: LeaderboardEntry[]): string {
       if (index === 0) {
         return `**${entry.rank}. ${entry.name} (${entry.value})**`;
       } else {
-        return `-# ${entry.rank}. ${entry.name} (${entry.value})`;
+        return `${entry.rank}. ${entry.name} (${entry.value})`;
       }
     })
     .join('\n');
@@ -357,7 +357,7 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
       if (index === 0) {
         return `**${entry.rank}. ${entry.name} (${formattedTime})**`;
       } else {
-        return `-# ${entry.rank}. ${entry.name} (${formattedTime})`;
+        return `${entry.rank}. ${entry.name} (${formattedTime})`;
       }
     })
     .join('\n');
