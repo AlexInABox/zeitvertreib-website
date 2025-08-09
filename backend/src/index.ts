@@ -30,6 +30,10 @@ import {
   handleDeleteRecurringTransaction,
   processRecurringTransactions,
 } from './routes/financial.js';
+import {
+  updateLeaderboard,
+  handleLeaderboardUpdate,
+} from './routes/leaderboard.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -68,6 +72,7 @@ const routes: Record<
   '/financial/transactions': handleFinancialTransactions,
   '/financial/recurring': handleRecurringTransactions,
   '/financial/summary': handleGetSummary,
+  '/leaderboard/update': handleLeaderboardUpdate,
 };
 
 // Helper function to route recurring transactions based on method and path
@@ -201,7 +206,14 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    // Process recurring transactions daily
-    ctx.waitUntil(processRecurringTransactions(env));
+    // Process recurring transactions daily (6:00 AM)
+    if (controller.cron === '0 6 * * *') {
+      ctx.waitUntil(processRecurringTransactions(env));
+    }
+
+    // Update leaderboard every 5 minutes
+    if (controller.cron === '*/5 * * * *') {
+      ctx.waitUntil(updateLeaderboard(env));
+    }
   },
 } satisfies ExportedHandler<Env>;

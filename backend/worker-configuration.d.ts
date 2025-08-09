@@ -13,6 +13,8 @@ interface Env extends Cloudflare.Env {
   STEAM_API_KEY: string;
   OPENAI_API_KEY: string;
   SPRAY_MOD_WEBHOOK: string;
+  LEADERBOARD_WEBHOOK: string;
+  LEADERBOARD_MESSAGE_ID: string;
 }
 
 // Begin runtime types
