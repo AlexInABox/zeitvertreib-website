@@ -56,6 +56,9 @@ interface DiscordEmbed {
     inline: boolean;
   }[];
   color: number;
+  footer?: {
+    text: string;
+  };
 }
 
 interface DiscordMessage {
@@ -378,6 +381,18 @@ function createDiscordMessage(
     ? T
     : never,
 ): DiscordMessage {
+  // Create timestamp for last update
+  const now = new Date();
+  const timestamp = now.toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+
   return {
     embeds: [
       {
@@ -439,6 +454,9 @@ function createDiscordMessage(
             inline: true,
           },
         ],
+        footer: {
+          text: `Bestenliste aktualisiert sich alle 15 Minuten • Letzte Aktualisierung: ${timestamp}`,
+        },
         color: 13568958, // Purple color similar to your example
       },
     ],
