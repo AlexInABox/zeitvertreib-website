@@ -212,7 +212,7 @@ export default {
     }
 
     // Update leaderboard every 30 minutes
-    if (controller.cron === '*/10 * * * *') {
+    if (controller.cron === '*/5 * * * *') {
       ctx.waitUntil(updateLeaderboard(env));
     }
   },
