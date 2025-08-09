@@ -460,10 +460,8 @@ export async function mapPlayerDataToStats(
   steamId: string,
   env: Env,
 ): Promise<Statistics> {
-  // Get kills and deaths data from the kills table
-  const [kills, deaths, lastKillers, lastKills] = await Promise.all([
-    getPlayerKillsCount(steamId, env),
-    getPlayerDeathsCount(steamId, env),
+  // Get kills and deaths directly from playerdata, but still get last killers/kills from kills table
+  const [lastKillers, lastKills] = await Promise.all([
     getPlayerLastKillers(steamId, env),
     getPlayerLastKills(steamId, env),
   ]);
@@ -472,8 +470,8 @@ export async function mapPlayerDataToStats(
     return {
       username,
       avatarFull,
-      kills,
-      deaths,
+      kills: 0,
+      deaths: 0,
       experience: 0,
       playtime: 0,
       roundsplayed: 0,
@@ -491,8 +489,8 @@ export async function mapPlayerDataToStats(
   return {
     username,
     avatarFull,
-    kills,
-    deaths,
+    kills: Number(playerData.killcount) || 0,
+    deaths: Number(playerData.deathcount) || 0,
     experience: Number(playerData.experience) || 0,
     playtime: Number(playerData.playtime) || 0,
     roundsplayed: Number(playerData.roundsplayed) || 0,

@@ -43,6 +43,8 @@ export interface PlayerData {
   usedadrenaline?: number;
   snakehighscore?: number;
   fakerank?: string;
+  killcount?: number;
+  deathcount?: number;
 }
 
 export interface KillRecord {
