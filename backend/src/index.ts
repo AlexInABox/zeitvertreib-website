@@ -19,6 +19,17 @@ import {
   handleFakerankModerationBan,
 } from './routes/profile.js';
 import {
+  handleGetUserFakerank,
+  handleSetUserFakerank,
+  handleGetBlacklist,
+  handleAddToBlacklist,
+  handleRemoveFromBlacklist,
+  handleGetWhitelist,
+  handleAddToWhitelist,
+  handleRemoveFromWhitelist,
+  handleGetAllFakeranks,
+} from './routes/fakerank-admin.js';
+import {
   handleGetTransactions,
   handleCreateTransaction,
   handleUpdateTransaction,
@@ -69,6 +80,10 @@ const routes: Record<
   '/fakerank': handleFakerank,
   '/fakerank/moderate/delete': handleFakerankModerationDelete,
   '/fakerank/moderate/ban': handleFakerankModerationBan,
+  '/fakerank-admin/user': handleFakerankAdminUser,
+  '/fakerank-admin/blacklist': handleFakerankAdminBlacklist,
+  '/fakerank-admin/whitelist': handleFakerankAdminWhitelist,
+  '/fakerank-admin/all-fakeranks': handleGetAllFakeranks,
   '/financial/transactions': handleFinancialTransactions,
   '/financial/recurring': handleRecurringTransactions,
   '/financial/summary': handleGetSummary,
@@ -137,6 +152,67 @@ async function handleFinancialTransactions(
     } else if (method === 'DELETE') {
       return handleDeleteTransaction(request, env);
     }
+  }
+
+  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+    status: 405,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// Helper function to route fakerank admin user operations based on method
+async function handleFakerankAdminUser(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const method = request.method;
+
+  if (method === 'GET') {
+    return handleGetUserFakerank(request, env);
+  } else if (method === 'POST') {
+    return handleSetUserFakerank(request, env);
+  }
+
+  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+    status: 405,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// Helper function to route fakerank admin blacklist operations based on method
+async function handleFakerankAdminBlacklist(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const method = request.method;
+
+  if (method === 'GET') {
+    return handleGetBlacklist(request, env);
+  } else if (method === 'POST') {
+    return handleAddToBlacklist(request, env);
+  } else if (method === 'DELETE') {
+    return handleRemoveFromBlacklist(request, env);
+  }
+
+  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+    status: 405,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// Helper function to route fakerank admin whitelist operations based on method
+async function handleFakerankAdminWhitelist(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const method = request.method;
+
+  if (method === 'GET') {
+    return handleGetWhitelist(request, env);
+  } else if (method === 'POST') {
+    return handleAddToWhitelist(request, env);
+  } else if (method === 'DELETE') {
+    return handleRemoveFromWhitelist(request, env);
   }
 
   return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {

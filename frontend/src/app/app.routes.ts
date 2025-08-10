@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { fakerankAdminGuard } from './guards/fakerank-admin.guard';
 
 export const routes: Routes = [
   {
@@ -22,6 +23,14 @@ export const routes: Routes = [
         (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
+  },
+  {
+    path: 'fakerank',
+    loadComponent: () =>
+      import('./fakerank-admin/fakerank-admin.component').then(
+        (m) => m.FakerankAdminComponent,
+      ),
+    canActivate: [fakerankAdminGuard],
   },
   {
     path: 'profile',

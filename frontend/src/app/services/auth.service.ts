@@ -12,12 +12,37 @@ export interface SteamUser {
   avatarfull: string;
 }
 
+export interface PlayerData {
+  id: string;
+  experience: number;
+  playtime: number;
+  roundsplayed: number;
+  usedmedkits: number;
+  usedcolas: number;
+  pocketescapes: number;
+  usedadrenaline: number;
+  fakerank: string;
+  snakehighscore: number;
+  killcount: number;
+  deathcount: number;
+  fakerankallowed: boolean | number;
+  fakerank_color: string;
+  fakerankadmin: boolean | number;
+}
+
+export interface UserData {
+  user: SteamUser;
+  playerData: PlayerData | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<SteamUser | null>(null);
+  private currentUserDataSubject = new BehaviorSubject<UserData | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  public currentUserData$ = this.currentUserDataSubject.asObservable();
   private sessionToken: string | null = null;
 
   constructor(private http: HttpClient) {
@@ -56,14 +81,19 @@ export class AuthService {
     return headers;
   }
 
+  public getSessionToken(): string | null {
+    return this.sessionToken;
+  }
+
   checkAuthStatus(): void {
     if (!this.sessionToken) {
       this.currentUserSubject.next(null);
+      this.currentUserDataSubject.next(null);
       return;
     }
 
     this.http
-      .get<{ user: SteamUser }>(`${environment.apiUrl}/auth/me`, {
+      .get<UserData>(`${environment.apiUrl}/auth/me`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -75,7 +105,13 @@ export class AuthService {
         }),
       )
       .subscribe((response) => {
-        this.currentUserSubject.next(response?.user || null);
+        if (response?.user) {
+          this.currentUserSubject.next(response.user);
+          this.currentUserDataSubject.next(response);
+        } else {
+          this.currentUserSubject.next(null);
+          this.currentUserDataSubject.next(null);
+        }
       });
   }
 
@@ -99,6 +135,7 @@ export class AuthService {
     this.logout().subscribe(() => {
       this.clearToken();
       this.currentUserSubject.next(null);
+      this.currentUserDataSubject.next(null);
     });
   }
 
@@ -108,6 +145,16 @@ export class AuthService {
 
   getCurrentUser(): SteamUser | null {
     return this.currentUserSubject.value;
+  }
+
+  getCurrentUserData(): UserData | null {
+    return this.currentUserDataSubject.value;
+  }
+
+  isFakerankAdmin(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    const adminFlag = userData?.playerData?.fakerankadmin;
+    return adminFlag === true || adminFlag === 1;
   }
 
   // Helper method for making authenticated API calls

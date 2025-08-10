@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService, SteamUser } from '../services/auth.service';
+import { AuthService, SteamUser, UserData } from '../services/auth.service';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';

@@ -8,6 +8,13 @@ import OpenAI from 'openai';
 import { profanity } from '@2toad/profanity';
 import { EmbedBuilder } from '@discordjs/builders';
 
+// Extend the Env interface to include OPENAI_API_KEY
+declare global {
+  interface Env {
+    OPENAI_API_KEY: string;
+  }
+}
+
 // Send accepted fakerank to Discord webhook for moderation tracking
 async function sendFakerankToDiscord(
   steamId: string,
@@ -308,80 +315,107 @@ async function handleUpdateFakerank(
       );
     }
 
-    // Validate fakerank content using profanity filter
+    // First, check whitelist - if whitelisted, skip all other content validation
+    let isWhitelisted = false;
     try {
-      // Check built-in profanity detection
-      const containsProfanity = profanity.exists(body.fakerank);
-      const containsProfanityWithLangs = profanity.exists(body.fakerank, [
-        'en',
-        'de',
-        'fr',
-      ]);
-
-      // Manual check against our blacklist (more reliable than library for custom words)
-      const blacklistData = await env.SESSIONS.get('fakerank_blacklist');
-      let isBlacklisted = false;
-
-      if (blacklistData) {
-        const blacklistedWords = JSON.parse(blacklistData) as string[];
-        isBlacklisted = blacklistedWords.some(
+      const whitelistData = await env.SESSIONS.get('fakerank_whitelist');
+      if (whitelistData) {
+        const whitelistedWords = JSON.parse(whitelistData) as string[];
+        isWhitelisted = whitelistedWords.some(
           (word) =>
             body.fakerank.toLowerCase().includes(word.toLowerCase()) ||
-            word.toLowerCase().includes(body.fakerank.toLowerCase()),
+            word.toLowerCase().includes(body.fakerank.toLowerCase()) ||
+            body.fakerank.toLowerCase() === word.toLowerCase(),
         );
       }
+    } catch (whitelistError) {
+      console.error('Error checking whitelist:', whitelistError);
+      // Continue with normal validation if whitelist check fails
+    }
 
-      if (containsProfanity || containsProfanityWithLangs || isBlacklisted) {
+    // Only perform content validation if the word is NOT whitelisted
+    if (!isWhitelisted) {
+      // Validate fakerank content using profanity filter
+      try {
+        // Check built-in profanity detection
+        const containsProfanity = profanity.exists(body.fakerank);
+        const containsProfanityWithLangs = profanity.exists(body.fakerank, [
+          'en',
+          'de',
+          'fr',
+        ]);
+
+        // Manual check against our blacklist (more reliable than library for custom words)
+        const blacklistData = await env.SESSIONS.get('fakerank_blacklist');
+        let isBlacklisted = false;
+
+        if (blacklistData) {
+          const blacklistedWords = JSON.parse(blacklistData) as string[];
+          isBlacklisted = blacklistedWords.some(
+            (word) =>
+              body.fakerank.toLowerCase().includes(word.toLowerCase()) ||
+              word.toLowerCase().includes(body.fakerank.toLowerCase()),
+          );
+        }
+
+        if (containsProfanity || containsProfanityWithLangs || isBlacklisted) {
+          return createResponse(
+            { error: 'Fakerank enthält unangemessene Inhalte' },
+            400,
+            origin,
+          );
+        }
+      } catch (profanityError) {
+        console.error('Error checking profanity:', profanityError);
         return createResponse(
-          { error: 'Fakerank enthält unangemessene Inhalte' },
-          400,
+          { error: 'Inhalt konnte nicht validiert werden' },
+          500,
           origin,
         );
       }
-    } catch (profanityError) {
-      console.error('Error checking profanity:', profanityError);
-      return createResponse(
-        { error: 'Inhalt konnte nicht validiert werden' },
-        500,
-        origin,
-      );
-    } // Validate fakerank content using OpenAI moderation
-    if (!env.OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY is not configured');
-      return createResponse(
-        { error: 'Inhaltsvalidierung nicht verfügbar' },
-        500,
-        origin,
-      );
-    }
 
-    try {
-      const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+      // Validate fakerank content using OpenAI moderation
+      if (!env.OPENAI_API_KEY) {
+        console.error('OPENAI_API_KEY is not configured');
+        return createResponse(
+          { error: 'Inhaltsvalidierung nicht verfügbar' },
+          500,
+          origin,
+        );
+      }
 
-      const moderation = await openai.moderations.create({
-        model: 'omni-moderation-latest',
-        input: body.fakerank,
-      });
+      try {
+        const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
-      // Evaluate moderation response
-      const results = moderation.results || [];
-      if (Array.isArray(results) && results.length > 0) {
-        for (const result of results) {
-          if (result.flagged) {
-            return createResponse(
-              { error: 'Fakerank enthält unangemessene Inhalte' },
-              400,
-              origin,
-            );
+        const moderation = await openai.moderations.create({
+          model: 'omni-moderation-latest',
+          input: body.fakerank,
+        });
+
+        // Evaluate moderation response
+        const results = moderation.results || [];
+        if (Array.isArray(results) && results.length > 0) {
+          for (const result of results) {
+            if (result.flagged) {
+              return createResponse(
+                { error: 'Fakerank enthält unangemessene Inhalte' },
+                400,
+                origin,
+              );
+            }
           }
         }
+      } catch (moderationError) {
+        console.error('Error with OpenAI moderation:', moderationError);
+        return createResponse(
+          { error: 'Inhalt konnte nicht validiert werden' },
+          500,
+          origin,
+        );
       }
-    } catch (moderationError) {
-      console.error('Error with OpenAI moderation:', moderationError);
-      return createResponse(
-        { error: 'Inhalt konnte nicht validiert werden' },
-        500,
-        origin,
+    } else {
+      console.log(
+        `Fakerank "${body.fakerank}" is whitelisted, skipping content validation`,
       );
     }
 

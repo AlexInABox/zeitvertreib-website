@@ -538,6 +538,26 @@
                   >
                     🗑️ Löschen
                   </button>
+
+                  <!-- Admin Button -->
+                  <button
+                    *ngIf="isFakerankAdmin()"
+                    [routerLink]="['/fakerank']"
+                    class="fakerank-btn fakerank-btn-admin"
+                    title="Fakerank Administration"
+                  >
+                    🛡️ Admin Panel
+                  </button>
+
+                  <!-- Disabled Admin Button for non-admins (optional visual indicator) -->
+                  <button
+                    *ngIf="!isFakerankAdmin()"
+                    class="fakerank-btn fakerank-btn-admin-disabled"
+                    disabled
+                    title="Nur für Fakerank-Administratoren verfügbar"
+                  >
+                    🛡️ Admin Panel
+                  </button>
                 </div>
               </div>
 

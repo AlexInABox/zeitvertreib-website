@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
-import { AuthService, SteamUser } from '../../services/auth.service';
+import { AuthService, SteamUser, UserData } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -28,11 +28,36 @@ export class HeaderComponent implements OnInit, OnDestroy {
   userLoggedIn: boolean = false;
   avatarIcon: string = '';
   currentUser: SteamUser | null = null;
+  isFakerankAdmin: boolean = false;
   private authSubscription?: Subscription;
+  private userDataSubscription?: Subscription;
 
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
+    this.updateMenuItems();
+
+    // Subscribe to user authentication status
+    this.authSubscription = this.authService.currentUser$.subscribe(
+      (user: SteamUser | null) => {
+        this.currentUser = user;
+        this.userLoggedIn = !!user;
+        this.avatarIcon = user?.avatarfull || '';
+      },
+    );
+
+    // Subscribe to user data changes (including fakerank admin status)
+    this.userDataSubscription = this.authService.currentUserData$.subscribe(
+      (userData: UserData | null) => {
+        this.isFakerankAdmin =
+          userData?.playerData?.fakerankadmin === true ||
+          userData?.playerData?.fakerankadmin === 1;
+        this.updateMenuItems(); // Update menu items when admin status changes
+      },
+    );
+  }
+
+  private updateMenuItems() {
     this.items = [
       {
         label: 'Startseite',
@@ -56,18 +81,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-    // Auf Authentifizierungsstatusänderungen abonnieren
-    this.authSubscription = this.authService.currentUser$.subscribe(
-      (user: SteamUser | null) => {
-        this.currentUser = user;
-        this.userLoggedIn = !!user;
-        this.avatarIcon = user?.avatarfull || '';
-      },
-    );
+    // Add fakerank admin dashboard if user has privileges
+    if (this.isFakerankAdmin) {
+      this.items.push({
+        label: 'Fakerank Admin',
+        icon: PrimeIcons.SHIELD,
+        route: '/fakerank',
+      });
+    }
   }
 
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
+    this.userDataSubscription?.unsubscribe();
   }
 
   login() {

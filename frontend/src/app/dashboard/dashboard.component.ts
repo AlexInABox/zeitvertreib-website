@@ -6,6 +6,7 @@ import { ChartModule } from 'primeng/chart';
 import { AvatarModule } from 'primeng/avatar';
 import { CommonModule, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { parseGIF, decompressFrames } from 'gifuct-js';
 
@@ -42,6 +43,7 @@ interface Statistics {
     AvatarModule,
     CommonModule,
     FormsModule,
+    RouterLink,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -137,6 +139,11 @@ export class DashboardComponent implements OnDestroy {
       }
     };
     document.addEventListener('click', this.documentClickHandler);
+  }
+
+  // Check if current user is a fakerank admin
+  isFakerankAdmin(): boolean {
+    return this.authService.isFakerankAdmin();
   }
 
   // Safe getter methods for template usage

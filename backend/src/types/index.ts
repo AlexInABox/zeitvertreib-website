@@ -47,7 +47,8 @@ export interface PlayerData {
   fakerank_color?: string;
   killcount?: number;
   deathcount?: number;
-  fakerankallowed?: boolean;
+  fakerankallowed?: boolean | number;
+  fakerankadmin?: boolean | number;
 }
 
 export interface KillRecord {

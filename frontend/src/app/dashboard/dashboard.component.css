@@ -1639,3 +1639,31 @@
   z-index: 10;
   position: relative;
 }
+
+/* Fakerank Admin Button Styles */
+.fakerank-btn-admin {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.fakerank-btn-admin:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
+}
+
+.fakerank-btn-admin-disabled {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: #9ca3af;
+  border: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.fakerank-btn-admin-disabled:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  transform: none;
+  box-shadow: none;
+}

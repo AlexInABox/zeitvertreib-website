@@ -7,6 +7,7 @@ import {
   createSession,
   deleteSession,
   createResponse,
+  getPlayerData,
 } from '../utils.js';
 
 export async function handleSteamLogin(request: Request): Promise<Response> {
@@ -81,7 +82,17 @@ export async function handleGetUser(
     return createResponse({ error: error! }, 401, origin);
   }
 
-  return createResponse({ user: session!.steamUser }, 200, origin);
+  // Get player data including fakerankadmin flag
+  const playerData = await getPlayerData(session!.steamId, env);
+
+  return createResponse(
+    {
+      user: session!.steamUser,
+      playerData: playerData,
+    },
+    200,
+    origin,
+  );
 }
 
 export async function handleLogout(

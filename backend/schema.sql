@@ -20,7 +20,8 @@ CREATE TABLE "playerdata" (
     'tomato', 'yellow', 'magenta', 'blue_green', 'orange', 'lime', 'green', 'emerald',
     'carmine', 'nickel', 'mint', 'army_green', 'pumpkin'
   ))
-);
+, fakerankadmin BOOLEAN DEFAULT FALSE);
+
 CREATE TABLE IF NOT EXISTS kills (
     attacker TEXT,
     target TEXT,
@@ -74,12 +75,12 @@ CREATE INDEX IF NOT EXISTS idx_recurring_frequency ON recurring_transactions(fre
 INSERT OR IGNORE INTO playerdata (
     id, experience, playtime, roundsplayed,
     usedmedkits, usedcolas, pocketescapes, usedadrenaline,
-    snakehighscore, fakerank, fakerankallowed
+    snakehighscore, fakerank, fakerankallowed, fakerankadmin
 ) VALUES (
     '76561198354414854@steam',
     12500, 7200, 45,
     25, 18, 7, 12,
-    23, 'Elite Commander', 1
+    23, 'Elite Commander', 1, 1
 );
 
 -- Sample kills data for testing
