@@ -559,7 +559,7 @@ export async function handleGetAllFakeranks(
 
     try {
       const response = await fetch(
-        'https://zeitvertreib-discord.main-1a2.workers.dev/webhook/playerlist',
+        'https://zeitvertreib-discord-backend.zeitvertreib.vip/webhook/playerlist',
         {
           method: 'GET',
           headers: {
