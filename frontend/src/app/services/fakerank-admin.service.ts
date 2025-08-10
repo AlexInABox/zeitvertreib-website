@@ -57,14 +57,12 @@ export interface PaginatedFakeranks {
   providedIn: 'root',
 })
 export class FakerankAdminService {
-  private readonly API_BASE = environment.production
-    ? 'https://zeitvertreib-website-backend.alexinabox.workers.dev'
-    : 'http://localhost:8787';
+  private readonly API_BASE = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   private getAuthHeaders(): HttpHeaders {
     // Get session token from AuthService
@@ -233,11 +231,11 @@ export class FakerankAdminService {
             currentPage:
               Math.floor(
                 (response.pagination?.offset || 0) /
-                  (response.pagination?.limit || limit),
+                (response.pagination?.limit || limit),
               ) + 1,
             totalPages: Math.ceil(
               (response.pagination?.total || 0) /
-                (response.pagination?.limit || limit),
+              (response.pagination?.limit || limit),
             ),
             currentPlayersOnline: response.currentPlayersOnline || 0,
             uniquePlayerNames: response.uniquePlayerNames || 0,
