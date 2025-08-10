@@ -1461,3 +1461,181 @@
   transform: scale(1.1);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
+
+/* Color picker styles */
+.nickname-color-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.color-picker-section {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.color-picker-container {
+  position: relative;
+}
+
+.color-selector-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.color-selector-button:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.color-selector-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.color-selector-button .color-indicator {
+  width: 16px;
+  height: 16px;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.color-picker-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1500;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  margin-top: 0.25rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.color-options {
+  padding: 0.75rem;
+}
+
+.color-option {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.color-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(2px);
+}
+
+.color-option.selected {
+  background: rgba(251, 191, 36, 0.25);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+}
+
+.color-option .color-indicator {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.color-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.selected-check {
+  color: #fbbf24;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Scrollbar for color dropdown */
+.color-picker-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.color-picker-dropdown::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.color-picker-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.color-picker-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Allow overflow for fakerank card when color picker is open */
+.stats-card:has(.color-picker-dropdown) {
+  overflow: visible;
+  z-index: 10;
+  position: relative;
+}
+
+/* Fallback for browsers that don't support :has() */
+.stats-card.fakerank-card-overflow {
+  overflow: visible;
+  z-index: 10;
+  position: relative;
+}
+
+/* Ensure color picker container doesn't interfere with overflow */
+.color-picker-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure grid column allows overflow when color picker is open */
+.col-span-1:has(.fakerank-card-overflow) {
+  overflow: visible;
+  z-index: 10;
+  position: relative;
+}

@@ -44,6 +44,7 @@ export interface PlayerData {
   usedadrenaline?: number;
   snakehighscore?: number;
   fakerank?: string;
+  fakerank_color?: string;
   killcount?: number;
   deathcount?: number;
   fakerankallowed?: boolean;

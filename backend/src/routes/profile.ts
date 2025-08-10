@@ -194,6 +194,7 @@ async function handleGetFakerank(
     return createResponse(
       {
         fakerank: playerData?.fakerank || null,
+        fakerank_color: playerData?.fakerank_color || 'default',
         fakerankallowed: Boolean(playerData?.fakerankallowed) || false,
       },
       200,
@@ -249,11 +250,50 @@ async function handleUpdateFakerank(
     }
 
     // Parse request body
-    const body = (await request.json()) as { fakerank: string };
+    const body = (await request.json()) as {
+      fakerank: string;
+      fakerank_color?: string;
+    };
 
     if (!body.fakerank && body.fakerank !== '') {
       return createResponse(
         { error: 'Fakerank ist erforderlich' },
+        400,
+        origin,
+      );
+    }
+
+    // Validate fakerank_color if provided
+    const validColors = [
+      'pink',
+      'red',
+      'brown',
+      'silver',
+      'default',
+      'light_green',
+      'crimson',
+      'cyan',
+      'aqua',
+      'deep_pink',
+      'tomato',
+      'yellow',
+      'magenta',
+      'blue_green',
+      'orange',
+      'lime',
+      'green',
+      'emerald',
+      'carmine',
+      'nickel',
+      'mint',
+      'army_green',
+      'pumpkin',
+    ];
+
+    const fakerankColor = body.fakerank_color || 'default';
+    if (!validColors.includes(fakerankColor)) {
+      return createResponse(
+        { error: 'Ungültige Fakerank-Farbe ausgewählt' },
         400,
         origin,
       );
@@ -352,19 +392,21 @@ async function handleUpdateFakerank(
       .first();
 
     if (existingPlayer) {
-      // Update existing player's fakerank
-      await env['zeitvertreib-data']
-        .prepare('UPDATE playerdata SET fakerank = ? WHERE id = ?')
-        .bind(body.fakerank, playerId)
-        .run();
-    } else {
-      // Create new player record with fakerank
+      // Update existing player's fakerank and color
       await env['zeitvertreib-data']
         .prepare(
-          `INSERT INTO playerdata (id, fakerank, experience, playtime, roundsplayed, usedmedkits, usedcolas, pocketescapes, usedadrenaline) 
-                         VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0)`,
+          'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
         )
-        .bind(playerId, body.fakerank)
+        .bind(body.fakerank, fakerankColor, playerId)
+        .run();
+    } else {
+      // Create new player record with fakerank and color
+      await env['zeitvertreib-data']
+        .prepare(
+          `INSERT INTO playerdata (id, fakerank, fakerank_color, experience, playtime, roundsplayed, usedmedkits, usedcolas, pocketescapes, usedadrenaline) 
+                         VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0)`,
+        )
+        .bind(playerId, body.fakerank, fakerankColor)
         .run();
     }
 
@@ -377,6 +419,7 @@ async function handleUpdateFakerank(
         success: true,
         message: 'Fakerank erfolgreich aktualisiert',
         fakerank: body.fakerank,
+        fakerank_color: fakerankColor,
       },
       200,
       origin,
@@ -413,10 +456,12 @@ async function handleDeleteFakerank(
       .first();
 
     if (existingPlayer) {
-      // Set fakerank to NULL (or empty string, depending on your preference)
+      // Set fakerank to NULL and reset color to default
       await env['zeitvertreib-data']
-        .prepare('UPDATE playerdata SET fakerank = NULL WHERE id = ?')
-        .bind(playerId)
+        .prepare(
+          'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+        )
+        .bind('default', playerId)
         .run();
 
       return createResponse(
@@ -469,10 +514,12 @@ export async function handleFakerankModerationDelete(
 
     const playerId = `${steamId}@steam`;
 
-    // Delete the fakerank from database
+    // Delete the fakerank from database and reset color
     await env['zeitvertreib-data']
-      .prepare('UPDATE playerdata SET fakerank = NULL WHERE id = ?')
-      .bind(playerId)
+      .prepare(
+        'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+      )
+      .bind('default', playerId)
       .run();
 
     // Add word to blacklist
@@ -536,10 +583,12 @@ export async function handleFakerankModerationBan(
 
     const playerId = `${steamId}@steam`;
 
-    // Delete the fakerank from database
+    // Delete the fakerank from database and reset color
     await env['zeitvertreib-data']
-      .prepare('UPDATE playerdata SET fakerank = NULL WHERE id = ?')
-      .bind(playerId)
+      .prepare(
+        'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+      )
+      .bind('default', playerId)
       .run();
 
     // Add word to blacklist

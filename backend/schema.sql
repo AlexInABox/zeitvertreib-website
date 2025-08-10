@@ -1,7 +1,26 @@
 -- D1 Database Schema for zeitvertreib-data
 -- This file contains the database schema for the player statistics
 
-CREATE TABLE "playerdata" (   id TEXT PRIMARY KEY,   experience INTEGER DEFAULT 0,   playtime INTEGER DEFAULT 0,   roundsplayed INTEGER DEFAULT 0,   usedmedkits INTEGER DEFAULT 0,   usedcolas INTEGER DEFAULT 0,   pocketescapes INTEGER DEFAULT 0,   usedadrenaline INTEGER DEFAULT 0,   fakerank TEXT , snakehighscore INTEGER DEFAULT 0, killcount INTEGER DEFAULT 0, deathcount INTEGER DEFAULT 0, fakerankallowed BOOLEAN DEFAULT FALSE);
+CREATE TABLE "playerdata" (
+  id TEXT PRIMARY KEY,
+  experience INTEGER DEFAULT 0,
+  playtime INTEGER DEFAULT 0,
+  roundsplayed INTEGER DEFAULT 0,
+  usedmedkits INTEGER DEFAULT 0,
+  usedcolas INTEGER DEFAULT 0,
+  pocketescapes INTEGER DEFAULT 0,
+  usedadrenaline INTEGER DEFAULT 0,
+  fakerank TEXT,
+  snakehighscore INTEGER DEFAULT 0,
+  killcount INTEGER DEFAULT 0,
+  deathcount INTEGER DEFAULT 0,
+  fakerankallowed BOOLEAN DEFAULT FALSE,
+  fakerank_color TEXT DEFAULT 'default' CHECK (fakerank_color IN (
+    'pink', 'red', 'brown', 'silver', 'default', 'light_green', 'crimson', 'cyan', 'aqua', 'deep_pink',
+    'tomato', 'yellow', 'magenta', 'blue_green', 'orange', 'lime', 'green', 'emerald',
+    'carmine', 'nickel', 'mint', 'army_green', 'pumpkin'
+  ))
+);
 CREATE TABLE IF NOT EXISTS kills (
     attacker TEXT,
     target TEXT,
@@ -55,12 +74,12 @@ CREATE INDEX IF NOT EXISTS idx_recurring_frequency ON recurring_transactions(fre
 INSERT OR IGNORE INTO playerdata (
     id, experience, playtime, roundsplayed,
     usedmedkits, usedcolas, pocketescapes, usedadrenaline,
-    snakehighscore, fakerank
+    snakehighscore, fakerank, fakerankallowed
 ) VALUES (
     '76561198354414854@steam',
     12500, 7200, 45,
     25, 18, 7, 12,
-    23, 'Elite Commander'
+    23, 'Elite Commander', 1
 );
 
 -- Sample kills data for testing

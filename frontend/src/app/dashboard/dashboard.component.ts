@@ -83,6 +83,8 @@ export class DashboardComponent implements OnDestroy {
 
   // Fakerank-related properties
   currentFakerank: string | null = null;
+  currentFakerankColor: string = 'default';
+  tempFakerankColor: string = 'default'; // Temporary color for editing
   isEditingFakerank = false;
   fakerankValue = '';
   fakerankLoading = false;
@@ -90,12 +92,51 @@ export class DashboardComponent implements OnDestroy {
   fakerankSuccess = false;
   showFakerankHelp = false;
   fakerankAllowed = false;
+  showColorPicker = false;
+  private documentClickHandler?: (event: Event) => void;
+
+  // Available fakerank colors
+  fakerankColors = [
+    { key: 'default', name: 'Default (Weiß)', hex: '#FFFFFF' },
+    { key: 'pink', name: 'Pink', hex: '#FF96DE' },
+    { key: 'red', name: 'Rot', hex: '#C50000' },
+    { key: 'brown', name: 'Braun', hex: '#944710' },
+    { key: 'silver', name: 'Silber', hex: '#A0A0A0' },
+    { key: 'light_green', name: 'Hellgrün', hex: '#32CD32' },
+    { key: 'crimson', name: 'Karmesinrot', hex: '#DC143C' },
+    { key: 'cyan', name: 'Cyan', hex: '#00B7EB' },
+    { key: 'aqua', name: 'Aqua', hex: '#00FFFF' },
+    { key: 'deep_pink', name: 'Tiefes Pink', hex: '#FF1493' },
+    { key: 'tomato', name: 'Tomate', hex: '#FF6448' },
+    { key: 'yellow', name: 'Gelb', hex: '#FAFF86' },
+    { key: 'magenta', name: 'Magenta', hex: '#FF0090' },
+    { key: 'blue_green', name: 'Blaugrün', hex: '#4DFFB8' },
+    { key: 'orange', name: 'Orange', hex: '#FF9966' },
+    { key: 'lime', name: 'Limette', hex: '#BFFF00' },
+    { key: 'green', name: 'Grün', hex: '#228B22' },
+    { key: 'emerald', name: 'Smaragd', hex: '#50C878' },
+    { key: 'carmine', name: 'Karmin', hex: '#960018' },
+    { key: 'nickel', name: 'Nickel', hex: '#727472' },
+    { key: 'mint', name: 'Minze', hex: '#98FB98' },
+    { key: 'army_green', name: 'Armeegrün', hex: '#4B5320' },
+    { key: 'pumpkin', name: 'Kürbis', hex: '#EE7600' },
+  ];
 
   constructor(private authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
     this.loadCurrentSpray();
     this.loadFakerank();
+
+    // Close color picker when clicking outside
+    this.documentClickHandler = (event: Event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.color-picker-container')) {
+        this.showColorPicker = false;
+        this.updateOverflowClass();
+      }
+    };
+    document.addEventListener('click', this.documentClickHandler);
   }
 
   // Safe getter methods for template usage
@@ -443,6 +484,11 @@ export class DashboardComponent implements OnDestroy {
     // Clean up object URLs to prevent memory leaks
     if (this.currentSprayImage) {
       URL.revokeObjectURL(this.currentSprayImage);
+    }
+
+    // Clean up event listener
+    if (this.documentClickHandler) {
+      document.removeEventListener('click', this.documentClickHandler);
     }
   }
 
@@ -794,11 +840,13 @@ export class DashboardComponent implements OnDestroy {
     this.authService
       .authenticatedGet<{
         fakerank: string | null;
+        fakerank_color: string;
         fakerankallowed: boolean;
       }>(`${environment.apiUrl}/fakerank`)
       .subscribe({
         next: (response) => {
           this.currentFakerank = response?.fakerank || null;
+          this.currentFakerankColor = response?.fakerank_color || 'default';
           this.fakerankValue = this.currentFakerank || '';
           this.fakerankAllowed = response?.fakerankallowed || false;
         },
@@ -812,15 +860,21 @@ export class DashboardComponent implements OnDestroy {
   startEditingFakerank(): void {
     this.isEditingFakerank = true;
     this.fakerankValue = this.currentFakerank || '';
+    this.tempFakerankColor = this.currentFakerankColor; // Store current color as temp
     this.fakerankError = '';
     this.fakerankSuccess = false;
+    this.showColorPicker = false;
+    this.updateOverflowClass();
   }
 
   cancelEditingFakerank(): void {
     this.isEditingFakerank = false;
     this.fakerankValue = this.currentFakerank || '';
+    this.tempFakerankColor = this.currentFakerankColor; // Reset temp color to current
     this.fakerankError = '';
     this.fakerankSuccess = false;
+    this.showColorPicker = false;
+    this.updateOverflowClass();
   }
 
   saveFakerank(): void {
@@ -830,19 +884,26 @@ export class DashboardComponent implements OnDestroy {
     this.fakerankError = '';
     this.fakerankSuccess = false;
 
-    const payload = { fakerank: this.fakerankValue.trim() };
+    const payload = {
+      fakerank: this.fakerankValue.trim(),
+      fakerank_color: this.tempFakerankColor,
+    };
 
     this.authService
       .authenticatedPost<{
         success: boolean;
         fakerank: string;
+        fakerank_color: string;
       }>(`${environment.apiUrl}/fakerank`, payload)
       .subscribe({
         next: (response) => {
           if (response?.success) {
             this.currentFakerank = response.fakerank;
+            this.currentFakerankColor = response.fakerank_color;
             this.fakerankSuccess = true;
             this.isEditingFakerank = false;
+            this.showColorPicker = false;
+            this.updateOverflowClass();
             setTimeout(() => (this.fakerankSuccess = false), 3000);
           }
           this.fakerankLoading = false;
@@ -871,9 +932,12 @@ export class DashboardComponent implements OnDestroy {
         next: (response) => {
           if (response?.success) {
             this.currentFakerank = null;
+            this.currentFakerankColor = 'default';
             this.fakerankValue = '';
             this.fakerankSuccess = true;
             this.isEditingFakerank = false;
+            this.showColorPicker = false;
+            this.updateOverflowClass();
             setTimeout(() => (this.fakerankSuccess = false), 3000);
           }
           this.fakerankLoading = false;
@@ -885,5 +949,39 @@ export class DashboardComponent implements OnDestroy {
           this.fakerankLoading = false;
         },
       });
+  }
+
+  // Color picker methods
+  toggleColorPicker(): void {
+    this.showColorPicker = !this.showColorPicker;
+    this.updateOverflowClass();
+  }
+
+  selectColor(colorKey: string): void {
+    this.tempFakerankColor = colorKey; // Update temp color during editing
+    this.showColorPicker = false;
+    this.updateOverflowClass();
+  }
+
+  private updateOverflowClass(): void {
+    // Add/remove overflow class for the fakerank card
+    const fakerankCard = document.getElementById('fakerank-card');
+    if (fakerankCard) {
+      if (this.showColorPicker) {
+        fakerankCard.classList.add('fakerank-card-overflow');
+      } else {
+        fakerankCard.classList.remove('fakerank-card-overflow');
+      }
+    }
+  }
+
+  getColorHex(colorKey: string): string {
+    const color = this.fakerankColors.find((c) => c.key === colorKey);
+    return color ? color.hex : '#FFFFFF';
+  }
+
+  getColorName(colorKey: string): string {
+    const color = this.fakerankColors.find((c) => c.key === colorKey);
+    return color ? color.name : 'Default (Weiß)';
   }
 }

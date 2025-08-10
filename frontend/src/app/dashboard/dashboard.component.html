@@ -436,7 +436,7 @@
 
       <!-- Fakerank Card -->
       <div class="col-span-1">
-        <div class="stats-card p-6 rounded-2xl auto-height">
+        <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
           <!-- Help Popup (replaces entire card content when shown) -->
           <div *ngIf="showFakerankHelp" class="help-popup h-full">
             <div class="help-content h-full">
@@ -495,9 +495,20 @@
                       <div class="nickname-icon">✨</div>
                       <div class="nickname-text">
                         <span class="nickname-label">Dein Spitzname:</span>
-                        <span class="nickname-value">{{
-                          currentFakerank
-                        }}</span>
+                        <span
+                          class="nickname-value"
+                          [style.color]="getColorHex(currentFakerankColor)"
+                          >{{ currentFakerank }}</span
+                        >
+                        <div class="nickname-color-info">
+                          <span
+                            class="color-indicator"
+                            [style.background-color]="
+                              getColorHex(currentFakerankColor)
+                            "
+                          ></span>
+                          {{ getColorName(currentFakerankColor) }}
+                        </div>
                       </div>
                     </div>
                     <div *ngIf="!currentFakerank" class="nickname-empty-state">
@@ -569,6 +580,7 @@
                     maxlength="50"
                     class="nickname-input"
                     [disabled]="fakerankLoading"
+                    [style.color]="getColorHex(tempFakerankColor)"
                     (keyup.enter)="saveFakerank()"
                     (keyup.escape)="cancelEditingFakerank()"
                   />
@@ -576,6 +588,52 @@
                     {{ fakerankValue.length }}/50
                   </div>
                 </div>
+
+                <!-- Color Picker Section -->
+                <div class="color-picker-section mt-3">
+                  <label class="editor-label">🎨 Farbe wählen</label>
+                  <div class="color-picker-container">
+                    <button
+                      (click)="toggleColorPicker()"
+                      class="color-selector-button"
+                      [disabled]="fakerankLoading"
+                    >
+                      <span
+                        class="color-indicator"
+                        [style.background-color]="
+                          getColorHex(tempFakerankColor)
+                        "
+                      ></span>
+                      {{ getColorName(tempFakerankColor) }}
+                      <span class="dropdown-arrow">{{
+                        showColorPicker ? '▲' : '▼'
+                      }}</span>
+                    </button>
+
+                    <div *ngIf="showColorPicker" class="color-picker-dropdown">
+                      <div class="color-options">
+                        <button
+                          *ngFor="let color of fakerankColors"
+                          (click)="selectColor(color.key)"
+                          class="color-option"
+                          [class.selected]="tempFakerankColor === color.key"
+                        >
+                          <span
+                            class="color-indicator"
+                            [style.background-color]="color.hex"
+                          ></span>
+                          <span class="color-name">{{ color.name }}</span>
+                          <span
+                            *ngIf="tempFakerankColor === color.key"
+                            class="selected-check"
+                            >✓</span
+                          >
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="editor-hint">
                   💡 Sei kreativ! Dies ist nur ein Spitzname zur Dekoration.
                 </div>
