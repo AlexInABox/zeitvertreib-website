@@ -629,11 +629,11 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   }
 
   getAvatarUrl(avatar: string | null | undefined): string {
-    return avatar || 'https://via.placeholder.com/64';
+    return avatar || '/assets/logos/logo_full_color_1to1.png';
   }
 
   onAvatarError(event: any) {
-    event.target.src = 'assets/placeholder-avatar.png';
+    event.target.src = '/assets/logos/logo_full_color_1to1.png';
   }
 
   // Prevent parentheses and commas from being typed

@@ -66,6 +66,6 @@ describe('FakerankAdminComponent', () => {
       target: { src: '' },
     };
     component.onAvatarError(mockEvent);
-    expect(mockEvent.target.src).toContain('placeholder');
+    expect(mockEvent.target.src).toContain('logo_full_color_1to1.png');
   });
 });
