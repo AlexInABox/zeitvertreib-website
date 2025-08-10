@@ -315,6 +315,15 @@ async function handleUpdateFakerank(
       );
     }
 
+    // Validate fakerank content - ban parentheses and commas
+    if (body.fakerank.includes('(') || body.fakerank.includes(')') || body.fakerank.includes(',')) {
+      return createResponse(
+        { error: 'Fakerank darf keine Klammern () oder Kommas enthalten' },
+        400,
+        origin,
+      );
+    }
+
     // First, check whitelist - if whitelisted, skip all other content validation
     let isWhitelisted = false;
     try {

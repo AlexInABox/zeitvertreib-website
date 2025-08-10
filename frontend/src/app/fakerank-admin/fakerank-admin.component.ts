@@ -98,7 +98,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   // Computed properties
@@ -157,7 +157,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.setupClickHandlers();
@@ -331,6 +331,12 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate fakerank content - ban parentheses and commas
+    if (fakerank.includes('(') || fakerank.includes(')') || fakerank.includes(',')) {
+      this.showToast('error', 'Fehler', 'Fakerank darf keine Klammern () oder Kommas enthalten');
+      return;
+    }
+
     this.setLoadingState('user', true);
 
     this.fakerankAdminService
@@ -426,6 +432,12 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate word content - ban parentheses and commas
+    if (word.includes('(') || word.includes(')') || word.includes(',')) {
+      this.showToast('error', 'Fehler', 'Wort darf keine Klammern () oder Kommas enthalten');
+      return;
+    }
+
     const trimmedWord = word.trim();
     this.fakerankAdminService.addToBlacklist(trimmedWord).subscribe({
       next: (response) => {
@@ -467,7 +479,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Blacklist entfernt werden',
+              'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -500,6 +512,12 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     const word = this.newWhitelistWord();
     if (!word.trim()) {
       this.showToast('warn', 'Warnung', 'Bitte gib ein Wort ein');
+      return;
+    }
+
+    // Validate word content - ban parentheses and commas
+    if (word.includes('(') || word.includes(')') || word.includes(',')) {
+      this.showToast('error', 'Fehler', 'Wort darf keine Klammern () oder Kommas enthalten');
       return;
     }
 
@@ -544,7 +562,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Whitelist entfernt werden',
+              'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });
@@ -614,8 +632,15 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     return avatar || 'https://via.placeholder.com/64';
   }
 
-  onAvatarError(event: any): void {
-    event.target.src = 'https://via.placeholder.com/64?text=Avatar';
+  onAvatarError(event: any) {
+    event.target.src = 'assets/placeholder-avatar.png';
+  }
+
+  // Prevent parentheses and commas from being typed
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === '(' || event.key === ')' || event.key === ',') {
+      event.preventDefault();
+    }
   }
 
   formatDate(dateString: string): string {

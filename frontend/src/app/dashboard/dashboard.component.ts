@@ -884,8 +884,21 @@ export class DashboardComponent implements OnDestroy {
     this.updateOverflowClass();
   }
 
+  // Prevent parentheses and commas from being typed
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === '(' || event.key === ')' || event.key === ',') {
+      event.preventDefault();
+    }
+  }
+
   saveFakerank(): void {
     if (this.fakerankLoading) return;
+
+    // Validate fakerank content - ban parentheses and commas
+    if (this.fakerankValue.includes('(') || this.fakerankValue.includes(')') || this.fakerankValue.includes(',')) {
+      this.fakerankError = 'Fakerank darf keine Klammern () oder Kommas enthalten';
+      return;
+    }
 
     this.fakerankLoading = true;
     this.fakerankError = '';

@@ -119,6 +119,15 @@ export async function handleSetUserFakerank(
       return createResponse({ error: 'Invalid fakerank format' }, 400, origin);
     }
 
+    // Validate fakerank content - ban parentheses and commas
+    if (fakerank && (fakerank.includes('(') || fakerank.includes(')') || fakerank.includes(','))) {
+      return createResponse(
+        { error: 'Fakerank darf keine Klammern () oder Kommas enthalten' },
+        400,
+        origin,
+      );
+    }
+
     // Update the user's fakerank
     const playerId = `${steamId}@steam`;
 
@@ -587,12 +596,12 @@ export async function handleGetAllFakeranks(
     const uniqueUserIds =
       playerListData.length > 0
         ? [
-            ...new Set(
-              playerListData.map((player) =>
-                player.UserId.replace('@steam', ''),
-              ),
+          ...new Set(
+            playerListData.map((player) =>
+              player.UserId.replace('@steam', ''),
             ),
-          ]
+          ),
+        ]
         : [];
 
     // Get all users with fakeranks from database

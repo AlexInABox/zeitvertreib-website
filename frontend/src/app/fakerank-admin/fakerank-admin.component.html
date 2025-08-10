@@ -147,6 +147,7 @@
                       placeholder="Neuen Fakerank eingeben..."
                       [ngModel]="newFakerank()"
                       (ngModelChange)="newFakerank.set($event)"
+                      (keydown)="onKeyDown($event)"
                       [disabled]="loading().user"
                     />
                     <button
@@ -245,6 +246,7 @@
                   placeholder="Wort zur Blacklist hinzufügen..."
                   [ngModel]="newBlacklistWord()"
                   (ngModelChange)="newBlacklistWord.set($event)"
+                  (keydown)="onKeyDown($event)"
                   (keyup.enter)="addToBlacklist()"
                 />
                 <button
@@ -306,6 +308,7 @@
                   placeholder="Wort zur Whitelist hinzufügen..."
                   [ngModel]="newWhitelistWord()"
                   (ngModelChange)="newWhitelistWord.set($event)"
+                  (keydown)="onKeyDown($event)"
                   (keyup.enter)="addToWhitelist()"
                 />
                 <button
