@@ -55,7 +55,9 @@ export async function handleSteamCallback(
   const sessionId = await createSession(steamId, steamUser, env);
 
   const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
-  const redirectUrl = new URL(frontendUrl);
+  
+  // Redirect to the auth callback page instead of directly to the app
+  const redirectUrl = new URL(`${frontendUrl}/auth/callback`);
   redirectUrl.searchParams.set('token', sessionId);
 
   // Check if there's a redirect parameter in the return_to URL
@@ -68,7 +70,31 @@ export async function handleSteamCallback(
     }
   }
 
-  return createResponse(redirectUrl.toString(), 302);
+  // Create a response that also sets a secure cookie for Safari compatibility
+  // Determine if we're in development or production
+  const isLocalDev = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+  
+  let cookieSettings = `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60 * 3}`;
+  
+  if (!isLocalDev) {
+    // Production settings: secure, SameSite=None for cross-origin
+    cookieSettings += '; HttpOnly; Secure; SameSite=None';
+  } else {
+    // Development settings: less restrictive for localhost testing
+    cookieSettings += '; SameSite=Lax';
+  }
+
+  const response = new Response(null, {
+    status: 302,
+    headers: {
+      'Location': redirectUrl.toString(),
+      'Access-Control-Allow-Origin': origin || '*',
+      'Access-Control-Allow-Credentials': 'true',
+      'Set-Cookie': cookieSettings
+    }
+  });
+
+  return response;
 }
 
 export async function handleGetUser(

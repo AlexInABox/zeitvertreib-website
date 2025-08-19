@@ -44,6 +44,11 @@ export const routes: Routes = [
       import('./login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'auth/callback',
+    loadComponent: () =>
+      import('./auth-callback/auth-callback.component').then((m) => m.AuthCallbackComponent),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./home/home.component').then((m) => m.HomeComponent),

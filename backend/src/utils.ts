@@ -135,6 +135,9 @@ export function createResponse(
     'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Credentials': 'true',
     'Content-Type': 'application/json',
+    // Add additional headers for Safari compatibility
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   };
 
   if (status === 302) {
