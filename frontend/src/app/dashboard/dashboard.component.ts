@@ -591,7 +591,7 @@ export class DashboardComponent implements OnDestroy {
       const img = new Image();
       img.onload = () => {
         try {
-          const pixelArtQuality = 80; // Reduced quality for better performance
+          const pixelArtQuality = 100;
 
           // Create 50x50 thumbnail (for storage/display)
           const thumbnailCanvas = document.createElement('canvas');
