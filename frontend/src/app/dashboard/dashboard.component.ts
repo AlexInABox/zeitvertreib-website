@@ -8,7 +8,6 @@ import { CommonModule, NgForOf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { parseGIF, decompressFrames } from 'gifuct-js';
 
 interface PlayerEntry {
   displayname?: string;
@@ -32,6 +31,23 @@ interface Statistics {
   fakerankallowed?: boolean;
   lastkillers?: PlayerEntry[];
   lastkills?: PlayerEntry[];
+}
+
+interface UploadLimits {
+  maxOriginalSize: number;
+  maxThumbnailSize: number;
+  maxOriginalSizeMB: number;
+  maxThumbnailSizeKB: number;
+  supportedFormats: string[];
+  message: string;
+}
+
+interface SprayBanStatus {
+  isBanned: boolean;
+  banReason?: string;
+  bannedAt?: number;
+  bannedBy?: string;
+  permanent?: boolean;
 }
 
 @Component({
@@ -82,6 +98,8 @@ export class DashboardComponent implements OnDestroy {
   showSprayHelp = false;
   showPrivacyDetails = false;
   isDragOver = false;
+  uploadLimits: UploadLimits | null = null;
+  sprayBanStatus: SprayBanStatus | null = null;
 
   // Fakerank-related properties
   currentFakerank: string | null = null;
@@ -128,6 +146,8 @@ export class DashboardComponent implements OnDestroy {
     this.generateRandomColors();
     this.loadUserStats();
     this.loadCurrentSpray();
+    this.loadUploadLimits();
+    this.loadSprayBanStatus();
     this.loadFakerank();
 
     // Close color picker when clicking outside
@@ -301,6 +321,45 @@ export class DashboardComponent implements OnDestroy {
       });
   }
 
+  // Load upload limits for images
+  private loadUploadLimits(): void {
+    this.authService
+      .authenticatedGet<UploadLimits>(`${environment.apiUrl}/spray/upload-limits`)
+      .subscribe({
+        next: (response) => {
+          this.uploadLimits = response;
+        },
+        error: (error) => {
+          console.error('Error loading upload limits:', error);
+          // Provide fallback limits if API call fails
+          this.uploadLimits = {
+            maxOriginalSize: 5 * 1024 * 1024, // 5MB
+            maxThumbnailSize: 10 * 1024, // 10KB
+            maxOriginalSizeMB: 5,
+            maxThumbnailSizeKB: 10,
+            supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
+            message: 'Maximale Bildgröße: 5MB'
+          };
+        },
+      });
+  }
+
+  // Load spray ban status for current user
+  private loadSprayBanStatus(): void {
+    this.authService
+      .authenticatedGet<SprayBanStatus>(`${environment.apiUrl}/spray/ban-status`)
+      .subscribe({
+        next: (response) => {
+          this.sprayBanStatus = response;
+        },
+        error: (error) => {
+          console.error('Error loading spray ban status:', error);
+          // If we can't load ban status, assume not banned for safety
+          this.sprayBanStatus = { isBanned: false };
+        },
+      });
+  }
+
   // Öffentliche Methode zum Aktualisieren der Statistiken (kann vom Template aufgerufen werden)
   refreshStats(): void {
     this.generateRandomColors();
@@ -316,7 +375,24 @@ export class DashboardComponent implements OnDestroy {
   onFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target?.files?.[0]) {
-      this.selectedFile = target.files[0];
+      const file = target.files[0];
+
+      // Validate file type - no GIFs allowed
+      if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+        target.value = ''; // Clear the input
+        return;
+      }
+
+      // Check if file type is supported
+      if (this.uploadLimits?.supportedFormats &&
+        !this.uploadLimits.supportedFormats.includes(file.type)) {
+        this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
+        target.value = ''; // Clear the input
+        return;
+      }
+
+      this.selectedFile = file;
       this.sprayUploadError = '';
       this.sprayUploadSuccess = false;
       this.sprayDeleteSuccess = false;
@@ -344,13 +420,19 @@ export class DashboardComponent implements OnDestroy {
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+        // Check if file type is supported
+        if (this.uploadLimits?.supportedFormats &&
+          !this.uploadLimits.supportedFormats.includes(file.type)) {
+          this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
+          return;
+        }
         this.selectedFile = file;
         this.sprayUploadError = '';
         this.sprayUploadSuccess = false;
         this.sprayDeleteSuccess = false;
       } else {
-        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus';
+        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       }
     }
   }
@@ -361,18 +443,24 @@ export class DashboardComponent implements OnDestroy {
       return;
     }
 
-    // Validate file type
-    if (!this.selectedFile.type.startsWith('image/')) {
-      this.sprayUploadError = 'Bitte wähle eine Bilddatei aus';
+    // Validate file type - only images, no GIFs
+    if (!this.selectedFile.type.startsWith('image/') || this.selectedFile.type === 'image/gif') {
+      this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       return;
     }
 
-    const isGif = this.selectedFile.type === 'image/gif';
+    // Validate supported formats
+    if (this.uploadLimits?.supportedFormats &&
+      !this.uploadLimits.supportedFormats.includes(this.selectedFile.type)) {
+      this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
+      return;
+    }
 
-    // Validate file size (different limits for GIFs)
-    const maxSize = isGif ? 2 * 1024 * 1024 : 10 * 1024 * 1024; // 2MB for GIFs, 10MB for regular images
+    // Validate file size using dynamic limits
+    const maxSize = this.uploadLimits?.maxOriginalSize || 5 * 1024 * 1024; // Fallback to 5MB
     if (this.selectedFile.size > maxSize) {
-      this.sprayUploadError = `Datei ist zu groß. Maximum sind ${isGif ? '2MB für GIFs' : '10MB'}`;
+      const maxSizeMB = this.uploadLimits?.maxOriginalSizeMB || 5;
+      this.sprayUploadError = `Datei ist zu groß. Maximum sind ${maxSizeMB}MB`;
       return;
     }
 
@@ -380,12 +468,8 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    // Process the image based on type
-    const processPromise = isGif
-      ? this.processGifForUpload(this.selectedFile)
-      : this.processImageForUpload(this.selectedFile);
-
-    processPromise
+    // Process the image (no more GIF processing since GIFs are not supported)
+    this.processImageForUpload(this.selectedFile)
       .then((processedData) => {
         if (!this.selectedFile) {
           throw new Error('Keine Datei ausgewählt');
@@ -394,15 +478,11 @@ export class DashboardComponent implements OnDestroy {
         const formData = new FormData();
         formData.append('smallImage', processedData.smallImage); // Thumbnail for storage
         formData.append('originalImage', this.selectedFile); // Original file for moderation
-        formData.append('isGif', isGif.toString());
+        formData.append('isGif', 'false'); // No more GIF support
 
-        if (isGif && 'pixelDataFrames' in processedData) {
-          formData.append(
-            'pixelDataFrames',
-            JSON.stringify(processedData.pixelDataFrames),
-          ); // Array of frame strings for GIFs
-        } else if ('pixelData' in processedData) {
-          formData.append('pixelData', processedData.pixelData); // Single string for regular images
+        // Only handle regular image data
+        if ('pixelData' in processedData) {
+          formData.append('pixelData', processedData.pixelData); // Single string for images
         }
 
         return this.authService
@@ -487,6 +567,10 @@ export class DashboardComponent implements OnDestroy {
     return this.selectedFile?.name || '';
   }
 
+  get isSprayBanned(): boolean {
+    return this.sprayBanStatus?.isBanned === true;
+  }
+
   ngOnDestroy(): void {
     // Clean up object URLs to prevent memory leaks
     if (this.currentSprayImage) {
@@ -497,168 +581,6 @@ export class DashboardComponent implements OnDestroy {
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
     }
-  }
-
-  // Process GIF to extract frames and create pixel data for each frame
-  private async processGifForUpload(
-    file: File,
-  ): Promise<{ smallImage: Blob; pixelDataFrames: string[] }> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Read file as ArrayBuffer
-        const arrayBuffer = await file.arrayBuffer();
-
-        // Parse GIF
-        const gif = parseGIF(arrayBuffer);
-        const frames = decompressFrames(gif, true);
-
-        if (!frames || frames.length === 0) {
-          throw new Error('Keine Frames in GIF gefunden');
-        }
-
-        // Limit to 20 frames max for performance and storage
-        const maxFrames = 20;
-        const framesToProcess = frames.slice(0, maxFrames);
-
-        // Check if GIF has too many frames
-        if (frames.length > maxFrames) {
-          throw new Error(
-            `GIF hat ${frames.length} Frames. Maximum erlaubt sind ${maxFrames} Frames.`,
-          );
-        }
-
-        // Create canvas for processing
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Konnte 2D-Kontext nicht erhalten');
-
-        // Set canvas size from first frame
-        const firstFrame = framesToProcess[0];
-        canvas.width = firstFrame.dims.width;
-        canvas.height = firstFrame.dims.height;
-
-        // Process each frame to create pixel art strings
-        const pixelDataFrames: string[] = [];
-        let thumbnailImageData: ImageData | null = null;
-
-        for (let i = 0; i < framesToProcess.length; i++) {
-          const frame = framesToProcess[i];
-
-          // Create ImageData from frame patch
-          const imageData = new ImageData(
-            new Uint8ClampedArray(frame.patch),
-            frame.dims.width,
-            frame.dims.height,
-          );
-
-          // Clear canvas and draw frame
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.putImageData(imageData, frame.dims.left, frame.dims.top);
-
-          // Create high-quality pixel art for this frame
-          const pixelCanvas = document.createElement('canvas');
-          const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx)
-            throw new Error(
-              'Konnte 2D-Kontext für Pixel-Canvas nicht erhalten',
-            );
-
-          const pixelArtQuality = 80; // Reduced quality for better performance
-          pixelCanvas.width = pixelArtQuality;
-          pixelCanvas.height = pixelArtQuality;
-
-          // Scale frame to fit
-          const { width: pixelWidth, height: pixelHeight } =
-            this.scaleToLongestSide(
-              canvas.width,
-              canvas.height,
-              pixelArtQuality,
-            );
-          const pixelOffsetX = (pixelArtQuality - pixelWidth) / 2;
-          const pixelOffsetY = (pixelArtQuality - pixelHeight) / 2;
-
-          pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
-          pixelCtx.drawImage(
-            canvas,
-            pixelOffsetX,
-            pixelOffsetY,
-            pixelWidth,
-            pixelHeight,
-          );
-
-          // Extract pixel data for this frame
-          const framePixelData = this.createPixelArtFromCanvas(
-            pixelCtx,
-            pixelArtQuality,
-            pixelArtQuality,
-          );
-          pixelDataFrames.push(framePixelData);
-
-          // Use first frame for thumbnail
-          if (i === 0) {
-            thumbnailImageData = ctx.getImageData(
-              0,
-              0,
-              canvas.width,
-              canvas.height,
-            );
-          }
-        }
-
-        // Create thumbnail from first frame
-        const thumbnailCanvas = document.createElement('canvas');
-        const thumbnailCtx = thumbnailCanvas.getContext('2d');
-        if (!thumbnailCtx || !thumbnailImageData)
-          throw new Error('Could not create thumbnail');
-
-        thumbnailCanvas.width = 50;
-        thumbnailCanvas.height = 50;
-
-        // Create temp canvas with first frame
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        if (!tempCtx)
-          throw new Error('Konnte temporären Kontext nicht erhalten');
-
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        tempCtx.putImageData(thumbnailImageData, 0, 0);
-
-        // Scale thumbnail
-        const { width: thumbWidth, height: thumbHeight } =
-          this.scaleToLongestSide(canvas.width, canvas.height, 50);
-        const thumbOffsetX = (50 - thumbWidth) / 2;
-        const thumbOffsetY = (50 - thumbHeight) / 2;
-
-        thumbnailCtx.clearRect(0, 0, 50, 50);
-        thumbnailCtx.drawImage(
-          tempCanvas,
-          thumbOffsetX,
-          thumbOffsetY,
-          thumbWidth,
-          thumbHeight,
-        );
-
-        // Convert thumbnail to blob
-        thumbnailCanvas.toBlob(
-          (smallBlob) => {
-            if (!smallBlob) {
-              reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
-              return;
-            }
-
-            resolve({
-              smallImage: smallBlob,
-              pixelDataFrames,
-            });
-          },
-          'image/png',
-          1.0,
-        );
-      } catch (error) {
-        reject(error);
-      }
-    });
   }
 
   // Process image to create 50x50 thumbnail and high-quality pixel data

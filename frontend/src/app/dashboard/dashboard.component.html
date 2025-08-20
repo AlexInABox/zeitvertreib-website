@@ -221,215 +221,260 @@
               </button>
             </h3>
 
-            <!-- Current Spray Display -->
-            <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
-              <div class="spray-preview-container mx-auto relative">
-                <div class="spray-preview">
-                  <img
-                    [src]="currentSprayImage"
-                    alt="Current Spray"
-                    class="spray-image"
-                  />
-                </div>
-                <button
-                  (click)="removeSpray()"
-                  class="remove-spray-button"
-                  [disabled]="sprayUploadLoading"
-                  title="Spray löschen"
+            <!-- Banned State -->
+            <div *ngIf="isSprayBanned" class="fakerank-not-allowed">
+              <div class="not-allowed-icon">🚫</div>
+              <div class="not-allowed-message">
+                <p class="not-allowed-title">Spray-Uploads gesperrt!</p>
+                <p class="not-allowed-text">
+                  Du wurdest von Spray-Uploads ausgeschlossen.
+                  <span *ngIf="sprayBanStatus && sprayBanStatus.banReason">
+                    <br /><strong>Grund:</strong> {{ sprayBanStatus.banReason }}
+                  </span>
+                </p>
+                <p
+                  class="not-allowed-link"
+                  *ngIf="sprayBanStatus && sprayBanStatus.permanent"
                 >
-                  ×
-                </button>
+                  <strong>Diese Sperre ist permanent.</strong>
+                </p>
+                <p
+                  class="not-allowed-link"
+                  *ngIf="sprayBanStatus && !sprayBanStatus.permanent"
+                >
+                  Kontaktiere die Moderation unter
+                  <a href="https://dsc.gg/zeit" style="text-decoration: none"
+                    ><strong>dsc.gg/zeit</strong></a
+                  >
+                  für weitere Informationen.
+                </p>
               </div>
             </div>
 
-            <!-- No Spray State -->
-            <div *ngIf="!hasSpray && !selectedFile" class="text-center py-4">
-              <div class="text-4xl mb-2">🎨</div>
-              <p class="text-gray-300 text-sm">Kein Spray hochgeladen</p>
-            </div>
-
-            <!-- Upload Section with Drag & Drop -->
-            <div class="spray-upload">
-              <div
-                class="upload-area"
-                [class.has-file]="selectedFile && !sprayUploadLoading"
-                [class.loading]="sprayUploadLoading"
-                [class.drag-over]="isDragOver"
-                (dragover)="onDragOver($event)"
-                (dragleave)="onDragLeave($event)"
-                (drop)="onDrop($event)"
-              >
-                <input
-                  type="file"
-                  id="sprayFileInput"
-                  accept="image/*"
-                  (change)="onFileSelected($event)"
-                  class="file-input"
-                />
-                <label for="sprayFileInput" class="upload-label">
-                  <div class="upload-content">
-                    <div
-                      *ngIf="!sprayUploadLoading && !selectedFile"
-                      class="text-center"
-                    >
-                      <div class="text-2xl mb-2">📁</div>
-                      <p class="font-medium">Klicken oder hierher ziehen</p>
-                      <p class="text-sm opacity-75">PNG, JPG, GIF</p>
-                      <p class="text-xs opacity-60 mt-1">
-                        Max: 10MB (Bilder) / 2MB (GIFs, 20 Frames)
-                      </p>
-                    </div>
-                    <div
-                      *ngIf="selectedFile && !sprayUploadLoading"
-                      class="text-center"
-                    >
-                      <div class="text-2xl mb-2">✓</div>
-                      <p class="font-medium">{{ selectedFileName }}</p>
-                      <p class="text-sm opacity-75">Bereit zum Upload</p>
-                    </div>
-                    <div *ngIf="sprayUploadLoading" class="text-center">
-                      <div class="loading-spinner mx-auto mb-2"></div>
-                      <p class="font-medium">Wird hochgeladen...</p>
-                    </div>
+            <!-- Normal Spray Functionality (only if not banned) -->
+            <div *ngIf="!isSprayBanned">
+              <!-- Current Spray Display -->
+              <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
+                <div class="spray-preview-container mx-auto relative">
+                  <div class="spray-preview">
+                    <img
+                      [src]="currentSprayImage"
+                      alt="Current Spray"
+                      class="spray-image"
+                    />
                   </div>
-                </label>
-              </div>
-
-              <div
-                *ngIf="selectedFile && !sprayUploadLoading"
-                class="upload-actions mt-3"
-              >
-                <button (click)="uploadSpray()" class="upload-button">
-                  Hochladen
-                </button>
-                <button (click)="selectedFile = null" class="cancel-button">
-                  Abbrechen
-                </button>
-              </div>
-            </div>
-
-            <!-- Privacy Policy Notice -->
-            <div
-              class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
-            >
-              <!-- Compact Default State -->
-              <div
-                *ngIf="!showPrivacyDetails"
-                class="flex items-center gap-3 p-4 md:p-5"
-              >
-                <div class="text-yellow-400 text-xl leading-none">⚠️</div>
-                <div class="text-sm text-yellow-100 leading-relaxed">
-                  <strong>Datenschutzhinweis:</strong>
-                  <span
-                    class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
-                    (click)="showPrivacyDetails = true"
-                    >Details anzeigen
-                  </span>
+                  <button
+                    (click)="removeSpray()"
+                    class="remove-spray-button"
+                    [disabled]="sprayUploadLoading"
+                    title="Spray löschen"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
 
-              <!-- Expanded Privacy Details -->
+              <!-- No Spray State -->
+              <div *ngIf="!hasSpray && !selectedFile" class="text-center py-4">
+                <div class="text-4xl mb-2">🎨</div>
+                <p class="text-gray-300 text-sm">Kein Spray hochgeladen</p>
+              </div>
+
+              <!-- Upload Section with Drag & Drop -->
+              <div class="spray-upload">
+                <div
+                  class="upload-area"
+                  [class.has-file]="selectedFile && !sprayUploadLoading"
+                  [class.loading]="sprayUploadLoading"
+                  [class.drag-over]="isDragOver"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                >
+                  <input
+                    type="file"
+                    id="sprayFileInput"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    (change)="onFileSelected($event)"
+                    class="file-input"
+                  />
+                  <label for="sprayFileInput" class="upload-label">
+                    <div class="upload-content">
+                      <div
+                        *ngIf="!sprayUploadLoading && !selectedFile"
+                        class="text-center"
+                      >
+                        <div class="text-2xl mb-2">📁</div>
+                        <p class="font-medium">Klicken oder hierher ziehen</p>
+                        <p class="text-sm opacity-75">PNG, JPG, WEBP</p>
+                        <p class="text-xs opacity-60 mt-1" *ngIf="uploadLimits">
+                          {{ uploadLimits.message }}
+                        </p>
+                        <p
+                          class="text-xs opacity-60 mt-1"
+                          *ngIf="!uploadLimits"
+                        >
+                          Max: 5MB (Bilder)
+                        </p>
+                      </div>
+                      <div
+                        *ngIf="selectedFile && !sprayUploadLoading"
+                        class="text-center"
+                      >
+                        <div class="text-2xl mb-2">✓</div>
+                        <p class="font-medium">{{ selectedFileName }}</p>
+                        <p class="text-sm opacity-75">Bereit zum Upload</p>
+                      </div>
+                      <div *ngIf="sprayUploadLoading" class="text-center">
+                        <div class="loading-spinner mx-auto mb-2"></div>
+                        <p class="font-medium">Wird hochgeladen...</p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div
+                  *ngIf="selectedFile && !sprayUploadLoading"
+                  class="upload-actions mt-3"
+                >
+                  <button (click)="uploadSpray()" class="upload-button">
+                    Hochladen
+                  </button>
+                  <button (click)="selectedFile = null" class="cancel-button">
+                    Abbrechen
+                  </button>
+                </div>
+              </div>
+
+              <!-- Privacy Policy Notice -->
               <div
-                *ngIf="showPrivacyDetails"
-                id="privacy-details"
-                class="privacy-expanded p-4 md:p-5"
+                class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
               >
-                <div class="flex items-start gap-3 mb-3">
+                <!-- Compact Default State -->
+                <div
+                  *ngIf="!showPrivacyDetails"
+                  class="flex items-center gap-3 p-4 md:p-5"
+                >
                   <div class="text-yellow-400 text-xl leading-none">⚠️</div>
-                  <h4
-                    class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader"
-                  >
-                    Datenschutzhinweis - Wichtige Informationen
-                  </h4>
-
-                  <span
-                    class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
-                    (click)="showPrivacyDetails = false"
-                    title="Schließen"
-                    role="button"
-                    aria-label="Datenschutzhinweis schließen"
-                    aria-expanded="true"
-                    aria-controls="privacy-details"
-                  >
-                    ✕
-                  </span>
+                  <div class="text-sm text-yellow-100 leading-relaxed">
+                    <strong>Datenschutzhinweis:</strong>
+                    <span
+                      class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
+                      (click)="showPrivacyDetails = true"
+                      >Details anzeigen
+                    </span>
+                  </div>
                 </div>
 
-                <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
-                  <li class="leading-relaxed">
-                    <span class="font-semibold"
-                      >Öffentliche Verfügbarkeit und Datenübertragung:</span
+                <!-- Expanded Privacy Details -->
+                <div
+                  *ngIf="showPrivacyDetails"
+                  id="privacy-details"
+                  class="privacy-expanded p-4 md:p-5"
+                >
+                  <div class="flex items-start gap-3 mb-3">
+                    <div class="text-yellow-400 text-xl leading-none">⚠️</div>
+                    <h4
+                      class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader"
                     >
-                    Ihr hochgeladenes Bild wird öffentlich zugänglich und kann
-                    an unseren Discord-Server übertragen werden, welcher auf
-                    US-amerikanischen Servern außerhalb unserer direkten
-                    Kontrolle gehostet wird. Diese Übertragung erfolgt zur
-                    technischen Bereitstellung des Services.
-                  </li>
+                      Datenschutzhinweis - Wichtige Informationen
+                    </h4>
 
-                  <li class="leading-relaxed">
-                    <span class="font-semibold"
-                      >Datenlöschung und Persistenz:</span
+                    <span
+                      class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
+                      (click)="showPrivacyDetails = false"
+                      title="Schließen"
+                      role="button"
+                      aria-label="Datenschutzhinweis schließen"
+                      aria-expanded="true"
+                      aria-controls="privacy-details"
                     >
-                    Eine Löschung des Bildes durch Sie garantiert nicht die
-                    vollständige und endgültige Entfernung von unseren Systemen,
-                    Discord-Servern oder beteiligten Drittsystemen. Kopien
-                    können in Backups, Caches oder anderen technischen Systemen
-                    verbleiben.
-                  </li>
+                      ✕
+                    </span>
+                  </div>
 
-                  <li class="leading-relaxed">
-                    <span class="font-semibold"
-                      >Automatisierte Inhaltsmoderation:</span
-                    >
-                    Alle hochgeladenen Bilder werden automatisiert mittels
-                    OpenAI-Moderation (Modell „omni-moderation-latest“) geprüft.
-                    Dabei können Ihre Bilddaten an OpenAI übermittelt werden.
-                    Die Verarbeitung erfolgt zur Erkennung und Vermeidung
-                    unzulässiger Inhalte.
-                  </li>
+                  <ul
+                    class="privacy-list text-sm text-yellow-100 space-y-3 pl-1"
+                  >
+                    <li class="leading-relaxed">
+                      <span class="font-semibold"
+                        >Öffentliche Verfügbarkeit und Datenübertragung:</span
+                      >
+                      Ihr hochgeladenes Bild wird öffentlich zugänglich und kann
+                      an unseren Discord-Server übertragen werden, welcher auf
+                      US-amerikanischen Servern außerhalb unserer direkten
+                      Kontrolle gehostet wird. Diese Übertragung erfolgt zur
+                      technischen Bereitstellung des Services.
+                    </li>
 
-                  <li class="leading-relaxed">
-                    <span class="font-semibold"
-                      >Moderationsmaßnahmen und Account-Sperrung:</span
-                    >
-                    Wir behalten uns vor, hochgeladene Bilder jederzeit und ohne
-                    Vorankündigung zu löschen. Bei Verstößen gegen diese
-                    Hinweise, gegen gesetzliche Vorgaben oder bei
-                    missbräuchlicher Nutzung kann Ihr Account ohne vorherige
-                    Warnung gesperrt werden.
-                  </li>
+                    <li class="leading-relaxed">
+                      <span class="font-semibold"
+                        >Datenlöschung und Persistenz:</span
+                      >
+                      Eine Löschung des Bildes durch Sie garantiert nicht die
+                      vollständige und endgültige Entfernung von unseren
+                      Systemen, Discord-Servern oder beteiligten Drittsystemen.
+                      Kopien können in Backups, Caches oder anderen technischen
+                      Systemen verbleiben.
+                    </li>
 
-                  <li class="leading-relaxed">
-                    <span class="font-semibold"
-                      >Internationale Datenübertragung:</span
-                    >
-                    Durch die Nutzung von Discord-Servern und die Einbindung des
-                    OpenAI-Moderationsdienstes kann eine Übertragung Ihrer Daten
-                    in die USA und ggf. weitere Drittländer erfolgen, in denen
-                    ein anderes Datenschutzniveau als in Deutschland/EU gilt.
-                  </li>
+                    <li class="leading-relaxed">
+                      <span class="font-semibold"
+                        >Automatisierte Inhaltsmoderation:</span
+                      >
+                      Alle hochgeladenen Bilder werden automatisiert mittels
+                      OpenAI-Moderation (Modell „omni-moderation-latest“)
+                      geprüft. Dabei können Ihre Bilddaten an OpenAI übermittelt
+                      werden. Die Verarbeitung erfolgt zur Erkennung und
+                      Vermeidung unzulässiger Inhalte.
+                    </li>
 
-                  <li class="leading-relaxed font-semibold p-2 rounded">
-                    <span class="font-semibold">Einverständniserklärung:</span>
-                    Durch das Hochladen eines Bildes erklären Sie sich mit den
-                    oben genannten Bedingungen einverstanden und bestätigen,
-                    dass Sie die rechtlichen Konsequenzen verstanden haben.
-                  </li>
-                </ul>
+                    <li class="leading-relaxed">
+                      <span class="font-semibold"
+                        >Moderationsmaßnahmen und Account-Sperrung:</span
+                      >
+                      Wir behalten uns vor, hochgeladene Bilder jederzeit und
+                      ohne Vorankündigung zu löschen. Bei Verstößen gegen diese
+                      Hinweise, gegen gesetzliche Vorgaben oder bei
+                      missbräuchlicher Nutzung kann Ihr Account ohne vorherige
+                      Warnung gesperrt werden.
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold"
+                        >Internationale Datenübertragung:</span
+                      >
+                      Durch die Nutzung von Discord-Servern und die Einbindung
+                      des OpenAI-Moderationsdienstes kann eine Übertragung Ihrer
+                      Daten in die USA und ggf. weitere Drittländer erfolgen, in
+                      denen ein anderes Datenschutzniveau als in Deutschland/EU
+                      gilt.
+                    </li>
+
+                    <li class="leading-relaxed font-semibold p-2 rounded">
+                      <span class="font-semibold"
+                        >Einverständniserklärung:</span
+                      >
+                      Durch das Hochladen eines Bildes erklären Sie sich mit den
+                      oben genannten Bedingungen einverstanden und bestätigen,
+                      dass Sie die rechtlichen Konsequenzen verstanden haben.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Messages -->
+              <div *ngIf="sprayUploadError" class="error-message mt-3">
+                {{ sprayUploadError }}
+              </div>
+              <div *ngIf="sprayUploadSuccess" class="success-message mt-3">
+                Spray erfolgreich hochgeladen!
+              </div>
+              <div *ngIf="sprayDeleteSuccess" class="success-message mt-3">
+                Spray erfolgreich gelöscht!
               </div>
             </div>
-
-            <!-- Messages -->
-            <div *ngIf="sprayUploadError" class="error-message mt-3">
-              {{ sprayUploadError }}
-            </div>
-            <div *ngIf="sprayUploadSuccess" class="success-message mt-3">
-              Spray erfolgreich hochgeladen!
-            </div>
-            <div *ngIf="sprayDeleteSuccess" class="success-message mt-3">
-              Spray erfolgreich gelöscht!
-            </div>
+            <!-- End of non-banned functionality -->
           </div>
         </div>
       </div>

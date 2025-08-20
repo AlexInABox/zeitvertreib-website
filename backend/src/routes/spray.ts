@@ -6,6 +6,14 @@ import {
 import { EmbedBuilder } from '@discordjs/builders';
 import OpenAI from 'openai';
 
+// Upload limits configuration - images only (no GIFs)
+const UPLOAD_LIMITS = {
+  MAX_ORIGINAL_SIZE: 10 * 1024 * 1024, // 10MB for original images
+  MAX_THUMBNAIL_SIZE: 10 * 1024, // 10KB for thumbnails
+  SUPPORTED_FORMATS: ['image/jpeg', 'image/png', 'image/webp'],
+  SUPPORTED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+} as const;
+
 /**
  * Discord Webhook Setup Instructions:
  *
@@ -385,75 +393,58 @@ export async function handleUploadSpray(
         origin,
       );
     }
+
     const formData = await request.formData();
-    const smallImage = formData.get('smallImage') as File; // 50x50 thumbnail for storage
-    const originalImage = formData.get('originalImage') as File; // Original uncompressed image for moderation
-    const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art (single string for images)
-    const pixelDataFrames = formData.get('pixelDataFrames') as string; // Pre-computed pixel art frames (JSON array for GIFs)
-    const isGif = formData.get('isGif') as string; // Flag to indicate if it's a GIF
+    const smallImage = formData.get('smallImage') as File; // Thumbnail for storage
+    const originalImage = formData.get('originalImage') as File; // Original file for moderation
+    const pixelData = formData.get('pixelData') as string; // Pre-computed pixel art
 
-    if (!smallImage || !originalImage || (!pixelData && !pixelDataFrames)) {
+    if (!smallImage || !originalImage || !pixelData) {
       return createResponse(
         {
-          error:
-            'smallImage, originalImage und pixelData/pixelDataFrames sind erforderlich',
+          error: 'smallImage, originalImage und pixelData sind erforderlich',
         },
         400,
         origin,
       );
     }
 
-    // Validate file type
-    const isGifUpload = isGif === 'true' || originalImage.type === 'image/gif';
-
-    if (!isGifUpload) {
-      // Regular image validation
-      if (
-        !smallImage.type.startsWith('image/') ||
-        !originalImage.type.startsWith('image/')
-      ) {
-        return createResponse(
-          { error: 'Ungültiger Dateityp. Bitte lade Bilder hoch.' },
-          400,
-          origin,
-        );
-      }
-    } else {
-      // GIF validation
-      if (originalImage.type !== 'image/gif') {
-        return createResponse(
-          { error: 'Ungültiger Dateityp. GIF erwartet.' },
-          400,
-          origin,
-        );
-      }
+    // Validate file types - only images, no GIFs
+    if (
+      !smallImage.type.startsWith('image/') ||
+      !originalImage.type.startsWith('image/') ||
+      !UPLOAD_LIMITS.SUPPORTED_MIME_TYPES.includes(smallImage.type as any) ||
+      !UPLOAD_LIMITS.SUPPORTED_MIME_TYPES.includes(originalImage.type as any)
+    ) {
+      return createResponse(
+        { error: 'Ungültiger Dateityp. Nur PNG, JPG und WEBP sind erlaubt.' },
+        400,
+        origin,
+      );
     }
 
-    // Validate file size
-    const maxSmallSize = isGifUpload ? 50 * 1024 : 10 * 1024; // 50KB for GIF thumbnails, 10KB for regular
-    const maxOriginalSize = isGifUpload ? 2 * 1024 * 1024 : 5 * 1024 * 1024; // 2MB for GIFs, 5MB for regular images
-
-    if (smallImage.size > maxSmallSize) {
+    // Validate file sizes using defined limits
+    if (smallImage.size > UPLOAD_LIMITS.MAX_THUMBNAIL_SIZE) {
       return createResponse(
         {
-          error: `Thumbnail zu groß. Maximale Größe sind ${maxSmallSize / 1024}KB.`,
+          error: `Thumbnail zu groß. Maximale Größe sind ${UPLOAD_LIMITS.MAX_THUMBNAIL_SIZE / 1024}KB.`,
         },
         400,
         origin,
       );
     }
 
-    if (originalImage.size > maxOriginalSize) {
+    if (originalImage.size > UPLOAD_LIMITS.MAX_ORIGINAL_SIZE) {
       return createResponse(
         {
-          error: `Datei zu groß. Maximale Größe sind ${maxOriginalSize / (1024 * 1024)}MB.`,
+          error: `Datei zu groß. Maximale Größe sind ${UPLOAD_LIMITS.MAX_ORIGINAL_SIZE / (1024 * 1024)}MB.`,
         },
         400,
         origin,
       );
     }
 
-    // Check image content safety with OpenAI using the original uncompressed image
+    // Check image content safety with OpenAI using the original image
     const isSafe = await checkImageSafety(originalImage, env, steamId);
     if (!isSafe) {
       return createResponse(
@@ -463,68 +454,19 @@ export async function handleUploadSpray(
       );
     }
 
-    // Process the pre-resized images and use pre-computed pixel data:
-    // 1. Use the high-quality pre-computed pixel art string from frontend
-    // 2. Store the 50x50 thumbnail directly
+    // Process the pre-resized thumbnail and use pre-computed pixel data
     const smallImageBuffer = await smallImage.arrayBuffer();
     const processedImageData = await convertImageToDataURL(smallImageBuffer);
 
-    // Store both the pixel string and processed image data in KV
+    // Store the pixel string and processed image data in KV
     const sprayKey = `spray_${steamId}`;
-
-    let sprayData: any;
-
-    if (isGifUpload) {
-      // For GIFs, parse the frames array and store it
-      let frames: string[];
-      try {
-        frames = JSON.parse(pixelDataFrames);
-        if (!Array.isArray(frames) || frames.length === 0) {
-          throw new Error('Invalid frames data');
-        }
-        // Limit number of frames to prevent excessive storage and improve performance
-        if (frames.length > 20) {
-          return createResponse(
-            {
-              error: 'GIF hat zu viele Frames. Maximum sind 20 Frames erlaubt.',
-            },
-            400,
-            origin,
-          );
-        }
-      } catch (e) {
-        return createResponse(
-          {
-            error:
-              'Ungültige GIF-Daten. Bitte lade eine gültige GIF-Datei hoch.',
-          },
-          400,
-          origin,
-        );
-      }
-
-      sprayData = {
-        pixelString: null, // No single string for GIFs
-        pixelFrames: frames, // Array of frame strings
-        processedImageData,
-        uploadedAt: Date.now(),
-        originalFileName: smallImage.name,
-        isGif: true,
-        frameCount: frames.length,
-      };
-    } else {
-      // For regular images, use the single pixel string
-      const pixelString = pixelData;
-
-      sprayData = {
-        pixelString,
-        pixelFrames: null, // No frames for regular images
-        processedImageData,
-        uploadedAt: Date.now(),
-        originalFileName: smallImage.name,
-        isGif: false,
-      };
-    }
+    const sprayData = {
+      pixelString: pixelData,
+      processedImageData,
+      uploadedAt: Date.now(),
+      originalFileName: smallImage.name,
+      isGif: false, // Always false since we only support images
+    };
 
     await env.SESSIONS.put(sprayKey, JSON.stringify(sprayData));
 
@@ -532,11 +474,8 @@ export async function handleUploadSpray(
       {
         success: true,
         message: 'Spray erfolgreich hochgeladen und verarbeitet',
-        isGif: isGifUpload,
-        frameCount: isGifUpload ? sprayData.frameCount : undefined,
-        pixelString: isGifUpload
-          ? undefined
-          : sprayData.pixelString.substring(0, 200) + '...', // Preview only for regular images
+        isGif: false,
+        pixelString: sprayData.pixelString.substring(0, 200) + '...', // Preview only
       },
       200,
       origin,
@@ -633,31 +572,17 @@ export async function handleGetSprayString(
 
     const sprayData = JSON.parse(sprayDataString);
 
-    // Return appropriate data based on whether it's a GIF or regular image
-    if (sprayData.isGif) {
-      return createResponse(
-        {
-          pixelFrames: sprayData.pixelFrames,
-          uploadedAt: sprayData.uploadedAt,
-          originalFileName: sprayData.originalFileName,
-          isGif: true,
-          frameCount: sprayData.frameCount,
-        },
-        200,
-        origin,
-      );
-    } else {
-      return createResponse(
-        {
-          pixelString: sprayData.pixelString,
-          uploadedAt: sprayData.uploadedAt,
-          originalFileName: sprayData.originalFileName,
-          isGif: false,
-        },
-        200,
-        origin,
-      );
-    }
+    // Return image data (no more GIF support)
+    return createResponse(
+      {
+        pixelString: sprayData.pixelString,
+        uploadedAt: sprayData.uploadedAt,
+        originalFileName: sprayData.originalFileName,
+        isGif: false, // Always false since we only support images
+      },
+      200,
+      origin,
+    );
   } catch (error) {
     console.error('Error retrieving spray string:', error);
     return createResponse(
@@ -833,6 +758,88 @@ export async function handleModerationBan(
     console.error('Error handling moderation ban:', error);
     return createResponse(
       { error: 'Failed to process moderation action' },
+      500,
+      origin,
+    );
+  }
+}
+
+// Check if user is banned from spray uploads
+export async function handleGetSprayBanStatus(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  // Validate session
+  const sessionValidation = await validateSession(request, env);
+  if (!sessionValidation.isValid || !sessionValidation.session) {
+    return createResponse({ error: 'Authentication required' }, 401, origin);
+  }
+
+  const { steamId } = sessionValidation.session;
+
+  try {
+    // Check if user is banned from uploading sprays
+    const banKey = `spray_ban_${steamId}`;
+    const banData = await env.SESSIONS.get(banKey);
+
+    if (banData) {
+      const ban = JSON.parse(banData);
+      return createResponse(
+        {
+          isBanned: true,
+          banReason: ban.reason || 'Banned via moderation',
+          bannedAt: ban.bannedAt,
+          bannedBy: ban.bannedBy || 'moderator',
+          permanent: ban.permanent || false,
+        },
+        200,
+        origin,
+      );
+    }
+
+    return createResponse(
+      {
+        isBanned: false,
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Error checking spray ban status:', error);
+    return createResponse(
+      { error: 'Failed to check ban status' },
+      500,
+      origin,
+    );
+  }
+}
+
+// Get upload limits for images
+export async function handleGetUploadLimits(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    return createResponse(
+      {
+        maxOriginalSize: UPLOAD_LIMITS.MAX_ORIGINAL_SIZE,
+        maxThumbnailSize: UPLOAD_LIMITS.MAX_THUMBNAIL_SIZE,
+        maxOriginalSizeMB: UPLOAD_LIMITS.MAX_ORIGINAL_SIZE / (1024 * 1024),
+        maxThumbnailSizeKB: UPLOAD_LIMITS.MAX_THUMBNAIL_SIZE / 1024,
+        supportedFormats: UPLOAD_LIMITS.SUPPORTED_FORMATS,
+        message: `Maximale Bildgröße: ${UPLOAD_LIMITS.MAX_ORIGINAL_SIZE / (1024 * 1024)}MB`
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Error getting upload limits:', error);
+    return createResponse(
+      { error: 'Failed to get upload limits' },
       500,
       origin,
     );

@@ -12,6 +12,8 @@ import {
   handleDeleteSpray,
   handleModerationDelete,
   handleModerationBan,
+  handleGetUploadLimits,
+  handleGetSprayBanStatus,
 } from './routes/spray.js';
 import {
   handleFakerank,
@@ -77,6 +79,8 @@ const routes: Record<
   '/spray/delete': handleDeleteSpray,
   '/spray/moderate/delete': handleModerationDelete,
   '/spray/moderate/ban': handleModerationBan,
+  '/spray/upload-limits': handleGetUploadLimits,
+  '/spray/ban-status': handleGetSprayBanStatus,
   '/fakerank': handleFakerank,
   '/fakerank/moderate/delete': handleFakerankModerationDelete,
   '/fakerank/moderate/ban': handleFakerankModerationBan,
