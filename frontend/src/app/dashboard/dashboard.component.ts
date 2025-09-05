@@ -97,6 +97,7 @@ export class DashboardComponent implements OnDestroy {
   selectedFile: File | null = null;
   showSprayHelp = false;
   showPrivacyDetails = false;
+  showRulesDetails = false;
   isDragOver = false;
   uploadLimits: UploadLimits | null = null;
   sprayBanStatus: SprayBanStatus | null = null;
