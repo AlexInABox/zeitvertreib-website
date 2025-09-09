@@ -13,6 +13,7 @@ declare namespace Cloudflare {
     PROXY_HOST_PORT: string;
     PROXY_USERNAME: string;
     PROXY_PASSWORD: string;
+    REPLICATE_API_TOKEN: string;
     PLAYERLIST: DurableObjectNamespace /* zeitvertreib-discord_PlayerlistStorage */;
     'zeitvertreib-data': D1Database;
   }

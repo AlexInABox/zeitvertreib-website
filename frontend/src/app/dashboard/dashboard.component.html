@@ -301,7 +301,11 @@
                   <label for="sprayFileInput" class="upload-label">
                     <div class="upload-content">
                       <div
-                        *ngIf="!sprayUploadLoading && !selectedFile"
+                        *ngIf="
+                          !sprayUploadLoading &&
+                          !selectedFile &&
+                          !backgroundRemovalProcessing
+                        "
                         class="text-center"
                       >
                         <div class="text-2xl mb-2">📁</div>
@@ -317,13 +321,73 @@
                           Max: 5MB (Bilder)
                         </p>
                       </div>
+
+                      <!-- Original File Preview -->
                       <div
-                        *ngIf="selectedFile && !sprayUploadLoading"
+                        *ngIf="
+                          selectedFile &&
+                          selectedFilePreview &&
+                          !sprayUploadLoading &&
+                          !backgroundRemovalProcessing
+                        "
                         class="text-center"
                       >
-                        <div class="text-2xl mb-2">✓</div>
+                        <div class="file-preview-container mb-2">
+                          <div
+                            class="preview-wrapper"
+                            [class.bg-removed]="processedImagePreview"
+                          >
+                            <img
+                              [src]="
+                                processedImagePreview || selectedFilePreview
+                              "
+                              alt="Selected Image Preview"
+                              class="file-preview-image"
+                            />
+                            <!-- Subtle glow effect for background removed images -->
+                            <div
+                              *ngIf="processedImagePreview"
+                              class="bg-removed-glow"
+                            ></div>
+                          </div>
+                        </div>
                         <p class="font-medium">{{ selectedFileName }}</p>
-                        <p class="text-sm opacity-75">Bereit zum Upload</p>
+                        <div class="preview-status">
+                          <p class="text-sm opacity-75">
+                            {{
+                              processedImagePreview
+                                ? 'Bereit zum Upload'
+                                : 'Bereit zum Upload'
+                            }}
+                          </p>
+                          <!-- Clean status indicator below the image -->
+                          <div
+                            *ngIf="processedImagePreview"
+                            class="bg-removed-status"
+                          >
+                            <span class="status-icon">✨</span>
+                            <span class="status-text"
+                              >Hintergrund entfernt</span
+                            >
+                          </div>
+                        </div>
+                        <p
+                          *ngIf="removeBackground && !processedImagePreview"
+                          class="text-xs mt-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        >
+                          🪄 Hintergrund wird entfernt
+                        </p>
+                      </div>
+
+                      <div
+                        *ngIf="backgroundRemovalProcessing"
+                        class="text-center"
+                      >
+                        <div class="loading-spinner mx-auto mb-2"></div>
+                        <p class="font-medium">Entferne Hintergrund...</p>
+                        <p class="text-sm opacity-75">
+                          Dies kann einen Moment dauern
+                        </p>
                       </div>
                       <div *ngIf="sprayUploadLoading" class="text-center">
                         <div class="loading-spinner mx-auto mb-2"></div>
@@ -337,12 +401,65 @@
                   *ngIf="selectedFile && !sprayUploadLoading"
                   class="upload-actions mt-3"
                 >
-                  <button (click)="uploadSpray()" class="upload-button">
-                    Hochladen
+                  <button
+                    (click)="uploadSpray()"
+                    class="upload-button"
+                    [disabled]="backgroundRemovalProcessing"
+                    [class.disabled]="backgroundRemovalProcessing"
+                  >
+                    {{
+                      backgroundRemovalProcessing
+                        ? 'Wird verarbeitet...'
+                        : 'Hochladen'
+                    }}
                   </button>
-                  <button (click)="selectedFile = null" class="cancel-button">
+                  <button (click)="clearAllPreviews()" class="cancel-button">
                     Abbrechen
                   </button>
+                </div>
+              </div>
+
+              <!-- Background Removal Toggle -->
+              <div class="background-removal-toggle mt-4">
+                <div class="toggle-container">
+                  <div class="toggle-header">
+                    <div class="toggle-info">
+                      <div class="toggle-icon">🪄</div>
+                      <div class="toggle-content">
+                        <h4 class="toggle-title">
+                          Automatische Hintergrundentfernung
+                        </h4>
+                        <p class="toggle-description">
+                          Entfernt automatisch den Hintergrund mit KI - über unseren Server!
+                        </p>
+                      </div>
+                    </div>
+                    <div class="toggle-switch-container">
+                      <label class="toggle-switch">
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="removeBackground"
+                          [disabled]="
+                            sprayUploadLoading || backgroundRemovalProcessing
+                          "
+                          (change)="onBackgroundRemovalToggle()"
+                        />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Status indicator -->
+                  <div class="toggle-status" [class.active]="removeBackground">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">
+                      {{
+                        removeBackground
+                          ? 'Aktiviert - Hintergrund wird mit KI entfernt'
+                          : 'Deaktiviert - Originalbild wird verwendet'
+                      }}
+                    </span>
+                  </div>
                 </div>
               </div>
 

@@ -9,6 +9,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
+interface BackgroundRemovalResponse {
+  success: boolean;
+  processedImageUrl?: string;
+  message?: string;
+  error?: string;
+}
+
 interface PlayerEntry {
   displayname?: string;
   avatarmedium?: string;
@@ -95,12 +102,16 @@ export class DashboardComponent implements OnDestroy {
   sprayDeleteSuccess = false;
   currentSprayImage: string | null = null;
   selectedFile: File | null = null;
+  selectedFilePreview: string | null = null; // Preview of original selected file
   showSprayHelp = false;
   showPrivacyDetails = false;
   showRulesDetails = false;
   isDragOver = false;
   uploadLimits: UploadLimits | null = null;
   sprayBanStatus: SprayBanStatus | null = null;
+  removeBackground = false; // Toggle for automatic background removal
+  backgroundRemovalProcessing = false; // Track if background removal is in progress
+  processedImagePreview: string | null = null; // Preview of processed image
 
   // Fakerank-related properties
   currentFakerank: string | null = null;
@@ -160,6 +171,23 @@ export class DashboardComponent implements OnDestroy {
       }
     };
     document.addEventListener('click', this.documentClickHandler);
+  }
+
+    // Handle toggle change to trigger background removal
+  async onBackgroundRemovalToggle(): Promise<void> {
+    if (this.removeBackground && this.selectedFile && !this.backgroundRemovalProcessing) {
+      // Process image for preview when toggle is turned on
+      try {
+        await this.processImageWithBackgroundRemoval(this.selectedFile);
+      } catch (error) {
+        console.error('Preview processing failed:', error);
+        // Reset toggle if processing fails
+        this.removeBackground = false;
+      }
+    } else if (!this.removeBackground) {
+      // Clear processed preview when toggle is turned off
+      this.clearProcessedPreview();
+    }
   }
 
   // Check if current user is a fakerank admin
@@ -393,11 +421,25 @@ export class DashboardComponent implements OnDestroy {
         return;
       }
 
-      this.selectedFile = file;
-      this.sprayUploadError = '';
-      this.sprayUploadSuccess = false;
-      this.sprayDeleteSuccess = false;
+      this.setSelectedFile(file);
     }
+  }
+
+  // Helper method to set selected file and create preview
+  private setSelectedFile(file: File): void {
+    // Clean up previous preview
+    if (this.selectedFilePreview) {
+      URL.revokeObjectURL(this.selectedFilePreview);
+    }
+
+    this.selectedFile = file;
+    this.selectedFilePreview = URL.createObjectURL(file);
+    this.sprayUploadError = '';
+    this.sprayUploadSuccess = false;
+    this.sprayDeleteSuccess = false;
+
+    // Clear any existing processed preview since we have a new file
+    this.clearProcessedPreview();
   }
 
   // Drag and drop methods
@@ -428,17 +470,14 @@ export class DashboardComponent implements OnDestroy {
           this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
           return;
         }
-        this.selectedFile = file;
-        this.sprayUploadError = '';
-        this.sprayUploadSuccess = false;
-        this.sprayDeleteSuccess = false;
+        this.setSelectedFile(file);
       } else {
         this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       }
     }
   }
 
-  uploadSpray(): void {
+  async uploadSpray(): Promise<void> {
     if (!this.selectedFile) {
       this.sprayUploadError = 'Bitte wähle eine Datei aus';
       return;
@@ -469,51 +508,65 @@ export class DashboardComponent implements OnDestroy {
     this.sprayUploadError = '';
     this.sprayDeleteSuccess = false;
 
-    // Process the image (no more GIF processing since GIFs are not supported)
-    this.processImageForUpload(this.selectedFile)
-      .then((processedData) => {
-        if (!this.selectedFile) {
-          throw new Error('Keine Datei ausgewählt');
-        }
+    try {
+      // Process image with background removal if enabled
+      const fileToProcess = await this.processImageWithBackgroundRemoval(this.selectedFile);
 
-        const formData = new FormData();
-        formData.append('smallImage', processedData.smallImage); // Thumbnail for storage
-        formData.append('originalImage', this.selectedFile); // Original file for moderation
-        formData.append('isGif', 'false'); // No more GIF support
+      // Process the image (no more GIF processing since GIFs are not supported)
+      const processedData = await this.processImageForUpload(fileToProcess);
 
-        // Only handle regular image data
-        if ('pixelData' in processedData) {
-          formData.append('pixelData', processedData.pixelData); // Single string for images
-        }
+      if (!this.selectedFile) {
+        throw new Error('Keine Datei ausgewählt');
+      }
 
-        return this.authService
-          .authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
-          .toPromise();
-      })
-      .then((response: any) => {
-        this.sprayUploadLoading = false;
-        this.sprayUploadSuccess = true;
-        this.sprayUploadError = '';
-        this.selectedFile = null;
+      const formData = new FormData();
+      formData.append('smallImage', processedData.smallImage); // Thumbnail for storage
+      formData.append('originalImage', fileToProcess); // Use processed file (with or without background removal)
+      formData.append('isGif', 'false'); // No more GIF support
+      formData.append('removeBackground', this.removeBackground.toString()); // Background removal toggle
 
-        // Reset file input
-        const fileInput = document.getElementById(
-          'sprayFileInput',
-        ) as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+      // Only handle regular image data
+      if ('pixelData' in processedData) {
+        formData.append('pixelData', processedData.pixelData); // Single string for images
+      }
 
-        // Reload spray image
-        this.loadCurrentSpray();
-      })
-      .catch((error) => {
-        console.error('Spray upload error:', error);
-        this.sprayUploadLoading = false;
-        this.sprayUploadError =
-          error.error?.error ||
-          error.message ||
-          'Fehler beim Hochladen des Sprays';
-        this.sprayUploadSuccess = false;
-      });
+      const response = await this.authService
+        .authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
+        .toPromise();
+
+      this.sprayUploadLoading = false;
+      this.sprayUploadSuccess = true;
+      this.sprayUploadError = '';
+      this.selectedFile = null;
+      this.removeBackground = false; // Reset toggle after successful upload
+
+      // Clean up all preview URLs
+      if (this.selectedFilePreview) {
+        URL.revokeObjectURL(this.selectedFilePreview);
+        this.selectedFilePreview = null;
+      }
+      if (this.processedImagePreview) {
+        URL.revokeObjectURL(this.processedImagePreview);
+        this.processedImagePreview = null;
+      }
+
+      // Reset file input
+      const fileInput = document.getElementById(
+        'sprayFileInput',
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      // Reload spray image
+      this.loadCurrentSpray();
+    } catch (error: any) {
+      console.error('Spray upload error:', error);
+      this.sprayUploadLoading = false;
+      this.sprayUploadError =
+        error?.error?.error ||
+        error?.message ||
+        'Fehler beim Hochladen des Sprays';
+      this.sprayUploadSuccess = false;
+    }
   }
 
   // Method to remove current spray
@@ -572,15 +625,99 @@ export class DashboardComponent implements OnDestroy {
     return this.sprayBanStatus?.isBanned === true;
   }
 
+  // Clear processed image preview
+  clearProcessedPreview(): void {
+    if (this.processedImagePreview) {
+      URL.revokeObjectURL(this.processedImagePreview);
+      this.processedImagePreview = null;
+    }
+  }
+
+  // Clear all previews and selected file
+  clearAllPreviews(): void {
+    if (this.selectedFilePreview) {
+      URL.revokeObjectURL(this.selectedFilePreview);
+      this.selectedFilePreview = null;
+    }
+    this.clearProcessedPreview();
+    this.selectedFile = null;
+    this.removeBackground = false;
+
+    // Reset file input
+    const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  }
+
   ngOnDestroy(): void {
     // Clean up object URLs to prevent memory leaks
     if (this.currentSprayImage) {
       URL.revokeObjectURL(this.currentSprayImage);
     }
 
+    // Clean up file previews
+    if (this.selectedFilePreview) {
+      URL.revokeObjectURL(this.selectedFilePreview);
+    }
+    if (this.processedImagePreview) {
+      URL.revokeObjectURL(this.processedImagePreview);
+    }
+
     // Clean up event listener
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
+    }
+  }
+
+  // Process image with background removal if enabled
+  private async processImageWithBackgroundRemoval(file: File): Promise<File> {
+    if (!this.removeBackground) {
+      return file; // Return original file if background removal is disabled
+    }
+
+    try {
+      this.backgroundRemovalProcessing = true;
+
+      // Send image to backend for background removal
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await this.authService
+        .authenticatedPost(`${environment.apiUrl}/spray/remove-background`, formData)
+        .toPromise() as BackgroundRemovalResponse;
+
+      if (!response?.success || !response?.processedImageUrl) {
+        throw new Error('Backend did not return processed image URL');
+      }
+
+      // Fetch the processed image from the URL
+      const imageResponse = await fetch(response.processedImageUrl);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to fetch processed image');
+      }
+
+      const imageBlob = await imageResponse.blob();
+
+      // Create preview URL for display
+      if (this.processedImagePreview) {
+        URL.revokeObjectURL(this.processedImagePreview);
+      }
+      this.processedImagePreview = URL.createObjectURL(imageBlob);
+
+      // Convert blob to file
+      const processedFile = new File([imageBlob], file.name, {
+        type: 'image/png', // Background removal always outputs PNG for transparency
+        lastModified: Date.now()
+      });
+
+      console.log('Background removal successful, processed file size:', processedFile.size);
+      this.backgroundRemovalProcessing = false;
+      return processedFile;
+
+    } catch (error) {
+      this.backgroundRemovalProcessing = false;
+      console.error('Background removal failed:', error);
+      this.sprayUploadError = 'Hintergrundentfernung fehlgeschlagen: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler');
+      return file; // Fall back to original file
     }
   }
 

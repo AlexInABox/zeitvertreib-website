@@ -1198,3 +1198,116 @@ export async function handleModerationUndelete(
     );
   }
 }
+
+// Handle background removal via Replicate API
+export async function handleBackgroundRemoval(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    // Validate session
+    const sessionValidation = await validateSession(request, env);
+    if (!sessionValidation.isValid || !sessionValidation.session?.steamId) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const steamId = sessionValidation.session.steamId;
+
+    // Check request method
+    if (request.method !== 'POST') {
+      return createResponse({ error: 'Method Not Allowed' }, 405, origin);
+    }
+
+    // Get form data with the image
+    const formData = await request.formData();
+    const imageFile = formData.get('image') as File;
+
+    if (!imageFile) {
+      return createResponse({ error: 'No image provided' }, 400, origin);
+    }
+
+    // Validate file type
+    if (!UPLOAD_LIMITS.SUPPORTED_FORMATS.includes(imageFile.type as any)) {
+      return createResponse(
+        { error: 'Unsupported file format' },
+        400,
+        origin,
+      );
+    }
+
+    // Check API token
+    if (!env.REPLICATE_API_TOKEN) {
+      console.error('REPLICATE_API_TOKEN is not configured');
+      return createResponse(
+        { error: 'Background removal service not available' },
+        503,
+        origin,
+      );
+    }
+
+    // Convert image to base64 data URL for Replicate
+    const imageBuffer = await imageFile.arrayBuffer();
+    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    const mimeType = imageFile.type;
+    const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
+    // Call Replicate API
+    const replicateResponse = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'wait'
+      },
+      body: JSON.stringify({
+        version: 'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003',
+        input: {
+          image: dataUrl
+        }
+      })
+    });
+
+    if (!replicateResponse.ok) {
+      const errorText = await replicateResponse.text();
+      console.error('Replicate API error:', replicateResponse.status, errorText);
+      return createResponse(
+        { error: 'Background removal service failed' },
+        500,
+        origin,
+      );
+    }
+
+    const result = await replicateResponse.json() as { output?: string; error?: string };
+
+    // Check if the result has the output URL
+    if (!result.output) {
+      console.error('Replicate API did not return output:', result);
+      return createResponse(
+        { error: 'Background removal processing failed' },
+        500,
+        origin,
+      );
+    }
+
+    // Return the URL of the processed image
+    return createResponse(
+      {
+        success: true,
+        processedImageUrl: result.output,
+        message: 'Background removed successfully'
+      },
+      200,
+      origin,
+    );
+
+  } catch (error) {
+    console.error('Error handling background removal:', error);
+    return createResponse(
+      { error: 'Failed to process background removal' },
+      500,
+      origin,
+    );
+  }
+}

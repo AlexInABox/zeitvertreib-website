@@ -16,6 +16,7 @@ import {
   handleModerationUndelete,
   handleGetUploadLimits,
   handleGetSprayBanStatus,
+  handleBackgroundRemoval,
 } from './routes/spray.js';
 import {
   handleFakerank,
@@ -76,6 +77,7 @@ const routes: Record<
   '/auth/logout': handleLogout,
   '/stats': handleGetStats,
   '/spray/upload': handleUploadSpray,
+  '/spray/remove-background': handleBackgroundRemoval,
   '/spray/image': handleGetSpray,
   '/spray/string': handleGetSprayString,
   '/spray/delete': handleDeleteSpray,
