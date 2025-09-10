@@ -77,8 +77,18 @@ export async function handleSteamCallback(
   let cookieSettings = `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60 * 3}`;
   
   if (!isLocalDev) {
-    // Production settings: secure, SameSite=None for cross-origin
-    cookieSettings += '; HttpOnly; Secure; SameSite=None';
+    // Production settings: secure, with domain for subdomain sharing
+    // Extract domain from frontend URL (e.g., "zeitvertreib.vip" from "https://dev.zeitvertreib.vip")
+    const frontendHost = new URL(frontendUrl).hostname;
+    const domainParts = frontendHost.split('.');
+    let cookieDomain = frontendHost;
+    
+    // If it's a subdomain (more than 2 parts), use the parent domain
+    if (domainParts.length > 2) {
+      cookieDomain = domainParts.slice(-2).join('.');
+    }
+    
+    cookieSettings += `; Domain=.${cookieDomain}; HttpOnly; Secure; SameSite=None`;
   } else {
     // Development settings: less restrictive for localhost testing
     cookieSettings += '; SameSite=Lax';
