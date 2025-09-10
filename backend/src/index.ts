@@ -107,9 +107,15 @@ async function handleRecurringTransactions(
 ): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method;
+  
+  // Remove /api prefix if present
+  let pathname = url.pathname;
+  if (pathname.startsWith('/api')) {
+    pathname = pathname.substring(4);
+  }
 
   // Handle different HTTP methods for /financial/recurring
-  if (url.pathname === '/financial/recurring') {
+  if (pathname === '/financial/recurring') {
     if (method === 'GET') {
       return handleGetRecurringTransactions(request, env);
     } else if (method === 'POST') {
@@ -118,7 +124,7 @@ async function handleRecurringTransactions(
   }
 
   // Handle /financial/recurring/{id} for PUT and DELETE
-  const recurringIdMatch = url.pathname.match(
+  const recurringIdMatch = pathname.match(
     /^\/financial\/recurring\/(\d+)$/,
   );
   if (recurringIdMatch) {
@@ -142,9 +148,15 @@ async function handleFinancialTransactions(
 ): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method;
+  
+  // Remove /api prefix if present
+  let pathname = url.pathname;
+  if (pathname.startsWith('/api')) {
+    pathname = pathname.substring(4);
+  }
 
   // Handle different HTTP methods for /financial/transactions
-  if (url.pathname === '/financial/transactions') {
+  if (pathname === '/financial/transactions') {
     if (method === 'GET') {
       return handleGetTransactions(request, env);
     } else if (method === 'POST') {
@@ -153,7 +165,7 @@ async function handleFinancialTransactions(
   }
 
   // Handle /financial/transactions/{id} for PUT and DELETE
-  const transactionIdMatch = url.pathname.match(
+  const transactionIdMatch = pathname.match(
     /^\/financial\/transactions\/(\d+)$/,
   );
   if (transactionIdMatch) {
@@ -250,31 +262,37 @@ export default {
 
     try {
       const url = new URL(request.url);
+      
+      // Remove /api prefix if present to match our route definitions
+      let pathname = url.pathname;
+      if (pathname.startsWith('/api')) {
+        pathname = pathname.substring(4);
+      }
 
       // Handle financial routes with dynamic paths
-      if (url.pathname.startsWith('/financial/transactions')) {
+      if (pathname.startsWith('/financial/transactions')) {
         return await handleFinancialTransactions(request, env);
       }
 
       // Handle recurring financial routes with dynamic paths
-      if (url.pathname.startsWith('/financial/recurring')) {
+      if (pathname.startsWith('/financial/recurring')) {
         return await handleRecurringTransactions(request, env);
       }
 
-      const handler = routes[url.pathname];
+      const handler = routes[pathname];
       if (handler) {
         // Handle method-specific routing for spray upload
-        if (url.pathname === '/spray/upload' && request.method !== 'POST') {
+        if (pathname === '/spray/upload' && request.method !== 'POST') {
           return createResponse({ error: 'Method Not Allowed' }, 405, origin);
         }
         if (
-          (url.pathname === '/spray/image' ||
-            url.pathname === '/spray/string') &&
+          (pathname === '/spray/image' ||
+            pathname === '/spray/string') &&
           request.method !== 'GET'
         ) {
           return createResponse({ error: 'Method Not Allowed' }, 405, origin);
         }
-        if (url.pathname === '/spray/delete' && request.method !== 'DELETE') {
+        if (pathname === '/spray/delete' && request.method !== 'DELETE') {
           return createResponse({ error: 'Method Not Allowed' }, 405, origin);
         }
 
