@@ -4,7 +4,7 @@
 declare namespace Cloudflare {
   interface Env {
     SESSIONS: KVNamespace;
-    BACKEND_URL: 'https://zeitvertreib-website-backend.main-1a2.workers.dev';
+    BACKEND_URL: 'https://backend.zeitvertreib.vip';
     STEAM_API_KEY: string;
     FRONTEND_URL: string;
     SPRAY_MOD_WEBHOOK: string;

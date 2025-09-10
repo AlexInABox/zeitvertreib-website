@@ -22,7 +22,7 @@
   ],
   "vars": {
     "FRONTEND_URL": "https://dev.zeitvertreib.vip",
-    "BACKEND_URL": "https://zeitvertreib-website-backend.main-1a2.workers.dev",
+    "BACKEND_URL": "https://backend.zeitvertreib.vip",
   },
   "observability": {
     "enabled": true,
