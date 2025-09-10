@@ -15,7 +15,7 @@ interface Env {
 
 interface PlayerStats {
   id: string;
-  experience: number;
+  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   roundsplayed: number;
   usedmedkits: number;
@@ -128,7 +128,7 @@ async function getLeaderboardData(env: Env): Promise<{
   snake: LeaderboardEntry[];
   kills: LeaderboardEntry[];
   deaths: LeaderboardEntry[];
-  experience: LeaderboardEntry[];
+  zvcoins: LeaderboardEntry[];  // Changed from 'experience' to reflect ZV Coins
   playtime: LeaderboardEntry[];
   rounds: LeaderboardEntry[];
   medkits: LeaderboardEntry[];
@@ -151,7 +151,7 @@ async function getLeaderboardData(env: Env): Promise<{
     )
     .all();
 
-  // Get top 3 by experience
+  // Get top 3 by ZV Coins (experience column)
   const experienceQuery = await db
     .prepare(
       `
@@ -285,7 +285,7 @@ async function getLeaderboardData(env: Env): Promise<{
     snake: await formatLeaderboard(snakeQuery.results, 'snakehighscore'),
     kills: await formatLeaderboard(killsQuery.results, 'killcount'),
     deaths: await formatLeaderboard(deathsQuery.results, 'deathcount'),
-    experience: await formatLeaderboard(experienceQuery.results, 'experience'),
+    zvcoins: await formatLeaderboard(experienceQuery.results, 'experience'),
     playtime: await formatLeaderboard(playtimeQuery.results, 'playtime'),
     rounds: await formatLeaderboard(roundsQuery.results, 'roundsplayed'),
     medkits: await formatLeaderboard(medkitsQuery.results, 'usedmedkits'),
@@ -414,8 +414,8 @@ function createDiscordMessage(
             inline: true,
           },
           {
-            name: '⭐ XP',
-            value: formatLeaderboardField(leaderboardData.experience),
+            name: '🪙 ZV Coins',
+            value: formatLeaderboardField(leaderboardData.zvcoins),
             inline: true,
           },
           {

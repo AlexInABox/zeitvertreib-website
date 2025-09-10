@@ -655,7 +655,7 @@ export async function handleGetAllFakeranks(
       if (a.fakerank && !b.fakerank) return -1;
       if (!a.fakerank && b.fakerank) return 1;
 
-      // Priority 2: By experience
+      // Priority 2: By ZV Coins (experience column)
       return b.experience - a.experience;
     });
 

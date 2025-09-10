@@ -22,22 +22,22 @@ interface PlayerEntry {
 }
 
 interface Statistics {
-  username?: string;
-  kills?: number;
-  deaths?: number;
-  experience?: number;
-  playtime?: number;
-  avatarFull?: string;
-  roundsplayed?: number;
-  leaderboardposition?: number | null;
-  usedmedkits?: number;
-  usedcolas?: number;
-  pocketescapes?: number;
-  usedadrenaline?: number;
-  snakehighscore?: number;
-  fakerankallowed?: boolean;
-  lastkillers?: PlayerEntry[];
-  lastkills?: PlayerEntry[];
+  username: string;
+  kills: number;
+  deaths: number;
+  experience?: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  playtime: number;
+  avatarFull: string;
+  roundsplayed: number;
+  leaderboardposition: number | null;
+  usedmedkits: number;
+  usedcolas: number;
+  pocketescapes: number;
+  usedadrenaline: number;
+  snakehighscore: number;
+  fakerankallowed: boolean;
+  lastkillers: Array<{ displayname: string; avatarmedium: string }>;
+  lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
 
 interface UploadLimits {
@@ -86,6 +86,7 @@ export class DashboardComponent implements OnDestroy {
     pocketescapes: 0,
     usedadrenaline: 0,
     snakehighscore: 0,
+    fakerankallowed: false,
     lastkillers: [],
     lastkills: [],
   };
@@ -154,6 +155,20 @@ export class DashboardComponent implements OnDestroy {
     { key: 'pumpkin', name: 'Kürbis', hex: '#EE7600' },
   ];
 
+  // Cosmetic-related properties
+  activeTab: 'hats' | 'pets' | 'auras' = 'hats';
+  selectedHat: string = 'none';
+  selectedPet: string = 'none';
+  selectedAura: string = 'none';
+  cosmeticLoading = false;
+
+  // Mock data for owned cosmetics - in production this would come from backend
+  ownedCosmetics = {
+    hats: ['cap'] as string[], // User owns a baseball cap
+    pets: [] as string[], // No pets owned
+    auras: ['blue'] as string[] // User owns blue aura
+  };
+
   constructor(private authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
@@ -173,7 +188,7 @@ export class DashboardComponent implements OnDestroy {
     document.addEventListener('click', this.documentClickHandler);
   }
 
-    // Handle toggle change to trigger background removal
+  // Handle toggle change to trigger background removal
   async onBackgroundRemovalToggle(): Promise<void> {
     if (this.removeBackground && this.selectedFile && !this.backgroundRemovalProcessing) {
       // Process image for preview when toggle is turned on
@@ -1062,5 +1077,113 @@ export class DashboardComponent implements OnDestroy {
   getColorName(colorKey: string): string {
     const color = this.fakerankColors.find((c) => c.key === colorKey);
     return color ? color.name : 'Default (Weiß)';
+  }
+
+  // ZV Coins related methods
+  getProgressPercentage(current: number, target: number): number {
+    return Math.min(100, (current / target) * 100);
+  }
+
+  openShop(): void {
+    // TODO: Implement shop functionality
+    console.log('Opening ZV Coins shop...');
+    // For now, just show an alert or redirect to a shop page
+    alert('🛒 Der ZV Coins Shop ist noch in Entwicklung! Bald verfügbar.');
+  }
+
+  showEarningTips(): void {
+    // TODO: Implement earning tips modal or navigation
+    console.log('Showing earning tips...');
+    alert('💡 Earning Tips:\n\n• Spiele aktiv und sammle Abschüsse (+50 ZVC)\n• Gewinne Runden (+100 ZVC)\n• Bleibe länger im Spiel (+10 ZVC alle 5 Min)\n• Nutze Items strategisch für Bonus-ZVC\n\nMehr Tipps findest du bald im offiziellen Guide!');
+  }
+
+  // Cosmetic-related methods
+  getHatEmoji(hatKey: string): string {
+    const hatEmojis: { [key: string]: string } = {
+      'cap': '🧢',
+      'crown': '👑',
+      'helmet': '⛑️'
+    };
+    return hatEmojis[hatKey] || '';
+  }
+
+  getHatName(hatKey: string): string {
+    const hatNames: { [key: string]: string } = {
+      'cap': 'Baseball Cap',
+      'crown': 'Königskrone',
+      'helmet': 'Schutzhelm'
+    };
+    return hatNames[hatKey] || '';
+  }
+
+  getPetEmoji(petKey: string): string {
+    const petEmojis: { [key: string]: string } = {
+      'cat': '🐱',
+      'dog': '🐕',
+      'bird': '🦅'
+    };
+    return petEmojis[petKey] || '';
+  }
+
+  getPetName(petKey: string): string {
+    const petNames: { [key: string]: string } = {
+      'cat': 'Cyber Katze',
+      'dog': 'Roboter Hund',
+      'bird': 'Drohnen Adler'
+    };
+    return petNames[petKey] || '';
+  }
+
+  getAuraName(auraKey: string): string {
+    const auraNames: { [key: string]: string } = {
+      'blue': 'Blaue Aura',
+      'red': 'Rote Aura',
+      'rainbow': 'Regenbogen Aura'
+    };
+    return auraNames[auraKey] || '';
+  }
+
+  selectHat(hatKey: string): void {
+    if (hatKey === 'none' || this.ownedCosmetics.hats.includes(hatKey)) {
+      this.selectedHat = hatKey;
+    } else {
+      alert(`Du besitzt diesen Hut noch nicht! Kaufe ihn im Cosmetic Shop.`);
+    }
+  }
+
+  selectPet(petKey: string): void {
+    if (petKey === 'none' || this.ownedCosmetics.pets.includes(petKey)) {
+      this.selectedPet = petKey;
+    } else {
+      alert(`Du besitzt diesen Begleiter noch nicht! Kaufe ihn im Cosmetic Shop.`);
+    }
+  }
+
+  selectAura(auraKey: string): void {
+    if (auraKey === 'none' || this.ownedCosmetics.auras.includes(auraKey)) {
+      this.selectedAura = auraKey;
+    } else {
+      alert(`Du besitzt diese Aura noch nicht! Kaufe sie im Cosmetic Shop.`);
+    }
+  }
+
+  saveCosmetics(): void {
+    this.cosmeticLoading = true;
+
+    // Simulate API call
+    setTimeout(() => {
+      this.cosmeticLoading = false;
+      alert(`Cosmetics gespeichert!\nHut: ${this.getHatName(this.selectedHat) || 'Keiner'}\nBegleiter: ${this.getPetName(this.selectedPet) || 'Keiner'}\nAura: ${this.getAuraName(this.selectedAura) || 'Keine'}`);
+    }, 1500);
+  }
+
+  resetToDefault(): void {
+    this.selectedHat = 'none';
+    this.selectedPet = 'none';
+    this.selectedAura = 'none';
+  }
+
+  openCosmeticShop(): void {
+    alert('Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.');
   }
 }

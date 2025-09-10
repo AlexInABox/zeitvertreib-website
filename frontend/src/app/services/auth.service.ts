@@ -14,7 +14,7 @@ export interface SteamUser {
 
 export interface PlayerData {
   id: string;
-  experience: number;
+  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   roundsplayed: number;
   usedmedkits: number;
@@ -62,7 +62,7 @@ export class AuthService {
 
     if (token) {
       this.sessionToken = token;
-      
+
       try {
         localStorage.setItem('sessionToken', token);
       } catch (error) {

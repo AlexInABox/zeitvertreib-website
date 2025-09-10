@@ -18,7 +18,7 @@ export interface Statistics {
   username: string;
   kills: number;
   deaths: number;
-  experience: number;
+  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   avatarFull: string;
   roundsplayed: number;
@@ -35,7 +35,7 @@ export interface Statistics {
 
 export interface PlayerData {
   id: string;
-  experience?: number;
+  experience?: number;  // Keep property name for DB compatibility, but represents ZV Coins
   playtime?: number;
   roundsplayed?: number;
   usedmedkits?: number;

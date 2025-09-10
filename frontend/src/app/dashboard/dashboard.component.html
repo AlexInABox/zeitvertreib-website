@@ -65,20 +65,19 @@
                 </div>
               </div>
 
-              <!-- Experience -->
+              <!-- Zeitvertreib Coins -->
               <div
                 class="stat-item"
-                style="--stat-color: #f59e0b; --stat-color-light: #fbbf24"
+                style="--stat-color: #eab308; --stat-color-light: #facc15"
               >
                 <div class="stat-indicator"></div>
                 <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
-                  <h5 class="stat-label m-0 mb-1">Erfahrung</h5>
+                  <h5 class="stat-label m-0 mb-1">Zeitvertreib Coins</h5>
                   <p class="stat-value m-0">
-                    {{ userStatistics.experience | number: '1.0-0' }}XP
+                    {{ userStatistics.experience | number: '1.0-0' }} ZVC
                   </p>
                 </div>
               </div>
-
               <!-- K/D Ratio -->
               <div
                 class="stat-item"
@@ -1026,41 +1025,833 @@
           </div>
         </td>
       </tr>
-
+      <tr></tr>
       <tr>
-        <!-- Last Killers -->
-        <td class="killers-container align-top p-2">
+        <!-- ZV Coins Widget -->
+        <td colspan="2" class="zvcoins-container align-top p-2">
           <div class="stats-card p-6 rounded-2xl">
             <h3 class="text-xl font-bold text-white mb-4 cardHeader">
-              Diese Leute haben dich getötet!
+              🪙 Zeitvertreib Coins
             </h3>
 
-            <div *ngIf="!hasKillers" class="text-center py-8">
-              <div class="text-4xl mb-4">🎯</div>
-              <p class="text-gray-300">Noch keine Killer-Daten verfügbar</p>
-            </div>
-
-            <div *ngIf="hasKillers" class="killers-list">
-              <div
-                *ngFor="
-                  let killer of userStatistics?.lastkillers;
-                  let i = index;
-                  trackBy: trackByKiller
-                "
-                class="killer-item"
-              >
-                <img
-                  class="killer-avatar"
-                  [src]="getAvatarUrl(killer?.avatarmedium)"
-                  [alt]="killer?.displayname || 'Unknown Player'"
-                  loading="lazy"
-                  (error)="onImageError($event)"
-                />
-                <div class="flex-1 min-w-0">
-                  <p class="killer-name" [title]="killer?.displayname">
-                    {{ truncateDisplayName(killer?.displayname) }}
+            <!-- Current Balance -->
+            <div class="zvcoins-balance-section mb-6">
+              <div class="zvcoins-balance-card">
+                <div class="zvcoins-icon">🪙</div>
+                <div class="zvcoins-balance-info">
+                  <p class="zvcoins-balance-label">Dein Guthaben</p>
+                  <p class="zvcoins-balance-amount">
+                    {{ userStatistics.experience | number: '1.0-0' }} ZVC
                   </p>
                 </div>
+              </div>
+            </div>
+
+            <!-- Redeemable Items -->
+            <div class="zvcoins-rewards-section mb-4">
+              <h4 class="zvcoins-section-title">� Belohnungen einlösen</h4>
+              <div class="zvcoins-rewards-grid">
+                <div
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    (userStatistics.experience || 0) >= 200
+                  "
+                >
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">🎨</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">Spray Creator Pack</h5>
+                      <p class="zvcoins-reward-description">
+                        10 Credits für Custom Spray Änderungen
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">200</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              200
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            200
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="(userStatistics.experience || 0) < 200"
+                      [class.zvcoins-redeem-available]="
+                        (userStatistics.experience || 0) >= 200
+                      "
+                    >
+                      <span *ngIf="(userStatistics.experience || 0) >= 200"
+                        >✨ Einlösen</span
+                      >
+                      <span *ngIf="(userStatistics.experience || 0) < 200">
+                        {{ 200 - (userStatistics.experience || 0) }} ZVC fehlen
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    (userStatistics.experience || 0) >= 500
+                  "
+                >
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">👑</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">Fakerank Flex Pack</h5>
+                      <p class="zvcoins-reward-description">
+                        5 Credits zum Ändern deines Fakeranks
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">500</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              500
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            500
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="(userStatistics.experience || 0) < 500"
+                      [class.zvcoins-redeem-available]="
+                        (userStatistics.experience || 0) >= 500
+                      "
+                    >
+                      <span *ngIf="(userStatistics.experience || 0) >= 500"
+                        >✨ Einlösen</span
+                      >
+                      <span *ngIf="(userStatistics.experience || 0) < 500">
+                        {{ 500 - (userStatistics.experience || 0) }} ZVC fehlen
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    (userStatistics.experience || 0) >= 1000
+                  "
+                >
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">💎</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">Elite Cosmetic Pass</h5>
+                      <p class="zvcoins-reward-description">
+                        Exklusives In-Game Cosmetic für 1 Monat
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">1,000</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              1000
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            1000
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="(userStatistics.experience || 0) < 1000"
+                      [class.zvcoins-redeem-available]="
+                        (userStatistics.experience || 0) >= 1000
+                      "
+                    >
+                      <span *ngIf="(userStatistics.experience || 0) >= 1000"
+                        >✨ Einlösen</span
+                      >
+                      <span *ngIf="(userStatistics.experience || 0) < 1000">
+                        {{ 1000 - (userStatistics.experience || 0) }} ZVC fehlen
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    (userStatistics.experience || 0) >= 2500
+                  "
+                >
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">🎮</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">Steam Guthaben</h5>
+                      <p class="zvcoins-reward-description">
+                        5€ Steam Gift Card für neue Games
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">2,500</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              2500
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            2500
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="(userStatistics.experience || 0) < 2500"
+                      [class.zvcoins-redeem-available]="
+                        (userStatistics.experience || 0) >= 2500
+                      "
+                    >
+                      <span *ngIf="(userStatistics.experience || 0) >= 2500"
+                        >✨ Einlösen</span
+                      >
+                      <span *ngIf="(userStatistics.experience || 0) < 2500">
+                        {{ 2500 - (userStatistics.experience || 0) }} ZVC fehlen
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    (userStatistics.experience || 0) >= 3000
+                  "
+                >
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">🚀</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">Discord Nitro Boost</h5>
+                      <p class="zvcoins-reward-description">
+                        1 Monat Discord Nitro Premium
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">3,000</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              3000
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            3000
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="(userStatistics.experience || 0) < 3000"
+                      [class.zvcoins-redeem-available]="
+                        (userStatistics.experience || 0) >= 3000
+                      "
+                    >
+                      <span *ngIf="(userStatistics.experience || 0) >= 3000"
+                        >✨ Einlösen</span
+                      >
+                      <span *ngIf="(userStatistics.experience || 0) < 3000">
+                        {{ 3000 - (userStatistics.experience || 0) }} ZVC fehlen
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    (userStatistics.experience || 0) >= 5000
+                  "
+                >
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">⭐</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">VIP Elite Jahrespass</h5>
+                      <p class="zvcoins-reward-description">
+                        1 Jahr VIP Status mit allen Vorteilen
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">5,000</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              5000
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            5000
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="(userStatistics.experience || 0) < 5000"
+                      [class.zvcoins-redeem-available]="
+                        (userStatistics.experience || 0) >= 5000
+                      "
+                    >
+                      <span *ngIf="(userStatistics.experience || 0) >= 5000"
+                        >✨ Einlösen</span
+                      >
+                      <span *ngIf="(userStatistics.experience || 0) < 5000">
+                        {{ 5000 - (userStatistics.experience || 0) }} ZVC fehlen
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="zvcoins-actions">
+              <button
+                class="zvcoins-action-btn zvcoins-primary-btn"
+                (click)="openShop()"
+                [disabled]="(userStatistics.experience || 0) < 100"
+              >
+                <span class="zvcoins-btn-icon">🛒</span>
+                Shop öffnen
+              </button>
+              <button
+                class="zvcoins-action-btn zvcoins-secondary-btn"
+                (click)="showEarningTips()"
+              >
+                <span class="zvcoins-btn-icon">📈</span>
+                Mehr verdienen
+              </button>
+            </div>
+          </div>
+        </td>
+        <!-- Cosmetic Customization Widget -->
+        <td colspan="1" class="cosmetics-container align-top p-2">
+          <div class="stats-card p-6 rounded-2xl">
+            <h3
+              class="text-xl font-bold text-white mb-4 cardHeader flex items-center gap-2"
+            >
+              ✨ Cosmetic Editor
+              <span class="cosmetic-beta-badge">BETA</span>
+            </h3>
+
+            <!-- Cosmetic Preview Section -->
+            <div class="cosmetic-preview-section mb-6">
+              <div class="cosmetic-preview-card">
+                <div class="cosmetic-avatar-container">
+                  <div class="cosmetic-avatar-base">
+                    <div class="cosmetic-player-model">🧑‍💼</div>
+
+                    <!-- Hat Layer -->
+                    <div class="cosmetic-hat-layer" *ngIf="selectedHat">
+                      <span class="cosmetic-hat-emoji">{{
+                        getHatEmoji(selectedHat)
+                      }}</span>
+                    </div>
+
+                    <!-- Pet -->
+                    <div class="cosmetic-pet-container" *ngIf="selectedPet">
+                      <span class="cosmetic-pet-emoji">{{
+                        getPetEmoji(selectedPet)
+                      }}</span>
+                    </div>
+
+                    <!-- Aura Effect -->
+                    <div
+                      class="cosmetic-aura-effect"
+                      [class]="'cosmetic-aura-' + selectedAura"
+                      *ngIf="selectedAura && selectedAura !== 'none'"
+                    ></div>
+                  </div>
+                </div>
+
+                <div class="cosmetic-preview-info">
+                  <h4 class="cosmetic-preview-title">Dein Look</h4>
+                  <div class="cosmetic-active-items">
+                    <div class="cosmetic-item-tag" *ngIf="selectedHat">
+                      🎩 {{ getHatName(selectedHat) }}
+                    </div>
+                    <div class="cosmetic-item-tag" *ngIf="selectedPet">
+                      🐾 {{ getPetName(selectedPet) }}
+                    </div>
+                    <div
+                      class="cosmetic-item-tag"
+                      *ngIf="selectedAura && selectedAura !== 'none'"
+                    >
+                      ✨ {{ getAuraName(selectedAura) }}
+                    </div>
+                    <div
+                      class="cosmetic-item-tag cosmetic-empty"
+                      *ngIf="
+                        !selectedHat &&
+                        !selectedPet &&
+                        (!selectedAura || selectedAura === 'none')
+                      "
+                    >
+                      💭 Standard Look
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cosmetic Categories -->
+            <div class="cosmetic-categories">
+              <div class="cosmetic-category-tabs">
+                <button
+                  class="cosmetic-tab"
+                  [class.active]="activeTab === 'hats'"
+                  (click)="activeTab = 'hats'"
+                >
+                  🎩 Hüte
+                </button>
+                <button
+                  class="cosmetic-tab"
+                  [class.active]="activeTab === 'pets'"
+                  (click)="activeTab = 'pets'"
+                >
+                  🐾 Begleiter
+                </button>
+                <button
+                  class="cosmetic-tab"
+                  [class.active]="activeTab === 'auras'"
+                  (click)="activeTab = 'auras'"
+                >
+                  ✨ Aura Effekte
+                </button>
+              </div>
+
+              <!-- Hats Tab -->
+              <div class="cosmetic-tab-content" *ngIf="activeTab === 'hats'">
+                <div class="cosmetic-items-grid">
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedHat === 'none'"
+                    [class.owned]="true"
+                    (click)="selectHat('none')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-no-item">🚫</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Kein Hut</h5>
+                      <p class="cosmetic-item-status owned">Verfügbar</p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedHat === 'cap'"
+                    [class.owned]="ownedCosmetics.hats.includes('cap')"
+                    [class.locked]="!ownedCosmetics.hats.includes('cap')"
+                    (click)="selectHat('cap')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-item-emoji">🧢</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Baseball Cap</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.hats.includes('cap')"
+                        [class.locked]="!ownedCosmetics.hats.includes('cap')"
+                      >
+                        {{
+                          ownedCosmetics.hats.includes('cap')
+                            ? 'Besessen'
+                            : '500 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedHat === 'crown'"
+                    [class.owned]="ownedCosmetics.hats.includes('crown')"
+                    [class.locked]="!ownedCosmetics.hats.includes('crown')"
+                    (click)="selectHat('crown')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-item-emoji">👑</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Königskrone</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.hats.includes('crown')"
+                        [class.locked]="!ownedCosmetics.hats.includes('crown')"
+                      >
+                        {{
+                          ownedCosmetics.hats.includes('crown')
+                            ? 'Besessen'
+                            : '2000 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedHat === 'helmet'"
+                    [class.owned]="ownedCosmetics.hats.includes('helmet')"
+                    [class.locked]="!ownedCosmetics.hats.includes('helmet')"
+                    (click)="selectHat('helmet')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-item-emoji">⛑️</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Schutzhelm</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.hats.includes('helmet')"
+                        [class.locked]="!ownedCosmetics.hats.includes('helmet')"
+                      >
+                        {{
+                          ownedCosmetics.hats.includes('helmet')
+                            ? 'Besessen'
+                            : '750 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pets Tab -->
+              <div class="cosmetic-tab-content" *ngIf="activeTab === 'pets'">
+                <div class="cosmetic-items-grid">
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedPet === 'none'"
+                    [class.owned]="true"
+                    (click)="selectPet('none')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-no-item">🚫</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Kein Begleiter</h5>
+                      <p class="cosmetic-item-status owned">Verfügbar</p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedPet === 'cat'"
+                    [class.owned]="ownedCosmetics.pets.includes('cat')"
+                    [class.locked]="!ownedCosmetics.pets.includes('cat')"
+                    (click)="selectPet('cat')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-item-emoji">🐱</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Cyber Katze</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.pets.includes('cat')"
+                        [class.locked]="!ownedCosmetics.pets.includes('cat')"
+                      >
+                        {{
+                          ownedCosmetics.pets.includes('cat')
+                            ? 'Besessen'
+                            : '1200 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedPet === 'dog'"
+                    [class.owned]="ownedCosmetics.pets.includes('dog')"
+                    [class.locked]="!ownedCosmetics.pets.includes('dog')"
+                    (click)="selectPet('dog')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-item-emoji">🐕</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Roboter Hund</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.pets.includes('dog')"
+                        [class.locked]="!ownedCosmetics.pets.includes('dog')"
+                      >
+                        {{
+                          ownedCosmetics.pets.includes('dog')
+                            ? 'Besessen'
+                            : '1500 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedPet === 'bird'"
+                    [class.owned]="ownedCosmetics.pets.includes('bird')"
+                    [class.locked]="!ownedCosmetics.pets.includes('bird')"
+                    (click)="selectPet('bird')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-item-emoji">🦅</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Drohnen Adler</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.pets.includes('bird')"
+                        [class.locked]="!ownedCosmetics.pets.includes('bird')"
+                      >
+                        {{
+                          ownedCosmetics.pets.includes('bird')
+                            ? 'Besessen'
+                            : '1800 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Auras Tab -->
+              <div class="cosmetic-tab-content" *ngIf="activeTab === 'auras'">
+                <div class="cosmetic-items-grid">
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedAura === 'none'"
+                    [class.owned]="true"
+                    (click)="selectAura('none')"
+                  >
+                    <div class="cosmetic-item-preview">
+                      <span class="cosmetic-no-item">🚫</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Keine Aura</h5>
+                      <p class="cosmetic-item-status owned">Verfügbar</p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedAura === 'blue'"
+                    [class.owned]="ownedCosmetics.auras.includes('blue')"
+                    [class.locked]="!ownedCosmetics.auras.includes('blue')"
+                    (click)="selectAura('blue')"
+                  >
+                    <div class="cosmetic-item-preview cosmetic-aura-preview">
+                      <div class="cosmetic-aura-demo cosmetic-aura-blue"></div>
+                      <span class="cosmetic-item-emoji">💙</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Blaue Aura</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.auras.includes('blue')"
+                        [class.locked]="!ownedCosmetics.auras.includes('blue')"
+                      >
+                        {{
+                          ownedCosmetics.auras.includes('blue')
+                            ? 'Besessen'
+                            : '800 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedAura === 'red'"
+                    [class.owned]="ownedCosmetics.auras.includes('red')"
+                    [class.locked]="!ownedCosmetics.auras.includes('red')"
+                    (click)="selectAura('red')"
+                  >
+                    <div class="cosmetic-item-preview cosmetic-aura-preview">
+                      <div class="cosmetic-aura-demo cosmetic-aura-red"></div>
+                      <span class="cosmetic-item-emoji">❤️</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Rote Aura</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.auras.includes('red')"
+                        [class.locked]="!ownedCosmetics.auras.includes('red')"
+                      >
+                        {{
+                          ownedCosmetics.auras.includes('red')
+                            ? 'Besessen'
+                            : '800 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    class="cosmetic-item-card"
+                    [class.selected]="selectedAura === 'rainbow'"
+                    [class.owned]="ownedCosmetics.auras.includes('rainbow')"
+                    [class.locked]="!ownedCosmetics.auras.includes('rainbow')"
+                    (click)="selectAura('rainbow')"
+                  >
+                    <div class="cosmetic-item-preview cosmetic-aura-preview">
+                      <div
+                        class="cosmetic-aura-demo cosmetic-aura-rainbow"
+                      ></div>
+                      <span class="cosmetic-item-emoji">🌈</span>
+                    </div>
+                    <div class="cosmetic-item-info">
+                      <h5 class="cosmetic-item-name">Regenbogen Aura</h5>
+                      <p
+                        class="cosmetic-item-status"
+                        [class.owned]="ownedCosmetics.auras.includes('rainbow')"
+                        [class.locked]="
+                          !ownedCosmetics.auras.includes('rainbow')
+                        "
+                      >
+                        {{
+                          ownedCosmetics.auras.includes('rainbow')
+                            ? 'Besessen'
+                            : '2500 ZVC'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="cosmetic-actions mt-6">
+              <button
+                class="cosmetic-action-btn cosmetic-primary-btn"
+                (click)="saveCosmetics()"
+                [disabled]="cosmeticLoading"
+              >
+                <span *ngIf="!cosmeticLoading">💾 Änderungen speichern</span>
+                <span *ngIf="cosmeticLoading">💾 Speichere...</span>
+              </button>
+
+              <button
+                class="cosmetic-action-btn cosmetic-secondary-btn"
+                (click)="resetToDefault()"
+              >
+                🔄 Zurücksetzen
+              </button>
+
+              <button
+                class="cosmetic-action-btn cosmetic-shop-btn"
+                (click)="openCosmeticShop()"
+              >
+                🛒 Cosmetic Shop
+              </button>
+            </div>
+
+            <!-- Info Notice -->
+            <div class="cosmetic-info-notice mt-4">
+              <div class="cosmetic-notice-icon">ℹ️</div>
+              <div class="cosmetic-notice-text">
+                <strong>Beta Feature:</strong> Das Cosmetic System befindet sich
+                in der Entwicklung. Einige Items sind möglicherweise noch nicht
+                im Spiel verfügbar.
               </div>
             </div>
           </div>

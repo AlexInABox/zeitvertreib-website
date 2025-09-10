@@ -6,7 +6,7 @@ import { AuthService, UserData } from '../services/auth.service';
 import {
   FakerankAdminService,
   UserFakerank,
-  FakerankUser,
+  Player,
   BlacklistItem,
   WhitelistItem,
 } from '../services/fakerank-admin.service';
@@ -75,7 +75,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   // Data collections
   blacklistItems = signal<BlacklistItem[]>([]);
   whitelistItems = signal<WhitelistItem[]>([]);
-  allFakeranks = signal<FakerankUser[]>([]);
+  allFakeranks = signal<Player[]>([]);
 
   // Statistics
   stats = signal({
@@ -603,17 +603,17 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     this.loadAllFakeranks();
   }
 
-  editFakerank(user: FakerankUser) {
+  editFakerank(user: Player) {
     this.activeTabIndex.set(0);
-    this.searchSteamId.set(user.steamId);
+    this.searchSteamId.set(user.id);
 
     const userFakerank: UserFakerank = {
-      steamId: user.steamId,
+      steamId: user.id,
       fakerank:
         user.fakerank && user.fakerank !== 'No Fakerank' ? user.fakerank : '',
       fakerank_color: user.fakerank_color,
-      username: user.username,
-      avatarFull: user.avatarFull || '',
+      username: user.personaname,
+      avatarFull: user.avatarfull || '',
     };
 
     this.searchedUser.set(userFakerank);

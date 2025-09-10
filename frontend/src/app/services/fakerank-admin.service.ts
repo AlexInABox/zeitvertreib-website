@@ -13,22 +13,30 @@ export interface UserFakerank {
   avatarFull: string;
 }
 
-export interface FakerankUser {
-  steamId: string;
-  username: string;
+export interface Player {
+  id: string;
+  steamId: string;  // Add for compatibility with template
+  personaname: string;
+  username: string;  // Add for compatibility with template
+  avatar: string;
+  avatarmedium: string;
+  avatarfull: string;
+  avatarFull: string;  // Add for compatibility with template
   fakerank: string;
   fakerank_color: string;
   fakerankallowed: boolean;
-  experience: number;
-  // Current session info
-  currentHealth: number | null;
-  currentTeam: string | null;
-  isCurrentlyOnline: boolean;
-  // Timestamps
-  createdAt: string;
-  updatedAt: string;
-  // Legacy compatibility (can be removed if not needed)
-  avatarFull?: string;
+  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  playtime: number;
+  roundsplayed: number;
+  usedmedkits: number;
+  usedcolas: number;
+  pocketescapes: number;
+  usedadrenaline: number;
+  snakehighscore: number;
+  killcount: number;
+  deathcount: number;
+  fakerankadmin: boolean;
+  isCurrentlyOnline?: boolean;  // Add for compatibility with template
 }
 
 export interface BlacklistItem {
@@ -44,7 +52,7 @@ export interface WhitelistItem {
 }
 
 export interface PaginatedFakeranks {
-  data: FakerankUser[];
+  data: Player[];
   totalItems: number;
   currentPage: number;
   totalPages: number;

@@ -593,7 +593,7 @@ export async function mapPlayerDataToStats(
       avatarFull,
       kills: 0,
       deaths: 0,
-      experience: 0,
+      experience: 0,  // Represents ZV Coins
       playtime: 0,
       roundsplayed: 0,
       leaderboardposition: 0,
@@ -613,7 +613,7 @@ export async function mapPlayerDataToStats(
     avatarFull,
     kills: Number(playerData.killcount) || 0,
     deaths: Number(playerData.deathcount) || 0,
-    experience: Number(playerData.experience) || 0,
+    experience: Number(playerData.experience) || 0,  // Represents ZV Coins
     playtime: Number(playerData.playtime) || 0,
     roundsplayed: Number(playerData.roundsplayed) || 0,
     leaderboardposition: 0,
