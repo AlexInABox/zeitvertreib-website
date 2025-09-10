@@ -216,7 +216,7 @@ export function generateSteamLoginUrl(request: Request): string {
   const url = new URL(request.url);
   const redirectParam = url.searchParams.get('redirect');
 
-  let returnUrl = `${url.origin}/auth/steam/callback`;
+  let returnUrl = `${url.origin}/api/auth/steam/callback`;
   if (redirectParam) {
     returnUrl += `?redirect=${encodeURIComponent(redirectParam)}`;
   }
