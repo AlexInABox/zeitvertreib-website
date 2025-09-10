@@ -17,6 +17,80 @@
   pointer-events: none;
 }
 
+/* Table Layout Styles */
+.dashboard-table {
+  table-layout: fixed;
+  width: 100%;
+  border-spacing: 0;
+}
+
+.dashboard-table td {
+  border: none;
+  vertical-align: top;
+  padding: 0.5rem;
+}
+
+.dashboard-table .stats-overview {
+  width: 50%;
+}
+
+.dashboard-table .player-card-container {
+  width: 25%;
+}
+
+.dashboard-table .spray-card-container {
+  width: 25%;
+}
+
+.dashboard-table .killers-container {
+  width: 25%;
+}
+
+.dashboard-table .history-container {
+  width: 66.67%;
+}
+
+/* Portrait Mode - Stack all elements vertically */
+@media (orientation: portrait) {
+  .dashboard-table,
+  .dashboard-table tbody,
+  .dashboard-table tr,
+  .dashboard-table td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .dashboard-table tr {
+    margin-bottom: 0;
+  }
+
+  .dashboard-table td {
+    padding: 0.5rem;
+    width: 100% !important;
+  }
+
+  /* Reset all column and row spans in portrait mode */
+  .dashboard-table td[colspan],
+  .dashboard-table td[rowspan] {
+    width: 100% !important;
+  }
+
+  /* Ensure all cards have consistent spacing */
+  .dashboard-table .stats-overview,
+  .dashboard-table .player-card-container,
+  .dashboard-table .spray-card-container,
+  .dashboard-table .killers-container,
+  .dashboard-table .history-container {
+    width: 100% !important;
+    margin-bottom: 1rem;
+  }
+
+  /* Last cell shouldn't have bottom margin */
+  .dashboard-table td:last-child {
+    margin-bottom: 0;
+  }
+}
+
 .cardWrapper {
   height: fit-content;
 }
