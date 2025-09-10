@@ -93,14 +93,11 @@ export class AuthCallbackComponent implements OnInit {
 
   private async handleAuthCallback() {
     try {
-      console.log('[AUTH-CALLBACK] Starting authentication callback handling');
-      
       // Give the auth service a moment to process URL parameters
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Check if we now have a session token
       const token = this.authService.getSessionToken();
-      console.log('[AUTH-CALLBACK] Session token:', token ? 'present' : 'none');
       
       if (token) {
         this.message = 'Authentication successful! Redirecting...';
@@ -116,10 +113,8 @@ export class AuthCallbackComponent implements OnInit {
         const redirectPath = urlParams.get('redirect');
         
         if (redirectPath) {
-          console.log('[AUTH-CALLBACK] Redirecting to:', redirectPath);
           this.router.navigate([redirectPath]);
         } else {
-          console.log('[AUTH-CALLBACK] Redirecting to dashboard');
           this.router.navigate(['/dashboard']);
         }
       } else {
@@ -128,7 +123,6 @@ export class AuthCallbackComponent implements OnInit {
         const urlToken = urlParams.get('token');
         
         if (urlToken) {
-          console.log('[AUTH-CALLBACK] Found token in URL, manually setting');
           this.authService.setSessionToken(urlToken);
           this.message = 'Authentication successful! Redirecting...';
           

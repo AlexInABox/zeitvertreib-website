@@ -709,7 +709,6 @@ export class DashboardComponent implements OnDestroy {
         lastModified: Date.now()
       });
 
-      console.log('Background removal successful, processed file size:', processedFile.size);
       this.backgroundRemovalProcessing = false;
       return processedFile;
 

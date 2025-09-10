@@ -46,18 +46,13 @@ export class AuthService {
   private sessionToken: string | null = null;
 
   constructor(private http: HttpClient) {
-    console.log('[AUTH] Initializing AuthService');
     this.loadTokenFromStorage();
-    console.log('[AUTH] Token from storage:', this.sessionToken ? 'present' : 'none');
     this.checkForTokenInUrl();
-    console.log('[AUTH] Final token after URL check:', this.sessionToken);
     this.checkAuthStatus();
   }
 
   private loadTokenFromStorage(): void {
-    // Try localStorage first
     this.sessionToken = localStorage.getItem('sessionToken');
-    console.log('[AUTH] localStorage token:', this.sessionToken);
   }
 
   private checkForTokenInUrl(): void {
@@ -65,30 +60,21 @@ export class AuthService {
     const token = urlParams.get('token');
     const redirectPath = urlParams.get('redirect');
 
-    console.log('[AUTH] URL token:', token ? 'present' : 'none');
-    console.log('[AUTH] Redirect path:', redirectPath);
-
     if (token) {
       this.sessionToken = token;
       
-      // Try to store in localStorage, but don't fail if it doesn't work (Safari)
       try {
         localStorage.setItem('sessionToken', token);
-        console.log('[AUTH] Successfully stored token in localStorage');
       } catch (error) {
-        console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?), relying on cookie fallback', error);
+        console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?)', error);
       }
 
       // Clean up URL and redirect if needed
       window.history.replaceState({}, document.title, window.location.pathname);
 
       if (redirectPath) {
-        console.log('[AUTH] Redirecting to:', redirectPath);
         window.location.href = redirectPath;
       }
-    } else {
-      // No token in URL, check authentication status with server
-      console.log('[AUTH] No token in URL, checking auth status with server');
     }
   }
 
@@ -109,13 +95,11 @@ export class AuthService {
     try {
       localStorage.setItem('sessionToken', token);
     } catch (error) {
-      console.warn('[AUTH] Could not store token in localStorage');
+      // Ignore localStorage errors
     }
   }
 
   checkAuthStatus(): void {
-    console.log('[AUTH] Checking authentication status with server');
-    
     this.http
       .get<UserData>(`${environment.apiUrl}/auth/me`, {
         headers: this.getAuthHeaders(),
@@ -123,19 +107,15 @@ export class AuthService {
       })
       .pipe(
         catchError((error) => {
-          console.log('[AUTH] Auth check failed:', error.status);
-          // If request fails, clear any stored token
           this.clearToken();
           return of(null);
         }),
       )
       .subscribe((response) => {
         if (response?.user) {
-          console.log('[AUTH] User authenticated:', response.user.personaname);
           this.currentUserSubject.next(response.user);
           this.currentUserDataSubject.next(response);
         } else {
-          console.log('[AUTH] No user data received');
           this.currentUserSubject.next(null);
           this.currentUserDataSubject.next(null);
         }
@@ -149,7 +129,6 @@ export class AuthService {
     } catch (error) {
       // Ignore localStorage errors
     }
-    console.log('[AUTH] Cleared stored session token');
   }
 
   login(redirectPath: string = '/'): void {
