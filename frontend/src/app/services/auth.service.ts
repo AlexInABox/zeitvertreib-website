@@ -50,31 +50,14 @@ export class AuthService {
     this.loadTokenFromStorage();
     console.log('[AUTH] Token from storage:', this.sessionToken ? 'present' : 'none');
     this.checkForTokenInUrl();
-    console.log('[AUTH] Final token after URL check:', this.sessionToken ? 'present' : 'none');
+    console.log('[AUTH] Final token after URL check:', this.sessionToken);
     this.checkAuthStatus();
   }
 
   private loadTokenFromStorage(): void {
     // Try localStorage first
     this.sessionToken = localStorage.getItem('sessionToken');
-    console.log('[AUTH] localStorage token:', this.sessionToken ? 'present' : 'none');
-    
-    // Fallback to cookies for Safari compatibility
-    if (!this.sessionToken) {
-      this.sessionToken = this.getSessionTokenFromCookie();
-      console.log('[AUTH] Cookie token:', this.sessionToken ? 'present' : 'none');
-    }
-  }
-
-  private getSessionTokenFromCookie(): string | null {
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'session') {
-        return value;
-      }
-    }
-    return null;
+    console.log('[AUTH] localStorage token:', this.sessionToken);
   }
 
   private checkForTokenInUrl(): void {
@@ -104,19 +87,8 @@ export class AuthService {
         window.location.href = redirectPath;
       }
     } else {
-      // If no token in URL, check if we have one in cookies (Safari fallback)
-      const cookieToken = this.getSessionTokenFromCookie();
-      if (cookieToken && !this.sessionToken) {
-        console.log('[AUTH] Using cookie token as fallback');
-        this.sessionToken = cookieToken;
-        // Try to sync to localStorage for future use
-        try {
-          localStorage.setItem('sessionToken', cookieToken);
-        } catch (error) {
-          // Ignore localStorage errors in Safari
-          console.warn('[AUTH] Could not sync cookie token to localStorage');
-        }
-      }
+      // No token in URL, check authentication status with server
+      console.log('[AUTH] No token in URL, checking auth status with server');
     }
   }
 
@@ -142,29 +114,28 @@ export class AuthService {
   }
 
   checkAuthStatus(): void {
-    if (!this.sessionToken) {
-      this.currentUserSubject.next(null);
-      this.currentUserDataSubject.next(null);
-      return;
-    }
-
+    console.log('[AUTH] Checking authentication status with server');
+    
     this.http
       .get<UserData>(`${environment.apiUrl}/auth/me`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .pipe(
-        catchError(() => {
-          // If request fails, clear token
+        catchError((error) => {
+          console.log('[AUTH] Auth check failed:', error.status);
+          // If request fails, clear any stored token
           this.clearToken();
           return of(null);
         }),
       )
       .subscribe((response) => {
         if (response?.user) {
+          console.log('[AUTH] User authenticated:', response.user.personaname);
           this.currentUserSubject.next(response.user);
           this.currentUserDataSubject.next(response);
         } else {
+          console.log('[AUTH] No user data received');
           this.currentUserSubject.next(null);
           this.currentUserDataSubject.next(null);
         }
@@ -178,9 +149,7 @@ export class AuthService {
     } catch (error) {
       // Ignore localStorage errors
     }
-    
-    // Also clear the session cookie
-    document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
+    console.log('[AUTH] Cleared stored session token');
   }
 
   login(redirectPath: string = '/'): void {
