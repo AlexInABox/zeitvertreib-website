@@ -22,8 +22,14 @@
   ],
   "vars": {
     "FRONTEND_URL": "https://dev.zeitvertreib.vip",
-    "BACKEND_URL": "https://backend.zeitvertreib.vip",
+    "BACKEND_URL": "https://dev.zeitvertreib.vip/api",
   },
+  "routes": [
+    {
+      "pattern": "dev.zeitvertreib.vip/api/*",
+      "zone_name": "zeitvertreib.vip"
+    }
+  ],
   "observability": {
     "enabled": true,
   },
