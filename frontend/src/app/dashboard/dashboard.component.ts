@@ -1081,7 +1081,7 @@ export class DashboardComponent implements OnDestroy {
 
   // ZV Coins related methods
   getProgressPercentage(current: number, target: number): number {
-    return Math.min(100, (current / target) * 100);
+    return Math.min(100, Math.floor((current / target) * 100));
   }
 
   openShop(): void {

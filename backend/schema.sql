@@ -78,7 +78,7 @@ INSERT OR IGNORE INTO playerdata (
     snakehighscore, fakerank, fakerankallowed, fakerankadmin
 ) VALUES (
     '76561198354414854@steam',
-    1230, 7200, 45,
+    999, 7200, 45,
     25, 18, 7, 12,
     23, 'Elite Commander', 1, 1
 );
