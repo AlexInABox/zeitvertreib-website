@@ -96,7 +96,7 @@
         </td>
 
         <!-- Player Card -->
-        <td rowspan="3" class="player-card-container align-top p-2">
+        <td rowspan="2" class="player-card-container align-top p-2">
           <div class="player-card">
             <!-- Avatar Header -->
             <div
@@ -178,7 +178,213 @@
           </div>
         </td>
       </tr>
+      <tr>
+        <!-- ZV Coins Widget -->
+        <td colspan="2" class="zvcoins-container align-top p-2">
+          <div class="stats-card p-6 rounded-2xl">
+            <h3 class="text-xl font-bold text-white mb-4 cardHeader">
+              🪙 Zeitvertreib Coins
+            </h3>
 
+            <!-- Current Balance -->
+            <div class="zvcoins-balance-section mb-6">
+              <div class="zvcoins-balance-card">
+                <div class="zvcoins-icon">🪙</div>
+                <div class="zvcoins-balance-info">
+                  <p class="zvcoins-balance-label">Dein Guthaben</p>
+                  <p class="zvcoins-balance-amount">
+                    {{ userStatistics.experience | number: '1.0-0' }} ZVC
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Code Redemption Section -->
+            <div class="zvcoins-code-section mb-6">
+              <div class="zvcoins-code-card">
+                <div class="zvcoins-code-header">
+                  <div class="zvcoins-code-icon">🎫</div>
+                  <div class="zvcoins-code-info">
+                    <p class="zvcoins-code-label">Code einlösen</p>
+                    <p class="zvcoins-code-description">
+                      Gutscheincode für zusätzliche ZVC
+                    </p>
+                  </div>
+                </div>
+                <div class="zvcoins-code-input-section">
+                  <div class="zvcoins-code-input-group">
+                    <input
+                      type="text"
+                      [(ngModel)]="redeemCode"
+                      placeholder="Gib deinen Code hier ein..."
+                      class="zvcoins-code-input"
+                      (keyup.enter)="redeemCodeAction()"
+                      [disabled]="codeRedemptionLoading"
+                    />
+                    <button
+                      class="zvcoins-code-btn"
+                      (click)="redeemCodeAction()"
+                      [disabled]="!redeemCode || codeRedemptionLoading"
+                    >
+                      <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
+                      <span *ngIf="codeRedemptionLoading"
+                        >⏳ Wird eingelöst...</span
+                      >
+                    </button>
+                  </div>
+                  <div
+                    *ngIf="codeRedemptionMessage"
+                    class="zvcoins-code-message"
+                    [class.success]="codeRedemptionSuccess"
+                    [class.error]="!codeRedemptionSuccess"
+                  >
+                    {{ codeRedemptionMessage }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Redeemable Items -->
+            <div class="zvcoins-rewards-section mb-4">
+              <h4 class="zvcoins-section-title">🎁 Belohnungen einlösen</h4>
+
+              <!-- Loading State -->
+              <div *ngIf="redeemablesLoading" class="text-center py-8">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-lg text-white">Lade Belohnungen...</p>
+              </div>
+
+              <!-- Error State -->
+              <div
+                *ngIf="redeemablesError && !redeemablesLoading"
+                class="text-center py-8"
+              >
+                <div class="text-red-400 mb-4">⚠️</div>
+                <p class="text-red-400">{{ redeemablesError }}</p>
+                <button
+                  (click)="loadRedeemables()"
+                  class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Erneut versuchen
+                </button>
+              </div>
+
+              <!-- Redeemables Grid -->
+              <div
+                *ngIf="!redeemablesLoading && !redeemablesError"
+                class="zvcoins-rewards-grid"
+              >
+                <div
+                  *ngFor="let redeemable of redeemables"
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="
+                    canAfford(redeemable.price) && isAvailable(redeemable)
+                  "
+                  [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
+                  [class.zvcoins-expired]="isExpired(redeemable)"
+                  [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                >
+                  <!-- Limited Time Badge -->
+                  <div
+                    *ngIf="
+                      isLimitedTime(redeemable) &&
+                      !isExpired(redeemable) &&
+                      !isSoldOut(redeemable)
+                    "
+                    class="zvcoins-limited-badge"
+                  >
+                    ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
+                  </div>
+
+                  <!-- Expired Badge -->
+                  <div
+                    *ngIf="isExpired(redeemable)"
+                    class="zvcoins-expired-badge"
+                  >
+                    ❌ Nicht mehr verfügbar
+                  </div>
+
+                  <!-- Sold Out Badge -->
+                  <div
+                    *ngIf="isSoldOut(redeemable)"
+                    class="zvcoins-sold-out-badge"
+                  >
+                    🚫 Ausverkauft
+                  </div>
+
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">
+                      {{ redeemable.emoji }}
+                    </div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">
+                        {{ redeemable.name }}
+                      </h5>
+                      <p class="zvcoins-reward-description">
+                        {{ redeemable.description }}
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">{{
+                        redeemable.price | number: '1.0-0'
+                      }}</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              redeemable.price
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            redeemable.price
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="!canRedeem(redeemable)"
+                      [class.zvcoins-redeem-available]="canRedeem(redeemable)"
+                      [class.zvcoins-expired]="isExpired(redeemable)"
+                      [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                      (click)="redeemItem(redeemable)"
+                    >
+                      {{ getAvailabilityText(redeemable) }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- No redeemables available message -->
+                <div
+                  *ngIf="redeemables.length === 0"
+                  class="text-center py-8 col-span-full"
+                >
+                  <div class="text-6xl mb-4">🎁</div>
+                  <p class="text-lg text-gray-300">
+                    Keine Belohnungen verfügbar
+                  </p>
+                  <p class="text-sm text-gray-400 mt-2">
+                    Schau später wieder vorbei!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr></tr>
       <tr>
         <!-- Custom Spray Card -->
         <td rowspan="2" colspan="1" class="spray-card-container align-top p-2">
@@ -1024,173 +1230,7 @@
             </div>
           </div>
         </td>
-      </tr>
-      <tr></tr>
-      <tr>
-        <!-- ZV Coins Widget -->
-        <td colspan="2" class="zvcoins-container align-top p-2">
-          <div class="stats-card p-6 rounded-2xl">
-            <h3 class="text-xl font-bold text-white mb-4 cardHeader">
-              🪙 Zeitvertreib Coins
-            </h3>
 
-            <!-- Current Balance -->
-            <div class="zvcoins-balance-section mb-6">
-              <div class="zvcoins-balance-card">
-                <div class="zvcoins-icon">🪙</div>
-                <div class="zvcoins-balance-info">
-                  <p class="zvcoins-balance-label">Dein Guthaben</p>
-                  <p class="zvcoins-balance-amount">
-                    {{ userStatistics.experience | number: '1.0-0' }} ZVC
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Code Redemption Section -->
-            <div class="zvcoins-code-section mb-6">
-              <div class="zvcoins-code-card">
-                <div class="zvcoins-code-header">
-                  <div class="zvcoins-code-icon">🎫</div>
-                  <div class="zvcoins-code-info">
-                    <p class="zvcoins-code-label">Code einlösen</p>
-                    <p class="zvcoins-code-description">Gutscheincode für zusätzliche ZVC</p>
-                  </div>
-                </div>
-                <div class="zvcoins-code-input-section">
-                  <div class="zvcoins-code-input-group">
-                    <input 
-                      type="text" 
-                      [(ngModel)]="redeemCode"
-                      placeholder="Gib deinen Code hier ein..."
-                      class="zvcoins-code-input"
-                      (keyup.enter)="redeemCodeAction()"
-                      [disabled]="codeRedemptionLoading"
-                    />
-                    <button 
-                      class="zvcoins-code-btn"
-                      (click)="redeemCodeAction()"
-                      [disabled]="!redeemCode || codeRedemptionLoading"
-                    >
-                      <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
-                      <span *ngIf="codeRedemptionLoading">⏳ Wird eingelöst...</span>
-                    </button>
-                  </div>
-                  <div *ngIf="codeRedemptionMessage" 
-                       class="zvcoins-code-message" 
-                       [class.success]="codeRedemptionSuccess"
-                       [class.error]="!codeRedemptionSuccess">
-                    {{ codeRedemptionMessage }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Redeemable Items -->
-            <div class="zvcoins-rewards-section mb-4">
-              <h4 class="zvcoins-section-title">🎁 Belohnungen einlösen</h4>
-              
-              <!-- Loading State -->
-              <div *ngIf="redeemablesLoading" class="text-center py-8">
-                <div class="loading-spinner mx-auto mb-4"></div>
-                <p class="text-lg text-white">Lade Belohnungen...</p>
-              </div>
-
-              <!-- Error State -->
-              <div *ngIf="redeemablesError && !redeemablesLoading" class="text-center py-8">
-                <div class="text-red-400 mb-4">⚠️</div>
-                <p class="text-red-400">{{ redeemablesError }}</p>
-                <button 
-                  (click)="loadRedeemables()" 
-                  class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Erneut versuchen
-                </button>
-              </div>
-
-              <!-- Redeemables Grid -->
-              <div *ngIf="!redeemablesLoading && !redeemablesError" class="zvcoins-rewards-grid">
-                <div
-                  *ngFor="let redeemable of redeemables"
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="canAfford(redeemable.price) && isAvailable(redeemable)"
-                  [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
-                  [class.zvcoins-expired]="isExpired(redeemable)"
-                  [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                >
-                  <!-- Limited Time Badge -->
-                  <div *ngIf="isLimitedTime(redeemable) && !isExpired(redeemable) && !isSoldOut(redeemable)" class="zvcoins-limited-badge">
-                    ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
-                  </div>
-
-                  <!-- Expired Badge -->
-                  <div *ngIf="isExpired(redeemable)" class="zvcoins-expired-badge">
-                    ❌ Nicht mehr verfügbar
-                  </div>
-
-                  <!-- Sold Out Badge -->
-                  <div *ngIf="isSoldOut(redeemable)" class="zvcoins-sold-out-badge">
-                    🚫 Ausverkauft
-                  </div>
-
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">{{ redeemable.emoji }}</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">{{ redeemable.name }}</h5>
-                      <p class="zvcoins-reward-description">
-                        {{ redeemable.description }}
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">{{ redeemable.price | number:'1.0-0' }}</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              redeemable.price
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            redeemable.price
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="!canRedeem(redeemable)"
-                      [class.zvcoins-redeem-available]="canRedeem(redeemable)"
-                      [class.zvcoins-expired]="isExpired(redeemable)"
-                      [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                      (click)="redeemItem(redeemable)"
-                    >
-                      {{ getAvailabilityText(redeemable) }}
-                    </button>
-                  </div>
-                </div>
-
-                <!-- No redeemables available message -->
-                <div *ngIf="redeemables.length === 0" class="text-center py-8 col-span-full">
-                  <div class="text-6xl mb-4">🎁</div>
-                  <p class="text-lg text-gray-300">Keine Belohnungen verfügbar</p>
-                  <p class="text-sm text-gray-400 mt-2">Schau später wieder vorbei!</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </td>
         <!-- Cosmetic Customization Widget -->
         <td colspan="1" class="cosmetics-container align-top p-2">
           <div class="stats-card p-6 rounded-2xl">
@@ -1627,6 +1667,7 @@
           </div>
         </td>
       </tr>
+      <tr></tr>
       <tr>
         <!-- Session History (spans 2 columns) -->
         <td colspan="2" class="history-container align-top p-2">
