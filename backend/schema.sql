@@ -19,8 +19,10 @@ CREATE TABLE "playerdata" (
     'pink', 'red', 'brown', 'silver', 'default', 'light_green', 'crimson', 'cyan', 'aqua', 'deep_pink',
     'tomato', 'yellow', 'magenta', 'blue_green', 'orange', 'lime', 'green', 'emerald',
     'carmine', 'nickel', 'mint', 'army_green', 'pumpkin'
-  ))
-, fakerankadmin BOOLEAN DEFAULT FALSE);
+  )),
+  fakerankadmin BOOLEAN DEFAULT FALSE,
+  redeemed_codes TEXT DEFAULT ''
+);
 
 CREATE TABLE IF NOT EXISTS kills (
     attacker TEXT,
@@ -70,6 +72,27 @@ CREATE TABLE IF NOT EXISTS recurring_transactions (
 CREATE INDEX IF NOT EXISTS idx_recurring_active ON recurring_transactions(is_active);
 CREATE INDEX IF NOT EXISTS idx_recurring_next_execution ON recurring_transactions(next_execution);
 CREATE INDEX IF NOT EXISTS idx_recurring_frequency ON recurring_transactions(frequency);
+
+-- Redemption codes table for ZV Coins
+CREATE TABLE IF NOT EXISTS redemption_codes (
+    code TEXT PRIMARY KEY,
+    credits INTEGER NOT NULL,
+    remaining_uses INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for redemption codes
+CREATE INDEX IF NOT EXISTS idx_redemption_codes_remaining ON redemption_codes(remaining_uses);
+
+-- Sample redemption codes data for testing
+INSERT OR IGNORE INTO redemption_codes (code, credits, remaining_uses) VALUES 
+    ('WELCOME2025', 500, 100),
+    ('ALPHA100', 1000, 50),
+    ('BETA50', 250, 200),
+    ('NEWBIE', 100, 500),
+    ('ZEITVERTREIB', 750, 75),
+    ('COMMUNITY2025', 300, 150),
+    ('TESTCODE', 1500, 10);
 
 -- Sample data for testing (optional)
 INSERT OR IGNORE INTO playerdata (

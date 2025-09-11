@@ -1047,377 +1047,147 @@
               </div>
             </div>
 
-            <!-- Redeemable Items -->
-            <div class="zvcoins-rewards-section mb-4">
-              <h4 class="zvcoins-section-title">� Belohnungen einlösen</h4>
-              <div class="zvcoins-rewards-grid">
-                <div
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="
-                    (userStatistics.experience || 0) >= 200
-                  "
-                >
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">🎨</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">Spray Creator Pack</h5>
-                      <p class="zvcoins-reward-description">
-                        10 Credits für Custom Spray Änderungen
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">200</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              200
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            200
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="(userStatistics.experience || 0) < 200"
-                      [class.zvcoins-redeem-available]="
-                        (userStatistics.experience || 0) >= 200
-                      "
-                    >
-                      <span *ngIf="(userStatistics.experience || 0) >= 200"
-                        >✨ Einlösen</span
-                      >
-                      <span *ngIf="(userStatistics.experience || 0) < 200">
-                        {{ 200 - (userStatistics.experience || 0) }} ZVC fehlen
-                      </span>
-                    </button>
+            <!-- Code Redemption Section -->
+            <div class="zvcoins-code-section mb-6">
+              <div class="zvcoins-code-card">
+                <div class="zvcoins-code-header">
+                  <div class="zvcoins-code-icon">🎫</div>
+                  <div class="zvcoins-code-info">
+                    <p class="zvcoins-code-label">Code einlösen</p>
+                    <p class="zvcoins-code-description">Gutscheincode für zusätzliche ZVC</p>
                   </div>
                 </div>
-
-                <div
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="
-                    (userStatistics.experience || 0) >= 500
-                  "
-                >
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">👑</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">Fakerank Flex Pack</h5>
-                      <p class="zvcoins-reward-description">
-                        5 Credits zum Ändern deines Fakeranks
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">500</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              500
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            500
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="(userStatistics.experience || 0) < 500"
-                      [class.zvcoins-redeem-available]="
-                        (userStatistics.experience || 0) >= 500
-                      "
+                <div class="zvcoins-code-input-section">
+                  <div class="zvcoins-code-input-group">
+                    <input 
+                      type="text" 
+                      [(ngModel)]="redeemCode"
+                      placeholder="Gib deinen Code hier ein..."
+                      class="zvcoins-code-input"
+                      (keyup.enter)="redeemCodeAction()"
+                      [disabled]="codeRedemptionLoading"
+                    />
+                    <button 
+                      class="zvcoins-code-btn"
+                      (click)="redeemCodeAction()"
+                      [disabled]="!redeemCode || codeRedemptionLoading"
                     >
-                      <span *ngIf="(userStatistics.experience || 0) >= 500"
-                        >✨ Einlösen</span
-                      >
-                      <span *ngIf="(userStatistics.experience || 0) < 500">
-                        {{ 500 - (userStatistics.experience || 0) }} ZVC fehlen
-                      </span>
+                      <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
+                      <span *ngIf="codeRedemptionLoading">⏳ Wird eingelöst...</span>
                     </button>
                   </div>
-                </div>
-
-                <div
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="
-                    (userStatistics.experience || 0) >= 1000
-                  "
-                >
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">💎</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">Elite Cosmetic Pass</h5>
-                      <p class="zvcoins-reward-description">
-                        Exklusives In-Game Cosmetic für 1 Monat
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">1,000</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              1000
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            1000
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="(userStatistics.experience || 0) < 1000"
-                      [class.zvcoins-redeem-available]="
-                        (userStatistics.experience || 0) >= 1000
-                      "
-                    >
-                      <span *ngIf="(userStatistics.experience || 0) >= 1000"
-                        >✨ Einlösen</span
-                      >
-                      <span *ngIf="(userStatistics.experience || 0) < 1000">
-                        {{ 1000 - (userStatistics.experience || 0) }} ZVC fehlen
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="
-                    (userStatistics.experience || 0) >= 2500
-                  "
-                >
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">🎮</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">Steam Guthaben</h5>
-                      <p class="zvcoins-reward-description">
-                        5€ Steam Gift Card für neue Games
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">2,500</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              2500
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            2500
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="(userStatistics.experience || 0) < 2500"
-                      [class.zvcoins-redeem-available]="
-                        (userStatistics.experience || 0) >= 2500
-                      "
-                    >
-                      <span *ngIf="(userStatistics.experience || 0) >= 2500"
-                        >✨ Einlösen</span
-                      >
-                      <span *ngIf="(userStatistics.experience || 0) < 2500">
-                        {{ 2500 - (userStatistics.experience || 0) }} ZVC fehlen
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="
-                    (userStatistics.experience || 0) >= 3000
-                  "
-                >
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">🚀</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">Discord Nitro Boost</h5>
-                      <p class="zvcoins-reward-description">
-                        1 Monat Discord Nitro Premium
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">3,000</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              3000
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            3000
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="(userStatistics.experience || 0) < 3000"
-                      [class.zvcoins-redeem-available]="
-                        (userStatistics.experience || 0) >= 3000
-                      "
-                    >
-                      <span *ngIf="(userStatistics.experience || 0) >= 3000"
-                        >✨ Einlösen</span
-                      >
-                      <span *ngIf="(userStatistics.experience || 0) < 3000">
-                        {{ 3000 - (userStatistics.experience || 0) }} ZVC fehlen
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="
-                    (userStatistics.experience || 0) >= 5000
-                  "
-                >
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">⭐</div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">VIP Elite Jahrespass</h5>
-                      <p class="zvcoins-reward-description">
-                        1 Jahr VIP Status mit allen Vorteilen
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">5,000</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
-                    </div>
-                  </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="
-                            getProgressPercentage(
-                              userStatistics.experience || 0,
-                              5000
-                            )
-                          "
-                        ></div>
-                      </div>
-                      <span class="zvcoins-progress-text">
-                        {{
-                          getProgressPercentage(
-                            userStatistics.experience || 0,
-                            5000
-                          ) | number: '1.0-0'
-                        }}%
-                      </span>
-                    </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="(userStatistics.experience || 0) < 5000"
-                      [class.zvcoins-redeem-available]="
-                        (userStatistics.experience || 0) >= 5000
-                      "
-                    >
-                      <span *ngIf="(userStatistics.experience || 0) >= 5000"
-                        >✨ Einlösen</span
-                      >
-                      <span *ngIf="(userStatistics.experience || 0) < 5000">
-                        {{ 5000 - (userStatistics.experience || 0) }} ZVC fehlen
-                      </span>
-                    </button>
+                  <div *ngIf="codeRedemptionMessage" 
+                       class="zvcoins-code-message" 
+                       [class.success]="codeRedemptionSuccess"
+                       [class.error]="!codeRedemptionSuccess">
+                    {{ codeRedemptionMessage }}
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="zvcoins-actions">
-              <button
-                class="zvcoins-action-btn zvcoins-primary-btn"
-                (click)="openShop()"
-                [disabled]="(userStatistics.experience || 0) < 100"
-              >
-                <span class="zvcoins-btn-icon">🛒</span>
-                Shop öffnen
-              </button>
-              <button
-                class="zvcoins-action-btn zvcoins-secondary-btn"
-                (click)="showEarningTips()"
-              >
-                <span class="zvcoins-btn-icon">📈</span>
-                Mehr verdienen
-              </button>
+            <!-- Redeemable Items -->
+            <div class="zvcoins-rewards-section mb-4">
+              <h4 class="zvcoins-section-title">🎁 Belohnungen einlösen</h4>
+              
+              <!-- Loading State -->
+              <div *ngIf="redeemablesLoading" class="text-center py-8">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-lg text-white">Lade Belohnungen...</p>
+              </div>
+
+              <!-- Error State -->
+              <div *ngIf="redeemablesError && !redeemablesLoading" class="text-center py-8">
+                <div class="text-red-400 mb-4">⚠️</div>
+                <p class="text-red-400">{{ redeemablesError }}</p>
+                <button 
+                  (click)="loadRedeemables()" 
+                  class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Erneut versuchen
+                </button>
+              </div>
+
+              <!-- Redeemables Grid -->
+              <div *ngIf="!redeemablesLoading && !redeemablesError" class="zvcoins-rewards-grid">
+                <div
+                  *ngFor="let redeemable of redeemables"
+                  class="zvcoins-reward-card"
+                  [class.zvcoins-affordable]="canAfford(redeemable.price) && isAvailable(redeemable)"
+                  [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
+                  [class.zvcoins-expired]="isExpired(redeemable)"
+                  [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                >
+                  <!-- Limited Time Badge -->
+                  <div *ngIf="isLimitedTime(redeemable) && !isExpired(redeemable) && !isSoldOut(redeemable)" class="zvcoins-limited-badge">
+                    ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
+                  </div>
+
+                  <!-- Expired Badge -->
+                  <div *ngIf="isExpired(redeemable)" class="zvcoins-expired-badge">
+                    ❌ Nicht mehr verfügbar
+                  </div>
+
+                  <!-- Sold Out Badge -->
+                  <div *ngIf="isSoldOut(redeemable)" class="zvcoins-sold-out-badge">
+                    🚫 Ausverkauft
+                  </div>
+
+                  <div class="zvcoins-reward-header">
+                    <div class="zvcoins-reward-icon-large">{{ redeemable.emoji }}</div>
+                    <div class="zvcoins-reward-details">
+                      <h5 class="zvcoins-reward-title">{{ redeemable.name }}</h5>
+                      <p class="zvcoins-reward-description">
+                        {{ redeemable.description }}
+                      </p>
+                    </div>
+                    <div class="zvcoins-reward-price">
+                      <span class="zvcoins-price-amount">{{ redeemable.price | number:'1.0-0' }}</span>
+                      <span class="zvcoins-price-currency">ZVC</span>
+                    </div>
+                  </div>
+                  <div class="zvcoins-reward-progress">
+                    <div class="zvcoins-progress-container">
+                      <div class="zvcoins-progress-track">
+                        <div
+                          class="zvcoins-progress-bar-fill"
+                          [style.width.%]="
+                            getProgressPercentage(
+                              userStatistics.experience || 0,
+                              redeemable.price
+                            )
+                          "
+                        ></div>
+                      </div>
+                      <span class="zvcoins-progress-text">
+                        {{
+                          getProgressPercentage(
+                            userStatistics.experience || 0,
+                            redeemable.price
+                          ) | number: '1.0-0'
+                        }}%
+                      </span>
+                    </div>
+                    <button
+                      class="zvcoins-redeem-btn"
+                      [disabled]="!canRedeem(redeemable)"
+                      [class.zvcoins-redeem-available]="canRedeem(redeemable)"
+                      [class.zvcoins-expired]="isExpired(redeemable)"
+                      [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                      (click)="redeemItem(redeemable)"
+                    >
+                      {{ getAvailabilityText(redeemable) }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- No redeemables available message -->
+                <div *ngIf="redeemables.length === 0" class="text-center py-8 col-span-full">
+                  <div class="text-6xl mb-4">🎁</div>
+                  <p class="text-lg text-gray-300">Keine Belohnungen verfügbar</p>
+                  <p class="text-sm text-gray-400 mt-2">Schau später wieder vorbei!</p>
+                </div>
+              </div>
             </div>
           </div>
         </td>

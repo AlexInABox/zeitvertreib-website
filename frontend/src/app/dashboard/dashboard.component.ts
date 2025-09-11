@@ -57,6 +57,17 @@ interface SprayBanStatus {
   permanent?: boolean;
 }
 
+interface Redeemable {
+  id: string;
+  name: string;
+  description: string;
+  emoji: string;
+  price: number;
+  redeemableuntil?: string; // ISO date string, optional for limited time items
+  isExpired?: boolean; // Indicates if the item is no longer available
+  availabilityStatus?: 'available' | 'expired' | 'sold_out';
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [
@@ -162,6 +173,17 @@ export class DashboardComponent implements OnDestroy {
   selectedAura: string = 'none';
   cosmeticLoading = false;
 
+  // ZV Coins Redeemables properties
+  redeemables: Redeemable[] = [];
+  redeemablesLoading = false;
+  redeemablesError = '';
+
+  // Code Redemption properties
+  redeemCode = '';
+  codeRedemptionLoading = false;
+  codeRedemptionMessage = '';
+  codeRedemptionSuccess = false;
+
   // Mock data for owned cosmetics - in production this would come from backend
   ownedCosmetics = {
     hats: ['cap'] as string[], // User owns a baseball cap
@@ -176,6 +198,7 @@ export class DashboardComponent implements OnDestroy {
     this.loadUploadLimits();
     this.loadSprayBanStatus();
     this.loadFakerank();
+    this.loadRedeemables();
 
     // Close color picker when clicking outside
     this.documentClickHandler = (event: Event) => {
@@ -400,6 +423,27 @@ export class DashboardComponent implements OnDestroy {
           console.error('Error loading spray ban status:', error);
           // If we can't load ban status, assume not banned for safety
           this.sprayBanStatus = { isBanned: false };
+        },
+      });
+  }
+
+  // Load available zeitvertreib coin redeemables
+  public loadRedeemables(): void {
+    this.redeemablesLoading = true;
+    this.redeemablesError = '';
+
+    this.authService
+      .authenticatedGet<{ redeemables: Redeemable[]; total: number; timestamp: string }>(`${environment.apiUrl}/redeemables`)
+      .subscribe({
+        next: (response) => {
+          // Sort redeemables by price (ascending - cheapest first)
+          this.redeemables = (response?.redeemables || []).sort((a, b) => a.price - b.price);
+          this.redeemablesLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading redeemables:', error);
+          this.redeemablesError = 'Fehler beim Laden der verfügbaren Belohnungen';
+          this.redeemablesLoading = false;
         },
       });
   }
@@ -1084,17 +1128,70 @@ export class DashboardComponent implements OnDestroy {
     return Math.min(100, Math.floor((current / target) * 100));
   }
 
-  openShop(): void {
-    // TODO: Implement shop functionality
-    console.log('Opening ZV Coins shop...');
-    // For now, just show an alert or redirect to a shop page
-    alert('🛒 Der ZV Coins Shop ist noch in Entwicklung! Bald verfügbar.');
-  }
+  redeemCodeAction(): void {
+    if (!this.redeemCode || this.redeemCode.trim() === '') {
+      return;
+    }
 
-  showEarningTips(): void {
-    // TODO: Implement earning tips modal or navigation
-    console.log('Showing earning tips...');
-    alert('💡 Earning Tips:\n\n• Spiele aktiv und sammle Abschüsse (+50 ZVC)\n• Gewinne Runden (+100 ZVC)\n• Bleibe länger im Spiel (+10 ZVC alle 5 Min)\n• Nutze Items strategisch für Bonus-ZVC\n\nMehr Tipps findest du bald im offiziellen Guide!');
+    this.codeRedemptionLoading = true;
+    this.codeRedemptionMessage = '';
+    this.codeRedemptionSuccess = false;
+
+    // Call the backend API to redeem the code
+    this.authService
+      .authenticatedPost<{
+        success: boolean;
+        message: string;
+        credits?: number;
+        newBalance?: number;
+      }>(`${environment.apiUrl}/redeem-code`, { code: this.redeemCode.trim() })
+      .subscribe({
+        next: (response) => {
+          this.codeRedemptionLoading = false;
+          if (response?.success) {
+            this.codeRedemptionSuccess = true;
+            this.codeRedemptionMessage = response.message || 'Code erfolgreich eingelöst!';
+            
+            // Update the user balance if provided
+            if (response.newBalance !== undefined) {
+              this.userStatistics.experience = response.newBalance;
+            } else if (response.credits) {
+              this.userStatistics.experience = (this.userStatistics.experience || 0) + response.credits;
+            }
+
+            // Clear the input after successful redemption
+            this.redeemCode = '';
+            
+            // Refresh stats to ensure we have the latest data
+            this.loadUserStats();
+          } else {
+            this.codeRedemptionSuccess = false;
+            this.codeRedemptionMessage = response?.message || 'Code konnte nicht eingelöst werden';
+          }
+        },
+        error: (error) => {
+          this.codeRedemptionLoading = false;
+          this.codeRedemptionSuccess = false;
+          
+          console.error('Error redeeming code:', error);
+          let errorMessage = 'Fehler beim Einlösen des Codes';
+          
+          if (error?.error?.error) {
+            errorMessage = error.error.error;
+          } else if (error?.error?.message) {
+            errorMessage = error.error.message;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          this.codeRedemptionMessage = errorMessage;
+        },
+      });
+
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      this.codeRedemptionMessage = '';
+    }, 5000);
   }
 
   // Cosmetic-related methods
@@ -1185,5 +1282,141 @@ export class DashboardComponent implements OnDestroy {
 
   openCosmeticShop(): void {
     alert('Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.');
+  }
+
+  // ZV Coins redeemables methods
+  redeemItem(redeemable: Redeemable): void {
+    if (!redeemable) {
+      return;
+    }
+
+    // Check if item is still available
+    if (!this.isAvailable(redeemable)) {
+      alert(`❌ Item nicht verfügbar\n\n${redeemable.name} ist nicht mehr verfügbar zum Einlösen.`);
+      return;
+    }
+
+    // Check if user has enough ZV Coins
+    const currentBalance = this.userStatistics.experience || 0;
+    if (currentBalance < redeemable.price) {
+      const missing = redeemable.price - currentBalance;
+      alert(`Nicht genügend ZV Coins!\n\nBenötigt: ${redeemable.price} ZVC\nVorhanden: ${currentBalance} ZVC\nFehlen noch: ${missing} ZVC`);
+      return;
+    }
+
+    // Show expiration warning for limited time items
+    let confirmMessage = `${redeemable.emoji} ${redeemable.name}\n\n${redeemable.description}\n\nPreis: ${redeemable.price} ZVC`;
+    
+    if (this.isLimitedTime(redeemable)) {
+      const timeLeft = this.getTimeLeft(redeemable.redeemableuntil);
+      confirmMessage += `\n\n⏰ Limitierte Zeit: ${timeLeft}`;
+    }
+    
+    confirmMessage += '\n\nMöchtest du dieses Item wirklich einlösen?';
+
+    // Confirm redemption
+    const confirmed = confirm(confirmMessage);
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Call the redemption API
+    this.authService
+      .authenticatedPost<{
+        success: boolean;
+        message: string;
+        item: Redeemable;
+        newBalance: number;
+        transactionId: string;
+      }>(`${environment.apiUrl}/redeemables/redeem`, { itemId: redeemable.id })
+      .subscribe({
+        next: (response) => {
+          if (response?.success) {
+            // Update user balance
+            this.userStatistics.experience = response.newBalance;
+            
+            // Show success message
+            alert(`🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`);
+            
+            // Reload stats to get updated data
+            this.loadUserStats();
+          } else {
+            alert('Fehler beim Einlösen: ' + (response?.message || 'Unbekannter Fehler'));
+          }
+        },
+        error: (error) => {
+          console.error('Error redeeming item:', error);
+          let errorMessage = 'Fehler beim Einlösen der Belohnung';
+          
+          if (error?.error?.error) {
+            errorMessage = error.error.error;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          alert(errorMessage);
+        },
+      });
+  }
+
+  canAfford(price: number): boolean {
+    return (this.userStatistics.experience || 0) >= price;
+  }
+
+  isAvailable(redeemable: Redeemable): boolean {
+    return !redeemable.isExpired && redeemable.availabilityStatus === 'available';
+  }
+
+  isExpired(redeemable: Redeemable): boolean {
+    return !!redeemable.isExpired || redeemable.availabilityStatus === 'expired';
+  }
+
+  isSoldOut(redeemable: Redeemable): boolean {
+    return redeemable.availabilityStatus === 'sold_out';
+  }
+
+  canRedeem(redeemable: Redeemable): boolean {
+    return this.isAvailable(redeemable) && this.canAfford(redeemable.price);
+  }
+
+  getAvailabilityText(redeemable: Redeemable): string {
+    if (this.isExpired(redeemable)) {
+      return 'Nicht mehr verfügbar';
+    }
+    if (this.isSoldOut(redeemable)) {
+      return 'Ausverkauft';
+    }
+    if (!this.canAfford(redeemable.price)) {
+      const missing = redeemable.price - (this.userStatistics.experience || 0);
+      return `${missing | 0} ZVC fehlen`;
+    }
+    return '✨ Einlösen';
+  }
+
+  isLimitedTime(redeemable: Redeemable): boolean {
+    return !!redeemable.redeemableuntil;
+  }
+
+  getTimeLeft(redeemableuntil?: string): string {
+    if (!redeemableuntil) return '';
+    
+    const endDate = new Date(redeemableuntil);
+    const now = new Date();
+    const timeDiff = endDate.getTime() - now.getTime();
+    
+    if (timeDiff <= 0) return 'Abgelaufen';
+    
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else {
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      return `${minutes}m`;
+    }
   }
 }

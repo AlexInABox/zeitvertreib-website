@@ -47,6 +47,11 @@ import {
   processRecurringTransactions,
 } from './routes/financial.js';
 import {
+  handleGetRedeemables,
+  handleRedeemItem,
+  handleRedeemCode,
+} from './routes/redeemables.js';
+import {
   updateLeaderboard,
   handleLeaderboardUpdate,
 } from './routes/leaderboard.js';
@@ -97,8 +102,43 @@ const routes: Record<
   '/financial/transactions': handleFinancialTransactions,
   '/financial/recurring': handleRecurringTransactions,
   '/financial/summary': handleGetSummary,
+  '/redeemables': handleRedeemablesRoutes,
+  '/redeemables/redeem': handleRedeemablesRoutes,
+  '/redeem-code': handleRedeemCode,
   '/leaderboard/update': handleLeaderboardUpdate,
 };
+
+// Helper function to route redeemables based on method and path
+async function handleRedeemablesRoutes(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const method = request.method;
+  
+  // Remove /api prefix if present
+  let pathname = url.pathname;
+  if (pathname.startsWith('/api')) {
+    pathname = pathname.substring(4);
+  }
+
+  // Handle different HTTP methods for /redeemables
+  if (pathname === '/redeemables') {
+    if (method === 'GET') {
+      return handleGetRedeemables(request, env);
+    }
+  }
+
+  // Handle /redeemables/redeem for POST
+  if (pathname === '/redeemables/redeem' && method === 'POST') {
+    return handleRedeemItem(request, env);
+  }
+
+  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+    status: 405,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 // Helper function to route recurring transactions based on method and path
 async function handleRecurringTransactions(

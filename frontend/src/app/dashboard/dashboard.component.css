@@ -2141,6 +2141,256 @@
   box-shadow: 0 12px 30px rgba(16, 185, 129, 0.35);
 }
 
+/* Limited Time Badge Styles */
+.zvcoins-limited-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulseGlow 2s ease-in-out infinite;
+  z-index: 10;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.7);
+    transform: scale(1.05);
+  }
+}
+
+.zvcoins-reward-card.zvcoins-limited-time {
+  position: relative;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+}
+
+.zvcoins-reward-card.zvcoins-limited-time.zvcoins-affordable {
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25), 0 0 10px rgba(239, 68, 68, 0.1);
+}
+
+/* Expired Items Styles */
+.zvcoins-reward-card.zvcoins-expired {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  border: 1px solid rgba(150, 150, 150, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(60, 60, 70, 0.5),
+    rgba(50, 50, 60, 0.4)
+  );
+}
+
+.zvcoins-reward-card.zvcoins-expired:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-reward-title {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.zvcoins-expired-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.4);
+  z-index: 10;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.zvcoins-redeem-btn.zvcoins-expired {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: not-allowed;
+}
+
+/* Expired Badge Styles */
+.zvcoins-expired-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+/* Expired Card Styles */
+.zvcoins-reward-card.zvcoins-expired {
+  position: relative;
+  opacity: 0.6;
+  background: linear-gradient(
+    135deg,
+    rgba(55, 55, 65, 0.7),
+    rgba(45, 45, 55, 0.6)
+  );
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-reward-icon-large {
+  filter: grayscale(100%) opacity(0.7);
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-reward-title {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: line-through;
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-reward-description {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-price-amount {
+  color: rgba(251, 191, 36, 0.5);
+  text-shadow: none;
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-price-currency {
+  color: rgba(251, 191, 36, 0.4);
+}
+
+.zvcoins-reward-card.zvcoins-expired .zvcoins-progress-bar-fill {
+  background: linear-gradient(90deg, #6b7280, #4b5563);
+  opacity: 0.5;
+}
+
+.zvcoins-reward-card.zvcoins-expired:hover {
+  transform: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Expired Button Styles */
+.zvcoins-redeem-btn.zvcoins-expired {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.zvcoins-redeem-btn.zvcoins-expired:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Sold Out Badge Styles */
+.zvcoins-sold-out-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  z-index: 10;
+  border: 2px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+/* Sold Out Card Styles */
+.zvcoins-reward-card.zvcoins-sold-out {
+  position: relative;
+  opacity: 0.65;
+  background: linear-gradient(
+    135deg,
+    rgba(65, 50, 50, 0.7),
+    rgba(55, 40, 40, 0.6)
+  );
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.15);
+}
+
+.zvcoins-reward-card.zvcoins-sold-out .zvcoins-reward-icon-large {
+  filter: grayscale(80%) opacity(0.8);
+}
+
+.zvcoins-reward-card.zvcoins-sold-out .zvcoins-reward-title {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: line-through;
+}
+
+.zvcoins-reward-card.zvcoins-sold-out .zvcoins-reward-description {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.zvcoins-reward-card.zvcoins-sold-out .zvcoins-price-amount {
+  color: rgba(251, 191, 36, 0.6);
+  text-shadow: none;
+}
+
+.zvcoins-reward-card.zvcoins-sold-out .zvcoins-price-currency {
+  color: rgba(251, 191, 36, 0.5);
+}
+
+.zvcoins-reward-card.zvcoins-sold-out .zvcoins-progress-bar-fill {
+  background: linear-gradient(90deg, #dc2626, #b91c1c);
+  opacity: 0.6;
+}
+
+.zvcoins-reward-card.zvcoins-sold-out:hover {
+  transform: none;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.15);
+}
+
+/* Sold Out Button Styles */
+.zvcoins-redeem-btn.zvcoins-sold-out {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.zvcoins-redeem-btn.zvcoins-sold-out:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: none;
+  box-shadow: none;
+}
+
 .zvcoins-reward-header {
   display: flex;
   align-items: center;
@@ -2326,66 +2576,123 @@
   flex: 1;
 }
 
-.zvcoins-actions {
-  display: flex;
-  gap: 0.5rem;
+/* Code Redemption Styles - Clean & Simple */
+.zvcoins-code-section {
+  margin-bottom: 1.5rem;
 }
 
-.zvcoins-action-btn {
-  flex: 1;
+.zvcoins-code-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.zvcoins-code-header {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
+  margin-bottom: 0.75rem;
 }
 
-.zvcoins-primary-btn {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+.zvcoins-code-icon {
+  font-size: 1.2rem;
+}
+
+.zvcoins-code-info {
+  flex: 1;
+}
+
+.zvcoins-code-label {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.zvcoins-code-description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  margin-top: 0.125rem;
+}
+
+.zvcoins-code-input-section {
+  margin-top: 0;
+}
+
+.zvcoins-code-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.zvcoins-code-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.zvcoins-code-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.zvcoins-code-input:focus {
+  border-color: #fbbf24;
+}
+
+.zvcoins-code-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zvcoins-code-btn {
+  padding: 0.5rem 1rem;
+  background: #fbbf24;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.zvcoins-code-btn:hover:not(:disabled) {
+  background: #f59e0b;
+}
+
+.zvcoins-code-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #6b7280;
   color: white;
 }
 
-.zvcoins-primary-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb, #1e40af);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+.zvcoins-code-message {
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  text-align: center;
 }
 
-.zvcoins-primary-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: linear-gradient(135deg, #6b7280, #4b5563);
+.zvcoins-code-message.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-.zvcoins-secondary-btn {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.zvcoins-secondary-btn:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 255, 255, 0.1)
-  );
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-}
-
-.zvcoins-btn-icon {
-  font-size: 1rem;
+.zvcoins-code-message.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 /* Responsive adjustments for ZV Coins widget */
