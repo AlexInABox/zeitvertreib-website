@@ -18,21 +18,24 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     name: 'Fakerank (7 Tage)',
     description: 'Zugang zum Fakerank-System für eine Woche. Danach verfällt der Rang.',
     emoji: '✨',
-    price: 300
+    price: 300,
+    availabilityStatus: 'sold_out'
   },
   {
     id: 'custom_spray_2x',
     name: '2x Custom Sprays',
     description: 'Erlaubt dir das Hochladen von 2 weiteren Custom-Sprays!',
     emoji: '🎨',
-    price: 200
+    price: 200,
+    availabilityStatus: 'sold_out'
   },
   {
     id: 'vip_status_30d',
     name: 'VIP Status (30 Tage)',
     description: 'VIP für einen Monat: unbegrenzte Sprays & Fakerank-Zugang.',
     emoji: '👑',
-    price: 2000
+    price: 2000,
+    availabilityStatus: 'sold_out'
   },
   {
     id: 'cosmetic_access_30d',
@@ -47,14 +50,16 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     name: '5€ Steam',
     description: 'Erhalte einen 5€ Steam-Geschenkgutschein.',
     emoji: '🎁',
-    price: 3000
+    price: 3000,
+    availabilityStatus: 'sold_out'
   },
   {
     id: 'discord_nitro',
     name: 'Discord Nitro',
     description: 'Erhalte ein Discord Nitro Geschenk (1 Monat).',
     emoji: '💎',
-    price: 4000
+    price: 4000,
+    availabilityStatus: 'sold_out'
   }
 ];
 
@@ -80,10 +85,10 @@ export async function handleGetRedeemables(
     const currentDate = new Date().toISOString();
     const processedRedeemables = ZEITVERTREIB_REDEEMABLES.map(item => {
       const isExpired = item.redeemableuntil && item.redeemableuntil < currentDate;
-      
+
       // Use manually set availabilityStatus if it exists, otherwise calculate based on expiration
       const availabilityStatus = item.availabilityStatus || (isExpired ? 'expired' as const : 'available' as const);
-      
+
       return {
         ...item,
         isExpired: isExpired || false,
@@ -182,7 +187,7 @@ export async function handleRedeemItem(
     const currentBalance = playerData.experience || 0;
     if (currentBalance < redeemable.price) {
       return createResponse(
-        { 
+        {
           error: 'Insufficient ZV Coins',
           required: redeemable.price,
           current: currentBalance,
@@ -354,12 +359,12 @@ export async function handleRedeemCode(
     // Start transaction to ensure data consistency
     const currentBalance = playerData.experience || 0;
     const newBalance = currentBalance + codeData.credits;
-    
+
     // Add code to player's redeemed codes list
-    const updatedRedeemedCodes = redeemedCodes.length > 0 
+    const updatedRedeemedCodes = redeemedCodes.length > 0
       ? `${playerData.redeemed_codes},${code}`
       : code;
-    
+
     // Update player balance and redeemed codes
     const updatePlayerResult = await env['zeitvertreib-data']
       .prepare('UPDATE playerdata SET experience = ?, redeemed_codes = ? WHERE id = ?')
