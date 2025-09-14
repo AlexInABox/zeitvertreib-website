@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
@@ -36,6 +36,8 @@ interface Statistics {
   usedadrenaline: number;
   snakehighscore: number;
   fakerankallowed: boolean;
+  fakerank_until?: number;  // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -82,7 +84,7 @@ interface Redeemable {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent implements OnDestroy {
+export class DashboardComponent implements OnInit, OnDestroy {
   userStatistics: Statistics = {
     username: 'LÄDT...',
     kills: 0,
@@ -136,6 +138,9 @@ export class DashboardComponent implements OnDestroy {
   fakerankSuccess = false;
   showFakerankHelp = false;
   fakerankAllowed = false;
+  fakerankTimeRemaining = 0;
+  fakerankAdminTimeRemaining = 0;
+  private fakerankTimerInterval: any;
   showColorPicker = false;
   private documentClickHandler?: (event: Event) => void;
 
@@ -209,6 +214,11 @@ export class DashboardComponent implements OnDestroy {
       }
     };
     document.addEventListener('click', this.documentClickHandler);
+  }
+
+  ngOnInit(): void {
+    // Start the access timer when component initializes
+    this.startAccessTimer();
   }
 
   // Handle toggle change to trigger background removal
@@ -347,6 +357,8 @@ export class DashboardComponent implements OnDestroy {
             };
             // Update fakerankAllowed from stats as well
             this.fakerankAllowed = response.stats.fakerankallowed || false;
+            // Update timers after loading stats
+            this.updateAccessTimers();
           }
           this.isLoading = false;
         },
@@ -708,6 +720,9 @@ export class DashboardComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Stop the access timer
+    this.stopAccessTimer();
+
     // Clean up object URLs to prevent memory leaks
     if (this.currentSprayImage) {
       URL.revokeObjectURL(this.currentSprayImage);
@@ -1151,7 +1166,7 @@ export class DashboardComponent implements OnDestroy {
           if (response?.success) {
             this.codeRedemptionSuccess = true;
             this.codeRedemptionMessage = response.message || 'Code erfolgreich eingelöst!';
-            
+
             // Update the user balance if provided
             if (response.newBalance !== undefined) {
               this.userStatistics.experience = response.newBalance;
@@ -1161,7 +1176,7 @@ export class DashboardComponent implements OnDestroy {
 
             // Clear the input after successful redemption
             this.redeemCode = '';
-            
+
             // Refresh stats to ensure we have the latest data
             this.loadUserStats();
           } else {
@@ -1172,10 +1187,10 @@ export class DashboardComponent implements OnDestroy {
         error: (error) => {
           this.codeRedemptionLoading = false;
           this.codeRedemptionSuccess = false;
-          
+
           console.error('Error redeeming code:', error);
           let errorMessage = 'Fehler beim Einlösen des Codes';
-          
+
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.error?.message) {
@@ -1183,7 +1198,7 @@ export class DashboardComponent implements OnDestroy {
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           this.codeRedemptionMessage = errorMessage;
         },
       });
@@ -1284,6 +1299,59 @@ export class DashboardComponent implements OnDestroy {
     alert('Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.');
   }
 
+  // Format time remaining for display
+  formatTimeRemaining(seconds: number): string {
+    if (seconds <= 0) return 'Expired';
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (days > 30) {
+      return `${Math.floor(days / 30)}mo ${days % 30}d`;
+    } else if (days > 0) {
+      return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (minutes > 5) {
+      return `${minutes}m`;
+    } else {
+      return `${minutes}m ${secs}s`;
+    }
+  }
+
+  // Update access timers
+  private updateAccessTimers(): void {
+    this.fakerankTimeRemaining = this.authService.getFakerankTimeRemaining();
+    this.fakerankAdminTimeRemaining = this.authService.getFakerankAdminTimeRemaining();
+    this.fakerankAllowed = this.authService.hasFakerankAccess();
+  }
+
+  // Start the countdown timer
+  private startAccessTimer(): void {
+    // Clear any existing timer
+    if (this.fakerankTimerInterval) {
+      clearInterval(this.fakerankTimerInterval);
+    }
+
+    // Update immediately
+    this.updateAccessTimers();
+
+    // Update every second
+    this.fakerankTimerInterval = setInterval(() => {
+      this.updateAccessTimers();
+    }, 1000);
+  }
+
+  // Stop the countdown timer
+  private stopAccessTimer(): void {
+    if (this.fakerankTimerInterval) {
+      clearInterval(this.fakerankTimerInterval);
+      this.fakerankTimerInterval = null;
+    }
+  }
+
   // ZV Coins redeemables methods
   redeemItem(redeemable: Redeemable): void {
     if (!redeemable) {
@@ -1306,12 +1374,12 @@ export class DashboardComponent implements OnDestroy {
 
     // Show expiration warning for limited time items
     let confirmMessage = `${redeemable.emoji} ${redeemable.name}\n\n${redeemable.description}\n\nPreis: ${redeemable.price} ZVC`;
-    
+
     if (this.isLimitedTime(redeemable)) {
       const timeLeft = this.getTimeLeft(redeemable.redeemableuntil);
       confirmMessage += `\n\n⏰ Limitierte Zeit: ${timeLeft}`;
     }
-    
+
     confirmMessage += '\n\nMöchtest du dieses Item wirklich einlösen?';
 
     // Confirm redemption
@@ -1335,10 +1403,10 @@ export class DashboardComponent implements OnDestroy {
           if (response?.success) {
             // Update user balance
             this.userStatistics.experience = response.newBalance;
-            
+
             // Show success message
             alert(`🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`);
-            
+
             // Reload stats to get updated data
             this.loadUserStats();
           } else {
@@ -1348,13 +1416,13 @@ export class DashboardComponent implements OnDestroy {
         error: (error) => {
           console.error('Error redeeming item:', error);
           let errorMessage = 'Fehler beim Einlösen der Belohnung';
-          
+
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           alert(errorMessage);
         },
       });
@@ -1400,16 +1468,16 @@ export class DashboardComponent implements OnDestroy {
 
   getTimeLeft(redeemableuntil?: string): string {
     if (!redeemableuntil) return '';
-    
+
     const endDate = new Date(redeemableuntil);
     const now = new Date();
     const timeDiff = endDate.getTime() - now.getTime();
-    
+
     if (timeDiff <= 0) return 'Abgelaufen';
-    
+
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) {
       return `${days}d ${hours}h`;
     } else if (hours > 0) {

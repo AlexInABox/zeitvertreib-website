@@ -2163,7 +2163,8 @@
 }
 
 @keyframes pulseGlow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
     transform: scale(1);
   }
@@ -2181,7 +2182,9 @@
 
 .zvcoins-reward-card.zvcoins-limited-time.zvcoins-affordable {
   border: 1px solid rgba(16, 185, 129, 0.5);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25), 0 0 10px rgba(239, 68, 68, 0.1);
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.25),
+    0 0 10px rgba(239, 68, 68, 0.1);
 }
 
 /* Expired Items Styles */
@@ -3191,4 +3194,51 @@
     max-width: 300px;
     justify-content: center;
   }
+}
+
+/* Timer Badge Styles */
+.fakerank-timer-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 1000;
+  padding: 0rem 0.4rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.3rem;
+  opacity: 0.85;
+  vertical-align: middle;
+}
+
+.fakerank-timer-badge:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+
+.fakerank-admin-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 0.15rem 0.4rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.3rem;
+  opacity: 0.85;
+  vertical-align: middle;
+}
+
+.fakerank-admin-badge:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
 }

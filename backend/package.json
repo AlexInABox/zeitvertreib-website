@@ -3,12 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "build": "tsc",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "cf-typegen": "wrangler types",
     "db:init": "wrangler d1 execute zeitvertreib-data --local --file=./schema.sql",
-    "db:reset": "wrangler d1 execute zeitvertreib-data --local --command=\"DROP TABLE IF EXISTS playerdata; DROP TABLE IF EXISTS kills;\" && npm run db:init",
+    "db:reset": "rm -rf .wrangler/state/v3/d1/",
     "dev:fresh": "npm run db:reset && npm run dev"
   },
   "devDependencies": {

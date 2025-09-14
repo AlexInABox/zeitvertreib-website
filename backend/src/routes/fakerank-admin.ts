@@ -29,8 +29,14 @@ async function validateFakerankAdmin(request: Request, env: Env) {
 
   // Get player data to check admin status
   const playerData = await getPlayerData(session!.steamId, env);
-  if (!playerData?.fakerankadmin && playerData?.fakerankadmin !== 1) {
-    return { isValid: false, error: 'Insufficient privileges' };
+
+  // Check if user has fakerank admin access based on unix timestamp
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const fakerankAdminUntil = playerData?.fakerankadmin_until || 0;
+
+  // If fakerankadmin_until is 0 or current time is past the expiration, no access
+  if (fakerankAdminUntil === 0 || currentTimestamp > fakerankAdminUntil) {
+    return { isValid: false, error: 'Insufficient privileges - fakerank admin access expired' };
   }
 
   return { isValid: true, session, playerData };
@@ -75,6 +81,10 @@ export async function handleGetUserFakerank(
       console.warn('Could not fetch Steam user data:', error);
     }
 
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const fakerankUntil = Number(playerData.fakerank_until) || 0;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+
     return createResponse(
       {
         steamId,
@@ -83,7 +93,8 @@ export async function handleGetUserFakerank(
           steamUserData?.avatarfull || steamUserData?.avatarmedium || null,
         fakerank: playerData.fakerank || null,
         fakerank_color: playerData.fakerank_color || 'default',
-        fakerankallowed: !!playerData.fakerankallowed,
+        fakerank_until: fakerankUntil,
+        hasFakerankAccess,
       },
       200,
       origin,
@@ -608,7 +619,7 @@ export async function handleGetAllFakeranks(
     const allFakeranksResult = await env['zeitvertreib-data']
       .prepare(
         `
-                SELECT id, fakerank, fakerank_color, fakerankallowed, experience 
+                SELECT id, fakerank, fakerank_color, fakerank_until, experience 
                 FROM playerdata 
                 WHERE fakerank IS NOT NULL
             `,
@@ -617,13 +628,19 @@ export async function handleGetAllFakeranks(
 
     // Create a map of player data by Steam ID
     const playerDataMap = new Map();
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+
     allFakeranksResult.results.forEach((row: any) => {
       const steamId = row.id.replace('@steam', '');
+      const fakerankUntil = Number(row.fakerank_until) || 0;
+      const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+
       playerDataMap.set(steamId, {
         steamId,
         fakerank: row.fakerank,
         fakerank_color: row.fakerank_color,
-        fakerankallowed: !!row.fakerankallowed,
+        fakerank_until: fakerankUntil,
+        hasFakerankAccess,
         experience: row.experience,
       });
     });
@@ -641,7 +658,8 @@ export async function handleGetAllFakeranks(
         steamId,
         fakerank: existingFakerank?.fakerank || null,
         fakerank_color: existingFakerank?.fakerank_color || null,
-        fakerankallowed: existingFakerank?.fakerankallowed || false,
+        fakerank_until: existingFakerank?.fakerank_until || 0,
+        hasFakerankAccess: existingFakerank?.hasFakerankAccess || false,
         experience: existingFakerank?.experience || 0,
         isCurrentlyOnline: true,
         currentPlayer: player,
@@ -671,7 +689,8 @@ export async function handleGetAllFakeranks(
         username: currentPlayer?.Name || `Player ${userData.steamId.slice(-4)}`, // Use actual name if available
         fakerank: userData.fakerank || 'No Fakerank', // Show "No Fakerank" for players without one
         fakerank_color: userData.fakerank_color || '#ffffff',
-        fakerankallowed: userData.fakerankallowed,
+        fakerank_until: userData.fakerank_until,
+        hasFakerankAccess: userData.hasFakerankAccess,
         experience: userData.experience,
         // Additional info from current session (if player is currently online)
         currentHealth: currentPlayer?.Health || null,

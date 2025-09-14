@@ -19,7 +19,6 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Zugang zum Fakerank-System für eine Woche. Danach verfällt der Rang.',
     emoji: '✨',
     price: 300,
-    availabilityStatus: 'sold_out'
   },
   {
     id: 'custom_spray_2x',
@@ -213,11 +212,13 @@ export async function handleRedeemItem(
       );
     }
 
+    // Log the redemption
+    console.log(`Player ${playerId} is redeeming ${redeemable.id} for ${redeemable.price} ZV Coins`);
+
     // Apply the redeemed item effects
     await applyRedeemableEffects(redeemable, playerId, env);
 
-    // Log the redemption (you could add a redemption_history table for this)
-    console.log(`Player ${playerId} redeemed ${redeemable.id} for ${redeemable.price} ZV Coins`);
+
 
     return createResponse(
       {
@@ -250,11 +251,29 @@ async function applyRedeemableEffects(
   env: Env
 ): Promise<void> {
   switch (redeemable.id) {
-    case 'fakerank_basic':
-      // Enable fakerank functionality
+    case 'fakerank_7d':
+      // Add 7 days if still active, otherwise reset to 7 days from now
+      const now = Math.floor(Date.now() / 1000);
       await env['zeitvertreib-data']
-        .prepare('UPDATE playerdata SET fakerankallowed = TRUE WHERE id = ?')
-        .bind(playerId)
+        .prepare(`
+      UPDATE playerdata
+      SET fakerank_until = CASE
+        WHEN fakerank_until > ? THEN fakerank_until + (7 * 24 * 60 * 60)
+        ELSE ? + (7 * 24 * 60 * 60)
+      END
+      WHERE id = ?
+    `)
+        .bind(now, now, playerId)
+        .run();
+      break;
+
+
+    case 'vip_status_30d':
+      // VIP status includes fakerank access for 30 days
+      const thirtyDaysTimestamp = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
+      await env['zeitvertreib-data']
+        .prepare('UPDATE playerdata SET fakerank_until = ? WHERE id = ?')
+        .bind(thirtyDaysTimestamp, playerId)
         .run();
       break;
 
@@ -262,16 +281,6 @@ async function applyRedeemableEffects(
       // Custom spray is typically enabled when fakerank is enabled
       // This could unlock spray upload permissions or extend spray features
       console.log(`Applied custom spray permissions to ${playerId}`);
-      break;
-
-    case 'vip_status_7d':
-    case 'cosmetic_hat_pack':
-    case 'priority_queue':
-    case 'exclusive_badge':
-    case 'holiday_spray_2025':
-      // These would typically require additional tables or external systems
-      // For now, just log the redemption
-      console.log(`Applied ${redeemable.id} to ${playerId}`);
       break;
 
     default:

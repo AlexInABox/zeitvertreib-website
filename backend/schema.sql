@@ -14,15 +14,16 @@ CREATE TABLE "playerdata" (
   snakehighscore INTEGER DEFAULT 0,
   killcount INTEGER DEFAULT 0,
   deathcount INTEGER DEFAULT 0,
-  fakerankallowed BOOLEAN DEFAULT FALSE,
+  fakerank_until INTEGER DEFAULT 0, -- unix timestamp, 0 = no fakerank
   fakerank_color TEXT DEFAULT 'default' CHECK (fakerank_color IN (
     'pink', 'red', 'brown', 'silver', 'default', 'light_green', 'crimson', 'cyan', 'aqua', 'deep_pink',
     'tomato', 'yellow', 'magenta', 'blue_green', 'orange', 'lime', 'green', 'emerald',
     'carmine', 'nickel', 'mint', 'army_green', 'pumpkin'
   )),
-  fakerankadmin BOOLEAN DEFAULT FALSE,
+  fakerankadmin_until INTEGER DEFAULT 0, -- unix timestamp, 0 = not an admin
   redeemed_codes TEXT DEFAULT ''
 );
+
 
 CREATE TABLE IF NOT EXISTS kills (
     attacker TEXT,
@@ -98,12 +99,12 @@ INSERT OR IGNORE INTO redemption_codes (code, credits, remaining_uses) VALUES
 INSERT OR IGNORE INTO playerdata (
     id, experience, playtime, roundsplayed,
     usedmedkits, usedcolas, pocketescapes, usedadrenaline,
-    snakehighscore, fakerank, fakerankallowed, fakerankadmin
+    snakehighscore, fakerank, fakerank_until, fakerankadmin_until
 ) VALUES (
     '76561198354414854@steam',
     999, 7200, 45,
     25, 18, 7, 12,
-    23, 'Elite Commander', 1, 1
+    23, 'Elite Commander', 1760452027, 0
 );
 
 -- Sample kills data for testing

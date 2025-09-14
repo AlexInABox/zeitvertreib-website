@@ -65,16 +65,16 @@
                 </div>
               </div>
 
-              <!-- Zeitvertreib Coins -->
+              <!-- Playtime -->
               <div
                 class="stat-item"
                 style="--stat-color: #eab308; --stat-color-light: #facc15"
               >
                 <div class="stat-indicator"></div>
                 <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
-                  <h5 class="stat-label m-0 mb-1">Zeitvertreib Coins</h5>
+                  <h5 class="stat-label m-0 mb-1">Spielzeit</h5>
                   <p class="stat-value m-0">
-                    {{ userStatistics.experience | number: '1.0-0' }} ZVC
+                    {{ playtimeFormatted }}
                   </p>
                 </div>
               </div>
@@ -995,14 +995,30 @@
               >
                 <div class="flex items-center gap-2">
                   ✨ <span>Fakerank</span>
+                  <!-- Timer Badge -->
+                  <span
+                    *ngIf="fakerankTimeRemaining > 0"
+                    class="fakerank-timer-badge"
+                  >
+                    {{ formatTimeRemaining(fakerankTimeRemaining) }}
+                  </span>
+                  <!-- Admin Badge -->
+                  <span
+                    *ngIf="fakerankAdminTimeRemaining > 0"
+                    class="fakerank-admin-badge"
+                  >
+                    Admin
+                  </span>
                 </div>
-                <button
-                  (click)="showFakerankHelp = true"
-                  class="help-button"
-                  title="Was ist ein Fakerank?"
-                >
-                  ?
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    (click)="showFakerankHelp = true"
+                    class="help-button"
+                    title="Was ist ein Fakerank?"
+                  >
+                    ?
+                  </button>
+                </div>
               </h3>
 
               <!-- Display Mode -->

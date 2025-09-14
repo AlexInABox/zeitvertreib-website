@@ -587,6 +587,8 @@ export async function mapPlayerDataToStats(
     getPlayerLastKills(steamId, env),
   ]);
 
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+
   if (!playerData) {
     return {
       username,
@@ -602,11 +604,16 @@ export async function mapPlayerDataToStats(
       pocketescapes: 0,
       usedadrenaline: 0,
       snakehighscore: 0,
-      fakerankallowed: false,
+      fakerank_until: 0,
+      fakerankadmin_until: 0,
       lastkillers: lastKillers,
       lastkills: lastKills,
     };
   }
+
+  // Determine fakerank access based on unix timestamp
+  const fakerankUntil = Number(playerData.fakerank_until) || 0;
+  const fakerankAdminUntil = Number(playerData.fakerankadmin_until) || 0;
 
   return {
     username,
@@ -622,7 +629,8 @@ export async function mapPlayerDataToStats(
     pocketescapes: Number(playerData.pocketescapes) || 0,
     usedadrenaline: Number(playerData.usedadrenaline) || 0,
     snakehighscore: Number(playerData.snakehighscore) || 0,
-    fakerankallowed: Boolean(playerData.fakerankallowed) || false,
+    fakerank_until: fakerankUntil,
+    fakerankadmin_until: fakerankAdminUntil,
     lastkillers: lastKillers,
     lastkills: lastKills,
   };

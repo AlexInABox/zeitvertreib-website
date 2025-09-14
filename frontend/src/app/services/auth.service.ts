@@ -28,6 +28,9 @@ export interface PlayerData {
   fakerankallowed: boolean | number;
   fakerank_color: string;
   fakerankadmin: boolean | number;
+  fakerank_until?: number;  // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
+  redeemed_codes?: string;
 }
 
 export interface UserData {
@@ -164,8 +167,46 @@ export class AuthService {
 
   isFakerankAdmin(): boolean {
     const userData = this.currentUserDataSubject.value;
-    const adminFlag = userData?.playerData?.fakerankadmin;
-    return adminFlag === true || adminFlag === 1;
+    const fakerankAdminUntil = userData?.playerData?.fakerankadmin_until;
+
+    // Check if user has admin access based on unix timestamp
+    if (!fakerankAdminUntil || fakerankAdminUntil === 0) {
+      return false;
+    }
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    return currentTimestamp < fakerankAdminUntil;
+  }
+
+  // Get remaining fakerank admin access time in seconds
+  getFakerankAdminTimeRemaining(): number {
+    const userData = this.currentUserDataSubject.value;
+    const fakerankAdminUntil = userData?.playerData?.fakerankadmin_until;
+
+    if (!fakerankAdminUntil || fakerankAdminUntil === 0) {
+      return 0;
+    }
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    return Math.max(0, fakerankAdminUntil - currentTimestamp);
+  }
+
+  // Get remaining fakerank access time in seconds
+  getFakerankTimeRemaining(): number {
+    const userData = this.currentUserDataSubject.value;
+    const fakerankUntil = userData?.playerData?.fakerank_until;
+
+    if (!fakerankUntil || fakerankUntil === 0) {
+      return 0;
+    }
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    return Math.max(0, fakerankUntil - currentTimestamp);
+  }
+
+  // Check if user has fakerank access
+  hasFakerankAccess(): boolean {
+    return this.getFakerankTimeRemaining() > 0;
   }
 
   // Helper method for making authenticated API calls

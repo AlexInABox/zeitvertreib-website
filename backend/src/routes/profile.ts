@@ -198,11 +198,16 @@ async function handleGetFakerank(
   try {
     const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
 
+    // Calculate fakerank access based on timestamp
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const fakerankUntil = Number(playerData?.fakerank_until) || 0;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+
     return createResponse(
       {
         fakerank: playerData?.fakerank || null,
         fakerank_color: playerData?.fakerank_color || 'default',
-        fakerankallowed: Boolean(playerData?.fakerankallowed) || false,
+        fakerank_until: fakerankUntil,
       },
       200,
       origin,
@@ -224,9 +229,15 @@ async function handleUpdateFakerank(
   origin: string | null,
 ): Promise<Response> {
   try {
-    // Check if user is allowed to set fakeranks
+    // Check if user is allowed to set fakeranks based on timestamp
     const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
-    if (!playerData?.fakerankallowed) {
+
+    // Check if user has valid fakerank access
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const fakerankUntil = Number(playerData?.fakerank_until) || 0;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+
+    if (!hasFakerankAccess) {
       return createResponse(
         {
           error:
@@ -479,9 +490,15 @@ async function handleDeleteFakerank(
   origin: string | null,
 ): Promise<Response> {
   try {
-    // Check if user is allowed to modify fakeranks
+    // Check if user is allowed to modify fakeranks based on timestamp
     const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
-    if (!playerData?.fakerankallowed) {
+
+    // Check if user has valid fakerank access
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const fakerankUntil = Number(playerData?.fakerank_until) || 0;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+
+    if (!hasFakerankAccess) {
       return createResponse(
         {
           error:

@@ -28,7 +28,8 @@ export interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
-  fakerankallowed: boolean;
+  fakerank_until?: number;  // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -47,8 +48,9 @@ export interface PlayerData {
   fakerank_color?: string;
   killcount?: number;
   deathcount?: number;
-  fakerankallowed?: boolean | number;
-  fakerankadmin?: boolean | number;
+  fakerank_until?: number;  // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
+  redeemed_codes?: string;
 }
 
 export interface KillRecord {
