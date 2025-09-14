@@ -14,9 +14,9 @@ export interface Redeemable {
 // Predefined redeemables list - in production this could come from database
 const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
   {
-    id: 'fakerank_7d',
-    name: 'Fakerank (7 Tage)',
-    description: 'Zugang zum Fakerank-System für eine Woche. Danach verfällt der Rang.',
+    id: 'fakerank_14d',
+    name: 'Fakerank (14 Tage)',
+    description: 'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
     emoji: '✨',
     price: 300,
   },
@@ -251,15 +251,15 @@ async function applyRedeemableEffects(
   env: Env
 ): Promise<void> {
   switch (redeemable.id) {
-    case 'fakerank_7d':
-      // Add 7 days if still active, otherwise reset to 7 days from now
+    case 'fakerank_14d':
+      // Add 14 days if still active, otherwise reset to 14 days from now
       const now = Math.floor(Date.now() / 1000);
       await env['zeitvertreib-data']
         .prepare(`
       UPDATE playerdata
       SET fakerank_until = CASE
-        WHEN fakerank_until > ? THEN fakerank_until + (7 * 24 * 60 * 60)
-        ELSE ? + (7 * 24 * 60 * 60)
+        WHEN fakerank_until > ? THEN fakerank_until + (14 * 24 * 60 * 60)
+        ELSE ? + (14 * 24 * 60 * 60)
       END
       WHERE id = ?
     `)
