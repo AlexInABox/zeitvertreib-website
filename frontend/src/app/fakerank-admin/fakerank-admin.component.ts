@@ -72,6 +72,23 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   newWhitelistWord = signal('');
   tempFakerankColor = signal('default');
 
+  // Override settings
+  isOverrideMode = signal(false);
+  overrideDurationHours = signal(24);
+
+  // Helper methods for override duration
+  decreaseOverrideDuration() {
+    this.overrideDurationHours.set(Math.max(1, this.overrideDurationHours() - 1));
+  }
+
+  increaseOverrideDuration() {
+    this.overrideDurationHours.set(Math.min(168, this.overrideDurationHours() + 1));
+  }
+
+  setOverrideDuration(value: number) {
+    this.overrideDurationHours.set(Math.max(1, Math.min(168, value)));
+  }
+
   // Data collections
   blacklistItems = signal<BlacklistItem[]>([]);
   whitelistItems = signal<WhitelistItem[]>([]);
@@ -104,8 +121,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   // Computed properties
   isAuthenticated = computed(() => !!this.userData()?.user);
   isFakerankAdmin = computed(() => {
-    const adminFlag = this.userData()?.playerData?.fakerankadmin;
-    return adminFlag === true || adminFlag === 1;
+    return this.authService.isFakerankAdmin();
   });
   hasSearchedUser = computed(() => !!this.searchedUser());
   currentPage = computed(
@@ -340,11 +356,18 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     this.setLoadingState('user', true);
 
     this.fakerankAdminService
-      .setUserFakerank(user.steamId, fakerank.trim(), this.tempFakerankColor())
+      .setUserFakerank(
+        user.steamId,
+        fakerank.trim(),
+        this.tempFakerankColor(),
+        this.isOverrideMode(),
+        this.overrideDurationHours()
+      )
       .pipe(finalize(() => this.setLoadingState('user', false)))
       .subscribe({
         next: () => {
-          this.showToast('success', 'Erfolg', 'Fakerank erfolgreich gesetzt');
+          const overrideText = this.isOverrideMode() ? ` (Override für ${this.overrideDurationHours()}h)` : '';
+          this.showToast('success', 'Erfolg', `Fakerank erfolgreich gesetzt${overrideText}`);
           this.searchedUser.update((u) =>
             u ? { ...u, fakerank: fakerank.trim() } : u,
           );

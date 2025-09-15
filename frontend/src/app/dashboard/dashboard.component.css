@@ -1493,6 +1493,116 @@
   color: #f87171;
 }
 
+/* Fakerank override styles */
+.override-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.override-banner-icon {
+  font-size: 1.25rem;
+  opacity: 0.8;
+}
+
+.override-banner-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.override-banner-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.override-banner-subtitle {
+  font-size: 0.8rem;
+  color: #fde68a;
+}
+
+.fakerank-override {
+  margin-bottom: 1.5rem;
+}
+
+.override-display {
+  position: relative;
+  border: 2px solid rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.override-badge {
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.override-text {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.override-timer {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.125rem 0.375rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+}
+
+.override-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.override-icon {
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.override-message {
+  flex: 1;
+  color: #fbbf24;
+}
+
+.override-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #fbbf24;
+}
+
+.override-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #fde68a;
+}
+
 /* Fakerank not allowed styles */
 .fakerank-not-allowed {
   display: flex;

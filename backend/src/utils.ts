@@ -606,6 +606,7 @@ export async function mapPlayerDataToStats(
       snakehighscore: 0,
       fakerank_until: 0,
       fakerankadmin_until: 0,
+      fakerankoverride_until: 0,
       lastkillers: lastKillers,
       lastkills: lastKills,
     };
@@ -614,6 +615,7 @@ export async function mapPlayerDataToStats(
   // Determine fakerank access based on unix timestamp
   const fakerankUntil = Number(playerData.fakerank_until) || 0;
   const fakerankAdminUntil = Number(playerData.fakerankadmin_until) || 0;
+  const fakerankOverrideUntil = Number(playerData.fakerankoverride_until) || 0;
 
   return {
     username,
@@ -631,6 +633,7 @@ export async function mapPlayerDataToStats(
     snakehighscore: Number(playerData.snakehighscore) || 0,
     fakerank_until: fakerankUntil,
     fakerankadmin_until: fakerankAdminUntil,
+    fakerankoverride_until: fakerankOverrideUntil,
     lastkillers: lastKillers,
     lastkills: lastKills,
   };

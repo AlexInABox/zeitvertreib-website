@@ -30,6 +30,7 @@ export interface Statistics {
   snakehighscore: number;
   fakerank_until?: number;  // Unix timestamp for fakerank expiration
   fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -50,6 +51,7 @@ export interface PlayerData {
   deathcount?: number;
   fakerank_until?: number;  // Unix timestamp for fakerank expiration
   fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
   redeemed_codes?: string;
 }
 

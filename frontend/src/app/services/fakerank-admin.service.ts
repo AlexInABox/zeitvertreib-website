@@ -105,11 +105,13 @@ export class FakerankAdminService {
     steamId: string,
     fakerank: string,
     fakerank_color: string = 'default',
+    isOverride: boolean = false,
+    overrideDurationHours: number = 24,
   ): Observable<{ success: boolean }> {
     return this.http
       .post<{ success: boolean }>(
         `${this.API_BASE}/fakerank-admin/user`,
-        { steamId, fakerank, fakerank_color },
+        { steamId, fakerank, fakerank_color, isOverride, overrideDurationHours },
         {
           headers: this.getAuthHeaders(),
           withCredentials: true,

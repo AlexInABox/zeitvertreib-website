@@ -27,9 +27,9 @@ export interface PlayerData {
   deathcount: number;
   fakerankallowed: boolean | number;
   fakerank_color: string;
-  fakerankadmin: boolean | number;
   fakerank_until?: number;  // Unix timestamp for fakerank expiration
   fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
   redeemed_codes?: string;
 }
 
@@ -125,6 +125,31 @@ export class AuthService {
       });
   }
 
+  // Public method to refresh user data
+  refreshUserData(): void {
+    if (!this.sessionToken) {
+      return;
+    }
+
+    this.http
+      .get<UserData>(`${environment.apiUrl}/auth/me`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('Error refreshing user data:', error);
+          return of(null);
+        }),
+      )
+      .subscribe((response) => {
+        if (response?.user) {
+          this.currentUserSubject.next(response.user);
+          this.currentUserDataSubject.next(response);
+        }
+      });
+  }
+
   private clearToken(): void {
     this.sessionToken = null;
     try {
@@ -207,6 +232,52 @@ export class AuthService {
   // Check if user has fakerank access
   hasFakerankAccess(): boolean {
     return this.getFakerankTimeRemaining() > 0;
+  }
+
+  // Check if user has an override fakerank (read-only)
+  hasFakerankOverride(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    const fakerankOverrideUntil = userData?.playerData?.fakerankoverride_until;
+
+    if (!fakerankOverrideUntil || fakerankOverrideUntil === 0) {
+      return false;
+    }
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    return currentTimestamp < fakerankOverrideUntil;
+  }
+
+  // Get remaining fakerank override time in seconds
+  getFakerankOverrideTimeRemaining(): number {
+    const userData = this.currentUserDataSubject.value;
+    const fakerankOverrideUntil = userData?.playerData?.fakerankoverride_until;
+
+    if (!fakerankOverrideUntil || fakerankOverrideUntil === 0) {
+      return 0;
+    }
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    return Math.max(0, fakerankOverrideUntil - currentTimestamp);
+  }
+
+  // Check if user can edit their fakerank 
+  // Can edit if: has regular access OR has only override access (but not both)
+  // If user has regular access, they can always edit (even with override)
+  canEditFakerank(): boolean {
+    const hasRegularAccess = this.hasFakerankAccess();
+    const hasOverrideAccess = this.hasFakerankOverride();
+
+    // Can edit if has regular access OR has override access (or both)
+    return hasRegularAccess || hasOverrideAccess;
+  }
+
+  // Check if the fakerank is readonly (override only, no regular access)
+  isFakerankReadOnly(): boolean {
+    const hasRegularAccess = this.hasFakerankAccess();
+    const hasOverrideAccess = this.hasFakerankOverride();
+
+    // Read-only if has override but no regular access
+    return hasOverrideAccess && !hasRegularAccess;
   }
 
   // Helper method for making authenticated API calls

@@ -120,7 +120,7 @@ export async function handleSetUserFakerank(
     }
 
     const body = (await request.json()) as any;
-    const { steamId, fakerank, fakerank_color = 'default' } = body;
+    const { steamId, fakerank, fakerank_color = 'default', isOverride = false, overrideDurationHours = 24 } = body;
 
     if (!steamId) {
       return createResponse({ error: 'steamId is required' }, 400, origin);
@@ -144,24 +144,36 @@ export async function handleSetUserFakerank(
 
     if (fakerank) {
       // Set fakerank
-      await env['zeitvertreib-data']
-        .prepare(
-          'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
-        )
-        .bind(fakerank, fakerank_color, playerId)
-        .run();
+      if (isOverride) {
+        // Set as override fakerank with expiration
+        const overrideUntil = Math.floor(Date.now() / 1000) + (overrideDurationHours * 3600);
+        await env['zeitvertreib-data']
+          .prepare(
+            'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = ? WHERE id = ?',
+          )
+          .bind(fakerank, fakerank_color, overrideUntil, playerId)
+          .run();
+      } else {
+        // Set regular fakerank (user can modify)
+        await env['zeitvertreib-data']
+          .prepare(
+            'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
+          )
+          .bind(fakerank, fakerank_color, playerId)
+          .run();
+      }
     } else {
-      // Clear fakerank
+      // Clear fakerank and override
       await env['zeitvertreib-data']
         .prepare(
-          'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+          'UPDATE playerdata SET fakerank = NULL, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
         )
         .bind('default', playerId)
         .run();
     }
 
     console.log(
-      `Admin ${adminCheck.session!.steamId} updated fakerank for ${steamId}: "${fakerank}"`,
+      `Admin ${adminCheck.session!.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`,
     );
 
     return createResponse(
@@ -170,6 +182,8 @@ export async function handleSetUserFakerank(
         steamId,
         fakerank: fakerank || null,
         fakerank_color,
+        isOverride,
+        overrideDurationHours: isOverride ? overrideDurationHours : undefined,
       },
       200,
       origin,

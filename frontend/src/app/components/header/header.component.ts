@@ -32,7 +32,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -49,9 +49,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Subscribe to user data changes (including fakerank admin status)
     this.userDataSubscription = this.authService.currentUserData$.subscribe(
       (userData: UserData | null) => {
-        this.isFakerankAdmin =
-          userData?.playerData?.fakerankadmin === true ||
-          userData?.playerData?.fakerankadmin === 1;
+        this.isFakerankAdmin = this.authService.isFakerankAdmin();
         this.updateMenuItems(); // Update menu items when admin status changes
       },
     );

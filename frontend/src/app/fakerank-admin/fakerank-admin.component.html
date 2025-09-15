@@ -213,6 +213,68 @@
                     </div>
                   </div>
 
+                  <!-- Override Controls -->
+                  <div class="override-controls">
+                    <div class="override-toggle">
+                      <label class="toggle-label">
+                        <input
+                          type="checkbox"
+                          class="toggle-input"
+                          [ngModel]="isOverrideMode()"
+                          (ngModelChange)="isOverrideMode.set($event)"
+                          [disabled]="loading().user"
+                        />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">🔒 Override-Modus</span>
+                      </label>
+                      <p class="override-description">
+                        Override ermöglicht es, einem User einen Fakerank zu
+                        setzen, auch wenn er normalerweise keine Berechtigung
+                        dazu hat.
+                      </p>
+                    </div>
+
+                    @if (isOverrideMode()) {
+                      <div class="override-duration">
+                        <label class="duration-label"
+                          >⏱️ Override-Dauer (Stunden):</label
+                        >
+                        <div class="duration-controls">
+                          <button
+                            type="button"
+                            class="duration-btn"
+                            (click)="decreaseOverrideDuration()"
+                            [disabled]="
+                              loading().user || overrideDurationHours() <= 1
+                            "
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            class="duration-input"
+                            [ngModel]="overrideDurationHours()"
+                            (ngModelChange)="setOverrideDuration($event)"
+                            min="1"
+                            max="168"
+                            [disabled]="loading().user"
+                          />
+                          <button
+                            type="button"
+                            class="duration-btn"
+                            (click)="increaseOverrideDuration()"
+                            [disabled]="
+                              loading().user || overrideDurationHours() >= 168
+                            "
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span class="duration-hint">Max: 7 Tage (168h)</span>
+                      </div>
+                    }
+                  </div>
+
                   @if (user.fakerank) {
                     <button
                       class="btn btn-danger"

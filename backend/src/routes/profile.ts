@@ -232,12 +232,17 @@ async function handleUpdateFakerank(
     // Check if user is allowed to set fakeranks based on timestamp
     const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
 
-    // Check if user has valid fakerank access
+    // Check if user has valid fakerank access (regular access)
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const fakerankOverrideUntil = Number(playerData?.fakerankoverride_until) || 0;
 
-    if (!hasFakerankAccess) {
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasOverrideAccess = fakerankOverrideUntil > 0 && currentTimestamp < fakerankOverrideUntil;
+
+    // User can edit if they have regular access OR if they only have override (no regular access)
+    // But if they have both, regular access takes precedence and they can edit
+    if (!hasFakerankAccess && !hasOverrideAccess) {
       return createResponse(
         {
           error:
@@ -446,13 +451,24 @@ async function handleUpdateFakerank(
       .first();
 
     if (existingPlayer) {
-      // Update existing player's fakerank and color
-      await env['zeitvertreib-data']
-        .prepare(
-          'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
-        )
-        .bind(body.fakerank, fakerankColor, playerId)
-        .run();
+      // If user has regular fakerank access and an override is active, clear the override
+      if (hasFakerankAccess && hasOverrideAccess) {
+        // Update existing player's fakerank, color, and clear override
+        await env['zeitvertreib-data']
+          .prepare(
+            'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
+          )
+          .bind(body.fakerank, fakerankColor, playerId)
+          .run();
+      } else {
+        // Update existing player's fakerank and color only
+        await env['zeitvertreib-data']
+          .prepare(
+            'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
+          )
+          .bind(body.fakerank, fakerankColor, playerId)
+          .run();
+      }
     } else {
       // Create new player record with fakerank and color
       await env['zeitvertreib-data']
@@ -468,12 +484,19 @@ async function handleUpdateFakerank(
     const userSteamId = playerId.replace('@steam', '');
     await sendFakerankToDiscord(userSteamId, body.fakerank, env);
 
+    // Determine response message based on whether override was cleared
+    const overrideCleared = hasFakerankAccess && hasOverrideAccess;
+    const message = overrideCleared
+      ? 'Fakerank erfolgreich aktualisiert und Admin-Override entfernt'
+      : 'Fakerank erfolgreich aktualisiert';
+
     return createResponse(
       {
         success: true,
-        message: 'Fakerank erfolgreich aktualisiert',
+        message: message,
         fakerank: body.fakerank,
         fakerank_color: fakerankColor,
+        override_cleared: overrideCleared,
       },
       200,
       origin,

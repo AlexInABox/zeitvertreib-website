@@ -35,9 +35,9 @@ interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
-  fakerankallowed: boolean;
   fakerank_until?: number;  // Unix timestamp for fakerank expiration
   fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -99,7 +99,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     pocketescapes: 0,
     usedadrenaline: 0,
     snakehighscore: 0,
-    fakerankallowed: false,
     lastkillers: [],
     lastkills: [],
   };
@@ -140,6 +139,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   fakerankAllowed = false;
   fakerankTimeRemaining = 0;
   fakerankAdminTimeRemaining = 0;
+  fakerankOverrideTimeRemaining = 0;
+  hasFakerankOverride = false;
+  isFakerankReadOnly = false;
   private fakerankTimerInterval: any;
   showColorPicker = false;
   private documentClickHandler?: (event: Event) => void;
@@ -355,8 +357,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
               ...this.userStatistics, // Keep defaults for missing properties
               ...response.stats,
             };
-            // Update fakerankAllowed from stats as well
-            this.fakerankAllowed = response.stats.fakerankallowed || false;
+            // Update fakerankAllowed from timestamp-based calculation
+            this.fakerankAllowed = this.authService.canEditFakerank();
+            this.hasFakerankOverride = this.authService.hasFakerankOverride();
+            this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
             // Update timers after loading stats
             this.updateAccessTimers();
           }
@@ -464,6 +468,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   refreshStats(): void {
     this.generateRandomColors();
     this.loadUserStats();
+  }
+
+  // Comprehensive refresh method for post-redemption updates
+  refreshAllData(): void {
+    this.generateRandomColors();
+    // Refresh auth service user data first to get updated timestamps
+    this.authService.refreshUserData();
+
+    // Then refresh other data
+    this.loadUserStats();
+    this.loadRedeemables();
+    this.updateAccessTimers();
+
+    // Update fakerank allowed status
+    this.fakerankAllowed = this.authService.canEditFakerank();
+    this.hasFakerankOverride = this.authService.hasFakerankOverride();
+    this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
+
+    // Also refresh any other data that might have changed
+    if (this.fakerankTimerInterval) {
+      this.startAccessTimer(); // Restart timer to update immediately
+    }
   }
 
   // Public method to regenerate colors only
@@ -981,14 +1007,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .authenticatedGet<{
         fakerank: string | null;
         fakerank_color: string;
-        fakerankallowed: boolean;
+        fakerank_until: number;
       }>(`${environment.apiUrl}/fakerank`)
       .subscribe({
         next: (response) => {
           this.currentFakerank = response?.fakerank || null;
           this.currentFakerankColor = response?.fakerank_color || 'default';
           this.fakerankValue = this.currentFakerank || '';
-          this.fakerankAllowed = response?.fakerankallowed || false;
+          this.fakerankAllowed = this.authService.canEditFakerank();
+          this.hasFakerankOverride = this.authService.hasFakerankOverride();
+          this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
         },
         error: (error) => {
           console.error('Error loading fakerank:', error);
@@ -1045,8 +1073,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authService
       .authenticatedPost<{
         success: boolean;
+        message: string;
         fakerank: string;
         fakerank_color: string;
+        override_cleared?: boolean;
       }>(`${environment.apiUrl}/fakerank`, payload)
       .subscribe({
         next: (response) => {
@@ -1057,6 +1087,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.isEditingFakerank = false;
             this.showColorPicker = false;
             this.updateOverflowClass();
+
+            // Show different message if override was cleared
+            if (response.override_cleared) {
+              console.log('Admin override was cleared due to user edit');
+              // Update the user's permission state to reflect that override is gone
+              this.authService.refreshUserData();
+            }
+
             setTimeout(() => (this.fakerankSuccess = false), 3000);
           }
           this.fakerankLoading = false;
@@ -1177,8 +1215,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
             // Clear the input after successful redemption
             this.redeemCode = '';
 
-            // Refresh stats to ensure we have the latest data
-            this.loadUserStats();
+            // Force refresh the entire page to ensure all data is updated
+            window.location.reload();
           } else {
             this.codeRedemptionSuccess = false;
             this.codeRedemptionMessage = response?.message || 'Code konnte nicht eingelöst werden';
@@ -1325,7 +1363,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private updateAccessTimers(): void {
     this.fakerankTimeRemaining = this.authService.getFakerankTimeRemaining();
     this.fakerankAdminTimeRemaining = this.authService.getFakerankAdminTimeRemaining();
-    this.fakerankAllowed = this.authService.hasFakerankAccess();
+    this.fakerankOverrideTimeRemaining = this.authService.getFakerankOverrideTimeRemaining();
+    this.fakerankAllowed = this.authService.canEditFakerank();
+    this.hasFakerankOverride = this.authService.hasFakerankOverride();
+    this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
   }
 
   // Start the countdown timer
@@ -1401,14 +1442,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response?.success) {
-            // Update user balance
+            // Update user balance immediately
             this.userStatistics.experience = response.newBalance;
 
             // Show success message
             alert(`🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`);
 
-            // Reload stats to get updated data
-            this.loadUserStats();
+            // Force refresh the entire page to ensure all data is updated
+            window.location.reload();
           } else {
             alert('Fehler beim Einlösen: ' + (response?.message || 'Unbekannter Fehler'));
           }

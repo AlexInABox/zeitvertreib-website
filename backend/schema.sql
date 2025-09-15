@@ -21,6 +21,7 @@ CREATE TABLE "playerdata" (
     'carmine', 'nickel', 'mint', 'army_green', 'pumpkin'
   )),
   fakerankadmin_until INTEGER DEFAULT 0, -- unix timestamp, 0 = not an admin
+  fakerankoverride_until INTEGER DEFAULT 0, -- unix timestamp, 0 = no admin override fakerank
   redeemed_codes TEXT DEFAULT ''
 );
 
@@ -99,12 +100,12 @@ INSERT OR IGNORE INTO redemption_codes (code, credits, remaining_uses) VALUES
 INSERT OR IGNORE INTO playerdata (
     id, experience, playtime, roundsplayed,
     usedmedkits, usedcolas, pocketescapes, usedadrenaline,
-    snakehighscore, fakerank, fakerank_until, fakerankadmin_until
+    snakehighscore, fakerank, fakerank_until, fakerankadmin_until, fakerankoverride_until
 ) VALUES (
     '76561198354414854@steam',
     999, 7200, 45,
     25, 18, 7, 12,
-    23, 'Elite Commander', 1760452027, 0
+    23, 'Elite Commander', 1760452027, 1760452027, 0
 );
 
 -- Sample kills data for testing

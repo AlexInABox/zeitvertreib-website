@@ -1023,8 +1023,28 @@
 
               <!-- Display Mode -->
               <div *ngIf="!isEditingFakerank" class="fakerank-display">
-                <!-- Check if user is allowed to use fakeranks -->
+                <!-- Check if user can edit fakeranks -->
                 <div *ngIf="fakerankAllowed">
+                  <!-- Show override info if user has override (but can still edit) -->
+                  <div
+                    *ngIf="hasFakerankOverride && !isFakerankReadOnly"
+                    class="override-info-banner"
+                  >
+                    <div class="override-banner-icon">🛡️</div>
+                    <div class="override-banner-text">
+                      <span class="override-banner-title"
+                        >Admin-Override aktiv</span
+                      >
+                      <span
+                        class="override-banner-subtitle"
+                        *ngIf="fakerankOverrideTimeRemaining > 0"
+                      >
+                        Du kannst trotzdem bearbeiten · Verbleibt:
+                        {{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}
+                      </span>
+                    </div>
+                  </div>
+
                   <div class="nickname-container mb-4">
                     <div
                       class="nickname-preview"
@@ -1102,6 +1122,68 @@
                     >
                       🛡️ Admin Panel
                     </button>
+                  </div>
+                </div>
+
+                <!-- Override fakerank (read-only, set by admin) -->
+                <div *ngIf="isFakerankReadOnly" class="fakerank-override">
+                  <div class="nickname-container mb-4">
+                    <div
+                      class="nickname-preview"
+                      [class.nickname-empty]="!currentFakerank"
+                    >
+                      <div
+                        *ngIf="currentFakerank"
+                        class="nickname-display override-display"
+                      >
+                        <div class="nickname-icon">🔒</div>
+                        <div class="nickname-text">
+                          <span class="nickname-label">Admin-Spitzname:</span>
+                          <span
+                            class="nickname-value"
+                            [style.color]="getColorHex(currentFakerankColor)"
+                            >{{ currentFakerank }}</span
+                          >
+                        </div>
+                        <div class="override-badge">
+                          <span class="override-text">Override</span>
+                          <span
+                            class="override-timer"
+                            *ngIf="fakerankOverrideTimeRemaining > 0"
+                          >
+                            {{
+                              formatTimeRemaining(fakerankOverrideTimeRemaining)
+                            }}
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        *ngIf="!currentFakerank"
+                        class="nickname-empty-display"
+                      >
+                        <div class="nickname-icon">🔒</div>
+                        <span class="nickname-placeholder"
+                          >Admin kann dir einen Spitzname zuweisen</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="override-info">
+                    <div class="override-icon">🛡️</div>
+                    <div class="override-message">
+                      <p class="override-title">Admin-Override aktiv</p>
+                      <p class="override-text">
+                        Dein Spitzname wurde von einem Admin gesetzt und kann
+                        nicht bearbeitet werden.
+                        <span *ngIf="fakerankOverrideTimeRemaining > 0">
+                          Verbleibt:
+                          <strong>{{
+                            formatTimeRemaining(fakerankOverrideTimeRemaining)
+                          }}</strong>
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
 

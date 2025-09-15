@@ -16,11 +16,8 @@ export const fakerankAdminGuard: CanActivateFn = (route, state) => {
         return false;
       }
 
-      // Check if user has fakerank admin privileges
-      if (
-        !userData.playerData?.fakerankadmin &&
-        userData.playerData?.fakerankadmin !== 1
-      ) {
+      // Check if user has fakerank admin privileges using timestamp-based system
+      if (!authService.isFakerankAdmin()) {
         router.navigate(['/dashboard']);
         return false;
       }
