@@ -3,6 +3,7 @@ import {
   createResponse,
   fetchDiscordWithProxy,
 } from '../utils.js';
+import { proxyFetch } from '../proxy.js';
 import { EmbedBuilder } from '@discordjs/builders';
 import OpenAI from 'openai';
 
@@ -1254,7 +1255,7 @@ export async function handleBackgroundRemoval(
     const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
     // Call Replicate API
-    const replicateResponse = await fetch('https://api.replicate.com/v1/predictions', {
+    const replicateResponse = await proxyFetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
@@ -1267,7 +1268,7 @@ export async function handleBackgroundRemoval(
           image: dataUrl
         }
       })
-    });
+    }, env);
 
     if (!replicateResponse.ok) {
       const errorText = await replicateResponse.text();

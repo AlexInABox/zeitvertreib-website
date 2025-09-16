@@ -5,7 +5,4 @@ LEADERBOARD_WEBHOOK=your_discord_webhook_url_for_leaderboard
 LEADERBOARD_MESSAGE_ID=your_discord_message_id_to_edit_for_leaderboard
 
 # Proxy configuration for Discord API calls
-# Format: host:port (e.g., 217.154.204.87:7432)
-PROXY_HOST_PORT=your_proxy_host:port
-PROXY_USERNAME=your_proxy_username
-PROXY_PASSWORD=your_proxy_password
+PROXY_HOST=https://crossorigin.me

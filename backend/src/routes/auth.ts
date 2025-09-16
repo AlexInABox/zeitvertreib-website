@@ -23,7 +23,7 @@ export async function handleSteamCallback(
   const origin = request.headers.get('Origin');
 
   // Verify Steam response
-  if (!(await verifySteamResponse(params))) {
+  if (!(await verifySteamResponse(params, env))) {
     return createResponse(
       { error: 'Steam authentication failed' },
       401,

@@ -10,9 +10,7 @@ declare namespace Cloudflare {
     SPRAY_MOD_WEBHOOK: string;
     LEADERBOARD_WEBHOOK: string;
     LEADERBOARD_MESSAGE_ID: string;
-    PROXY_HOST_PORT: string;
-    PROXY_USERNAME: string;
-    PROXY_PASSWORD: string;
+    PROXY_HOST: string;
     REPLICATE_API_TOKEN: string;
     PLAYERLIST: DurableObjectNamespace /* zeitvertreib-discord_PlayerlistStorage */;
     'zeitvertreib-data': D1Database;

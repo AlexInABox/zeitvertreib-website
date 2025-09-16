@@ -4,6 +4,7 @@ import {
   getPlayerData,
   fetchSteamUserData,
 } from '../utils.js';
+import { proxyFetch } from '../proxy.js';
 
 // Extend the Env interface to include DISCORD_WORKER_API_KEY
 declare global {
@@ -583,7 +584,7 @@ export async function handleGetAllFakeranks(
     let currentPlayersOnline = 0;
 
     try {
-      const response = await fetch(
+      const response = await proxyFetch(
         'https://zeitvertreib-discord-backend.zeitvertreib.vip/webhook/playerlist',
         {
           method: 'GET',
@@ -592,6 +593,7 @@ export async function handleGetAllFakeranks(
             'Content-Type': 'application/json',
           },
         },
+        env,
       );
 
       if (response.ok) {

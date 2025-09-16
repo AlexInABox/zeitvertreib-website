@@ -6,6 +6,7 @@ import {
   PlayerData,
   KillRecord,
 } from './types/index.js';
+import { proxyFetch } from './proxy.js';
 
 // Discord API proxy utility
 export async function fetchDiscordWithProxy(
@@ -13,116 +14,7 @@ export async function fetchDiscordWithProxy(
   options: RequestInit,
   env: Env,
 ): Promise<Response> {
-  // Check if the URL is a Discord API endpoint
-  const isDiscordAPI =
-    url.includes('discord.com') || url.includes('discordapp.com');
-
-  if (!isDiscordAPI) {
-    // If not Discord API, use regular fetch
-    return fetch(url, options);
-  }
-
-  // For Discord API calls, use proxy if configured
-  if (env.PROXY_HOST_PORT && env.PROXY_USERNAME && env.PROXY_PASSWORD) {
-    try {
-      console.log(`Using proxy for Discord API call: ${url}`);
-
-      const [proxyHost, proxyPort] = env.PROXY_HOST_PORT.split(':');
-
-      // Create a proxy request using HTTP CONNECT method
-      // This implements a basic HTTP proxy relay
-      const proxyUrl = `http://${proxyHost}:${proxyPort}`;
-      const proxyAuth = `Basic ${btoa(`${env.PROXY_USERNAME}:${env.PROXY_PASSWORD}`)}`;
-
-      // Parse the target URL
-      const targetUrl = new URL(url);
-      const targetHost = targetUrl.hostname;
-      const targetPort =
-        targetUrl.port || (targetUrl.protocol === 'https:' ? '443' : '80');
-
-      // For HTTP proxies, we can try to make the request through the proxy
-      // by sending the full URL in the request line
-      const proxiedOptions: RequestInit = {
-        ...options,
-        headers: {
-          ...options.headers,
-          'Proxy-Authorization': proxyAuth,
-          Host: targetHost,
-        },
-      };
-
-      // Try to make the request through the HTTP proxy
-      // Note: This might not work in all Cloudflare Workers environments
-      // as it depends on the specific proxy configuration and network setup
-      try {
-        // Method 1: Try using the proxy as an HTTP proxy with full URL
-        const response = await fetch(url, {
-          ...proxiedOptions,
-          // Some proxies might require the request to be made to the proxy URL
-          // with the target URL in headers or as a parameter
-        });
-
-        if (response.ok || response.status < 500) {
-          console.log('Successfully used proxy for Discord API call');
-          return response;
-        } else {
-          throw new Error(`Proxy returned status: ${response.status}`);
-        }
-      } catch (proxyError) {
-        console.log(
-          'Direct proxy method failed, trying alternative approach:',
-          proxyError,
-        );
-
-        // Method 2: Try making request to proxy with target in path/headers
-        // This is a fallback that might work with some proxy configurations
-        try {
-          const proxyResponse = await fetch(proxyUrl, {
-            method: 'POST',
-            headers: {
-              Authorization: proxyAuth,
-              'Content-Type': 'application/json',
-              'X-Target-URL': url,
-              'X-Target-Method': options.method || 'GET',
-            },
-            body: JSON.stringify({
-              url: url,
-              method: options.method || 'GET',
-              headers: Object.fromEntries(
-                new Headers(options.headers || {}).entries(),
-              ),
-              body: options.body
-                ? typeof options.body === 'string'
-                  ? options.body
-                  : 'FORM_DATA'
-                : undefined,
-            }),
-          });
-
-          if (proxyResponse.ok) {
-            console.log('Successfully used proxy relay for Discord API call');
-            return proxyResponse;
-          }
-        } catch (relayError) {
-          console.log('Proxy relay method also failed:', relayError);
-        }
-
-        // If all proxy methods fail, fall back to direct connection
-        console.log('All proxy methods failed, using direct connection');
-        return fetch(url, options);
-      }
-    } catch (error) {
-      console.error(
-        'Proxy configuration error, falling back to direct connection:',
-        error,
-      );
-      return fetch(url, options);
-    }
-  }
-
-  // Fallback to regular fetch if no proxy configured
-  console.log(`Direct Discord API call (no proxy configured): ${url}`);
-  return fetch(url, options);
+  return proxyFetch(url, options, env);
 }
 
 // Response helpers
@@ -240,17 +132,18 @@ export function generateSteamLoginUrl(request: Request): string {
 
 export async function verifySteamResponse(
   params: Record<string, string>,
+  env: Env,
 ): Promise<boolean> {
   if (params['openid.mode'] !== 'id_res') return false;
 
   const verifyParams = new URLSearchParams(params);
   verifyParams.set('openid.mode', 'check_authentication');
 
-  const response = await fetch('https://steamcommunity.com/openid/login', {
+  const response = await proxyFetch('https://steamcommunity.com/openid/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: verifyParams.toString(),
-  });
+  }, env);
 
   return (await response.text()).includes('is_valid:true');
 }
@@ -321,7 +214,7 @@ export async function fetchSteamUserData(
     const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`;
     console.log('Fetching Steam user data from:', url.replace(apiKey, '***'));
 
-    const response = await fetch(url);
+    const response = await proxyFetch(url, {}, env);
     console.log('Steam API response status:', response.status);
 
     if (!response.ok) {
