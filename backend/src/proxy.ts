@@ -3,12 +3,21 @@ export async function proxyFetch(
   options: RequestInit = {},
   env: Env,
 ): Promise<Response> {
-  const target = new URL(url);
+  try {
+    const target = new URL(url);
 
-  return fetch(`${env.PROXY_HOST}/${target}`, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-    },
-  });
+    const response = await fetch(`${env.PROXY_HOST}/${target}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+      },
+    });
+
+    // If proxy responds successfully, return the response
+    return response;
+  } catch (error) {
+    console.warn('Proxy failed, falling back to direct fetch:', error);
+    // Fallback to normal fetch if proxy fails
+    return fetch(url, options);
+  }
 }
