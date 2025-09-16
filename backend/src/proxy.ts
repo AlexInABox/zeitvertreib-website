@@ -10,6 +10,7 @@ export async function proxyFetch(
       ...options,
       headers: {
         ...(options.headers || {}),
+        'x-requested-with': 'cf-worker',
       },
     });
 
