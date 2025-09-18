@@ -18,7 +18,7 @@ export interface Statistics {
   username: string;
   kills: number;
   deaths: number;
-  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   avatarFull: string;
   roundsplayed: number;
@@ -28,16 +28,16 @@ export interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
-  fakerank_until?: number;  // Unix timestamp for fakerank expiration
-  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
-  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
+  fakerank_until?: number; // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number; // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number; // Unix timestamp for admin-set fakerank override
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
 
 export interface PlayerData {
   id: string;
-  experience?: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  experience?: number; // Keep property name for DB compatibility, but represents ZV Coins
   playtime?: number;
   roundsplayed?: number;
   usedmedkits?: number;
@@ -49,9 +49,9 @@ export interface PlayerData {
   fakerank_color?: string;
   killcount?: number;
   deathcount?: number;
-  fakerank_until?: number;  // Unix timestamp for fakerank expiration
-  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
-  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
+  fakerank_until?: number; // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number; // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number; // Unix timestamp for admin-set fakerank override
   redeemed_codes?: string;
 }
 

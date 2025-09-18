@@ -119,7 +119,7 @@ async function handleRedeemablesRoutes(
 ): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method;
-  
+
   // Remove /api prefix if present
   let pathname = url.pathname;
   if (pathname.startsWith('/api')) {
@@ -151,7 +151,7 @@ async function handleRecurringTransactions(
 ): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method;
-  
+
   // Remove /api prefix if present
   let pathname = url.pathname;
   if (pathname.startsWith('/api')) {
@@ -168,9 +168,7 @@ async function handleRecurringTransactions(
   }
 
   // Handle /financial/recurring/{id} for PUT and DELETE
-  const recurringIdMatch = pathname.match(
-    /^\/financial\/recurring\/(\d+)$/,
-  );
+  const recurringIdMatch = pathname.match(/^\/financial\/recurring\/(\d+)$/);
   if (recurringIdMatch) {
     if (method === 'PUT') {
       return handleUpdateRecurringTransaction(request, env);
@@ -192,7 +190,7 @@ async function handleFinancialTransactions(
 ): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method;
-  
+
   // Remove /api prefix if present
   let pathname = url.pathname;
   if (pathname.startsWith('/api')) {
@@ -306,7 +304,7 @@ export default {
 
     try {
       const url = new URL(request.url);
-      
+
       // Remove /api prefix if present to match our route definitions
       let pathname = url.pathname;
       if (pathname.startsWith('/api')) {
@@ -330,8 +328,7 @@ export default {
           return createResponse({ error: 'Method Not Allowed' }, 405, origin);
         }
         if (
-          (pathname === '/spray/image' ||
-            pathname === '/spray/string') &&
+          (pathname === '/spray/image' || pathname === '/spray/string') &&
           request.method !== 'GET'
         ) {
           return createResponse({ error: 'Method Not Allowed' }, 405, origin);

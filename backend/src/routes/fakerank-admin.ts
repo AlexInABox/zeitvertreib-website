@@ -37,7 +37,10 @@ async function validateFakerankAdmin(request: Request, env: Env) {
 
   // If fakerankadmin_until is 0 or current time is past the expiration, no access
   if (fakerankAdminUntil === 0 || currentTimestamp > fakerankAdminUntil) {
-    return { isValid: false, error: 'Insufficient privileges - fakerank admin access expired' };
+    return {
+      isValid: false,
+      error: 'Insufficient privileges - fakerank admin access expired',
+    };
   }
 
   return { isValid: true, session, playerData };
@@ -84,7 +87,8 @@ export async function handleGetUserFakerank(
 
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData.fakerank_until) || 0;
-    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasFakerankAccess =
+      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
     return createResponse(
       {
@@ -121,7 +125,13 @@ export async function handleSetUserFakerank(
     }
 
     const body = (await request.json()) as any;
-    const { steamId, fakerank, fakerank_color = 'default', isOverride = false, overrideDurationHours = 24 } = body;
+    const {
+      steamId,
+      fakerank,
+      fakerank_color = 'default',
+      isOverride = false,
+      overrideDurationHours = 24,
+    } = body;
 
     if (!steamId) {
       return createResponse({ error: 'steamId is required' }, 400, origin);
@@ -132,7 +142,12 @@ export async function handleSetUserFakerank(
     }
 
     // Validate fakerank content - ban parentheses and commas
-    if (fakerank && (fakerank.includes('(') || fakerank.includes(')') || fakerank.includes(','))) {
+    if (
+      fakerank &&
+      (fakerank.includes('(') ||
+        fakerank.includes(')') ||
+        fakerank.includes(','))
+    ) {
       return createResponse(
         { error: 'Fakerank darf keine Klammern () oder Kommas enthalten' },
         400,
@@ -147,7 +162,8 @@ export async function handleSetUserFakerank(
       // Set fakerank
       if (isOverride) {
         // Set as override fakerank with expiration
-        const overrideUntil = Math.floor(Date.now() / 1000) + (overrideDurationHours * 3600);
+        const overrideUntil =
+          Math.floor(Date.now() / 1000) + overrideDurationHours * 3600;
         await env['zeitvertreib-data']
           .prepare(
             'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = ? WHERE id = ?',
@@ -623,12 +639,12 @@ export async function handleGetAllFakeranks(
     const uniqueUserIds =
       playerListData.length > 0
         ? [
-          ...new Set(
-            playerListData.map((player) =>
-              player.UserId.replace('@steam', ''),
+            ...new Set(
+              playerListData.map((player) =>
+                player.UserId.replace('@steam', ''),
+              ),
             ),
-          ),
-        ]
+          ]
         : [];
 
     // Get all users with fakeranks from database
@@ -649,7 +665,8 @@ export async function handleGetAllFakeranks(
     allFakeranksResult.results.forEach((row: any) => {
       const steamId = row.id.replace('@steam', '');
       const fakerankUntil = Number(row.fakerank_until) || 0;
-      const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+      const hasFakerankAccess =
+        fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
       playerDataMap.set(steamId, {
         steamId,

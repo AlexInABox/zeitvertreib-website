@@ -185,7 +185,7 @@ async function sendSprayToDiscord(
       );
       console.error('Payload sent:', JSON.stringify(payload, null, 2));
     } else {
-      const responseData = await response.json() as { id?: string };
+      const responseData = (await response.json()) as { id?: string };
       const messageId = responseData.id;
 
       // Store the message ID for later updates
@@ -241,8 +241,7 @@ async function updateDiscordWebhookMessage(
     }
 
     // Create updated embed based on action
-    const embed = new EmbedBuilder()
-      .setTimestamp();
+    const embed = new EmbedBuilder().setTimestamp();
 
     // Always keep ALL buttons regardless of action
     const deleteUrl = `${env.BACKEND_URL}/spray/moderate/delete?steamId=${encodeURIComponent(steamId)}&imageHash=${encodeURIComponent(imageHash)}`;
@@ -450,9 +449,7 @@ async function checkImageSafety(
     const banData = await env.SESSIONS.get(banKey);
     if (banData) {
       const ban = JSON.parse(banData);
-      console.log(
-        `Steam ID ${steamId} is banned from uploading sprays`,
-      );
+      console.log(`Steam ID ${steamId} is banned from uploading sprays`);
       return false;
     }
 
@@ -863,7 +860,9 @@ export async function handleModerationDelete(
     const sprayKey = `spray_${steamId}`;
     const existingSpray = await env.SESSIONS.get(sprayKey);
     if (!existingSpray) {
-      console.log(`No spray found for Steam ID: ${steamId}, skipping delete action`);
+      console.log(
+        `No spray found for Steam ID: ${steamId}, skipping delete action`,
+      );
       return createResponse(
         { success: true, message: 'No spray found to delete' },
         200,
@@ -1032,11 +1031,7 @@ export async function handleGetSprayBanStatus(
     );
   } catch (error) {
     console.error('Error checking spray ban status:', error);
-    return createResponse(
-      { error: 'Failed to check ban status' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to check ban status' }, 500, origin);
   }
 }
 
@@ -1055,7 +1050,7 @@ export async function handleGetUploadLimits(
         maxOriginalSizeMB: UPLOAD_LIMITS.MAX_ORIGINAL_SIZE / (1024 * 1024),
         maxThumbnailSizeKB: UPLOAD_LIMITS.MAX_THUMBNAIL_SIZE / 1024,
         supportedFormats: UPLOAD_LIMITS.SUPPORTED_FORMATS,
-        message: `Maximale Bildgröße: ${UPLOAD_LIMITS.MAX_ORIGINAL_SIZE / (1024 * 1024)}MB`
+        message: `Maximale Bildgröße: ${UPLOAD_LIMITS.MAX_ORIGINAL_SIZE / (1024 * 1024)}MB`,
       },
       200,
       origin,
@@ -1108,9 +1103,7 @@ export async function handleModerationUnban(
     // Update Discord webhook message to show action taken
     await updateDiscordWebhookMessage(steamId, imageHash, 'unbanned', env);
 
-    console.log(
-      `Moderator unbanned Steam ID: ${steamId}`,
-    );
+    console.log(`Moderator unbanned Steam ID: ${steamId}`);
 
     return createResponse(
       {
@@ -1154,7 +1147,9 @@ export async function handleModerationUndelete(
     const cacheKey = `moderation_${imageHash}`;
     const cachedResult = await env.SESSIONS.get(cacheKey);
     if (!cachedResult) {
-      console.log(`Image hash ${imageHash} is not blocked, skipping undelete action`);
+      console.log(
+        `Image hash ${imageHash} is not blocked, skipping undelete action`,
+      );
       return createResponse(
         { success: true, message: 'Image is not blocked' },
         200,
@@ -1164,7 +1159,9 @@ export async function handleModerationUndelete(
 
     const cached = JSON.parse(cachedResult);
     if (!cached.blocked) {
-      console.log(`Image hash ${imageHash} is not blocked, skipping undelete action`);
+      console.log(
+        `Image hash ${imageHash} is not blocked, skipping undelete action`,
+      );
       return createResponse(
         { success: true, message: 'Image is not blocked' },
         200,
@@ -1178,9 +1175,7 @@ export async function handleModerationUndelete(
     // Update Discord webhook message to show action taken
     await updateDiscordWebhookMessage(steamId, imageHash, 'undeleted', env);
 
-    console.log(
-      `Moderator undeleted/unblocked image hash: ${imageHash}`,
-    );
+    console.log(`Moderator undeleted/unblocked image hash: ${imageHash}`);
 
     return createResponse(
       {
@@ -1231,11 +1226,7 @@ export async function handleBackgroundRemoval(
 
     // Validate file type
     if (!UPLOAD_LIMITS.SUPPORTED_FORMATS.includes(imageFile.type as any)) {
-      return createResponse(
-        { error: 'Unsupported file format' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Unsupported file format' }, 400, origin);
     }
 
     // Check API token
@@ -1250,29 +1241,40 @@ export async function handleBackgroundRemoval(
 
     // Convert image to base64 data URL for Replicate
     const imageBuffer = await imageFile.arrayBuffer();
-    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    const base64Image = btoa(
+      String.fromCharCode(...new Uint8Array(imageBuffer)),
+    );
     const mimeType = imageFile.type;
     const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
     // Call Replicate API
-    const replicateResponse = await proxyFetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'wait'
+    const replicateResponse = await proxyFetch(
+      'https://api.replicate.com/v1/predictions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.REPLICATE_API_TOKEN}`,
+          'Content-Type': 'application/json',
+          Prefer: 'wait',
+        },
+        body: JSON.stringify({
+          version:
+            'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003',
+          input: {
+            image: dataUrl,
+          },
+        }),
       },
-      body: JSON.stringify({
-        version: 'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003',
-        input: {
-          image: dataUrl
-        }
-      })
-    }, env);
+      env,
+    );
 
     if (!replicateResponse.ok) {
       const errorText = await replicateResponse.text();
-      console.error('Replicate API error:', replicateResponse.status, errorText);
+      console.error(
+        'Replicate API error:',
+        replicateResponse.status,
+        errorText,
+      );
       return createResponse(
         { error: 'Background removal service failed' },
         500,
@@ -1280,7 +1282,10 @@ export async function handleBackgroundRemoval(
       );
     }
 
-    const result = await replicateResponse.json() as { output?: string; error?: string };
+    const result = (await replicateResponse.json()) as {
+      output?: string;
+      error?: string;
+    };
 
     // Check if the result has the output URL
     if (!result.output) {
@@ -1297,12 +1302,11 @@ export async function handleBackgroundRemoval(
       {
         success: true,
         processedImageUrl: result.output,
-        message: 'Background removed successfully'
+        message: 'Background removed successfully',
       },
       200,
       origin,
     );
-
   } catch (error) {
     console.error('Error handling background removal:', error);
     return createResponse(

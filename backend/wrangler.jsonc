@@ -27,8 +27,8 @@
   "routes": [
     {
       "pattern": "dev.zeitvertreib.vip/api/*",
-      "zone_name": "zeitvertreib.vip"
-    }
+      "zone_name": "zeitvertreib.vip",
+    },
   ],
   "observability": {
     "enabled": true,

@@ -201,7 +201,8 @@ async function handleGetFakerank(
     // Calculate fakerank access based on timestamp
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasFakerankAccess =
+      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
     return createResponse(
       {
@@ -235,10 +236,13 @@ async function handleUpdateFakerank(
     // Check if user has valid fakerank access (regular access)
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const fakerankOverrideUntil = Number(playerData?.fakerankoverride_until) || 0;
+    const fakerankOverrideUntil =
+      Number(playerData?.fakerankoverride_until) || 0;
 
-    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
-    const hasOverrideAccess = fakerankOverrideUntil > 0 && currentTimestamp < fakerankOverrideUntil;
+    const hasFakerankAccess =
+      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasOverrideAccess =
+      fakerankOverrideUntil > 0 && currentTimestamp < fakerankOverrideUntil;
 
     // User can edit if they have regular access OR if they only have override (no regular access)
     // But if they have both, regular access takes precedence and they can edit
@@ -332,7 +336,11 @@ async function handleUpdateFakerank(
     }
 
     // Validate fakerank content - ban parentheses and commas
-    if (body.fakerank.includes('(') || body.fakerank.includes(')') || body.fakerank.includes(',')) {
+    if (
+      body.fakerank.includes('(') ||
+      body.fakerank.includes(')') ||
+      body.fakerank.includes(',')
+    ) {
       return createResponse(
         { error: 'Fakerank darf keine Klammern () oder Kommas enthalten' },
         400,
@@ -519,7 +527,8 @@ async function handleDeleteFakerank(
     // Check if user has valid fakerank access
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasFakerankAccess =
+      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
     if (!hasFakerankAccess) {
       return createResponse(

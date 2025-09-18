@@ -78,11 +78,15 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
   // Helper methods for override duration
   decreaseOverrideDuration() {
-    this.overrideDurationHours.set(Math.max(1, this.overrideDurationHours() - 1));
+    this.overrideDurationHours.set(
+      Math.max(1, this.overrideDurationHours() - 1),
+    );
   }
 
   increaseOverrideDuration() {
-    this.overrideDurationHours.set(Math.min(168, this.overrideDurationHours() + 1));
+    this.overrideDurationHours.set(
+      Math.min(168, this.overrideDurationHours() + 1),
+    );
   }
 
   setOverrideDuration(value: number) {
@@ -115,7 +119,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => { },
+    onConfirm: () => {},
   });
 
   // Computed properties
@@ -173,7 +177,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.setupClickHandlers();
@@ -348,8 +352,16 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     }
 
     // Validate fakerank content - ban parentheses and commas
-    if (fakerank.includes('(') || fakerank.includes(')') || fakerank.includes(',')) {
-      this.showToast('error', 'Fehler', 'Fakerank darf keine Klammern () oder Kommas enthalten');
+    if (
+      fakerank.includes('(') ||
+      fakerank.includes(')') ||
+      fakerank.includes(',')
+    ) {
+      this.showToast(
+        'error',
+        'Fehler',
+        'Fakerank darf keine Klammern () oder Kommas enthalten',
+      );
       return;
     }
 
@@ -361,13 +373,19 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         fakerank.trim(),
         this.tempFakerankColor(),
         this.isOverrideMode(),
-        this.overrideDurationHours()
+        this.overrideDurationHours(),
       )
       .pipe(finalize(() => this.setLoadingState('user', false)))
       .subscribe({
         next: () => {
-          const overrideText = this.isOverrideMode() ? ` (Override für ${this.overrideDurationHours()}h)` : '';
-          this.showToast('success', 'Erfolg', `Fakerank erfolgreich gesetzt${overrideText}`);
+          const overrideText = this.isOverrideMode()
+            ? ` (Override für ${this.overrideDurationHours()}h)`
+            : '';
+          this.showToast(
+            'success',
+            'Erfolg',
+            `Fakerank erfolgreich gesetzt${overrideText}`,
+          );
           this.searchedUser.update((u) =>
             u ? { ...u, fakerank: fakerank.trim() } : u,
           );
@@ -457,7 +475,11 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
     // Validate word content - ban parentheses and commas
     if (word.includes('(') || word.includes(')') || word.includes(',')) {
-      this.showToast('error', 'Fehler', 'Wort darf keine Klammern () oder Kommas enthalten');
+      this.showToast(
+        'error',
+        'Fehler',
+        'Wort darf keine Klammern () oder Kommas enthalten',
+      );
       return;
     }
 
@@ -502,7 +524,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-              'Wort konnte nicht aus der Blacklist entfernt werden',
+                'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -540,7 +562,11 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
     // Validate word content - ban parentheses and commas
     if (word.includes('(') || word.includes(')') || word.includes(',')) {
-      this.showToast('error', 'Fehler', 'Wort darf keine Klammern () oder Kommas enthalten');
+      this.showToast(
+        'error',
+        'Fehler',
+        'Wort darf keine Klammern () oder Kommas enthalten',
+      );
       return;
     }
 
@@ -585,7 +611,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-              'Wort konnte nicht aus der Whitelist entfernt werden',
+                'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });

@@ -14,7 +14,7 @@ export interface SteamUser {
 
 export interface PlayerData {
   id: string;
-  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   roundsplayed: number;
   usedmedkits: number;
@@ -27,9 +27,9 @@ export interface PlayerData {
   deathcount: number;
   fakerankallowed: boolean | number;
   fakerank_color: string;
-  fakerank_until?: number;  // Unix timestamp for fakerank expiration
-  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
-  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
+  fakerank_until?: number; // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number; // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number; // Unix timestamp for admin-set fakerank override
   redeemed_codes?: string;
 }
 
@@ -70,7 +70,10 @@ export class AuthService {
       try {
         localStorage.setItem('sessionToken', token);
       } catch (error) {
-        console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?)', error);
+        console.warn(
+          '[AUTH] Failed to store session token in localStorage (Safari ITP?)',
+          error,
+        );
       }
 
       // Clean up URL and redirect if needed
@@ -89,7 +92,7 @@ export class AuthService {
     if (loginSecret) {
       // Attempt to login with the secret
       this.loginWithSecret(loginSecret);
-      
+
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -274,7 +277,7 @@ export class AuthService {
     return Math.max(0, fakerankOverrideUntil - currentTimestamp);
   }
 
-  // Check if user can edit their fakerank 
+  // Check if user can edit their fakerank
   // Can edit if: has regular access OR has only override access (but not both)
   // If user has regular access, they can always edit (even with override)
   canEditFakerank(): boolean {
@@ -328,9 +331,12 @@ export class AuthService {
   // Login using a login secret
   private loginWithSecret(secret: string): void {
     this.http
-      .get<{ success: boolean; sessionId: string; user: SteamUser }>(`${environment.apiUrl}/auth/login-with-secret?secret=${secret}`, {
-        withCredentials: true,
-      })
+      .get<{ success: boolean; sessionId: string; user: SteamUser }>(
+        `${environment.apiUrl}/auth/login-with-secret?secret=${secret}`,
+        {
+          withCredentials: true,
+        },
+      )
       .pipe(
         catchError((error) => {
           console.error('[AUTH] Login with secret failed:', error);
@@ -343,9 +349,12 @@ export class AuthService {
           try {
             localStorage.setItem('sessionToken', response.sessionId);
           } catch (error) {
-            console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?)', error);
+            console.warn(
+              '[AUTH] Failed to store session token in localStorage (Safari ITP?)',
+              error,
+            );
           }
-          
+
           this.currentUserSubject.next(response.user);
           this.checkAuthStatus(); // Refresh full user data
         }

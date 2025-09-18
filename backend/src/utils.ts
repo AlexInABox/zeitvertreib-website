@@ -139,11 +139,15 @@ export async function verifySteamResponse(
   const verifyParams = new URLSearchParams(params);
   verifyParams.set('openid.mode', 'check_authentication');
 
-  const response = await proxyFetch('https://steamcommunity.com/openid/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: verifyParams.toString(),
-  }, env);
+  const response = await proxyFetch(
+    'https://steamcommunity.com/openid/login',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: verifyParams.toString(),
+    },
+    env,
+  );
 
   return (await response.text()).includes('is_valid:true');
 }
@@ -488,7 +492,7 @@ export async function mapPlayerDataToStats(
       avatarFull,
       kills: 0,
       deaths: 0,
-      experience: 0,  // Represents ZV Coins
+      experience: 0, // Represents ZV Coins
       playtime: 0,
       roundsplayed: 0,
       leaderboardposition: 0,
@@ -515,7 +519,7 @@ export async function mapPlayerDataToStats(
     avatarFull,
     kills: Number(playerData.killcount) || 0,
     deaths: Number(playerData.deathcount) || 0,
-    experience: Number(playerData.experience) || 0,  // Represents ZV Coins
+    experience: Number(playerData.experience) || 0, // Represents ZV Coins
     playtime: Number(playerData.playtime) || 0,
     roundsplayed: Number(playerData.roundsplayed) || 0,
     leaderboardposition: 0,
@@ -548,7 +552,8 @@ export async function generateLoginSecret(
 
     console.log('[AUTH] Generating login secret for steamId:', steamId);
 
-    await env['zeitvertreib-data'].prepare(insertQuery)
+    await env['zeitvertreib-data']
+      .prepare(insertQuery)
       .bind(secret, steamId, expiresAt.toISOString())
       .run();
 
@@ -570,7 +575,10 @@ export async function validateLoginSecret(
     WHERE secret = ?
   `;
 
-  const result = await env['zeitvertreib-data'].prepare(selectQuery).bind(secret).first();
+  const result = await env['zeitvertreib-data']
+    .prepare(selectQuery)
+    .bind(secret)
+    .first();
 
   if (!result) {
     return { isValid: false, error: 'Invalid login secret' };

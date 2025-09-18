@@ -2,7 +2,7 @@ import { proxyFetch } from '../proxy.js';
 
 interface PlayerStats {
   id: string;
-  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   roundsplayed: number;
   usedmedkits: number;
@@ -115,7 +115,7 @@ async function getLeaderboardData(env: Env): Promise<{
   snake: LeaderboardEntry[];
   kills: LeaderboardEntry[];
   deaths: LeaderboardEntry[];
-  zvcoins: LeaderboardEntry[];  // Changed from 'experience' to reflect ZV Coins
+  zvcoins: LeaderboardEntry[]; // Changed from 'experience' to reflect ZV Coins
   playtime: LeaderboardEntry[];
   rounds: LeaderboardEntry[];
   medkits: LeaderboardEntry[];

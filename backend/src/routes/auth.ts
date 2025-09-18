@@ -75,7 +75,8 @@ export async function handleSteamCallback(
 
   // Create a response that also sets a secure cookie for Safari compatibility
   // Determine if we're in development or production
-  const isLocalDev = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+  const isLocalDev =
+    frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
 
   let cookieSettings = `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60 * 3}`;
 
@@ -90,11 +91,11 @@ export async function handleSteamCallback(
   const response = new Response(null, {
     status: 302,
     headers: {
-      'Location': redirectUrl.toString(),
+      Location: redirectUrl.toString(),
       'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Credentials': 'true',
-      'Set-Cookie': cookieSettings
-    }
+      'Set-Cookie': cookieSettings,
+    },
   });
 
   return response;
@@ -159,7 +160,7 @@ export async function handleGenerateLoginSecret(
       steamId = url.searchParams.get('steamId') || '';
     } else if (request.method === 'POST') {
       // Handle POST request with JSON body
-      const body = await request.json() as { steamId?: string };
+      const body = (await request.json()) as { steamId?: string };
       steamId = body.steamId || '';
     } else {
       return createResponse({ error: 'Method not allowed' }, 405, origin);
@@ -171,7 +172,11 @@ export async function handleGenerateLoginSecret(
 
     // Validate steamId format (should end with @steam)
     if (!steamId.includes('@steam')) {
-      return createResponse({ error: 'Invalid Steam ID format. Must include @steam' }, 400, origin);
+      return createResponse(
+        { error: 'Invalid Steam ID format. Must include @steam' },
+        400,
+        origin,
+      );
     }
 
     // Generate new login secret
@@ -180,18 +185,26 @@ export async function handleGenerateLoginSecret(
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
     const loginUrl = `${frontendUrl}/?loginSecret=${secret}`;
 
-    return createResponse({
-      secret,
-      loginUrl,
-      steamId,
-      expiresIn: '40 minutes'
-    }, 200, origin);
+    return createResponse(
+      {
+        secret,
+        loginUrl,
+        steamId,
+        expiresIn: '40 minutes',
+      },
+      200,
+      origin,
+    );
   } catch (err) {
     console.error('[AUTH] Generate login secret error:', err);
-    return createResponse({
-      error: 'Failed to generate login secret',
-      details: err instanceof Error ? err.message : String(err)
-    }, 500, origin);
+    return createResponse(
+      {
+        error: 'Failed to generate login secret',
+        details: err instanceof Error ? err.message : String(err),
+      },
+      500,
+      origin,
+    );
   }
 }
 
@@ -228,11 +241,22 @@ export async function handleLoginWithSecret(
     const numericSteamId = steamId!.replace('@steam', '');
 
     console.log('[AUTH] Login with secret - stored steamId:', steamId);
-    console.log('[AUTH] Login with secret - numeric steamId for API:', numericSteamId);
+    console.log(
+      '[AUTH] Login with secret - numeric steamId for API:',
+      numericSteamId,
+    );
 
-    const steamUser = await fetchSteamUserData(numericSteamId, env.STEAM_API_KEY, env);
+    const steamUser = await fetchSteamUserData(
+      numericSteamId,
+      env.STEAM_API_KEY,
+      env,
+    );
     if (!steamUser) {
-      return createResponse({ error: 'Could not fetch user data' }, 500, origin);
+      return createResponse(
+        { error: 'Could not fetch user data' },
+        500,
+        origin,
+      );
     }
 
     // Create session using the numeric Steam ID (consistent with normal login)
@@ -240,7 +264,8 @@ export async function handleLoginWithSecret(
 
     // Determine if we're in development or production
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
-    const isLocalDev = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
+    const isLocalDev =
+      frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
 
     let cookieSettings = `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60 * 3}`;
 
@@ -253,24 +278,31 @@ export async function handleLoginWithSecret(
     }
 
     // Create custom response with cookie
-    const response = new Response(JSON.stringify({
-      success: true,
-      sessionId,
-      user: steamUser
-    }), {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': origin || '*',
-        'Access-Control-Allow-Credentials': 'true',
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Set-Cookie': cookieSettings
-      }
-    });
+    const response = new Response(
+      JSON.stringify({
+        success: true,
+        sessionId,
+        user: steamUser,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': origin || '*',
+          'Access-Control-Allow-Credentials': 'true',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Set-Cookie': cookieSettings,
+        },
+      },
+    );
 
     return response;
   } catch (err) {
-    return createResponse({ error: 'Failed to login with secret' }, 500, origin);
+    return createResponse(
+      { error: 'Failed to login with secret' },
+      500,
+      origin,
+    );
   }
 }

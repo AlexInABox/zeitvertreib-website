@@ -15,17 +15,17 @@ export interface UserFakerank {
 
 export interface Player {
   id: string;
-  steamId: string;  // Add for compatibility with template
+  steamId: string; // Add for compatibility with template
   personaname: string;
-  username: string;  // Add for compatibility with template
+  username: string; // Add for compatibility with template
   avatar: string;
   avatarmedium: string;
   avatarfull: string;
-  avatarFull: string;  // Add for compatibility with template
+  avatarFull: string; // Add for compatibility with template
   fakerank: string;
   fakerank_color: string;
   fakerankallowed: boolean;
-  experience: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   roundsplayed: number;
   usedmedkits: number;
@@ -36,7 +36,7 @@ export interface Player {
   killcount: number;
   deathcount: number;
   fakerankadmin: boolean;
-  isCurrentlyOnline?: boolean;  // Add for compatibility with template
+  isCurrentlyOnline?: boolean; // Add for compatibility with template
 }
 
 export interface BlacklistItem {
@@ -70,7 +70,7 @@ export class FakerankAdminService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   private getAuthHeaders(): HttpHeaders {
     // Get session token from AuthService
@@ -111,7 +111,13 @@ export class FakerankAdminService {
     return this.http
       .post<{ success: boolean }>(
         `${this.API_BASE}/fakerank-admin/user`,
-        { steamId, fakerank, fakerank_color, isOverride, overrideDurationHours },
+        {
+          steamId,
+          fakerank,
+          fakerank_color,
+          isOverride,
+          overrideDurationHours,
+        },
         {
           headers: this.getAuthHeaders(),
           withCredentials: true,
@@ -241,11 +247,11 @@ export class FakerankAdminService {
             currentPage:
               Math.floor(
                 (response.pagination?.offset || 0) /
-                (response.pagination?.limit || limit),
+                  (response.pagination?.limit || limit),
               ) + 1,
             totalPages: Math.ceil(
               (response.pagination?.total || 0) /
-              (response.pagination?.limit || limit),
+                (response.pagination?.limit || limit),
             ),
             currentPlayersOnline: response.currentPlayersOnline || 0,
             uniquePlayerNames: response.uniquePlayerNames || 0,

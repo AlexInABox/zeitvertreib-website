@@ -16,7 +16,8 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
   {
     id: 'fakerank_14d',
     name: 'Fakerank (14 Tage)',
-    description: 'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
+    description:
+      'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
     emoji: '✨',
     price: 300,
   },
@@ -26,7 +27,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Erlaubt dir das Hochladen von 2 weiteren Custom-Sprays!',
     emoji: '🎨',
     price: 200,
-    availabilityStatus: 'sold_out'
+    availabilityStatus: 'sold_out',
   },
   {
     id: 'vip_status_30d',
@@ -34,7 +35,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'VIP für einen Monat: unbegrenzte Sprays & Fakerank-Zugang.',
     emoji: '👑',
     price: 2000,
-    availabilityStatus: 'sold_out'
+    availabilityStatus: 'sold_out',
   },
   {
     id: 'cosmetic_access_30d',
@@ -42,7 +43,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Schalte das Kosmetik-System für 1 Monat frei.',
     emoji: '🎩',
     price: 800,
-    availabilityStatus: 'sold_out'
+    availabilityStatus: 'sold_out',
   },
   {
     id: 'steam_giftcard_5',
@@ -50,7 +51,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Erhalte einen 5€ Steam-Geschenkgutschein.',
     emoji: '🎁',
     price: 3000,
-    availabilityStatus: 'sold_out'
+    availabilityStatus: 'sold_out',
   },
   {
     id: 'discord_nitro',
@@ -58,10 +59,9 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Erhalte ein Discord Nitro Geschenk (1 Monat).',
     emoji: '💎',
     price: 4000,
-    availabilityStatus: 'sold_out'
-  }
+    availabilityStatus: 'sold_out',
+  },
 ];
-
 
 /**
  * GET /redeemables
@@ -82,16 +82,19 @@ export async function handleGetRedeemables(
   try {
     // Mark expired limited-time items but keep them in the list
     const currentDate = new Date().toISOString();
-    const processedRedeemables = ZEITVERTREIB_REDEEMABLES.map(item => {
-      const isExpired = item.redeemableuntil && item.redeemableuntil < currentDate;
+    const processedRedeemables = ZEITVERTREIB_REDEEMABLES.map((item) => {
+      const isExpired =
+        item.redeemableuntil && item.redeemableuntil < currentDate;
 
       // Use manually set availabilityStatus if it exists, otherwise calculate based on expiration
-      const availabilityStatus = item.availabilityStatus || (isExpired ? 'expired' as const : 'available' as const);
+      const availabilityStatus =
+        item.availabilityStatus ||
+        (isExpired ? ('expired' as const) : ('available' as const));
 
       return {
         ...item,
         isExpired: isExpired || false,
-        availabilityStatus: availabilityStatus
+        availabilityStatus: availabilityStatus,
       };
     });
 
@@ -99,9 +102,10 @@ export async function handleGetRedeemables(
       {
         redeemables: processedRedeemables,
         total: processedRedeemables.length,
-        available: processedRedeemables.filter(item => !item.isExpired).length,
-        expired: processedRedeemables.filter(item => item.isExpired).length,
-        timestamp: currentDate
+        available: processedRedeemables.filter((item) => !item.isExpired)
+          .length,
+        expired: processedRedeemables.filter((item) => item.isExpired).length,
+        timestamp: currentDate,
       },
       200,
       origin,
@@ -137,15 +141,13 @@ export async function handleRedeemItem(
     const itemId = requestBody?.itemId;
 
     if (!itemId || typeof itemId !== 'string') {
-      return createResponse(
-        { error: 'Item ID is required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Item ID is required' }, 400, origin);
     }
 
     // Find the redeemable item
-    const redeemable = ZEITVERTREIB_REDEEMABLES.find(item => item.id === itemId);
+    const redeemable = ZEITVERTREIB_REDEEMABLES.find(
+      (item) => item.id === itemId,
+    );
     if (!redeemable) {
       return createResponse(
         { error: 'Redeemable item not found' },
@@ -159,7 +161,10 @@ export async function handleRedeemItem(
       const currentDate = new Date().toISOString();
       if (redeemable.redeemableuntil < currentDate) {
         return createResponse(
-          { error: 'This item has expired and is no longer available for redemption' },
+          {
+            error:
+              'This item has expired and is no longer available for redemption',
+          },
           410, // Gone
           origin,
         );
@@ -169,17 +174,13 @@ export async function handleRedeemItem(
     const playerId = `${validation.session!.steamId}@steam`;
 
     // Get current player data to check ZV Coins balance
-    const playerData = await env['zeitvertreib-data']
+    const playerData = (await env['zeitvertreib-data']
       .prepare('SELECT experience FROM playerdata WHERE id = ?')
       .bind(playerId)
-      .first() as { experience: number } | null;
+      .first()) as { experience: number } | null;
 
     if (!playerData) {
-      return createResponse(
-        { error: 'Player data not found' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Player data not found' }, 404, origin);
     }
 
     // Check if player has enough ZV Coins
@@ -190,7 +191,7 @@ export async function handleRedeemItem(
           error: 'Insufficient ZV Coins',
           required: redeemable.price,
           current: currentBalance,
-          missing: redeemable.price - currentBalance
+          missing: redeemable.price - currentBalance,
         },
         402, // Payment Required
         origin,
@@ -213,12 +214,12 @@ export async function handleRedeemItem(
     }
 
     // Log the redemption
-    console.log(`Player ${playerId} is redeeming ${redeemable.id} for ${redeemable.price} ZV Coins`);
+    console.log(
+      `Player ${playerId} is redeeming ${redeemable.id} for ${redeemable.price} ZV Coins`,
+    );
 
     // Apply the redeemed item effects
     await applyRedeemableEffects(redeemable, playerId, env);
-
-
 
     return createResponse(
       {
@@ -226,19 +227,14 @@ export async function handleRedeemItem(
         message: `Successfully redeemed ${redeemable.name}`,
         item: redeemable,
         newBalance: newBalance,
-        transactionId: `redeem_${Date.now()}_${itemId}`
+        transactionId: `redeem_${Date.now()}_${itemId}`,
       },
       200,
       origin,
     );
-
   } catch (error) {
     console.error('Error redeeming item:', error);
-    return createResponse(
-      { error: 'Failed to redeem item' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to redeem item' }, 500, origin);
   }
 }
 
@@ -248,29 +244,31 @@ export async function handleRedeemItem(
 async function applyRedeemableEffects(
   redeemable: Redeemable,
   playerId: string,
-  env: Env
+  env: Env,
 ): Promise<void> {
   switch (redeemable.id) {
     case 'fakerank_14d':
       // Add 14 days if still active, otherwise reset to 14 days from now
       const now = Math.floor(Date.now() / 1000);
       await env['zeitvertreib-data']
-        .prepare(`
+        .prepare(
+          `
       UPDATE playerdata
       SET fakerank_until = CASE
         WHEN fakerank_until > ? THEN fakerank_until + (14 * 24 * 60 * 60)
         ELSE ? + (14 * 24 * 60 * 60)
       END
       WHERE id = ?
-    `)
+    `,
+        )
         .bind(now, now, playerId)
         .run();
       break;
 
-
     case 'vip_status_30d':
       // VIP status includes fakerank access for 30 days
-      const thirtyDaysTimestamp = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
+      const thirtyDaysTimestamp =
+        Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
       await env['zeitvertreib-data']
         .prepare('UPDATE playerdata SET fakerank_until = ? WHERE id = ?')
         .bind(thirtyDaysTimestamp, playerId)
@@ -309,25 +307,23 @@ export async function handleRedeemCode(
     const code = requestBody?.code?.toUpperCase()?.trim();
 
     if (!code || typeof code !== 'string') {
-      return createResponse(
-        { error: 'Code ist erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Code ist erforderlich' }, 400, origin);
     }
 
     // Get code data from database
-    const codeData = await env['zeitvertreib-data']
-      .prepare('SELECT code, credits, remaining_uses FROM redemption_codes WHERE code = ?')
+    const codeData = (await env['zeitvertreib-data']
+      .prepare(
+        'SELECT code, credits, remaining_uses FROM redemption_codes WHERE code = ?',
+      )
       .bind(code)
-      .first() as { code: string; credits: number; remaining_uses: number } | null;
+      .first()) as {
+      code: string;
+      credits: number;
+      remaining_uses: number;
+    } | null;
 
     if (!codeData) {
-      return createResponse(
-        { error: 'Ungültiger Code' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Ungültiger Code' }, 404, origin);
     }
 
     // Check if code has remaining uses
@@ -342,21 +338,19 @@ export async function handleRedeemCode(
     const playerId = `${validation.session!.steamId}@steam`;
 
     // Get current player data including redeemed codes
-    const playerData = await env['zeitvertreib-data']
+    const playerData = (await env['zeitvertreib-data']
       .prepare('SELECT experience, redeemed_codes FROM playerdata WHERE id = ?')
       .bind(playerId)
-      .first() as { experience: number; redeemed_codes: string | null } | null;
+      .first()) as { experience: number; redeemed_codes: string | null } | null;
 
     if (!playerData) {
-      return createResponse(
-        { error: 'Spieler nicht gefunden' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
     }
 
     // Check if player has already redeemed this code
-    const redeemedCodes = playerData.redeemed_codes ? playerData.redeemed_codes.split(',') : [];
+    const redeemedCodes = playerData.redeemed_codes
+      ? playerData.redeemed_codes.split(',')
+      : [];
     if (redeemedCodes.includes(code)) {
       return createResponse(
         { error: 'Du hast diesen Code bereits eingelöst' },
@@ -370,13 +364,14 @@ export async function handleRedeemCode(
     const newBalance = currentBalance + codeData.credits;
 
     // Add code to player's redeemed codes list
-    const updatedRedeemedCodes = redeemedCodes.length > 0
-      ? `${playerData.redeemed_codes},${code}`
-      : code;
+    const updatedRedeemedCodes =
+      redeemedCodes.length > 0 ? `${playerData.redeemed_codes},${code}` : code;
 
     // Update player balance and redeemed codes
     const updatePlayerResult = await env['zeitvertreib-data']
-      .prepare('UPDATE playerdata SET experience = ?, redeemed_codes = ? WHERE id = ?')
+      .prepare(
+        'UPDATE playerdata SET experience = ?, redeemed_codes = ? WHERE id = ?',
+      )
       .bind(newBalance, updatedRedeemedCodes, playerId)
       .run();
 
@@ -390,18 +385,24 @@ export async function handleRedeemCode(
 
     // Decrease remaining uses for the code
     const updateCodeResult = await env['zeitvertreib-data']
-      .prepare('UPDATE redemption_codes SET remaining_uses = remaining_uses - 1 WHERE code = ?')
+      .prepare(
+        'UPDATE redemption_codes SET remaining_uses = remaining_uses - 1 WHERE code = ?',
+      )
       .bind(code)
       .run();
 
     if (!updateCodeResult.success) {
       // If code update fails, we should ideally rollback the player balance update
       // For now, just log the error but still return success since player got the credits
-      console.error(`Failed to update code usage for ${code}, player ${playerId} received credits anyway`);
+      console.error(
+        `Failed to update code usage for ${code}, player ${playerId} received credits anyway`,
+      );
     }
 
     // Log the redemption
-    console.log(`Player ${playerId} redeemed code ${code} for ${codeData.credits} ZV Coins. Remaining uses: ${codeData.remaining_uses - 1}`);
+    console.log(
+      `Player ${playerId} redeemed code ${code} for ${codeData.credits} ZV Coins. Remaining uses: ${codeData.remaining_uses - 1}`,
+    );
 
     return createResponse(
       {
@@ -410,12 +411,11 @@ export async function handleRedeemCode(
         credits: codeData.credits,
         newBalance: newBalance,
         code: code,
-        remainingUses: codeData.remaining_uses - 1
+        remainingUses: codeData.remaining_uses - 1,
       },
       200,
       origin,
     );
-
   } catch (error) {
     console.error('Error redeeming code:', error);
     return createResponse(

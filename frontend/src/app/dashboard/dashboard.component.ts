@@ -25,7 +25,7 @@ interface Statistics {
   username: string;
   kills: number;
   deaths: number;
-  experience?: number;  // Keep property name for DB compatibility, but represents ZV Coins
+  experience?: number; // Keep property name for DB compatibility, but represents ZV Coins
   playtime: number;
   avatarFull: string;
   roundsplayed: number;
@@ -35,9 +35,9 @@ interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
-  fakerank_until?: number;  // Unix timestamp for fakerank expiration
-  fakerankadmin_until?: number;  // Unix timestamp for fakerank admin expiration
-  fakerankoverride_until?: number;  // Unix timestamp for admin-set fakerank override
+  fakerank_until?: number; // Unix timestamp for fakerank expiration
+  fakerankadmin_until?: number; // Unix timestamp for fakerank admin expiration
+  fakerankoverride_until?: number; // Unix timestamp for admin-set fakerank override
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -195,7 +195,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ownedCosmetics = {
     hats: ['cap'] as string[], // User owns a baseball cap
     pets: [] as string[], // No pets owned
-    auras: ['blue'] as string[] // User owns blue aura
+    auras: ['blue'] as string[], // User owns blue aura
   };
 
   constructor(private authService: AuthService) {
@@ -225,7 +225,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Handle toggle change to trigger background removal
   async onBackgroundRemovalToggle(): Promise<void> {
-    if (this.removeBackground && this.selectedFile && !this.backgroundRemovalProcessing) {
+    if (
+      this.removeBackground &&
+      this.selectedFile &&
+      !this.backgroundRemovalProcessing
+    ) {
       // Process image for preview when toggle is turned on
       try {
         await this.processImageWithBackgroundRemoval(this.selectedFile);
@@ -407,7 +411,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Load upload limits for images
   private loadUploadLimits(): void {
     this.authService
-      .authenticatedGet<UploadLimits>(`${environment.apiUrl}/spray/upload-limits`)
+      .authenticatedGet<UploadLimits>(
+        `${environment.apiUrl}/spray/upload-limits`,
+      )
       .subscribe({
         next: (response) => {
           this.uploadLimits = response;
@@ -421,7 +427,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             maxOriginalSizeMB: 5,
             maxThumbnailSizeKB: 10,
             supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
-            message: 'Maximale Bildgröße: 5MB'
+            message: 'Maximale Bildgröße: 5MB',
           };
         },
       });
@@ -430,7 +436,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Load spray ban status for current user
   private loadSprayBanStatus(): void {
     this.authService
-      .authenticatedGet<SprayBanStatus>(`${environment.apiUrl}/spray/ban-status`)
+      .authenticatedGet<SprayBanStatus>(
+        `${environment.apiUrl}/spray/ban-status`,
+      )
       .subscribe({
         next: (response) => {
           this.sprayBanStatus = response;
@@ -449,16 +457,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.redeemablesError = '';
 
     this.authService
-      .authenticatedGet<{ redeemables: Redeemable[]; total: number; timestamp: string }>(`${environment.apiUrl}/redeemables`)
+      .authenticatedGet<{
+        redeemables: Redeemable[];
+        total: number;
+        timestamp: string;
+      }>(`${environment.apiUrl}/redeemables`)
       .subscribe({
         next: (response) => {
           // Sort redeemables by price (ascending - cheapest first)
-          this.redeemables = (response?.redeemables || []).sort((a, b) => a.price - b.price);
+          this.redeemables = (response?.redeemables || []).sort(
+            (a, b) => a.price - b.price,
+          );
           this.redeemablesLoading = false;
         },
         error: (error) => {
           console.error('Error loading redeemables:', error);
-          this.redeemablesError = 'Fehler beim Laden der verfügbaren Belohnungen';
+          this.redeemablesError =
+            'Fehler beim Laden der verfügbaren Belohnungen';
           this.redeemablesLoading = false;
         },
       });
@@ -505,14 +520,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Validate file type - no GIFs allowed
       if (!file.type.startsWith('image/') || file.type === 'image/gif') {
-        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+        this.sprayUploadError =
+          'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
         target.value = ''; // Clear the input
         return;
       }
 
       // Check if file type is supported
-      if (this.uploadLimits?.supportedFormats &&
-        !this.uploadLimits.supportedFormats.includes(file.type)) {
+      if (
+        this.uploadLimits?.supportedFormats &&
+        !this.uploadLimits.supportedFormats.includes(file.type)
+      ) {
         this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
         target.value = ''; // Clear the input
         return;
@@ -562,14 +580,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const file = files[0];
       if (file.type.startsWith('image/') && file.type !== 'image/gif') {
         // Check if file type is supported
-        if (this.uploadLimits?.supportedFormats &&
-          !this.uploadLimits.supportedFormats.includes(file.type)) {
+        if (
+          this.uploadLimits?.supportedFormats &&
+          !this.uploadLimits.supportedFormats.includes(file.type)
+        ) {
           this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
           return;
         }
         this.setSelectedFile(file);
       } else {
-        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+        this.sprayUploadError =
+          'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       }
     }
   }
@@ -581,14 +602,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Validate file type - only images, no GIFs
-    if (!this.selectedFile.type.startsWith('image/') || this.selectedFile.type === 'image/gif') {
-      this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+    if (
+      !this.selectedFile.type.startsWith('image/') ||
+      this.selectedFile.type === 'image/gif'
+    ) {
+      this.sprayUploadError =
+        'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       return;
     }
 
     // Validate supported formats
-    if (this.uploadLimits?.supportedFormats &&
-      !this.uploadLimits.supportedFormats.includes(this.selectedFile.type)) {
+    if (
+      this.uploadLimits?.supportedFormats &&
+      !this.uploadLimits.supportedFormats.includes(this.selectedFile.type)
+    ) {
       this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
       return;
     }
@@ -607,7 +634,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       // Process image with background removal if enabled
-      const fileToProcess = await this.processImageWithBackgroundRemoval(this.selectedFile);
+      const fileToProcess = await this.processImageWithBackgroundRemoval(
+        this.selectedFile,
+      );
 
       // Process the image (no more GIF processing since GIFs are not supported)
       const processedData = await this.processImageForUpload(fileToProcess);
@@ -741,7 +770,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.removeBackground = false;
 
     // Reset file input
-    const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
+    const fileInput = document.getElementById(
+      'sprayFileInput',
+    ) as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   }
 
@@ -781,9 +812,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await this.authService
-        .authenticatedPost(`${environment.apiUrl}/spray/remove-background`, formData)
-        .toPromise() as BackgroundRemovalResponse;
+      const response = (await this.authService
+        .authenticatedPost(
+          `${environment.apiUrl}/spray/remove-background`,
+          formData,
+        )
+        .toPromise()) as BackgroundRemovalResponse;
 
       if (!response?.success || !response?.processedImageUrl) {
         throw new Error('Backend did not return processed image URL');
@@ -806,16 +840,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Convert blob to file
       const processedFile = new File([imageBlob], file.name, {
         type: 'image/png', // Background removal always outputs PNG for transparency
-        lastModified: Date.now()
+        lastModified: Date.now(),
       });
 
       this.backgroundRemovalProcessing = false;
       return processedFile;
-
     } catch (error) {
       this.backgroundRemovalProcessing = false;
       console.error('Background removal failed:', error);
-      this.sprayUploadError = 'Hintergrundentfernung fehlgeschlagen: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler');
+      this.sprayUploadError =
+        'Hintergrundentfernung fehlgeschlagen: ' +
+        (error instanceof Error ? error.message : 'Unbekannter Fehler');
       return file; // Fall back to original file
     }
   }
@@ -1056,8 +1091,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.fakerankLoading) return;
 
     // Validate fakerank content - ban parentheses and commas
-    if (this.fakerankValue.includes('(') || this.fakerankValue.includes(')') || this.fakerankValue.includes(',')) {
-      this.fakerankError = 'Fakerank darf keine Klammern () oder Kommas enthalten';
+    if (
+      this.fakerankValue.includes('(') ||
+      this.fakerankValue.includes(')') ||
+      this.fakerankValue.includes(',')
+    ) {
+      this.fakerankError =
+        'Fakerank darf keine Klammern () oder Kommas enthalten';
       return;
     }
 
@@ -1203,13 +1243,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.codeRedemptionLoading = false;
           if (response?.success) {
             this.codeRedemptionSuccess = true;
-            this.codeRedemptionMessage = response.message || 'Code erfolgreich eingelöst!';
+            this.codeRedemptionMessage =
+              response.message || 'Code erfolgreich eingelöst!';
 
             // Update the user balance if provided
             if (response.newBalance !== undefined) {
               this.userStatistics.experience = response.newBalance;
             } else if (response.credits) {
-              this.userStatistics.experience = (this.userStatistics.experience || 0) + response.credits;
+              this.userStatistics.experience =
+                (this.userStatistics.experience || 0) + response.credits;
             }
 
             // Clear the input after successful redemption
@@ -1219,7 +1261,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
             window.location.reload();
           } else {
             this.codeRedemptionSuccess = false;
-            this.codeRedemptionMessage = response?.message || 'Code konnte nicht eingelöst werden';
+            this.codeRedemptionMessage =
+              response?.message || 'Code konnte nicht eingelöst werden';
           }
         },
         error: (error) => {
@@ -1250,45 +1293,45 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Cosmetic-related methods
   getHatEmoji(hatKey: string): string {
     const hatEmojis: { [key: string]: string } = {
-      'cap': '🧢',
-      'crown': '👑',
-      'helmet': '⛑️'
+      cap: '🧢',
+      crown: '👑',
+      helmet: '⛑️',
     };
     return hatEmojis[hatKey] || '';
   }
 
   getHatName(hatKey: string): string {
     const hatNames: { [key: string]: string } = {
-      'cap': 'Baseball Cap',
-      'crown': 'Königskrone',
-      'helmet': 'Schutzhelm'
+      cap: 'Baseball Cap',
+      crown: 'Königskrone',
+      helmet: 'Schutzhelm',
     };
     return hatNames[hatKey] || '';
   }
 
   getPetEmoji(petKey: string): string {
     const petEmojis: { [key: string]: string } = {
-      'cat': '🐱',
-      'dog': '🐕',
-      'bird': '🦅'
+      cat: '🐱',
+      dog: '🐕',
+      bird: '🦅',
     };
     return petEmojis[petKey] || '';
   }
 
   getPetName(petKey: string): string {
     const petNames: { [key: string]: string } = {
-      'cat': 'Cyber Katze',
-      'dog': 'Roboter Hund',
-      'bird': 'Drohnen Adler'
+      cat: 'Cyber Katze',
+      dog: 'Roboter Hund',
+      bird: 'Drohnen Adler',
     };
     return petNames[petKey] || '';
   }
 
   getAuraName(auraKey: string): string {
     const auraNames: { [key: string]: string } = {
-      'blue': 'Blaue Aura',
-      'red': 'Rote Aura',
-      'rainbow': 'Regenbogen Aura'
+      blue: 'Blaue Aura',
+      red: 'Rote Aura',
+      rainbow: 'Regenbogen Aura',
     };
     return auraNames[auraKey] || '';
   }
@@ -1305,7 +1348,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (petKey === 'none' || this.ownedCosmetics.pets.includes(petKey)) {
       this.selectedPet = petKey;
     } else {
-      alert(`Du besitzt diesen Begleiter noch nicht! Kaufe ihn im Cosmetic Shop.`);
+      alert(
+        `Du besitzt diesen Begleiter noch nicht! Kaufe ihn im Cosmetic Shop.`,
+      );
     }
   }
 
@@ -1323,7 +1368,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Simulate API call
     setTimeout(() => {
       this.cosmeticLoading = false;
-      alert(`Cosmetics gespeichert!\nHut: ${this.getHatName(this.selectedHat) || 'Keiner'}\nBegleiter: ${this.getPetName(this.selectedPet) || 'Keiner'}\nAura: ${this.getAuraName(this.selectedAura) || 'Keine'}`);
+      alert(
+        `Cosmetics gespeichert!\nHut: ${this.getHatName(this.selectedHat) || 'Keiner'}\nBegleiter: ${this.getPetName(this.selectedPet) || 'Keiner'}\nAura: ${this.getAuraName(this.selectedAura) || 'Keine'}`,
+      );
     }, 1500);
   }
 
@@ -1334,7 +1381,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   openCosmeticShop(): void {
-    alert('Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.');
+    alert(
+      'Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.',
+    );
   }
 
   // Format time remaining for display
@@ -1362,8 +1411,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Update access timers
   private updateAccessTimers(): void {
     this.fakerankTimeRemaining = this.authService.getFakerankTimeRemaining();
-    this.fakerankAdminTimeRemaining = this.authService.getFakerankAdminTimeRemaining();
-    this.fakerankOverrideTimeRemaining = this.authService.getFakerankOverrideTimeRemaining();
+    this.fakerankAdminTimeRemaining =
+      this.authService.getFakerankAdminTimeRemaining();
+    this.fakerankOverrideTimeRemaining =
+      this.authService.getFakerankOverrideTimeRemaining();
     this.fakerankAllowed = this.authService.canEditFakerank();
     this.hasFakerankOverride = this.authService.hasFakerankOverride();
     this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
@@ -1401,7 +1452,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Check if item is still available
     if (!this.isAvailable(redeemable)) {
-      alert(`❌ Item nicht verfügbar\n\n${redeemable.name} ist nicht mehr verfügbar zum Einlösen.`);
+      alert(
+        `❌ Item nicht verfügbar\n\n${redeemable.name} ist nicht mehr verfügbar zum Einlösen.`,
+      );
       return;
     }
 
@@ -1409,7 +1462,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const currentBalance = this.userStatistics.experience || 0;
     if (currentBalance < redeemable.price) {
       const missing = redeemable.price - currentBalance;
-      alert(`Nicht genügend ZV Coins!\n\nBenötigt: ${redeemable.price} ZVC\nVorhanden: ${currentBalance} ZVC\nFehlen noch: ${missing} ZVC`);
+      alert(
+        `Nicht genügend ZV Coins!\n\nBenötigt: ${redeemable.price} ZVC\nVorhanden: ${currentBalance} ZVC\nFehlen noch: ${missing} ZVC`,
+      );
       return;
     }
 
@@ -1446,12 +1501,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.userStatistics.experience = response.newBalance;
 
             // Show success message
-            alert(`🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`);
+            alert(
+              `🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`,
+            );
 
             // Force refresh the entire page to ensure all data is updated
             window.location.reload();
           } else {
-            alert('Fehler beim Einlösen: ' + (response?.message || 'Unbekannter Fehler'));
+            alert(
+              'Fehler beim Einlösen: ' +
+                (response?.message || 'Unbekannter Fehler'),
+            );
           }
         },
         error: (error) => {
@@ -1474,11 +1534,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   isAvailable(redeemable: Redeemable): boolean {
-    return !redeemable.isExpired && redeemable.availabilityStatus === 'available';
+    return (
+      !redeemable.isExpired && redeemable.availabilityStatus === 'available'
+    );
   }
 
   isExpired(redeemable: Redeemable): boolean {
-    return !!redeemable.isExpired || redeemable.availabilityStatus === 'expired';
+    return (
+      !!redeemable.isExpired || redeemable.availabilityStatus === 'expired'
+    );
   }
 
   isSoldOut(redeemable: Redeemable): boolean {
@@ -1517,7 +1581,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (timeDiff <= 0) return 'Abgelaufen';
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(
+      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    );
 
     if (days > 0) {
       return `${days}d ${hours}h`;
