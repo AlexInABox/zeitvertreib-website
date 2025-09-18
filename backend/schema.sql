@@ -86,6 +86,18 @@ CREATE TABLE IF NOT EXISTS redemption_codes (
 -- Index for redemption codes
 CREATE INDEX IF NOT EXISTS idx_redemption_codes_remaining ON redemption_codes(remaining_uses);
 
+-- Login secrets table for one-time login URLs
+CREATE TABLE IF NOT EXISTS login_secrets (
+    secret TEXT PRIMARY KEY,
+    steam_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL
+);
+
+-- Index for login secrets
+CREATE INDEX IF NOT EXISTS idx_login_secrets_expires ON login_secrets(expires_at);
+CREATE INDEX IF NOT EXISTS idx_login_secrets_steam_id ON login_secrets(steam_id);
+
 -- Sample redemption codes data for testing
 INSERT OR IGNORE INTO redemption_codes (code, credits, remaining_uses) VALUES 
     ('WELCOME2025', 500, 100),

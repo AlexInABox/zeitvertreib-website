@@ -3,6 +3,8 @@ import {
   handleSteamCallback,
   handleGetUser,
   handleLogout,
+  handleGenerateLoginSecret,
+  handleLoginWithSecret,
 } from './routes/auth.js';
 import { handleGetStats } from './routes/stats.js';
 import {
@@ -80,6 +82,8 @@ const routes: Record<
   '/auth/steam/callback': handleSteamCallback,
   '/auth/me': handleGetUser,
   '/auth/logout': handleLogout,
+  '/auth/generate-login-secret': handleGenerateLoginSecret,
+  '/auth/login-with-secret': handleLoginWithSecret,
   '/stats': handleGetStats,
   '/spray/upload': handleUploadSpray,
   '/spray/remove-background': handleBackgroundRemoval,

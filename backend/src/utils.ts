@@ -531,3 +531,85 @@ export async function mapPlayerDataToStats(
     lastkills: lastKills,
   };
 }
+
+// Login secret helpers
+export async function generateLoginSecret(
+  steamId: string,
+  env: Env,
+): Promise<string> {
+  try {
+    const secret = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
+    const insertQuery = `
+      INSERT INTO login_secrets (secret, steam_id, expires_at)
+      VALUES (?, ?, ?)
+    `;
+    
+    console.log('[AUTH] Generating login secret for steamId:', steamId);
+    
+    await env['zeitvertreib-data'].prepare(insertQuery)
+      .bind(secret, steamId, expiresAt.toISOString())
+      .run();
+      
+    console.log('[AUTH] Login secret generated successfully:', secret);
+    return secret;
+  } catch (error) {
+    console.error('[AUTH] Error generating login secret:', error);
+    throw error;
+  }
+}
+
+export async function validateLoginSecret(
+  secret: string,
+  env: Env,
+): Promise<{ isValid: boolean; steamId?: string; error?: string }> {
+  const selectQuery = `
+    SELECT steam_id, expires_at
+    FROM login_secrets
+    WHERE secret = ?
+  `;
+  
+  const result = await env['zeitvertreib-data'].prepare(selectQuery).bind(secret).first();
+  
+  if (!result) {
+    return { isValid: false, error: 'Invalid login secret' };
+  }
+  
+  const expiresAt = new Date(result.expires_at as string);
+  if (Date.now() > expiresAt.getTime()) {
+    // Delete the expired secret
+    const deleteQuery = `
+      DELETE FROM login_secrets
+      WHERE secret = ?
+    `;
+    await env['zeitvertreib-data'].prepare(deleteQuery).bind(secret).run();
+    return { isValid: false, error: 'Invalid login secret' };
+  }
+  
+  // Delete the secret after successful validation (one-time use)
+  const deleteQuery = `
+    DELETE FROM login_secrets
+    WHERE secret = ?
+  `;
+  
+  await env['zeitvertreib-data'].prepare(deleteQuery).bind(secret).run();
+  
+  return { isValid: true, steamId: result.steam_id as string };
+}
+
+export async function cleanupExpiredLoginSecrets(env: Env): Promise<void> {
+  try {
+    const deleteQuery = `
+      DELETE FROM login_secrets
+      WHERE expires_at < datetime('now')
+    `;
+    
+    console.log('[AUTH] Cleaning up expired login secrets');
+    await env['zeitvertreib-data'].prepare(deleteQuery).run();
+    console.log('[AUTH] Expired login secrets cleanup completed');
+  } catch (error) {
+    console.error('[AUTH] Error cleaning up expired login secrets:', error);
+    throw error;
+  }
+}

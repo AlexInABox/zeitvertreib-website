@@ -12,6 +12,7 @@ declare namespace Cloudflare {
     LEADERBOARD_MESSAGE_ID: string;
     PROXY_HOST: string;
     REPLICATE_API_TOKEN: string;
+    LOGIN_SECRET_API_KEY: string;
     PLAYERLIST: DurableObjectNamespace /* zeitvertreib-discord_PlayerlistStorage */;
     'zeitvertreib-data': D1Database;
   }

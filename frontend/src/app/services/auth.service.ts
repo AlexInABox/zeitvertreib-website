@@ -51,6 +51,7 @@ export class AuthService {
   constructor(private http: HttpClient) {
     this.loadTokenFromStorage();
     this.checkForTokenInUrl();
+    this.checkForLoginSecret();
     this.checkAuthStatus();
   }
 
@@ -78,6 +79,19 @@ export class AuthService {
       if (redirectPath) {
         window.location.href = redirectPath;
       }
+    }
+  }
+
+  private checkForLoginSecret(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const loginSecret = urlParams.get('loginSecret');
+
+    if (loginSecret) {
+      // Attempt to login with the secret
+      this.loginWithSecret(loginSecret);
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
@@ -309,5 +323,32 @@ export class AuthService {
       withCredentials: true,
       responseType: 'blob',
     });
+  }
+
+  // Login using a login secret
+  private loginWithSecret(secret: string): void {
+    this.http
+      .get<{ success: boolean; sessionId: string; user: SteamUser }>(`${environment.apiUrl}/auth/login-with-secret?secret=${secret}`, {
+        withCredentials: true,
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('[AUTH] Login with secret failed:', error);
+          return of(null);
+        }),
+      )
+      .subscribe((response) => {
+        if (response?.success && response.sessionId) {
+          this.sessionToken = response.sessionId;
+          try {
+            localStorage.setItem('sessionToken', response.sessionId);
+          } catch (error) {
+            console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?)', error);
+          }
+          
+          this.currentUserSubject.next(response.user);
+          this.checkAuthStatus(); // Refresh full user data
+        }
+      });
   }
 }
