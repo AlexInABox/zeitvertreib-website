@@ -55,10 +55,6 @@ export class AccountingComponent implements OnInit {
   // Monthly breakdown
   monthlyBreakdown: MonthlyBreakdown[] = [];
 
-  // Help popup states
-  showSaldoHelp = false;
-  showCoverageHelp = false;
-
   // Admin check - only admin can create/edit transactions
   isAdmin = false;
 
@@ -360,9 +356,9 @@ export class AccountingComponent implements OnInit {
     this.coveragePercentage =
       this.averageMonthlyExpenses > 0
         ? Math.min(
-            100,
-            (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100,
-          )
+          100,
+          (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100,
+        )
         : 100;
 
     // Calculate 3-month projection
@@ -486,7 +482,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error deleting transaction:', error);
             alert(
               'Fehler beim Löschen der Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
           },
         });
@@ -539,7 +535,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error updating transaction:', error);
             alert(
               'Fehler beim Aktualisieren der Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
             this.isSubmitting = false; // Reset loading state on error
           },
@@ -559,7 +555,7 @@ export class AccountingComponent implements OnInit {
           console.error('Error creating transaction:', error);
           alert(
             'Fehler beim Erstellen der Transaktion: ' +
-              (error.error?.error || error.message || 'Unbekannter Fehler'),
+            (error.error?.error || error.message || 'Unbekannter Fehler'),
           );
           this.isSubmitting = false; // Reset loading state on error
         },
@@ -628,7 +624,7 @@ export class AccountingComponent implements OnInit {
               console.error('Error deleting recurring transaction:', error);
               alert(
                 'Fehler beim Löschen der wiederkehrenden Transaktion: ' +
-                  (error.error?.error || error.message || 'Unbekannter Fehler'),
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
               );
             },
           });
@@ -688,7 +684,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error updating recurring transaction:', error);
             alert(
               'Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
             this.isSubmitting = false;
           },
@@ -710,7 +706,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error creating recurring transaction:', error);
             alert(
               'Fehler beim Erstellen der wiederkehrenden Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
             this.isSubmitting = false;
           },

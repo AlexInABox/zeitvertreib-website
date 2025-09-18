@@ -1,417 +1,181 @@
 <div class="accounting-container">
-  <!-- Financial Overview Grid -->
-  <div class="financial-overview-grid">
-    <!-- Quick Stats Cards -->
-    <div class="quick-stats-section">
-      <h2 class="section-title">Finanzübersicht</h2>
+  <!-- Header with Admin Controls -->
+  <div class="header-section">
+    <h2 class="page-title">Server-Finanzen</h2>
 
-      <!-- Admin Controls -->
-      <div *ngIf="isAdmin" class="admin-controls">
-        <button
-          class="admin-btn add-transaction-btn"
-          (click)="openAddTransactionModal()"
-        >
-          <i class="pi pi-plus"></i>
-          Transaktion hinzufügen
-        </button>
-        <button
-          class="admin-btn add-recurring-btn"
-          (click)="openAddRecurringModal()"
-        >
-          <i class="pi pi-refresh"></i>
-          Wiederkehrend hinzufügen
-        </button>
-        <span class="admin-badge">Admin</span>
+    <div *ngIf="isAdmin" class="admin-controls">
+      <button class="admin-btn primary" (click)="openAddTransactionModal()">
+        <i class="pi pi-plus"></i>
+        Transaktion
+      </button>
+      <button class="admin-btn secondary" (click)="openAddRecurringModal()">
+        <i class="pi pi-refresh"></i>
+        Wiederkehrend
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Stats Grid -->
+  <div class="main-stats">
+    <!-- Current Balance -->
+    <div class="stat-card primary" [class.negative]="currentBalance < 0">
+      <div class="stat-header">
+        <i class="pi pi-wallet"></i>
+        <span>Aktueller Saldo</span>
       </div>
-
-      <div class="stats-grid">
-        <!-- Balance Card -->
-        <div
-          class="stat-card balance-card"
+      <div class="stat-value">
+        <span class="amount">{{ currentBalance | number: '1.2-2' }}€</span>
+        <span
+          class="status"
+          [class.positive]="currentBalance >= 0"
           [class.negative]="currentBalance < 0"
-          [class.showing-help]="showSaldoHelp"
         >
-          <!-- Help Popup -->
-          <div *ngIf="showSaldoHelp" class="help-popup">
-            <div class="help-content">
-              <div class="help-title">
-                Server-Saldo - Finanzielle Gesundheit der Community! 💰
-              </div>
-              <div class="help-text">
-                Der aktuelle Server-Saldo zeigt die Gesamtbilanz aller Einnahmen
-                und Ausgaben für den Zeitvertreib Community Server seit Beginn
-                der Aufzeichnungen.
-              </div>
-              <div class="help-text">
-                <strong>Berechnung:</strong><br />
-                • Alle Einnahmen (Community-Spenden, Merchandise, etc.)<br />
-                • Minus alle Ausgaben (Server-Hosting, Domains, Services,
-                etc.)<br />
-                • = Aktueller Server-Saldo
-              </div>
-              <div class="help-text">
-                <strong>Positiver Saldo:</strong> Die Community hat mehr
-                gespendet als für den Server ausgegeben wurde<br />
-                <strong>Negativer Saldo:</strong> Die Server-Kosten übersteigen
-                die Community-Unterstützung
-              </div>
-              <button (click)="showSaldoHelp = false" class="help-close-btn">
-                Verstanden! ✨
-              </button>
-            </div>
-          </div>
+          {{ currentBalance >= 0 ? 'Überschuss' : 'Defizit' }}
+        </span>
+      </div>
+    </div>
 
-          <!-- Regular Card Content -->
-          <div *ngIf="!showSaldoHelp">
-            <div class="stat-header">
-              <i class="pi pi-wallet stat-icon"></i>
-              <div class="stat-header-content">
-                <span class="stat-label">Server-Saldo</span>
-                <button
-                  (click)="showSaldoHelp = true"
-                  class="help-button"
-                  title="Hilfe anzeigen"
-                >
-                  ?
-                </button>
-              </div>
-            </div>
-            <div class="stat-value">
-              <span class="currency-symbol">€</span>
-              <span class="amount">{{ currentBalance | number: '1.2-2' }}</span>
-            </div>
-            <div
-              class="stat-trend"
-              [class.positive]="currentBalance >= 0"
-              [class.negative]="currentBalance < 0"
-            >
-              <i
-                class="pi"
-                [class.pi-arrow-up]="currentBalance >= 0"
-                [class.pi-arrow-down]="currentBalance < 0"
-              ></i>
-              <span>{{ currentBalance >= 0 ? 'Überschuss' : 'Defizit' }}</span>
-            </div>
-          </div>
+    <!-- Monthly Summary -->
+    <div class="stat-card">
+      <div class="stat-header">
+        <i class="pi pi-calendar"></i>
+        <span>Dieser Monat</span>
+      </div>
+      <div class="monthly-summary">
+        <div class="summary-item positive">
+          <span class="label">Einnahmen</span>
+          <span class="value">+{{ monthlyIncome | number: '1.2-2' }}€</span>
         </div>
-
-        <!-- Monthly Income -->
-        <div class="stat-card income-card">
-          <div class="stat-header">
-            <i class="pi pi-arrow-up-right stat-icon"></i>
-            <span class="stat-label">Community-Einnahmen</span>
-          </div>
-          <div class="stat-value">
-            <span class="currency-symbol">€</span>
-            <span class="amount">{{ monthlyIncome | number: '1.2-2' }}</span>
-          </div>
-          <div class="stat-info">
-            <span>Ø {{ averageMonthlyIncome | number: '1.2-2' }}€/Monat</span>
-          </div>
+        <div class="summary-item negative">
+          <span class="label">Ausgaben</span>
+          <span class="value">-{{ monthlyExpenses | number: '1.2-2' }}€</span>
         </div>
-
-        <!-- Monthly Expenses -->
-        <div class="stat-card expense-card">
-          <div class="stat-header">
-            <i class="pi pi-arrow-down-right stat-icon"></i>
-            <span class="stat-label">Server-Ausgaben</span>
-          </div>
-          <div class="stat-value">
-            <span class="currency-symbol">€</span>
-            <span class="amount">{{ monthlyExpenses | number: '1.2-2' }}</span>
-          </div>
-          <div class="stat-info">
-            <span>Ø {{ averageMonthlyExpenses | number: '1.2-2' }}€/Monat</span>
-          </div>
-        </div>
-
-        <!-- Coverage Progress -->
-        <div
-          class="stat-card coverage-card"
-          [class.showing-help]="showCoverageHelp"
-        >
-          <!-- Help Popup -->
-          <div *ngIf="showCoverageHelp" class="help-popup">
-            <div class="help-content">
-              <div class="help-title">
-                Server-Kostendeckung - Wie gut unterstützt die Community? 📊
-              </div>
-              <div class="help-text">
-                Die Server-Kostendeckung zeigt, wie gut die Community-Einnahmen
-                die laufenden Server-Kosten decken können.
-              </div>
-              <div class="help-text">
-                <strong>Berechnung:</strong><br />
-                • Durchschnittliche monatliche Community-Einnahmen<br />
-                • Geteilt durch durchschnittliche monatliche Server-Ausgaben<br />
-                • Multipliziert mit 100 = Deckungsgrad
-              </div>
-              <div class="help-text">
-                <strong>100% oder mehr:</strong> Community-Unterstützung deckt
-                alle Server-Kosten ab<br />
-                <strong>Unter 100%:</strong> Server-Kosten sind höher als
-                Community-Einnahmen<br />
-                <strong>Über 100%:</strong> Die Community unterstützt sogar über
-                die Kosten hinaus! 🎉
-              </div>
-              <button (click)="showCoverageHelp = false" class="help-close-btn">
-                Verstanden! ✨
-              </button>
-            </div>
-          </div>
-
-          <!-- Regular Card Content -->
-          <div *ngIf="!showCoverageHelp">
-            <div class="stat-header">
-              <i class="pi pi-chart-line stat-icon"></i>
-              <div class="stat-header-content">
-                <span class="stat-label">Server-Kostendeckung</span>
-                <button
-                  (click)="showCoverageHelp = true"
-                  class="help-button"
-                  title="Hilfe anzeigen"
-                >
-                  ?
-                </button>
-              </div>
-            </div>
-            <div class="coverage-progress">
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  [style.width.%]="coveragePercentage"
-                ></div>
-              </div>
-              <div class="progress-text">
-                <span class="percentage">{{ coveragePercentage }}%</span>
-                <span
-                  class="coverage-status"
-                  [class.covered]="coveragePercentage >= 100"
-                >
-                  {{
-                    coveragePercentage >= 100
-                      ? 'Vollständig gedeckt'
-                      : 'Unterdeckt'
-                  }}
-                </span>
-              </div>
-            </div>
-          </div>
+        <div class="summary-item neutral">
+          <span class="label">Bilanz</span>
+          <span class="value"
+            >{{ monthlyIncome - monthlyExpenses | number: '1.2-2' }}€</span
+          >
         </div>
       </div>
     </div>
 
-    <!-- Recent Transactions -->
-    <div class="transactions-section">
-      <div class="section-header">
-        <h2 class="section-title">Server-Transaktionen</h2>
-        <div class="transaction-filters">
-          <button class="filter-btn active" (click)="filterTransactions('all')">
-            Alle
-          </button>
-          <button class="filter-btn" (click)="filterTransactions('income')">
-            Community-Support
-          </button>
-          <button class="filter-btn" (click)="filterTransactions('expenses')">
-            Server-Kosten
-          </button>
-        </div>
+    <!-- Coverage Status -->
+    <div class="stat-card">
+      <div class="stat-header">
+        <i class="pi pi-chart-pie"></i>
+        <span>Kostendeckung</span>
       </div>
-
-      <div class="transactions-list">
+      <div class="coverage-display">
         <div
-          class="transaction-item"
-          *ngFor="let event of filteredEvents"
-          [class.income]="event.type === 'income'"
-          [class.expense]="event.type === 'expense'"
+          class="coverage-circle"
+          [style.--percentage]="coveragePercentage + '%'"
         >
-          <div class="transaction-icon">
-            <i [class]="event.icon"></i>
-          </div>
-          <div class="transaction-details">
-            <div class="transaction-main">
-              <span class="service-name">{{ event.service }}</span>
-              <span
-                class="transaction-amount"
-                [class.positive]="event.type === 'income'"
-                [class.negative]="event.type === 'expense'"
-              >
-                {{ event.type === 'income' ? '+' : '-' }}€{{
-                  event.amount | number: '1.2-2'
-                }}
-              </span>
-            </div>
-            <div class="transaction-meta">
-              <span class="description">{{ event.description }}</span>
-              <span class="date">{{ event.date | date: 'dd.MM.yyyy' }}</span>
-            </div>
-          </div>
-
-          <!-- Admin Controls for each transaction -->
-          <div *ngIf="isAdmin" class="transaction-admin-controls">
-            <button
-              class="admin-btn edit-btn"
-              (click)="editTransaction(event)"
-              title="Bearbeiten"
-            >
-              <i class="pi pi-pencil"></i>
-            </button>
-            <button
-              class="admin-btn delete-btn"
-              (click)="deleteTransaction(event)"
-              title="Löschen"
-            >
-              <i class="pi pi-trash"></i>
-            </button>
-          </div>
+          <span class="percentage">{{ coveragePercentage }}%</span>
         </div>
+        <span
+          class="coverage-label"
+          [class.covered]="coveragePercentage >= 100"
+        >
+          {{ coveragePercentage >= 100 ? 'Gedeckt' : 'Unterdeckt' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="transactions-section">
+    <div class="section-header">
+      <h3>Letzte Transaktionen</h3>
+      <div class="filter-buttons">
+        <button
+          class="filter-btn"
+          [class.active]="currentFilter === 'all'"
+          (click)="filterTransactions('all')"
+        >
+          Alle
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="currentFilter === 'income'"
+          (click)="filterTransactions('income')"
+        >
+          Einnahmen
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="currentFilter === 'expenses'"
+          (click)="filterTransactions('expenses')"
+        >
+          Ausgaben
+        </button>
       </div>
     </div>
 
-    <!-- Recurring Transactions Section -->
-    <div
-      *ngIf="isAdmin && recurringTransactions.length > 0"
-      class="recurring-transactions-section"
-    >
-      <h3 class="section-title">Wiederkehrende Transaktionen</h3>
-
-      <div class="recurring-transactions-list">
-        <div
-          class="recurring-transaction-item"
-          *ngFor="let recurring of recurringTransactions"
-          [class.income]="recurring.transaction_type === 'income'"
-          [class.expense]="recurring.transaction_type === 'expense'"
-          [class.inactive]="!recurring.is_active"
-        >
-          <div class="recurring-icon">
-            <i class="pi pi-refresh"></i>
-          </div>
-          <div class="recurring-details">
-            <div class="recurring-main">
-              <span class="recurring-service">{{ recurring.category }}</span>
-              <span class="recurring-frequency">{{ recurring.frequency }}</span>
-              <span
-                class="recurring-amount"
-                [class.positive]="recurring.transaction_type === 'income'"
-                [class.negative]="recurring.transaction_type === 'expense'"
-              >
-                {{ recurring.transaction_type === 'income' ? '+' : '-' }}€{{
-                  recurring.amount | number: '1.2-2'
-                }}
-              </span>
-            </div>
-            <div class="recurring-meta">
-              <span class="recurring-description">{{
-                recurring.description
-              }}</span>
-              <span class="recurring-next"
-                >Nächste Ausführung:
-                {{ recurring.next_execution | date: 'dd.MM.yyyy' }}</span
-              >
-            </div>
-          </div>
-
-          <!-- Admin Controls for recurring transactions -->
-          <div class="recurring-admin-controls">
-            <button
-              class="admin-btn edit-btn"
-              (click)="editRecurringTransaction(recurring)"
-              title="Bearbeiten"
-            >
-              <i class="pi pi-pencil"></i>
-            </button>
-            <button
-              class="admin-btn delete-btn"
-              (click)="deleteRecurringTransaction(recurring)"
-              title="Löschen"
-            >
-              <i class="pi pi-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Monthly Breakdown -->
-    <div class="monthly-breakdown-section">
-      <h2 class="section-title">Monatliche Server-Finanzübersicht</h2>
-
-      <div class="breakdown-grid">
-        <div class="breakdown-item" *ngFor="let month of monthlyBreakdown">
-          <div class="month-header">
-            <span class="month-name">{{ month.name }}</span>
+    <div class="transactions-list">
+      <div
+        class="transaction-item"
+        *ngFor="let event of filteredEvents | slice: 0 : 5"
+        [class.income]="event.type === 'income'"
+        [class.expense]="event.type === 'expense'"
+      >
+        <div class="transaction-info">
+          <div class="transaction-main">
+            <span class="service-name">{{ event.service }}</span>
             <span
-              class="month-balance"
-              [class.positive]="month.balance >= 0"
-              [class.negative]="month.balance < 0"
+              class="transaction-amount"
+              [class.positive]="event.type === 'income'"
+              [class.negative]="event.type === 'expense'"
             >
-              {{ month.balance >= 0 ? '+' : '' }}€{{
-                month.balance | number: '1.2-2'
-              }}
+              {{ event.type === 'income' ? '+' : '-'
+              }}{{ event.amount | number: '1.2-2' }}€
             </span>
           </div>
-          <div class="month-details">
-            <div class="detail-row">
-              <span class="label">Community-Support:</span>
-              <span class="value positive"
-                >+€{{ month.income | number: '1.2-2' }}</span
-              >
-            </div>
-            <div class="detail-row">
-              <span class="label">Server-Kosten:</span>
-              <span class="value negative"
-                >-€{{ month.expenses | number: '1.2-2' }}</span
-              >
-            </div>
+          <div class="transaction-details">
+            <span class="description">{{ event.description }}</span>
+            <span class="date">{{ event.date | date: 'dd.MM.yyyy' }}</span>
           </div>
-          <div class="month-progress">
-            <div class="progress-bar small">
-              <div
-                class="progress-fill"
-                [style.width.%]="month.coveragePercentage"
-              ></div>
-            </div>
-          </div>
+        </div>
+
+        <div *ngIf="isAdmin" class="admin-actions">
+          <button
+            class="action-btn edit"
+            (click)="editTransaction(event)"
+            title="Bearbeiten"
+          >
+            <i class="pi pi-pencil"></i>
+          </button>
+          <button
+            class="action-btn delete"
+            (click)="deleteTransaction(event)"
+            title="Löschen"
+          >
+            <i class="pi pi-trash"></i>
+          </button>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Projections -->
-    <div class="projections-section">
-      <h2 class="section-title">Server-Finanzprognose</h2>
-
-      <div class="projection-cards">
-        <div class="projection-card">
-          <div class="projection-header">
-            <i class="pi pi-calendar stat-icon"></i>
-            <span class="projection-label">Nächste 3 Monate</span>
-          </div>
-          <div
-            class="projection-value"
-            [class.positive]="threeMonthProjection >= 0"
-            [class.negative]="threeMonthProjection < 0"
-          >
-            {{ threeMonthProjection >= 0 ? '+' : '' }}€{{
-              threeMonthProjection | number: '1.2-2'
-            }}
-          </div>
-          <div class="projection-info">
-            <span>Basierend auf aktuellen Durchschnittswerten</span>
-          </div>
-        </div>
-
-        <div class="projection-card">
-          <div class="projection-header">
-            <i class="pi pi-clock stat-icon"></i>
-            <span class="projection-label">Server-Laufzeit</span>
-          </div>
-          <div class="projection-value">
-            {{ burnRate | number: '1.2-2' }} Monate
-          </div>
-          <div class="projection-info">
-            <span>Bei aktuellem Saldo und Server-Kosten</span>
-          </div>
-        </div>
+  <!-- Quick Projection -->
+  <div class="projection-section">
+    <h3>Prognose</h3>
+    <div class="projection-cards">
+      <div class="projection-card">
+        <span class="projection-label">Nächste 3 Monate</span>
+        <span
+          class="projection-value"
+          [class.positive]="threeMonthProjection >= 0"
+          [class.negative]="threeMonthProjection < 0"
+        >
+          {{ threeMonthProjection >= 0 ? '+' : ''
+          }}{{ threeMonthProjection | number: '1.2-2' }}€
+        </span>
+      </div>
+      <div class="projection-card">
+        <span class="projection-label">Laufzeit bei akt. Saldo</span>
+        <span class="projection-value"
+          >{{ burnRate | number: '1.0-0' }} Monate</span
+        >
       </div>
     </div>
   </div>
@@ -426,13 +190,9 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>
-        {{
-          editingTransaction
-            ? 'Transaktion bearbeiten'
-            : 'Neue Transaktion hinzufügen'
-        }}
+        {{ editingTransaction ? 'Transaktion bearbeiten' : 'Neue Transaktion' }}
       </h3>
-      <button class="modal-close-btn" (click)="closeTransactionModal()">
+      <button class="modal-close" (click)="closeTransactionModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
@@ -442,104 +202,90 @@
       (ngSubmit)="saveTransaction()"
       #transactionForm="ngForm"
     >
-      <div class="form-group">
-        <label for="transactionType">Typ *</label>
-        <select
-          id="transactionType"
-          [(ngModel)]="transactionFormData.type"
-          name="type"
-          required
-          class="form-control"
-        >
-          <option value="">Typ auswählen</option>
-          <option value="income">Einnahme</option>
-          <option value="expense">Ausgabe</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Typ</label>
+          <select [(ngModel)]="transactionFormData.type" name="type" required>
+            <option value="">Auswählen</option>
+            <option value="income">Einnahme</option>
+            <option value="expense">Ausgabe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Betrag (€)</label>
+          <input
+            type="number"
+            [(ngModel)]="transactionFormData.amount"
+            name="amount"
+            required
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+          />
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="category">Kategorie *</label>
-        <select
-          id="category"
-          [(ngModel)]="transactionFormData.category"
-          name="category"
-          required
-          class="form-control"
-        >
-          <option value="">Kategorie auswählen</option>
-          <option value="hosting">Server-Hosting</option>
-          <option value="domain">Domain</option>
-          <option value="services">Services</option>
-          <option value="donation">Spende</option>
-          <option value="merchandise">Merchandise</option>
-          <option value="other">Sonstiges</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategorie</label>
+          <select
+            [(ngModel)]="transactionFormData.category"
+            name="category"
+            required
+          >
+            <option value="">Auswählen</option>
+            <option value="hosting">Server-Hosting</option>
+            <option value="domain">Domain</option>
+            <option value="services">Services</option>
+            <option value="donation">Spende</option>
+            <option value="merchandise">Merchandise</option>
+            <option value="other">Sonstiges</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Datum</label>
+          <input
+            type="date"
+            [(ngModel)]="transactionFormData.date"
+            name="date"
+            required
+          />
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="amount">Betrag (€) *</label>
-        <input
-          type="number"
-          id="amount"
-          [(ngModel)]="transactionFormData.amount"
-          name="amount"
-          required
-          step="0.01"
-          min="0"
-          class="form-control"
-          placeholder="0.00"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="description">Beschreibung *</label>
-        <input
-          type="text"
-          id="description"
-          [(ngModel)]="transactionFormData.description"
-          name="description"
-          required
-          class="form-control"
-          placeholder="Beschreibung der Transaktion"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="date">Datum *</label>
-        <input
-          type="date"
-          id="date"
-          [(ngModel)]="transactionFormData.date"
-          name="date"
-          required
-          class="form-control"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="title">Titel *</label>
+      <div class="form-group full-width">
+        <label>Titel</label>
         <input
           type="text"
-          id="title"
           [(ngModel)]="transactionFormData.title"
           name="title"
           required
-          class="form-control"
-          placeholder="Titel oder Anbieter"
+          placeholder="Anbieter oder Titel"
+        />
+      </div>
+
+      <div class="form-group full-width">
+        <label>Beschreibung</label>
+        <input
+          type="text"
+          [(ngModel)]="transactionFormData.description"
+          name="description"
+          required
+          placeholder="Kurze Beschreibung"
         />
       </div>
 
       <div class="form-actions">
         <button
           type="button"
-          class="btn btn-secondary"
+          class="btn secondary"
           (click)="closeTransactionModal()"
         >
           Abbrechen
         </button>
         <button
           type="submit"
-          class="btn btn-primary"
+          class="btn primary"
           [disabled]="!transactionForm.valid || isSubmitting"
         >
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
@@ -562,10 +308,10 @@
         {{
           editingRecurring
             ? 'Wiederkehrende Transaktion bearbeiten'
-            : 'Neue wiederkehrende Transaktion hinzufügen'
+            : 'Neue wiederkehrende Transaktion'
         }}
       </h3>
-      <button class="modal-close-btn" (click)="closeRecurringModal()">
+      <button class="modal-close" (click)="closeRecurringModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
@@ -575,132 +321,114 @@
       (ngSubmit)="saveRecurringTransaction()"
       #recurringForm="ngForm"
     >
-      <div class="form-group">
-        <label for="recurringType">Typ *</label>
-        <select
-          id="recurringType"
-          [(ngModel)]="recurringFormData.type"
-          name="type"
-          required
-          class="form-control"
-        >
-          <option value="">Typ auswählen</option>
-          <option value="income">Einnahme</option>
-          <option value="expense">Ausgabe</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Typ</label>
+          <select [(ngModel)]="recurringFormData.type" name="type" required>
+            <option value="">Auswählen</option>
+            <option value="income">Einnahme</option>
+            <option value="expense">Ausgabe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Betrag (€)</label>
+          <input
+            type="number"
+            [(ngModel)]="recurringFormData.amount"
+            name="amount"
+            required
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+          />
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="recurringCategory">Kategorie *</label>
-        <select
-          id="recurringCategory"
-          [(ngModel)]="recurringFormData.category"
-          name="category"
-          required
-          class="form-control"
-        >
-          <option value="">Kategorie auswählen</option>
-          <option value="hosting">Server-Hosting</option>
-          <option value="domain">Domain</option>
-          <option value="services">Services</option>
-          <option value="donation">Spende</option>
-          <option value="merchandise">Merchandise</option>
-          <option value="other">Sonstiges</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategorie</label>
+          <select
+            [(ngModel)]="recurringFormData.category"
+            name="category"
+            required
+          >
+            <option value="">Auswählen</option>
+            <option value="hosting">Server-Hosting</option>
+            <option value="domain">Domain</option>
+            <option value="services">Services</option>
+            <option value="donation">Spende</option>
+            <option value="merchandise">Merchandise</option>
+            <option value="other">Sonstiges</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Häufigkeit</label>
+          <select
+            [(ngModel)]="recurringFormData.frequency"
+            name="frequency"
+            required
+          >
+            <option value="">Auswählen</option>
+            <option value="monthly">Monatlich</option>
+            <option value="yearly">Jährlich</option>
+            <option value="weekly">Wöchentlich</option>
+          </select>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="recurringAmount">Betrag (€) *</label>
-        <input
-          type="number"
-          id="recurringAmount"
-          [(ngModel)]="recurringFormData.amount"
-          name="amount"
-          required
-          step="0.01"
-          min="0"
-          class="form-control"
-          placeholder="0.00"
-        />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Startdatum</label>
+          <input
+            type="date"
+            [(ngModel)]="recurringFormData.start_date"
+            name="start_date"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Enddatum (optional)</label>
+          <input
+            type="date"
+            [(ngModel)]="recurringFormData.end_date"
+            name="end_date"
+          />
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="recurringDescription">Beschreibung *</label>
-        <input
-          type="text"
-          id="recurringDescription"
-          [(ngModel)]="recurringFormData.description"
-          name="description"
-          required
-          class="form-control"
-          placeholder="Beschreibung der wiederkehrenden Transaktion"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="recurringFrequency">Häufigkeit *</label>
-        <select
-          id="recurringFrequency"
-          [(ngModel)]="recurringFormData.frequency"
-          name="frequency"
-          required
-          class="form-control"
-        >
-          <option value="">Häufigkeit auswählen</option>
-          <option value="daily">Täglich</option>
-          <option value="weekly">Wöchentlich</option>
-          <option value="monthly">Monatlich</option>
-          <option value="yearly">Jährlich</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="recurringStartDate">Startdatum *</label>
-        <input
-          type="date"
-          id="recurringStartDate"
-          [(ngModel)]="recurringFormData.start_date"
-          name="start_date"
-          required
-          class="form-control"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="recurringEndDate">Enddatum (optional)</label>
-        <input
-          type="date"
-          id="recurringEndDate"
-          [(ngModel)]="recurringFormData.end_date"
-          name="end_date"
-          class="form-control"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="recurringTitle">Titel *</label>
+      <div class="form-group full-width">
+        <label>Titel</label>
         <input
           type="text"
-          id="recurringTitle"
           [(ngModel)]="recurringFormData.title"
           name="title"
           required
-          class="form-control"
-          placeholder="Titel oder Anbieter"
+          placeholder="Anbieter oder Titel"
+        />
+      </div>
+
+      <div class="form-group full-width">
+        <label>Beschreibung</label>
+        <input
+          type="text"
+          [(ngModel)]="recurringFormData.description"
+          name="description"
+          required
+          placeholder="Kurze Beschreibung"
         />
       </div>
 
       <div class="form-actions">
         <button
           type="button"
-          class="btn btn-secondary"
+          class="btn secondary"
           (click)="closeRecurringModal()"
         >
           Abbrechen
         </button>
         <button
           type="submit"
-          class="btn btn-primary"
+          class="btn primary"
           [disabled]="!recurringForm.valid || isSubmitting"
         >
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
