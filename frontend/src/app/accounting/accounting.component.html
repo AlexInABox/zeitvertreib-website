@@ -70,7 +70,9 @@
           class="coverage-circle"
           [style.--percentage]="coveragePercentage + '%'"
         >
-          <span class="percentage">{{ coveragePercentage }}%</span>
+          <span class="percentage"
+            >{{ coveragePercentage | number: '1.0-0' }}%</span
+          >
         </div>
         <span
           class="coverage-label"
