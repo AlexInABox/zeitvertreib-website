@@ -539,19 +539,19 @@ export async function generateLoginSecret(
 ): Promise<string> {
   try {
     const secret = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
-    
+    const expiresAt = new Date(Date.now() + 40 * 60 * 1000); // 40 minutes from now
+
     const insertQuery = `
       INSERT INTO login_secrets (secret, steam_id, expires_at)
       VALUES (?, ?, ?)
     `;
-    
+
     console.log('[AUTH] Generating login secret for steamId:', steamId);
-    
+
     await env['zeitvertreib-data'].prepare(insertQuery)
       .bind(secret, steamId, expiresAt.toISOString())
       .run();
-      
+
     console.log('[AUTH] Login secret generated successfully:', secret);
     return secret;
   } catch (error) {
@@ -569,13 +569,13 @@ export async function validateLoginSecret(
     FROM login_secrets
     WHERE secret = ?
   `;
-  
+
   const result = await env['zeitvertreib-data'].prepare(selectQuery).bind(secret).first();
-  
+
   if (!result) {
     return { isValid: false, error: 'Invalid login secret' };
   }
-  
+
   const expiresAt = new Date(result.expires_at as string);
   if (Date.now() > expiresAt.getTime()) {
     // Delete the expired secret
@@ -586,15 +586,15 @@ export async function validateLoginSecret(
     await env['zeitvertreib-data'].prepare(deleteQuery).bind(secret).run();
     return { isValid: false, error: 'Invalid login secret' };
   }
-  
+
   // Delete the secret after successful validation (one-time use)
   const deleteQuery = `
     DELETE FROM login_secrets
     WHERE secret = ?
   `;
-  
+
   await env['zeitvertreib-data'].prepare(deleteQuery).bind(secret).run();
-  
+
   return { isValid: true, steamId: result.steam_id as string };
 }
 
@@ -604,7 +604,7 @@ export async function cleanupExpiredLoginSecrets(env: Env): Promise<void> {
       DELETE FROM login_secrets
       WHERE expires_at < datetime('now')
     `;
-    
+
     console.log('[AUTH] Cleaning up expired login secrets');
     await env['zeitvertreib-data'].prepare(deleteQuery).run();
     console.log('[AUTH] Expired login secrets cleanup completed');

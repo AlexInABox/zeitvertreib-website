@@ -58,7 +58,7 @@ export async function handleSteamCallback(
   const sessionId = await createSession(steamId, steamUser, env);
 
   const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
-  
+
   // Redirect to the auth callback page instead of directly to the app
   const redirectUrl = new URL(`${frontendUrl}/auth/callback`);
   redirectUrl.searchParams.set('token', sessionId);
@@ -76,9 +76,9 @@ export async function handleSteamCallback(
   // Create a response that also sets a secure cookie for Safari compatibility
   // Determine if we're in development or production
   const isLocalDev = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
-  
+
   let cookieSettings = `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60 * 3}`;
-  
+
   if (!isLocalDev) {
     // Production settings: same domain, so no cross-origin issues
     cookieSettings += '; HttpOnly; Secure; SameSite=Strict';
@@ -138,14 +138,14 @@ export async function handleGenerateLoginSecret(
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
-  
+
   try {
     // Validate API key authentication
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return createResponse({ error: 'API key required' }, 401, origin);
     }
-    
+
     const apiKey = authHeader.substring(7);
     if (!env.LOGIN_SECRET_API_KEY || apiKey !== env.LOGIN_SECRET_API_KEY) {
       return createResponse({ error: 'Invalid API key' }, 403, origin);
@@ -164,7 +164,7 @@ export async function handleGenerateLoginSecret(
     } else {
       return createResponse({ error: 'Method not allowed' }, 405, origin);
     }
-    
+
     if (!steamId) {
       return createResponse({ error: 'Steam ID is required' }, 400, origin);
     }
@@ -176,19 +176,19 @@ export async function handleGenerateLoginSecret(
 
     // Generate new login secret
     const secret = await generateLoginSecret(steamId, env);
-    
+
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
     const loginUrl = `${frontendUrl}/?loginSecret=${secret}`;
-    
+
     return createResponse({
       secret,
       loginUrl,
       steamId,
-      expiresIn: '10 minutes'
+      expiresIn: '40 minutes'
     }, 200, origin);
   } catch (err) {
     console.error('[AUTH] Generate login secret error:', err);
-    return createResponse({ 
+    return createResponse({
       error: 'Failed to generate login secret',
       details: err instanceof Error ? err.message : String(err)
     }, 500, origin);
@@ -202,7 +202,7 @@ export async function handleLoginWithSecret(
   const origin = request.headers.get('Origin');
   const url = new URL(request.url);
   const secret = url.searchParams.get('secret');
-  
+
   if (!secret) {
     return createResponse({ error: 'Login secret is required' }, 400, origin);
   }
@@ -210,7 +210,7 @@ export async function handleLoginWithSecret(
   try {
     // Validate the login secret
     const { isValid, steamId, error } = await validateLoginSecret(secret, env);
-    
+
     if (!isValid) {
       return createResponse({ error: error! }, 400, origin);
     }
@@ -226,7 +226,7 @@ export async function handleLoginWithSecret(
 
     // Extract the numeric Steam ID from the stored format (remove @steam suffix)
     const numericSteamId = steamId!.replace('@steam', '');
-    
+
     console.log('[AUTH] Login with secret - stored steamId:', steamId);
     console.log('[AUTH] Login with secret - numeric steamId for API:', numericSteamId);
 
@@ -241,9 +241,9 @@ export async function handleLoginWithSecret(
     // Determine if we're in development or production
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
     const isLocalDev = frontendUrl.includes('localhost') || frontendUrl.includes('127.0.0.1');
-    
+
     let cookieSettings = `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60 * 3}`;
-    
+
     if (!isLocalDev) {
       // Production settings: same domain, so no cross-origin issues
       cookieSettings += '; HttpOnly; Secure; SameSite=Strict';
