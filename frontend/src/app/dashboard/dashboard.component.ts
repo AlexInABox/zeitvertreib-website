@@ -191,6 +191,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
   codeRedemptionMessage = '';
   codeRedemptionSuccess = false;
 
+  // ZVC Transfer properties
+  transferRecipient = '';
+  transferAmount: number | null = null;
+  transferLoading = false;
+  transferMessage = '';
+  transferSuccess = false;
+
+  // Helper method to calculate transfer tax
+  getTransferTax(amount: number | null): number {
+    if (!amount) return 0;
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) return 0;
+    return Math.floor(numAmount * 0.10); // 10% tax
+  }
+
+  // Helper method to calculate total transfer cost
+  getTransferTotalCost(amount: number | null): number {
+    if (!amount) return 0;
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) return 0;
+    return numAmount + this.getTransferTax(numAmount);
+  }
+
   // Mock data for owned cosmetics - in production this would come from backend
   ownedCosmetics = {
     hats: ['cap'] as string[], // User owns a baseball cap
@@ -1290,6 +1313,118 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }, 5000);
   }
 
+  // ZVC Transfer method
+  transferZVC(): void {
+    if (!this.transferRecipient || !this.transferAmount) {
+      return;
+    }
+
+    // Convert to number and validate
+    const amount = Number(this.transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      this.transferMessage = 'Bitte gib einen gültigen Betrag ein';
+      this.transferSuccess = false;
+      setTimeout(() => {
+        this.transferMessage = '';
+      }, 3000);
+      return;
+    }
+
+    // Validate minimum transfer amount
+    if (amount < 100) {
+      this.transferMessage = 'Mindestbetrag für Transfers: 100 ZVC';
+      this.transferSuccess = false;
+      setTimeout(() => {
+        this.transferMessage = '';
+      }, 3000);
+      return;
+    }
+
+    // Validate transfer amount
+    const currentBalance = this.userStatistics.experience || 0;
+    const taxAmount = Math.floor(amount * 0.10); // 10% tax
+    const totalCost = amount + taxAmount;
+
+    if (totalCost > currentBalance) {
+      this.transferMessage = `Nicht genügend ZVC! Benötigt: ${totalCost} ZVC (${amount} + ${taxAmount} Steuer), Verfügbar: ${currentBalance} ZVC`;
+      this.transferSuccess = false;
+      setTimeout(() => {
+        this.transferMessage = '';
+      }, 5000);
+      return;
+    }
+
+    this.transferLoading = true;
+    this.transferMessage = '';
+    this.transferSuccess = false;
+
+    // Call the backend API
+    this.authService
+      .authenticatedPost<{
+        success: boolean;
+        message: string;
+        transfer?: {
+          amount: number;
+          tax: number;
+          totalCost: number;
+          recipient: string;
+          senderNewBalance: number;
+          recipientNewBalance: number;
+        };
+      }>(`${environment.apiUrl}/transfer-zvc`, {
+        recipient: this.transferRecipient.trim(),
+        amount: amount, // Use the converted number
+      })
+      .subscribe({
+        next: (response) => {
+          this.transferLoading = false;
+          if (response?.success) {
+            this.transferSuccess = true;
+            this.transferMessage = response.message;
+
+            // Update the user balance immediately with the new balance from server
+            if (response.transfer?.senderNewBalance !== undefined) {
+              this.userStatistics.experience = response.transfer.senderNewBalance;
+            }
+
+            // Clear the inputs after successful transfer
+            this.transferRecipient = '';
+            this.transferAmount = null;
+
+            // Clear message after 5 seconds
+            setTimeout(() => {
+              this.transferMessage = '';
+            }, 5000);
+          } else {
+            this.transferSuccess = false;
+            this.transferMessage = response?.message || 'Transfer fehlgeschlagen';
+          }
+        },
+        error: (error) => {
+          this.transferLoading = false;
+          this.transferSuccess = false;
+
+          console.error('Error transferring ZVC:', error);
+          let errorMessage = 'Fehler beim Senden der ZVC';
+
+          if (error?.error?.error) {
+            errorMessage = error.error.error;
+          } else if (error?.error?.message) {
+            errorMessage = error.error.message;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+
+          this.transferMessage = errorMessage;
+
+          // Clear message after 5 seconds
+          setTimeout(() => {
+            this.transferMessage = '';
+          }, 5000);
+        },
+      });
+  }
+
   // Cosmetic-related methods
   getHatEmoji(hatKey: string): string {
     const hatEmojis: { [key: string]: string } = {
@@ -1510,7 +1645,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },

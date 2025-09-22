@@ -182,65 +182,160 @@
         <!-- ZV Coins Widget -->
         <td colspan="2" class="zvcoins-container align-top p-2">
           <div class="stats-card p-6 rounded-2xl">
-            <h3 class="text-xl font-bold text-white mb-4 cardHeader">
-              🪙 Zeitvertreib Coins
+            <h3
+              class="text-xl font-bold text-white mb-4 cardHeader flex items-center justify-between"
+            >
+              <span>🪙 Zeitvertreib Coins</span>
+              <span class="zvcoins-balance-inline">
+                {{ userStatistics.experience | number: '1.0-0' }} ZVC
+              </span>
             </h3>
 
-            <!-- Current Balance -->
-            <div class="zvcoins-balance-section mb-6">
-              <div class="zvcoins-balance-card">
-                <div class="zvcoins-icon">🪙</div>
-                <div class="zvcoins-balance-info">
-                  <p class="zvcoins-balance-label">Dein Guthaben</p>
-                  <p class="zvcoins-balance-amount">
-                    {{ userStatistics.experience | number: '1.0-0' }} ZVC
-                  </p>
+            <!-- Code Redemption and Transfer Combined -->
+            <div class="zvcoins-balance-code-section mb-6">
+              <div class="zvcoins-combined-card">
+                <!-- Code Redemption Area -->
+                <div class="zvcoins-code-area">
+                  <div class="zvcoins-code-header">
+                    <div class="zvcoins-code-icon">🎫</div>
+                    <div class="zvcoins-code-info">
+                      <p class="zvcoins-code-label">Code einlösen</p>
+                    </div>
+                  </div>
+
+                  <!-- Code Info Tip -->
+                  <div class="zvcoins-code-tip">
+                    <div class="code-tip-icon">💡</div>
+                    <div class="code-tip-text">
+                      Codes kannst du auf unserem
+                      <strong>Discord-Server</strong> oder bei speziellen Events
+                      gewinnen!!
+                    </div>
+                  </div>
+
+                  <div class="zvcoins-code-input-section">
+                    <div class="zvcoins-code-input-group">
+                      <input
+                        type="text"
+                        [(ngModel)]="redeemCode"
+                        placeholder="Gib deinen Code hier ein..."
+                        class="zvcoins-code-input"
+                        (keyup.enter)="redeemCodeAction()"
+                        [disabled]="codeRedemptionLoading"
+                      />
+                      <button
+                        class="zvcoins-code-btn"
+                        (click)="redeemCodeAction()"
+                        [disabled]="!redeemCode || codeRedemptionLoading"
+                      >
+                        <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
+                        <span *ngIf="codeRedemptionLoading"
+                          >⏳ Wird eingelöst...</span
+                        >
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Vertical Divider -->
+                <div class="zvcoins-divider"></div>
+
+                <!-- ZVC Transfer Area -->
+                <div class="zvcoins-transfer-area">
+                  <div class="zvcoins-transfer-header">
+                    <div class="zvcoins-transfer-icon">💸</div>
+                    <div class="zvcoins-transfer-info">
+                      <p class="zvcoins-transfer-label">
+                        Zeitvertreib Coins senden
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Transaction Tax Disclaimer -->
+                  <div class="zvcoins-transfer-disclaimer">
+                    <div class="transfer-disclaimer-icon">⚠️</div>
+                    <div class="transfer-disclaimer-text">
+                      <strong>Transaktionsgebühr:</strong> Auf jede Transaktion
+                      wird eine 10% Steuer erhoben.
+                      <strong>Mindestbetrag:</strong> 100 ZVC.
+                    </div>
+                  </div>
+
+                  <!-- Transfer Cost Info -->
+                  <div
+                    *ngIf="transferAmount && transferAmount > 0"
+                    class="zvcoins-transfer-cost-info"
+                  >
+                    <div class="transfer-cost-item">
+                      <span class="cost-label">Betrag:</span>
+                      <span class="cost-value">{{ transferAmount }} ZVC</span>
+                    </div>
+                    <div class="transfer-cost-item">
+                      <span class="cost-label">Steuer (10%):</span>
+                      <span class="cost-value"
+                        >{{ getTransferTax(transferAmount) }} ZVC</span
+                      >
+                    </div>
+                    <div class="transfer-cost-item transfer-cost-total">
+                      <span class="cost-label">Gesamt:</span>
+                      <span class="cost-value"
+                        >{{ getTransferTotalCost(transferAmount) }} ZVC</span
+                      >
+                    </div>
+                  </div>
+
+                  <div class="zvcoins-transfer-input-section">
+                    <div class="zvcoins-transfer-input-group">
+                      <input
+                        type="text"
+                        [(ngModel)]="transferRecipient"
+                        placeholder="Steam ID (z.B. 76561198354414854 oder 354414854)"
+                        class="zvcoins-transfer-input zvcoins-transfer-recipient"
+                        [disabled]="transferLoading"
+                      />
+                      <input
+                        type="text"
+                        [(ngModel)]="transferAmount"
+                        placeholder="Betrag"
+                        class="zvcoins-transfer-input zvcoins-transfer-amount"
+                        [disabled]="transferLoading"
+                      />
+                      <button
+                        class="zvcoins-transfer-btn"
+                        (click)="transferZVC()"
+                        [disabled]="
+                          !transferRecipient ||
+                          !transferAmount ||
+                          transferAmount <= 0 ||
+                          transferAmount < 100 ||
+                          getTransferTotalCost(transferAmount) >
+                            (userStatistics.experience || 0) ||
+                          transferLoading
+                        "
+                      >
+                        <span *ngIf="!transferLoading">💸 Senden</span>
+                        <span *ngIf="transferLoading">⏳ Wird gesendet...</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Code Redemption Section -->
-            <div class="zvcoins-code-section mb-6">
-              <div class="zvcoins-code-card">
-                <div class="zvcoins-code-header">
-                  <div class="zvcoins-code-icon">🎫</div>
-                  <div class="zvcoins-code-info">
-                    <p class="zvcoins-code-label">Code einlösen</p>
-                    <p class="zvcoins-code-description">
-                      Gutscheincode für zusätzliche ZVC
-                    </p>
-                  </div>
-                </div>
-                <div class="zvcoins-code-input-section">
-                  <div class="zvcoins-code-input-group">
-                    <input
-                      type="text"
-                      [(ngModel)]="redeemCode"
-                      placeholder="Gib deinen Code hier ein..."
-                      class="zvcoins-code-input"
-                      (keyup.enter)="redeemCodeAction()"
-                      [disabled]="codeRedemptionLoading"
-                    />
-                    <button
-                      class="zvcoins-code-btn"
-                      (click)="redeemCodeAction()"
-                      [disabled]="!redeemCode || codeRedemptionLoading"
-                    >
-                      <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
-                      <span *ngIf="codeRedemptionLoading"
-                        >⏳ Wird eingelöst...</span
-                      >
-                    </button>
-                  </div>
-                  <div
-                    *ngIf="codeRedemptionMessage"
-                    class="zvcoins-code-message"
-                    [class.success]="codeRedemptionSuccess"
-                    [class.error]="!codeRedemptionSuccess"
-                  >
-                    {{ codeRedemptionMessage }}
-                  </div>
-                </div>
+              <!-- Message displays outside the card for better visibility -->
+              <div
+                *ngIf="codeRedemptionMessage"
+                class="zvcoins-message mt-3"
+                [class.success]="codeRedemptionSuccess"
+                [class.error]="!codeRedemptionSuccess"
+              >
+                {{ codeRedemptionMessage }}
+              </div>
+              <div
+                *ngIf="transferMessage"
+                class="zvcoins-message mt-3"
+                [class.success]="transferSuccess"
+                [class.error]="!transferSuccess"
+              >
+                {{ transferMessage }}
               </div>
             </div>
 

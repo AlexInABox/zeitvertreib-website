@@ -986,3 +986,218 @@ export async function handleGetSummary(
     return createResponse({ error: 'Failed to fetch summary' }, 500, origin);
   }
 }
+
+/**
+ * POST /transfer-zvc
+ * Transfer ZV Coins (experience) from one user to another with 10% tax
+ */
+export async function handleTransferZVC(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  // Validate session for the sender
+  const validation = await validateSession(request, env);
+  if (!validation.isValid) {
+    return createResponse({ error: validation.error }, 401, origin);
+  }
+
+  try {
+    const body = await request.json() as { recipient?: string; amount?: number };
+    const { recipient, amount } = body;
+
+    // Validate input
+    if (!recipient || typeof recipient !== 'string' || recipient.trim() === '') {
+      return createResponse({ error: 'Empfänger ist erforderlich' }, 400, origin);
+    }
+
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return createResponse({ error: 'Gültiger Betrag ist erforderlich' }, 400, origin);
+    }
+
+    if (!Number.isInteger(amount)) {
+      return createResponse({ error: 'Betrag muss eine ganze Zahl sein' }, 400, origin);
+    }
+
+    // Validate minimum transfer amount
+    if (amount < 100) {
+      return createResponse({ error: 'Mindestbetrag für Transfers: 100 ZVC' }, 400, origin);
+    }
+
+    const senderSteamId = validation.session!.steamId;
+    const cleanRecipient = recipient.trim();
+
+    // Prevent self-transfer
+    if (senderSteamId === cleanRecipient) {
+      return createResponse({ error: 'Du kannst nicht an dich selbst senden' }, 400, origin);
+    }
+
+    // Calculate tax (10%)
+    const taxRate = 0.10;
+    const taxAmount = Math.floor(amount * taxRate);
+    const totalCost = amount + taxAmount; // Total amount to deduct from sender
+
+    // Check if sender has enough ZVC (needs 110% of transfer amount)
+    const senderData = (await env['zeitvertreib-data']
+      .prepare('SELECT experience FROM playerdata WHERE id = ?')
+      .bind(senderSteamId)
+      .first()) as { experience: number } | null;
+
+    if (!senderData) {
+      return createResponse({ error: 'Sender nicht in der Datenbank gefunden' }, 404, origin);
+    }
+
+    const senderBalance = senderData.experience || 0;
+    if (senderBalance < totalCost) {
+      return createResponse({
+        error: `Nicht genügend ZVC. Benötigt: ${totalCost} ZVC (${amount} + ${taxAmount} Steuer), Verfügbar: ${senderBalance} ZVC`
+      }, 400, origin);
+    }
+
+    // Helper function to parse Steam ID from various input formats
+    function parseSteamId(input: string): string | null {
+      // Remove all whitespace
+      const cleaned = input.replace(/\s+/g, '');
+
+      // Extract numbers from the input
+      const numbers = cleaned.match(/\d+/g);
+      if (!numbers || numbers.length === 0) {
+        return null;
+      }
+
+      // Join all numbers and take the longest sequence
+      const allNumbers = numbers.join('');
+
+      // Look for potential Steam ID patterns (17-digit numbers starting with 7656119)
+      const steamIdPattern = /7656119\d{10}/g;
+      const steamIdMatches = allNumbers.match(steamIdPattern);
+
+      if (steamIdMatches && steamIdMatches.length > 0) {
+        return steamIdMatches[0]; // Return the first valid Steam ID found
+      }
+
+      // If no Steam ID pattern found, check if we have a number that could be converted
+      // Look for sequences of 10+ digits
+      const longNumbers = numbers.filter(num => num.length >= 10);
+
+      for (const num of longNumbers) {
+        // If it's a long number, try adding Steam ID prefix
+        if (num.length >= 10 && num.length <= 17) {
+          // Try different approaches:
+
+          // 1. If it starts with 765611, it might be missing just the last digit
+          if (num.startsWith('765611')) {
+            return num;
+          }
+
+          // 2. If it's 10-11 digits, prepend "7656119" (standard Steam ID prefix)
+          if (num.length >= 10 && num.length <= 11) {
+            return '7656119' + num;
+          }
+
+          // 3. If it's exactly 17 digits and starts with reasonable digits, use as-is
+          if (num.length === 17 && /^[1-9]/.test(num)) {
+            return num;
+          }
+        }
+      }
+
+      // If we have any number, try prefixing with Steam ID prefix
+      if (allNumbers.length >= 8) {
+        const candidate = '7656119' + allNumbers.slice(-10); // Take last 10 digits
+        if (candidate.length === 17) {
+          return candidate;
+        }
+      }
+
+      return null;
+    }
+
+    // Parse the recipient Steam ID from input
+    const parsedSteamId = parseSteamId(cleanRecipient);
+
+    if (!parsedSteamId) {
+      return createResponse({
+        error: 'Ungültiger Empfänger. Bitte gib eine Steam ID ein (z.B. 76561198354414854 oder 354414854)'
+      }, 400, origin);
+    }
+
+    // Check if recipient exists in database
+    let recipientData = (await env['zeitvertreib-data']
+      .prepare('SELECT id, experience FROM playerdata WHERE id = ?')
+      .bind(parsedSteamId)
+      .first()) as { id: string; experience: number } | null;
+
+    if (!recipientData) {
+      return createResponse({
+        error: `Empfänger-Steam ID ${parsedSteamId} nicht in der Datenbank gefunden`
+      }, 404, origin);
+    }
+
+    const recipientBalance = recipientData.experience || 0;
+    const recipientSteamId = recipientData.id;
+
+    // Perform the transfer in a transaction
+    try {
+      // Deduct total cost from sender (amount + tax)
+      await env['zeitvertreib-data']
+        .prepare('UPDATE playerdata SET experience = experience - ? WHERE id = ?')
+        .bind(totalCost, senderSteamId)
+        .run();
+
+      // Add only the transfer amount to recipient (not including tax)
+      await env['zeitvertreib-data']
+        .prepare('UPDATE playerdata SET experience = experience + ? WHERE id = ?')
+        .bind(amount, recipientSteamId)
+        .run();
+
+      // Log the transaction in financial_transactions table for record keeping
+      const transactionDate = new Date().toISOString().split('T')[0];
+      await env['zeitvertreib-data']
+        .prepare(`
+          INSERT INTO financial_transactions 
+          (transaction_type, category, amount, description, transaction_date, created_by, notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `)
+        .bind(
+          'expense',
+          'ZVC_Transfer',
+          totalCost,
+          `ZVC Transfer: ${amount} ZVC an ${recipientSteamId} (${taxAmount} ZVC Steuer)`,
+          transactionDate,
+          senderSteamId,
+          `Transfer Tax: ${taxAmount} ZVC (10%)`
+        )
+        .run();
+
+      // Calculate new balances
+      const newSenderBalance = senderBalance - totalCost;
+      const newRecipientBalance = recipientBalance + amount;
+
+      return createResponse({
+        success: true,
+        message: `${amount} ZVC erfolgreich an ${recipientSteamId} gesendet! (${taxAmount} ZVC Steuer abgezogen)`,
+        transfer: {
+          amount,
+          tax: taxAmount,
+          totalCost,
+          recipient: recipientSteamId,
+          senderNewBalance: newSenderBalance,
+          recipientNewBalance: newRecipientBalance
+        }
+      }, 200, origin);
+
+    } catch (dbError) {
+      console.error('Database error during transfer:', dbError);
+      return createResponse({ error: 'Transfer fehlgeschlagen - Datenbankfehler' }, 500, origin);
+    }
+
+  } catch (error) {
+    console.error('Error in ZVC transfer:', error);
+    if (error instanceof SyntaxError) {
+      return createResponse({ error: 'Ungültiges JSON' }, 400, origin);
+    }
+    return createResponse({ error: 'Interner Serverfehler' }, 500, origin);
+  }
+}

@@ -47,6 +47,7 @@ import {
   handleUpdateRecurringTransaction,
   handleDeleteRecurringTransaction,
   processRecurringTransactions,
+  handleTransferZVC,
 } from './routes/financial.js';
 import {
   handleGetRedeemables,
@@ -109,6 +110,7 @@ const routes: Record<
   '/redeemables': handleRedeemablesRoutes,
   '/redeemables/redeem': handleRedeemablesRoutes,
   '/redeem-code': handleRedeemCode,
+  '/transfer-zvc': handleTransferZVC,
   '/leaderboard/update': handleLeaderboardUpdate,
 };
 

@@ -2808,6 +2808,474 @@
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+/* Combined Balance and Code Redemption Styles */
+.zvcoins-balance-code-section {
+  margin-bottom: 1.5rem;
+}
+
+.zvcoins-combined-card {
+  display: flex;
+  gap: 1.5rem;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.1),
+    rgba(245, 158, 11, 0.1)
+  );
+  border: 2px solid rgba(251, 191, 36, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  align-items: center;
+}
+
+/* Vertical Divider */
+.zvcoins-divider {
+  width: 1px;
+  align-self: center;
+  height: 140px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.3) 80%,
+    transparent
+  );
+  flex-shrink: 0;
+}
+
+.zvcoins-balance-area {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 1.5rem 1.5rem 1.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  min-height: 80px;
+}
+
+.zvcoins-balance-area .zvcoins-icon {
+  font-size: 2.5rem;
+  margin-right: 1rem;
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.5));
+}
+
+.zvcoins-balance-area .zvcoins-balance-info {
+  flex: 1;
+}
+
+.zvcoins-balance-area .zvcoins-balance-label {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.zvcoins-balance-area .zvcoins-balance-amount {
+  margin: 0;
+  color: #fbbf24;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+/* Inline balance display in title */
+.zvcoins-balance-inline {
+  color: #fbbf24;
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+  padding: 0.25rem 0.75rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.zvcoins-code-area {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.zvcoins-code-area .zvcoins-code-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.zvcoins-code-area .zvcoins-code-icon {
+  font-size: 1.2rem;
+}
+
+.zvcoins-code-area .zvcoins-code-info {
+  flex: 1;
+}
+
+.zvcoins-code-area .zvcoins-code-label {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Code Tip Styles */
+.zvcoins-code-tip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  background: rgba(61, 135, 255, 0.349);
+  border: 1px solid rgba(143, 180, 255, 0.3);
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.code-tip-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.code-tip-text {
+  color: #ffffff;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.code-tip-text strong {
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+.zvcoins-code-area .zvcoins-code-input-section {
+  margin-top: 0;
+}
+
+.zvcoins-code-area .zvcoins-code-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.zvcoins-code-area .zvcoins-code-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.zvcoins-code-area .zvcoins-code-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.zvcoins-code-area .zvcoins-code-input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+.zvcoins-code-area .zvcoins-code-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zvcoins-code-area .zvcoins-code-btn {
+  padding: 0.5rem 1rem;
+  background: #fbbf24;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.zvcoins-code-area .zvcoins-code-btn:hover:not(:disabled) {
+  background: #94918c;
+}
+
+.zvcoins-code-area .zvcoins-code-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #6b7280;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .zvcoins-combined-card {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .zvcoins-balance-area {
+    justify-content: center;
+  }
+}
+
+/* ZVC Transfer Styles */
+.zvcoins-transfer-area {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-icon {
+  font-size: 1.2rem;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-info {
+  flex: 1;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-label {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Transaction Tax Disclaimer Styles */
+.zvcoins-transfer-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.transfer-disclaimer-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.transfer-disclaimer-text {
+  color: #fbbf24;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.transfer-disclaimer-text strong {
+  color: #fde047;
+  font-weight: 700;
+}
+
+/* Transfer Cost Info Styles */
+.zvcoins-transfer-cost-info {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.transfer-cost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.transfer-cost-item:last-child {
+  margin-bottom: 0;
+}
+
+.transfer-cost-total {
+  border-top: 1px solid rgba(82, 148, 253, 0.856);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  font-weight: 700;
+}
+
+.cost-label {
+  color: #93c5fd;
+  font-size: 0.8rem;
+}
+
+.cost-value {
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.transfer-cost-total .cost-label,
+.transfer-cost-total .cost-value {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-input-section {
+  margin-top: 0;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-input {
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-recipient {
+  flex: 2;
+  min-width: 120px;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-amount {
+  flex: 1;
+  min-width: 80px;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-btn {
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.zvcoins-transfer-area .zvcoins-transfer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #6b7280;
+  color: white;
+}
+
+/* Unified message styles */
+.zvcoins-message {
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.zvcoins-message.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.zvcoins-message.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Enhanced responsive adjustments */
+@media (max-width: 1024px) {
+  .zvcoins-combined-card {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+
+  .zvcoins-balance-area {
+    justify-content: center;
+  }
+
+  .zvcoins-transfer-area .zvcoins-transfer-input-group {
+    flex-wrap: wrap;
+  }
+
+  .zvcoins-transfer-area .zvcoins-transfer-recipient {
+    flex: 1 1 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .zvcoins-transfer-area .zvcoins-transfer-amount {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  /* Hide vertical dividers on mobile and show horizontal ones */
+  .zvcoins-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.3) 20%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.3) 80%,
+      transparent
+    );
+  }
+}
+
 /* Responsive adjustments for ZV Coins widget */
 @media (max-width: 768px) {
   .zvcoins-rewards-grid {
