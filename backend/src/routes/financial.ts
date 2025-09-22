@@ -1025,6 +1025,11 @@ export async function handleTransferZVC(
       return createResponse({ error: 'Mindestbetrag für Transfers: 100 ZVC' }, 400, origin);
     }
 
+    // Validate maximum transfer amount
+    if (amount > 50000) {
+      return createResponse({ error: 'Maximaler Transferbetrag: 50.000 ZVC' }, 400, origin);
+    }
+
     const senderSteamId = validation.session!.steamId;
     const cleanRecipient = recipient.trim();
 
@@ -1055,88 +1060,33 @@ export async function handleTransferZVC(
       }, 400, origin);
     }
 
-    // Helper function to parse Steam ID from various input formats
-    function parseSteamId(input: string): string | null {
-      // Remove all whitespace
-      const cleaned = input.replace(/\s+/g, '');
-
-      // Extract numbers from the input
-      const numbers = cleaned.match(/\d+/g);
-      if (!numbers || numbers.length === 0) {
-        return null;
-      }
-
-      // Join all numbers and take the longest sequence
-      const allNumbers = numbers.join('');
-
-      // Look for potential Steam ID patterns (17-digit numbers starting with 7656119)
-      const steamIdPattern = /7656119\d{10}/g;
-      const steamIdMatches = allNumbers.match(steamIdPattern);
-
-      if (steamIdMatches && steamIdMatches.length > 0) {
-        return steamIdMatches[0]; // Return the first valid Steam ID found
-      }
-
-      // If no Steam ID pattern found, check if we have a number that could be converted
-      // Look for sequences of 10+ digits
-      const longNumbers = numbers.filter(num => num.length >= 10);
-
-      for (const num of longNumbers) {
-        // If it's a long number, try adding Steam ID prefix
-        if (num.length >= 10 && num.length <= 17) {
-          // Try different approaches:
-
-          // 1. If it starts with 765611, it might be missing just the last digit
-          if (num.startsWith('765611')) {
-            return num;
-          }
-
-          // 2. If it's 10-11 digits, prepend "7656119" (standard Steam ID prefix)
-          if (num.length >= 10 && num.length <= 11) {
-            return '7656119' + num;
-          }
-
-          // 3. If it's exactly 17 digits and starts with reasonable digits, use as-is
-          if (num.length === 17 && /^[1-9]/.test(num)) {
-            return num;
-          }
-        }
-      }
-
-      // If we have any number, try prefixing with Steam ID prefix
-      if (allNumbers.length >= 8) {
-        const candidate = '7656119' + allNumbers.slice(-10); // Take last 10 digits
-        if (candidate.length === 17) {
-          return candidate;
-        }
-      }
-
-      return null;
+    // Parse recipient Steam ID by removing @steam if present
+    let recipientSteamId = cleanRecipient;
+    if (recipientSteamId.endsWith('@steam')) {
+      recipientSteamId = recipientSteamId.slice(0, -6); // Remove "@steam"
     }
 
-    // Parse the recipient Steam ID from input
-    const parsedSteamId = parseSteamId(cleanRecipient);
-
-    if (!parsedSteamId) {
+    // Validate that it's a valid Steam ID format
+    if (!/^\d{17}$/.test(recipientSteamId)) {
       return createResponse({
-        error: 'Ungültiger Empfänger. Bitte gib eine Steam ID ein (z.B. 76561198354414854 oder 354414854)'
+        error: 'Ungültiger Empfänger. Bitte gib eine gültige 17-stellige Steam ID ein'
       }, 400, origin);
     }
 
-    // Check if recipient exists in database
+    // Check if recipient exists in database (query with @steam suffix)
     let recipientData = (await env['zeitvertreib-data']
       .prepare('SELECT id, experience FROM playerdata WHERE id = ?')
-      .bind(parsedSteamId)
+      .bind(recipientSteamId + '@steam')
       .first()) as { id: string; experience: number } | null;
 
     if (!recipientData) {
       return createResponse({
-        error: `Empfänger-Steam ID ${parsedSteamId} nicht in der Datenbank gefunden`
+        error: `Empfänger-Steam ID ${recipientSteamId} nicht in der Datenbank gefunden`
       }, 404, origin);
     }
 
     const recipientBalance = recipientData.experience || 0;
-    const recipientSteamId = recipientData.id;
+    const finalRecipientId = recipientData.id;
 
     // Perform the transfer in a transaction
     try {
@@ -1149,7 +1099,7 @@ export async function handleTransferZVC(
       // Add only the transfer amount to recipient (not including tax)
       await env['zeitvertreib-data']
         .prepare('UPDATE playerdata SET experience = experience + ? WHERE id = ?')
-        .bind(amount, recipientSteamId)
+        .bind(amount, finalRecipientId)
         .run();
 
       // Log the transaction in financial_transactions table for record keeping
@@ -1164,7 +1114,7 @@ export async function handleTransferZVC(
           'expense',
           'ZVC_Transfer',
           totalCost,
-          `ZVC Transfer: ${amount} ZVC an ${recipientSteamId} (${taxAmount} ZVC Steuer)`,
+          `ZVC Transfer: ${amount} ZVC an ${finalRecipientId} (${taxAmount} ZVC Steuer)`,
           transactionDate,
           senderSteamId,
           `Transfer Tax: ${taxAmount} ZVC (10%)`
@@ -1177,12 +1127,12 @@ export async function handleTransferZVC(
 
       return createResponse({
         success: true,
-        message: `${amount} ZVC erfolgreich an ${recipientSteamId} gesendet! (${taxAmount} ZVC Steuer abgezogen)`,
+        message: `${amount} ZVC erfolgreich an ${finalRecipientId} gesendet! (${taxAmount} ZVC Steuer abgezogen)`,
         transfer: {
           amount,
           tax: taxAmount,
           totalCost,
-          recipient: recipientSteamId,
+          recipient: finalRecipientId,
           senderNewBalance: newSenderBalance,
           recipientNewBalance: newRecipientBalance
         }

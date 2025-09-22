@@ -289,7 +289,7 @@
                       <input
                         type="text"
                         [(ngModel)]="transferRecipient"
-                        placeholder="Steam ID (z.B. 76561198354414854 oder 354414854)"
+                        placeholder="Steam ID (76561198354414854 oder 354414854@steam)"
                         class="zvcoins-transfer-input zvcoins-transfer-recipient"
                         [disabled]="transferLoading"
                       />
@@ -308,6 +308,7 @@
                           !transferAmount ||
                           transferAmount <= 0 ||
                           transferAmount < 100 ||
+                          transferAmount > 50000 ||
                           getTransferTotalCost(transferAmount) >
                             (userStatistics.experience || 0) ||
                           transferLoading

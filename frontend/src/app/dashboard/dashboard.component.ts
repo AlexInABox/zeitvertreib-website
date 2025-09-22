@@ -1340,6 +1340,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate maximum transfer amount
+    if (amount > 50000) {
+      this.transferMessage = 'Maximaler Transferbetrag: 50.000 ZVC';
+      this.transferSuccess = false;
+      setTimeout(() => {
+        this.transferMessage = '';
+      }, 3000);
+      return;
+    }
+
+    // Validate maximum transfer amount
+    if (amount > 50000) {
+      this.transferMessage = 'Maximaler Transferbetrag: 50.000 ZVC';
+      this.transferSuccess = false;
+      setTimeout(() => {
+        this.transferMessage = '';
+      }, 3000);
+      return;
+    }
+
     // Validate transfer amount
     const currentBalance = this.userStatistics.experience || 0;
     const taxAmount = Math.floor(amount * 0.10); // 10% tax
@@ -1358,6 +1378,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.transferMessage = '';
     this.transferSuccess = false;
 
+    // Prepare recipient Steam ID by trimming @steam if present
+    let cleanRecipient = this.transferRecipient.trim();
+    if (cleanRecipient.endsWith('@steam')) {
+      cleanRecipient = cleanRecipient.slice(0, -6); // Remove "@steam"
+    }
+
     // Call the backend API
     this.authService
       .authenticatedPost<{
@@ -1372,7 +1398,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           recipientNewBalance: number;
         };
       }>(`${environment.apiUrl}/transfer-zvc`, {
-        recipient: this.transferRecipient.trim(),
+        recipient: cleanRecipient,
         amount: amount, // Use the converted number
       })
       .subscribe({
