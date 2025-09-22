@@ -1108,7 +1108,7 @@ export async function handleTransferZVC(
 
       return createResponse({
         success: true,
-        message: `${amount} ZVC erfolgreich an ${finalRecipientId} gesendet! (${taxAmount} ZVC Steuer abgezogen)`,
+        message: `${amount} ZVC erfolgreich an ${finalRecipientId} gesendet!`,
         transfer: {
           amount,
           tax: taxAmount,
