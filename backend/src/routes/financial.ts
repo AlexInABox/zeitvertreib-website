@@ -1030,7 +1030,7 @@ export async function handleTransferZVC(
       return createResponse({ error: 'Maximaler Transferbetrag: 50.000 ZVC' }, 400, origin);
     }
 
-    const senderSteamId = validation.steamId!;
+    const senderSteamId = validation.steamId! + '@steam';
     const cleanRecipient = recipient.trim();
 
     // Prevent self-transfer
