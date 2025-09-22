@@ -57,7 +57,7 @@ function getSessionId(request: Request): string | null {
 export async function validateSession(
   request: Request,
   env: Env,
-): Promise<{ isValid: boolean; session?: SessionData; error?: string }> {
+): Promise<{ isValid: boolean; session?: SessionData; steamId?: string; error?: string }> {
   const sessionId = getSessionId(request);
   if (!sessionId) return { isValid: false, error: 'No session found' };
 
@@ -70,7 +70,7 @@ export async function validateSession(
     return { isValid: false, error: 'Session expired' };
   }
 
-  return { isValid: true, session };
+  return { isValid: true, session, steamId: session.steamId };
 }
 
 export async function createSession(

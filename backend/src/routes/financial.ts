@@ -1030,7 +1030,7 @@ export async function handleTransferZVC(
       return createResponse({ error: 'Maximaler Transferbetrag: 50.000 ZVC' }, 400, origin);
     }
 
-    const senderSteamId = validation.session!.steamId;
+    const senderSteamId = validation.steamId!;
     const cleanRecipient = recipient.trim();
 
     // Prevent self-transfer
@@ -1050,7 +1050,7 @@ export async function handleTransferZVC(
       .first()) as { experience: number } | null;
 
     if (!senderData) {
-      return createResponse({ error: 'Sender nicht in der Datenbank gefunden' }, 404, origin);
+      return createResponse({ error: 'Sender ' + senderSteamId + ' nicht in der Datenbank gefunden' }, 404, origin);
     }
 
     const senderBalance = senderData.experience || 0;
@@ -1100,25 +1100,6 @@ export async function handleTransferZVC(
       await env['zeitvertreib-data']
         .prepare('UPDATE playerdata SET experience = experience + ? WHERE id = ?')
         .bind(amount, finalRecipientId)
-        .run();
-
-      // Log the transaction in financial_transactions table for record keeping
-      const transactionDate = new Date().toISOString().split('T')[0];
-      await env['zeitvertreib-data']
-        .prepare(`
-          INSERT INTO financial_transactions 
-          (transaction_type, category, amount, description, transaction_date, created_by, notes)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `)
-        .bind(
-          'expense',
-          'ZVC_Transfer',
-          totalCost,
-          `ZVC Transfer: ${amount} ZVC an ${finalRecipientId} (${taxAmount} ZVC Steuer)`,
-          transactionDate,
-          senderSteamId,
-          `Transfer Tax: ${taxAmount} ZVC (10%)`
-        )
         .run();
 
       // Calculate new balances
