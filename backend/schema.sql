@@ -16,14 +16,13 @@ CREATE TABLE "playerdata" (
   deathcount INTEGER DEFAULT 0,
   fakerank_until INTEGER DEFAULT 0, -- unix timestamp, 0 = no fakerank
   fakerank_color TEXT DEFAULT 'default' CHECK (fakerank_color IN (
-    'pink', 'red', 'brown', 'silver', 'default', 'light_green', 'crimson', 'cyan', 'aqua', 'deep_pink',
-    'tomato', 'yellow', 'magenta', 'blue_green', 'orange', 'lime', 'green', 'emerald',
-    'carmine', 'nickel', 'mint', 'army_green', 'pumpkin'
+    'pink','red','brown','silver','default','light_green','crimson','cyan','aqua','deep_pink',
+    'tomato','yellow','magenta','blue_green','orange','lime','green','emerald',
+    'carmine','nickel','mint','army_green','pumpkin'
   )),
   fakerankadmin_until INTEGER DEFAULT 0, -- unix timestamp, 0 = not an admin
-  fakerankoverride_until INTEGER DEFAULT 0, -- unix timestamp, 0 = no admin override fakerank
   redeemed_codes TEXT DEFAULT ''
-);
+, fakerankoverride_until INTEGER DEFAULT 0, username TEXT DEFAULT '')
 
 
 CREATE TABLE IF NOT EXISTS kills (

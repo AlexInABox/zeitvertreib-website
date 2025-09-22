@@ -1060,29 +1060,34 @@ export async function handleTransferZVC(
       }, 400, origin);
     }
 
-    // Parse recipient Steam ID by removing @steam if present
+    // Determine if input is Steam ID or username
+    let recipientData: { id: string; experience: number } | null = null;
+
+    // First, try to parse as Steam ID
     let recipientSteamId = cleanRecipient;
     if (recipientSteamId.endsWith('@steam')) {
       recipientSteamId = recipientSteamId.slice(0, -6); // Remove "@steam"
     }
 
-    // Validate that it's a valid Steam ID format
-    if (!/^\d{17}$/.test(recipientSteamId)) {
-      return createResponse({
-        error: 'Ungültiger Empfänger. Bitte gib eine gültige 17-stellige Steam ID ein'
-      }, 400, origin);
+    // Check if it's a valid Steam ID format (17 digits)
+    if (/^\d{17}$/.test(recipientSteamId)) {
+      // It's a Steam ID - query by id column with @steam suffix
+      recipientData = (await env['zeitvertreib-data']
+        .prepare('SELECT id, experience FROM playerdata WHERE id = ?')
+        .bind(recipientSteamId + '@steam')
+        .first()) as { id: string; experience: number } | null;
+    } else {
+      // It's not a Steam ID - treat as username and query by username column
+      recipientData = (await env['zeitvertreib-data']
+        .prepare('SELECT id, experience FROM playerdata WHERE username = ?')
+        .bind(cleanRecipient)
+        .first()) as { id: string; experience: number } | null;
     }
-
-    // Check if recipient exists in database (query with @steam suffix)
-    let recipientData = (await env['zeitvertreib-data']
-      .prepare('SELECT id, experience FROM playerdata WHERE id = ?')
-      .bind(recipientSteamId + '@steam')
-      .first()) as { id: string; experience: number } | null;
 
     if (!recipientData) {
       return createResponse({
-        error: `Empfänger-Steam ID ${recipientSteamId} nicht in der Datenbank gefunden`
-      }, 404, origin);
+        error: `Empfänger "${cleanRecipient}" nicht in der Datenbank gefunden. Bitte gib eine gültige Steam ID (17 Ziffern) oder einen Benutzernamen ein.`
+      }, 400, origin);
     }
 
     const recipientBalance = recipientData.experience || 0;

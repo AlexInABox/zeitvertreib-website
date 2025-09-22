@@ -1378,11 +1378,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.transferMessage = '';
     this.transferSuccess = false;
 
-    // Prepare recipient Steam ID by trimming @steam if present
-    let cleanRecipient = this.transferRecipient.trim();
-    if (cleanRecipient.endsWith('@steam')) {
-      cleanRecipient = cleanRecipient.slice(0, -6); // Remove "@steam"
-    }
+    // Just trim the input and send it to backend - let backend handle Steam ID vs username detection
+    const cleanRecipient = this.transferRecipient.trim();
 
     // Call the backend API
     this.authService
