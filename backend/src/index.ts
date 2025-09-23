@@ -323,30 +323,31 @@ export default {
 
       // Serve OpenAPI HTML at /docs
       if (pathname === '/docs' && request.method === 'GET') {
-        const redocHtml = `<!DOCTYPE html>
-              <html>
-                <head>
-                  <title>Redoc</title>
-                  <!-- needed for adaptive design -->
-                  <meta charset="utf-8"/>
-                  <meta name="viewport" content="width=device-width, initial-scale=1">
-                  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+        const redocHtml = `<!doctype html>
+        <html>
+          <head>
+            <title>Scalar API Reference</title>
+            <meta charset="utf-8" />
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1" />
+          </head>
 
-                  <!--
-                  Redoc doesn't change outer page styles
-                  -->
-                  <style>
-                    body {
-                      margin: 0;
-                      padding: 0;
-                    }
-                  </style>
-                </head>
-                <body>
-                  <redoc spec-url='openapi.json'></redoc>
-                  <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
-                </body>
-              </html>`;
+          <body>
+            <div id="app"></div>
+
+            <!-- Load the Script -->
+            <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+            <!-- Initialize the Scalar API Reference -->
+            <script>
+              Scalar.createApiReference('#app', {
+                // The URL of the OpenAPI/Swagger document
+                url: 'openapi.json',
+              })
+            </script>
+          </body>
+        </html>`;
 
         return new Response(redocHtml, {
           status: 200,
