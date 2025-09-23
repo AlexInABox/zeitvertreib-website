@@ -1,3 +1,4 @@
+import openapi from "./openapi.json";
 import {
   handleSteamLogin,
   handleSteamCallback,
@@ -311,6 +312,46 @@ export default {
       let pathname = url.pathname;
       if (pathname.startsWith('/api')) {
         pathname = pathname.substring(4);
+      }
+
+      if (pathname === '/openapi.json' && request.method === 'GET') {
+        return new Response(JSON.stringify(openapi), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Serve OpenAPI HTML at /docs
+      if (pathname === '/docs' && request.method === 'GET') {
+        const redocHtml = `<!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Redoc</title>
+                  <!-- needed for adaptive design -->
+                  <meta charset="utf-8"/>
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+
+                  <!--
+                  Redoc doesn't change outer page styles
+                  -->
+                  <style>
+                    body {
+                      margin: 0;
+                      padding: 0;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <redoc spec-url='openapi.json'></redoc>
+                  <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
+                </body>
+              </html>`;
+
+        return new Response(redocHtml, {
+          status: 200,
+          headers: { 'Content-Type': 'text/html' },
+        });
       }
 
       // Handle financial routes with dynamic paths
