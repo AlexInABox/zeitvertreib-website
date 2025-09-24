@@ -3,7 +3,7 @@
   "info": {
     "title": "Zeitvertreib API",
     "version": "1.0.0",
-    "description": "Public API for Zeitvertreib gaming services. Provides access to player statistics, spray management, fakerank system, and financial tools.",
+    "description": "Public API for Zeitvertreib services. Provides access to player statistics, spray management, fakerank system, and financial tools.",
     "license": {
       "name": "AGPL-3.0-only",
       "url": "https://opensource.org/license/agpl-v3"
@@ -20,14 +20,32 @@
     }
   ],
   "tags": [
-    { "name": "Authentication", "description": "User login and session management" },
-    { "name": "Stats", "description": "Player statistics and performance data" },
+    {
+      "name": "Authentication",
+      "description": "User login and session management"
+    },
+    {
+      "name": "Stats",
+      "description": "Player statistics and performance data"
+    },
     { "name": "Sprays", "description": "Custom spray image management" },
-    { "name": "Fakeranks", "description": "Custom player rank system" },
-    { "name": "Admin", "description": "Administrative controls (requires admin privileges)" },
-    { "name": "Financial", "description": "Transaction and budget management (admin only)" },
-    { "name": "Rewards", "description": "ZV Coins and redeemable items" },
-    { "name": "Leaderboard", "description": "Player rankings and leaderboard data" },
+    { "name": "FakeRank", "description": "Custom player rank system" },
+    {
+      "name": "Admin",
+      "description": "Administrative controls (requires admin privileges)"
+    },
+    {
+      "name": "Financial",
+      "description": "Transaction and budget management"
+    },
+    {
+      "name": "Economy",
+      "description": "ZV Coins, rewards, shop items, and transactions"
+    },
+    {
+      "name": "Leaderboard",
+      "description": "Player rankings and leaderboard data"
+    },
     { "name": "Moderation", "description": "Content moderation tools" }
   ],
   "components": {
@@ -68,17 +86,7 @@
             "description": "Redirect to frontend with session"
           },
           "401": {
-            "description": "Authentication failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Authentication failed"
           }
         }
       }
@@ -121,6 +129,15 @@
         "summary": "Generate login secret (Server Only)",
         "description": "Creates a temporary login secret for game server integration. Used by SCP:SL server to generate magic login links.",
         "security": [{ "serverToken": [] }],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "description": "SteamID64 of the user to generate login secret for",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Login secret created",
@@ -199,8 +216,14 @@
                     "avatarFull": { "type": "string" },
                     "kills": { "type": "number" },
                     "deaths": { "type": "number" },
-                    "experience": { "type": "number", "description": "ZV Coins balance" },
-                    "playtime": { "type": "number", "description": "Total playtime in seconds" },
+                    "experience": {
+                      "type": "number",
+                      "description": "ZV Coins balance"
+                    },
+                    "playtime": {
+                      "type": "number",
+                      "description": "Total playtime in seconds"
+                    },
                     "roundsplayed": { "type": "number" },
                     "leaderboardposition": { "type": "number" },
                     "usedmedkits": { "type": "number" },
@@ -208,9 +231,6 @@
                     "pocketescapes": { "type": "number" },
                     "usedadrenaline": { "type": "number" },
                     "snakehighscore": { "type": "number" },
-                    "fakerank_until": { "type": "number", "description": "Unix timestamp" },
-                    "fakerankadmin_until": { "type": "number", "description": "Unix timestamp" },
-                    "fakerankoverride_until": { "type": "number", "description": "Unix timestamp" },
                     "lastkillers": {
                       "type": "array",
                       "items": {
@@ -334,7 +354,10 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "playtime": { "type": "number", "description": "Total playtime in seconds" }
+                    "playtime": {
+                      "type": "number",
+                      "description": "Total playtime in seconds"
+                    }
                   }
                 }
               }
@@ -412,6 +435,9 @@
             }
           },
           "400": {
+            "description": "Content not allowed due to AI moderation"
+          },
+          "422": {
             "description": "Invalid file format or size"
           },
           "401": {
@@ -465,28 +491,23 @@
     "/spray/image": {
       "get": {
         "tags": ["Sprays"],
-        "summary": "Get spray image",
-        "description": "Download spray image by Steam ID (public endpoint)",
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of the player",
-            "schema": { "type": "string" }
-          }
-        ],
+        "summary": "Get own spray image",
+        "description": "Download your current spray image",
+        "security": [{ "sessionCookie": [] }],
         "responses": {
           "200": {
-            "description": "Spray image",
+            "description": "Your spray image",
             "content": {
               "image/jpeg": {},
               "image/png": {},
               "image/webp": {}
             }
           },
+          "401": {
+            "description": "Authentication required"
+          },
           "404": {
-            "description": "Spray not found for this user"
+            "description": "No spray uploaded yet"
           }
         }
       }
@@ -523,7 +544,10 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "maxSize": { "type": "number", "description": "Maximum file size in bytes" },
+                    "maxSize": {
+                      "type": "number",
+                      "description": "Maximum file size in bytes"
+                    },
                     "supportedFormats": {
                       "type": "array",
                       "items": { "type": "string" },
@@ -665,7 +689,7 @@
     },
     "/fakerank": {
       "post": {
-        "tags": ["Fakeranks"],
+        "tags": ["FakeRank"],
         "summary": "Set custom rank",
         "description": "Set your custom fakerank display name and color",
         "security": [{ "sessionCookie": [] }],
@@ -676,8 +700,40 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "fakerank": { "type": "string", "description": "Custom rank text" },
-                  "color": { "type": "string", "description": "Hex color code (optional)" }
+                  "fakerank": {
+                    "type": "string",
+                    "description": "Custom rank text"
+                  },
+                  "color": {
+                    "type": "string",
+                    "description": "Fakerank color (optional)",
+                    "enum": [
+                      "pink",
+                      "red",
+                      "brown",
+                      "silver",
+                      "default",
+                      "light_green",
+                      "crimson",
+                      "cyan",
+                      "aqua",
+                      "deep_pink",
+                      "tomato",
+                      "yellow",
+                      "magenta",
+                      "blue_green",
+                      "orange",
+                      "lime",
+                      "green",
+                      "emerald",
+                      "carmine",
+                      "nickel",
+                      "mint",
+                      "army_green",
+                      "pumpkin"
+                    ],
+                    "default": "default"
+                  }
                 },
                 "required": ["fakerank"]
               }
@@ -696,6 +752,84 @@
           },
           "403": {
             "description": "Fakerank access required (purchase with ZV Coins)"
+          }
+        }
+      }
+    },
+    "/fakerank/status": {
+      "get": {
+        "tags": ["FakeRank"],
+        "summary": "Get fakerank status",
+        "description": "Get current fakerank access status, expiration times, and ban state",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Fakerank status information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fakerank_until": {
+                      "type": "number",
+                      "description": "Unix timestamp when fakerank access expires"
+                    },
+                    "fakerankadmin_until": {
+                      "type": "number",
+                      "description": "Unix timestamp when admin fakerank access expires"
+                    },
+                    "fakerankoverride_until": {
+                      "type": "number",
+                      "description": "Unix timestamp when fakerank override expires"
+                    },
+                    "isBanned": {
+                      "type": "boolean",
+                      "description": "Whether user is banned from fakerank system"
+                    },
+                    "banReason": {
+                      "type": "string",
+                      "description": "Reason for ban (if banned)"
+                    },
+                    "currentFakerank": {
+                      "type": "string",
+                      "description": "Current active fakerank text"
+                    },
+                    "currentColor": {
+                      "type": "string",
+                      "enum": [
+                        "pink",
+                        "red",
+                        "brown",
+                        "silver",
+                        "default",
+                        "light_green",
+                        "crimson",
+                        "cyan",
+                        "aqua",
+                        "deep_pink",
+                        "tomato",
+                        "yellow",
+                        "magenta",
+                        "blue_green",
+                        "orange",
+                        "lime",
+                        "green",
+                        "emerald",
+                        "carmine",
+                        "nickel",
+                        "mint",
+                        "army_green",
+                        "pumpkin"
+                      ],
+                      "description": "Current fakerank color"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
           }
         }
       }
@@ -774,7 +908,7 @@
       "get": {
         "tags": ["Admin"],
         "summary": "Get user fakerank info",
-        "description": "View detailed fakerank information for any user (admin only)",
+        "description": "View detailed fakerank information for any user",
         "security": [{ "sessionCookie": [] }],
         "parameters": [
           {
@@ -793,12 +927,41 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "steamId": { "type": "string" },
                     "username": { "type": "string" },
-                    "avatarFull": { "type": "string" },
+                    "avatar": { "type": "string" },
                     "fakerank": { "type": "string" },
-                    "color": { "type": "string" },
-                    "expiresAt": { "type": "number", "description": "Unix timestamp" },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "pink",
+                        "red",
+                        "brown",
+                        "silver",
+                        "default",
+                        "light_green",
+                        "crimson",
+                        "cyan",
+                        "aqua",
+                        "deep_pink",
+                        "tomato",
+                        "yellow",
+                        "magenta",
+                        "blue_green",
+                        "orange",
+                        "lime",
+                        "green",
+                        "emerald",
+                        "carmine",
+                        "nickel",
+                        "mint",
+                        "army_green",
+                        "pumpkin"
+                      ]
+                    },
+                    "expiresAt": {
+                      "type": "number",
+                      "description": "Unix timestamp"
+                    },
                     "hasAccess": { "type": "boolean" }
                   }
                 }
@@ -816,7 +979,7 @@
       "post": {
         "tags": ["Admin"],
         "summary": "Set user fakerank",
-        "description": "Directly set fakerank for any user with custom duration (admin only)",
+        "description": "Directly set fakerank for any user with custom duration",
         "security": [{ "sessionCookie": [] }],
         "requestBody": {
           "required": true,
@@ -827,8 +990,39 @@
                 "properties": {
                   "steamId": { "type": "string" },
                   "fakerank": { "type": "string" },
-                  "color": { "type": "string" },
-                  "duration": { "type": "number", "description": "Duration in seconds (0 for permanent)" }
+                  "color": {
+                    "type": "string",
+                    "enum": [
+                      "pink",
+                      "red",
+                      "brown",
+                      "silver",
+                      "default",
+                      "light_green",
+                      "crimson",
+                      "cyan",
+                      "aqua",
+                      "deep_pink",
+                      "tomato",
+                      "yellow",
+                      "magenta",
+                      "blue_green",
+                      "orange",
+                      "lime",
+                      "green",
+                      "emerald",
+                      "carmine",
+                      "nickel",
+                      "mint",
+                      "army_green",
+                      "pumpkin"
+                    ],
+                    "default": "default"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "Duration in seconds"
+                  }
                 },
                 "required": ["steamId", "fakerank"]
               }
@@ -851,8 +1045,8 @@
     "/admin/fakerank/blacklist": {
       "get": {
         "tags": ["Admin"],
-        "summary": "Get blacklisted fakeranks",
-        "description": "View all blacklisted fakerank terms (admin only)",
+        "summary": "Get blacklisted FakeRanks",
+        "description": "View all blacklisted fakerank terms",
         "security": [{ "sessionCookie": [] }],
         "responses": {
           "200": {
@@ -877,7 +1071,7 @@
       "post": {
         "tags": ["Admin"],
         "summary": "Add to blacklist",
-        "description": "Add a term to the fakerank blacklist (admin only)",
+        "description": "Add a term to the fakerank blacklist",
         "security": [{ "sessionCookie": [] }],
         "requestBody": {
           "required": true,
@@ -908,7 +1102,7 @@
       "delete": {
         "tags": ["Admin"],
         "summary": "Remove from blacklist",
-        "description": "Remove a term from the fakerank blacklist (admin only)",
+        "description": "Remove a term from the fakerank blacklist",
         "security": [{ "sessionCookie": [] }],
         "requestBody": {
           "required": true,
@@ -940,8 +1134,8 @@
     "/admin/fakerank/whitelist": {
       "get": {
         "tags": ["Admin"],
-        "summary": "Get whitelisted fakeranks",
-        "description": "View all whitelisted fakerank terms (admin only)",
+        "summary": "Get whitelisted FakeRank",
+        "description": "View all whitelisted fakerank terms",
         "security": [{ "sessionCookie": [] }],
         "responses": {
           "200": {
@@ -966,7 +1160,7 @@
       "post": {
         "tags": ["Admin"],
         "summary": "Add to whitelist",
-        "description": "Add a term to the fakerank whitelist (admin only)",
+        "description": "Add a term to the fakerank whitelist",
         "security": [{ "sessionCookie": [] }],
         "requestBody": {
           "required": true,
@@ -997,7 +1191,7 @@
       "delete": {
         "tags": ["Admin"],
         "summary": "Remove from whitelist",
-        "description": "Remove a term from the fakerank whitelist (admin only)",
+        "description": "Remove a term from the fakerank whitelist",
         "security": [{ "sessionCookie": [] }],
         "requestBody": {
           "required": true,
@@ -1026,440 +1220,9 @@
         }
       }
     },
-    "/admin/fakerank/all": {
+    "/economy/shop": {
       "get": {
-        "tags": ["Admin"],
-        "summary": "List all active fakeranks",
-        "description": "View all users with active fakeranks (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "All active fakeranks",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "steamId": { "type": "string" },
-                      "username": { "type": "string" },
-                      "fakerank": { "type": "string" },
-                      "color": { "type": "string" },
-                      "avatarFull": { "type": "string" },
-                      "expiresAt": { "type": "number" }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      }
-    },
-    "/admin/financial/transactions": {
-      "get": {
-        "tags": ["Financial"],
-        "summary": "List transactions",
-        "description": "Get paginated list of financial transactions (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Number of transactions to return",
-            "schema": { "type": "integer", "default": 50, "maximum": 100 }
-          },
-          {
-            "name": "offset",
-            "in": "query", 
-            "description": "Number of transactions to skip",
-            "schema": { "type": "integer", "default": 0 }
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "description": "Filter by transaction type",
-            "schema": { "type": "string", "enum": ["income", "expense"] }
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "description": "Filter by category",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Paginated transaction list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "transactions": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": { "type": "number" },
-                          "type": { "type": "string", "enum": ["income", "expense"] },
-                          "category": { "type": "string" },
-                          "amount": { "type": "number" },
-                          "description": { "type": "string" },
-                          "date": { "type": "string", "format": "date" },
-                          "createdAt": { "type": "string", "format": "date-time" },
-                          "createdBy": { "type": "string" },
-                          "referenceId": { "type": "string" },
-                          "notes": { "type": "string" }
-                        }
-                      }
-                    },
-                    "total": { "type": "number" },
-                    "limit": { "type": "number" },
-                    "offset": { "type": "number" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      },
-      "post": {
-        "tags": ["Financial"],
-        "summary": "Create transaction",
-        "description": "Record a new financial transaction (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "type": { "type": "string", "enum": ["income", "expense"] },
-                  "category": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "description": { "type": "string" },
-                  "date": { "type": "string", "format": "date" },
-                  "referenceId": { "type": "string" },
-                  "notes": { "type": "string" }
-                },
-                "required": ["type", "category", "amount", "description", "date"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Transaction created successfully"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      }
-    },
-    "/admin/financial/transactions/{id}": {
-      "put": {
-        "tags": ["Financial"],
-        "summary": "Update transaction",
-        "description": "Modify an existing financial transaction (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Transaction ID",
-            "schema": { "type": "integer" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "type": { "type": "string", "enum": ["income", "expense"] },
-                  "category": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "description": { "type": "string" },
-                  "date": { "type": "string", "format": "date" },
-                  "referenceId": { "type": "string" },
-                  "notes": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Transaction updated"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          },
-          "404": {
-            "description": "Transaction not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Financial"],
-        "summary": "Delete transaction",
-        "description": "Remove a financial transaction (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Transaction ID",
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Transaction deleted"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          },
-          "404": {
-            "description": "Transaction not found"
-          }
-        }
-      }
-    },
-    "/admin/financial/summary": {
-      "get": {
-        "tags": ["Financial"],
-        "summary": "Get financial overview",
-        "description": "View financial summary and category breakdowns (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Financial summary data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "totalIncome": { "type": "number" },
-                    "totalExpenses": { "type": "number" },
-                    "balance": { "type": "number" },
-                    "byCategory": {
-                      "type": "object",
-                      "additionalProperties": { "type": "number" },
-                      "description": "Amount totals grouped by category"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      }
-    },
-    "/admin/financial/recurring": {
-      "get": {
-        "tags": ["Financial"],
-        "summary": "List recurring transactions",
-        "description": "Get all scheduled recurring transactions (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Recurring transaction list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "number" },
-                      "type": { "type": "string", "enum": ["income", "expense"] },
-                      "category": { "type": "string" },
-                      "amount": { "type": "number" },
-                      "description": { "type": "string" },
-                      "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
-                      "startDate": { "type": "string", "format": "date" },
-                      "endDate": { "type": "string", "format": "date" },
-                      "nextExecution": { "type": "string", "format": "date" },
-                      "isActive": { "type": "boolean" },
-                      "createdAt": { "type": "string", "format": "date-time" },
-                      "createdBy": { "type": "string" },
-                      "referenceId": { "type": "string" },
-                      "notes": { "type": "string" },
-                      "lastExecuted": { "type": "string", "format": "date-time" }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      },
-      "post": {
-        "tags": ["Financial"],
-        "summary": "Create recurring transaction",
-        "description": "Set up a new recurring financial transaction (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "type": { "type": "string", "enum": ["income", "expense"] },
-                  "category": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "description": { "type": "string" },
-                  "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
-                  "startDate": { "type": "string", "format": "date" },
-                  "endDate": { "type": "string", "format": "date" },
-                  "referenceId": { "type": "string" },
-                  "notes": { "type": "string" }
-                },
-                "required": ["type", "category", "amount", "description", "frequency", "startDate"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Recurring transaction created"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      }
-    },
-    "/admin/financial/recurring/{id}": {
-      "put": {
-        "tags": ["Financial"],
-        "summary": "Update recurring transaction",
-        "description": "Modify a recurring transaction schedule (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Recurring transaction ID",
-            "schema": { "type": "integer" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "type": { "type": "string", "enum": ["income", "expense"] },
-                  "category": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "description": { "type": "string" },
-                  "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
-                  "startDate": { "type": "string", "format": "date" },
-                  "endDate": { "type": "string", "format": "date" },
-                  "isActive": { "type": "boolean" },
-                  "referenceId": { "type": "string" },
-                  "notes": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Recurring transaction updated"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          },
-          "404": {
-            "description": "Recurring transaction not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Financial"],
-        "summary": "Delete recurring transaction",
-        "description": "Remove a recurring transaction (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Recurring transaction ID",
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Recurring transaction deleted"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          },
-          "404": {
-            "description": "Recurring transaction not found"
-          }
-        }
-      }
-    },
-    "/rewards/shop": {
-      "get": {
-        "tags": ["Rewards"],
+        "tags": ["Economy"],
         "summary": "Get shop items",
         "description": "List all available items that can be purchased with ZV Coins",
         "security": [{ "sessionCookie": [] }],
@@ -1477,10 +1240,19 @@
                       "name": { "type": "string" },
                       "description": { "type": "string" },
                       "emoji": { "type": "string" },
-                      "price": { "type": "number", "description": "Price in ZV Coins" },
-                      "availableUntil": { "type": "string", "format": "date-time" },
+                      "price": {
+                        "type": "number",
+                        "description": "Price in ZV Coins"
+                      },
+                      "availableUntil": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
                       "isAvailable": { "type": "boolean" },
-                      "stock": { "type": "number", "description": "Remaining quantity (-1 for unlimited)" }
+                      "stock": {
+                        "type": "number",
+                        "description": "Remaining quantity (-1 for unlimited)"
+                      }
                     }
                   }
                 }
@@ -1493,9 +1265,9 @@
         }
       }
     },
-    "/rewards/purchase": {
+    "/economy/purchase": {
       "post": {
-        "tags": ["Rewards"],
+        "tags": ["Economy"],
         "summary": "Buy item with ZV Coins",
         "description": "Purchase an item from the shop using ZV Coins",
         "security": [{ "sessionCookie": [] }],
@@ -1539,9 +1311,9 @@
         }
       }
     },
-    "/rewards/redeem-code": {
+    "/economy/redeem-code": {
       "post": {
-        "tags": ["Rewards"],
+        "tags": ["Economy"],
         "summary": "Redeem promo code",
         "description": "Redeem a promotional code for ZV Coins or items",
         "security": [{ "sessionCookie": [] }],
@@ -1552,7 +1324,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "code": { "type": "string", "description": "Promotional code" }
+                  "code": {
+                    "type": "string",
+                    "description": "Promotional code"
+                  }
                 },
                 "required": ["code"]
               }
@@ -1584,11 +1359,11 @@
         }
       }
     },
-    "/admin/coins/transfer": {
+    "/economy/transfer": {
       "post": {
-        "tags": ["Admin"],
+        "tags": ["Economy"],
         "summary": "Transfer ZV Coins",
-        "description": "Transfer ZV Coins between players (admin only)",
+        "description": "Transfer ZV Coins to another player. This endpoint will fail if the sending users ZVC balance is less than 110% of the transfer amount. This is due to a 10% transaction fee.",
         "security": [{ "sessionCookie": [] }],
         "requestBody": {
           "required": true,
@@ -1613,76 +1388,11 @@
           "401": {
             "description": "Authentication required"
           },
-          "403": {
-            "description": "Admin privileges required"
+          "400": {
+            "description": "Invalid transfer amount or insufficient balance"
           },
           "404": {
             "description": "Target user not found"
-          }
-        }
-      }
-    },
-    "/leaderboard": {
-      "get": {
-        "tags": ["Leaderboard"],
-        "summary": "Get player leaderboard",
-        "description": "Returns top players ranked by experience/kills (public endpoint)",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Number of players to return",
-            "schema": { "type": "integer", "default": 50, "maximum": 100 }
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "description": "Ranking criteria",
-            "schema": { "type": "string", "enum": ["experience", "kills", "playtime"], "default": "experience" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Player rankings",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "rank": { "type": "number" },
-                      "steamId": { "type": "string" },
-                      "username": { "type": "string" },
-                      "avatarMedium": { "type": "string" },
-                      "experience": { "type": "number" },
-                      "kills": { "type": "number" },
-                      "deaths": { "type": "number" },
-                      "playtime": { "type": "number" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/admin/leaderboard/refresh": {
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Refresh leaderboard",
-        "description": "Manually trigger leaderboard recalculation (admin only)",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Leaderboard refresh initiated"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
           }
         }
       }
