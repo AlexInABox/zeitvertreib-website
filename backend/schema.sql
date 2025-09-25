@@ -21,8 +21,10 @@ CREATE TABLE "playerdata" (
     'carmine','nickel','mint','army_green','pumpkin'
   )),
   fakerankadmin_until INTEGER DEFAULT 0, -- unix timestamp, 0 = not an admin
-  redeemed_codes TEXT DEFAULT ''
-, fakerankoverride_until INTEGER DEFAULT 0, username TEXT DEFAULT '')
+  redeemed_codes TEXT DEFAULT '',
+  fakerankoverride_until INTEGER DEFAULT 0,
+  username TEXT DEFAULT ''
+);
 
 
 CREATE TABLE IF NOT EXISTS kills (
@@ -117,6 +119,25 @@ INSERT OR IGNORE INTO playerdata (
     999, 7200, 45,
     25, 18, 7, 12,
     23, 'Elite Commander', 1760452027, 1760452027, 0
+),
+-- Test users for development
+(
+    '76561197000000000@steam',
+    450, 3600, 28,
+    12, 8, 3, 5,
+    15, NULL, 0, 0, 0
+),
+(
+    '76561197000000001@steam',
+    820, 5400, 35,
+    18, 14, 5, 9,
+    21, 'Special Agent', 32472144000, 0, 0
+),
+(
+    '76561197000000002@steam',
+    1250, 8100, 52,
+    32, 25, 12, 18,
+    28, 'Admin Commander', 0, 32472144000, 0
 );
 
 -- Sample kills data for testing

@@ -4,5 +4,9 @@ SPRAY_MOD_WEBHOOK=your_discord_webhook_url_for_spray_moderation
 LEADERBOARD_WEBHOOK=your_discord_webhook_url_for_leaderboard
 LEADERBOARD_MESSAGE_ID=your_discord_message_id_to_edit_for_leaderboard
 
+TESTING_USER0_COOKIE=foo
+TESTING_USER1_COOKIE=foo
+TESTING_USER2_COOKIE=foo
+
 # Proxy configuration for Discord API calls
 PROXY_HOST=https://crossorigin.me

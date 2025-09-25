@@ -57,9 +57,79 @@ function getSessionId(request: Request): string | null {
 export async function validateSession(
   request: Request,
   env: Env,
-): Promise<{ isValid: boolean; session?: SessionData; steamId?: string; error?: string }> {
+): Promise<{
+  isValid: boolean;
+  session?: SessionData;
+  steamId?: string;
+  error?: string;
+}> {
   const sessionId = getSessionId(request);
   if (!sessionId) return { isValid: false, error: 'No session found' };
+
+  // Testing mode: check for different test user cookies
+  // Backward compatibility: TESTING_COOKIE defaults to user 0
+  if (env.TESTING_USER0_COOKIE && sessionId === env.TESTING_USER0_COOKIE) {
+    console.log(
+      'Testing mode: auto-validating session with test user 0 (no special permissions)',
+    );
+    const testSteamId = '76561197000000000';
+    const testSession: SessionData = {
+      steamId: testSteamId,
+      steamUser: {
+        steamid: testSteamId,
+        personaname: 'Test User 0',
+        profileurl: 'https://steamcommunity.com/profiles/76561197000000000',
+        avatarfull: '',
+        avatarmedium: '',
+        avatar: '',
+      },
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
+    };
+    return { isValid: true, session: testSession, steamId: testSteamId };
+  }
+
+  if (env.TESTING_USER1_COOKIE && sessionId === env.TESTING_USER1_COOKIE) {
+    console.log(
+      'Testing mode: auto-validating session with test user 1 (fakerank access)',
+    );
+    const testSteamId = '76561197000000001';
+    const testSession: SessionData = {
+      steamId: testSteamId,
+      steamUser: {
+        steamid: testSteamId,
+        personaname: 'Test User 1',
+        profileurl: 'https://steamcommunity.com/profiles/76561197000000001',
+        avatarfull: '',
+        avatarmedium: '',
+        avatar: '',
+      },
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
+    };
+    return { isValid: true, session: testSession, steamId: testSteamId };
+  }
+
+  if (env.TESTING_USER2_COOKIE && sessionId === env.TESTING_USER2_COOKIE) {
+    console.log(
+      'Testing mode: auto-validating session with test user 2 (fakerankadmin access)',
+    );
+    const testSteamId = '76561197000000002';
+    const testSession: SessionData = {
+      steamId: testSteamId,
+      steamUser: {
+        steamid: testSteamId,
+        personaname: 'Test User 2',
+        profileurl: 'https://steamcommunity.com/profiles/76561197000000002',
+        avatarfull: '',
+        avatarmedium: '',
+        avatar: '',
+      },
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year from now
+    };
+    return { isValid: true, session: testSession, steamId: testSteamId };
+  }
 
   const sessionData = await env.SESSIONS.get(sessionId);
   if (!sessionData) return { isValid: false, error: 'Invalid session' };

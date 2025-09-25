@@ -13,6 +13,9 @@ declare namespace Cloudflare {
     PROXY_HOST: string;
     REPLICATE_API_TOKEN: string;
     LOGIN_SECRET_API_KEY: string;
+    TESTING_USER0_COOKIE?: string;
+    TESTING_USER1_COOKIE?: string;
+    TESTING_USER2_COOKIE?: string;
     PLAYERLIST: DurableObjectNamespace /* zeitvertreib-discord_PlayerlistStorage */;
     'zeitvertreib-data': D1Database;
   }

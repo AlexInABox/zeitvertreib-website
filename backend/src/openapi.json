@@ -1343,7 +1343,6 @@
                   "type": "object",
                   "properties": {
                     "message": { "type": "string" },
-                    "reward": { "type": "string" },
                     "amount": { "type": "number" }
                   }
                 }
@@ -1372,11 +1371,33 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "targetSteamId": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "reason": { "type": "string" }
+                  "targetUser": {
+                    "type": "object",
+                    "oneOf": [
+                      {
+                        "properties": {
+                          "steamId": {
+                            "type": "string",
+                            "example": "76561198354414854"
+                          }
+                        },
+                        "required": ["steamId"]
+                      },
+                      {
+                        "properties": {
+                          "username": {
+                            "type": "string",
+                            "example": "cooler_Alex"
+                          }
+                        },
+                        "required": ["username"]
+                      }
+                    ],
+                    "description": "Specify either a Steam ID or a username."
+                  },
+                  "amount": { "type": "number" }
                 },
-                "required": ["targetSteamId", "amount"]
+                "required": ["targetUser", "amount"]
               }
             }
           }

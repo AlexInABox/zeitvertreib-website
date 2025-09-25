@@ -1,0 +1,16 @@
+# Default auth for most operations
+headers = { Cookie = "session=1" }
+
+# Special auth for admin operations
+[[operations]]
+include-tag = "FakeRank"
+headers = { Cookie = "session=2" }
+[[operations]]
+include-tag = "Admin"
+headers = { Cookie = "session=3" }
+[[operations]]
+include-tag = "Authentication"
+enabled = false
+[[operations]]
+include-tag = "Moderation"
+enabled = false
