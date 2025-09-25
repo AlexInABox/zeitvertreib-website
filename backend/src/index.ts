@@ -1,4 +1,6 @@
 import openapi from "./openapi.json";
+import { drizzle } from 'drizzle-orm/d1';
+import * as schema from '../drizzle/schema.js';
 import {
   handleSteamLogin,
   handleSteamCallback,
@@ -75,222 +77,76 @@ function createResponse(
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-// Route handlers
+// Route mapping: path + method -> handler function
 const routes: Record<
   string,
-  (request: Request, env: Env) => Promise<Response>
+  (request: Request, db: ReturnType<typeof drizzle>, env: Env) => Promise<Response>
 > = {
-  '/auth/steam': handleSteamLogin,
-  '/auth/steam/callback': handleSteamCallback,
-  '/auth/me': handleGetUser,
-  '/auth/logout': handleLogout,
-  '/auth/generate-login-secret': handleGenerateLoginSecret,
-  '/auth/login-with-secret': handleLoginWithSecret,
-  '/stats': handleGetStats,
-  '/spray/upload': handleUploadSpray,
-  '/spray/remove-background': handleBackgroundRemoval,
-  '/spray/image': handleGetSpray,
-  '/spray/string': handleGetSprayString,
-  '/spray/delete': handleDeleteSpray,
-  '/spray/moderate/delete': handleModerationDelete,
-  '/spray/moderate/ban': handleModerationBan,
-  '/spray/moderate/unban': handleModerationUnban,
-  '/spray/moderate/undelete': handleModerationUndelete,
-  '/spray/upload-limits': handleGetUploadLimits,
-  '/spray/ban-status': handleGetSprayBanStatus,
-  '/fakerank': handleFakerank,
-  '/fakerank/moderate/delete': handleFakerankModerationDelete,
-  '/fakerank/moderate/ban': handleFakerankModerationBan,
-  '/fakerank-admin/user': handleFakerankAdminUser,
-  '/fakerank-admin/blacklist': handleFakerankAdminBlacklist,
-  '/fakerank-admin/whitelist': handleFakerankAdminWhitelist,
-  '/fakerank-admin/all-fakeranks': handleGetAllFakeranks,
-  '/financial/transactions': handleFinancialTransactions,
-  '/financial/recurring': handleRecurringTransactions,
-  '/financial/summary': handleGetSummary,
-  '/redeemables': handleRedeemablesRoutes,
-  '/redeemables/redeem': handleRedeemablesRoutes,
-  '/redeem-code': handleRedeemCode,
-  '/transfer-zvc': handleTransferZVC,
-  '/leaderboard/update': handleLeaderboardUpdate,
+  // Auth routes
+  'POST:/auth/steam': handleSteamLogin,
+  'GET:/auth/steam/callback': handleSteamCallback,
+  'GET:/auth/me': handleGetUser,
+  'POST:/auth/logout': handleLogout,
+  'POST:/auth/generate-login-secret': handleGenerateLoginSecret,
+  'POST:/auth/login-with-secret': handleLoginWithSecret,
+
+  // Stats
+  'GET:/stats': handleGetStats,
+
+  // Spray routes
+  'POST:/spray/upload': handleUploadSpray,
+  'POST:/spray/remove-background': handleBackgroundRemoval,
+  'GET:/spray/image': handleGetSpray,
+  'GET:/spray/string': handleGetSprayString,
+  'DELETE:/spray/delete': handleDeleteSpray,
+  'DELETE:/spray/moderate/delete': handleModerationDelete,
+  'POST:/spray/moderate/ban': handleModerationBan,
+  'POST:/spray/moderate/unban': handleModerationUnban,
+  'POST:/spray/moderate/undelete': handleModerationUndelete,
+  'GET:/spray/upload-limits': handleGetUploadLimits,
+  'GET:/spray/ban-status': handleGetSprayBanStatus,
+
+  // Fakerank routes
+  'POST:/fakerank': handleFakerank,
+  'DELETE:/fakerank/moderate/delete': handleFakerankModerationDelete,
+  'POST:/fakerank/moderate/ban': handleFakerankModerationBan,
+
+  // Fakerank admin routes
+  'GET:/fakerank-admin/user': handleGetUserFakerank,
+  'POST:/fakerank-admin/user': handleSetUserFakerank,
+  'GET:/fakerank-admin/blacklist': handleGetBlacklist,
+  'POST:/fakerank-admin/blacklist': handleAddToBlacklist,
+  'DELETE:/fakerank-admin/blacklist': handleRemoveFromBlacklist,
+  'GET:/fakerank-admin/whitelist': handleGetWhitelist,
+  'POST:/fakerank-admin/whitelist': handleAddToWhitelist,
+  'DELETE:/fakerank-admin/whitelist': handleRemoveFromWhitelist,
+  'GET:/fakerank-admin/all-fakeranks': handleGetAllFakeranks,
+
+  // Financial routes
+  'GET:/financial/transactions': handleGetTransactions,
+  'POST:/financial/transactions': handleCreateTransaction,
+  'PUT:/financial/transactions': handleUpdateTransaction,
+  'DELETE:/financial/transactions': handleDeleteTransaction,
+  'GET:/financial/recurring': handleGetRecurringTransactions,
+  'POST:/financial/recurring': handleCreateRecurringTransaction,
+  'PUT:/financial/recurring': handleUpdateRecurringTransaction,
+  'DELETE:/financial/recurring': handleDeleteRecurringTransaction,
+  'GET:/financial/summary': handleGetSummary,
+
+  // Redeemables routes
+  'GET:/redeemables': handleGetRedeemables,
+  'POST:/redeemables/redeem': handleRedeemItem,
+  'POST:/redeem-code': handleRedeemCode,
+
+  // Other routes
+  'POST:/transfer-zvc': handleTransferZVC,
+  'POST:/leaderboard/update': handleLeaderboardUpdate,
 };
 
-// Helper function to route redeemables based on method and path
-async function handleRedeemablesRoutes(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const url = new URL(request.url);
-  const method = request.method;
-
-  // Remove /api prefix if present
-  let pathname = url.pathname;
-  if (pathname.startsWith('/api')) {
-    pathname = pathname.substring(4);
-  }
-
-  // Handle different HTTP methods for /redeemables
-  if (pathname === '/redeemables') {
-    if (method === 'GET') {
-      return handleGetRedeemables(request, env);
-    }
-  }
-
-  // Handle /redeemables/redeem for POST
-  if (pathname === '/redeemables/redeem' && method === 'POST') {
-    return handleRedeemItem(request, env);
-  }
-
-  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-// Helper function to route recurring transactions based on method and path
-async function handleRecurringTransactions(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const url = new URL(request.url);
-  const method = request.method;
-
-  // Remove /api prefix if present
-  let pathname = url.pathname;
-  if (pathname.startsWith('/api')) {
-    pathname = pathname.substring(4);
-  }
-
-  // Handle different HTTP methods for /financial/recurring
-  if (pathname === '/financial/recurring') {
-    if (method === 'GET') {
-      return handleGetRecurringTransactions(request, env);
-    } else if (method === 'POST') {
-      return handleCreateRecurringTransaction(request, env);
-    }
-  }
-
-  // Handle /financial/recurring/{id} for PUT and DELETE
-  const recurringIdMatch = pathname.match(/^\/financial\/recurring\/(\d+)$/);
-  if (recurringIdMatch) {
-    if (method === 'PUT') {
-      return handleUpdateRecurringTransaction(request, env);
-    } else if (method === 'DELETE') {
-      return handleDeleteRecurringTransaction(request, env);
-    }
-  }
-
-  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-// Helper function to route financial transactions based on method and path
-async function handleFinancialTransactions(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const url = new URL(request.url);
-  const method = request.method;
-
-  // Remove /api prefix if present
-  let pathname = url.pathname;
-  if (pathname.startsWith('/api')) {
-    pathname = pathname.substring(4);
-  }
-
-  // Handle different HTTP methods for /financial/transactions
-  if (pathname === '/financial/transactions') {
-    if (method === 'GET') {
-      return handleGetTransactions(request, env);
-    } else if (method === 'POST') {
-      return handleCreateTransaction(request, env);
-    }
-  }
-
-  // Handle /financial/transactions/{id} for PUT and DELETE
-  const transactionIdMatch = pathname.match(
-    /^\/financial\/transactions\/(\d+)$/,
-  );
-  if (transactionIdMatch) {
-    if (method === 'PUT') {
-      return handleUpdateTransaction(request, env);
-    } else if (method === 'DELETE') {
-      return handleDeleteTransaction(request, env);
-    }
-  }
-
-  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-// Helper function to route fakerank admin user operations based on method
-async function handleFakerankAdminUser(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const method = request.method;
-
-  if (method === 'GET') {
-    return handleGetUserFakerank(request, env);
-  } else if (method === 'POST') {
-    return handleSetUserFakerank(request, env);
-  }
-
-  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-// Helper function to route fakerank admin blacklist operations based on method
-async function handleFakerankAdminBlacklist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const method = request.method;
-
-  if (method === 'GET') {
-    return handleGetBlacklist(request, env);
-  } else if (method === 'POST') {
-    return handleAddToBlacklist(request, env);
-  } else if (method === 'DELETE') {
-    return handleRemoveFromBlacklist(request, env);
-  }
-
-  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-// Helper function to route fakerank admin whitelist operations based on method
-async function handleFakerankAdminWhitelist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const method = request.method;
-
-  if (method === 'GET') {
-    return handleGetWhitelist(request, env);
-  } else if (method === 'POST') {
-    return handleAddToWhitelist(request, env);
-  } else if (method === 'DELETE') {
-    return handleRemoveFromWhitelist(request, env);
-  }
-
-  return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-    status: 405,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
 export default {
+
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
+    const db = drizzle(env["zeitvertreib-data"], { schema });
     const origin = request.headers.get('Origin');
 
     // Handle preflight OPTIONS requests
@@ -355,33 +211,23 @@ export default {
         });
       }
 
-      // Handle financial routes with dynamic paths
-      if (pathname.startsWith('/financial/transactions')) {
-        return await handleFinancialTransactions(request, env);
+      // Handle routes with dynamic paths (transactions/{id}, recurring/{id})
+      let routeKey = `${request.method}:${pathname}`;
+
+      // Check for dynamic routes
+      const transactionIdMatch = pathname.match(/^\/financial\/transactions\/(\d+)$/);
+      if (transactionIdMatch) {
+        routeKey = `${request.method}:/financial/transactions`;
       }
 
-      // Handle recurring financial routes with dynamic paths
-      if (pathname.startsWith('/financial/recurring')) {
-        return await handleRecurringTransactions(request, env);
+      const recurringIdMatch = pathname.match(/^\/financial\/recurring\/(\d+)$/);
+      if (recurringIdMatch) {
+        routeKey = `${request.method}:/financial/recurring`;
       }
 
-      const handler = routes[pathname];
+      const handler = routes[routeKey];
       if (handler) {
-        // Handle method-specific routing for spray upload
-        if (pathname === '/spray/upload' && request.method !== 'POST') {
-          return createResponse({ error: 'Method Not Allowed' }, 405, origin);
-        }
-        if (
-          (pathname === '/spray/image' || pathname === '/spray/string') &&
-          request.method !== 'GET'
-        ) {
-          return createResponse({ error: 'Method Not Allowed' }, 405, origin);
-        }
-        if (pathname === '/spray/delete' && request.method !== 'DELETE') {
-          return createResponse({ error: 'Method Not Allowed' }, 405, origin);
-        }
-
-        return await handler(request, env);
+        return await handler(request, db, env);
       }
       return createResponse({ error: 'Not Found' }, 404, origin);
     } catch (error) {
@@ -395,9 +241,11 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
+    const db = drizzle(env["zeitvertreib-data"], { schema });
+
     // Process recurring transactions daily (6:00 AM)
     if (controller.cron === '0 6 * * *') {
-      ctx.waitUntil(processRecurringTransactions(env));
+      ctx.waitUntil(processRecurringTransactions(db, env));
     }
 
     // Update leaderboard every 30 minutes

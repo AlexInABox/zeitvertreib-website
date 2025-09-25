@@ -4,9 +4,11 @@ import {
   mapPlayerDataToStats,
   createResponse,
 } from '../utils.js';
+import { drizzle } from 'drizzle-orm/d1';
 
 export async function handleGetStats(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -17,12 +19,13 @@ export async function handleGetStats(
   }
 
   try {
-    const playerData = await getPlayerData(session!.steamId, env);
+    const playerData = await getPlayerData(session!.steamId, db, env);
     const stats = await mapPlayerDataToStats(
       playerData,
       session!.steamUser.personaname,
       session!.steamUser.avatarfull,
       session!.steamId,
+      db,
       env,
     );
 

@@ -5,6 +5,9 @@ import {
   fetchSteamUserData,
 } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq, like, isNotNull } from 'drizzle-orm';
+import { playerdata } from '../../drizzle/schema.js';
 
 // Extend the Env interface to include DISCORD_WORKER_API_KEY
 declare global {
@@ -21,7 +24,11 @@ interface Player {
 }
 
 // Helper function to check if user is fakerank admin
-async function validateFakerankAdmin(request: Request, env: Env) {
+async function validateFakerankAdmin(
+  request: Request,
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+) {
   const { isValid, session, error } = await validateSession(request, env);
 
   if (!isValid) {
@@ -29,7 +36,7 @@ async function validateFakerankAdmin(request: Request, env: Env) {
   }
 
   // Get player data to check admin status
-  const playerData = await getPlayerData(session!.steamId, env);
+  const playerData = await getPlayerData(session!.steamId, db, env);
 
   // Check if user has fakerank admin access based on unix timestamp
   const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -49,13 +56,14 @@ async function validateFakerankAdmin(request: Request, env: Env) {
 // GET user fakerank by steamid
 export async function handleGetUserFakerank(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -72,7 +80,7 @@ export async function handleGetUserFakerank(
     }
 
     // Get player data for the requested user
-    const playerData = await getPlayerData(steamId, env);
+    const playerData = await getPlayerData(steamId, db, env);
     if (!playerData) {
       return createResponse({ error: 'User not found' }, 404, origin);
     }
@@ -113,13 +121,14 @@ export async function handleGetUserFakerank(
 // SET user fakerank by steamid
 export async function handleSetUserFakerank(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -164,29 +173,35 @@ export async function handleSetUserFakerank(
         // Set as override fakerank with expiration
         const overrideUntil =
           Math.floor(Date.now() / 1000) + overrideDurationHours * 3600;
-        await env['zeitvertreib-data']
-          .prepare(
-            'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = ? WHERE id = ?',
-          )
-          .bind(fakerank, fakerank_color, overrideUntil, playerId)
-          .run();
+        await db
+          .update(playerdata)
+          .set({
+            fakerank,
+            fakerankColor: fakerank_color,
+            fakerankoverrideUntil: overrideUntil
+          })
+          .where(eq(playerdata.id, playerId));
       } else {
         // Set regular fakerank (user can modify)
-        await env['zeitvertreib-data']
-          .prepare(
-            'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
-          )
-          .bind(fakerank, fakerank_color, playerId)
-          .run();
+        await db
+          .update(playerdata)
+          .set({
+            fakerank,
+            fakerankColor: fakerank_color,
+            fakerankoverrideUntil: 0
+          })
+          .where(eq(playerdata.id, playerId));
       }
     } else {
       // Clear fakerank and override
-      await env['zeitvertreib-data']
-        .prepare(
-          'UPDATE playerdata SET fakerank = NULL, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
-        )
-        .bind('default', playerId)
-        .run();
+      await db
+        .update(playerdata)
+        .set({
+          fakerank: null,
+          fakerankColor: 'default',
+          fakerankoverrideUntil: 0
+        })
+        .where(eq(playerdata.id, playerId));
     }
 
     console.log(
@@ -214,13 +229,14 @@ export async function handleSetUserFakerank(
 // GET blacklisted words
 export async function handleGetBlacklist(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -256,13 +272,14 @@ export async function handleGetBlacklist(
 // ADD word to blacklist
 export async function handleAddToBlacklist(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -326,13 +343,14 @@ export async function handleAddToBlacklist(
 // REMOVE word from blacklist
 export async function handleRemoveFromBlacklist(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -397,13 +415,14 @@ export async function handleRemoveFromBlacklist(
 // GET whitelisted words
 export async function handleGetWhitelist(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -439,13 +458,14 @@ export async function handleGetWhitelist(
 // ADD word to whitelist
 export async function handleAddToWhitelist(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -509,13 +529,14 @@ export async function handleAddToWhitelist(
 // REMOVE word from whitelist
 export async function handleRemoveFromWhitelist(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -580,13 +601,14 @@ export async function handleRemoveFromWhitelist(
 // GET all users with fakeranks from current player list (for admin overview, excludes requesting user)
 export async function handleGetAllFakeranks(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, env);
+    const adminCheck = await validateFakerankAdmin(request, db, env);
     if (!adminCheck.isValid) {
       return createResponse({ error: adminCheck.error }, 401, origin);
     }
@@ -639,30 +661,31 @@ export async function handleGetAllFakeranks(
     const uniqueUserIds =
       playerListData.length > 0
         ? [
-            ...new Set(
-              playerListData.map((player) =>
-                player.UserId.replace('@steam', ''),
-              ),
+          ...new Set(
+            playerListData.map((player) =>
+              player.UserId.replace('@steam', ''),
             ),
-          ]
+          ),
+        ]
         : [];
 
     // Get all users with fakeranks from database
-    const allFakeranksResult = await env['zeitvertreib-data']
-      .prepare(
-        `
-                SELECT id, fakerank, fakerank_color, fakerank_until, experience 
-                FROM playerdata 
-                WHERE fakerank IS NOT NULL
-            `,
-      )
-      .all();
+    const allFakeranksResult = await db
+      .select({
+        id: playerdata.id,
+        fakerank: playerdata.fakerank,
+        fakerank_color: playerdata.fakerankColor,
+        fakerank_until: playerdata.fakerankUntil,
+        experience: playerdata.experience
+      })
+      .from(playerdata)
+      .where(isNotNull(playerdata.fakerank));
 
     // Create a map of player data by Steam ID
     const playerDataMap = new Map();
     const currentTimestamp = Math.floor(Date.now() / 1000);
 
-    allFakeranksResult.results.forEach((row: any) => {
+    allFakeranksResult.forEach((row: any) => {
       const steamId = row.id.replace('@steam', '');
       const fakerankUntil = Number(row.fakerank_until) || 0;
       const hasFakerankAccess =

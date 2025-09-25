@@ -7,6 +7,9 @@ import {
 import OpenAI from 'openai';
 import { profanity } from '@2toad/profanity';
 import { EmbedBuilder } from '@discordjs/builders';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+import { playerdata } from '../../drizzle/schema.js';
 
 // Extend the Env interface to include OPENAI_API_KEY
 declare global {
@@ -155,6 +158,7 @@ async function loadBlacklist(env: Env): Promise<void> {
 
 export async function handleFakerank(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -172,14 +176,14 @@ export async function handleFakerank(
   try {
     switch (method) {
       case 'GET':
-        return await handleGetFakerank(playerId, env, origin);
+        return await handleGetFakerank(playerId, db, env, origin);
 
       case 'POST':
       case 'PATCH':
-        return await handleUpdateFakerank(request, playerId, env, origin);
+        return await handleUpdateFakerank(request, playerId, db, env, origin);
 
       case 'DELETE':
-        return await handleDeleteFakerank(playerId, env, origin);
+        return await handleDeleteFakerank(playerId, db, env, origin);
 
       default:
         return createResponse({ error: 'Method Not Allowed' }, 405, origin);
@@ -192,11 +196,12 @@ export async function handleFakerank(
 
 async function handleGetFakerank(
   playerId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
   origin: string | null,
 ): Promise<Response> {
   try {
-    const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
     // Calculate fakerank access based on timestamp
     const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -226,12 +231,13 @@ async function handleGetFakerank(
 async function handleUpdateFakerank(
   request: Request,
   playerId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
   origin: string | null,
 ): Promise<Response> {
   try {
     // Check if user is allowed to set fakeranks based on timestamp
-    const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
     // Check if user has valid fakerank access (regular access)
     const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -517,12 +523,13 @@ async function handleUpdateFakerank(
 
 async function handleDeleteFakerank(
   playerId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
   origin: string | null,
 ): Promise<Response> {
   try {
     // Check if user is allowed to modify fakeranks based on timestamp
-    const playerData = await getPlayerData(playerId.replace('@steam', ''), env);
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
     // Check if user has valid fakerank access
     const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -587,6 +594,7 @@ async function handleDeleteFakerank(
 // Handle Discord moderation action - delete fakerank and blacklist word
 export async function handleFakerankModerationDelete(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -656,6 +664,7 @@ export async function handleFakerankModerationDelete(
 // Handle Discord moderation action - delete fakerank, blacklist word, and ban user
 export async function handleFakerankModerationBan(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');

@@ -13,13 +13,17 @@
     "dev:fresh": "npm run db:reset && npm run dev"
   },
   "devDependencies": {
+    "@types/node": "^24.5.2",
+    "dotenv": "^17.2.2",
+    "drizzle-kit": "^0.31.4",
     "prettier": "3.6.2",
     "typescript": "^5.9.2",
-    "wrangler": "^4.28.1"
+    "wrangler": "^4.40.0"
   },
   "dependencies": {
     "@2toad/profanity": "^3.1.1",
     "@discordjs/builders": "^1.11.2",
+    "drizzle-orm": "^0.44.5",
     "glin-profanity": "^2.3.3",
     "openai": "^5.12.1",
     "washyourmouthoutwithsoap": "^1.0.2"

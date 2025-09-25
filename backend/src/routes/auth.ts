@@ -12,13 +12,19 @@ import {
   validateLoginSecret,
   cleanupExpiredLoginSecrets,
 } from '../utils.js';
+import { drizzle } from 'drizzle-orm/d1';
 
-export async function handleSteamLogin(request: Request): Promise<Response> {
+export async function handleSteamLogin(
+  request: Request,
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+): Promise<Response> {
   return createResponse(generateSteamLoginUrl(request), 302);
 }
 
 export async function handleSteamCallback(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const url = new URL(request.url);
@@ -103,6 +109,7 @@ export async function handleSteamCallback(
 
 export async function handleGetUser(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -113,7 +120,7 @@ export async function handleGetUser(
   }
 
   // Get player data including fakerankadmin flag
-  const playerData = await getPlayerData(session!.steamId, env);
+  const playerData = await getPlayerData(session!.steamId, db, env);
 
   return createResponse(
     {
@@ -127,6 +134,7 @@ export async function handleGetUser(
 
 export async function handleLogout(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -136,6 +144,7 @@ export async function handleLogout(
 
 export async function handleGenerateLoginSecret(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -180,7 +189,7 @@ export async function handleGenerateLoginSecret(
     }
 
     // Generate new login secret
-    const secret = await generateLoginSecret(steamId, env);
+    const secret = await generateLoginSecret(steamId, db, env);
 
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
     const loginUrl = `${frontendUrl}/?loginSecret=${secret}`;
@@ -210,6 +219,7 @@ export async function handleGenerateLoginSecret(
 
 export async function handleLoginWithSecret(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -222,7 +232,7 @@ export async function handleLoginWithSecret(
 
   try {
     // Validate the login secret
-    const { isValid, steamId, error } = await validateLoginSecret(secret, env);
+    const { isValid, steamId, error } = await validateLoginSecret(secret, db, env);
 
     if (!isValid) {
       return createResponse({ error: error! }, 400, origin);

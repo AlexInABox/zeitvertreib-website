@@ -7,6 +7,9 @@ import {
   KillRecord,
 } from './types/index.js';
 import { proxyFetch } from './proxy.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq, count, lt } from 'drizzle-orm';
+import { playerdata, kills, loginSecrets } from '../drizzle/schema.js';
 
 // Discord API proxy utility
 export async function fetchDiscordWithProxy(
@@ -373,19 +376,45 @@ export async function refreshSteamUserData(
 // Database helpers
 export async function getPlayerData(
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<PlayerData | null> {
   try {
     const playerId = `${steamId}@steam`;
     console.log('Fetching player data for ID:', playerId);
 
-    const result = (await env['zeitvertreib-data']
-      .prepare('SELECT * FROM playerdata WHERE id = ?')
-      .bind(playerId)
-      .first()) as PlayerData | null;
+    const result = await db
+      .select()
+      .from(playerdata)
+      .where(eq(playerdata.id, playerId))
+      .get();
 
     console.log('Player data result:', result);
-    return result;
+
+    // Convert result to match PlayerData interface (map camelCase DB columns to snake_case interface)
+    if (result) {
+      return {
+        id: result.id,
+        experience: result.experience ?? undefined,
+        playtime: result.playtime ?? undefined,
+        roundsplayed: result.roundsplayed ?? undefined,
+        usedmedkits: result.usedmedkits ?? undefined,
+        usedcolas: result.usedcolas ?? undefined,
+        pocketescapes: result.pocketescapes ?? undefined,
+        usedadrenaline: result.usedadrenaline ?? undefined,
+        snakehighscore: result.snakehighscore ?? undefined,
+        fakerank: result.fakerank ?? undefined,
+        fakerank_color: result.fakerankColor ?? undefined,
+        killcount: result.killcount ?? undefined,
+        deathcount: result.deathcount ?? undefined,
+        fakerank_until: result.fakerankUntil ?? undefined,
+        fakerankadmin_until: result.fakerankadminUntil ?? undefined,
+        fakerankoverride_until: result.fakerankoverrideUntil ?? undefined,
+        redeemed_codes: result.redeemedCodes ?? undefined
+      } as PlayerData;
+    }
+
+    return null;
   } catch (error) {
     console.error('Database error:', error);
     throw new Error('Failed to fetch player data');
@@ -395,14 +424,16 @@ export async function getPlayerData(
 // New kills table helpers
 export async function getPlayerKillsCount(
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<number> {
   try {
     const playerId = `${steamId}@steam`;
-    const result = (await env['zeitvertreib-data']
-      .prepare('SELECT COUNT(*) as count FROM kills WHERE attacker = ?')
-      .bind(playerId)
-      .first()) as { count: number } | null;
+    const result = await db
+      .select({ count: count() })
+      .from(kills)
+      .where(eq(kills.attacker, playerId))
+      .get();
 
     return result?.count || 0;
   } catch (error) {
@@ -413,14 +444,16 @@ export async function getPlayerKillsCount(
 
 export async function getPlayerDeathsCount(
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<number> {
   try {
     const playerId = `${steamId}@steam`;
-    const result = (await env['zeitvertreib-data']
-      .prepare('SELECT COUNT(*) as count FROM kills WHERE target = ?')
-      .bind(playerId)
-      .first()) as { count: number } | null;
+    const result = await db
+      .select({ count: count() })
+      .from(kills)
+      .where(eq(kills.target, playerId))
+      .get();
 
     return result?.count || 0;
   } catch (error) {
@@ -431,25 +464,26 @@ export async function getPlayerDeathsCount(
 
 export async function getPlayerLastKillers(
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Array<{ displayname: string; avatarmedium: string }>> {
   try {
     const playerId = `${steamId}@steam`;
-    const results = (await env['zeitvertreib-data']
-      .prepare(
-        'SELECT attacker FROM kills WHERE target = ? ORDER BY timestamp DESC LIMIT 5',
-      )
-      .bind(playerId)
-      .all()) as { results: Array<{ attacker: string }> };
+    const results = await db
+      .select({ attacker: kills.attacker })
+      .from(kills)
+      .where(eq(kills.target, playerId))
+      .orderBy(kills.timestamp)
+      .limit(5);
 
-    if (!results.results || results.results.length === 0) {
+    if (!results || results.length === 0) {
       return [];
     }
 
     // Get Steam user data for each unique attacker (excluding anonymous)
     const uniqueAttackers = [
-      ...new Set(results.results.map((r) => r.attacker)),
-    ].filter((attacker) => attacker !== 'anonymous');
+      ...new Set(results.map((r) => r.attacker)),
+    ].filter((attacker) => attacker !== 'anonymous' && attacker !== null) as string[];
 
     const killersData = await Promise.all(
       uniqueAttackers.map(async (attacker) => {
@@ -467,11 +501,11 @@ export async function getPlayerLastKillers(
     );
 
     // Map back to preserve order and handle anonymous attackers
-    return results.results.map((r) => {
+    return results.map((r) => {
       if (r.attacker === 'anonymous') {
         return { displayname: 'Anonymous', avatarmedium: '' };
       }
-      const index = uniqueAttackers.indexOf(r.attacker);
+      const index = uniqueAttackers.indexOf(r.attacker!);
       return (
         killersData[index] || {
           displayname: 'Unknown Player',
@@ -487,25 +521,26 @@ export async function getPlayerLastKillers(
 
 export async function getPlayerLastKills(
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Array<{ displayname: string; avatarmedium: string }>> {
   try {
     const playerId = `${steamId}@steam`;
-    const results = (await env['zeitvertreib-data']
-      .prepare(
-        'SELECT target FROM kills WHERE attacker = ? ORDER BY timestamp DESC LIMIT 5',
-      )
-      .bind(playerId)
-      .all()) as { results: Array<{ target: string }> };
+    const results = await db
+      .select({ target: kills.target })
+      .from(kills)
+      .where(eq(kills.attacker, playerId))
+      .orderBy(kills.timestamp)
+      .limit(5);
 
-    if (!results.results || results.results.length === 0) {
+    if (!results || results.length === 0) {
       return [];
     }
 
     // Get Steam user data for each unique target (excluding anonymous)
     const uniqueTargets = [
-      ...new Set(results.results.map((r) => r.target)),
-    ].filter((target) => target !== 'anonymous');
+      ...new Set(results.map((r) => r.target)),
+    ].filter((target) => target !== 'anonymous' && target !== null) as string[];
 
     const targetsData = await Promise.all(
       uniqueTargets.map(async (target) => {
@@ -523,11 +558,11 @@ export async function getPlayerLastKills(
     );
 
     // Map back to preserve order and handle anonymous targets
-    return results.results.map((r) => {
+    return results.map((r) => {
       if (r.target === 'anonymous') {
         return { displayname: 'Anonymous', avatarmedium: '' };
       }
-      const index = uniqueTargets.indexOf(r.target);
+      const index = uniqueTargets.indexOf(r.target!);
       return (
         targetsData[index] || {
           displayname: 'Unknown Player',
@@ -546,12 +581,13 @@ export async function mapPlayerDataToStats(
   username: string,
   avatarFull: string,
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Statistics> {
   // Get kills and deaths directly from playerdata, but still get last killers/kills from kills table
   const [lastKillers, lastKills] = await Promise.all([
-    getPlayerLastKillers(steamId, env),
-    getPlayerLastKills(steamId, env),
+    getPlayerLastKillers(steamId, db, env),
+    getPlayerLastKills(steamId, db, env),
   ]);
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -609,23 +645,22 @@ export async function mapPlayerDataToStats(
 // Login secret helpers
 export async function generateLoginSecret(
   steamId: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<string> {
   try {
     const secret = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 40 * 60 * 1000); // 40 minutes from now
 
-    const insertQuery = `
-      INSERT INTO login_secrets (secret, steam_id, expires_at)
-      VALUES (?, ?, ?)
-    `;
-
     console.log('[AUTH] Generating login secret for steamId:', steamId);
 
-    await env['zeitvertreib-data']
-      .prepare(insertQuery)
-      .bind(secret, steamId, expiresAt.toISOString())
-      .run();
+    await db
+      .insert(loginSecrets)
+      .values({
+        secret: secret,
+        steamId: steamId,
+        expiresAt: expiresAt.toISOString(),
+      });
 
     console.log('[AUTH] Login secret generated successfully:', secret);
     return secret;
@@ -637,54 +672,48 @@ export async function generateLoginSecret(
 
 export async function validateLoginSecret(
   secret: string,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<{ isValid: boolean; steamId?: string; error?: string }> {
-  const selectQuery = `
-    SELECT steam_id, expires_at
-    FROM login_secrets
-    WHERE secret = ?
-  `;
-
-  const result = await env['zeitvertreib-data']
-    .prepare(selectQuery)
-    .bind(secret)
-    .first();
+  const result = await db
+    .select({
+      steamId: loginSecrets.steamId,
+      expiresAt: loginSecrets.expiresAt,
+    })
+    .from(loginSecrets)
+    .where(eq(loginSecrets.secret, secret))
+    .get();
 
   if (!result) {
     return { isValid: false, error: 'Invalid login secret' };
   }
 
-  const expiresAt = new Date(result.expires_at as string);
+  const expiresAt = new Date(result.expiresAt as string);
   if (Date.now() > expiresAt.getTime()) {
     // Delete the expired secret
-    const deleteQuery = `
-      DELETE FROM login_secrets
-      WHERE secret = ?
-    `;
-    await env['zeitvertreib-data'].prepare(deleteQuery).bind(secret).run();
+    await db
+      .delete(loginSecrets)
+      .where(eq(loginSecrets.secret, secret));
     return { isValid: false, error: 'Invalid login secret' };
   }
 
   // Delete the secret after successful validation (one-time use)
-  const deleteQuery = `
-    DELETE FROM login_secrets
-    WHERE secret = ?
-  `;
+  await db
+    .delete(loginSecrets)
+    .where(eq(loginSecrets.secret, secret));
 
-  await env['zeitvertreib-data'].prepare(deleteQuery).bind(secret).run();
-
-  return { isValid: true, steamId: result.steam_id as string };
+  return { isValid: true, steamId: result.steamId };
 }
 
-export async function cleanupExpiredLoginSecrets(env: Env): Promise<void> {
+export async function cleanupExpiredLoginSecrets(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+): Promise<void> {
   try {
-    const deleteQuery = `
-      DELETE FROM login_secrets
-      WHERE expires_at < datetime('now')
-    `;
-
     console.log('[AUTH] Cleaning up expired login secrets');
-    await env['zeitvertreib-data'].prepare(deleteQuery).run();
+    await db
+      .delete(loginSecrets)
+      .where(lt(loginSecrets.expiresAt, new Date().toISOString()));
     console.log('[AUTH] Expired login secrets cleanup completed');
   } catch (error) {
     console.error('[AUTH] Error cleaning up expired login secrets:', error);

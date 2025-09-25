@@ -586,6 +586,7 @@ export async function updateLeaderboard(env: Env): Promise<boolean> {
 // HTTP endpoint to manually trigger leaderboard update
 export async function handleLeaderboardUpdate(
   request: Request,
+  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   try {

@@ -1,4 +1,7 @@
 import { validateSession, createResponse } from '../utils.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+import { playerdata, redemptionCodes } from '../../drizzle/schema.js';
 
 export interface Redeemable {
   id: string;
@@ -69,6 +72,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
  */
 export async function handleGetRedeemables(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -126,6 +130,7 @@ export async function handleGetRedeemables(
  */
 export async function handleRedeemItem(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -174,10 +179,11 @@ export async function handleRedeemItem(
     const playerId = `${validation.session!.steamId}@steam`;
 
     // Get current player data to check ZV Coins balance
-    const playerData = (await env['zeitvertreib-data']
-      .prepare('SELECT experience FROM playerdata WHERE id = ?')
-      .bind(playerId)
-      .first()) as { experience: number } | null;
+    const playerData = await db
+      .select({ experience: playerdata.experience })
+      .from(playerdata)
+      .where(eq(playerdata.id, playerId))
+      .get();
 
     if (!playerData) {
       return createResponse({ error: 'Player data not found' }, 404, origin);
@@ -200,12 +206,13 @@ export async function handleRedeemItem(
 
     // Deduct ZV Coins from player balance
     const newBalance = currentBalance - redeemable.price;
-    const updateResult = await env['zeitvertreib-data']
-      .prepare('UPDATE playerdata SET experience = ? WHERE id = ?')
-      .bind(newBalance, playerId)
-      .run();
+    const updateResult = await db
+      .update(playerdata)
+      .set({ experience: newBalance })
+      .where(eq(playerdata.id, playerId))
+      .returning({ updatedId: playerdata.id });
 
-    if (!updateResult.success) {
+    if (updateResult.length === 0) {
       return createResponse(
         { error: 'Failed to process redemption' },
         500,
@@ -292,6 +299,7 @@ async function applyRedeemableEffects(
  */
 export async function handleRedeemCode(
   request: Request,
+  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -317,10 +325,10 @@ export async function handleRedeemCode(
       )
       .bind(code)
       .first()) as {
-      code: string;
-      credits: number;
-      remaining_uses: number;
-    } | null;
+        code: string;
+        credits: number;
+        remaining_uses: number;
+      } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
@@ -425,3 +433,5 @@ export async function handleRedeemCode(
     );
   }
 }
+
+

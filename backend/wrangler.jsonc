@@ -18,6 +18,7 @@
       "binding": "zeitvertreib-data",
       "database_name": "zeitvertreib-data",
       "database_id": "a5642ecc-9382-4256-924d-8353a825c26b",
+      "migrations_dir": "drizzle/migrations",
     },
   ],
   "vars": {

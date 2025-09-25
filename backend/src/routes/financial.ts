@@ -1,5 +1,8 @@
 import { validateSession, createResponse } from '../utils.js';
 import { FinancialTransaction, RecurringTransaction } from '../types/index.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq, desc, and, gte, lt } from 'drizzle-orm';
+import { financialTransactions, recurringTransactions } from '../../drizzle/schema.js';
 
 const ADMIN_STEAM_ID = '76561198354414854';
 
@@ -25,6 +28,7 @@ async function validateAdminAccess(
  */
 export async function handleGetTransactions(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -38,61 +42,56 @@ export async function handleGetTransactions(
 
   try {
     const url = new URL(request.url);
-    const limit = url.searchParams.get('limit') || '100';
-    const offset = url.searchParams.get('offset') || '0';
+    const limit = parseInt(url.searchParams.get('limit') || '100');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
     const type = url.searchParams.get('type'); // 'income' or 'expense'
     const category = url.searchParams.get('category');
 
-    let query = `
-            SELECT * FROM financial_transactions
-            WHERE 1=1
-        `;
-    const params: any[] = [];
+    // Build where conditions
+    const conditions: any[] = [];
 
     if (type && (type === 'income' || type === 'expense')) {
-      query += ` AND transaction_type = ?`;
-      params.push(type);
+      conditions.push(eq(financialTransactions.transactionType, type));
     }
 
     if (category) {
-      query += ` AND category = ?`;
-      params.push(category);
+      conditions.push(eq(financialTransactions.category, category));
     }
 
-    query += ` ORDER BY transaction_date DESC, created_at DESC LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), parseInt(offset));
-
-    const result = await env['zeitvertreib-data']
-      .prepare(query)
-      .bind(...params)
-      .all();
+    // Execute query with Drizzle
+    const result = await db
+      .select()
+      .from(financialTransactions)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(financialTransactions.transactionDate), desc(financialTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     // Transform database records to match frontend interface
-    const transformedTransactions =
-      result.results?.map((row: any) => ({
-        id: row.id,
-        date: row.transaction_date,
-        type: row.transaction_type,
-        category: row.category,
-        amount: row.amount,
-        description: row.description,
-        service: row.notes || row.category, // Use notes as service/title, fallback to category
-        created_at: row.created_at,
-      })) || [];
+    const transformedTransactions = result.map((row) => ({
+      id: row.id,
+      date: row.transactionDate,
+      type: row.transactionType,
+      category: row.category,
+      amount: row.amount,
+      description: row.description,
+      service: row.notes || row.category, // Use notes as service/title, fallback to category
+      created_at: row.createdAt,
+    }));
 
     return createResponse(
       {
         transactions: transformedTransactions,
-        total: result.results?.length || 0,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+        total: result.length,
+        limit: limit,
+        offset: offset,
       },
       200,
       origin,
     );
   } catch (error) {
-    console.error('Error getting summary:', error);
-    return createResponse({ error: 'Failed to get summary' }, 500, origin);
+    console.error('Error getting transactions:', error);
+    return createResponse({ error: 'Failed to get transactions' }, 500, origin);
   }
 }
 
@@ -102,6 +101,7 @@ export async function handleGetTransactions(
  */
 export async function handleGetRecurringTransactions(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -113,19 +113,15 @@ export async function handleGetRecurringTransactions(
   }
 
   try {
-    const result = await env['zeitvertreib-data']
-      .prepare(
-        `
-            SELECT * FROM recurring_transactions 
-            ORDER BY created_at DESC
-        `,
-      )
-      .all();
+    const result = await db
+      .select()
+      .from(recurringTransactions)
+      .orderBy(desc(recurringTransactions.createdAt));
 
     return createResponse(
       {
-        recurring_transactions: result.results,
-        total: result.results?.length || 0,
+        recurring_transactions: result,
+        total: result.length,
       },
       200,
       origin,
@@ -146,6 +142,7 @@ export async function handleGetRecurringTransactions(
  */
 export async function handleCreateRecurringTransaction(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -221,43 +218,28 @@ export async function handleCreateRecurringTransaction(
       recurring.frequency,
     );
 
-    // Insert recurring transaction
-    const result = await env['zeitvertreib-data']
-      .prepare(
-        `
-            INSERT INTO recurring_transactions (
-                transaction_type, category, amount, description, frequency, 
-                start_date, end_date, next_execution, created_by, reference_id, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-      )
-      .bind(
-        recurring.transaction_type,
-        recurring.category,
-        recurring.amount,
-        recurring.description,
-        recurring.frequency,
-        recurring.start_date,
-        recurring.end_date || null,
-        nextExecution,
-        adminValidation.session?.steamId || null,
-        recurring.reference_id || null,
-        recurring.notes || null,
-      )
-      .run();
-
-    if (!result.success) {
-      return createResponse(
-        { error: 'Failed to create recurring transaction' },
-        500,
-        origin,
-      );
-    }
+    // Insert recurring transaction using Drizzle
+    const result = await db
+      .insert(recurringTransactions)
+      .values({
+        transactionType: recurring.transaction_type,
+        category: recurring.category,
+        amount: recurring.amount,
+        description: recurring.description,
+        frequency: recurring.frequency,
+        startDate: recurring.start_date,
+        endDate: recurring.end_date || null,
+        nextExecution: nextExecution,
+        createdBy: adminValidation.session?.steamId || null,
+        referenceId: recurring.reference_id || null,
+        notes: recurring.notes || null,
+      })
+      .returning({ insertedId: recurringTransactions.id });
 
     return createResponse(
       {
         message: 'Recurring transaction created successfully',
-        id: result.meta.last_row_id,
+        id: result[0].insertedId,
       },
       201,
       origin,
@@ -278,6 +260,7 @@ export async function handleCreateRecurringTransaction(
  */
 export async function handleUpdateRecurringTransaction(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -308,60 +291,45 @@ export async function handleUpdateRecurringTransaction(
 
     const updates: any = await request.json();
 
-    // Build update query dynamically
-    const updateFields = [];
-    const params = [];
+    // Build update object dynamically
+    const updateData: any = {};
 
     if (updates.transaction_type) {
-      updateFields.push('transaction_type = ?');
-      params.push(updates.transaction_type);
+      updateData.transactionType = updates.transaction_type;
     }
     if (updates.category) {
-      updateFields.push('category = ?');
-      params.push(updates.category);
+      updateData.category = updates.category;
     }
     if (updates.amount !== undefined) {
-      updateFields.push('amount = ?');
-      params.push(updates.amount);
+      updateData.amount = updates.amount;
     }
     if (updates.description) {
-      updateFields.push('description = ?');
-      params.push(updates.description);
+      updateData.description = updates.description;
     }
     if (updates.frequency) {
-      updateFields.push('frequency = ?');
-      params.push(updates.frequency);
+      updateData.frequency = updates.frequency;
     }
     if (updates.is_active !== undefined) {
-      updateFields.push('is_active = ?');
-      params.push(updates.is_active);
+      updateData.isActive = updates.is_active;
     }
     if (updates.end_date !== undefined) {
-      updateFields.push('end_date = ?');
-      params.push(updates.end_date);
+      updateData.endDate = updates.end_date;
     }
 
-    if (updateFields.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return createResponse({ error: 'No fields to update' }, 400, origin);
     }
 
-    params.push(id);
+    const result = await db
+      .update(recurringTransactions)
+      .set(updateData)
+      .where(eq(recurringTransactions.id, parseInt(id)))
+      .returning({ updatedId: recurringTransactions.id });
 
-    const result = await env['zeitvertreib-data']
-      .prepare(
-        `
-            UPDATE recurring_transactions 
-            SET ${updateFields.join(', ')} 
-            WHERE id = ?
-        `,
-      )
-      .bind(...params)
-      .run();
-
-    if (!result.success) {
+    if (result.length === 0) {
       return createResponse(
-        { error: 'Failed to update recurring transaction' },
-        500,
+        { error: 'Recurring transaction not found' },
+        404,
         origin,
       );
     }
@@ -387,6 +355,7 @@ export async function handleUpdateRecurringTransaction(
  */
 export async function handleDeleteRecurringTransaction(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -415,19 +384,15 @@ export async function handleDeleteRecurringTransaction(
       );
     }
 
-    const result = await env['zeitvertreib-data']
-      .prepare(
-        `
-            DELETE FROM recurring_transactions WHERE id = ?
-        `,
-      )
-      .bind(id)
-      .run();
+    const result = await db
+      .delete(recurringTransactions)
+      .where(eq(recurringTransactions.id, parseInt(id)))
+      .returning({ deletedId: recurringTransactions.id });
 
-    if (!result.success) {
+    if (result.length === 0) {
       return createResponse(
-        { error: 'Failed to delete recurring transaction' },
-        500,
+        { error: 'Recurring transaction not found' },
+        404,
         origin,
       );
     }
@@ -476,7 +441,10 @@ function calculateNextExecution(startDate: string, frequency: string): string {
  * Cron job function to process recurring transactions
  * This will be called daily by Cloudflare Workers cron
  */
-export async function processRecurringTransactions(env: Env): Promise<void> {
+export async function processRecurringTransactions(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+): Promise<void> {
   const today = new Date().toISOString().split('T')[0];
 
   try {
@@ -562,6 +530,7 @@ export async function processRecurringTransactions(env: Env): Promise<void> {
  */
 export async function handleCreateTransaction(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -638,40 +607,25 @@ export async function handleCreateTransaction(
       );
     }
 
-    // Insert transaction
-    const result = await env['zeitvertreib-data']
-      .prepare(
-        `
-            INSERT INTO financial_transactions (
-                transaction_type, category, amount, description, transaction_date,
-                created_by, reference_id, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-      )
-      .bind(
-        transaction.transaction_type,
-        transaction.category,
-        transaction.amount,
-        transaction.description,
-        transaction.transaction_date,
-        adminValidation.session?.steamId || null,
-        transaction.reference_id || null,
-        transaction.notes || null,
-      )
-      .run();
-
-    if (!result.success) {
-      return createResponse(
-        { error: 'Failed to create transaction' },
-        500,
-        origin,
-      );
-    }
+    // Insert transaction using Drizzle
+    const result = await db
+      .insert(financialTransactions)
+      .values({
+        transactionType: transaction.transaction_type,
+        category: transaction.category,
+        amount: transaction.amount,
+        description: transaction.description,
+        transactionDate: transaction.transaction_date,
+        createdBy: adminValidation.session?.steamId || null,
+        referenceId: transaction.reference_id || null,
+        notes: transaction.notes || null,
+      })
+      .returning({ insertedId: financialTransactions.id });
 
     return createResponse(
       {
         message: 'Transaction created successfully',
-        id: result.meta.last_row_id,
+        id: result[0].insertedId,
       },
       201,
       origin,
@@ -692,6 +646,7 @@ export async function handleCreateTransaction(
  */
 export async function handleUpdateTransaction(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -828,6 +783,7 @@ export async function handleUpdateTransaction(
  */
 export async function handleDeleteTransaction(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -900,6 +856,7 @@ export async function handleDeleteTransaction(
  */
 export async function handleGetSummary(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -993,6 +950,7 @@ export async function handleGetSummary(
  */
 export async function handleTransferZVC(
   request: Request,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
