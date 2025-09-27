@@ -1,4 +1,4 @@
-import openapi from "./openapi.json";
+import openapi from './openapi.json';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../drizzle/schema.js';
 import {
@@ -80,7 +80,11 @@ function createResponse(
 // Route mapping: path + method -> handler function
 const routes: Record<
   string,
-  (request: Request, db: ReturnType<typeof drizzle>, env: Env) => Promise<Response>
+  (
+    request: Request,
+    db: ReturnType<typeof drizzle>,
+    env: Env,
+  ) => Promise<Response>
 > = {
   // Auth routes
   'POST:/auth/steam': handleSteamLogin,
@@ -144,9 +148,8 @@ const routes: Record<
 };
 
 export default {
-
   async fetch(request: Request, env: Env): Promise<Response> {
-    const db = drizzle(env["zeitvertreib-data"], { schema });
+    const db = drizzle(env['zeitvertreib-data'], { schema });
     const origin = request.headers.get('Origin');
 
     // Handle preflight OPTIONS requests
@@ -215,12 +218,16 @@ export default {
       let routeKey = `${request.method}:${pathname}`;
 
       // Check for dynamic routes
-      const transactionIdMatch = pathname.match(/^\/financial\/transactions\/(\d+)$/);
+      const transactionIdMatch = pathname.match(
+        /^\/financial\/transactions\/(\d+)$/,
+      );
       if (transactionIdMatch) {
         routeKey = `${request.method}:/financial/transactions`;
       }
 
-      const recurringIdMatch = pathname.match(/^\/financial\/recurring\/(\d+)$/);
+      const recurringIdMatch = pathname.match(
+        /^\/financial\/recurring\/(\d+)$/,
+      );
       if (recurringIdMatch) {
         routeKey = `${request.method}:/financial/recurring`;
       }
@@ -241,7 +248,7 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    const db = drizzle(env["zeitvertreib-data"], { schema });
+    const db = drizzle(env['zeitvertreib-data'], { schema });
 
     // Process recurring transactions daily (6:00 AM)
     if (controller.cron === '0 6 * * *') {
@@ -250,7 +257,7 @@ export default {
 
     // Update leaderboard every 30 minutes
     if (controller.cron === '*/15 * * * *') {
-      ctx.waitUntil(updateLeaderboard(env));
+      ctx.waitUntil(updateLeaderboard(db, env));
     }
   },
 } satisfies ExportedHandler<Env>;

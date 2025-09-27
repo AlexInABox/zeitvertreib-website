@@ -1,18 +1,7 @@
 import { proxyFetch } from '../proxy.js';
-
-interface PlayerStats {
-  id: string;
-  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
-  playtime: number;
-  roundsplayed: number;
-  usedmedkits: number;
-  usedcolas: number;
-  pocketescapes: number;
-  usedadrenaline: number;
-  fakerank: string | null;
-  snakehighscore: number;
-  kills: number;
-}
+import { drizzle } from 'drizzle-orm/d1';
+import { desc, gt, ne, and } from 'drizzle-orm';
+import { playerdata } from '../../drizzle/schema.js';
 
 interface LeaderboardEntry {
   name: string;
@@ -111,11 +100,14 @@ async function getSteamUsername(steamId: string, env: Env): Promise<string> {
   }
 }
 
-async function getLeaderboardData(env: Env): Promise<{
+async function getLeaderboardData(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+): Promise<{
   snake: LeaderboardEntry[];
   kills: LeaderboardEntry[];
   deaths: LeaderboardEntry[];
-  zvcoins: LeaderboardEntry[]; // Changed from 'experience' to reflect ZV Coins
+  zvcoins: LeaderboardEntry[];
   playtime: LeaderboardEntry[];
   rounds: LeaderboardEntry[];
   medkits: LeaderboardEntry[];
@@ -123,168 +115,126 @@ async function getLeaderboardData(env: Env): Promise<{
   pocketescapes: LeaderboardEntry[];
   adrenaline: LeaderboardEntry[];
 }> {
-  const db = env['zeitvertreib-data'];
-
-  // Get top 3 snake scores
-  const snakeQuery = await db
-    .prepare(
-      `
-    SELECT id, snakehighscore 
-    FROM playerdata 
-    WHERE snakehighscore > 0 
-    ORDER BY snakehighscore DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by ZV Coins (experience column)
-  const experienceQuery = await db
-    .prepare(
-      `
-    SELECT id, experience 
-    FROM playerdata 
-    WHERE experience > 0 
-    ORDER BY experience DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by playtime
-  const playtimeQuery = await db
-    .prepare(
-      `
-    SELECT id, playtime 
-    FROM playerdata 
-    WHERE playtime > 0 
-    ORDER BY playtime DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by rounds played
-  const roundsQuery = await db
-    .prepare(
-      `
-    SELECT id, roundsplayed 
-    FROM playerdata 
-    WHERE roundsplayed > 0 
-    ORDER BY roundsplayed DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by kill count
-  const killsQuery = await db
-    .prepare(
-      `
-    SELECT id, killcount 
-    FROM playerdata 
-    WHERE killcount > 0 
-    ORDER BY killcount DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by death count
-  const deathsQuery = await db
-    .prepare(
-      `
-    SELECT id, deathcount 
-    FROM playerdata 
-    WHERE deathcount > 0 
-    ORDER BY deathcount DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by used medkits
-  const medkitsQuery = await db
-    .prepare(
-      `
-    SELECT id, usedmedkits 
-    FROM playerdata 
-    WHERE usedmedkits > 0 
-    ORDER BY usedmedkits DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by used colas
-  const colasQuery = await db
-    .prepare(
-      `
-    SELECT id, usedcolas 
-    FROM playerdata 
-    WHERE usedcolas > 0 
-    ORDER BY usedcolas DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by pocket escapes
-  const pocketescapesQuery = await db
-    .prepare(
-      `
-    SELECT id, pocketescapes 
-    FROM playerdata 
-    WHERE pocketescapes > 0 
-    ORDER BY pocketescapes DESC 
-    LIMIT 3
-  `,
-    )
-    .all();
-
-  // Get top 3 by used adrenaline
-  const adrenalineQuery = await db
-    .prepare(
-      `
-    SELECT id, usedadrenaline 
-    FROM playerdata 
-    WHERE usedadrenaline > 0 
-    ORDER BY usedadrenaline DESC 
-    LIMIT 3
-  `,
-    )
-    .all(); // Helper function to format leaderboard entries
-  const formatLeaderboard = async (
-    data: any[],
+  // Helper function to format leaderboard entries
+  const formatLeaderboard = async <T extends { id: string }>(
+    data: T[],
     valueKey: string,
   ): Promise<LeaderboardEntry[]> => {
     const entries = await Promise.all(
       data.map(async (item, index) => ({
-        name: await getSteamUsername(item.id || '', env),
-        value: item[valueKey] || 0,
+        name: await getSteamUsername(item.id, env),
+        value: ((item as any)[valueKey] as number) || 0,
         rank: index + 1,
       })),
     );
     return entries;
   };
 
+  // Get all leaderboard data in parallel
+  const [
+    snakeData,
+    killsData,
+    deathsData,
+    zvcoinsData,
+    playtimeData,
+    roundsData,
+    medkitsData,
+    colasData,
+    pocketescapesData,
+    adrenalineData,
+  ] = await Promise.all([
+    // Top 3 snake scores
+    db
+      .select({ id: playerdata.id, snakehighscore: playerdata.snakehighscore })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.snakehighscore))
+      .limit(3),
+
+    // Top 3 by kills
+    db
+      .select({ id: playerdata.id, killcount: playerdata.killcount })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.killcount))
+      .limit(3),
+
+    // Top 3 by deaths
+    db
+      .select({ id: playerdata.id, deathcount: playerdata.deathcount })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.deathcount))
+      .limit(3),
+
+    // Top 3 by ZV Coins (experience)
+    db
+      .select({ id: playerdata.id, experience: playerdata.experience })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.experience))
+      .limit(3),
+
+    // Top 3 by playtime
+    db
+      .select({ id: playerdata.id, playtime: playerdata.playtime })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.playtime))
+      .limit(3),
+
+    // Top 3 by rounds played
+    db
+      .select({ id: playerdata.id, roundsplayed: playerdata.roundsplayed })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.roundsplayed))
+      .limit(3),
+
+    // Top 3 by medkits used
+    db
+      .select({ id: playerdata.id, usedmedkits: playerdata.usedmedkits })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.usedmedkits))
+      .limit(3),
+
+    // Top 3 by colas used
+    db
+      .select({ id: playerdata.id, usedcolas: playerdata.usedcolas })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.usedcolas))
+      .limit(3),
+
+    // Top 3 by pocket escapes
+    db
+      .select({ id: playerdata.id, pocketescapes: playerdata.pocketescapes })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.pocketescapes))
+      .limit(3),
+
+    // Top 3 by adrenaline used
+    db
+      .select({ id: playerdata.id, usedadrenaline: playerdata.usedadrenaline })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.usedadrenaline))
+      .limit(3),
+  ]);
+
   return {
-    snake: await formatLeaderboard(snakeQuery.results, 'snakehighscore'),
-    kills: await formatLeaderboard(killsQuery.results, 'killcount'),
-    deaths: await formatLeaderboard(deathsQuery.results, 'deathcount'),
-    zvcoins: await formatLeaderboard(experienceQuery.results, 'experience'),
-    playtime: await formatLeaderboard(playtimeQuery.results, 'playtime'),
-    rounds: await formatLeaderboard(roundsQuery.results, 'roundsplayed'),
-    medkits: await formatLeaderboard(medkitsQuery.results, 'usedmedkits'),
-    colas: await formatLeaderboard(colasQuery.results, 'usedcolas'),
-    pocketescapes: await formatLeaderboard(
-      pocketescapesQuery.results,
-      'pocketescapes',
-    ),
-    adrenaline: await formatLeaderboard(
-      adrenalineQuery.results,
-      'usedadrenaline',
-    ),
+    snake: await formatLeaderboard(snakeData, 'snakehighscore'),
+    kills: await formatLeaderboard(killsData, 'killcount'),
+    deaths: await formatLeaderboard(deathsData, 'deathcount'),
+    zvcoins: await formatLeaderboard(zvcoinsData, 'experience'),
+    playtime: await formatLeaderboard(playtimeData, 'playtime'),
+    rounds: await formatLeaderboard(roundsData, 'roundsplayed'),
+    medkits: await formatLeaderboard(medkitsData, 'usedmedkits'),
+    colas: await formatLeaderboard(colasData, 'usedcolas'),
+    pocketescapes: await formatLeaderboard(pocketescapesData, 'pocketescapes'),
+    adrenaline: await formatLeaderboard(adrenalineData, 'usedadrenaline'),
   };
 }
 
@@ -557,12 +507,15 @@ async function sendOrUpdateDiscordMessage(
   }
 }
 
-export async function updateLeaderboard(env: Env): Promise<boolean> {
+export async function updateLeaderboard(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+): Promise<boolean> {
   try {
     console.log('Starte Bestenliste Update...');
 
     // Get leaderboard data
-    const leaderboardData = await getLeaderboardData(env);
+    const leaderboardData = await getLeaderboardData(db, env);
 
     // Create Discord message
     const discordMessage = createDiscordMessage(leaderboardData);
@@ -586,11 +539,11 @@ export async function updateLeaderboard(env: Env): Promise<boolean> {
 // HTTP endpoint to manually trigger leaderboard update
 export async function handleLeaderboardUpdate(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   try {
-    const success = await updateLeaderboard(env);
+    const success = await updateLeaderboard(db, env);
 
     return new Response(
       JSON.stringify({
