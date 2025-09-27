@@ -87,12 +87,12 @@ const routes: Record<
   ) => Promise<Response>
 > = {
   // Auth routes
-  'POST:/auth/steam': handleSteamLogin,
+  'GET:/auth/steam': handleSteamLogin,
   'GET:/auth/steam/callback': handleSteamCallback,
   'GET:/auth/me': handleGetUser,
   'POST:/auth/logout': handleLogout,
   'POST:/auth/generate-login-secret': handleGenerateLoginSecret,
-  'POST:/auth/login-with-secret': handleLoginWithSecret,
+  'GET:/auth/login-with-secret': handleLoginWithSecret,
 
   // Stats
   'GET:/stats': handleGetStats,
