@@ -1,89 +1,87 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
-    "title": "Zeitvertreib API",
+    "title": "Zeitvertreib Backend API",
+    "description": "Backend API for the Zeitvertreib gaming platform, handling authentication, player data, sprays, fakeranks, and financial transactions.",
     "version": "1.0.0",
-    "description": "Public API for Zeitvertreib services. Provides access to player statistics, spray management, fakerank system, and financial tools.",
-    "license": {
-      "name": "AGPL-3.0-only",
-      "url": "https://opensource.org/license/agpl-v3"
-    },
     "contact": {
-      "name": "John Zeitvertreib",
-      "email": "hobby@zeitvertreib.vip"
+      "name": "Zeitvertreib Team",
+      "url": "https://github.com/AlexInABox/zeitvertreib-website"
     }
   },
   "servers": [
     {
       "url": "https://dev.zeitvertreib.vip/api",
-      "description": "Production API"
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:8787",
+      "description": "Development server"
     }
   ],
-  "tags": [
+  "security": [
     {
-      "name": "Authentication",
-      "description": "User login and session management"
-    },
-    {
-      "name": "Stats",
-      "description": "Player statistics and performance data"
-    },
-    { "name": "Sprays", "description": "Custom spray image management" },
-    { "name": "FakeRank", "description": "Custom player rank system" },
-    {
-      "name": "Admin",
-      "description": "Administrative controls (requires admin privileges)"
-    },
-    {
-      "name": "Financial",
-      "description": "Transaction and budget management"
-    },
-    {
-      "name": "Economy",
-      "description": "ZV Coins, rewards, shop items, and transactions"
-    },
-    {
-      "name": "Leaderboard",
-      "description": "Player rankings and leaderboard data"
-    },
-    { "name": "Moderation", "description": "Content moderation tools" }
-  ],
-  "components": {
-    "securitySchemes": {
-      "sessionCookie": {
-        "type": "apiKey",
-        "in": "cookie",
-        "name": "session",
-        "description": "Session cookie for authenticated users"
-      },
-      "serverToken": {
-        "type": "http",
-        "scheme": "bearer",
-        "description": "Bearer token for server-to-server communication"
-      }
+      "cookieAuth": []
     }
-  },
+  ],
   "paths": {
     "/auth/steam": {
       "get": {
+        "summary": "Initiate Steam login",
+        "description": "Redirects to Steam OpenID login page",
         "tags": ["Authentication"],
-        "summary": "Start Steam login",
-        "description": "Redirects user to Steam OpenID login page",
         "responses": {
           "302": {
-            "description": "Redirect to Steam login"
+            "description": "Redirect to Steam login",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "description": "Steam OpenID login URL"
+              }
+            }
           }
         }
       }
     },
     "/auth/steam/callback": {
       "get": {
+        "summary": "Steam login callback",
+        "description": "Handles callback from Steam OpenID authentication",
         "tags": ["Authentication"],
-        "summary": "Handle Steam login callback",
-        "description": "Processes Steam authentication response and creates user session",
+        "parameters": [
+          {
+            "name": "openid.mode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openid.identity",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
-          "302": {
-            "description": "Redirect to frontend with session"
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Steam response"
           },
           "401": {
             "description": "Authentication failed"
@@ -91,106 +89,94 @@
         }
       }
     },
-    "/auth/verify": {
+    "/auth/me": {
       "get": {
+        "summary": "Get current user information",
+        "description": "Returns information about the currently authenticated user",
         "tags": ["Authentication"],
-        "summary": "Check session validity",
-        "description": "Verifies if current session cookie is valid",
-        "security": [{ "sessionCookie": [] }],
+        "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": {
-            "description": "Session is valid"
+            "description": "User information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionData"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Invalid or expired session"
+            "description": "Not authenticated"
           }
         }
       }
     },
     "/auth/logout": {
       "post": {
+        "summary": "Logout user",
+        "description": "Invalidates the current session",
         "tags": ["Authentication"],
-        "summary": "End user session",
-        "description": "Invalidates the current session cookie",
-        "security": [{ "sessionCookie": [] }],
+        "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": {
-            "description": "Successfully logged out"
-          },
-          "401": {
-            "description": "No active session"
+            "description": "Logout successful"
           }
         }
       }
     },
     "/auth/generate-login-secret": {
       "post": {
+        "summary": "Generate login secret for external authentication",
+        "description": "Creates a temporary secret for logging in from external applications",
         "tags": ["Authentication"],
-        "summary": "Generate login secret (Server Only)",
-        "description": "Creates a temporary login secret for game server integration. Used by SCP:SL server to generate magic login links.",
-        "security": [{ "serverToken": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "SteamID64 of the user to generate login secret for",
-            "schema": { "type": "string" }
-          }
-        ],
+        "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": {
-            "description": "Login secret created",
+            "description": "Login secret generated",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "secret": { "type": "string" },
-                    "expiresAt": { "type": "number" }
+                    "secret": {
+                      "type": "string",
+                      "description": "Temporary login secret"
+                    },
+                    "expiresAt": {
+                      "type": "number",
+                      "description": "Expiration timestamp"
+                    }
                   }
                 }
               }
             }
           },
-          "403": {
-            "description": "Server authentication required"
+          "401": {
+            "description": "Not authenticated"
           }
         }
       }
     },
     "/auth/login-with-secret": {
-      "post": {
+      "get": {
+        "summary": "Login using secret",
+        "description": "Authenticate using a previously generated secret",
         "tags": ["Authentication"],
-        "summary": "Login with secret token",
-        "description": "Exchange a temporary secret token for a session cookie. Secret is consumed on use.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "secret": { "type": "string" }
-                },
-                "required": ["secret"]
-              }
-            }
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Login secret"
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Login successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "sessionId": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Login successful"
           },
           "400": {
             "description": "Invalid or expired secret"
@@ -198,58 +184,22 @@
         }
       }
     },
-    "/stats/profile": {
+    "/stats": {
       "get": {
-        "tags": ["Stats"],
-        "summary": "Get complete player profile",
-        "description": "Returns all player statistics and profile information",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Get player statistics",
+        "description": "Returns comprehensive player statistics and game data",
+        "tags": ["Statistics"],
+        "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": {
-            "description": "Complete player profile",
+            "description": "Player statistics",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "username": { "type": "string" },
-                    "avatarFull": { "type": "string" },
-                    "kills": { "type": "number" },
-                    "deaths": { "type": "number" },
-                    "experience": {
-                      "type": "number",
-                      "description": "ZV Coins balance"
-                    },
-                    "playtime": {
-                      "type": "number",
-                      "description": "Total playtime in seconds"
-                    },
-                    "roundsplayed": { "type": "number" },
-                    "leaderboardposition": { "type": "number" },
-                    "usedmedkits": { "type": "number" },
-                    "usedcolas": { "type": "number" },
-                    "pocketescapes": { "type": "number" },
-                    "usedadrenaline": { "type": "number" },
-                    "snakehighscore": { "type": "number" },
-                    "lastkillers": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "displayname": { "type": "string" },
-                          "avatarmedium": { "type": "string" }
-                        }
-                      }
-                    },
-                    "lastkills": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "displayname": { "type": "string" },
-                          "avatarmedium": { "type": "string" }
-                        }
-                      }
+                    "stats": {
+                      "$ref": "#/components/schemas/Statistics"
                     }
                   }
                 }
@@ -257,150 +207,17 @@
             }
           },
           "401": {
-            "description": "Authentication required"
-          }
-        }
-      }
-    },
-    "/stats/coins": {
-      "get": {
-        "tags": ["Stats"],
-        "summary": "Get ZV Coins balance",
-        "description": "Returns current Zeitvertreib Coins balance",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Current ZV Coins balance",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "coins": { "type": "number" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          }
-        }
-      }
-    },
-    "/stats/kills": {
-      "get": {
-        "tags": ["Stats"],
-        "summary": "Get kill count",
-        "description": "Returns total number of kills",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Kill statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "kills": { "type": "number" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          }
-        }
-      }
-    },
-    "/stats/deaths": {
-      "get": {
-        "tags": ["Stats"],
-        "summary": "Get death count",
-        "description": "Returns total number of deaths",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Death statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "deaths": { "type": "number" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          }
-        }
-      }
-    },
-    "/stats/playtime": {
-      "get": {
-        "tags": ["Stats"],
-        "summary": "Get playtime",
-        "description": "Returns total playtime in seconds",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Playtime statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "playtime": {
-                      "type": "number",
-                      "description": "Total playtime in seconds"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          }
-        }
-      }
-    },
-    "/stats/rounds": {
-      "get": {
-        "tags": ["Stats"],
-        "summary": "Get rounds played",
-        "description": "Returns total number of rounds played",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Rounds played",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "rounds": { "type": "number" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           }
         }
       }
     },
     "/spray/upload": {
       "post": {
-        "tags": ["Sprays"],
         "summary": "Upload custom spray",
-        "description": "Upload a new spray image (JPEG, PNG, WebP, max 10MB)",
-        "security": [{ "sessionCookie": [] }],
+        "description": "Upload a custom spray image (moderated by AI)",
+        "tags": ["Sprays"],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -408,53 +225,41 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "spray": {
+                  "file": {
                     "type": "string",
                     "format": "binary",
                     "description": "Image file (JPEG, PNG, WebP, max 10MB)"
                   }
-                },
-                "required": ["spray"]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Spray uploaded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string" },
-                    "sprayId": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Spray uploaded successfully"
           },
           "400": {
-            "description": "Content not allowed due to AI moderation"
-          },
-          "422": {
             "description": "Invalid file format or size"
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           },
           "403": {
-            "description": "User is banned from uploading sprays"
+            "description": "Spray rejected by moderation"
+          },
+          "429": {
+            "description": "Upload limit exceeded"
           }
         }
       }
     },
     "/spray/remove-background": {
       "post": {
+        "summary": "Remove background from image",
+        "description": "Removes background from uploaded image using AI",
         "tags": ["Sprays"],
-        "summary": "Remove image background",
-        "description": "Automatically remove background from spray image using AI",
-        "security": [{ "sessionCookie": [] }],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -462,12 +267,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "image": {
+                  "file": {
                     "type": "string",
                     "format": "binary"
                   }
-                },
-                "required": ["image"]
+                }
               }
             }
           }
@@ -476,82 +280,241 @@
           "200": {
             "description": "Background removed successfully",
             "content": {
-              "image/png": {}
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
             }
           },
           "400": {
-            "description": "Invalid image format"
+            "description": "Invalid image"
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           }
         }
       }
     },
     "/spray/image": {
       "get": {
+        "summary": "Get spray image",
+        "description": "Retrieve a spray image by Steam ID",
         "tags": ["Sprays"],
-        "summary": "Get own spray image",
-        "description": "Download your current spray image",
-        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "steamid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Your spray image",
+            "description": "Spray image",
             "content": {
-              "image/jpeg": {},
-              "image/png": {},
-              "image/webp": {}
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
             }
           },
-          "401": {
-            "description": "Authentication required"
+          "404": {
+            "description": "Spray not found"
+          }
+        }
+      }
+    },
+    "/spray/string": {
+      "get": {
+        "summary": "Get spray as base64 string",
+        "description": "Retrieve a spray image as base64 encoded string",
+        "tags": ["Sprays"],
+        "parameters": [
+          {
+            "name": "steamid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Base64 encoded spray image",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "spray": {
+                      "type": "string",
+                      "description": "Base64 encoded image"
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "No spray uploaded yet"
+            "description": "Spray not found"
           }
         }
       }
     },
     "/spray/delete": {
       "delete": {
-        "tags": ["Sprays"],
         "summary": "Delete own spray",
-        "description": "Remove your current spray image",
-        "security": [{ "sessionCookie": [] }],
+        "description": "Delete your own spray image",
+        "tags": ["Sprays"],
+        "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": {
             "description": "Spray deleted successfully"
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           },
           "404": {
-            "description": "No spray to delete"
+            "description": "Spray not found"
           }
         }
       }
     },
-    "/spray/limits": {
-      "get": {
-        "tags": ["Sprays"],
-        "summary": "Get upload restrictions",
-        "description": "Returns file size limits and supported formats (public endpoint)",
+    "/spray/moderate/delete": {
+      "delete": {
+        "summary": "Moderate spray (admin only)",
+        "description": "Delete a spray as a moderator",
+        "tags": ["Sprays", "Moderation"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Upload restrictions",
+            "description": "Spray moderated successfully"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/spray/moderate/ban": {
+      "post": {
+        "summary": "Ban user from uploading sprays (admin only)",
+        "description": "Ban a user from uploading sprays",
+        "tags": ["Sprays", "Moderation"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User banned successfully"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/spray/moderate/unban": {
+      "post": {
+        "summary": "Unban user from uploading sprays (admin only)",
+        "description": "Remove spray upload ban from user",
+        "tags": ["Sprays", "Moderation"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User unbanned successfully"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/spray/moderate/undelete": {
+      "post": {
+        "summary": "Restore deleted spray (admin only)",
+        "description": "Restore a previously deleted spray",
+        "tags": ["Sprays", "Moderation"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spray restored successfully"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/spray/upload-limits": {
+      "get": {
+        "summary": "Get spray upload limits",
+        "description": "Returns current upload limits and user's remaining quota",
+        "tags": ["Sprays"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Upload limits information",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "maxSize": {
-                      "type": "number",
-                      "description": "Maximum file size in bytes"
+                    "maxOriginalSize": {
+                      "type": "integer"
+                    },
+                    "maxThumbnailSize": {
+                      "type": "integer"
                     },
                     "supportedFormats": {
                       "type": "array",
-                      "items": { "type": "string" },
-                      "example": ["image/jpeg", "image/png", "image/webp"]
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "remainingUploads": {
+                      "type": "integer"
                     }
                   }
                 }
@@ -563,10 +526,10 @@
     },
     "/spray/ban-status": {
       "get": {
+        "summary": "Check spray ban status",
+        "description": "Check if user is banned from uploading sprays",
         "tags": ["Sprays"],
-        "summary": "Check ban status",
-        "description": "Check if current user is banned from uploading sprays",
-        "security": [{ "sessionCookie": [] }],
+        "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": {
             "description": "Ban status information",
@@ -575,124 +538,58 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "isBanned": { "type": "boolean" },
-                    "reason": { "type": "string" }
+                    "isBanned": {
+                      "type": "boolean"
+                    },
+                    "banReason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fakerank": {
+      "get": {
+        "summary": "Get current fakerank",
+        "description": "Get the current user's fakerank",
+        "tags": ["Fakerank"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current fakerank",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fakerank": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "number"
+                    }
                   }
                 }
               }
             }
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           }
         }
-      }
-    },
-    "/moderate/spray/delete": {
-      "delete": {
-        "tags": ["Moderation"],
-        "summary": "Delete user's spray (Moderator)",
-        "description": "Force delete a user's spray (moderator action)",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of user whose spray to delete",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Spray deleted by moderator"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Moderator privileges required"
-          },
-          "404": {
-            "description": "User or spray not found"
-          }
-        }
-      }
-    },
-    "/moderate/spray/ban": {
+      },
       "post": {
-        "tags": ["Moderation"],
-        "summary": "Ban user from sprays (Moderator)",
-        "description": "Ban a user from uploading sprays",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of user to ban",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reason": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User banned from sprays"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Moderator privileges required"
-          }
-        }
-      }
-    },
-    "/moderate/spray/unban": {
-      "delete": {
-        "tags": ["Moderation"],
-        "summary": "Unban user from sprays (Moderator)",
-        "description": "Remove spray ban from user",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of user to unban",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User unbanned from sprays"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Moderator privileges required"
-          }
-        }
-      }
-    },
-    "/fakerank": {
-      "post": {
-        "tags": ["FakeRank"],
-        "summary": "Set custom rank",
-        "description": "Set your custom fakerank display name and color",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Set fakerank",
+        "description": "Set or update user's fakerank (requires fakerank access)",
+        "tags": ["Fakerank"],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -702,40 +599,194 @@
                 "properties": {
                   "fakerank": {
                     "type": "string",
-                    "description": "Custom rank text"
+                    "maxLength": 50
                   },
                   "color": {
                     "type": "string",
-                    "description": "Fakerank color (optional)",
-                    "enum": [
-                      "pink",
-                      "red",
-                      "brown",
-                      "silver",
-                      "default",
-                      "light_green",
-                      "crimson",
-                      "cyan",
-                      "aqua",
-                      "deep_pink",
-                      "tomato",
-                      "yellow",
-                      "magenta",
-                      "blue_green",
-                      "orange",
-                      "lime",
-                      "green",
-                      "emerald",
-                      "carmine",
-                      "nickel",
-                      "mint",
-                      "army_green",
-                      "pumpkin"
-                    ],
-                    "default": "default"
+                    "pattern": "^#[0-9A-Fa-f]{6}$"
                   }
-                },
-                "required": ["fakerank"]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fakerank updated successfully"
+          },
+          "400": {
+            "description": "Invalid fakerank or profanity detected"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "No fakerank access"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update fakerank",
+        "description": "Update user's fakerank (alias for POST)",
+        "tags": ["Fakerank"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fakerank": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fakerank updated successfully"
+          },
+          "400": {
+            "description": "Invalid fakerank or profanity detected"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "No fakerank access"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete fakerank",
+        "description": "Remove user's current fakerank",
+        "tags": ["Fakerank"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Fakerank deleted successfully"
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        }
+      }
+    },
+    "/fakerank/moderate/delete": {
+      "delete": {
+        "summary": "Moderate fakerank (admin only)",
+        "description": "Delete a user's fakerank and add it to blacklist",
+        "tags": ["Fakerank", "Moderation"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fakerank",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fakerank moderated successfully"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/fakerank/moderate/ban": {
+      "post": {
+        "summary": "Ban user from fakerank system (admin only)",
+        "description": "Ban a user from using fakeranks",
+        "tags": ["Fakerank", "Moderation"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User banned from fakerank successfully"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/fakerank-admin/user": {
+      "get": {
+        "summary": "Get user fakerank info (admin only)",
+        "description": "Get detailed fakerank information for a specific user",
+        "tags": ["Fakerank Admin"],
+        "parameters": [
+          {
+            "name": "steamId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User fakerank information"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Set user fakerank (admin only)",
+        "description": "Set or override a user's fakerank as admin",
+        "tags": ["Fakerank Admin"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "steamId": {
+                    "type": "string"
+                  },
+                  "fakerank": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "description": "Duration in days"
+                  }
+                }
               }
             }
           }
@@ -744,335 +795,45 @@
           "200": {
             "description": "Fakerank set successfully"
           },
-          "400": {
-            "description": "Invalid fakerank text or blacklisted content"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
           "403": {
-            "description": "Fakerank access required (purchase with ZV Coins)"
+            "description": "Not authorized"
           }
         }
       }
     },
-    "/fakerank/status": {
+    "/fakerank-admin/blacklist": {
       "get": {
-        "tags": ["FakeRank"],
-        "summary": "Get fakerank status",
-        "description": "Get current fakerank access status, expiration times, and ban state",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Get fakerank blacklist (admin only)",
+        "description": "Get list of blacklisted fakerank terms",
+        "tags": ["Fakerank Admin"],
         "responses": {
           "200": {
-            "description": "Fakerank status information",
+            "description": "Blacklist entries",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "fakerank_until": {
-                      "type": "number",
-                      "description": "Unix timestamp when fakerank access expires"
-                    },
-                    "fakerankadmin_until": {
-                      "type": "number",
-                      "description": "Unix timestamp when admin fakerank access expires"
-                    },
-                    "fakerankoverride_until": {
-                      "type": "number",
-                      "description": "Unix timestamp when fakerank override expires"
-                    },
-                    "isBanned": {
-                      "type": "boolean",
-                      "description": "Whether user is banned from fakerank system"
-                    },
-                    "banReason": {
-                      "type": "string",
-                      "description": "Reason for ban (if banned)"
-                    },
-                    "currentFakerank": {
-                      "type": "string",
-                      "description": "Current active fakerank text"
-                    },
-                    "currentColor": {
-                      "type": "string",
-                      "enum": [
-                        "pink",
-                        "red",
-                        "brown",
-                        "silver",
-                        "default",
-                        "light_green",
-                        "crimson",
-                        "cyan",
-                        "aqua",
-                        "deep_pink",
-                        "tomato",
-                        "yellow",
-                        "magenta",
-                        "blue_green",
-                        "orange",
-                        "lime",
-                        "green",
-                        "emerald",
-                        "carmine",
-                        "nickel",
-                        "mint",
-                        "army_green",
-                        "pumpkin"
-                      ],
-                      "description": "Current fakerank color"
+                    "blacklist": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": {
-            "description": "Authentication required"
-          }
-        }
-      }
-    },
-    "/moderate/fakerank/delete": {
-      "delete": {
-        "tags": ["Moderation"],
-        "summary": "Delete fakerank (Moderator)",
-        "description": "Remove user's fakerank and add to blacklist",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of user",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fakerank",
-            "in": "query",
-            "required": true,
-            "description": "Fakerank text to blacklist",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Fakerank deleted and blacklisted"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
           "403": {
-            "description": "Moderator privileges required"
-          }
-        }
-      }
-    },
-    "/moderate/fakerank/ban": {
-      "post": {
-        "tags": ["Moderation"],
-        "summary": "Ban user and blacklist fakerank (Moderator)",
-        "description": "Ban user from fakerank system and blacklist the text",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of user to ban",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "fakerank",
-            "in": "query",
-            "required": true,
-            "description": "Fakerank text to blacklist",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User banned and fakerank blacklisted"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Moderator privileges required"
-          }
-        }
-      }
-    },
-    "/admin/fakerank/user": {
-      "get": {
-        "tags": ["Admin"],
-        "summary": "Get user fakerank info",
-        "description": "View detailed fakerank information for any user",
-        "security": [{ "sessionCookie": [] }],
-        "parameters": [
-          {
-            "name": "steamId",
-            "in": "query",
-            "required": true,
-            "description": "Steam ID of user to lookup",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User fakerank details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "username": { "type": "string" },
-                    "avatar": { "type": "string" },
-                    "fakerank": { "type": "string" },
-                    "color": {
-                      "type": "string",
-                      "enum": [
-                        "pink",
-                        "red",
-                        "brown",
-                        "silver",
-                        "default",
-                        "light_green",
-                        "crimson",
-                        "cyan",
-                        "aqua",
-                        "deep_pink",
-                        "tomato",
-                        "yellow",
-                        "magenta",
-                        "blue_green",
-                        "orange",
-                        "lime",
-                        "green",
-                        "emerald",
-                        "carmine",
-                        "nickel",
-                        "mint",
-                        "army_green",
-                        "pumpkin"
-                      ]
-                    },
-                    "expiresAt": {
-                      "type": "number",
-                      "description": "Unix timestamp"
-                    },
-                    "hasAccess": { "type": "boolean" }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
+            "description": "Not authorized"
           }
         }
       },
       "post": {
-        "tags": ["Admin"],
-        "summary": "Set user fakerank",
-        "description": "Directly set fakerank for any user with custom duration",
-        "security": [{ "sessionCookie": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "steamId": { "type": "string" },
-                  "fakerank": { "type": "string" },
-                  "color": {
-                    "type": "string",
-                    "enum": [
-                      "pink",
-                      "red",
-                      "brown",
-                      "silver",
-                      "default",
-                      "light_green",
-                      "crimson",
-                      "cyan",
-                      "aqua",
-                      "deep_pink",
-                      "tomato",
-                      "yellow",
-                      "magenta",
-                      "blue_green",
-                      "orange",
-                      "lime",
-                      "green",
-                      "emerald",
-                      "carmine",
-                      "nickel",
-                      "mint",
-                      "army_green",
-                      "pumpkin"
-                    ],
-                    "default": "default"
-                  },
-                  "duration": {
-                    "type": "number",
-                    "description": "Duration in seconds"
-                  }
-                },
-                "required": ["steamId", "fakerank"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Fakerank set successfully"
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      }
-    },
-    "/admin/fakerank/blacklist": {
-      "get": {
-        "tags": ["Admin"],
-        "summary": "Get blacklisted FakeRanks",
-        "description": "View all blacklisted fakerank terms",
-        "security": [{ "sessionCookie": [] }],
-        "responses": {
-          "200": {
-            "description": "Blacklisted terms",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required"
-          },
-          "403": {
-            "description": "Admin privileges required"
-          }
-        }
-      },
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Add to blacklist",
+        "summary": "Add to fakerank blacklist (admin only)",
         "description": "Add a term to the fakerank blacklist",
-        "security": [{ "sessionCookie": [] }],
+        "tags": ["Fakerank Admin"],
         "requestBody": {
           "required": true,
           "content": {
@@ -1080,9 +841,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "term": { "type": "string" }
-                },
-                "required": ["term"]
+                  "term": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }
@@ -1091,77 +853,68 @@
           "200": {
             "description": "Term added to blacklist"
           },
-          "401": {
-            "description": "Authentication required"
-          },
           "403": {
-            "description": "Admin privileges required"
+            "description": "Not authorized"
           }
         }
       },
       "delete": {
-        "tags": ["Admin"],
-        "summary": "Remove from blacklist",
+        "summary": "Remove from fakerank blacklist (admin only)",
         "description": "Remove a term from the fakerank blacklist",
-        "security": [{ "sessionCookie": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "term": { "type": "string" }
-                },
-                "required": ["term"]
-              }
+        "tags": ["Fakerank Admin"],
+        "parameters": [
+          {
+            "name": "term",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Term removed from blacklist"
           },
-          "401": {
-            "description": "Authentication required"
-          },
           "403": {
-            "description": "Admin privileges required"
+            "description": "Not authorized"
           }
         }
       }
     },
-    "/admin/fakerank/whitelist": {
+    "/fakerank-admin/whitelist": {
       "get": {
-        "tags": ["Admin"],
-        "summary": "Get whitelisted FakeRank",
-        "description": "View all whitelisted fakerank terms",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Get fakerank whitelist (admin only)",
+        "description": "Get list of whitelisted fakerank terms",
+        "tags": ["Fakerank Admin"],
         "responses": {
           "200": {
-            "description": "Whitelisted terms",
+            "description": "Whitelist entries",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "type": "string" }
+                  "type": "object",
+                  "properties": {
+                    "whitelist": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
                 }
               }
             }
           },
-          "401": {
-            "description": "Authentication required"
-          },
           "403": {
-            "description": "Admin privileges required"
+            "description": "Not authorized"
           }
         }
       },
       "post": {
-        "tags": ["Admin"],
-        "summary": "Add to whitelist",
+        "summary": "Add to fakerank whitelist (admin only)",
         "description": "Add a term to the fakerank whitelist",
-        "security": [{ "sessionCookie": [] }],
+        "tags": ["Fakerank Admin"],
         "requestBody": {
           "required": true,
           "content": {
@@ -1169,9 +922,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "term": { "type": "string" }
-                },
-                "required": ["term"]
+                  "term": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }
@@ -1180,78 +934,274 @@
           "200": {
             "description": "Term added to whitelist"
           },
-          "401": {
-            "description": "Authentication required"
-          },
           "403": {
-            "description": "Admin privileges required"
+            "description": "Not authorized"
           }
         }
       },
       "delete": {
-        "tags": ["Admin"],
-        "summary": "Remove from whitelist",
+        "summary": "Remove from fakerank whitelist (admin only)",
         "description": "Remove a term from the fakerank whitelist",
-        "security": [{ "sessionCookie": [] }],
+        "tags": ["Fakerank Admin"],
+        "parameters": [
+          {
+            "name": "term",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Term removed from whitelist"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/fakerank-admin/all-fakeranks": {
+      "get": {
+        "summary": "Get all fakeranks (admin only)",
+        "description": "Get all active fakeranks in the system",
+        "tags": ["Fakerank Admin"],
+        "responses": {
+          "200": {
+            "description": "All fakeranks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fakeranks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "steamId": {
+                            "type": "string"
+                          },
+                          "fakerank": {
+                            "type": "string"
+                          },
+                          "color": {
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/financial/transactions": {
+      "get": {
+        "summary": "Get financial transactions",
+        "description": "Get list of financial transactions with optional filtering",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["income", "expense"]
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FinancialTransaction"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create financial transaction (admin only)",
+        "description": "Create a new financial transaction",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "term": { "type": "string" }
-                },
-                "required": ["term"]
+                "$ref": "#/components/schemas/FinancialTransactionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialTransaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not authorized (admin only)"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update financial transaction (admin only)",
+        "description": "Update an existing financial transaction",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialTransaction"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Term removed from whitelist"
+            "description": "Transaction updated successfully"
+          },
+          "400": {
+            "description": "Invalid input"
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           },
           "403": {
-            "description": "Admin privileges required"
+            "description": "Not authorized (admin only)"
+          },
+          "404": {
+            "description": "Transaction not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete financial transaction (admin only)",
+        "description": "Delete a financial transaction by ID",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction deleted successfully"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not authorized (admin only)"
+          },
+          "404": {
+            "description": "Transaction not found"
           }
         }
       }
     },
-    "/economy/shop": {
+    "/financial/recurring": {
       "get": {
-        "tags": ["Economy"],
-        "summary": "Get shop items",
-        "description": "List all available items that can be purchased with ZV Coins",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Get recurring transactions",
+        "description": "Get list of recurring transactions",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by active status"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Available shop items",
+            "description": "List of recurring transactions",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "string" },
-                      "name": { "type": "string" },
-                      "description": { "type": "string" },
-                      "emoji": { "type": "string" },
-                      "price": {
-                        "type": "number",
-                        "description": "Price in ZV Coins"
-                      },
-                      "availableUntil": {
-                        "type": "string",
-                        "format": "date-time"
-                      },
-                      "isAvailable": { "type": "boolean" },
-                      "stock": {
-                        "type": "number",
-                        "description": "Remaining quantity (-1 for unlimited)"
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RecurringTransaction"
                       }
                     }
                   }
@@ -1260,17 +1210,203 @@
             }
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create recurring transaction (admin only)",
+        "description": "Create a new recurring transaction",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringTransactionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recurring transaction created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not authorized (admin only)"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update recurring transaction (admin only)",
+        "description": "Update an existing recurring transaction",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringTransaction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recurring transaction updated successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not authorized (admin only)"
+          },
+          "404": {
+            "description": "Recurring transaction not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete recurring transaction (admin only)",
+        "description": "Delete a recurring transaction by ID",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recurring transaction deleted successfully"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not authorized (admin only)"
+          },
+          "404": {
+            "description": "Recurring transaction not found"
           }
         }
       }
     },
-    "/economy/purchase": {
+    "/financial/summary": {
+      "get": {
+        "summary": "Get financial summary",
+        "description": "Get financial summary including totals and category breakdowns",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Financial summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalIncome": {
+                      "type": "number"
+                    },
+                    "totalExpenses": {
+                      "type": "number"
+                    },
+                    "netIncome": {
+                      "type": "number"
+                    },
+                    "categoryBreakdown": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        }
+      }
+    },
+    "/redeemables": {
+      "get": {
+        "summary": "Get available redeemables",
+        "description": "Get list of items that can be redeemed with ZV Coins",
+        "tags": ["Redeemables"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of redeemable items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "redeemables": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Redeemable"
+                      }
+                    },
+                    "userBalance": {
+                      "type": "integer",
+                      "description": "User's current ZV Coin balance"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        }
+      }
+    },
+    "/redeemables/redeem": {
       "post": {
-        "tags": ["Economy"],
-        "summary": "Buy item with ZV Coins",
-        "description": "Purchase an item from the shop using ZV Coins",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Redeem item",
+        "description": "Redeem an item using ZV Coins",
+        "tags": ["Redeemables"],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -1278,8 +1414,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "itemId": { "type": "string" },
-                  "quantity": { "type": "integer", "default": 1, "minimum": 1 }
+                  "itemId": {
+                    "type": "string"
+                  }
                 },
                 "required": ["itemId"]
               }
@@ -1288,35 +1425,23 @@
         },
         "responses": {
           "200": {
-            "description": "Purchase successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string" },
-                    "newBalance": { "type": "number" },
-                    "item": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Item redeemed successfully"
           },
           "400": {
-            "description": "Insufficient coins, item unavailable, or out of stock"
+            "description": "Invalid item or insufficient balance"
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           }
         }
       }
     },
-    "/economy/redeem-code": {
+    "/redeem-code": {
       "post": {
-        "tags": ["Economy"],
-        "summary": "Redeem promo code",
-        "description": "Redeem a promotional code for ZV Coins or items",
-        "security": [{ "sessionCookie": [] }],
+        "summary": "Redeem code",
+        "description": "Redeem a special code for ZV Coins",
+        "tags": ["Redeemables"],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -1325,8 +1450,7 @@
                 "type": "object",
                 "properties": {
                   "code": {
-                    "type": "string",
-                    "description": "Promotional code"
+                    "type": "string"
                   }
                 },
                 "required": ["code"]
@@ -1342,28 +1466,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string" },
-                    "amount": { "type": "number" }
+                    "credits": {
+                      "type": "integer",
+                      "description": "Credits awarded"
+                    },
+                    "newBalance": {
+                      "type": "integer",
+                      "description": "New ZV Coin balance"
+                    }
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid, expired, or already used code"
+            "description": "Invalid or expired code"
           },
           "401": {
-            "description": "Authentication required"
+            "description": "Not authenticated"
           }
         }
       }
     },
-    "/economy/transfer": {
+    "/transfer-zvc": {
       "post": {
-        "tags": ["Economy"],
         "summary": "Transfer ZV Coins",
-        "description": "Transfer ZV Coins to another player. This endpoint will fail if the sending users ZVC balance is less than 110% of the transfer amount. This is due to a 10% transaction fee.",
-        "security": [{ "sessionCookie": [] }],
+        "description": "Transfer ZV Coins to another player",
+        "tags": ["Financial"],
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -1371,52 +1501,503 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "targetUser": {
-                    "type": "object",
-                    "oneOf": [
-                      {
-                        "properties": {
-                          "steamId": {
-                            "type": "string",
-                            "example": "76561198354414854"
-                          }
-                        },
-                        "required": ["steamId"]
-                      },
-                      {
-                        "properties": {
-                          "username": {
-                            "type": "string",
-                            "example": "cooler_Alex"
-                          }
-                        },
-                        "required": ["username"]
-                      }
-                    ],
-                    "description": "Specify either a Steam ID or a username."
+                  "targetSteamId": {
+                    "type": "string"
                   },
-                  "amount": { "type": "number" }
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
                 },
-                "required": ["targetUser", "amount"]
+                "required": ["targetSteamId", "amount"]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "ZV Coins transferred successfully"
-          },
-          "401": {
-            "description": "Authentication required"
+            "description": "Transfer successful"
           },
           "400": {
-            "description": "Invalid transfer amount or insufficient balance"
+            "description": "Invalid amount or insufficient balance"
+          },
+          "401": {
+            "description": "Not authenticated"
           },
           "404": {
-            "description": "Target user not found"
+            "description": "Target player not found"
+          }
+        }
+      }
+    },
+    "/leaderboard/update": {
+      "post": {
+        "summary": "Update leaderboard",
+        "description": "Trigger leaderboard update (admin only)",
+        "tags": ["Leaderboard"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Leaderboard updated successfully"
+          },
+          "403": {
+            "description": "Not authorized"
           }
         }
       }
     }
-  }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session"
+      }
+    },
+    "schemas": {
+      "SteamUser": {
+        "type": "object",
+        "properties": {
+          "steamid": {
+            "type": "string",
+            "description": "Steam ID"
+          },
+          "personaname": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "profileurl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Steam profile URL"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri",
+            "description": "Small avatar URL"
+          },
+          "avatarmedium": {
+            "type": "string",
+            "format": "uri",
+            "description": "Medium avatar URL"
+          },
+          "avatarfull": {
+            "type": "string",
+            "format": "uri",
+            "description": "Full avatar URL"
+          }
+        },
+        "required": [
+          "steamid",
+          "personaname",
+          "profileurl",
+          "avatar",
+          "avatarmedium",
+          "avatarfull"
+        ]
+      },
+      "SessionData": {
+        "type": "object",
+        "properties": {
+          "steamId": {
+            "type": "string",
+            "description": "User's Steam ID"
+          },
+          "steamUser": {
+            "$ref": "#/components/schemas/SteamUser"
+          },
+          "createdAt": {
+            "type": "number",
+            "description": "Session creation timestamp"
+          },
+          "expiresAt": {
+            "type": "number",
+            "description": "Session expiration timestamp"
+          }
+        },
+        "required": ["steamId", "steamUser", "createdAt", "expiresAt"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionData"
+          }
+        }
+      },
+      "Statistics": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "kills": {
+            "type": "integer"
+          },
+          "deaths": {
+            "type": "integer"
+          },
+          "experience": {
+            "type": "integer",
+            "description": "ZV Coins (legacy name for compatibility)"
+          },
+          "playtime": {
+            "type": "integer",
+            "description": "Playtime in seconds"
+          },
+          "avatarFull": {
+            "type": "string",
+            "format": "uri"
+          },
+          "roundsplayed": {
+            "type": "integer"
+          },
+          "leaderboardposition": {
+            "type": "integer"
+          },
+          "usedmedkits": {
+            "type": "integer"
+          },
+          "usedcolas": {
+            "type": "integer"
+          },
+          "pocketescapes": {
+            "type": "integer"
+          },
+          "usedadrenaline": {
+            "type": "integer"
+          },
+          "snakehighscore": {
+            "type": "integer"
+          },
+          "fakerank_until": {
+            "type": "number",
+            "description": "Fakerank expiration timestamp"
+          },
+          "fakerankadmin_until": {
+            "type": "number",
+            "description": "Fakerank admin expiration timestamp"
+          },
+          "fakerankoverride_until": {
+            "type": "number",
+            "description": "Admin-set fakerank override expiration timestamp"
+          },
+          "lastkillers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "displayname": {
+                  "type": "string"
+                },
+                "avatarmedium": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "lastkills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "displayname": {
+                  "type": "string"
+                },
+                "avatarmedium": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "username",
+          "kills",
+          "deaths",
+          "experience",
+          "playtime",
+          "avatarFull",
+          "roundsplayed",
+          "leaderboardposition"
+        ]
+      },
+      "FinancialTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "transaction_type": {
+            "type": "string",
+            "enum": ["income", "expense"]
+          },
+          "category": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_type",
+          "category",
+          "amount",
+          "description",
+          "transaction_date"
+        ]
+      },
+      "FinancialTransactionInput": {
+        "type": "object",
+        "properties": {
+          "transaction_type": {
+            "type": "string",
+            "enum": ["income", "expense"]
+          },
+          "category": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_type",
+          "category",
+          "amount",
+          "description",
+          "transaction_date"
+        ]
+      },
+      "RecurringTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "transaction_type": {
+            "type": "string",
+            "enum": ["income", "expense"]
+          },
+          "category": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["daily", "weekly", "monthly", "yearly"]
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "next_execution": {
+            "type": "string",
+            "format": "date"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "last_executed": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "transaction_type",
+          "category",
+          "amount",
+          "description",
+          "frequency",
+          "start_date",
+          "next_execution"
+        ]
+      },
+      "RecurringTransactionInput": {
+        "type": "object",
+        "properties": {
+          "transaction_type": {
+            "type": "string",
+            "enum": ["income", "expense"]
+          },
+          "category": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["daily", "weekly", "monthly", "yearly"]
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_type",
+          "category",
+          "amount",
+          "description",
+          "frequency",
+          "start_date"
+        ]
+      },
+      "Redeemable": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "price": {
+            "type": "integer",
+            "description": "Price in ZV Coins"
+          },
+          "redeemableuntil": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional expiration date"
+          },
+          "isExpired": {
+            "type": "boolean"
+          },
+          "availabilityStatus": {
+            "type": "string",
+            "enum": ["available", "expired", "sold_out"]
+          }
+        },
+        "required": ["id", "name", "description", "emoji", "price"]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Steam-based authentication system"
+    },
+    {
+      "name": "Statistics",
+      "description": "Player statistics and game data"
+    },
+    {
+      "name": "Sprays",
+      "description": "Custom spray image management"
+    },
+    {
+      "name": "Fakerank",
+      "description": "Custom rank system for players"
+    },
+    {
+      "name": "Fakerank Admin",
+      "description": "Administrative controls for fakerank system"
+    },
+    {
+      "name": "Financial",
+      "description": "Financial transaction management"
+    },
+    {
+      "name": "Redeemables",
+      "description": "ZV Coin redemption system"
+    },
+    {
+      "name": "Leaderboard",
+      "description": "Player ranking and leaderboard"
+    },
+    {
+      "name": "Moderation",
+      "description": "Content moderation tools"
+    }
+  ]
 }

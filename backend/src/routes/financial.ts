@@ -2,7 +2,10 @@ import { validateSession, createResponse } from '../utils.js';
 import { FinancialTransaction, RecurringTransaction } from '../types/index.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, and, gte, lt } from 'drizzle-orm';
-import { financialTransactions, recurringTransactions } from '../../drizzle/schema.js';
+import {
+  financialTransactions,
+  recurringTransactions,
+} from '../../drizzle/schema.js';
 
 const ADMIN_STEAM_ID = '76561198354414854';
 
@@ -63,7 +66,10 @@ export async function handleGetTransactions(
       .select()
       .from(financialTransactions)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(financialTransactions.transactionDate), desc(financialTransactions.createdAt))
+      .orderBy(
+        desc(financialTransactions.transactionDate),
+        desc(financialTransactions.createdAt),
+      )
       .limit(limit)
       .offset(offset);
 
@@ -962,30 +968,57 @@ export async function handleTransferZVC(
   }
 
   try {
-    const body = await request.json() as { recipient?: string; amount?: number };
+    const body = (await request.json()) as {
+      recipient?: string;
+      amount?: number;
+    };
     const { recipient, amount } = body;
 
     // Validate input
-    if (!recipient || typeof recipient !== 'string' || recipient.trim() === '') {
-      return createResponse({ error: 'Empfänger ist erforderlich' }, 400, origin);
+    if (
+      !recipient ||
+      typeof recipient !== 'string' ||
+      recipient.trim() === ''
+    ) {
+      return createResponse(
+        { error: 'Empfänger ist erforderlich' },
+        400,
+        origin,
+      );
     }
 
     if (!amount || typeof amount !== 'number' || amount <= 0) {
-      return createResponse({ error: 'Gültiger Betrag ist erforderlich' }, 400, origin);
+      return createResponse(
+        { error: 'Gültiger Betrag ist erforderlich' },
+        400,
+        origin,
+      );
     }
 
     if (!Number.isInteger(amount)) {
-      return createResponse({ error: 'Betrag muss eine ganze Zahl sein' }, 400, origin);
+      return createResponse(
+        { error: 'Betrag muss eine ganze Zahl sein' },
+        400,
+        origin,
+      );
     }
 
     // Validate minimum transfer amount
     if (amount < 100) {
-      return createResponse({ error: 'Mindestbetrag für Transfers: 100 ZVC' }, 400, origin);
+      return createResponse(
+        { error: 'Mindestbetrag für Transfers: 100 ZVC' },
+        400,
+        origin,
+      );
     }
 
     // Validate maximum transfer amount
     if (amount > 50000) {
-      return createResponse({ error: 'Maximaler Transferbetrag: 50.000 ZVC' }, 400, origin);
+      return createResponse(
+        { error: 'Maximaler Transferbetrag: 50.000 ZVC' },
+        400,
+        origin,
+      );
     }
 
     const senderSteamId = validation.steamId! + '@steam';
@@ -993,11 +1026,15 @@ export async function handleTransferZVC(
 
     // Prevent self-transfer
     if (senderSteamId === cleanRecipient) {
-      return createResponse({ error: 'Du kannst nicht an dich selbst senden' }, 400, origin);
+      return createResponse(
+        { error: 'Du kannst nicht an dich selbst senden' },
+        400,
+        origin,
+      );
     }
 
     // Calculate tax (10%)
-    const taxRate = 0.10;
+    const taxRate = 0.1;
     const taxAmount = Math.floor(amount * taxRate);
     const totalCost = amount + taxAmount; // Total amount to deduct from sender
 
@@ -1008,14 +1045,24 @@ export async function handleTransferZVC(
       .first()) as { experience: number } | null;
 
     if (!senderData) {
-      return createResponse({ error: 'Sender ' + senderSteamId + ' nicht in der Datenbank gefunden' }, 404, origin);
+      return createResponse(
+        {
+          error: 'Sender ' + senderSteamId + ' nicht in der Datenbank gefunden',
+        },
+        404,
+        origin,
+      );
     }
 
     const senderBalance = senderData.experience || 0;
     if (senderBalance < totalCost) {
-      return createResponse({
-        error: `Nicht genügend ZVC. Benötigt: ${totalCost} ZVC (${amount} + ${taxAmount} Steuer), Verfügbar: ${senderBalance} ZVC`
-      }, 400, origin);
+      return createResponse(
+        {
+          error: `Nicht genügend ZVC. Benötigt: ${totalCost} ZVC (${amount} + ${taxAmount} Steuer), Verfügbar: ${senderBalance} ZVC`,
+        },
+        400,
+        origin,
+      );
     }
 
     // Determine if input is Steam ID or username
@@ -1043,9 +1090,13 @@ export async function handleTransferZVC(
     }
 
     if (!recipientData) {
-      return createResponse({
-        error: `Empfänger "${cleanRecipient}" nicht in der Datenbank gefunden. Bitte gib eine gültige Steam ID (17 Ziffern) oder einen Benutzernamen ein.`
-      }, 400, origin);
+      return createResponse(
+        {
+          error: `Empfänger "${cleanRecipient}" nicht in der Datenbank gefunden. Bitte gib eine gültige Steam ID (17 Ziffern) oder einen Benutzernamen ein.`,
+        },
+        400,
+        origin,
+      );
     }
 
     const recipientBalance = recipientData.experience || 0;
@@ -1055,13 +1106,17 @@ export async function handleTransferZVC(
     try {
       // Deduct total cost from sender (amount + tax)
       await env['zeitvertreib-data']
-        .prepare('UPDATE playerdata SET experience = experience - ? WHERE id = ?')
+        .prepare(
+          'UPDATE playerdata SET experience = experience - ? WHERE id = ?',
+        )
         .bind(totalCost, senderSteamId)
         .run();
 
       // Add only the transfer amount to recipient (not including tax)
       await env['zeitvertreib-data']
-        .prepare('UPDATE playerdata SET experience = experience + ? WHERE id = ?')
+        .prepare(
+          'UPDATE playerdata SET experience = experience + ? WHERE id = ?',
+        )
         .bind(amount, finalRecipientId)
         .run();
 
@@ -1069,24 +1124,30 @@ export async function handleTransferZVC(
       const newSenderBalance = senderBalance - totalCost;
       const newRecipientBalance = recipientBalance + amount;
 
-      return createResponse({
-        success: true,
-        message: `${amount} ZVC erfolgreich an ${finalRecipientId} gesendet!`,
-        transfer: {
-          amount,
-          tax: taxAmount,
-          totalCost,
-          recipient: finalRecipientId,
-          senderNewBalance: newSenderBalance,
-          recipientNewBalance: newRecipientBalance
-        }
-      }, 200, origin);
-
+      return createResponse(
+        {
+          success: true,
+          message: `${amount} ZVC erfolgreich an ${finalRecipientId} gesendet!`,
+          transfer: {
+            amount,
+            tax: taxAmount,
+            totalCost,
+            recipient: finalRecipientId,
+            senderNewBalance: newSenderBalance,
+            recipientNewBalance: newRecipientBalance,
+          },
+        },
+        200,
+        origin,
+      );
     } catch (dbError) {
       console.error('Database error during transfer:', dbError);
-      return createResponse({ error: 'Transfer fehlgeschlagen - Datenbankfehler' }, 500, origin);
+      return createResponse(
+        { error: 'Transfer fehlgeschlagen - Datenbankfehler' },
+        500,
+        origin,
+      );
     }
-
   } catch (error) {
     console.error('Error in ZVC transfer:', error);
     if (error instanceof SyntaxError) {

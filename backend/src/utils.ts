@@ -410,7 +410,7 @@ export async function getPlayerData(
         fakerank_until: result.fakerankUntil ?? undefined,
         fakerankadmin_until: result.fakerankadminUntil ?? undefined,
         fakerankoverride_until: result.fakerankoverrideUntil ?? undefined,
-        redeemed_codes: result.redeemedCodes ?? undefined
+        redeemed_codes: result.redeemedCodes ?? undefined,
       } as PlayerData;
     }
 
@@ -481,9 +481,9 @@ export async function getPlayerLastKillers(
     }
 
     // Get Steam user data for each unique attacker (excluding anonymous)
-    const uniqueAttackers = [
-      ...new Set(results.map((r) => r.attacker)),
-    ].filter((attacker) => attacker !== 'anonymous' && attacker !== null) as string[];
+    const uniqueAttackers = [...new Set(results.map((r) => r.attacker))].filter(
+      (attacker) => attacker !== 'anonymous' && attacker !== null,
+    ) as string[];
 
     const killersData = await Promise.all(
       uniqueAttackers.map(async (attacker) => {
@@ -538,9 +538,9 @@ export async function getPlayerLastKills(
     }
 
     // Get Steam user data for each unique target (excluding anonymous)
-    const uniqueTargets = [
-      ...new Set(results.map((r) => r.target)),
-    ].filter((target) => target !== 'anonymous' && target !== null) as string[];
+    const uniqueTargets = [...new Set(results.map((r) => r.target))].filter(
+      (target) => target !== 'anonymous' && target !== null,
+    ) as string[];
 
     const targetsData = await Promise.all(
       uniqueTargets.map(async (target) => {
@@ -654,13 +654,11 @@ export async function generateLoginSecret(
 
     console.log('[AUTH] Generating login secret for steamId:', steamId);
 
-    await db
-      .insert(loginSecrets)
-      .values({
-        secret: secret,
-        steamId: steamId,
-        expiresAt: expiresAt.toISOString(),
-      });
+    await db.insert(loginSecrets).values({
+      secret: secret,
+      steamId: steamId,
+      expiresAt: expiresAt.toISOString(),
+    });
 
     console.log('[AUTH] Login secret generated successfully:', secret);
     return secret;
@@ -691,16 +689,12 @@ export async function validateLoginSecret(
   const expiresAt = new Date(result.expiresAt as string);
   if (Date.now() > expiresAt.getTime()) {
     // Delete the expired secret
-    await db
-      .delete(loginSecrets)
-      .where(eq(loginSecrets.secret, secret));
+    await db.delete(loginSecrets).where(eq(loginSecrets.secret, secret));
     return { isValid: false, error: 'Invalid login secret' };
   }
 
   // Delete the secret after successful validation (one-time use)
-  await db
-    .delete(loginSecrets)
-    .where(eq(loginSecrets.secret, secret));
+  await db.delete(loginSecrets).where(eq(loginSecrets.secret, secret));
 
   return { isValid: true, steamId: result.steamId };
 }

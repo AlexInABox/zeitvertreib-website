@@ -24,10 +24,12 @@ import {
   handleBackgroundRemoval,
 } from './routes/spray.js';
 import {
-  handleFakerank,
+  getFakerank,
+  updateFakerank,
+  deleteFakerank,
   handleFakerankModerationDelete,
   handleFakerankModerationBan,
-} from './routes/profile.js';
+} from './routes/fakerank.js';
 import {
   handleGetUserFakerank,
   handleSetUserFakerank,
@@ -111,7 +113,10 @@ const routes: Record<
   'GET:/spray/ban-status': handleGetSprayBanStatus,
 
   // Fakerank routes
-  'POST:/fakerank': handleFakerank,
+  'GET:/fakerank': getFakerank,
+  'POST:/fakerank': updateFakerank,
+  'PATCH:/fakerank': updateFakerank,
+  'DELETE:/fakerank': deleteFakerank,
   'DELETE:/fakerank/moderate/delete': handleFakerankModerationDelete,
   'POST:/fakerank/moderate/ban': handleFakerankModerationBan,
 

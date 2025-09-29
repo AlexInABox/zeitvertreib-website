@@ -232,7 +232,11 @@ export async function handleLoginWithSecret(
 
   try {
     // Validate the login secret
-    const { isValid, steamId, error } = await validateLoginSecret(secret, db, env);
+    const { isValid, steamId, error } = await validateLoginSecret(
+      secret,
+      db,
+      env,
+    );
 
     if (!isValid) {
       return createResponse({ error: error! }, 400, origin);

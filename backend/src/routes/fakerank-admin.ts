@@ -178,7 +178,7 @@ export async function handleSetUserFakerank(
           .set({
             fakerank,
             fakerankColor: fakerank_color,
-            fakerankoverrideUntil: overrideUntil
+            fakerankoverrideUntil: overrideUntil,
           })
           .where(eq(playerdata.id, playerId));
       } else {
@@ -188,7 +188,7 @@ export async function handleSetUserFakerank(
           .set({
             fakerank,
             fakerankColor: fakerank_color,
-            fakerankoverrideUntil: 0
+            fakerankoverrideUntil: 0,
           })
           .where(eq(playerdata.id, playerId));
       }
@@ -199,7 +199,7 @@ export async function handleSetUserFakerank(
         .set({
           fakerank: null,
           fakerankColor: 'default',
-          fakerankoverrideUntil: 0
+          fakerankoverrideUntil: 0,
         })
         .where(eq(playerdata.id, playerId));
     }
@@ -661,12 +661,12 @@ export async function handleGetAllFakeranks(
     const uniqueUserIds =
       playerListData.length > 0
         ? [
-          ...new Set(
-            playerListData.map((player) =>
-              player.UserId.replace('@steam', ''),
+            ...new Set(
+              playerListData.map((player) =>
+                player.UserId.replace('@steam', ''),
+              ),
             ),
-          ),
-        ]
+          ]
         : [];
 
     // Get all users with fakeranks from database
@@ -676,7 +676,7 @@ export async function handleGetAllFakeranks(
         fakerank: playerdata.fakerank,
         fakerank_color: playerdata.fakerankColor,
         fakerank_until: playerdata.fakerankUntil,
-        experience: playerdata.experience
+        experience: playerdata.experience,
       })
       .from(playerdata)
       .where(isNotNull(playerdata.fakerank));
