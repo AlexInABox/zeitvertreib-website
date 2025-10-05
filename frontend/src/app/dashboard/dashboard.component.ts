@@ -203,7 +203,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!amount) return 0;
     const numAmount = Number(amount);
     if (isNaN(numAmount) || numAmount <= 0) return 0;
-    return Math.floor(numAmount * 0.10); // 10% tax
+    return Math.floor(numAmount * 0.1); // 10% tax
   }
 
   // Helper method to calculate total transfer cost
@@ -1362,7 +1362,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Validate transfer amount
     const currentBalance = this.userStatistics.experience || 0;
-    const taxAmount = Math.floor(amount * 0.10); // 10% tax
+    const taxAmount = Math.floor(amount * 0.1); // 10% tax
     const totalCost = amount + taxAmount;
 
     if (totalCost > currentBalance) {
@@ -1407,7 +1407,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
             // Update the user balance immediately with the new balance from server
             if (response.transfer?.senderNewBalance !== undefined) {
-              this.userStatistics.experience = response.transfer.senderNewBalance;
+              this.userStatistics.experience =
+                response.transfer.senderNewBalance;
             }
 
             // Clear the inputs after successful transfer
@@ -1420,7 +1421,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }, 5000);
           } else {
             this.transferSuccess = false;
-            this.transferMessage = response?.message || 'Transfer fehlgeschlagen';
+            this.transferMessage =
+              response?.message || 'Transfer fehlgeschlagen';
           }
         },
         error: (error) => {
@@ -1668,7 +1670,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
