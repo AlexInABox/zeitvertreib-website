@@ -365,9 +365,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private applyRandomColors(): void {
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
-      root.style.setProperty('--random-color-1', this.randomColors[0] ?? '#000000');
-      root.style.setProperty('--random-color-2', this.randomColors[1] ?? '#000000');
-      root.style.setProperty('--random-color-3', this.randomColors[2] ?? '#000000');
+      root.style.setProperty(
+        '--random-color-1',
+        this.randomColors[0] ?? '#000000',
+      );
+      root.style.setProperty(
+        '--random-color-2',
+        this.randomColors[1] ?? '#000000',
+      );
+      root.style.setProperty(
+        '--random-color-3',
+        this.randomColors[2] ?? '#000000',
+      );
     }
   }
 
@@ -993,7 +1002,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const alpha = data[index + 3];
 
         // Ensure all values are defined
-        if (r === undefined || g === undefined || b === undefined || alpha === undefined) {
+        if (
+          r === undefined ||
+          g === undefined ||
+          b === undefined ||
+          alpha === undefined
+        ) {
           continue;
         }
 
@@ -1675,7 +1689,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
