@@ -9,7 +9,7 @@ import { map, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot,
+  _route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
 ) => {
   const authService = inject(AuthService);

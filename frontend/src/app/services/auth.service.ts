@@ -126,7 +126,7 @@ export class AuthService {
         withCredentials: true,
       })
       .pipe(
-        catchError((error) => {
+        catchError((_error) => {
           this.clearToken();
           return of(null);
         }),

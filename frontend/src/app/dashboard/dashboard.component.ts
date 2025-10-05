@@ -1,10 +1,10 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { AvatarModule } from 'primeng/avatar';
-import { CommonModule, NgForOf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -365,9 +365,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private applyRandomColors(): void {
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
-      root.style.setProperty('--random-color-1', this.randomColors[0]);
-      root.style.setProperty('--random-color-2', this.randomColors[1]);
-      root.style.setProperty('--random-color-3', this.randomColors[2]);
+      root.style.setProperty('--random-color-1', this.randomColors[0] ?? '#000000');
+      root.style.setProperty('--random-color-2', this.randomColors[1] ?? '#000000');
+      root.style.setProperty('--random-color-3', this.randomColors[2] ?? '#000000');
     }
   }
 
@@ -601,7 +601,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+      if (file && file.type.startsWith('image/') && file.type !== 'image/gif') {
         // Check if file type is supported
         if (
           this.uploadLimits?.supportedFormats &&
@@ -679,7 +679,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         formData.append('pixelData', processedData.pixelData); // Single string for images
       }
 
-      const response = await this.authService
+      await this.authService
         .authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
         .toPromise();
 
@@ -732,7 +732,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authService
       .authenticatedDelete(`${environment.apiUrl}/spray/delete`)
       .subscribe({
-        next: (response: any) => {
+        next: (_response: any) => {
           this.sprayUploadLoading = false;
           this.sprayDeleteSuccess = true;
           this.sprayUploadSuccess = false;
@@ -992,6 +992,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const b = data[index + 2];
         const alpha = data[index + 3];
 
+        // Ensure all values are defined
+        if (r === undefined || g === undefined || b === undefined || alpha === undefined) {
+          continue;
+        }
+
         // Handle transparency like the C# code (alpha < 25 becomes transparent block)
         if (alpha < 25) {
           if (consecutiveCount > 0 && currentColor) {
@@ -1046,18 +1051,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // Calculate dimensions that fit within max width/height while keeping aspect ratio
-  private calculateAspectRatioFit(
-    srcWidth: number,
-    srcHeight: number,
-    maxWidth: number,
-    maxHeight: number,
-  ): { width: number; height: number } {
-    const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
-    return {
-      width: Math.floor(srcWidth * ratio),
-      height: Math.floor(srcHeight * ratio),
-    };
-  }
+  // private calculateAspectRatioFit(
+  //   srcWidth: number,
+  //   srcHeight: number,
+  //   maxWidth: number,
+  //   maxHeight: number,
+  // ): { width: number; height: number } {
+  //   const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+  //   return {
+  //     width: Math.floor(srcWidth * ratio),
+  //     height: Math.floor(srcHeight * ratio),
+  //   };
+  // }
 
   // Fakerank methods
   loadFakerank(): void {
@@ -1670,7 +1675,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },

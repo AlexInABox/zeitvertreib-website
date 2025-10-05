@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { PrimeIcons } from 'primeng/api';
+
 import { AnimateOnScrollModule } from 'primeng/animateonscroll';
 import { ImageModule } from 'primeng/image';
 import { PanelModule } from 'primeng/panel';

@@ -4,8 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { PrimeIcons } from 'primeng/api';
 import {
   FinancialService,
-  FinancialTransaction,
-  FinancialSummary,
   RecurringTransaction,
 } from '../services/financial.service';
 import { AuthService } from '../services/auth.service';
@@ -118,7 +116,7 @@ export class AccountingComponent implements OnInit {
 
         if (transactions && transactions.length > 0) {
           this.events = transactions.map((transaction) => ({
-            id: transaction.id,
+            ...(transaction.id !== undefined && { id: transaction.id }),
             service: transaction.service || transaction.category,
             amount: transaction.amount,
             description: transaction.description,
@@ -356,9 +354,9 @@ export class AccountingComponent implements OnInit {
     this.coveragePercentage =
       this.averageMonthlyExpenses > 0
         ? Math.min(
-            100,
-            (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100,
-          )
+          100,
+          (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100,
+        )
         : 100;
 
     // Calculate 3-month projection
@@ -454,7 +452,7 @@ export class AccountingComponent implements OnInit {
       category: 'other', // Default category, user will need to select the correct one
       amount: event.amount,
       description: event.description,
-      date: event.date.toISOString().split('T')[0], // Format date for input
+      date: event.date.toISOString().split('T')[0] ?? '', // Format date for input
       title: event.service || '', // Use service field as title
     };
     this.showTransactionModal = true;
@@ -482,7 +480,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error deleting transaction:', error);
             alert(
               'Fehler beim Löschen der Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
           },
         });
@@ -535,7 +533,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error updating transaction:', error);
             alert(
               'Fehler beim Aktualisieren der Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
             this.isSubmitting = false; // Reset loading state on error
           },
@@ -555,7 +553,7 @@ export class AccountingComponent implements OnInit {
           console.error('Error creating transaction:', error);
           alert(
             'Fehler beim Erstellen der Transaktion: ' +
-              (error.error?.error || error.message || 'Unbekannter Fehler'),
+            (error.error?.error || error.message || 'Unbekannter Fehler'),
           );
           this.isSubmitting = false; // Reset loading state on error
         },
@@ -572,7 +570,7 @@ export class AccountingComponent implements OnInit {
       category: '',
       amount: 0,
       description: '',
-      date: new Date().toISOString().split('T')[0], // Default to today
+      date: new Date().toISOString().split('T')[0] ?? '', // Default to today
       title: '',
     };
   }
@@ -624,7 +622,7 @@ export class AccountingComponent implements OnInit {
               console.error('Error deleting recurring transaction:', error);
               alert(
                 'Fehler beim Löschen der wiederkehrenden Transaktion: ' +
-                  (error.error?.error || error.message || 'Unbekannter Fehler'),
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
               );
             },
           });
@@ -661,7 +659,7 @@ export class AccountingComponent implements OnInit {
         | 'monthly'
         | 'yearly',
       start_date: this.recurringFormData.start_date,
-      end_date: this.recurringFormData.end_date || undefined,
+      ...(this.recurringFormData.end_date && { end_date: this.recurringFormData.end_date }),
       reference_id: '',
       notes: this.recurringFormData.title,
       next_execution: this.recurringFormData.start_date, // Will be calculated by backend
@@ -684,7 +682,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error updating recurring transaction:', error);
             alert(
               'Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
             this.isSubmitting = false;
           },
@@ -706,7 +704,7 @@ export class AccountingComponent implements OnInit {
             console.error('Error creating recurring transaction:', error);
             alert(
               'Fehler beim Erstellen der wiederkehrenden Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
             this.isSubmitting = false;
           },
@@ -724,7 +722,7 @@ export class AccountingComponent implements OnInit {
       amount: 0,
       description: '',
       frequency: '',
-      start_date: new Date().toISOString().split('T')[0],
+      start_date: new Date().toISOString().split('T')[0] ?? '',
       end_date: '',
       title: '',
     };
