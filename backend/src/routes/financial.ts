@@ -18,7 +18,10 @@ async function validateAdminAccess(
 ): Promise<{ isAdmin: boolean; session?: any; error?: string }> {
   const validation = await validateSession(request, env);
   if (!validation.isValid) {
-    return { isAdmin: false, ...(validation.error && { error: validation.error }) };
+    return {
+      isAdmin: false,
+      ...(validation.error && { error: validation.error }),
+    };
   }
 
   const isAdmin = validation.session?.steamId === ADMIN_STEAM_ID;
