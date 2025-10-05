@@ -1,7 +1,7 @@
 import { validateSession, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { playerdata, redemptionCodes } from '../../drizzle/schema.js';
+import { playerdata } from '../../drizzle/schema.js';
 
 export interface Redeemable {
   id: string;
@@ -72,7 +72,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
  */
 export async function handleGetRedeemables(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -299,7 +299,7 @@ async function applyRedeemableEffects(
  */
 export async function handleRedeemCode(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -325,10 +325,10 @@ export async function handleRedeemCode(
       )
       .bind(code)
       .first()) as {
-      code: string;
-      credits: number;
-      remaining_uses: number;
-    } | null;
+        code: string;
+        credits: number;
+        remaining_uses: number;
+      } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);

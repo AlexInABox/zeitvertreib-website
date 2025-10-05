@@ -1,7 +1,7 @@
 import { validateSession, createResponse } from '../utils.js';
 import { FinancialTransaction, RecurringTransaction } from '../types/index.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, desc, and, gte, lt } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import {
   financialTransactions,
   recurringTransactions,
@@ -18,7 +18,7 @@ async function validateAdminAccess(
 ): Promise<{ isAdmin: boolean; session?: any; error?: string }> {
   const validation = await validateSession(request, env);
   if (!validation.isValid) {
-    return { isAdmin: false, error: validation.error };
+    return { isAdmin: false, ...(validation.error && { error: validation.error }) };
   }
 
   const isAdmin = validation.session?.steamId === ADMIN_STEAM_ID;
@@ -245,7 +245,7 @@ export async function handleCreateRecurringTransaction(
     return createResponse(
       {
         message: 'Recurring transaction created successfully',
-        id: result[0].insertedId,
+        id: result[0]?.insertedId,
       },
       201,
       origin,
@@ -440,7 +440,7 @@ function calculateNextExecution(startDate: string, frequency: string): string {
       break;
   }
 
-  return next.toISOString().split('T')[0];
+  return next.toISOString().split('T')[0] ?? '';
 }
 
 /**
@@ -448,10 +448,10 @@ function calculateNextExecution(startDate: string, frequency: string): string {
  * This will be called daily by Cloudflare Workers cron
  */
 export async function processRecurringTransactions(
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<void> {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0] ?? '';
 
   try {
     // Get all active recurring transactions that are due today
@@ -631,7 +631,7 @@ export async function handleCreateTransaction(
     return createResponse(
       {
         message: 'Transaction created successfully',
-        id: result[0].insertedId,
+        id: result[0]?.insertedId,
       },
       201,
       origin,
@@ -652,7 +652,7 @@ export async function handleCreateTransaction(
  */
 export async function handleUpdateTransaction(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -789,7 +789,7 @@ export async function handleUpdateTransaction(
  */
 export async function handleDeleteTransaction(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -862,7 +862,7 @@ export async function handleDeleteTransaction(
  */
 export async function handleGetSummary(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -933,10 +933,10 @@ export async function handleGetSummary(
 
     return createResponse(
       {
-        balance: balanceResult?.balance || 0,
+        balance: balanceResult?.['balance'] || 0,
         currentMonth: {
-          income: currentMonthResult?.income || 0,
-          expenses: currentMonthResult?.expenses || 0,
+          income: currentMonthResult?.['income'] || 0,
+          expenses: currentMonthResult?.['expenses'] || 0,
         },
         monthlyData: monthlyResult.results || [],
         categoryBreakdown: categoryResult.results || [],
@@ -956,7 +956,7 @@ export async function handleGetSummary(
  */
 export async function handleTransferZVC(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');

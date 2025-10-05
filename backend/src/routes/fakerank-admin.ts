@@ -6,7 +6,7 @@ import {
 } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, like, isNotNull } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { playerdata } from '../../drizzle/schema.js';
 
 // Extend the Env interface to include DISCORD_WORKER_API_KEY
@@ -658,16 +658,17 @@ export async function handleGetAllFakeranks(
       playerListData.length > 0
         ? [...new Set(playerListData.map((player) => player.Name))]
         : [];
-    const uniqueUserIds =
-      playerListData.length > 0
-        ? [
-            ...new Set(
-              playerListData.map((player) =>
-                player.UserId.replace('@steam', ''),
-              ),
-            ),
-          ]
-        : [];
+    // Extract unique user IDs for potential future use
+    // const uniqueUserIds =
+    //   playerListData.length > 0
+    //     ? [
+    //         ...new Set(
+    //           playerListData.map((player) =>
+    //             player.UserId.replace('@steam', ''),
+    //           ),
+    //         ),
+    //       ]
+    //     : [];
 
     // Get all users with fakeranks from database
     const allFakeranksResult = await db

@@ -4,7 +4,6 @@ import {
   SteamUser,
   Statistics,
   PlayerData,
-  KillRecord,
 } from './types/index.js';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
@@ -350,18 +349,6 @@ export async function fetchSteamUserData(
   }
 }
 
-// Steam user cache helpers
-export async function clearSteamUserCache(
-  steamId: string,
-  env: Env,
-): Promise<void> {
-  // Note: We no longer clear cache as per the new strategy
-  // Cache is kept indefinitely to always provide fallback data
-  console.log(
-    `Cache clearing disabled for ${steamId} - cache is kept for fallback purposes`,
-  );
-}
-
 export async function refreshSteamUserData(
   steamId: string,
   apiKey: string,
@@ -377,7 +364,7 @@ export async function refreshSteamUserData(
 export async function getPlayerData(
   steamId: string,
   db: ReturnType<typeof drizzle>,
-  env: Env,
+  _env: Env,
 ): Promise<PlayerData | null> {
   try {
     const playerId = `${steamId}@steam`;
@@ -425,7 +412,7 @@ export async function getPlayerData(
 export async function getPlayerKillsCount(
   steamId: string,
   db: ReturnType<typeof drizzle>,
-  env: Env,
+  _env: Env,
 ): Promise<number> {
   try {
     const playerId = `${steamId}@steam`;
@@ -445,7 +432,7 @@ export async function getPlayerKillsCount(
 export async function getPlayerDeathsCount(
   steamId: string,
   db: ReturnType<typeof drizzle>,
-  env: Env,
+  _env: Env,
 ): Promise<number> {
   try {
     const playerId = `${steamId}@steam`;
@@ -590,7 +577,7 @@ export async function mapPlayerDataToStats(
     getPlayerLastKills(steamId, db, env),
   ]);
 
-  const currentTimestamp = Math.floor(Date.now() / 1000);
+  // const currentTimestamp = Math.floor(Date.now() / 1000);
 
   if (!playerData) {
     return {
@@ -646,7 +633,7 @@ export async function mapPlayerDataToStats(
 export async function generateLoginSecret(
   steamId: string,
   db: ReturnType<typeof drizzle>,
-  env: Env,
+  _env: Env,
 ): Promise<string> {
   try {
     const secret = crypto.randomUUID();
@@ -671,7 +658,7 @@ export async function generateLoginSecret(
 export async function validateLoginSecret(
   secret: string,
   db: ReturnType<typeof drizzle>,
-  env: Env,
+  _env: Env,
 ): Promise<{ isValid: boolean; steamId?: string; error?: string }> {
   const result = await db
     .select({
@@ -701,7 +688,7 @@ export async function validateLoginSecret(
 
 export async function cleanupExpiredLoginSecrets(
   db: ReturnType<typeof drizzle>,
-  env: Env,
+  _env: Env,
 ): Promise<void> {
   try {
     console.log('[AUTH] Cleaning up expired login secrets');

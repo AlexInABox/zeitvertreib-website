@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "npx drizzle-kit pull && tsc",
+    "build": "npx drizzle-kit pull && for f in ./drizzle/*.ts; do echo '// @ts-nocheck' | cat - \"$f\" > temp && mv temp \"$f\"; done && tsc",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
@@ -13,6 +13,7 @@
     "dev:fresh": "npm run db:reset && npm run dev"
   },
   "devDependencies": {
+    "@tsconfig/strictest": "^2.0.6",
     "@types/node": "^24.5.2",
     "dotenv": "^17.2.2",
     "drizzle-kit": "^0.31.4",

@@ -178,10 +178,11 @@ export async function getFakerank(
     );
 
     // Calculate fakerank access based on timestamp
-    const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const hasFakerankAccess =
-      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    // Calculate if user has fakerank access (for future use)
+    // const currentTimestamp = Math.floor(Date.now() / 1000);
+    // const hasFakerankAccess =
+    //   fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
     return createResponse(
       {
@@ -595,7 +596,7 @@ export async function deleteFakerank(
 // Handle Discord moderation action - delete fakerank and blacklist word
 export async function handleFakerankModerationDelete(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -665,7 +666,7 @@ export async function handleFakerankModerationDelete(
 // Handle Discord moderation action - delete fakerank, blacklist word, and ban user
 export async function handleFakerankModerationBan(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');

@@ -10,21 +10,20 @@ import {
   getPlayerData,
   generateLoginSecret,
   validateLoginSecret,
-  cleanupExpiredLoginSecrets,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 
 export async function handleSteamLogin(
   request: Request,
-  db: ReturnType<typeof drizzle>,
-  env: Env,
+  _db: ReturnType<typeof drizzle>,
+  _env: Env,
 ): Promise<Response> {
   return createResponse(generateSteamLoginUrl(request), 302);
 }
 
 export async function handleSteamCallback(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const url = new URL(request.url);
@@ -134,7 +133,7 @@ export async function handleGetUser(
 
 export async function handleLogout(
   request: Request,
-  db: ReturnType<typeof drizzle>,
+  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');

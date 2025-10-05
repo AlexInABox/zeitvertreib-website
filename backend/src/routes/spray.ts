@@ -448,7 +448,8 @@ async function checkImageSafety(
     const banKey = `spray_ban_${steamId}`;
     const banData = await env.SESSIONS.get(banKey);
     if (banData) {
-      const ban = JSON.parse(banData);
+      // Parse ban data for potential future use
+      // const ban = JSON.parse(banData);
       console.log(`Steam ID ${steamId} is banned from uploading sprays`);
       return false;
     }
@@ -570,7 +571,7 @@ async function checkImageSafety(
 
 export async function handleUploadSpray(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -688,7 +689,7 @@ export async function handleUploadSpray(
 
 export async function handleGetSpray(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -747,7 +748,7 @@ export async function handleGetSpray(
 
 export async function handleGetSprayString(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -797,7 +798,7 @@ export async function handleGetSprayString(
 
 export async function handleDeleteSpray(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -843,7 +844,7 @@ export async function handleDeleteSpray(
 // Handle Discord moderation action - delete spray
 export async function handleModerationDelete(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -918,7 +919,7 @@ export async function handleModerationDelete(
 // Handle Discord moderation action - delete spray and ban user
 export async function handleModerationBan(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -999,7 +1000,7 @@ export async function handleModerationBan(
 // Check if user is banned from spray uploads
 export async function handleGetSprayBanStatus(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1045,8 +1046,8 @@ export async function handleGetSprayBanStatus(
 // Get upload limits for images
 export async function handleGetUploadLimits(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
-  env: Env,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
@@ -1076,7 +1077,7 @@ export async function handleGetUploadLimits(
 // Handle Discord moderation action - unban user
 export async function handleModerationUnban(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1135,7 +1136,7 @@ export async function handleModerationUnban(
 // Handle Discord moderation action - undelete spray (remove block flag)
 export async function handleModerationUndelete(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1208,7 +1209,7 @@ export async function handleModerationUndelete(
 // Handle background removal via Replicate API
 export async function handleBackgroundRemoval(
   request: Request,
-  db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
+  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1220,7 +1221,7 @@ export async function handleBackgroundRemoval(
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
-    const steamId = sessionValidation.session.steamId;
+    // const steamId = sessionValidation.session.steamId;
 
     // Check request method
     if (request.method !== 'POST') {

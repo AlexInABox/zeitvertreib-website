@@ -1,6 +1,6 @@
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { desc, gt, ne, and } from 'drizzle-orm';
+import { desc, ne } from 'drizzle-orm';
 import { playerdata } from '../../drizzle/schema.js';
 
 interface LeaderboardEntry {
@@ -83,7 +83,7 @@ async function getSteamUsername(steamId: string, env: Env): Promise<string> {
       return 'Unbekannt';
     }
 
-    const playerName = data.response.players[0].personaname;
+    const playerName = data.response.players[0]?.personaname || 'Unknown';
 
     // Cache the username for 24 hours
     await env.SESSIONS.put(cacheKey, playerName, {
@@ -538,7 +538,7 @@ export async function updateLeaderboard(
 
 // HTTP endpoint to manually trigger leaderboard update
 export async function handleLeaderboardUpdate(
-  request: Request,
+  _request: Request,
   db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
