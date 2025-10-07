@@ -1693,7 +1693,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1781,7 +1781,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Slot machine functions
   initializeSlotMachine(): void {
     const slots = document.querySelectorAll('.slot');
-    slots.forEach(slot => {
+    slots.forEach((slot) => {
       const symbols = slot.querySelector('.symbols') as HTMLElement;
       if (symbols && symbols.children.length === 0) {
         // Only initialize if empty
@@ -1804,7 +1804,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return div;
   }
 
-  spin(slotSymbols: string[], target1?: string, target2?: string, target3?: string): void {
+  spin(
+    slotSymbols: string[],
+    target1?: string,
+    target2?: string,
+    target3?: string,
+  ): void {
     this.reset();
 
     const slots = document.querySelectorAll('.slot');
@@ -1820,13 +1825,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Add 8 cycles of symbols
       for (let i = 0; i < 10; i++) {
-        slotSymbols.forEach(symbol => {
+        slotSymbols.forEach((symbol) => {
           symbols.appendChild(this.createSymbolElement(symbol));
         });
       }
 
       // Get symbol height AFTER adding symbols
-      const symbolHeight = symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
+      const symbolHeight =
+        symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
 
       // Random number of full rotations (2-6)
       const randomRotations = Math.floor(Math.random() * 8) + 4;
@@ -1838,29 +1844,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (targetSymbol && slotSymbols.includes(targetSymbol)) {
         // Land on specific symbol after random full spins
         const targetIndex = slotSymbols.indexOf(targetSymbol);
-        const fullRotations = randomRotations * slotSymbols.length * symbolHeight;
+        const fullRotations =
+          randomRotations * slotSymbols.length * symbolHeight;
         targetOffset = -(fullRotations + (targetIndex + 1) * symbolHeight);
       } else {
         // Random position after random full spins
         const randomIndex = Math.floor(Math.random() * slotSymbols.length);
-        const fullRotations = randomRotations * slotSymbols.length * symbolHeight;
+        const fullRotations =
+          randomRotations * slotSymbols.length * symbolHeight;
         targetOffset = -(fullRotations + (randomIndex + 1) * symbolHeight);
       }
 
       symbols.style.top = `${targetOffset}px`;
 
-      symbols.addEventListener('transitionend', () => {
-        completedSlots++;
-        if (completedSlots === slots.length) {
-          this.logDisplayedSymbols(slotSymbols);
-        }
-      }, { once: true });
+      symbols.addEventListener(
+        'transitionend',
+        () => {
+          completedSlots++;
+          if (completedSlots === slots.length) {
+            this.logDisplayedSymbols(slotSymbols);
+          }
+        },
+        { once: true },
+      );
     });
   }
 
   reset(): void {
     const slots = document.querySelectorAll('.slot');
-    slots.forEach(slot => {
+    slots.forEach((slot) => {
       const symbols = slot.querySelector('.symbols') as HTMLElement;
       symbols.style.transition = 'none';
       symbols.style.top = '0';
@@ -1875,11 +1887,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     slots.forEach((slot) => {
       const symbols = slot.querySelector('.symbols') as HTMLElement;
-      const symbolHeight = symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
+      const symbolHeight =
+        symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
       const topValue = Math.abs(parseInt(symbols.style.top, 10));
 
       // Account for the question mark at the beginning
-      const symbolIndex = (Math.floor(topValue / symbolHeight) - 1) % slotSymbols.length;
+      const symbolIndex =
+        (Math.floor(topValue / symbolHeight) - 1) % slotSymbols.length;
       const displayedSymbol = slotSymbols[symbolIndex];
       if (displayedSymbol) {
         displayedSymbols.push(displayedSymbol);
@@ -1891,7 +1905,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Example method to test the slot machine
   testSlotMachine(): void {
-    const mySymbols = ['🍎', '🍏', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑'];
+    const mySymbols = [
+      '🍎',
+      '🍏',
+      '🍐',
+      '🍊',
+      '🍋',
+      '🍌',
+      '🍉',
+      '🍇',
+      '🍓',
+      '🍈',
+      '🍒',
+      '🍑',
+    ];
     this.spin(mySymbols, '🍏', '🍏', '🍏');
   }
 }
