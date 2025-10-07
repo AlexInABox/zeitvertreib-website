@@ -63,6 +63,7 @@ import {
   updateLeaderboard,
   handleLeaderboardUpdate,
 } from './routes/leaderboard.js';
+import { handleSlotMachine } from './routes/slotmachine.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -146,6 +147,9 @@ const routes: Record<
   'GET:/redeemables': handleGetRedeemables,
   'POST:/redeemables/redeem': handleRedeemItem,
   'POST:/redeem-code': handleRedeemCode,
+
+  // Slot machine route
+  'POST:/slotmachine': handleSlotMachine,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
