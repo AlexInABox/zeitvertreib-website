@@ -1700,7 +1700,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1920,7 +1920,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Check if user has enough ZVC
     const currentBalance = this.userStatistics.experience || 0;
     if (currentBalance < 10) {
-      this.slotMachineError = 'Nicht genügend ZVC! Du brauchst mindestens 10 ZVC.';
+      this.slotMachineError =
+        'Nicht genügend ZVC! Du brauchst mindestens 10 ZVC.';
       setTimeout(() => {
         this.slotMachineError = '';
       }, 3000);
@@ -1979,7 +1980,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
               this.slotMachineMessage = '🎉 GEWONNEN! +100 ZVC! 🎉';
 
               // Add winnings to balance (100 ZVC total, already deducted 10)
-              this.userStatistics.experience = (this.userStatistics.experience || 0) + 100;
+              this.userStatistics.experience =
+                (this.userStatistics.experience || 0) + 100;
 
               // Hide winning animation after 5 seconds
               setTimeout(() => {
@@ -2002,8 +2004,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.isSpinning = false;
           this.slotMachineLoading = false;
           // Refund the 10 ZVC on error
-          this.userStatistics.experience = (this.userStatistics.experience || 0) + 10;
-          this.slotMachineError = error?.error?.error || 'Fehler beim Spielen der Slotmaschine';
+          this.userStatistics.experience =
+            (this.userStatistics.experience || 0) + 10;
+          this.slotMachineError =
+            error?.error?.error || 'Fehler beim Spielen der Slotmaschine';
 
           setTimeout(() => {
             this.slotMachineError = '';
