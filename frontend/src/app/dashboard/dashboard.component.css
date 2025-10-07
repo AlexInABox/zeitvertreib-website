@@ -52,6 +52,7 @@
 
 /* Portrait Mode - Stack all elements vertically */
 @media (orientation: portrait) {
+
   .dashboard-table,
   .dashboard-table tbody,
   .dashboard-table tr,
@@ -148,11 +149,9 @@
   width: 6px;
   height: 52px;
   border-radius: 6px;
-  background: linear-gradient(
-    145deg,
-    var(--stat-color, #10b981),
-    var(--stat-color-light, #34d399)
-  );
+  background: linear-gradient(145deg,
+      var(--stat-color, #10b981),
+      var(--stat-color-light, #34d399));
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
   position: relative;
   overflow: hidden;
@@ -165,12 +164,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(45deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
   animation: shimmer 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
 }
 
@@ -231,11 +228,9 @@
 }
 
 .player-card {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
@@ -250,17 +245,16 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--random-color-1, #f59e0b),
-    var(--random-color-2, #ef4444),
-    var(--random-color-3, #8b5cf6)
-  );
+  background: linear-gradient(90deg,
+      var(--random-color-1, #f59e0b),
+      var(--random-color-2, #ef4444),
+      var(--random-color-3, #8b5cf6));
   background-size: 200% 100%;
   animation: gradientShift 5s ease-in-out infinite;
 }
 
 @keyframes gradientShift {
+
   0%,
   100% {
     background-position: 0% 50%;
@@ -438,11 +432,9 @@
 }
 
 .chart-placeholder {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05));
   border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 3rem;
@@ -452,12 +444,10 @@
 }
 
 .text-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--random-color-1, #f59e0b),
-    var(--random-color-2, #ef4444),
-    var(--random-color-3, #8b5cf6)
-  );
+  background: linear-gradient(135deg,
+      var(--random-color-1, #f59e0b),
+      var(--random-color-2, #ef4444),
+      var(--random-color-3, #8b5cf6));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -600,19 +590,19 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
   background: linear-gradient(135deg, #10b981, #059669);
   border-color: #10b981;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(26px);
   background: linear-gradient(135deg, #ffffff, #f0f0f0);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.toggle-switch input:disabled + .toggle-slider {
+.toggle-switch input:disabled+.toggle-slider {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -946,7 +936,7 @@
 }
 
 /* Fix spacing issues for better card alignment */
-.dashboard-grid > * {
+.dashboard-grid>* {
   margin: 0 !important;
   /* Remove any default margins */
 }
@@ -1177,11 +1167,9 @@
 }
 
 .help-popup {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.1),
-    rgba(79, 70, 229, 0.1)
-  );
+  background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.1),
+      rgba(79, 70, 229, 0.1));
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 12px;
   padding: 1rem;
@@ -1242,11 +1230,9 @@
 }
 
 .nickname-preview {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.03)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 1.25rem;
@@ -2084,12 +2070,10 @@
   right: -2px;
   bottom: -2px;
   border-radius: 10px;
-  background: linear-gradient(
-    45deg,
-    rgba(16, 185, 129, 0.2),
-    rgba(52, 211, 153, 0.2),
-    rgba(16, 185, 129, 0.2)
-  );
+  background: linear-gradient(45deg,
+      rgba(16, 185, 129, 0.2),
+      rgba(52, 211, 153, 0.2),
+      rgba(16, 185, 129, 0.2));
   background-size: 200% 200%;
   animation: shimmerGlow 3s ease-in-out infinite;
   z-index: -1;
@@ -2097,10 +2081,12 @@
 }
 
 @keyframes shimmerGlow {
+
   0%,
   100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -2158,11 +2144,9 @@
 .zvcoins-balance-card {
   display: flex;
   align-items: center;
-  background: linear-gradient(
-    135deg,
-    rgba(251, 191, 36, 0.1),
-    rgba(245, 158, 11, 0.1)
-  );
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.1),
+      rgba(245, 158, 11, 0.1));
   border: 2px solid rgba(251, 191, 36, 0.2);
   border-radius: 12px;
   padding: 1rem;
@@ -2216,11 +2200,9 @@
 }
 
 .zvcoins-reward-card {
-  background: linear-gradient(
-    135deg,
-    rgba(45, 45, 55, 0.95),
-    rgba(35, 35, 45, 0.9)
-  );
+  background: linear-gradient(135deg,
+      rgba(45, 45, 55, 0.95),
+      rgba(35, 35, 45, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 1rem;
@@ -2232,11 +2214,9 @@
 }
 
 .zvcoins-reward-card.zvcoins-affordable {
-  background: linear-gradient(
-    135deg,
-    rgba(16, 185, 129, 0.2),
-    rgba(5, 150, 105, 0.15)
-  );
+  background: linear-gradient(135deg,
+      rgba(16, 185, 129, 0.2),
+      rgba(5, 150, 105, 0.15));
   border: 1px solid rgba(16, 185, 129, 0.5);
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
 }
@@ -2273,11 +2253,13 @@
 }
 
 @keyframes pulseGlow {
+
   0%,
   100% {
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 4px 16px rgba(239, 68, 68, 0.7);
     transform: scale(1.05);
@@ -2302,11 +2284,9 @@
   opacity: 0.6;
   filter: grayscale(0.5);
   border: 1px solid rgba(150, 150, 150, 0.3);
-  background: linear-gradient(
-    135deg,
-    rgba(60, 60, 70, 0.5),
-    rgba(50, 50, 60, 0.4)
-  );
+  background: linear-gradient(135deg,
+      rgba(60, 60, 70, 0.5),
+      rgba(50, 50, 60, 0.4));
 }
 
 .zvcoins-reward-card.zvcoins-expired:hover {
@@ -2368,11 +2348,9 @@
 .zvcoins-reward-card.zvcoins-expired {
   position: relative;
   opacity: 0.6;
-  background: linear-gradient(
-    135deg,
-    rgba(55, 55, 65, 0.7),
-    rgba(45, 45, 55, 0.6)
-  );
+  background: linear-gradient(135deg,
+      rgba(55, 55, 65, 0.7),
+      rgba(45, 45, 55, 0.6));
   border: 1px solid rgba(107, 114, 128, 0.3);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -2448,11 +2426,9 @@
 .zvcoins-reward-card.zvcoins-sold-out {
   position: relative;
   opacity: 0.65;
-  background: linear-gradient(
-    135deg,
-    rgba(65, 50, 50, 0.7),
-    rgba(55, 40, 40, 0.6)
-  );
+  background: linear-gradient(135deg,
+      rgba(65, 50, 50, 0.7),
+      rgba(55, 40, 40, 0.6));
   border: 1px solid rgba(220, 38, 38, 0.2);
   box-shadow: 0 0 10px rgba(220, 38, 38, 0.15);
 }
@@ -2599,12 +2575,10 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent);
   animation: shimmer 2s infinite;
 }
 
@@ -2612,6 +2586,7 @@
   0% {
     left: -100%;
   }
+
   100% {
     left: 100%;
   }
@@ -2816,11 +2791,9 @@
 .zvcoins-combined-card {
   display: flex;
   gap: 1.5rem;
-  background: linear-gradient(
-    135deg,
-    rgba(251, 191, 36, 0.1),
-    rgba(245, 158, 11, 0.1)
-  );
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.1),
+      rgba(245, 158, 11, 0.1));
   border: 2px solid rgba(251, 191, 36, 0.2);
   border-radius: 12px;
   padding: 1.5rem;
@@ -2833,14 +2806,12 @@
   width: 1px;
   align-self: center;
   height: 140px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(255, 255, 255, 0.3) 20%,
-    rgba(255, 255, 255, 0.5) 50%,
-    rgba(255, 255, 255, 0.3) 80%,
-    transparent
-  );
+  background: linear-gradient(to bottom,
+      transparent,
+      rgba(255, 255, 255, 0.3) 20%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.3) 80%,
+      transparent);
   flex-shrink: 0;
 }
 
@@ -3265,14 +3236,12 @@
   .zvcoins-divider {
     width: 100%;
     height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba(255, 255, 255, 0.3) 20%,
-      rgba(255, 255, 255, 0.5) 50%,
-      rgba(255, 255, 255, 0.3) 80%,
-      transparent
-    );
+    background: linear-gradient(to right,
+        transparent,
+        rgba(255, 255, 255, 0.3) 20%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(255, 255, 255, 0.3) 80%,
+        transparent);
   }
 }
 
@@ -3325,11 +3294,9 @@
 }
 
 .cosmetic-beta-badge {
-  background: linear-gradient(
-    135deg,
-    rgba(251, 191, 36, 0.8),
-    rgba(217, 119, 6, 0.6)
-  );
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.8),
+      rgba(217, 119, 6, 0.6));
   color: white;
   font-size: 0.6rem;
   font-weight: 700;
@@ -3373,11 +3340,9 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.8),
-    rgba(124, 58, 237, 0.6)
-  );
+  background: linear-gradient(135deg,
+      rgba(139, 92, 246, 0.8),
+      rgba(124, 58, 237, 0.6));
   border: 3px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
 }
@@ -3422,11 +3387,9 @@
 }
 
 .cosmetic-aura-blue {
-  background: radial-gradient(
-    circle,
-    rgba(59, 130, 246, 0.25),
-    transparent 70%
-  );
+  background: radial-gradient(circle,
+      rgba(59, 130, 246, 0.25),
+      transparent 70%);
   box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
 }
 
@@ -3436,27 +3399,27 @@
 }
 
 .cosmetic-aura-rainbow {
-  background: conic-gradient(
-    from 0deg,
-    rgba(255, 0, 0, 0.2),
-    rgba(255, 165, 0, 0.2),
-    rgba(255, 255, 0, 0.2),
-    rgba(0, 255, 0, 0.2),
-    rgba(0, 0, 255, 0.2),
-    rgba(75, 0, 130, 0.2),
-    rgba(238, 130, 238, 0.2),
-    rgba(255, 0, 0, 0.2)
-  );
+  background: conic-gradient(from 0deg,
+      rgba(255, 0, 0, 0.2),
+      rgba(255, 165, 0, 0.2),
+      rgba(255, 255, 0, 0.2),
+      rgba(0, 255, 0, 0.2),
+      rgba(0, 0, 255, 0.2),
+      rgba(75, 0, 130, 0.2),
+      rgba(238, 130, 238, 0.2),
+      rgba(255, 0, 0, 0.2));
   box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
   animation: cosmetic-aura-rainbow 3s linear infinite;
 }
 
 @keyframes cosmetic-aura-pulse {
+
   0%,
   100% {
     opacity: 0.6;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.9;
     transform: scale(1.1);
@@ -3467,6 +3430,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -3574,11 +3538,9 @@
 .cosmetic-item-card.selected {
   border-color: #10b981;
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-  background: linear-gradient(
-    135deg,
-    rgba(16, 185, 129, 0.2),
-    rgba(5, 150, 105, 0.15)
-  );
+  background: linear-gradient(135deg,
+      rgba(16, 185, 129, 0.2),
+      rgba(5, 150, 105, 0.15));
 }
 
 .cosmetic-item-card.locked {
@@ -3819,4 +3781,364 @@
   opacity: 1;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+
+
+
+/* Slots*/
+
+.slotcontainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+  border-radius: 16px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.slot {
+  width: 100px;
+  height: 150px;
+  border: 2px solid rgba(139, 92, 246, 0.4);
+  border-radius: 12px;
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.3) inset,
+    0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.slot:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 25px rgba(139, 92, 246, 0.4) inset,
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(139, 92, 246, 0.2);
+}
+
+.slot .symbols {
+  position: absolute;
+  top: 0;
+  width: 100px;
+  transition: top 10s;
+  margin-top: 30%;
+}
+
+/* Games Card Container - Similar to combined card */
+.zvcoins-games-card {
+  display: flex;
+  gap: 1.5rem;
+  background: linear-gradient(135deg,
+      rgba(139, 92, 246, 0.08),
+      rgba(99, 102, 241, 0.08));
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  align-items: stretch;
+}
+
+/* Slot Machine Widget Container */
+.slot-machine-widget {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.slot-machine-widget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.slot-machine-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.slot-machine-badge {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 2px 15px rgba(139, 92, 246, 0.6);
+  }
+}
+
+/* Slot Machine Controls */
+.slot-machine-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.slot-machine-btn {
+  flex: 1;
+  max-width: 250px;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.slot-machine-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.slot-machine-btn:hover::before {
+  left: 100%;
+}
+
+.slot-spin-btn {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(139, 92, 246, 0.4),
+    0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.slot-spin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 16px rgba(139, 92, 246, 0.5),
+    0 0 30px rgba(139, 92, 246, 0.3);
+}
+
+.slot-spin-btn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 8px rgba(139, 92, 246, 0.4),
+    0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+.slot-machine-btn .btn-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.slot-machine-btn .btn-text {
+  letter-spacing: 0.5px;
+  font-size: 1.1rem;
+}
+
+.slot-machine-btn .btn-cost {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  margin-top: 2px;
+}
+
+.slot-machine-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Coming Soon Widget */
+.coming-soon-widget {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(100, 100, 100, 0.05), rgba(80, 80, 80, 0.05));
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  position: relative;
+  overflow: hidden;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coming-soon-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 40px;
+  opacity: 0.3;
+}
+
+.placeholder-icon {
+  font-size: 6rem;
+  filter: grayscale(100%);
+  animation: slow-spin 20s linear infinite;
+}
+
+.placeholder-icon:nth-child(2) {
+  animation-delay: -7s;
+}
+
+.placeholder-icon:nth-child(3) {
+  animation-delay: -14s;
+}
+
+@keyframes slow-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.coming-soon-blur-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.coming-soon-content {
+  text-align: center;
+  padding: 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.coming-soon-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.coming-soon-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.coming-soon-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 20px 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.coming-soon-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.3), rgba(100, 116, 139, 0.3));
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: pulse-coming-soon 2s ease-in-out infinite;
+}
+
+@keyframes pulse-coming-soon {
+
+  0%,
+  100% {
+    box-shadow:
+      0 4px 15px rgba(0, 0, 0, 0.3),
+      0 0 20px rgba(148, 163, 184, 0.2);
+  }
+
+  50% {
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(148, 163, 184, 0.4);
+  }
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 768px) {
+  .zvcoins-games-card {
+    flex-direction: column;
+  }
+
+  .coming-soon-widget {
+    min-height: 300px;
+  }
 }
