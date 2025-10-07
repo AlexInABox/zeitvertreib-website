@@ -26,10 +26,7 @@
         <div class="stats-card p-6 rounded-2xl auto-height">
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Kills -->
-            <div
-              class="stat-item"
-              style="--stat-color: #10b981; --stat-color-light: #34d399"
-            >
+            <div class="stat-item" style="--stat-color: #10b981; --stat-color-light: #34d399">
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">Abschüsse</h5>
@@ -40,10 +37,7 @@
             </div>
 
             <!-- Deaths -->
-            <div
-              class="stat-item"
-              style="--stat-color: #3b82f6; --stat-color-light: #60a5fa"
-            >
+            <div class="stat-item" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa">
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">Todesfälle</h5>
@@ -54,10 +48,7 @@
             </div>
 
             <!-- Playtime -->
-            <div
-              class="stat-item"
-              style="--stat-color: #eab308; --stat-color-light: #facc15"
-            >
+            <div class="stat-item" style="--stat-color: #eab308; --stat-color-light: #facc15">
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">Spielzeit</h5>
@@ -67,10 +58,7 @@
               </div>
             </div>
             <!-- K/D Ratio -->
-            <div
-              class="stat-item"
-              style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa"
-            >
+            <div class="stat-item" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa">
               <div class="stat-indicator"></div>
               <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
                 <h5 class="stat-label m-0 mb-1">K/D Ratio</h5>
@@ -87,17 +75,9 @@
       <div class="grid-item player-card-container">
         <div class="player-card">
           <!-- Avatar Header -->
-          <div
-            class="player-avatar-container"
-            *ngIf="userStatistics?.avatarFull"
-          >
-            <img
-              class="player-avatar"
-              [src]="getAvatarUrl(userStatistics.avatarFull)"
-              [alt]="userStatistics.username || 'Player Avatar'"
-              loading="lazy"
-              (error)="onImageError($event)"
-            />
+          <div class="player-avatar-container" *ngIf="userStatistics?.avatarFull">
+            <img class="player-avatar" [src]="getAvatarUrl(userStatistics.avatarFull)"
+              [alt]="userStatistics.username || 'Player Avatar'" loading="lazy" (error)="onImageError($event)" />
           </div>
 
           <!-- Player Info -->
@@ -106,7 +86,7 @@
               Willkommen zurück,<br />
               <span class="text-gradient">{{
                 userStatistics.username || 'Spieler'
-              }}</span>
+                }}</span>
             </h2>
 
             <p class="text-lg text-gray-300 mb-6">
@@ -119,7 +99,7 @@
                 <span class="player-info-label">Gespielte Runden:</span>
                 <span class="player-info-value">{{
                   userStatistics.roundsplayed | number: '1.0-0'
-                }}</span>
+                  }}</span>
               </div>
 
               <div class="player-info-item">
@@ -131,35 +111,35 @@
                 <span class="player-info-label">Benutzte Medkits:</span>
                 <span class="player-info-value">{{
                   userStatistics.usedmedkits | number: '1.0-0'
-                }}</span>
+                  }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Getrunkene Colas:</span>
                 <span class="player-info-value">{{
                   userStatistics.usedcolas | number: '1.0-0'
-                }}</span>
+                  }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Pocket Escapes:</span>
                 <span class="player-info-value">{{
                   userStatistics.pocketescapes | number: '1.0-0'
-                }}</span>
+                  }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Benutzte Adrenalin:</span>
                 <span class="player-info-value">{{
                   userStatistics.usedadrenaline | number: '1.0-0'
-                }}</span>
+                  }}</span>
               </div>
 
               <div class="player-info-item">
                 <span class="player-info-label">Snake Highscore:</span>
                 <span class="player-info-value">{{
                   userStatistics.snakehighscore | number: '1.0-0'
-                }}</span>
+                  }}</span>
               </div>
             </div>
           </div>
@@ -169,9 +149,7 @@
       <!-- ZV Coins Widget -->
       <div class="grid-item zvcoins-container">
         <div class="stats-card p-6 rounded-2xl">
-          <h3
-            class="text-xl font-bold text-white mb-4 cardHeader flex items-center justify-between"
-          >
+          <h3 class="text-xl font-bold text-white mb-4 cardHeader flex items-center justify-between">
             <span>🪙 Zeitvertreib Coins</span>
             <span class="zvcoins-balance-inline">
               {{ userStatistics.experience | number: '1.0-0' }} ZVC
@@ -202,23 +180,13 @@
 
                 <div class="zvcoins-code-input-section">
                   <div class="zvcoins-code-input-group">
-                    <input
-                      type="text"
-                      [(ngModel)]="redeemCode"
-                      placeholder="Gib deinen Code hier ein..."
-                      class="zvcoins-code-input"
-                      (keyup.enter)="redeemCodeAction()"
-                      [disabled]="codeRedemptionLoading"
-                    />
-                    <button
-                      class="zvcoins-code-btn"
-                      (click)="redeemCodeAction()"
-                      [disabled]="!redeemCode || codeRedemptionLoading"
-                    >
+                    <input type="text" [(ngModel)]="redeemCode" placeholder="Gib deinen Code hier ein..."
+                      class="zvcoins-code-input" (keyup.enter)="redeemCodeAction()"
+                      [disabled]="codeRedemptionLoading" />
+                    <button class="zvcoins-code-btn" (click)="redeemCodeAction()"
+                      [disabled]="!redeemCode || codeRedemptionLoading">
                       <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
-                      <span *ngIf="codeRedemptionLoading"
-                        >⏳ Wird eingelöst...</span
-                      >
+                      <span *ngIf="codeRedemptionLoading">⏳ Wird eingelöst...</span>
                     </button>
                   </div>
                 </div>
@@ -249,48 +217,28 @@
                 </div>
 
                 <!-- Transfer Cost Info -->
-                <div
-                  *ngIf="transferAmount && transferAmount > 0"
-                  class="zvcoins-transfer-cost-info"
-                >
+                <div *ngIf="transferAmount && transferAmount > 0" class="zvcoins-transfer-cost-info">
                   <div class="transfer-cost-item">
                     <span class="cost-label">Betrag:</span>
                     <span class="cost-value">{{ transferAmount }} ZVC</span>
                   </div>
                   <div class="transfer-cost-item">
                     <span class="cost-label">Steuer (10%):</span>
-                    <span class="cost-value"
-                      >{{ getTransferTax(transferAmount) }} ZVC</span
-                    >
+                    <span class="cost-value">{{ getTransferTax(transferAmount) }} ZVC</span>
                   </div>
                   <div class="transfer-cost-item transfer-cost-total">
                     <span class="cost-label">Gesamt:</span>
-                    <span class="cost-value"
-                      >{{ getTransferTotalCost(transferAmount) }} ZVC</span
-                    >
+                    <span class="cost-value">{{ getTransferTotalCost(transferAmount) }} ZVC</span>
                   </div>
                 </div>
 
                 <div class="zvcoins-transfer-input-section">
                   <div class="zvcoins-transfer-input-group">
-                    <input
-                      type="text"
-                      [(ngModel)]="transferRecipient"
-                      placeholder="Steam ID oder Benutzername"
-                      class="zvcoins-transfer-input zvcoins-transfer-recipient"
-                      [disabled]="transferLoading"
-                    />
-                    <input
-                      type="text"
-                      [(ngModel)]="transferAmount"
-                      placeholder="Betrag"
-                      class="zvcoins-transfer-input zvcoins-transfer-amount"
-                      [disabled]="transferLoading"
-                    />
-                    <button
-                      class="zvcoins-transfer-btn"
-                      (click)="transferZVC()"
-                      [disabled]="
+                    <input type="text" [(ngModel)]="transferRecipient" placeholder="Steam ID oder Benutzername"
+                      class="zvcoins-transfer-input zvcoins-transfer-recipient" [disabled]="transferLoading" />
+                    <input type="text" [(ngModel)]="transferAmount" placeholder="Betrag"
+                      class="zvcoins-transfer-input zvcoins-transfer-amount" [disabled]="transferLoading" />
+                    <button class="zvcoins-transfer-btn" (click)="transferZVC()" [disabled]="
                         !transferRecipient ||
                         !transferAmount ||
                         transferAmount <= 0 ||
@@ -299,8 +247,7 @@
                         getTransferTotalCost(transferAmount) >
                           (userStatistics.experience || 0) ||
                         transferLoading
-                      "
-                    >
+                      ">
                       <span *ngIf="!transferLoading">💸 Senden</span>
                       <span *ngIf="transferLoading">⏳ Wird gesendet...</span>
                     </button>
@@ -310,20 +257,12 @@
             </div>
 
             <!-- Message displays outside the card for better visibility -->
-            <div
-              *ngIf="codeRedemptionMessage"
-              class="zvcoins-message mt-3"
-              [class.success]="codeRedemptionSuccess"
-              [class.error]="!codeRedemptionSuccess"
-            >
+            <div *ngIf="codeRedemptionMessage" class="zvcoins-message mt-3" [class.success]="codeRedemptionSuccess"
+              [class.error]="!codeRedemptionSuccess">
               {{ codeRedemptionMessage }}
             </div>
-            <div
-              *ngIf="transferMessage"
-              class="zvcoins-message mt-3"
-              [class.success]="transferSuccess"
-              [class.error]="!transferSuccess"
-            >
+            <div *ngIf="transferMessage" class="zvcoins-message mt-3" [class.success]="transferSuccess"
+              [class.error]="!transferSuccess">
               {{ transferMessage }}
             </div>
           </div>
@@ -336,6 +275,19 @@
                 <div class="slot-machine-header">
                   <h4 class="zvcoins-section-title">🎰 Slotmaschine</h4>
                   <div class="slot-machine-badge">BETA</div>
+                </div>
+
+                <!-- Winning Animation Overlay -->
+                <div *ngIf="showWinningAnimation" class="winning-animation-overlay">
+                  <div class="winning-animation-content">
+                    <div class="confetti">🎉</div>
+                    <div class="confetti">🎊</div>
+                    <div class="confetti">✨</div>
+                    <div class="confetti">💰</div>
+                    <div class="confetti">🏆</div>
+                    <div class="winning-text">JACKPOT!</div>
+                    <div class="winning-amount">+100 ZVC</div>
+                  </div>
                 </div>
 
                 <div class="slotcontainer">
@@ -352,14 +304,23 @@
                   </div>
                 </div>
 
+
+
                 <div class="slot-machine-controls">
-                  <button
-                    (click)="testSlotMachine()"
-                    class="slot-machine-btn slot-spin-btn"
-                  >
-                    <span class="btn-text">🎰 Start!!! 🎰</span>
+                  <button (click)="testSlotMachine()" class="slot-machine-btn slot-spin-btn" [disabled]="isSpinning"
+                    [class.spinning]="isSpinning">
+                    <span class="btn-text" *ngIf="!isSpinning">🎰 Start!!! 🎰</span>
+                    <span class="btn-text" *ngIf="isSpinning">🎰 Spinning... 🎰</span>
                     <span class="btn-cost">🪙 10 ZVC</span>
                   </button>
+                </div>
+
+                <!-- Status Messages -->
+                <div *ngIf="slotMachineMessage" class="slot-machine-message" [class.success]="showWinningAnimation">
+                  {{ slotMachineMessage }}
+                </div>
+                <div *ngIf="slotMachineError" class="slot-machine-error">
+                  {{ slotMachineError }}
                 </div>
               </div>
 
@@ -395,60 +356,37 @@
             </div>
 
             <!-- Error State -->
-            <div
-              *ngIf="redeemablesError && !redeemablesLoading"
-              class="text-center py-8"
-            >
+            <div *ngIf="redeemablesError && !redeemablesLoading" class="text-center py-8">
               <div class="text-red-400 mb-4">⚠️</div>
               <p class="text-red-400">{{ redeemablesError }}</p>
-              <button
-                (click)="loadRedeemables()"
-                class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
+              <button (click)="loadRedeemables()"
+                class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                 Erneut versuchen
               </button>
             </div>
 
             <!-- Redeemables Grid -->
-            <div
-              *ngIf="!redeemablesLoading && !redeemablesError"
-              class="zvcoins-rewards-grid"
-            >
-              <div
-                *ngFor="let redeemable of redeemables"
-                class="zvcoins-reward-card"
-                [class.zvcoins-affordable]="
+            <div *ngIf="!redeemablesLoading && !redeemablesError" class="zvcoins-rewards-grid">
+              <div *ngFor="let redeemable of redeemables" class="zvcoins-reward-card" [class.zvcoins-affordable]="
                   canAfford(redeemable.price) && isAvailable(redeemable)
-                "
-                [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
-                [class.zvcoins-expired]="isExpired(redeemable)"
-                [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-              >
+                " [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
+                [class.zvcoins-expired]="isExpired(redeemable)" [class.zvcoins-sold-out]="isSoldOut(redeemable)">
                 <!-- Limited Time Badge -->
-                <div
-                  *ngIf="
+                <div *ngIf="
                     isLimitedTime(redeemable) &&
                     !isExpired(redeemable) &&
                     !isSoldOut(redeemable)
-                  "
-                  class="zvcoins-limited-badge"
-                >
+                  " class="zvcoins-limited-badge">
                   ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
                 </div>
 
                 <!-- Expired Badge -->
-                <div
-                  *ngIf="isExpired(redeemable)"
-                  class="zvcoins-expired-badge"
-                >
+                <div *ngIf="isExpired(redeemable)" class="zvcoins-expired-badge">
                   ❌ Nicht mehr verfügbar
                 </div>
 
                 <!-- Sold Out Badge -->
-                <div
-                  *ngIf="isSoldOut(redeemable)"
-                  class="zvcoins-sold-out-badge"
-                >
+                <div *ngIf="isSoldOut(redeemable)" class="zvcoins-sold-out-badge">
                   🚫 Ausverkauft
                 </div>
 
@@ -467,50 +405,40 @@
                   <div class="zvcoins-reward-price">
                     <span class="zvcoins-price-amount">{{
                       redeemable.price | number: '1.0-0'
-                    }}</span>
+                      }}</span>
                     <span class="zvcoins-price-currency">ZVC</span>
                   </div>
                 </div>
                 <div class="zvcoins-reward-progress">
                   <div class="zvcoins-progress-container">
                     <div class="zvcoins-progress-track">
-                      <div
-                        class="zvcoins-progress-bar-fill"
-                        [style.width.%]="
+                      <div class="zvcoins-progress-bar-fill" [style.width.%]="
                           getProgressPercentage(
                             userStatistics.experience || 0,
                             redeemable.price
                           )
-                        "
-                      ></div>
+                        "></div>
                     </div>
                     <span class="zvcoins-progress-text">
                       {{
-                        getProgressPercentage(
-                          userStatistics.experience || 0,
-                          redeemable.price
-                        ) | number: '1.0-0'
+                      getProgressPercentage(
+                      userStatistics.experience || 0,
+                      redeemable.price
+                      ) | number: '1.0-0'
                       }}%
                     </span>
                   </div>
-                  <button
-                    class="zvcoins-redeem-btn"
-                    [disabled]="!canRedeem(redeemable)"
+                  <button class="zvcoins-redeem-btn" [disabled]="!canRedeem(redeemable)"
                     [class.zvcoins-redeem-available]="canRedeem(redeemable)"
-                    [class.zvcoins-expired]="isExpired(redeemable)"
-                    [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                    (click)="redeemItem(redeemable)"
-                  >
+                    [class.zvcoins-expired]="isExpired(redeemable)" [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                    (click)="redeemItem(redeemable)">
                     {{ getAvailabilityText(redeemable) }}
                   </button>
                 </div>
               </div>
 
               <!-- No redeemables available message -->
-              <div
-                *ngIf="redeemables.length === 0"
-                class="text-center py-8 col-span-full"
-              >
+              <div *ngIf="redeemables.length === 0" class="text-center py-8 col-span-full">
                 <div class="text-6xl mb-4">🎁</div>
                 <p class="text-lg text-gray-300">Keine Belohnungen verfügbar</p>
                 <p class="text-sm text-gray-400 mt-2">
@@ -555,17 +483,11 @@
 
           <!-- Regular Card Content -->
           <div *ngIf="!showSprayHelp">
-            <h3
-              class="text-xl font-bold text-white flex items-center justify-between cardHeader"
-            >
+            <h3 class="text-xl font-bold text-white flex items-center justify-between cardHeader">
               <div class="flex items-center gap-2">
                 🎨 <span>Custom Spray</span>
               </div>
-              <button
-                (click)="showSprayHelp = true"
-                class="help-button"
-                title="Hilfe anzeigen"
-              >
+              <button (click)="showSprayHelp = true" class="help-button" title="Hilfe anzeigen">
                 ?
               </button>
             </h3>
@@ -582,20 +504,12 @@
                     {{ sprayBanStatus.banReason }}
                   </span>
                 </p>
-                <p
-                  class="not-allowed-link"
-                  *ngIf="sprayBanStatus && sprayBanStatus.permanent"
-                >
+                <p class="not-allowed-link" *ngIf="sprayBanStatus && sprayBanStatus.permanent">
                   <strong>Diese Sperre ist permanent.</strong>
                 </p>
-                <p
-                  class="not-allowed-link"
-                  *ngIf="sprayBanStatus && !sprayBanStatus.permanent"
-                >
+                <p class="not-allowed-link" *ngIf="sprayBanStatus && !sprayBanStatus.permanent">
                   Kontaktiere die Moderation unter
-                  <a href="https://dsc.gg/zeit" style="text-decoration: none"
-                    ><strong>dsc.gg/zeit</strong></a
-                  >
+                  <a href="https://dsc.gg/zeit" style="text-decoration: none"><strong>dsc.gg/zeit</strong></a>
                   für weitere Informationen.
                 </p>
               </div>
@@ -607,18 +521,10 @@
               <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
                 <div class="spray-preview-container mx-auto relative">
                   <div class="spray-preview">
-                    <img
-                      [src]="currentSprayImage"
-                      alt="Current Spray"
-                      class="spray-image"
-                    />
+                    <img [src]="currentSprayImage" alt="Current Spray" class="spray-image" />
                   </div>
-                  <button
-                    (click)="removeSpray()"
-                    class="remove-spray-button"
-                    [disabled]="sprayUploadLoading"
-                    title="Spray löschen"
-                  >
+                  <button (click)="removeSpray()" class="remove-spray-button" [disabled]="sprayUploadLoading"
+                    title="Spray löschen">
                     ×
                   </button>
                 </div>
@@ -632,107 +538,67 @@
 
               <!-- Upload Section with Drag & Drop -->
               <div class="spray-upload">
-                <div
-                  class="upload-area"
-                  [class.has-file]="selectedFile && !sprayUploadLoading"
-                  [class.loading]="sprayUploadLoading"
-                  [class.drag-over]="isDragOver"
-                  (dragover)="onDragOver($event)"
-                  (dragleave)="onDragLeave($event)"
-                  (drop)="onDrop($event)"
-                >
-                  <input
-                    type="file"
-                    id="sprayFileInput"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    (change)="onFileSelected($event)"
-                    class="file-input"
-                  />
+                <div class="upload-area" [class.has-file]="selectedFile && !sprayUploadLoading"
+                  [class.loading]="sprayUploadLoading" [class.drag-over]="isDragOver" (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+                  <input type="file" id="sprayFileInput" accept="image/png,image/jpeg,image/jpg,image/webp"
+                    (change)="onFileSelected($event)" class="file-input" />
                   <label for="sprayFileInput" class="upload-label">
                     <div class="upload-content">
-                      <div
-                        *ngIf="
+                      <div *ngIf="
                           !sprayUploadLoading &&
                           !selectedFile &&
                           !backgroundRemovalProcessing
-                        "
-                        class="text-center"
-                      >
+                        " class="text-center">
                         <div class="text-2xl mb-2">📁</div>
                         <p class="font-medium">Klicken oder hierher ziehen</p>
                         <p class="text-sm opacity-75">PNG, JPG, WEBP</p>
                         <p class="text-xs opacity-60 mt-1" *ngIf="uploadLimits">
                           {{ uploadLimits.message }}
                         </p>
-                        <p
-                          class="text-xs opacity-60 mt-1"
-                          *ngIf="!uploadLimits"
-                        >
+                        <p class="text-xs opacity-60 mt-1" *ngIf="!uploadLimits">
                           Max: 5MB (Bilder)
                         </p>
                       </div>
 
                       <!-- Original File Preview -->
-                      <div
-                        *ngIf="
+                      <div *ngIf="
                           selectedFile &&
                           selectedFilePreview &&
                           !sprayUploadLoading &&
                           !backgroundRemovalProcessing
-                        "
-                        class="text-center"
-                      >
+                        " class="text-center">
                         <div class="file-preview-container mb-2">
-                          <div
-                            class="preview-wrapper"
-                            [class.bg-removed]="processedImagePreview"
-                          >
-                            <img
-                              [src]="
+                          <div class="preview-wrapper" [class.bg-removed]="processedImagePreview">
+                            <img [src]="
                                 processedImagePreview || selectedFilePreview
-                              "
-                              alt="Selected Image Preview"
-                              class="file-preview-image"
-                            />
+                              " alt="Selected Image Preview" class="file-preview-image" />
                             <!-- Subtle glow effect for background removed images -->
-                            <div
-                              *ngIf="processedImagePreview"
-                              class="bg-removed-glow"
-                            ></div>
+                            <div *ngIf="processedImagePreview" class="bg-removed-glow"></div>
                           </div>
                         </div>
                         <p class="font-medium">{{ selectedFileName }}</p>
                         <div class="preview-status">
                           <p class="text-sm opacity-75">
                             {{
-                              processedImagePreview
-                                ? 'Bereit zum Upload'
-                                : 'Bereit zum Upload'
+                            processedImagePreview
+                            ? 'Bereit zum Upload'
+                            : 'Bereit zum Upload'
                             }}
                           </p>
                           <!-- Clean status indicator below the image -->
-                          <div
-                            *ngIf="processedImagePreview"
-                            class="bg-removed-status"
-                          >
+                          <div *ngIf="processedImagePreview" class="bg-removed-status">
                             <span class="status-icon">✨</span>
-                            <span class="status-text"
-                              >Hintergrund entfernt</span
-                            >
+                            <span class="status-text">Hintergrund entfernt</span>
                           </div>
                         </div>
-                        <p
-                          *ngIf="removeBackground && !processedImagePreview"
-                          class="text-xs mt-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        >
+                        <p *ngIf="removeBackground && !processedImagePreview"
+                          class="text-xs mt-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           🪄 Hintergrund wird entfernt
                         </p>
                       </div>
 
-                      <div
-                        *ngIf="backgroundRemovalProcessing"
-                        class="text-center"
-                      >
+                      <div *ngIf="backgroundRemovalProcessing" class="text-center">
                         <div class="loading-spinner mx-auto mb-2"></div>
                         <p class="font-medium">Entferne Hintergrund...</p>
                         <p class="text-sm opacity-75">
@@ -747,20 +613,13 @@
                   </label>
                 </div>
 
-                <div
-                  *ngIf="selectedFile && !sprayUploadLoading"
-                  class="upload-actions mt-3"
-                >
-                  <button
-                    (click)="uploadSpray()"
-                    class="upload-button"
-                    [disabled]="backgroundRemovalProcessing"
-                    [class.disabled]="backgroundRemovalProcessing"
-                  >
+                <div *ngIf="selectedFile && !sprayUploadLoading" class="upload-actions mt-3">
+                  <button (click)="uploadSpray()" class="upload-button" [disabled]="backgroundRemovalProcessing"
+                    [class.disabled]="backgroundRemovalProcessing">
                     {{
-                      backgroundRemovalProcessing
-                        ? 'Wird verarbeitet...'
-                        : 'Hochladen'
+                    backgroundRemovalProcessing
+                    ? 'Wird verarbeitet...'
+                    : 'Hochladen'
                     }}
                   </button>
                   <button (click)="clearAllPreviews()" class="cancel-button">
@@ -787,14 +646,9 @@
                     </div>
                     <div class="toggle-switch-container">
                       <label class="toggle-switch">
-                        <input
-                          type="checkbox"
-                          [(ngModel)]="removeBackground"
-                          [disabled]="
+                        <input type="checkbox" [(ngModel)]="removeBackground" [disabled]="
                             sprayUploadLoading || backgroundRemovalProcessing
-                          "
-                          (change)="onBackgroundRemovalToggle()"
-                        />
+                          " (change)="onBackgroundRemovalToggle()" />
                         <span class="toggle-slider"></span>
                       </label>
                     </div>
@@ -805,9 +659,9 @@
                     <span class="status-indicator"></span>
                     <span class="status-text">
                       {{
-                        removeBackground
-                          ? 'Aktiviert - Hintergrund wird mit KI entfernt'
-                          : 'Deaktiviert - Originalbild wird verwendet'
+                      removeBackground
+                      ? 'Aktiviert - Hintergrund wird mit KI entfernt'
+                      : 'Deaktiviert - Originalbild wird verwendet'
                       }}
                     </span>
                   </div>
@@ -815,59 +669,38 @@
               </div>
 
               <!-- Privacy Policy Notice -->
-              <div
-                class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
-              >
+              <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
                 <!-- Compact Default State -->
-                <div
-                  *ngIf="!showPrivacyDetails"
-                  class="flex items-center gap-3 p-4 md:p-5"
-                >
+                <div *ngIf="!showPrivacyDetails" class="flex items-center gap-3 p-4 md:p-5">
                   <div class="text-yellow-400 text-xl leading-none">⚠️</div>
                   <div class="text-sm text-yellow-100 leading-relaxed">
                     <strong>Datenschutzhinweis:</strong>
                     <span
                       class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
-                      (click)="showPrivacyDetails = true"
-                      >Details anzeigen
+                      (click)="showPrivacyDetails = true">Details anzeigen
                     </span>
                   </div>
                 </div>
 
                 <!-- Expanded Privacy Details -->
-                <div
-                  *ngIf="showPrivacyDetails"
-                  id="privacy-details"
-                  class="privacy-expanded p-4 md:p-5"
-                >
+                <div *ngIf="showPrivacyDetails" id="privacy-details" class="privacy-expanded p-4 md:p-5">
                   <div class="flex items-start gap-3 mb-3">
                     <div class="text-yellow-400 text-xl leading-none">⚠️</div>
-                    <h4
-                      class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader"
-                    >
+                    <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
                       Datenschutzhinweis - Wichtige Informationen
                     </h4>
 
                     <span
                       class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
-                      (click)="showPrivacyDetails = false"
-                      title="Schließen"
-                      role="button"
-                      aria-label="Datenschutzhinweis schließen"
-                      aria-expanded="true"
-                      aria-controls="privacy-details"
-                    >
+                      (click)="showPrivacyDetails = false" title="Schließen" role="button"
+                      aria-label="Datenschutzhinweis schließen" aria-expanded="true" aria-controls="privacy-details">
                       ✕
                     </span>
                   </div>
 
-                  <ul
-                    class="privacy-list text-sm text-yellow-100 space-y-3 pl-1"
-                  >
+                  <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
                     <li class="leading-relaxed">
-                      <span class="font-semibold"
-                        >Öffentliche Verfügbarkeit und Datenübertragung:</span
-                      >
+                      <span class="font-semibold">Öffentliche Verfügbarkeit und Datenübertragung:</span>
                       Ihr hochgeladenes Bild wird öffentlich zugänglich und kann
                       an unseren Discord-Server übertragen werden, welcher auf
                       US-amerikanischen Servern außerhalb unserer direkten
@@ -876,9 +709,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold"
-                        >Datenlöschung und Persistenz:</span
-                      >
+                      <span class="font-semibold">Datenlöschung und Persistenz:</span>
                       Eine Löschung des Bildes durch Sie garantiert nicht die
                       vollständige und endgültige Entfernung von unseren
                       Systemen, Discord-Servern oder beteiligten Drittsystemen.
@@ -887,9 +718,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold"
-                        >Automatisierte Inhaltsmoderation:</span
-                      >
+                      <span class="font-semibold">Automatisierte Inhaltsmoderation:</span>
                       Alle hochgeladenen Bilder werden automatisiert mittels
                       OpenAI-Moderation (Modell „omni-moderation-latest“)
                       geprüft. Dabei können Ihre Bilddaten an OpenAI übermittelt
@@ -898,9 +727,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold"
-                        >Moderationsmaßnahmen und Account-Sperrung:</span
-                      >
+                      <span class="font-semibold">Moderationsmaßnahmen und Account-Sperrung:</span>
                       Wir behalten uns vor, hochgeladene Bilder jederzeit und
                       ohne Vorankündigung zu löschen. Bei Verstößen gegen diese
                       Hinweise, gegen gesetzliche Vorgaben oder bei
@@ -909,9 +736,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold"
-                        >Internationale Datenübertragung:</span
-                      >
+                      <span class="font-semibold">Internationale Datenübertragung:</span>
                       Durch die Nutzung von Discord-Servern und die Einbindung
                       des OpenAI-Moderationsdienstes kann eine Übertragung Ihrer
                       Daten in die USA und ggf. weitere Drittländer erfolgen, in
@@ -920,9 +745,7 @@
                     </li>
 
                     <li class="leading-relaxed font-semibold p-2 rounded">
-                      <span class="font-semibold"
-                        >Einverständniserklärung:</span
-                      >
+                      <span class="font-semibold">Einverständniserklärung:</span>
                       Durch das Hochladen eines Bildes erklären Sie sich mit den
                       oben genannten Bedingungen einverstanden und bestätigen,
                       dass Sie die rechtlichen Konsequenzen verstanden haben.
@@ -932,59 +755,38 @@
               </div>
 
               <!-- Rules Widget -->
-              <div
-                class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg"
-              >
+              <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
                 <!-- Compact Default State -->
-                <div
-                  *ngIf="!showRulesDetails"
-                  class="flex items-center gap-3 p-4 md:p-5"
-                >
+                <div *ngIf="!showRulesDetails" class="flex items-center gap-3 p-4 md:p-5">
                   <div class="text-yellow-400 text-xl leading-none">📋</div>
                   <div class="text-sm text-yellow-100 leading-relaxed">
                     <strong>Regeln für Inhalte:</strong>
                     <span
                       class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
-                      (click)="showRulesDetails = true"
-                      >Details anzeigen
+                      (click)="showRulesDetails = true">Details anzeigen
                     </span>
                   </div>
                 </div>
 
                 <!-- Expanded Rules Details -->
-                <div
-                  *ngIf="showRulesDetails"
-                  id="rules-details"
-                  class="privacy-expanded p-4 md:p-5"
-                >
+                <div *ngIf="showRulesDetails" id="rules-details" class="privacy-expanded p-4 md:p-5">
                   <div class="flex items-start gap-3 mb-3">
                     <div class="text-yellow-400 text-xl leading-none">📋</div>
-                    <h4
-                      class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader"
-                    >
+                    <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
                       Inhaltsregeln - Was ist nicht erlaubt
                     </h4>
 
                     <span
                       class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
-                      (click)="showRulesDetails = false"
-                      title="Schließen"
-                      role="button"
-                      aria-label="Regeln schließen"
-                      aria-expanded="true"
-                      aria-controls="rules-details"
-                    >
+                      (click)="showRulesDetails = false" title="Schließen" role="button" aria-label="Regeln schließen"
+                      aria-expanded="true" aria-controls="rules-details">
                       ✕
                     </span>
                   </div>
 
-                  <ul
-                    class="privacy-list text-sm text-yellow-100 space-y-3 pl-1"
-                  >
+                  <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
                     <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200"
-                        >I. Unzulässige Inhalte:</span
-                      >
+                      <span class="font-semibold block text-yellow-200">I. Unzulässige Inhalte:</span>
                       <ul class="pl-4 space-y-2 list-disc">
                         <li>
                           Pornographische, erotische oder sexuelle Inhalte sowie
@@ -1003,9 +805,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200"
-                        >II. Flaggen:</span
-                      >
+                      <span class="font-semibold block text-yellow-200">II. Flaggen:</span>
                       <ul class="pl-4 space-y-2 list-disc">
                         <li>
                           Zulässig sind ausschließlich Flaggen existierender
@@ -1020,9 +820,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200"
-                        >III. Kommunikation und Verhalten:</span
-                      >
+                      <span class="font-semibold block text-yellow-200">III. Kommunikation und Verhalten:</span>
                       <ul class="pl-4 space-y-2 list-disc">
                         <li>
                           Hasserfüllte Aussagen, diskriminierende Äußerungen
@@ -1032,9 +830,7 @@
                     </li>
 
                     <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200"
-                        >IV. Abbildungen von Personen:</span
-                      >
+                      <span class="font-semibold block text-yellow-200">IV. Abbildungen von Personen:</span>
                       <ul class="pl-4 space-y-2 list-disc">
                         <li>
                           Darstellungen von Kindern oder Jugendlichen sind
@@ -1047,12 +843,8 @@
                       </ul>
                     </li>
 
-                    <li
-                      class="leading-relaxed font-semibold p-2 rounded bg-yellow-800/30"
-                    >
-                      <span class="font-semibold"
-                        >V. Konsequenzen bei Verstößen:</span
-                      >
+                    <li class="leading-relaxed font-semibold p-2 rounded bg-yellow-800/30">
+                      <span class="font-semibold">V. Konsequenzen bei Verstößen:</span>
                       Bei Zuwiderhandlungen wird der betreffende Account ohne
                       vorherige Ankündigung gesperrt.
                     </li>
@@ -1109,32 +901,20 @@
 
           <!-- Regular Card Content -->
           <div *ngIf="!showFakerankHelp">
-            <h3
-              class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between cardHeader"
-            >
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between cardHeader">
               <div class="flex items-center gap-2">
                 ✨ <span>Fakerank</span>
                 <!-- Timer Badge -->
-                <span
-                  *ngIf="fakerankTimeRemaining > 0"
-                  class="fakerank-timer-badge"
-                >
+                <span *ngIf="fakerankTimeRemaining > 0" class="fakerank-timer-badge">
                   {{ formatTimeRemaining(fakerankTimeRemaining) }}
                 </span>
                 <!-- Admin Badge -->
-                <span
-                  *ngIf="fakerankAdminTimeRemaining > 0"
-                  class="fakerank-admin-badge"
-                >
+                <span *ngIf="fakerankAdminTimeRemaining > 0" class="fakerank-admin-badge">
                   Admin
                 </span>
               </div>
               <div class="flex items-center gap-2">
-                <button
-                  (click)="showFakerankHelp = true"
-                  class="help-button"
-                  title="Was ist ein Fakerank?"
-                >
+                <button (click)="showFakerankHelp = true" class="help-button" title="Was ist ein Fakerank?">
                   ?
                 </button>
               </div>
@@ -1145,19 +925,11 @@
               <!-- Check if user can edit fakeranks -->
               <div *ngIf="fakerankAllowed">
                 <!-- Show override info if user has override (but can still edit) -->
-                <div
-                  *ngIf="hasFakerankOverride && !isFakerankReadOnly"
-                  class="override-info-banner"
-                >
+                <div *ngIf="hasFakerankOverride && !isFakerankReadOnly" class="override-info-banner">
                   <div class="override-banner-icon">🛡️</div>
                   <div class="override-banner-text">
-                    <span class="override-banner-title"
-                      >Admin-Override aktiv</span
-                    >
-                    <span
-                      class="override-banner-subtitle"
-                      *ngIf="fakerankOverrideTimeRemaining > 0"
-                    >
+                    <span class="override-banner-title">Admin-Override aktiv</span>
+                    <span class="override-banner-subtitle" *ngIf="fakerankOverrideTimeRemaining > 0">
                       Du kannst trotzdem bearbeiten · Verbleibt:
                       {{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}
                     </span>
@@ -1165,26 +937,17 @@
                 </div>
 
                 <div class="nickname-container mb-4">
-                  <div
-                    class="nickname-preview"
-                    [class.nickname-empty]="!currentFakerank"
-                  >
+                  <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
                     <div *ngIf="currentFakerank" class="nickname-display">
                       <div class="nickname-icon">✨</div>
                       <div class="nickname-text">
                         <span class="nickname-label">Dein Spitzname:</span>
-                        <span
-                          class="nickname-value"
-                          [style.color]="getColorHex(currentFakerankColor)"
-                          >{{ currentFakerank }}</span
-                        >
+                        <span class="nickname-value" [style.color]="getColorHex(currentFakerankColor)">{{
+                          currentFakerank }}</span>
                         <div class="nickname-color-info">
-                          <span
-                            class="color-indicator"
-                            [style.background-color]="
+                          <span class="color-indicator" [style.background-color]="
                               getColorHex(currentFakerankColor)
-                            "
-                          ></span>
+                            "></span>
                           {{ getColorName(currentFakerankColor) }}
                         </div>
                       </div>
@@ -1193,27 +956,18 @@
                       <div class="nickname-icon">💭</div>
                       <div class="nickname-text">
                         <span class="nickname-label">Noch kein Spitzname</span>
-                        <span class="nickname-subtitle"
-                          >Gib dir einen coolen Namen!</span
-                        >
+                        <span class="nickname-subtitle">Gib dir einen coolen Namen!</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="fakerank-actions">
-                  <button
-                    (click)="startEditingFakerank()"
-                    class="fakerank-btn fakerank-btn-primary"
-                    [disabled]="fakerankLoading"
-                  >
+                  <button (click)="startEditingFakerank()" class="fakerank-btn fakerank-btn-primary"
+                    [disabled]="fakerankLoading">
                     {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
                   </button>
-                  <button
-                    *ngIf="currentFakerank"
-                    (click)="deleteFakerank()"
-                    class="fakerank-btn fakerank-btn-danger"
-                    [disabled]="fakerankLoading"
-                  >
+                  <button *ngIf="currentFakerank" (click)="deleteFakerank()" class="fakerank-btn fakerank-btn-danger"
+                    [disabled]="fakerankLoading">
                     🗑️ Löschen
                   </button>
                 </div>
@@ -1222,43 +976,26 @@
               <!-- Override fakerank (read-only, set by admin) -->
               <div *ngIf="isFakerankReadOnly" class="fakerank-override">
                 <div class="nickname-container mb-4">
-                  <div
-                    class="nickname-preview"
-                    [class.nickname-empty]="!currentFakerank"
-                  >
-                    <div
-                      *ngIf="currentFakerank"
-                      class="nickname-display override-display"
-                    >
+                  <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
+                    <div *ngIf="currentFakerank" class="nickname-display override-display">
                       <div class="nickname-icon">🔒</div>
                       <div class="nickname-text">
                         <span class="nickname-label">Admin-Spitzname:</span>
-                        <span
-                          class="nickname-value"
-                          [style.color]="getColorHex(currentFakerankColor)"
-                          >{{ currentFakerank }}</span
-                        >
+                        <span class="nickname-value" [style.color]="getColorHex(currentFakerankColor)">{{
+                          currentFakerank }}</span>
                       </div>
                       <div class="override-badge">
                         <span class="override-text">Override</span>
-                        <span
-                          class="override-timer"
-                          *ngIf="fakerankOverrideTimeRemaining > 0"
-                        >
+                        <span class="override-timer" *ngIf="fakerankOverrideTimeRemaining > 0">
                           {{
-                            formatTimeRemaining(fakerankOverrideTimeRemaining)
+                          formatTimeRemaining(fakerankOverrideTimeRemaining)
                           }}
                         </span>
                       </div>
                     </div>
-                    <div
-                      *ngIf="!currentFakerank"
-                      class="nickname-empty-display"
-                    >
+                    <div *ngIf="!currentFakerank" class="nickname-empty-display">
                       <div class="nickname-icon">🔒</div>
-                      <span class="nickname-placeholder"
-                        >Admin kann dir einen Spitzname zuweisen</span
-                      >
+                      <span class="nickname-placeholder">Admin kann dir einen Spitzname zuweisen</span>
                     </div>
                   </div>
                 </div>
@@ -1274,7 +1011,7 @@
                         Verbleibt:
                         <strong>{{
                           formatTimeRemaining(fakerankOverrideTimeRemaining)
-                        }}</strong>
+                          }}</strong>
                       </span>
                     </p>
                   </div>
@@ -1296,9 +1033,7 @@
                   </p>
                   <p class="not-allowed-link">
                     Tritt dem Discord unter
-                    <a href="https://dsc.gg/zeit" style="text-decoration: none"
-                      ><strong>dsc.gg/zeit</strong></a
-                    >
+                    <a href="https://dsc.gg/zeit" style="text-decoration: none"><strong>dsc.gg/zeit</strong></a>
                     bei für weitere Informationen.
                   </p>
                 </div>
@@ -1306,25 +1041,15 @@
             </div>
 
             <!-- Edit Mode -->
-            <div
-              *ngIf="isEditingFakerank && fakerankAllowed"
-              class="fakerank-edit"
-            >
+            <div *ngIf="isEditingFakerank && fakerankAllowed" class="fakerank-edit">
               <div class="nickname-editor mb-4">
                 <label class="editor-label"> ✨ Dein neuer Spitzname </label>
                 <div class="fakerank-input-container">
-                  <input
-                    type="text"
-                    [(ngModel)]="fakerankValue"
-                    placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..."
-                    maxlength="50"
-                    class="nickname-input"
-                    [disabled]="fakerankLoading"
-                    [style.color]="getColorHex(tempFakerankColor)"
-                    (keydown)="onKeyDown($event)"
-                    (keyup.enter)="saveFakerank()"
-                    (keyup.escape)="cancelEditingFakerank()"
-                  />
+                  <input type="text" [(ngModel)]="fakerankValue"
+                    placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..." maxlength="50" class="nickname-input"
+                    [disabled]="fakerankLoading" [style.color]="getColorHex(tempFakerankColor)"
+                    (keydown)="onKeyDown($event)" (keyup.enter)="saveFakerank()"
+                    (keyup.escape)="cancelEditingFakerank()" />
                   <div class="fakerank-char-count">
                     {{ fakerankValue.length }}/50
                   </div>
@@ -1334,41 +1059,23 @@
                 <div class="color-picker-section mt-3">
                   <label class="editor-label">🎨 Farbe wählen</label>
                   <div class="color-picker-container">
-                    <button
-                      (click)="toggleColorPicker()"
-                      class="color-selector-button"
-                      [disabled]="fakerankLoading"
-                    >
-                      <span
-                        class="color-indicator"
-                        [style.background-color]="
+                    <button (click)="toggleColorPicker()" class="color-selector-button" [disabled]="fakerankLoading">
+                      <span class="color-indicator" [style.background-color]="
                           getColorHex(tempFakerankColor)
-                        "
-                      ></span>
+                        "></span>
                       {{ getColorName(tempFakerankColor) }}
                       <span class="dropdown-arrow">{{
                         showColorPicker ? '▲' : '▼'
-                      }}</span>
+                        }}</span>
                     </button>
 
                     <div *ngIf="showColorPicker" class="color-picker-dropdown">
                       <div class="color-options">
-                        <button
-                          *ngFor="let color of fakerankColors"
-                          (click)="selectColor(color.key)"
-                          class="color-option"
-                          [class.selected]="tempFakerankColor === color.key"
-                        >
-                          <span
-                            class="color-indicator"
-                            [style.background-color]="color.hex"
-                          ></span>
+                        <button *ngFor="let color of fakerankColors" (click)="selectColor(color.key)"
+                          class="color-option" [class.selected]="tempFakerankColor === color.key">
+                          <span class="color-indicator" [style.background-color]="color.hex"></span>
                           <span class="color-name">{{ color.name }}</span>
-                          <span
-                            *ngIf="tempFakerankColor === color.key"
-                            class="selected-check"
-                            >✓</span
-                          >
+                          <span *ngIf="tempFakerankColor === color.key" class="selected-check">✓</span>
                         </button>
                       </div>
                     </div>
@@ -1380,38 +1087,25 @@
                 </div>
               </div>
               <div class="fakerank-actions">
-                <button
-                  (click)="saveFakerank()"
-                  class="fakerank-btn fakerank-btn-success"
-                  [disabled]="
+                <button (click)="saveFakerank()" class="fakerank-btn fakerank-btn-success" [disabled]="
                     fakerankLoading || fakerankValue.trim().length === 0
-                  "
-                >
+                  ">
                   {{ fakerankLoading ? '💾 Speichern...' : '💾 Speichern' }}
                 </button>
-                <button
-                  (click)="cancelEditingFakerank()"
-                  class="fakerank-btn fakerank-btn-secondary"
-                  [disabled]="fakerankLoading"
-                >
+                <button (click)="cancelEditingFakerank()" class="fakerank-btn fakerank-btn-secondary"
+                  [disabled]="fakerankLoading">
                   ❌ Abbrechen
                 </button>
               </div>
             </div>
 
             <!-- Success Message -->
-            <div
-              *ngIf="fakerankSuccess"
-              class="fakerank-message fakerank-success mt-3"
-            >
+            <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">
               🎉 Spitzname erfolgreich gespeichert!
             </div>
 
             <!-- Error Message -->
-            <div
-              *ngIf="fakerankError"
-              class="fakerank-message fakerank-error mt-3"
-            >
+            <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">
               {{ fakerankError }}
             </div>
           </div>

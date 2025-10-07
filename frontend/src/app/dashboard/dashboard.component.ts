@@ -197,6 +197,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   transferMessage = '';
   transferSuccess = false;
 
+  // Slot machine properties
+  slotMachineLoading = false;
+  slotMachineError = '';
+  slotMachineMessage = '';
+  isSpinning = false;
+  showWinningAnimation = false;
+
   // Helper method to calculate transfer tax
   getTransferTax(amount: number | null): number {
     if (!amount) return 0;
@@ -1693,7 +1700,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1824,7 +1831,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       symbols.appendChild(this.createSymbolElement('❓'));
 
       // Add 8 cycles of symbols
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 15; i++) {
         slotSymbols.forEach((symbol) => {
           symbols.appendChild(this.createSymbolElement(symbol));
         });
@@ -1905,20 +1912,103 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Example method to test the slot machine
   testSlotMachine(): void {
-    const mySymbols = [
-      '🍎',
-      '🍏',
-      '🍐',
-      '🍊',
-      '🍋',
-      '🍌',
-      '🍉',
-      '🍇',
-      '🍓',
-      '🍈',
-      '🍒',
-      '🍑',
-    ];
-    this.spin(mySymbols, '🍏', '🍏', '🍏');
+    // Prevent multiple simultaneous spins
+    if (this.isSpinning) {
+      return;
+    }
+
+    // Check if user has enough ZVC
+    const currentBalance = this.userStatistics.experience || 0;
+    if (currentBalance < 10) {
+      this.slotMachineError = 'Nicht genügend ZVC! Du brauchst mindestens 10 ZVC.';
+      setTimeout(() => {
+        this.slotMachineError = '';
+      }, 3000);
+      return;
+    }
+
+    this.isSpinning = true;
+    this.slotMachineLoading = true;
+    this.slotMachineError = '';
+    this.slotMachineMessage = '';
+    this.showWinningAnimation = false;
+
+    // Deduct 10 ZVC immediately (cost to play)
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - 10;
+
+    // Call backend to get the result
+    this.authService
+      .authenticatedPost<{
+        result: [string, string, string];
+        emojis: string[];
+      }>(`${environment.apiUrl}/slotmachine`, {})
+      .subscribe({
+        next: (response) => {
+          const [slot1, slot2, slot3] = response.result;
+
+          // Use predefined symbols for animation
+          const mySymbols = [
+            '🍎',
+            '🍏',
+            '🍐',
+            '🍊',
+            '🍋',
+            '🍌',
+            '🍉',
+            '🍇',
+            '🍓',
+            '🍈',
+            '🍒',
+            '🍑',
+          ];
+
+          // Animate to the result (don't reveal win/loss yet)
+          this.spin(mySymbols, slot1, slot2, slot3);
+
+          // Wait for animation to complete before revealing result
+          setTimeout(() => {
+            // NOW check if it's a win (after animation completes)
+            const isWin = slot1 === slot2 && slot2 === slot3;
+
+            this.isSpinning = false;
+            this.slotMachineLoading = false;
+
+            if (isWin) {
+              // Show winning animation
+              this.showWinningAnimation = true;
+              this.slotMachineMessage = '🎉 GEWONNEN! +100 ZVC! 🎉';
+
+              // Add winnings to balance (100 ZVC total, already deducted 10)
+              this.userStatistics.experience = (this.userStatistics.experience || 0) + 100;
+
+              // Hide winning animation after 5 seconds
+              setTimeout(() => {
+                this.showWinningAnimation = false;
+                this.slotMachineMessage = '';
+              }, 5000);
+            } else {
+              this.slotMachineMessage = 'Leider verloren. -10 ZVC';
+
+              // Balance already deducted, no further changes needed
+
+              // Hide message after 3 seconds
+              setTimeout(() => {
+                this.slotMachineMessage = '';
+              }, 3000);
+            }
+          }, 10000); // Animation duration (10 seconds)
+        },
+        error: (error) => {
+          this.isSpinning = false;
+          this.slotMachineLoading = false;
+          // Refund the 10 ZVC on error
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + 10;
+          this.slotMachineError = error?.error?.error || 'Fehler beim Spielen der Slotmaschine';
+
+          setTimeout(() => {
+            this.slotMachineError = '';
+          }, 3000);
+        },
+      });
   }
 }
