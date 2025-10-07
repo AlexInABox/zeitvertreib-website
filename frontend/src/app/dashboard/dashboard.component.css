@@ -17,78 +17,77 @@
   pointer-events: none;
 }
 
-/* Table Layout Styles */
-.dashboard-table {
-  table-layout: fixed;
+/* Grid Layout Styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto auto auto;
+  gap: 0.5rem;
   width: 100%;
-  border-spacing: 0;
 }
 
-.dashboard-table td {
-  border: none;
-  vertical-align: top;
+.grid-item {
   padding: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
-.dashboard-table .stats-overview {
-  width: 50%;
+/* Grid positioning for each widget */
+.stats-overview {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2;
 }
 
-.dashboard-table .player-card-container {
-  width: 25%;
+.player-card-container {
+  grid-column: 3 / 4;
+  grid-row: 1 / 3;
+  position: sticky;
+  top: 1rem;
+  align-self: start;
 }
 
-.dashboard-table .spray-card-container {
-  width: 25%;
+.zvcoins-container {
+  grid-column: 1 / 3;
+  grid-row: span 3;
 }
 
-.dashboard-table .killers-container {
-  width: 25%;
+.spray-card-container {
+  grid-column: 3;
+  grid-row: 4;
 }
 
-.dashboard-table .history-container {
-  width: 66.67%;
+.fakerank-container {
+  grid-column: 3;
+  grid-row: 5;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 6rem 0;
 }
 
 /* Portrait Mode - Stack all elements vertically */
 @media (orientation: portrait) {
-
-  .dashboard-table,
-  .dashboard-table tbody,
-  .dashboard-table tr,
-  .dashboard-table td {
-    display: block !important;
-    width: 100% !important;
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  .dashboard-table tr {
-    margin-bottom: 0;
+  .grid-item {
+    padding: 0;
   }
 
-  .dashboard-table td {
-    padding: 0.5rem;
-    width: 100% !important;
-  }
-
-  /* Reset all column and row spans in portrait mode */
-  .dashboard-table td[colspan],
-  .dashboard-table td[rowspan] {
-    width: 100% !important;
-  }
-
-  /* Ensure all cards have consistent spacing */
-  .dashboard-table .stats-overview,
-  .dashboard-table .player-card-container,
-  .dashboard-table .spray-card-container,
-  .dashboard-table .killers-container,
-  .dashboard-table .history-container {
-    width: 100% !important;
-    margin-bottom: 1rem;
-  }
-
-  /* Last cell shouldn't have bottom margin */
-  .dashboard-table td:last-child {
-    margin-bottom: 0;
+  /* Reset all grid positioning in portrait mode */
+  .stats-overview,
+  .player-card-container,
+  .zvcoins-container,
+  .spray-card-container,
+  .fakerank-container {
+    grid-column: 1 !important;
+    grid-row: auto !important;
   }
 }
 
@@ -2130,11 +2129,6 @@
 .upload-button.disabled:hover {
   background: linear-gradient(135deg, #6b7280, #4b5563);
   transform: none;
-}
-
-/* ZV Coins Widget Styles */
-.zvcoins-container {
-  width: 25%;
 }
 
 .zvcoins-balance-section {
