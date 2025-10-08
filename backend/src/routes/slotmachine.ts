@@ -41,7 +41,7 @@ const PAYOUT_TABLE = [
     symbol: '🥭🍇',
     name: 'Beliebig',
     condition: '2 Gleiche',
-    payout: 20,
+    payout: 15,
     tier: 'mini_win',
     description: 'Verrückter Zweier ^^',
   },
@@ -219,7 +219,7 @@ export async function handleSlotMachine(
     // Check for any 2 matching symbols (mini win)
     if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
       return {
-        payout: 10,
+        payout: 15,
         type: 'mini_win',
         message: '✨ MINI GEWINN! ✨',
       };
