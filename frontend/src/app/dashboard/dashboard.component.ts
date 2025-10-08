@@ -203,6 +203,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   slotMachineMessage = '';
   isSpinning = false;
   showWinningAnimation = false;
+  currentWinType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss' =
+    'loss';
+  slotMachineInfo: {
+    cost: number;
+    payoutTable: Array<{
+      symbol: string;
+      name: string;
+      condition: string;
+      payout: number;
+      tier: string;
+      description: string;
+    }>;
+    symbols: string[];
+    description: string;
+  } | null = null;
+  showPayoutInfo = false;
 
   // Helper method to calculate transfer tax
   getTransferTax(amount: number | null): number {
@@ -235,6 +251,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadSprayBanStatus();
     this.loadFakerank();
     this.loadRedeemables();
+    this.loadSlotMachineInfo();
 
     // Close color picker when clicking outside
     this.documentClickHandler = (event: Event) => {
@@ -1700,7 +1717,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1910,6 +1927,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
     console.log('🎰 Slot Machine Results:', displayedSymbols);
   }
 
+  // Load slot machine information (payout table)
+  loadSlotMachineInfo(): void {
+    this.authService
+      .authenticatedGet<{
+        cost: number;
+        payoutTable: Array<{
+          symbol: string;
+          name: string;
+          condition: string;
+          payout: number;
+          tier: string;
+          description: string;
+        }>;
+        symbols: string[];
+        description: string;
+      }>(`${environment.apiUrl}/slotmachine/info`)
+      .subscribe({
+        next: (response) => {
+          this.slotMachineInfo = response;
+        },
+        error: (error) => {
+          console.error('Error loading slot machine info:', error);
+        },
+      });
+  }
+
+  // Toggle payout info visibility
+  togglePayoutInfo(): void {
+    this.showPayoutInfo = !this.showPayoutInfo;
+  }
+
   // Example method to test the slot machine
   testSlotMachine(): void {
     // Prevent multiple simultaneous spins
@@ -1942,25 +1990,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .authenticatedPost<{
         result: [string, string, string];
         emojis: string[];
+        winType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss';
+        payout: number;
+        netChange: number;
+        message: string;
       }>(`${environment.apiUrl}/slotmachine`, {})
       .subscribe({
         next: (response) => {
           const [slot1, slot2, slot3] = response.result;
+          const { winType, payout, netChange, message } = response;
 
-          // Use predefined symbols for animation
+          // Use the same symbols as backend for animation
           const mySymbols = [
-            '🍎',
-            '🍏',
-            '🍐',
-            '🍊',
+            '🍒',
             '🍋',
-            '🍌',
             '🍉',
             '🍇',
-            '🍓',
-            '🍈',
-            '🍒',
-            '🍑',
+            '🔔',
+            '⭐',
+            '💎',
+            '🌈',
+            '🔥',
+            '🪙',
+            '💰',
+            '💫',
+            '🎇',
+            '🌟',
+            '🥭',
+            '🍍',
           ];
 
           // Animate to the result (don't reveal win/loss yet)
@@ -1968,32 +2025,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           // Wait for animation to complete before revealing result
           setTimeout(() => {
-            // NOW check if it's a win (after animation completes)
-            const isWin = slot1 === slot2 && slot2 === slot3;
-
             this.isSpinning = false;
             this.slotMachineLoading = false;
+            this.currentWinType = winType;
 
-            if (isWin) {
-              // Show winning animation
+            // Now reveal the result based on backend calculation
+            if (winType === 'jackpot') {
               this.showWinningAnimation = true;
-              this.slotMachineMessage = '🎉 GEWONNEN! +100 ZVC! 🎉';
-
-              // Add winnings to balance (100 ZVC total, already deducted 10)
+              this.slotMachineMessage = `💎 JACKPOT! +${payout} ZVC! 💎`;
               this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + 100;
+                (this.userStatistics.experience || 0) + payout;
 
-              // Hide winning animation after 5 seconds
+              setTimeout(() => {
+                this.showWinningAnimation = false;
+                this.slotMachineMessage = '';
+              }, 7000); // Longer display for jackpot
+            } else if (winType === 'big_win') {
+              this.showWinningAnimation = true;
+              this.slotMachineMessage = `🔥 GROSSER GEWINN! +${payout} ZVC! 🔥`;
+              this.userStatistics.experience =
+                (this.userStatistics.experience || 0) + payout;
+
+              setTimeout(() => {
+                this.showWinningAnimation = false;
+                this.slotMachineMessage = '';
+              }, 6000);
+            } else if (winType === 'small_win') {
+              this.showWinningAnimation = true;
+              this.slotMachineMessage = `✨ ${message} +${payout} ZVC! ✨`;
+              this.userStatistics.experience =
+                (this.userStatistics.experience || 0) + payout;
+
               setTimeout(() => {
                 this.showWinningAnimation = false;
                 this.slotMachineMessage = '';
               }, 5000);
+            } else if (winType === 'mini_win') {
+              // Mini win - no full animation, just message
+              this.slotMachineMessage = `🍒 MINI GEWINN! +${payout} ZVC! 🍒`;
+              this.userStatistics.experience =
+                (this.userStatistics.experience || 0) + payout;
+
+              setTimeout(() => {
+                this.slotMachineMessage = '';
+              }, 4000);
             } else {
-              this.slotMachineMessage = 'Leider verloren. -10 ZVC';
+              // Loss
+              this.slotMachineMessage = `Leider verloren. ${netChange} ZVC`;
 
-              // Balance already deducted, no further changes needed
-
-              // Hide message after 3 seconds
               setTimeout(() => {
                 this.slotMachineMessage = '';
               }, 3000);
