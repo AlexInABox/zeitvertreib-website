@@ -1717,7 +1717,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1978,8 +1978,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Check if user has enough ZVC
     const currentBalance = this.userStatistics.experience || 0;
     if (currentBalance < cost) {
-      this.slotMachineError =
-        `Nicht genügend ZVC! Du brauchst mindestens ${cost} ZVC.`;
+      this.slotMachineError = `Nicht genügend ZVC! Du brauchst mindestens ${cost} ZVC.`;
       setTimeout(() => {
         this.slotMachineError = '';
       }, 3000);
@@ -1993,7 +1992,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showWinningAnimation = false;
 
     // Deduct the cost immediately (cost to play)
-    this.userStatistics.experience = (this.userStatistics.experience || 0) - cost;
+    this.userStatistics.experience =
+      (this.userStatistics.experience || 0) - cost;
 
     // Call backend to get the result
     this.authService
