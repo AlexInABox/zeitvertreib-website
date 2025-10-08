@@ -288,7 +288,7 @@ export async function handleSlotMachine(
       }
 
       // Send to Discord webhook (non-blocking)
-      sendWinToDiscord(
+      await sendWinToDiscord(
         validation.session!.steamId,
         steamNickname,
         [slot1, slot2, slot3],
