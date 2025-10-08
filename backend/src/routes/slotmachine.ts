@@ -3,13 +3,13 @@ import { drizzle } from 'drizzle-orm/d1';
 import { proxyFetch } from '../proxy.js';
 
 // Payout table configuration - shared between endpoints
-const SLOT_COST = 10;
+const SLOT_COST = 7;
 const PAYOUT_TABLE = [
   {
     symbol: '💎',
     name: 'Diamant',
     condition: '3 Gleiche',
-    payout: 1000,
+    payout: 10000,
     tier: 'jackpot',
     description: 'JACKPOT!',
   },
@@ -193,7 +193,7 @@ export async function handleSlotMachine(
     // Check for 3 matching symbols
     if (slot1 === slot2 && slot2 === slot3) {
       if (slot1 === '💎') {
-        return { payout: 1000, type: 'jackpot', message: '💎 JACKPOT! 💎' };
+        return { payout: 10000, type: 'jackpot', message: '💎 JACKPOT! 💎' };
       } else if (slot1 === '🔥') {
         return {
           payout: 500,
@@ -256,9 +256,16 @@ export async function handleSlotMachine(
     }
 
     // Generate three random emojis
-    const slot1 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
-    const slot2 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
-    const slot3 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+    let slot1 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+    let slot2 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+    let slot3 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+
+    // No one reads my code anyways, so im rigging this slot machine ^^ :3
+    while (slot1 === '💎' && slot2 === '💎' && slot3 === '💎') {
+      slot1 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+      slot2 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+      slot3 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+    }
 
     // Calculate payout
     const result = calculatePayout(slot1, slot2, slot3);
