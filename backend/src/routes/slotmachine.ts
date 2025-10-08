@@ -30,20 +30,20 @@ const PAYOUT_TABLE = [
     description: 'KLEINER GEWINN!',
   },
   {
-    symbol: '🍒',
-    name: 'Kirsche',
-    condition: '2 Gleiche',
-    payout: 50,
-    tier: 'mini_win',
-    description: 'MINI GEWINN!',
-  },
-  {
-    symbol: '⭐🌟💫',
+    symbol: '⭐🌈💫',
     name: 'Andere',
     condition: '3 Gleiche',
     payout: 50,
     tier: 'small_win',
     description: 'Crazy 3!!!',
+  },
+  {
+    symbol: '🥭🍇',
+    name: 'Beliebig',
+    condition: '2 Gleiche',
+    payout: 20,
+    tier: 'mini_win',
+    description: 'Verrückter Zweier ^^',
   },
 ];
 
@@ -216,13 +216,12 @@ export async function handleSlotMachine(
       }
     }
 
-    // Check for 2 🍒 (mini win)
-    const cherryCount = [slot1, slot2, slot3].filter((s) => s === '🍒').length;
-    if (cherryCount === 2) {
+    // Check for any 2 matching symbols (mini win)
+    if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
       return {
-        payout: 50,
+        payout: 10,
         type: 'mini_win',
-        message: '🍒 MINI GEWINN! 🍒',
+        message: '✨ MINI GEWINN! ✨',
       };
     }
 
