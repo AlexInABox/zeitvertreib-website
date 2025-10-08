@@ -162,7 +162,11 @@ const routes: Record<
 };
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const db = drizzle(env['zeitvertreib-data'], { schema });
     const origin = request.headers.get('Origin');
 

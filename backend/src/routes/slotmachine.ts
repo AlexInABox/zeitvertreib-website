@@ -120,9 +120,8 @@ async function sendWinToDiscord(
       embeds: [embed],
     };
 
-
     //simulate spin time 10seconds
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise((resolve) => setTimeout(resolve, 10000));
 
     await proxyFetch(
       env.SLOTS_WEBHOOK,
