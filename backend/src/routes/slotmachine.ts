@@ -278,8 +278,8 @@ export async function handleSlotMachine(
       .bind(newBalance, playerId)
       .run();
 
-    // Send webhook notification for wins (not losses)
-    if (result.type !== 'loss') {
+    // Send webhook notification for significant wins only (jackpot, big_win, small_win)
+    if (result.type === 'jackpot' || result.type === 'big_win' || result.type === 'small_win') {
       // Get Steam username from cache
       let steamNickname = validation.session!.steamId;
       try {
