@@ -1717,7 +1717,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1958,6 +1958,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showPayoutInfo = !this.showPayoutInfo;
   }
 
+  // Check if user can afford to play the slot machine
+  canAffordSlotMachine(): boolean {
+    const cost = this.slotMachineInfo?.cost || 10;
+    const currentBalance = this.userStatistics.experience || 0;
+    return currentBalance >= cost;
+  }
+
   // Example method to test the slot machine
   testSlotMachine(): void {
     // Prevent multiple simultaneous spins
@@ -1965,11 +1972,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Get the cost from slot machine info
+    const cost = this.slotMachineInfo?.cost || 10;
+
     // Check if user has enough ZVC
     const currentBalance = this.userStatistics.experience || 0;
-    if (currentBalance < 10) {
+    if (currentBalance < cost) {
       this.slotMachineError =
-        'Nicht genügend ZVC! Du brauchst mindestens 10 ZVC.';
+        `Nicht genügend ZVC! Du brauchst mindestens ${cost} ZVC.`;
       setTimeout(() => {
         this.slotMachineError = '';
       }, 3000);
@@ -1982,8 +1992,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.slotMachineMessage = '';
     this.showWinningAnimation = false;
 
-    // Deduct 10 ZVC immediately (cost to play)
-    this.userStatistics.experience = (this.userStatistics.experience || 0) - 10;
+    // Deduct the cost immediately (cost to play)
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - cost;
 
     // Call backend to get the result
     this.authService
@@ -2082,9 +2092,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.isSpinning = false;
           this.slotMachineLoading = false;
-          // Refund the 10 ZVC on error
+          // Refund the cost on error
+          const cost = this.slotMachineInfo?.cost || 10;
           this.userStatistics.experience =
-            (this.userStatistics.experience || 0) + 10;
+            (this.userStatistics.experience || 0) + cost;
           this.slotMachineError =
             error?.error?.error || 'Fehler beim Spielen der Slotmaschine';
 

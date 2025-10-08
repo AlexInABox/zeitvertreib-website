@@ -409,11 +409,19 @@
                   <button
                     (click)="testSlotMachine()"
                     class="slot-machine-btn slot-spin-btn"
-                    [disabled]="isSpinning"
+                    [disabled]="isSpinning || !canAffordSlotMachine()"
                     [class.spinning]="isSpinning"
+                    [class.disabled]="!canAffordSlotMachine()"
                   >
-                    <span class="btn-text" *ngIf="!isSpinning"
+                    <span
+                      class="btn-text"
+                      *ngIf="!isSpinning && canAffordSlotMachine()"
                       >🎰 Start!!! 🎰</span
+                    >
+                    <span
+                      class="btn-text"
+                      *ngIf="!isSpinning && !canAffordSlotMachine()"
+                      >❌ Nicht genug ZVC ❌</span
                     >
                     <span class="btn-text" *ngIf="isSpinning"
                       >🎰 Dreht... 🎰</span
