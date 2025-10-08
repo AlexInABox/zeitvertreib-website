@@ -90,6 +90,7 @@ const routes: Record<
     request: Request,
     db: ReturnType<typeof drizzle>,
     env: Env,
+    ctx?: ExecutionContext,
   ) => Promise<Response>
 > = {
   // Auth routes
@@ -161,7 +162,7 @@ const routes: Record<
 };
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const db = drizzle(env['zeitvertreib-data'], { schema });
     const origin = request.headers.get('Origin');
 
@@ -247,7 +248,7 @@ export default {
 
       const handler = routes[routeKey];
       if (handler) {
-        return await handler(request, db, env);
+        return await handler(request, db, env, ctx);
       }
       return createResponse({ error: 'Not Found' }, 404, origin);
     } catch (error) {

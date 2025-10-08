@@ -120,6 +120,10 @@ async function sendWinToDiscord(
       embeds: [embed],
     };
 
+
+    //simulate spin time 10seconds
+    await new Promise(resolve => setTimeout(resolve, 10000));
+
     await proxyFetch(
       env.SLOTS_WEBHOOK,
       {
@@ -169,6 +173,7 @@ export async function handleSlotMachine(
   request: Request,
   _db: ReturnType<typeof drizzle>,
   env: Env,
+  ctx?: ExecutionContext,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
 
@@ -297,17 +302,21 @@ export async function handleSlotMachine(
         console.error('Error fetching cached Steam user data:', error);
       }
 
-      // Send to Discord webhook (non-blocking)
-      await sendWinToDiscord(
-        validation.session!.steamId,
-        steamNickname,
-        [slot1, slot2, slot3],
-        result.payout,
-        result.type,
-        env,
-      ).catch((error) =>
-        console.error('Failed to send webhook notification:', error),
-      );
+      // Send to Discord webhook (non-blocking) using ctx.waitUntil
+      if (ctx) {
+        ctx.waitUntil(
+          sendWinToDiscord(
+            validation.session!.steamId,
+            steamNickname,
+            [slot1, slot2, slot3],
+            result.payout,
+            result.type,
+            env,
+          ).catch((error) =>
+            console.error('Failed to send webhook notification:', error),
+          ),
+        );
+      }
     }
 
     console.log(
