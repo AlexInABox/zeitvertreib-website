@@ -1717,7 +1717,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },

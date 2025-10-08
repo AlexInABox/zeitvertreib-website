@@ -108,7 +108,11 @@ export async function handleSlotMachine(
   const playerId = `${validation.session!.steamId}@steam`;
 
   // Calculate payout based on the slot results
-  function calculatePayout(slot1: string, slot2: string, slot3: string): {
+  function calculatePayout(
+    slot1: string,
+    slot2: string,
+    slot3: string,
+  ): {
     payout: number;
     type: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss';
     message: string;
@@ -150,7 +154,11 @@ export async function handleSlotMachine(
     }
 
     // No win
-    return { payout: 0, type: 'loss', message: 'Viel Glück beim nächsten Mal!' };
+    return {
+      payout: 0,
+      type: 'loss',
+      message: 'Viel Glück beim nächsten Mal!',
+    };
   }
 
   try {

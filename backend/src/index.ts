@@ -63,7 +63,10 @@ import {
   updateLeaderboard,
   handleLeaderboardUpdate,
 } from './routes/leaderboard.js';
-import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
+import {
+  handleSlotMachine,
+  handleSlotMachineInfo,
+} from './routes/slotmachine.js';
 
 // Simple response helper for internal use
 function createResponse(
