@@ -10,3 +10,5 @@ TESTING_USER2_COOKIE=foo
 
 # Proxy configuration for Discord API calls
 PROXY_HOST=https://crossorigin.me
+
+SLOTS_WEBHOOK=

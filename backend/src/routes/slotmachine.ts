@@ -1,5 +1,6 @@
 import { validateSession, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
+import { proxyFetch } from '../proxy.js';
 
 // Payout table configuration - shared between endpoints
 const SLOT_COST = 10;
@@ -64,6 +65,75 @@ const SLOT_EMOJIS = [
   '🥭',
   '🍍',
 ];
+
+/**
+ * Send slot machine win to Discord webhook
+ */
+async function sendWinToDiscord(
+  steamId: string,
+  username: string,
+  slots: string[],
+  payout: number,
+  winType: string,
+  env: Env,
+): Promise<void> {
+  try {
+    if (!env.SLOTS_WEBHOOK) {
+      console.log('No slot machine webhook configured, skipping notification');
+      return;
+    }
+
+    // Determine embed color based on win type
+    let color = 0x808080; // Default gray
+    if (winType === 'jackpot') color = 0xff00ff; // Magenta for jackpot
+    else if (winType === 'big_win') color = 0xff6600; // Orange for big win
+    else if (winType === 'small_win') color = 0xffd700; // Gold for small win
+    else if (winType === 'mini_win') color = 0x00ff00; // Green for mini win
+
+    const embed = {
+      title: '🎰 Slots Gewinn!',
+      color: color,
+      fields: [
+        {
+          name: 'Spieler',
+          value: username,
+          inline: true,
+        },
+        {
+          name: 'Ergebnis',
+          value: slots.join(' '),
+          inline: true,
+        },
+        {
+          name: 'Gewinn',
+          value: `${payout} ZVC`,
+          inline: true,
+        },
+      ],
+      timestamp: new Date().toISOString(),
+    };
+
+    const payload = {
+      embeds: [embed],
+    };
+
+    await proxyFetch(
+      env.SLOTS_WEBHOOK,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      },
+      env,
+    );
+
+    console.log(`✅ Sent ${winType} notification to Discord for ${steamId}`);
+  } catch (error) {
+    console.error('Error sending win to Discord webhook:', error);
+  }
+}
 
 /**
  * GET /slotmachine/info
@@ -198,6 +268,34 @@ export async function handleSlotMachine(
       .prepare('UPDATE playerdata SET experience = ? WHERE id = ?')
       .bind(newBalance, playerId)
       .run();
+
+    // Send webhook notification for wins (not losses)
+    if (result.type !== 'loss') {
+      // Get Steam username from cache
+      let steamNickname = validation.session!.steamId;
+      try {
+        const userCacheKey = `steam_user:${validation.session!.steamId}`;
+        const cachedUserData = await env.SESSIONS.get(userCacheKey);
+        if (cachedUserData) {
+          const userData = JSON.parse(cachedUserData);
+          steamNickname = userData?.userData?.personaname || steamNickname;
+        }
+      } catch (error) {
+        console.error('Error fetching cached Steam user data:', error);
+      }
+
+      // Send to Discord webhook (non-blocking)
+      sendWinToDiscord(
+        validation.session!.steamId,
+        steamNickname,
+        [slot1, slot2, slot3],
+        result.payout,
+        result.type,
+        env,
+      ).catch((error) =>
+        console.error('Failed to send webhook notification:', error),
+      );
+    }
 
     console.log(
       `🎰 Slot machine: ${validation.session!.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout} ZVC. Balance: ${currentBalance} → ${newBalance}`,
