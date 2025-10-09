@@ -49,7 +49,6 @@ const PAYOUT_TABLE = [
 
 const SLOT_EMOJIS = [
   '🍒',
-  '🍋',
   '🍉',
   '🍇',
   '🔔',
@@ -62,8 +61,6 @@ const SLOT_EMOJIS = [
   '💫',
   '🎇',
   '🌟',
-  '🥭',
-  '🍍',
 ];
 
 /**
