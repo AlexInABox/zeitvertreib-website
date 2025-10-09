@@ -269,7 +269,8 @@ export async function handleSlotMachine(
     let slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
 
     // No one reads my code anyways, so im rigging this slot machine ^^ :3
-    if (slot1 === '💎' && slot2 === '💎' && slot3 === '💎') { // but only once! if they get the jackpot twice that crazy ^^
+    if (slot1 === '💎' && slot2 === '💎' && slot3 === '💎') {
+      // but only once! if they get the jackpot twice that crazy ^^
       slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
       slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
       slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
