@@ -256,16 +256,23 @@ export async function handleSlotMachine(
       );
     }
 
+    // Helper function for cryptographically secure random number generation
+    const getRandomIndex = (max: number): number => {
+      const randomBuffer = new Uint32Array(1);
+      crypto.getRandomValues(randomBuffer);
+      return randomBuffer[0]! % max;
+    };
+
     // Generate three random emojis
-    let slot1 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
-    let slot2 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
-    let slot3 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+    let slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    let slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    let slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
 
     // No one reads my code anyways, so im rigging this slot machine ^^ :3
-    while (slot1 === '💎' && slot2 === '💎' && slot3 === '💎') {
-      slot1 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
-      slot2 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
-      slot3 = SLOT_EMOJIS[Math.floor(Math.random() * SLOT_EMOJIS.length)]!;
+    if (slot1 === '💎' && slot2 === '💎' && slot3 === '💎') { // but only once! if they get the jackpot twice that crazy ^^
+      slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+      slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+      slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
     }
 
     // Calculate payout
