@@ -3,13 +3,13 @@ import { drizzle } from 'drizzle-orm/d1';
 import { proxyFetch } from '../proxy.js';
 
 // Payout table configuration - shared between endpoints
-const SLOT_COST = 7;
+const SLOT_COST = 8;
 const PAYOUT_TABLE = [
   {
     symbol: '💎',
     name: 'Diamant',
     condition: '3 Gleiche',
-    payout: 10000,
+    payout: 5000,
     tier: 'jackpot',
     description: 'JACKPOT!',
   },
@@ -22,18 +22,10 @@ const PAYOUT_TABLE = [
     description: 'GROSSER GEWINN!',
   },
   {
-    symbol: '🍒',
-    name: 'Kirsche',
-    condition: '3 Gleiche',
-    payout: 100,
-    tier: 'small_win',
-    description: 'KLEINER GEWINN!',
-  },
-  {
     symbol: '⭐🌈💫',
     name: 'Andere',
     condition: '3 Gleiche',
-    payout: 50,
+    payout: 100,
     tier: 'small_win',
     description: 'Crazy 3!!!',
   },
@@ -41,7 +33,7 @@ const PAYOUT_TABLE = [
     symbol: '🥭🍇',
     name: 'Beliebig',
     condition: '2 Gleiche',
-    payout: 15,
+    payout: 22,
     tier: 'mini_win',
     description: 'Verrückter Zweier ^^',
   },
@@ -194,23 +186,17 @@ export async function handleSlotMachine(
     // Check for 3 matching symbols
     if (slot1 === slot2 && slot2 === slot3) {
       if (slot1 === '💎') {
-        return { payout: 10000, type: 'jackpot', message: '💎 JACKPOT! 💎' };
+        return { payout: 5000, type: 'jackpot', message: '💎 JACKPOT! 💎' };
       } else if (slot1 === '🔥') {
         return {
           payout: 500,
           type: 'big_win',
           message: '🔥 GROSSER GEWINN! 🔥',
         };
-      } else if (slot1 === '🍒') {
-        return {
-          payout: 100,
-          type: 'small_win',
-          message: '🍒 KLEINER GEWINN! 🍒',
-        };
       } else {
         // Other 3-of-a-kind matches - small consolation prize
         return {
-          payout: 50,
+          payout: 100,
           type: 'small_win',
           message: '✨ 3 Gleiche! ✨',
         };
@@ -220,7 +206,7 @@ export async function handleSlotMachine(
     // Check for any 2 matching symbols (mini win)
     if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
       return {
-        payout: 15,
+        payout: 22,
         type: 'mini_win',
         message: '✨ MINI GEWINN! ✨',
       };
@@ -267,14 +253,6 @@ export async function handleSlotMachine(
     let slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
     let slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
     let slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-
-    // No one reads my code anyways, so im rigging this slot machine ^^ :3
-    if (slot1 === '💎' && slot2 === '💎' && slot3 === '💎') {
-      // but only once! if they get the jackpot twice that crazy ^^
-      slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-      slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-      slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-    }
 
     // Calculate payout
     const result = calculatePayout(slot1, slot2, slot3);
