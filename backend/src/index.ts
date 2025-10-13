@@ -110,10 +110,10 @@ const routes: Record<
   'GET:/spray/image': handleGetSpray,
   'GET:/spray/string': handleGetSprayString,
   'DELETE:/spray/delete': handleDeleteSpray,
-  'DELETE:/spray/moderate/delete': handleModerationDelete,
-  'POST:/spray/moderate/ban': handleModerationBan,
-  'POST:/spray/moderate/unban': handleModerationUnban,
-  'POST:/spray/moderate/undelete': handleModerationUndelete,
+  'GET:/spray/moderate/delete': handleModerationDelete,
+  'GET:/spray/moderate/ban': handleModerationBan,
+  'GET:/spray/moderate/unban': handleModerationUnban,
+  'GET:/spray/moderate/undelete': handleModerationUndelete,
   'GET:/spray/upload-limits': handleGetUploadLimits,
   'GET:/spray/ban-status': handleGetSprayBanStatus,
 
@@ -122,8 +122,8 @@ const routes: Record<
   'POST:/fakerank': updateFakerank,
   'PATCH:/fakerank': updateFakerank,
   'DELETE:/fakerank': deleteFakerank,
-  'DELETE:/fakerank/moderate/delete': handleFakerankModerationDelete,
-  'POST:/fakerank/moderate/ban': handleFakerankModerationBan,
+  'GET:/fakerank/moderate/delete': handleFakerankModerationDelete,
+  'GET:/fakerank/moderate/ban': handleFakerankModerationBan,
 
   // Fakerank admin routes
   'GET:/fakerank-admin/user': handleGetUserFakerank,
