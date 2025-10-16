@@ -659,6 +659,10 @@ export async function handleUploadSpray(
     const smallImageBuffer = await smallImage.arrayBuffer();
     const processedImageData = await convertImageToDataURL(smallImageBuffer);
 
+    // Generate hash for the original image (already computed during safety check)
+    const originalImageBuffer = await originalImage.arrayBuffer();
+    const imageHash = await generateImageHash(originalImageBuffer);
+
     // Store the pixel string and processed image data in KV
     const sprayKey = `spray_${steamId}`;
     const sprayData = {
@@ -666,6 +670,7 @@ export async function handleUploadSpray(
       processedImageData,
       uploadedAt: Date.now(),
       originalFileName: smallImage.name,
+      imageHash: imageHash,
       isGif: false, // Always false since we only support images
     };
 
@@ -781,6 +786,7 @@ export async function handleGetSprayString(
         pixelString: sprayData.pixelString,
         uploadedAt: sprayData.uploadedAt,
         originalFileName: sprayData.originalFileName,
+        imageHash: sprayData.imageHash,
         isGif: false, // Always false since we only support images
       },
       200,
