@@ -67,6 +67,7 @@ import {
   handleSlotMachine,
   handleSlotMachineInfo,
 } from './routes/slotmachine.js';
+import { handleSwapped } from './routes/swapped.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -155,6 +156,9 @@ const routes: Record<
   // Slot machine routes
   'GET:/slotmachine/info': handleSlotMachineInfo,
   'POST:/slotmachine': handleSlotMachine,
+
+  // Swapped (role swap) route
+  'POST:/swapped/': handleSwapped,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
