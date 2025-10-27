@@ -51,7 +51,7 @@ export async function handleDiscordLogin(
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
   const url = new URL(request.url);
-  const redirectUri = `${url.origin}/auth/discord/callback`;
+  const redirectUri = `${url.origin}/api/auth/discord/callback`;
 
   const authUrl = await generateDiscordAuthUrl(
     env.DISCORD_CLIENT_ID,
@@ -77,7 +77,7 @@ export async function handleDiscordCallback(
   }
 
   try {
-    const redirectUri = `${url.origin}/auth/discord/callback`;
+    const redirectUri = `${url.origin}/api/auth/discord/callback`;
     const accessToken = await exchangeCodeForToken(code, env, redirectUri);
     const connections = await getDiscordConnections(accessToken);
 
