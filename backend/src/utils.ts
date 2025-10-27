@@ -637,14 +637,14 @@ export async function generateLoginSecret(
 ): Promise<string> {
   try {
     const secret = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 40 * 60 * 1000); // 40 minutes from now
+    const expiresAt = Date.now() + 40 * 60 * 1000; // 40 minutes from now
 
     console.log('[AUTH] Generating login secret for steamId:', steamId);
 
     await db.insert(loginSecrets).values({
       secret: secret,
       steamId: steamId,
-      expiresAt: expiresAt.toISOString(),
+      expiresAt: expiresAt,
     });
 
     console.log('[AUTH] Login secret generated successfully:', secret);
@@ -673,8 +673,7 @@ export async function validateLoginSecret(
     return { isValid: false, error: 'Invalid login secret' };
   }
 
-  const expiresAt = new Date(result.expiresAt as string);
-  if (Date.now() > expiresAt.getTime()) {
+  if (Date.now() > result.expiresAt) {
     // Delete the expired secret
     await db.delete(loginSecrets).where(eq(loginSecrets.secret, secret));
     return { isValid: false, error: 'Invalid login secret' };
@@ -694,7 +693,7 @@ export async function cleanupExpiredLoginSecrets(
     console.log('[AUTH] Cleaning up expired login secrets');
     await db
       .delete(loginSecrets)
-      .where(lt(loginSecrets.expiresAt, new Date().toISOString()));
+      .where(lt(loginSecrets.expiresAt, Date.now()));
     console.log('[AUTH] Expired login secrets cleanup completed');
   } catch (error) {
     console.error('[AUTH] Error cleaning up expired login secrets:', error);
