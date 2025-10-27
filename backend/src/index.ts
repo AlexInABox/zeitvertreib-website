@@ -68,6 +68,7 @@ import {
   handleSlotMachineInfo,
 } from './routes/slotmachine.js';
 import { handleSwapped } from './routes/swapped.js';
+import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -158,6 +159,10 @@ const routes: Record<
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
   'POST:/leaderboard/update': handleLeaderboardUpdate,
+
+  // Discord OAuth2 routes
+  'GET:/auth/discord': handleDiscordLogin,
+  'GET:/auth/discord/callback': handleDiscordCallback,
 };
 
 export default {
