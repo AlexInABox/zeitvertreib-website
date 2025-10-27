@@ -5,7 +5,7 @@
   "scripts": {
     "build": "NODE_ENV=production npx drizzle-kit pull && npx tsc",
     "start": "wrangler dev -e dev",
-    "db:init": "wrangler d1 execute zeitvertreib-data --local --command 'SELECT 1;'"
+    "db:init": "wrangler d1 execute zeitvertreib-data -e dev --local --command 'SELECT 1;'"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.6",

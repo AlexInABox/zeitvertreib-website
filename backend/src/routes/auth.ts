@@ -15,7 +15,6 @@ import { drizzle } from 'drizzle-orm/d1';
 
 export async function handleSteamLogin(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   _env: Env,
 ): Promise<Response> {
   return createResponse(generateSteamLoginUrl(request), 302);
@@ -23,7 +22,6 @@ export async function handleSteamLogin(
 
 export async function handleSteamCallback(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const url = new URL(request.url);
@@ -108,9 +106,10 @@ export async function handleSteamCallback(
 
 export async function handleGetUser(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
   const origin = request.headers.get('Origin');
   const { isValid, session, error } = await validateSession(request, env);
 
@@ -133,7 +132,6 @@ export async function handleGetUser(
 
 export async function handleLogout(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -143,9 +141,10 @@ export async function handleLogout(
 
 export async function handleGenerateLoginSecret(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
   const origin = request.headers.get('Origin');
 
   try {
@@ -156,7 +155,7 @@ export async function handleGenerateLoginSecret(
     }
 
     const apiKey = authHeader.substring(7);
-    if (!env.LOGIN_SECRET_API_KEY || apiKey !== env.LOGIN_SECRET_API_KEY) {
+    if (apiKey !== env.LOGIN_SECRET_API_KEY) {
       return createResponse({ error: 'Invalid API key' }, 403, origin);
     }
 
@@ -218,9 +217,10 @@ export async function handleGenerateLoginSecret(
 
 export async function handleLoginWithSecret(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
   const origin = request.headers.get('Origin');
   const url = new URL(request.url);
   const secret = url.searchParams.get('secret');

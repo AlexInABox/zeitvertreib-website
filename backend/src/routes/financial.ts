@@ -34,9 +34,9 @@ async function validateAdminAccess(
  */
 export async function handleGetTransactions(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session (any valid Steam user can read)
@@ -110,9 +110,9 @@ export async function handleGetTransactions(
  */
 export async function handleGetRecurringTransactions(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session (any valid Steam user can read)
@@ -151,9 +151,9 @@ export async function handleGetRecurringTransactions(
  */
 export async function handleCreateRecurringTransaction(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate admin access
@@ -269,9 +269,9 @@ export async function handleCreateRecurringTransaction(
  */
 export async function handleUpdateRecurringTransaction(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate admin access
@@ -364,9 +364,9 @@ export async function handleUpdateRecurringTransaction(
  */
 export async function handleDeleteRecurringTransaction(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate admin access
@@ -458,7 +458,7 @@ export async function processRecurringTransactions(
 
   try {
     // Get all active recurring transactions that are due today
-    const result = await env['zeitvertreib-data']
+    const result = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             SELECT * FROM recurring_transactions 
@@ -476,7 +476,7 @@ export async function processRecurringTransactions(
     for (const recurring of recurringTransactions) {
       try {
         // Create the actual financial transaction
-        await env['zeitvertreib-data']
+        await env.ZEITVERTREIB_DATA
           .prepare(
             `
                     INSERT INTO financial_transactions (
@@ -503,7 +503,7 @@ export async function processRecurringTransactions(
           recurring.frequency,
         );
 
-        await env['zeitvertreib-data']
+        await env.ZEITVERTREIB_DATA
           .prepare(
             `
                     UPDATE recurring_transactions 
@@ -539,9 +539,9 @@ export async function processRecurringTransactions(
  */
 export async function handleCreateTransaction(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate admin access
@@ -655,9 +655,9 @@ export async function handleCreateTransaction(
  */
 export async function handleUpdateTransaction(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate admin access
@@ -746,7 +746,7 @@ export async function handleUpdateTransaction(
     // Add transaction ID to params
     params.push(parseInt(transactionId));
 
-    const result = await env['zeitvertreib-data']
+    const result = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             UPDATE financial_transactions 
@@ -792,9 +792,9 @@ export async function handleUpdateTransaction(
  */
 export async function handleDeleteTransaction(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate admin access
@@ -821,7 +821,7 @@ export async function handleDeleteTransaction(
       );
     }
 
-    const result = await env['zeitvertreib-data']
+    const result = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             DELETE FROM financial_transactions WHERE id = ?
@@ -865,9 +865,9 @@ export async function handleDeleteTransaction(
  */
 export async function handleGetSummary(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session (any valid Steam user can read)
@@ -878,7 +878,7 @@ export async function handleGetSummary(
 
   try {
     // Get total balance
-    const balanceResult = await env['zeitvertreib-data']
+    const balanceResult = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             SELECT 
@@ -889,7 +889,7 @@ export async function handleGetSummary(
       .first();
 
     // Get monthly totals for the last 12 months
-    const monthlyResult = await env['zeitvertreib-data']
+    const monthlyResult = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             SELECT 
@@ -905,7 +905,7 @@ export async function handleGetSummary(
       .all();
 
     // Get current month totals
-    const currentMonthResult = await env['zeitvertreib-data']
+    const currentMonthResult = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             SELECT 
@@ -918,7 +918,7 @@ export async function handleGetSummary(
       .first();
 
     // Get category breakdown
-    const categoryResult = await env['zeitvertreib-data']
+    const categoryResult = await env.ZEITVERTREIB_DATA
       .prepare(
         `
             SELECT 
@@ -959,9 +959,9 @@ export async function handleGetSummary(
  */
 export async function handleTransferZVC(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session for the sender
@@ -1042,7 +1042,7 @@ export async function handleTransferZVC(
     const totalCost = amount + taxAmount; // Total amount to deduct from sender
 
     // Check if sender has enough ZVC (needs 110% of transfer amount)
-    const senderData = (await env['zeitvertreib-data']
+    const senderData = (await env.ZEITVERTREIB_DATA
       .prepare('SELECT experience FROM playerdata WHERE id = ?')
       .bind(senderSteamId)
       .first()) as { experience: number } | null;
@@ -1080,13 +1080,13 @@ export async function handleTransferZVC(
     // Check if it's a valid Steam ID format (17 digits)
     if (/^\d{17}$/.test(recipientSteamId)) {
       // It's a Steam ID - query by id column with @steam suffix
-      recipientData = (await env['zeitvertreib-data']
+      recipientData = (await env.ZEITVERTREIB_DATA
         .prepare('SELECT id, experience FROM playerdata WHERE id = ?')
         .bind(recipientSteamId + '@steam')
         .first()) as { id: string; experience: number } | null;
     } else {
       // It's not a Steam ID - treat as username and query by username column
-      recipientData = (await env['zeitvertreib-data']
+      recipientData = (await env.ZEITVERTREIB_DATA
         .prepare('SELECT id, experience FROM playerdata WHERE username = ?')
         .bind(cleanRecipient)
         .first()) as { id: string; experience: number } | null;
@@ -1108,7 +1108,7 @@ export async function handleTransferZVC(
     // Perform the transfer in a transaction
     try {
       // Deduct total cost from sender (amount + tax)
-      await env['zeitvertreib-data']
+      await env.ZEITVERTREIB_DATA
         .prepare(
           'UPDATE playerdata SET experience = experience - ? WHERE id = ?',
         )
@@ -1116,7 +1116,7 @@ export async function handleTransferZVC(
         .run();
 
       // Add only the transfer amount to recipient (not including tax)
-      await env['zeitvertreib-data']
+      await env.ZEITVERTREIB_DATA
         .prepare(
           'UPDATE playerdata SET experience = experience + ? WHERE id = ?',
         )

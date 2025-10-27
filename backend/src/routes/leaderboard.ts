@@ -539,9 +539,9 @@ export async function updateLeaderboard(
 // HTTP endpoint to manually trigger leaderboard update
 export async function handleLeaderboardUpdate(
   _request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   try {
     const success = await updateLeaderboard(db, env);
 

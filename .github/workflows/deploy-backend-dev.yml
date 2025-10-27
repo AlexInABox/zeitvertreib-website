@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify types
+        run: cp .env.example .env && npx wrangler types -e dev
+
       - name: Build
         run: npm run build
 

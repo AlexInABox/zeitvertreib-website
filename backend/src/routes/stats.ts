@@ -8,9 +8,10 @@ import { drizzle } from 'drizzle-orm/d1';
 
 export async function handleGetStats(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
   const origin = request.headers.get('Origin');
   const { isValid, session, error } = await validateSession(request, env);
 

@@ -89,7 +89,6 @@ const routes: Record<
   string,
   (
     request: Request,
-    db: ReturnType<typeof drizzle>,
     env: Env,
     ctx?: ExecutionContext,
   ) => Promise<Response>
@@ -171,7 +170,6 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<Response> {
-    const db = drizzle(env['zeitvertreib-data'], { schema });
     const origin = request.headers.get('Origin');
 
     // Handle preflight OPTIONS requests
@@ -256,7 +254,7 @@ export default {
 
       const handler = routes[routeKey];
       if (handler) {
-        return await handler(request, db, env, ctx);
+        return await handler(request, env, ctx);
       }
       return createResponse({ error: 'Not Found' }, 404, origin);
     } catch (error) {
@@ -270,7 +268,7 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    const db = drizzle(env['zeitvertreib-data'], { schema });
+    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
 
     // Process recurring transactions daily (6:00 AM)
     if (controller.cron === '0 6 * * *') {

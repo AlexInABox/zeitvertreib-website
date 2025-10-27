@@ -9,13 +9,6 @@ import { profanity } from '@2toad/profanity';
 import { EmbedBuilder } from '@discordjs/builders';
 import { drizzle } from 'drizzle-orm/d1';
 
-// Extend the Env interface to include OPENAI_API_KEY
-declare global {
-  interface Env {
-    OPENAI_API_KEY: string;
-  }
-}
-
 // Send accepted fakerank to Discord webhook for moderation tracking
 async function sendFakerankToDiscord(
   steamId: string,
@@ -157,9 +150,9 @@ async function loadBlacklist(env: Env): Promise<void> {
 // GET: Retrieve user's fakerank information
 export async function getFakerank(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session first
@@ -206,9 +199,9 @@ export async function getFakerank(
 // POST/PATCH: Create or update user's fakerank
 export async function updateFakerank(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session first
@@ -401,16 +394,6 @@ export async function updateFakerank(
         );
       }
 
-      // Validate fakerank content using OpenAI moderation
-      if (!env.OPENAI_API_KEY) {
-        console.error('OPENAI_API_KEY is not configured');
-        return createResponse(
-          { error: 'Inhaltsvalidierung nicht verfügbar' },
-          500,
-          origin,
-        );
-      }
-
       try {
         const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
@@ -447,7 +430,7 @@ export async function updateFakerank(
     }
 
     // Check if player exists in database
-    const existingPlayer = await env['zeitvertreib-data']
+    const existingPlayer = await env.ZEITVERTREIB_DATA
       .prepare('SELECT id FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first();
@@ -456,7 +439,7 @@ export async function updateFakerank(
       // If user has regular fakerank access and an override is active, clear the override
       if (hasFakerankAccess && hasOverrideAccess) {
         // Update existing player's fakerank, color, and clear override
-        await env['zeitvertreib-data']
+        await env.ZEITVERTREIB_DATA
           .prepare(
             'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
           )
@@ -464,7 +447,7 @@ export async function updateFakerank(
           .run();
       } else {
         // Update existing player's fakerank and color only
-        await env['zeitvertreib-data']
+        await env.ZEITVERTREIB_DATA
           .prepare(
             'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
           )
@@ -473,7 +456,7 @@ export async function updateFakerank(
       }
     } else {
       // Create new player record with fakerank and color
-      await env['zeitvertreib-data']
+      await env.ZEITVERTREIB_DATA
         .prepare(
           `INSERT INTO playerdata (id, fakerank, fakerank_color, experience, playtime, roundsplayed, usedmedkits, usedcolas, pocketescapes, usedadrenaline) 
                          VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0)`,
@@ -512,9 +495,9 @@ export async function updateFakerank(
 // DELETE: Remove user's fakerank
 export async function deleteFakerank(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session first
@@ -551,14 +534,14 @@ export async function deleteFakerank(
     }
 
     // Check if player exists in database
-    const existingPlayer = await env['zeitvertreib-data']
+    const existingPlayer = await env.ZEITVERTREIB_DATA
       .prepare('SELECT id FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first();
 
     if (existingPlayer) {
       // Set fakerank to NULL and reset color to default
-      await env['zeitvertreib-data']
+      await env.ZEITVERTREIB_DATA
         .prepare(
           'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
         )
@@ -596,9 +579,9 @@ export async function deleteFakerank(
 // Handle Discord moderation action - delete fakerank and blacklist word
 export async function handleFakerankModerationDelete(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -617,7 +600,7 @@ export async function handleFakerankModerationDelete(
     const playerId = `${steamId}@steam`;
 
     // Delete the fakerank from database and reset color
-    await env['zeitvertreib-data']
+    await env.ZEITVERTREIB_DATA
       .prepare(
         'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
       )
@@ -666,9 +649,9 @@ export async function handleFakerankModerationDelete(
 // Handle Discord moderation action - delete fakerank, blacklist word, and ban user
 export async function handleFakerankModerationBan(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -687,7 +670,7 @@ export async function handleFakerankModerationBan(
     const playerId = `${steamId}@steam`;
 
     // Delete the fakerank from database and reset color
-    await env['zeitvertreib-data']
+    await env.ZEITVERTREIB_DATA
       .prepare(
         'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
       )

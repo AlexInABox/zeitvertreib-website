@@ -1,5 +1,4 @@
 import { validateSession, createResponse } from '../utils.js';
-import { drizzle } from 'drizzle-orm/d1';
 import { proxyFetch } from '../proxy.js';
 
 // Payout table configuration - shared between endpoints
@@ -67,11 +66,6 @@ async function sendWinToDiscord(
   env: Env,
 ): Promise<void> {
   try {
-    if (!env.SLOTS_WEBHOOK) {
-      console.log('No slot machine webhook configured, skipping notification');
-      return;
-    }
-
     // Determine embed color based on win type
     let color = 0x808080; // Default gray
     if (winType === 'jackpot')
@@ -136,7 +130,6 @@ async function sendWinToDiscord(
  */
 export async function handleSlotMachineInfo(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   _env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -159,7 +152,6 @@ export async function handleSlotMachineInfo(
  */
 export async function handleSlotMachine(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
   ctx?: ExecutionContext,
 ): Promise<Response> {
@@ -222,7 +214,7 @@ export async function handleSlotMachine(
 
   try {
     // Get current balance
-    const balanceResult = (await env['zeitvertreib-data']
+    const balanceResult = (await env.ZEITVERTREIB_DATA
       .prepare('SELECT experience FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first()) as { experience: number } | null;
@@ -260,7 +252,7 @@ export async function handleSlotMachine(
     const newBalance = currentBalance + netChange;
 
     // Update player balance (using experience field as ZVC)
-    await env['zeitvertreib-data']
+    await env.ZEITVERTREIB_DATA
       .prepare('UPDATE playerdata SET experience = ? WHERE id = ?')
       .bind(newBalance, playerId)
       .run();

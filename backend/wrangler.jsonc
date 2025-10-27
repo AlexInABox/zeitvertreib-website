@@ -28,7 +28,7 @@
       ],
       "d1_databases": [
         {
-          "binding": "zeitvertreib-data",
+          "binding": "ZEITVERTREIB_DATA",
           "database_name": "zeitvertreib-data",
           "database_id": "a5642ecc-9382-4256-924d-8353a825c26b",
           "migrations_dir": "drizzle/migrations",
@@ -55,7 +55,7 @@
       ],
       "d1_databases": [
         {
-          "binding": "zeitvertreib-data",
+          "binding": "ZEITVERTREIB_DATA",
           "database_name": "zeitvertreib-data",
           "database_id": "a5642ecc-9382-4256-924d-8353a825c26b",
           "migrations_dir": "drizzle/migrations",
@@ -68,7 +68,10 @@
     },
   },
   "triggers": {
-    "crons": ["0 6 * * *", "*/15 * * * *"],
+    "crons": [
+      "0 6 * * *",
+      "*/15 * * * *"
+    ],
   },
   /**
    * Smart Placement

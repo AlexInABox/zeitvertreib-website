@@ -13,7 +13,7 @@ function validateApiKey(request: Request, env: Env): boolean {
   }
 
   const token = authHeader.substring(7);
-  return token === env.SWAPPED_APIKEY;
+  return token === env.SWAPPED_API_KEY;
 }
 
 /**
@@ -24,9 +24,9 @@ function validateApiKey(request: Request, env: Env): boolean {
  */
 export async function handleSwapped(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate API key

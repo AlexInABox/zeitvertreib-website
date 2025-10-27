@@ -56,9 +56,9 @@ async function validateFakerankAdmin(
 // GET user fakerank by steamid
 export async function handleGetUserFakerank(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -121,9 +121,9 @@ export async function handleGetUserFakerank(
 // SET user fakerank by steamid
 export async function handleSetUserFakerank(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -229,9 +229,9 @@ export async function handleSetUserFakerank(
 // GET blacklisted words
 export async function handleGetBlacklist(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -272,9 +272,9 @@ export async function handleGetBlacklist(
 // ADD word to blacklist
 export async function handleAddToBlacklist(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -343,9 +343,9 @@ export async function handleAddToBlacklist(
 // REMOVE word from blacklist
 export async function handleRemoveFromBlacklist(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -415,9 +415,9 @@ export async function handleRemoveFromBlacklist(
 // GET whitelisted words
 export async function handleGetWhitelist(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -458,9 +458,9 @@ export async function handleGetWhitelist(
 // ADD word to whitelist
 export async function handleAddToWhitelist(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -529,9 +529,9 @@ export async function handleAddToWhitelist(
 // REMOVE word from whitelist
 export async function handleRemoveFromWhitelist(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -601,9 +601,9 @@ export async function handleRemoveFromWhitelist(
 // GET all users with fakeranks from current player list (for admin overview, excludes requesting user)
 export async function handleGetAllFakeranks(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {

@@ -571,7 +571,6 @@ async function checkImageSafety(
 
 export async function handleUploadSpray(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -694,7 +693,6 @@ export async function handleUploadSpray(
 
 export async function handleGetSpray(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -753,7 +751,6 @@ export async function handleGetSpray(
 
 export async function handleGetSprayString(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -804,7 +801,6 @@ export async function handleGetSprayString(
 
 export async function handleDeleteSpray(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -850,7 +846,6 @@ export async function handleDeleteSpray(
 // Handle Discord moderation action - delete spray
 export async function handleModerationDelete(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -925,7 +920,6 @@ export async function handleModerationDelete(
 // Handle Discord moderation action - delete spray and ban user
 export async function handleModerationBan(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1006,7 +1000,6 @@ export async function handleModerationBan(
 // Check if user is banned from spray uploads
 export async function handleGetSprayBanStatus(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1052,7 +1045,6 @@ export async function handleGetSprayBanStatus(
 // Get upload limits for images
 export async function handleGetUploadLimits(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   _env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1083,7 +1075,6 @@ export async function handleGetUploadLimits(
 // Handle Discord moderation action - unban user
 export async function handleModerationUnban(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1142,7 +1133,6 @@ export async function handleModerationUnban(
 // Handle Discord moderation action - undelete spray (remove block flag)
 export async function handleModerationUndelete(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1215,7 +1205,6 @@ export async function handleModerationUndelete(
 // Handle background removal via Replicate API
 export async function handleBackgroundRemoval(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -1245,16 +1234,6 @@ export async function handleBackgroundRemoval(
     // Validate file type
     if (!UPLOAD_LIMITS.SUPPORTED_FORMATS.includes(imageFile.type as any)) {
       return createResponse({ error: 'Unsupported file format' }, 400, origin);
-    }
-
-    // Check API token
-    if (!env.REPLICATE_API_TOKEN) {
-      console.error('REPLICATE_API_TOKEN is not configured');
-      return createResponse(
-        { error: 'Background removal service not available' },
-        503,
-        origin,
-      );
     }
 
     // Convert image to base64 data URL for Replicate

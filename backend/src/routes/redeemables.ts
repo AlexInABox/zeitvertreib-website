@@ -72,7 +72,6 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
  */
 export async function handleGetRedeemables(
   request: Request,
-  _db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -130,9 +129,9 @@ export async function handleGetRedeemables(
  */
 export async function handleRedeemItem(
   request: Request,
-  db: ReturnType<typeof drizzle>,
   env: Env,
 ): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -257,7 +256,7 @@ async function applyRedeemableEffects(
     case 'fakerank_14d':
       // Add 14 days if still active, otherwise reset to 14 days from now
       const now = Math.floor(Date.now() / 1000);
-      await env['zeitvertreib-data']
+      await env.ZEITVERTREIB_DATA
         .prepare(
           `
       UPDATE playerdata
@@ -276,7 +275,7 @@ async function applyRedeemableEffects(
       // VIP status includes fakerank access for 30 days
       const thirtyDaysTimestamp =
         Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
-      await env['zeitvertreib-data']
+      await env.ZEITVERTREIB_DATA
         .prepare('UPDATE playerdata SET fakerank_until = ? WHERE id = ?')
         .bind(thirtyDaysTimestamp, playerId)
         .run();
@@ -299,7 +298,6 @@ async function applyRedeemableEffects(
  */
 export async function handleRedeemCode(
   request: Request,
-  _db: ReturnType<typeof import('drizzle-orm/d1').drizzle>,
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -319,16 +317,16 @@ export async function handleRedeemCode(
     }
 
     // Get code data from database
-    const codeData = (await env['zeitvertreib-data']
+    const codeData = (await env.ZEITVERTREIB_DATA
       .prepare(
         'SELECT code, credits, remaining_uses FROM redemption_codes WHERE code = ?',
       )
       .bind(code)
       .first()) as {
-      code: string;
-      credits: number;
-      remaining_uses: number;
-    } | null;
+        code: string;
+        credits: number;
+        remaining_uses: number;
+      } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
@@ -346,7 +344,7 @@ export async function handleRedeemCode(
     const playerId = `${validation.session!.steamId}@steam`;
 
     // Get current player data including redeemed codes
-    const playerData = (await env['zeitvertreib-data']
+    const playerData = (await env.ZEITVERTREIB_DATA
       .prepare('SELECT experience, redeemed_codes FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first()) as { experience: number; redeemed_codes: string | null } | null;
@@ -376,7 +374,7 @@ export async function handleRedeemCode(
       redeemedCodes.length > 0 ? `${playerData.redeemed_codes},${code}` : code;
 
     // Update player balance and redeemed codes
-    const updatePlayerResult = await env['zeitvertreib-data']
+    const updatePlayerResult = await env.ZEITVERTREIB_DATA
       .prepare(
         'UPDATE playerdata SET experience = ?, redeemed_codes = ? WHERE id = ?',
       )
@@ -392,7 +390,7 @@ export async function handleRedeemCode(
     }
 
     // Decrease remaining uses for the code
-    const updateCodeResult = await env['zeitvertreib-data']
+    const updateCodeResult = await env.ZEITVERTREIB_DATA
       .prepare(
         'UPDATE redemption_codes SET remaining_uses = remaining_uses - 1 WHERE code = ?',
       )
