@@ -8,6 +8,7 @@ on:
 
 jobs:
   prettier:
+    name: 🖌️ Prettier Autoformat
     permissions:
       contents: write
     runs-on: ubuntu-latest

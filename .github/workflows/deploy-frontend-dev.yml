@@ -8,6 +8,7 @@ on:
 
 jobs:
   deploy:
+    name: 🚀 Deploy frontend (DEV)
     runs-on: ubuntu-latest
     defaults:
       run:
