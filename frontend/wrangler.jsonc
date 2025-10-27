@@ -8,7 +8,7 @@
   "compatibility_date": "2025-01-01",
   "assets": {
     "directory": "dist/zeitvertreib-website/browser/",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
   },
   "workers_dev": false,
   "env": {
