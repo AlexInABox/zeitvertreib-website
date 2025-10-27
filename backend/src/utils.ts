@@ -691,9 +691,7 @@ export async function cleanupExpiredLoginSecrets(
 ): Promise<void> {
   try {
     console.log('[AUTH] Cleaning up expired login secrets');
-    await db
-      .delete(loginSecrets)
-      .where(lt(loginSecrets.expiresAt, Date.now()));
+    await db.delete(loginSecrets).where(lt(loginSecrets.expiresAt, Date.now()));
     console.log('[AUTH] Expired login secrets cleanup completed');
   } catch (error) {
     console.error('[AUTH] Error cleaning up expired login secrets:', error);

@@ -17,7 +17,7 @@
       "routes": [
         {
           "pattern": "zeitvertreib.vip/api/*",
-          "zone_name": "zeitvertreib.vip"
+          "zone_name": "zeitvertreib.vip",
         },
       ],
       "kv_namespaces": [
@@ -44,7 +44,7 @@
       "routes": [
         {
           "pattern": "dev.zeitvertreib.vip/api/*",
-          "zone_name": "zeitvertreib.vip"
+          "zone_name": "zeitvertreib.vip",
         },
       ],
       "kv_namespaces": [
@@ -68,10 +68,7 @@
     },
   },
   "triggers": {
-    "crons": [
-      "0 6 * * *",
-      "*/15 * * * *"
-    ],
+    "crons": ["0 6 * * *", "*/15 * * * *"],
   },
   /**
    * Smart Placement
