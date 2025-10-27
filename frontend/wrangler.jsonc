@@ -1,8 +1,33 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zeitvertreib-website",
   "compatibility_date": "2025-01-01",
   "assets": {
-    "directory": "dist/zeitvertreib-website/browser/",
-    "not_found_handling": "single-page-application",
+    "directory": "dist/zeitvertreib-website/browser/"
+  },
+  "workers_dev": false,
+  "env": {
+    "production": {
+      "name": "zeitvertreib-frontend",
+      "routes": [
+        {
+          "pattern": "zeitvertreib.vip",
+          "custom_domain": true,
+        },
+      ],
+    },
+    "dev": {
+      "name": "zeitvertreib-frontend-dev",
+      "routes": [
+        {
+          "pattern": "dev.zeitvertreib.vip",
+          "custom_domain": true,
+        },
+      ],
+    },
   },
 }
