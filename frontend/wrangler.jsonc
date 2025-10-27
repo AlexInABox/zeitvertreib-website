@@ -7,7 +7,7 @@
   "name": "zeitvertreib-website",
   "compatibility_date": "2025-01-01",
   "assets": {
-    "directory": "dist/zeitvertreib-website/browser/"
+    "directory": "dist/zeitvertreib-website/browser/",
   },
   "workers_dev": false,
   "env": {
