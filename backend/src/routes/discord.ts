@@ -108,7 +108,10 @@ export async function handleDiscordCallback(
   // Uh oh, Discord didn't give us an authorization code - something went wrong
   if (!authorizationCode) {
     return createResponse(
-      { error: "Hmm, we didn't get an authorization code from Discord. Please try logging in again!" },
+      {
+        error:
+          "Hmm, we didn't get an authorization code from Discord. Please try logging in again!",
+      },
       400,
       origin,
     );
@@ -118,7 +121,11 @@ export async function handleDiscordCallback(
     const callbackUrl = `${currentUrl.origin}/api/auth/discord/callback`;
 
     // Step 1: Trade the authorization code for an access token
-    const accessToken = await exchangeCodeForToken(authorizationCode, env, callbackUrl);
+    const accessToken = await exchangeCodeForToken(
+      authorizationCode,
+      env,
+      callbackUrl,
+    );
 
     // Step 2: Fetch the Discord user's profile information
     const discordUser = await getDiscordUser(accessToken);
@@ -157,9 +164,15 @@ export async function handleDiscordCallback(
     }
   } catch (error) {
     // Something went wrong during the Discord authentication process
-    console.error('Oops, ran into an issue with Discord authentication:', error);
+    console.error(
+      'Oops, ran into an issue with Discord authentication:',
+      error,
+    );
     return createResponse(
-      { error: "Something went wrong while connecting to Discord. Mind giving it another shot?" },
+      {
+        error:
+          'Something went wrong while connecting to Discord. Mind giving it another shot?',
+      },
       500,
       origin,
     );
