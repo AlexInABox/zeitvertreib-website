@@ -430,8 +430,9 @@ export async function updateFakerank(
     }
 
     // Check if player exists in database
-    const existingPlayer = await env.ZEITVERTREIB_DATA
-      .prepare('SELECT id FROM playerdata WHERE id = ?')
+    const existingPlayer = await env.ZEITVERTREIB_DATA.prepare(
+      'SELECT id FROM playerdata WHERE id = ?',
+    )
       .bind(playerId)
       .first();
 
@@ -439,28 +440,25 @@ export async function updateFakerank(
       // If user has regular fakerank access and an override is active, clear the override
       if (hasFakerankAccess && hasOverrideAccess) {
         // Update existing player's fakerank, color, and clear override
-        await env.ZEITVERTREIB_DATA
-          .prepare(
-            'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
-          )
+        await env.ZEITVERTREIB_DATA.prepare(
+          'UPDATE playerdata SET fakerank = ?, fakerank_color = ?, fakerankoverride_until = 0 WHERE id = ?',
+        )
           .bind(body.fakerank, fakerankColor, playerId)
           .run();
       } else {
         // Update existing player's fakerank and color only
-        await env.ZEITVERTREIB_DATA
-          .prepare(
-            'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
-          )
+        await env.ZEITVERTREIB_DATA.prepare(
+          'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
+        )
           .bind(body.fakerank, fakerankColor, playerId)
           .run();
       }
     } else {
       // Create new player record with fakerank and color
-      await env.ZEITVERTREIB_DATA
-        .prepare(
-          `INSERT INTO playerdata (id, fakerank, fakerank_color, experience, playtime, roundsplayed, usedmedkits, usedcolas, pocketescapes, usedadrenaline) 
+      await env.ZEITVERTREIB_DATA.prepare(
+        `INSERT INTO playerdata (id, fakerank, fakerank_color, experience, playtime, roundsplayed, usedmedkits, usedcolas, pocketescapes, usedadrenaline) 
                          VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0)`,
-        )
+      )
         .bind(playerId, body.fakerank, fakerankColor)
         .run();
     }
@@ -534,17 +532,17 @@ export async function deleteFakerank(
     }
 
     // Check if player exists in database
-    const existingPlayer = await env.ZEITVERTREIB_DATA
-      .prepare('SELECT id FROM playerdata WHERE id = ?')
+    const existingPlayer = await env.ZEITVERTREIB_DATA.prepare(
+      'SELECT id FROM playerdata WHERE id = ?',
+    )
       .bind(playerId)
       .first();
 
     if (existingPlayer) {
       // Set fakerank to NULL and reset color to default
-      await env.ZEITVERTREIB_DATA
-        .prepare(
-          'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
-        )
+      await env.ZEITVERTREIB_DATA.prepare(
+        'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+      )
         .bind('default', playerId)
         .run();
 
@@ -600,10 +598,9 @@ export async function handleFakerankModerationDelete(
     const playerId = `${steamId}@steam`;
 
     // Delete the fakerank from database and reset color
-    await env.ZEITVERTREIB_DATA
-      .prepare(
-        'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
-      )
+    await env.ZEITVERTREIB_DATA.prepare(
+      'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+    )
       .bind('default', playerId)
       .run();
 
@@ -670,10 +667,9 @@ export async function handleFakerankModerationBan(
     const playerId = `${steamId}@steam`;
 
     // Delete the fakerank from database and reset color
-    await env.ZEITVERTREIB_DATA
-      .prepare(
-        'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
-      )
+    await env.ZEITVERTREIB_DATA.prepare(
+      'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
+    )
       .bind('default', playerId)
       .run();
 

@@ -256,9 +256,8 @@ async function applyRedeemableEffects(
     case 'fakerank_14d':
       // Add 14 days if still active, otherwise reset to 14 days from now
       const now = Math.floor(Date.now() / 1000);
-      await env.ZEITVERTREIB_DATA
-        .prepare(
-          `
+      await env.ZEITVERTREIB_DATA.prepare(
+        `
       UPDATE playerdata
       SET fakerank_until = CASE
         WHEN fakerank_until > ? THEN fakerank_until + (14 * 24 * 60 * 60)
@@ -266,7 +265,7 @@ async function applyRedeemableEffects(
       END
       WHERE id = ?
     `,
-        )
+      )
         .bind(now, now, playerId)
         .run();
       break;
@@ -275,8 +274,9 @@ async function applyRedeemableEffects(
       // VIP status includes fakerank access for 30 days
       const thirtyDaysTimestamp =
         Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
-      await env.ZEITVERTREIB_DATA
-        .prepare('UPDATE playerdata SET fakerank_until = ? WHERE id = ?')
+      await env.ZEITVERTREIB_DATA.prepare(
+        'UPDATE playerdata SET fakerank_until = ? WHERE id = ?',
+      )
         .bind(thirtyDaysTimestamp, playerId)
         .run();
       break;
@@ -317,16 +317,15 @@ export async function handleRedeemCode(
     }
 
     // Get code data from database
-    const codeData = (await env.ZEITVERTREIB_DATA
-      .prepare(
-        'SELECT code, credits, remaining_uses FROM redemption_codes WHERE code = ?',
-      )
+    const codeData = (await env.ZEITVERTREIB_DATA.prepare(
+      'SELECT code, credits, remaining_uses FROM redemption_codes WHERE code = ?',
+    )
       .bind(code)
       .first()) as {
-        code: string;
-        credits: number;
-        remaining_uses: number;
-      } | null;
+      code: string;
+      credits: number;
+      remaining_uses: number;
+    } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
@@ -344,8 +343,9 @@ export async function handleRedeemCode(
     const playerId = `${validation.session!.steamId}@steam`;
 
     // Get current player data including redeemed codes
-    const playerData = (await env.ZEITVERTREIB_DATA
-      .prepare('SELECT experience, redeemed_codes FROM playerdata WHERE id = ?')
+    const playerData = (await env.ZEITVERTREIB_DATA.prepare(
+      'SELECT experience, redeemed_codes FROM playerdata WHERE id = ?',
+    )
       .bind(playerId)
       .first()) as { experience: number; redeemed_codes: string | null } | null;
 
@@ -374,10 +374,9 @@ export async function handleRedeemCode(
       redeemedCodes.length > 0 ? `${playerData.redeemed_codes},${code}` : code;
 
     // Update player balance and redeemed codes
-    const updatePlayerResult = await env.ZEITVERTREIB_DATA
-      .prepare(
-        'UPDATE playerdata SET experience = ?, redeemed_codes = ? WHERE id = ?',
-      )
+    const updatePlayerResult = await env.ZEITVERTREIB_DATA.prepare(
+      'UPDATE playerdata SET experience = ?, redeemed_codes = ? WHERE id = ?',
+    )
       .bind(newBalance, updatedRedeemedCodes, playerId)
       .run();
 
@@ -390,10 +389,9 @@ export async function handleRedeemCode(
     }
 
     // Decrease remaining uses for the code
-    const updateCodeResult = await env.ZEITVERTREIB_DATA
-      .prepare(
-        'UPDATE redemption_codes SET remaining_uses = remaining_uses - 1 WHERE code = ?',
-      )
+    const updateCodeResult = await env.ZEITVERTREIB_DATA.prepare(
+      'UPDATE redemption_codes SET remaining_uses = remaining_uses - 1 WHERE code = ?',
+    )
       .bind(code)
       .run();
 

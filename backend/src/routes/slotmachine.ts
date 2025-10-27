@@ -214,8 +214,9 @@ export async function handleSlotMachine(
 
   try {
     // Get current balance
-    const balanceResult = (await env.ZEITVERTREIB_DATA
-      .prepare('SELECT experience FROM playerdata WHERE id = ?')
+    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare(
+      'SELECT experience FROM playerdata WHERE id = ?',
+    )
       .bind(playerId)
       .first()) as { experience: number } | null;
 
@@ -252,8 +253,9 @@ export async function handleSlotMachine(
     const newBalance = currentBalance + netChange;
 
     // Update player balance (using experience field as ZVC)
-    await env.ZEITVERTREIB_DATA
-      .prepare('UPDATE playerdata SET experience = ? WHERE id = ?')
+    await env.ZEITVERTREIB_DATA.prepare(
+      'UPDATE playerdata SET experience = ? WHERE id = ?',
+    )
       .bind(newBalance, playerId)
       .run();
 

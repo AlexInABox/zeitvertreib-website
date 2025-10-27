@@ -87,11 +87,7 @@ function createResponse(
 // Route mapping: path + method -> handler function
 const routes: Record<
   string,
-  (
-    request: Request,
-    env: Env,
-    ctx?: ExecutionContext,
-  ) => Promise<Response>
+  (request: Request, env: Env, ctx?: ExecutionContext) => Promise<Response>
 > = {
   // Auth routes
   'GET:/auth/steam': handleSteamLogin,

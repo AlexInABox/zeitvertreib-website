@@ -458,15 +458,14 @@ export async function processRecurringTransactions(
 
   try {
     // Get all active recurring transactions that are due today
-    const result = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const result = await env.ZEITVERTREIB_DATA.prepare(
+      `
             SELECT * FROM recurring_transactions 
             WHERE is_active = TRUE 
             AND next_execution <= ?
             AND (end_date IS NULL OR end_date >= ?)
         `,
-      )
+    )
       .bind(today, today)
       .all();
 
@@ -476,15 +475,14 @@ export async function processRecurringTransactions(
     for (const recurring of recurringTransactions) {
       try {
         // Create the actual financial transaction
-        await env.ZEITVERTREIB_DATA
-          .prepare(
-            `
+        await env.ZEITVERTREIB_DATA.prepare(
+          `
                     INSERT INTO financial_transactions (
                         transaction_type, category, amount, description, transaction_date,
                         created_by, reference_id, notes
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 `,
-          )
+        )
           .bind(
             recurring.transaction_type,
             recurring.category,
@@ -503,14 +501,13 @@ export async function processRecurringTransactions(
           recurring.frequency,
         );
 
-        await env.ZEITVERTREIB_DATA
-          .prepare(
-            `
+        await env.ZEITVERTREIB_DATA.prepare(
+          `
                     UPDATE recurring_transactions 
                     SET next_execution = ?, last_executed = ?
                     WHERE id = ?
                 `,
-          )
+        )
           .bind(nextExecution, today, recurring.id)
           .run();
 
@@ -746,14 +743,13 @@ export async function handleUpdateTransaction(
     // Add transaction ID to params
     params.push(parseInt(transactionId));
 
-    const result = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const result = await env.ZEITVERTREIB_DATA.prepare(
+      `
             UPDATE financial_transactions 
             SET ${updateFields.join(', ')}
             WHERE id = ?
         `,
-      )
+    )
       .bind(...params)
       .run();
 
@@ -821,12 +817,11 @@ export async function handleDeleteTransaction(
       );
     }
 
-    const result = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const result = await env.ZEITVERTREIB_DATA.prepare(
+      `
             DELETE FROM financial_transactions WHERE id = ?
         `,
-      )
+    )
       .bind(parseInt(transactionId))
       .run();
 
@@ -878,20 +873,17 @@ export async function handleGetSummary(
 
   try {
     // Get total balance
-    const balanceResult = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const balanceResult = await env.ZEITVERTREIB_DATA.prepare(
+      `
             SELECT 
                 SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE -amount END) as balance
             FROM financial_transactions
         `,
-      )
-      .first();
+    ).first();
 
     // Get monthly totals for the last 12 months
-    const monthlyResult = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const monthlyResult = await env.ZEITVERTREIB_DATA.prepare(
+      `
             SELECT 
                 strftime('%Y-%m', transaction_date) as month,
                 SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE 0 END) as income,
@@ -901,26 +893,22 @@ export async function handleGetSummary(
             GROUP BY strftime('%Y-%m', transaction_date)
             ORDER BY month DESC
         `,
-      )
-      .all();
+    ).all();
 
     // Get current month totals
-    const currentMonthResult = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const currentMonthResult = await env.ZEITVERTREIB_DATA.prepare(
+      `
             SELECT 
                 SUM(CASE WHEN transaction_type = 'income' THEN amount ELSE 0 END) as income,
                 SUM(CASE WHEN transaction_type = 'expense' THEN amount ELSE 0 END) as expenses
             FROM financial_transactions
             WHERE strftime('%Y-%m', transaction_date) = strftime('%Y-%m', 'now')
         `,
-      )
-      .first();
+    ).first();
 
     // Get category breakdown
-    const categoryResult = await env.ZEITVERTREIB_DATA
-      .prepare(
-        `
+    const categoryResult = await env.ZEITVERTREIB_DATA.prepare(
+      `
             SELECT 
                 category,
                 transaction_type,
@@ -931,8 +919,7 @@ export async function handleGetSummary(
             GROUP BY category, transaction_type
             ORDER BY total DESC
         `,
-      )
-      .all();
+    ).all();
 
     return createResponse(
       {
@@ -1042,8 +1029,9 @@ export async function handleTransferZVC(
     const totalCost = amount + taxAmount; // Total amount to deduct from sender
 
     // Check if sender has enough ZVC (needs 110% of transfer amount)
-    const senderData = (await env.ZEITVERTREIB_DATA
-      .prepare('SELECT experience FROM playerdata WHERE id = ?')
+    const senderData = (await env.ZEITVERTREIB_DATA.prepare(
+      'SELECT experience FROM playerdata WHERE id = ?',
+    )
       .bind(senderSteamId)
       .first()) as { experience: number } | null;
 
@@ -1080,14 +1068,16 @@ export async function handleTransferZVC(
     // Check if it's a valid Steam ID format (17 digits)
     if (/^\d{17}$/.test(recipientSteamId)) {
       // It's a Steam ID - query by id column with @steam suffix
-      recipientData = (await env.ZEITVERTREIB_DATA
-        .prepare('SELECT id, experience FROM playerdata WHERE id = ?')
+      recipientData = (await env.ZEITVERTREIB_DATA.prepare(
+        'SELECT id, experience FROM playerdata WHERE id = ?',
+      )
         .bind(recipientSteamId + '@steam')
         .first()) as { id: string; experience: number } | null;
     } else {
       // It's not a Steam ID - treat as username and query by username column
-      recipientData = (await env.ZEITVERTREIB_DATA
-        .prepare('SELECT id, experience FROM playerdata WHERE username = ?')
+      recipientData = (await env.ZEITVERTREIB_DATA.prepare(
+        'SELECT id, experience FROM playerdata WHERE username = ?',
+      )
         .bind(cleanRecipient)
         .first()) as { id: string; experience: number } | null;
     }
@@ -1108,18 +1098,16 @@ export async function handleTransferZVC(
     // Perform the transfer in a transaction
     try {
       // Deduct total cost from sender (amount + tax)
-      await env.ZEITVERTREIB_DATA
-        .prepare(
-          'UPDATE playerdata SET experience = experience - ? WHERE id = ?',
-        )
+      await env.ZEITVERTREIB_DATA.prepare(
+        'UPDATE playerdata SET experience = experience - ? WHERE id = ?',
+      )
         .bind(totalCost, senderSteamId)
         .run();
 
       // Add only the transfer amount to recipient (not including tax)
-      await env.ZEITVERTREIB_DATA
-        .prepare(
-          'UPDATE playerdata SET experience = experience + ? WHERE id = ?',
-        )
+      await env.ZEITVERTREIB_DATA.prepare(
+        'UPDATE playerdata SET experience = experience + ? WHERE id = ?',
+      )
         .bind(amount, finalRecipientId)
         .run();
 
