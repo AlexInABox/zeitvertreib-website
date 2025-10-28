@@ -114,6 +114,8 @@ async function getLeaderboardData(
   colas: LeaderboardEntry[];
   pocketescapes: LeaderboardEntry[];
   adrenaline: LeaderboardEntry[];
+  slotSpins: LeaderboardEntry[];
+  slotWins: LeaderboardEntry[];
 }> {
   // Helper function to format leaderboard entries
   const formatLeaderboard = async <T extends { id: string }>(
@@ -142,6 +144,8 @@ async function getLeaderboardData(
     colasData,
     pocketescapesData,
     adrenalineData,
+    slotSpinsData,
+    slotWinsData
   ] = await Promise.all([
     // Top 3 snake scores
     db
@@ -222,6 +226,20 @@ async function getLeaderboardData(
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.usedadrenaline))
       .limit(3),
+
+    db
+      .select({ id: playerdata.id, slotSpins: playerdata.slotSpins })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.slotSpins))
+      .limit(3),
+
+    db
+      .select({ id: playerdata.id, slotWins: playerdata.slotWins })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.slotWins))
+      .limit(3),
   ]);
 
   return {
@@ -235,6 +253,8 @@ async function getLeaderboardData(
     colas: await formatLeaderboard(colasData, 'usedcolas'),
     pocketescapes: await formatLeaderboard(pocketescapesData, 'pocketescapes'),
     adrenaline: await formatLeaderboard(adrenalineData, 'usedadrenaline'),
+    slotSpins: await formatLeaderboard(slotSpinsData, 'slotSpins'),
+    slotWins: await formatLeaderboard(slotWinsData, 'slotWins'),
   };
 }
 
@@ -383,6 +403,16 @@ function createDiscordMessage(
           {
             name: '💉 Adrenalin verwendet',
             value: formatLeaderboardField(leaderboardData.adrenaline),
+            inline: true,
+          },
+          {
+            name: '🎰 Slot Spins',
+            value: formatLeaderboardField(leaderboardData.slotSpins),
+            inline: true,
+          },
+          {
+            name: '🏆 Slots ZVC Gewinne',
+            value: formatLeaderboardField(leaderboardData.slotWins),
             inline: true,
           },
           {
