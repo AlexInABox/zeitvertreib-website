@@ -1,0 +1,37 @@
+Datenschutzerklärung für Zeitvertreib
+
+1. Verantwortlicher
+Verantwortlich für die Verarbeitung personenbezogener Daten im Rahmen der Nutzung der Dienste von Zeitvertreib (Website, Discord-Server, SCP:SL-Community) ist:
+Name: Alexander (alexinabox)
+Website/GitHub: alexinabox.de / github.com/alexinabox
+E-Mail: webmaster@zeitvertreib.vip
+
+2. Erhobene Daten
+Im Rahmen der Nutzung der Dienste von Zeitvertreib können folgende Daten erfasst werden:
+- Discord-ID
+- Steam-ID
+- Weitere Daten, die im Zusammenhang mit der Nutzung des Discord-Bots oder der Plattform entstehen
+
+3. Zweck der Datenerhebung
+Die erfassten Daten werden ausschließlich verwendet, um:
+- Nutzer über Discord oder andere Dienste zu verifizieren
+- Discord- und Steam-Accounts in unserer Datenbank zu verknüpfen, um Statistiken einfacher und persönlicher anzuzeigen
+- Die Funktionen und Services von Zeitvertreib bereitzustellen
+
+4. Rechtsgrundlage
+Die Verarbeitung der Daten erfolgt auf Grundlage der Einwilligung der Nutzer (Art. 6 Abs. 1 lit. a DSGVO). Mit der Nutzung der Dienste stimmen die Nutzer der Verarbeitung ihrer Daten zu.
+
+5. Speicherung und Löschung
+Daten werden nur so lange gespeichert, wie es für die Bereitstellung der Services notwendig ist. Die Löschung der Daten kann ausschließlich über die Website nach Login beantragt werden, um die Validität der Anfrage sicherzustellen.
+
+6. Weitergabe von Daten
+Eine Weitergabe an Dritte findet nicht statt. Die Daten werden ausschließlich für die internen Funktionen von Zeitvertreib verwendet.
+
+7. Rechte der Nutzer
+Nutzer haben jederzeit das Recht auf:
+- Auskunft über gespeicherte Daten
+- Berichtigung fehlerhafter Daten
+- Löschung ihrer Daten über die Website nach Login
+
+8. Kontakt
+Fragen zur Datenschutzerklärung oder zur Ausübung der Rechte können per E-Mail an webmaster@zeitvertreib.vip gestellt werden.
