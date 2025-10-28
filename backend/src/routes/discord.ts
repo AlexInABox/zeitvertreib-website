@@ -1,180 +1,113 @@
-import { createResponse } from '../utils.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+import { createResponse, createSession, fetchSteamUserData } from '../utils.js';
+import { playerdata } from '../../drizzle/schema.js';
 
-const DISCORD_BASE_URL = 'https://discord.com';
-const DISCORD_API_URL = 'https://discord.com/api';
+const DISCORD_API = 'https://discord.com/api';
 
-/**
- * Builds the Discord OAuth2 authorization URL that users will visit to log in.
- * We're asking for permission to see their basic profile and connected accounts.
- */
-async function generateDiscordAuthUrl(
-  clientId: string,
-  redirectUri: string,
-): Promise<string> {
-  // We need to see who the user is and what accounts they've linked to Discord
-  const requestedPermissions = ['identify', 'connections'].join(' ');
+// Start OAuth flow
+export async function handleDiscordLogin(request: Request, env: Env) {
+  const { origin } = new URL(request.url);
+  const redirectUri = `${origin}/api/auth/discord/callback`;
+  const scopes = ['identify', 'connections'].join(' ');
 
-  return `${DISCORD_BASE_URL}/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(requestedPermissions)}`;
+  const authUrl = `https://discord.com/oauth2/authorize?response_type=code&client_id=${env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+
+  return createResponse(authUrl, 302, request.headers.get('Origin'));
 }
 
-/**
- * Trades the temporary authorization code for an actual access token.
- */
-async function exchangeCodeForToken(
-  authorizationCode: string,
-  env: Env,
-  redirectUri: string,
-): Promise<string> {
-  // Prepare our credentials to prove we're a legit app
-  const tokenRequestData = {
-    client_id: env.DISCORD_CLIENT_ID,
-    client_secret: env.DISCORD_CLIENT_SECRET,
-    grant_type: 'authorization_code',
-    code: authorizationCode,
-    redirect_uri: redirectUri,
-  };
-
-  const response = await fetch(`${DISCORD_API_URL}/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams(tokenRequestData).toString(),
-  });
-
-  const tokenData: any = await response.json();
-  return tokenData.access_token;
-}
-
-/**
- * Fetches the Discord user's basic profile information.
- */
-async function getDiscordUser(accessToken: string): Promise<any> {
-  const response = await fetch(`${DISCORD_API_URL}/users/@me`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  return await response.json();
-}
-
-/**
- * Fetches all the external accounts this user has linked to their Discord.
- * We're mainly looking for Steam, but we get all of them.
- */
-async function getDiscordConnections(accessToken: string): Promise<any> {
-  const response = await fetch(`${DISCORD_API_URL}/users/@me/connections`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  return await response.json();
-}
-
-/**
- * Kicks off the Discord login flow by redirecting the user to Discord's authorization page.
- * They'll see a nice Discord screen asking if they want to let us in.
- */
-export async function handleDiscordLogin(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+// Handle OAuth callback
+export async function handleDiscordCallback(request: Request, env: Env) {
   const origin = request.headers.get('Origin');
-  const currentUrl = new URL(request.url);
-  const callbackUrl = `${currentUrl.origin}/api/auth/discord/callback`;
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
 
-  // Build the URL where we'll send the user to authorize with Discord
-  const discordAuthUrl = await generateDiscordAuthUrl(
-    env.DISCORD_CLIENT_ID,
-    callbackUrl,
-  );
-
-  // Off they go to Discord!
-  return createResponse(discordAuthUrl, 302, origin);
-}
-
-/**
- * Discord sends the user back here after they've authorized (or denied) our app.
- * We'll grab their authorization code and use it to fetch their Steam ID if they have one linked.
- */
-export async function handleDiscordCallback(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const origin = request.headers.get('Origin');
-  const currentUrl = new URL(request.url);
-  const authorizationCode = currentUrl.searchParams.get('code');
-
-  // Uh oh, Discord didn't give us an authorization code - something went wrong
-  if (!authorizationCode) {
-    return createResponse(
-      {
-        error:
-          "Hmm, we didn't get an authorization code from Discord. Please try logging in again!",
-      },
-      400,
-      origin,
-    );
+  if (!code) {
+    return createResponse({ error: 'No authorization code received' }, 400, origin);
   }
 
   try {
-    const callbackUrl = `${currentUrl.origin}/api/auth/discord/callback`;
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+    const redirectUri = `${url.origin}/api/auth/discord/callback`;
 
-    // Step 1: Trade the authorization code for an access token
-    const accessToken = await exchangeCodeForToken(
-      authorizationCode,
-      env,
-      callbackUrl,
-    );
+    // Exchange code for token
+    const tokenRes = await fetch(`${DISCORD_API}/oauth2/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: env.DISCORD_CLIENT_ID,
+        client_secret: env.DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+    const { access_token } = await tokenRes.json() as { access_token: string };
 
-    // Step 2: Fetch the Discord user's profile information
-    const discordUser = await getDiscordUser(accessToken);
+    // Get user and connections
+    const [user, connections]: [any, any] = await Promise.all([
+      fetch(`${DISCORD_API}/users/@me`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }).then(r => r.json()),
+      fetch(`${DISCORD_API}/users/@me/connections`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }).then(r => r.json()),
+    ]);
 
-    // Step 3: Use that token to fetch all their connected accounts
-    const userConnections = await getDiscordConnections(accessToken);
-
-    // Step 4: Look through their connections to see if they have Steam linked
-    const steamAccount = userConnections.find(
-      (connection: any) => connection.type === 'steam',
-    );
-
-    if (steamAccount) {
-      // Awesome! They have Steam connected to Discord
-      console.log('Discord ID:', discordUser.id, 'Steam ID:', steamAccount.id);
+    // Find Steam connection
+    const steam = connections.find((c: any) => c.type === 'steam');
+    if (!steam) {
       return createResponse(
-        {
-          hasSteam: true,
-          discordId: discordUser.id,
-          steamId: steamAccount.id,
-        },
-        200,
-        origin,
-      );
-    } else {
-      // No Steam connection found - that's okay, we'll let them know
-      return createResponse(
-        {
-          hasSteam: false,
-          discordId: discordUser.id,
-          steamId: null,
-        },
-        200,
-        origin,
+        { error: 'No Steam account linked. Please link Steam in Discord settings.' },
+        400,
+        origin
       );
     }
-  } catch (error) {
-    // Something went wrong during the Discord authentication process
-    console.error(
-      'Oops, ran into an issue with Discord authentication:',
-      error,
-    );
-    return createResponse(
-      {
-        error:
-          'Something went wrong while connecting to Discord. Mind giving it another shot?',
+
+    const steamId = steam.id;
+    const discordId = Number(user.id);
+
+    // Unlink old Discord ID if exists elsewhere
+    const existing = await db.select().from(playerdata).where(eq(playerdata.discordId, discordId)).limit(1);
+    if (existing[0]) {
+      await db.update(playerdata).set({ discordId: null }).where(eq(playerdata.id, existing[0].id));
+    }
+
+    // Link Discord to Steam account
+    await db.insert(playerdata).values({
+      id: `${steamId}@steam`,
+      discordId,
+    }).onConflictDoUpdate({
+      target: playerdata.id,
+      set: { discordId },
+    });
+
+    // Fetch Steam data and create session
+    const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+    if (!steamUser) {
+      return createResponse({ error: 'Could not fetch Steam user data' }, 500, origin);
+    }
+
+    const sessionId = await createSession(steamId, steamUser, env);
+    const isLocal = env.FRONTEND_URL.includes('localhost');
+    const redirectUrl = new URL(`${env.FRONTEND_URL}/auth/callback`);
+
+    redirectUrl.searchParams.set('token', sessionId);
+    if (url.searchParams.has('redirect')) {
+      redirectUrl.searchParams.set('redirect', url.searchParams.get('redirect')!);
+    }
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: redirectUrl.toString(),
+        'Access-Control-Allow-Origin': origin || '*',
+        'Access-Control-Allow-Credentials': 'true',
+        'Set-Cookie': `session=${sessionId}; Path=/; Max-Age=${7 * 24 * 60 * 60}${isLocal ? '; SameSite=Lax' : '; HttpOnly; Secure; SameSite=Strict'}`,
       },
-      500,
-      origin,
-    );
+    });
+  } catch (error) {
+    console.error('Discord auth error:', error);
+    return createResponse({ error: 'Authentication failed' }, 500, origin);
   }
 }
