@@ -11,6 +11,7 @@ import { sql } from 'drizzle-orm';
 
 export const playerdata = sqliteTable('playerdata', {
   id: text('id').primaryKey(),
+  discordId: integer('discordId'),
   experience: integer('experience').default(0),
   playtime: integer('playtime').default(0),
   roundsplayed: integer('roundsplayed').default(0),
@@ -54,6 +55,9 @@ export const playerdata = sqliteTable('playerdata', {
   redeemed_codes: text('redeemed_codes').default(''),
   fakerankoverride_until: integer('fakerankoverride_until').default(0),
   username: text('username').default(''),
+  slotSpins: integer('slotSpins').notNull().default(0),
+  slotWins: integer('slotWins').notNull().default(0),
+  slotLosses: integer('slotLosses').notNull().default(0),
 });
 
 export const loginSecrets = sqliteTable('login_secrets', {

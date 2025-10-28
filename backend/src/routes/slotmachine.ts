@@ -1,5 +1,9 @@
-import { validateSession, createResponse } from '../utils.js';
+import { validateSession, createResponse, increment } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+
+import { playerdata } from '../../drizzle/schema.js';
 
 // Payout table configuration - shared between endpoints
 const SLOT_COST = 8;
@@ -235,6 +239,8 @@ export async function handleSlotMachine(
       );
     }
 
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+
     // Helper function for cryptographically secure random number generation
     const getRandomIndex = (max: number): number => {
       const randomBuffer = new Uint32Array(1);
@@ -298,6 +304,24 @@ export async function handleSlotMachine(
     console.log(
       `🎰 Slot machine: ${validation.session!.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout} ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );
+
+
+    // Increment slot spins count
+    await db.update(playerdata)
+      .set({ slotSpins: increment(playerdata.slotSpins) })
+      .where(eq(playerdata.id, playerId))
+      .run();
+
+    // Increment wins/losses amount
+    await db.update(playerdata)
+      .set({ slotLosses: increment(playerdata.slotLosses, SLOT_COST) })
+      .where(eq(playerdata.id, playerId))
+      .run();
+    await db.update(playerdata)
+      .set({ slotWins: increment(playerdata.slotWins, result.payout) })
+      .where(eq(playerdata.id, playerId))
+      .run();
+
 
     return createResponse(
       {

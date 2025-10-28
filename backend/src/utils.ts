@@ -7,8 +7,9 @@ import {
 } from './types/index.js';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, count, lt } from 'drizzle-orm';
+import { eq, count, lt, sql } from 'drizzle-orm';
 import { playerdata, kills, loginSecrets } from '../drizzle/schema.js';
+import { AnyColumn } from 'drizzle-orm';
 
 // Discord API proxy utility
 export async function fetchDiscordWithProxy(
@@ -633,3 +634,7 @@ export async function cleanupExpiredLoginSecrets(
     throw error;
   }
 }
+
+export const increment = (column: AnyColumn, value = 1) => {
+  return sql`${column} + ${value}`;
+};
