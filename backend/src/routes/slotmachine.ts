@@ -305,23 +305,24 @@ export async function handleSlotMachine(
       `🎰 Slot machine: ${validation.session!.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout} ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );
 
-
     // Increment slot spins count
-    await db.update(playerdata)
+    await db
+      .update(playerdata)
       .set({ slotSpins: increment(playerdata.slotSpins) })
       .where(eq(playerdata.id, playerId))
       .run();
 
     // Increment wins/losses amount
-    await db.update(playerdata)
+    await db
+      .update(playerdata)
       .set({ slotLosses: increment(playerdata.slotLosses, SLOT_COST) })
       .where(eq(playerdata.id, playerId))
       .run();
-    await db.update(playerdata)
+    await db
+      .update(playerdata)
       .set({ slotWins: increment(playerdata.slotWins, result.payout) })
       .where(eq(playerdata.id, playerId))
       .run();
-
 
     return createResponse(
       {
