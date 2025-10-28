@@ -145,7 +145,7 @@ async function getLeaderboardData(
     pocketescapesData,
     adrenalineData,
     slotSpinsData,
-    slotWinsData
+    slotWinsData,
   ] = await Promise.all([
     // Top 3 snake scores
     db
