@@ -178,7 +178,7 @@ export class AuthService {
 
   login(redirectPath: string = '/'): void {
     const encodedRedirectPath = encodeURIComponent(redirectPath);
-    window.location.href = `${environment.apiUrl}/auth/steam?redirect=${encodedRedirectPath}`;
+    window.location.href = `${environment.apiUrl}/auth/discord?redirect=${encodedRedirectPath}`;
   }
 
   logout(): Observable<any> {

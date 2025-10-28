@@ -63,14 +63,15 @@ export async function handleDiscordCallback(request: Request, env: Env) {
     // Find Steam connection
     const steam = connections.find((c: any) => c.type === 'steam');
     if (!steam) {
-      return createResponse(
-        {
-          error:
-            'No Steam account linked. Please link Steam in Discord settings.',
+      const redirectUrl = new URL(`${env.FRONTEND_URL}/no-steam-link`);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: redirectUrl.toString(),
+          'Access-Control-Allow-Origin': origin || '*',
+          'Access-Control-Allow-Credentials': 'true',
         },
-        400,
-        origin,
-      );
+      });
     }
 
     const steamId = steam.id;

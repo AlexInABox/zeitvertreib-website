@@ -44,6 +44,13 @@ export const routes: Routes = [
       import('./login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'no-steam-link',
+    loadComponent: () =>
+      import('./no-steam-link/no-steam-link.component').then(
+        (m) => m.NoSteamLinkComponent,
+      ),
+  },
+  {
     path: 'auth/callback',
     loadComponent: () =>
       import('./auth-callback/auth-callback.component').then(

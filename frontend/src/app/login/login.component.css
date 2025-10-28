@@ -24,13 +24,15 @@
 
 .login-card {
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.9); /* Softer and lighter violet */
-  border: 1px solid rgba(220, 200, 255, 0.8); /* Complementary border */
+  background: rgba(255, 255, 255, 0.9);
+  /* Softer and lighter violet */
+  border: 1px solid rgba(220, 200, 255, 0.8);
+  /* Complementary border */
   border-radius: 24px;
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.15),
     0 8px 16px rgba(0, 0, 0, 0.1);
-  padding: 2.5rem;
+  padding: 2rem 2.5rem;
   transition: all 0.3s ease;
   animation: slideUp 0.8s ease-out;
   overflow: hidden;
@@ -42,6 +44,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -57,18 +60,18 @@
 
 .card-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .logo-container {
   position: relative;
   display: inline-block;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .logo-image {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   transition: transform 0.3s ease;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
@@ -78,23 +81,23 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(
-    circle,
-    rgba(102, 126, 234, 0.3) 0%,
-    transparent 70%
-  );
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle,
+      rgba(102, 126, 234, 0.3) 0%,
+      transparent 70%);
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 0.5;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.1);
     opacity: 0.8;
@@ -106,18 +109,10 @@
 }
 
 .welcome-title {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
-}
-
-.welcome-text {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
 }
 
 .brand-name {
@@ -136,18 +131,46 @@
 
 .description-text {
   color: #6b7280;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;
 }
 
+.info-box {
+  background: linear-gradient(135deg,
+      rgba(102, 126, 234, 0.08) 0%,
+      rgba(118, 75, 162, 0.08) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.info-icon {
+  color: #667eea;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.info-text {
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .button-container {
   position: relative;
   display: inline-block;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .button-glow {
@@ -169,13 +192,13 @@
   opacity: 0.4;
 }
 
-:host ::ng-deep .steam-login-btn {
+:host ::ng-deep .discord-login-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
   border: none;
   border-radius: 12px;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: white;
   transition: all 0.3s ease;
@@ -183,115 +206,54 @@
   overflow: hidden;
 }
 
-:host ::ng-deep .steam-login-btn::before {
+:host ::ng-deep .discord-login-btn::before {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent);
   transition: left 0.5s ease;
 }
 
-:host ::ng-deep .steam-login-btn:hover::before {
+:host ::ng-deep .discord-login-btn:hover::before {
   left: 100%;
 }
 
-:host ::ng-deep .steam-login-btn:hover {
+:host ::ng-deep .discord-login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 25px rgba(88, 101, 242, 0.4);
 }
 
-:host ::ng-deep .steam-login-btn:active {
+:host ::ng-deep .discord-login-btn:active {
   transform: translateY(0);
-}
-
-.features-preview {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(107, 114, 128, 0.2);
-}
-
-.feature-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  color: #6b7280;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.feature-item:hover {
-  color: #667eea;
-  transform: translateY(-3px);
-}
-
-.feature-icon {
-  font-size: 1.5rem;
-  padding: 0.75rem;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.1) 0%,
-    rgba(118, 75, 162, 0.1) 100%
-  );
-  transition: all 0.3s ease;
-}
-
-.feature-item:hover .feature-icon {
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.2) 0%,
-    rgba(118, 75, 162, 0.2) 100%
-  );
-  transform: scale(1.1);
-}
-
-.feature-item span {
-  font-size: 0.9rem;
-  font-weight: 500;
 }
 
 /* Responsive design */
 @media (max-width: 640px) {
   .login-card {
-    padding: 2rem 1.5rem;
+    padding: 1.75rem 1.5rem;
     margin: 1rem;
   }
 
   .welcome-title {
-    font-size: 1.75rem;
-  }
-
-  .welcome-text {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
   }
 
   .description-text {
-    font-size: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .info-text {
+    font-size: 0.85rem;
   }
 
   .logo-image {
-    width: 80px;
-    height: 80px;
-  }
-
-  .features-preview {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .feature-item {
-    flex-direction: row;
-    justify-content: center;
+    width: 70px;
+    height: 70px;
   }
 }

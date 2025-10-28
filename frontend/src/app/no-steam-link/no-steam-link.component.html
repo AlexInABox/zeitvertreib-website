@@ -1,0 +1,53 @@
+<div class="no-link-container">
+    <div class="no-link-card">
+        <div class="icon-wrapper">
+            <i class="pi pi-exclamation-triangle"></i>
+        </div>
+
+        <h1>Discord-Steam Verknüpfung fehlt</h1>
+
+        <p class="description">
+            Um Zeitvertreib nutzen zu können, muss dein Discord-Account mit Steam verbunden sein.
+            Nur so können wir deine Spielstatistiken abrufen.
+        </p>
+
+        <div class="info-box">
+            <h2>So verknüpfst du Discord mit Steam:</h2>
+            <div class="steps">
+                <div class="step">
+                    <span class="num">1</span>
+                    <div class="step-text">
+                        <strong>Discord Einstellungen öffnen</strong>
+                        <span>Zahnrad-Symbol neben deinem Namen</span>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="num">2</span>
+                    <div class="step-text">
+                        <strong>Zu "Verbindungen" navigieren</strong>
+                        <span>Im linken Menü findest du "Verbindungen"</span>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="num">3</span>
+                    <div class="step-text">
+                        <strong>Steam hinzufügen</strong>
+                        <span>Klicke auf das Steam-Logo und folge den Schritten</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <p-button label="Erneut versuchen" icon="pi pi-refresh" styleClass="retry-btn"
+                (onClick)="goToLogin()"></p-button>
+            <p-button label="Zur Startseite" icon="pi pi-home" styleClass="home-btn" (onClick)="goHome()"></p-button>
+        </div>
+
+        <a href="https://support.discord.com/hc/de/articles/8063233404823" target="_blank" rel="noopener noreferrer"
+            class="help-link">
+            <i class="pi pi-question-circle"></i>
+            Discord Hilfe-Artikel
+        </a>
+    </div>
+</div>
