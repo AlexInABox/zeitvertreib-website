@@ -15,6 +15,10 @@
       "binding": "SESSIONS",
       "id": "d0dc321532ca43349d87f88483a78105",
     },
+    {
+      "binding": "ZEITVERTREIB_SESSIONS",
+      "id": "f151e8f642a8447d915c129d7de5f078",
+    }
   ],
   "d1_databases": [
     {
@@ -43,6 +47,10 @@
           "binding": "SESSIONS",
           "id": "d0dc321532ca43349d87f88483a78105",
         },
+        {
+          "binding": "ZEITVERTREIB_SESSIONS",
+          "id": "f151e8f642a8447d915c129d7de5f078",
+        },
       ],
       "d1_databases": [
         {
@@ -70,6 +78,10 @@
           "binding": "SESSIONS",
           "id": "d0dc321532ca43349d87f88483a78105",
         },
+        {
+          "binding": "ZEITVERTREIB_SESSIONS",
+          "id": "f151e8f642a8447d915c129d7de5f078",
+        },
       ],
       "d1_databases": [
         {
@@ -86,7 +98,10 @@
     },
   },
   "triggers": {
-    "crons": ["0 6 * * *", "*/15 * * * *"],
+    "crons": [
+      "0 6 * * *",
+      "*/15 * * * *"
+    ],
   },
   /**
    * Smart Placement

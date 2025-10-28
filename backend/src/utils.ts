@@ -68,12 +68,12 @@ export async function validateSession(
   const sessionId = getSessionId(request);
   if (!sessionId) return { isValid: false, error: 'No session found' };
 
-  const sessionData = await env.SESSIONS.get(sessionId);
+  const sessionData = await env.ZEITVERTREIB_SESSIONS.get(sessionId);
   if (!sessionData) return { isValid: false, error: 'Invalid session' };
 
   const session: SessionData = JSON.parse(sessionData);
   if (Date.now() > session.expiresAt) {
-    await env.SESSIONS.delete(sessionId);
+    await env.ZEITVERTREIB_SESSIONS.delete(sessionId);
     return { isValid: false, error: 'Session expired' };
   }
 
@@ -96,7 +96,7 @@ export async function createSession(
     expiresAt: now + duration,
   };
 
-  await env.SESSIONS.put(sessionId, JSON.stringify(sessionData), {
+  await env.ZEITVERTREIB_SESSIONS.put(sessionId, JSON.stringify(sessionData), {
     expirationTtl: Math.floor(duration / 1000),
   });
 
@@ -106,7 +106,7 @@ export async function createSession(
 export async function deleteSession(request: Request, env: Env): Promise<void> {
   const sessionId = getSessionId(request);
   if (sessionId) {
-    await env.SESSIONS.delete(sessionId);
+    await env.ZEITVERTREIB_SESSIONS.delete(sessionId);
   }
 }
 
