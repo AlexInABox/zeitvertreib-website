@@ -415,11 +415,13 @@ function createDiscordMessage(
             value: formatLeaderboardField(leaderboardData.slotWins),
             inline: true,
           },
+          /*
           {
             name: '\u200b', // Empty field for spacing
             value: '\u200b',
             inline: true,
           },
+          */
         ],
         footer: {
           text: `Bestenliste aktualisiert sich alle 15 Minuten • Letzte Aktualisierung: ${timestamp}`,
