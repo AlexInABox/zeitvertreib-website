@@ -74,7 +74,7 @@ export class StatsCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Dieser Benutzer ist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-            'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
+              'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
           )
           .setTimestamp();
 
@@ -157,7 +157,8 @@ export class StatsCommand extends BaseCommand {
       if (stats.migratedCedmod === null) {
         fields.push({
           name: '💡 Tipp',
-          value: '**Du hast noch alte CedMod-Statistiken?**\nNutze `/migrate` um deine alten Stats zu importieren!',
+          value:
+            '**Du hast noch alte CedMod-Statistiken?**\nNutze `/migrate` um deine alten Stats zu importieren!',
           inline: false,
         });
       }
