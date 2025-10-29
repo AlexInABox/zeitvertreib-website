@@ -2,10 +2,7 @@ import { validateSession, createResponse } from '../utils.js';
 import { FinancialTransaction, RecurringTransaction } from '../types/index.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, and } from 'drizzle-orm';
-import {
-  financialTransactions,
-  recurringTransactions,
-} from '../db/schema.js';
+import { financialTransactions, recurringTransactions } from '../db/schema.js';
 
 const ADMIN_STEAM_ID = '76561198354414854';
 
