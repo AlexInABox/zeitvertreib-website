@@ -123,7 +123,7 @@ export async function handleSetUserFakerank(
   request: Request,
   env: Env,
 ): Promise<Response> {
-  const db = drizzle(env.ZEITVERTREIB_DATA, { casing: "camelCase" });
+  const db = drizzle(env.ZEITVERTREIB_DATA, { casing: 'camelCase' });
   const origin = request.headers.get('Origin');
 
   try {
