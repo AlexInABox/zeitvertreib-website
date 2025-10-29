@@ -1,7 +1,7 @@
 import { createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { playerdata } from '../../drizzle/schema.js';
+import { playerdata } from '../db/schema.js';
 
 /**
  * Validates the API key from the Authorization header

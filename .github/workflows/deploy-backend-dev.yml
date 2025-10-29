@@ -21,19 +21,37 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify types
-        run: cp .env.example .env && npx wrangler types -e dev
+      - name: Prepare environment
+        run: cp .env.example .env
 
-      - name: Build
-        run: npm run build
+      - name: Verify Wrangler types
+        run: npx wrangler types -e dev
+
+      - name: Test build with code schema
+        run: npx tsc
+
+      - name: Pull real database schema
+        run: NODE_ENV=production npx drizzle-kit pull
+
+      - name: Test build with real schema
+        run: |
+          mv src/db/schema.ts src/db/schema.ts.back
+          cp drizzle/schema.ts src/db/schema.ts
+          npx tsc
+          mv src/db/schema.ts.back src/db/schema.ts
+
+      - name: Final build
+        run: npx tsc
 
       - name: Deploy to Cloudflare (dev)
         run: npx wrangler deploy -e dev

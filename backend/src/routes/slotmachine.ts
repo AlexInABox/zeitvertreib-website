@@ -3,7 +3,7 @@ import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 
-import { playerdata } from '../../drizzle/schema.js';
+import { playerdata } from '../db/schema.js';
 
 // Payout table configuration - shared between endpoints
 const SLOT_COST = 8;

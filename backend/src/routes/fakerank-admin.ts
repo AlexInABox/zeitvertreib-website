@@ -7,7 +7,7 @@ import {
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, isNotNull } from 'drizzle-orm';
-import { playerdata } from '../../drizzle/schema.js';
+import { playerdata } from '../db/schema.js';
 
 // Extend the Env interface to include DISCORD_WORKER_API_KEY
 declare global {
@@ -177,8 +177,8 @@ export async function handleSetUserFakerank(
           .update(playerdata)
           .set({
             fakerank,
-            fakerankColor: fakerank_color,
-            fakerankoverrideUntil: overrideUntil,
+            fakerank_color: fakerank_color,
+            fakerankoverride_until: overrideUntil,
           })
           .where(eq(playerdata.id, playerId));
       } else {
@@ -187,8 +187,8 @@ export async function handleSetUserFakerank(
           .update(playerdata)
           .set({
             fakerank,
-            fakerankColor: fakerank_color,
-            fakerankoverrideUntil: 0,
+            fakerank_color: fakerank_color,
+            fakerankoverride_until: 0,
           })
           .where(eq(playerdata.id, playerId));
       }
@@ -198,8 +198,8 @@ export async function handleSetUserFakerank(
         .update(playerdata)
         .set({
           fakerank: null,
-          fakerankColor: 'default',
-          fakerankoverrideUntil: 0,
+          fakerank_color: 'default',
+          fakerankoverride_until: 0,
         })
         .where(eq(playerdata.id, playerId));
     }
@@ -675,8 +675,8 @@ export async function handleGetAllFakeranks(
       .select({
         id: playerdata.id,
         fakerank: playerdata.fakerank,
-        fakerank_color: playerdata.fakerankColor,
-        fakerank_until: playerdata.fakerankUntil,
+        fakerank_color: playerdata.fakerank_color,
+        fakerank_until: playerdata.fakerank_until,
         experience: playerdata.experience,
       })
       .from(playerdata)

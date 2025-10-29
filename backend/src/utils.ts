@@ -8,7 +8,7 @@ import {
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets } from '../drizzle/schema.js';
+import { playerdata, kills, loginSecrets } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 
 // Discord API proxy utility
@@ -327,13 +327,13 @@ export async function getPlayerData(
         usedadrenaline: result.usedadrenaline ?? undefined,
         snakehighscore: result.snakehighscore ?? undefined,
         fakerank: result.fakerank ?? undefined,
-        fakerank_color: result.fakerankColor ?? undefined,
+        fakerank_color: result.fakerank_color ?? undefined,
         killcount: result.killcount ?? undefined,
         deathcount: result.deathcount ?? undefined,
-        fakerank_until: result.fakerankUntil ?? undefined,
-        fakerankadmin_until: result.fakerankadminUntil ?? undefined,
-        fakerankoverride_until: result.fakerankoverrideUntil ?? undefined,
-        redeemed_codes: result.redeemedCodes ?? undefined,
+        fakerank_until: result.fakerank_until ?? undefined,
+        fakerankadmin_until: result.fakerankadmin_until ?? undefined,
+        fakerankoverride_until: result.fakerankoverride_until ?? undefined,
+        redeemed_codes: result.redeemed_codes ?? undefined,
       } as PlayerData;
     }
 
@@ -579,8 +579,8 @@ export async function generateLoginSecret(
 
     await db.insert(loginSecrets).values({
       secret: secret,
-      steamId: steamId,
-      expiresAt: expiresAt,
+      steam_id: steamId,
+      expires_at: expiresAt,
     });
 
     console.log('[AUTH] Login secret generated successfully:', secret);
@@ -598,8 +598,8 @@ export async function validateLoginSecret(
 ): Promise<{ isValid: boolean; steamId?: string; error?: string }> {
   const result = await db
     .select({
-      steamId: loginSecrets.steamId,
-      expiresAt: loginSecrets.expiresAt,
+      steamId: loginSecrets.steam_id,
+      expiresAt: loginSecrets.expires_at,
     })
     .from(loginSecrets)
     .where(eq(loginSecrets.secret, secret))
@@ -627,7 +627,7 @@ export async function cleanupExpiredLoginSecrets(
 ): Promise<void> {
   try {
     console.log('[AUTH] Cleaning up expired login secrets');
-    await db.delete(loginSecrets).where(lt(loginSecrets.expiresAt, Date.now()));
+    await db.delete(loginSecrets).where(lt(loginSecrets.expires_at, Date.now()));
     console.log('[AUTH] Expired login secrets cleanup completed');
   } catch (error) {
     console.error('[AUTH] Error cleaning up expired login secrets:', error);

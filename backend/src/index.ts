@@ -1,6 +1,6 @@
 import openapi from './openapi.json';
 import { drizzle } from 'drizzle-orm/d1';
-import * as schema from '../drizzle/schema.js';
+import * as schema from './db/schema.js';
 import {
   handleSteamLogin,
   handleSteamCallback,

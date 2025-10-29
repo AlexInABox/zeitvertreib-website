@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { createResponse, createSession, fetchSteamUserData } from '../utils.js';
-import { playerdata } from '../../drizzle/schema.js';
+import { playerdata } from '../db/schema.js';
 
 const DISCORD_API = 'https://discord.com/api';
 

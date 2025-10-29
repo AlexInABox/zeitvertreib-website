@@ -5,7 +5,7 @@ import { eq, desc, and } from 'drizzle-orm';
 import {
   financialTransactions,
   recurringTransactions,
-} from '../../drizzle/schema.js';
+} from '../db/schema.js';
 
 const ADMIN_STEAM_ID = '76561198354414854';
 

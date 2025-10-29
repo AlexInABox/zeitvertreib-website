@@ -1,7 +1,7 @@
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { desc, ne } from 'drizzle-orm';
-import { playerdata } from '../../drizzle/schema.js';
+import { playerdata } from '../db/schema.js';
 
 interface LeaderboardEntry {
   name: string;
