@@ -26,9 +26,10 @@ interface CedModResponse {
 export class MigrateCommand extends BaseCommand {
   override name = 'migrate';
   override name_localizations = { de: 'migrieren' };
-  override description = 'Migrate your CedMod stats to Zeitvertreib (one-time only)';
+  override description =
+    'Migrate your CedMod stats to Zeitvertreib (one-time only)';
   override description_localizations = {
-    de: 'Migriere deine CedMod-Statistiken zu Zeitvertreib (einmalig)'
+    de: 'Migriere deine CedMod-Statistiken zu Zeitvertreib (einmalig)',
   };
 
   override options = [];
@@ -63,7 +64,7 @@ export class MigrateCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Du bist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-            'Erstelle jetzt kostenlos deinen Account, um deine Statistiken zu migrieren!',
+              'Erstelle jetzt kostenlos deinen Account, um deine Statistiken zu migrieren!',
           )
           .setTimestamp();
 
@@ -102,7 +103,7 @@ export class MigrateCommand extends BaseCommand {
           .setTitle('⚠️ Migration bereits durchgeführt')
           .setDescription(
             `Du hast deine CedMod-Statistiken bereits am **${formattedDate}** migriert.\n\n` +
-            'Die Migration kann nur **einmal** durchgeführt werden, um Datenkonsistenz zu gewährleisten.',
+              'Die Migration kann nur **einmal** durchgeführt werden, um Datenkonsistenz zu gewährleisten.',
           )
           .setTimestamp();
 
@@ -117,7 +118,7 @@ export class MigrateCommand extends BaseCommand {
       console.log(`Fetching CedMod data for Steam ID: ${steamId}`);
       const cedmodResponse = await fetch(cedmodUrl, {
         headers: {
-          'Authorization': `Bearer ${env.CEDMOD_API_KEY}`,
+          Authorization: `Bearer ${env.CEDMOD_API_KEY}`,
         },
       });
 
@@ -133,7 +134,7 @@ export class MigrateCommand extends BaseCommand {
           .setTitle('❌ Keine CedMod-Daten gefunden')
           .setDescription(
             'Für deinen Account wurden keine Statistiken bei CedMod gefunden.\n\n' +
-            'Möglicherweise hast du noch nicht auf dem Server gespielt oder deine Daten wurden nicht erfasst.',
+              'Möglicherweise hast du noch nicht auf dem Server gespielt oder deine Daten wurden nicht erfasst.',
           )
           .setTimestamp();
 
@@ -182,7 +183,11 @@ export class MigrateCommand extends BaseCommand {
         .where(eq(playerdata.discordId, discordIdNum));
 
       // Create comparison strings
-      const createComparisonLine = (label: string, oldValue: number, newValue: number | undefined) => {
+      const createComparisonLine = (
+        label: string,
+        oldValue: number,
+        newValue: number | undefined,
+      ) => {
         if (newValue === undefined || newValue === null) {
           return `${label}: ${oldValue} → ❌ *Keine Daten von CedMod*`;
         }
@@ -194,8 +199,16 @@ export class MigrateCommand extends BaseCommand {
         createComparisonLine('Deaths', oldStats.deaths, cedmodPlayer.deaths),
         createComparisonLine('Colas', oldStats.colas, cedmodPlayer.colaDrink),
         createComparisonLine('Medkits', oldStats.medkits, cedmodPlayer.medkits),
-        createComparisonLine('Adrenalin', oldStats.adrenaline, cedmodPlayer.adrenalineShots),
-        createComparisonLine('Runden', oldStats.rounds, cedmodPlayer.roundsPlayed),
+        createComparisonLine(
+          'Adrenalin',
+          oldStats.adrenaline,
+          cedmodPlayer.adrenalineShots,
+        ),
+        createComparisonLine(
+          'Runden',
+          oldStats.rounds,
+          cedmodPlayer.roundsPlayed,
+        ),
       ];
 
       const successEmbed = new EmbedBuilder()
@@ -203,15 +216,14 @@ export class MigrateCommand extends BaseCommand {
         .setTitle('✅ Migration erfolgreich!')
         .setDescription(
           'Deine CedMod-Statistiken wurden erfolgreich zu Zeitvertreib migriert!\n\n' +
-          '**Migrierte Statistiken:**\n' +
-          comparisons.join('\n') +
-          '\n\n*Diese Migration kann nicht rückgängig gemacht werden.*',
+            '**Migrierte Statistiken:**\n' +
+            comparisons.join('\n') +
+            '\n\n*Diese Migration kann nicht rückgängig gemacht werden.*',
         )
         .setFooter({ text: `Steam ID: ${steamId}` })
         .setTimestamp();
 
       await helpers.reply({ embeds: [successEmbed.toJSON()] });
-
     } catch (error) {
       console.error('Migrate command error:', error);
 
@@ -221,7 +233,10 @@ export class MigrateCommand extends BaseCommand {
       let color = 0xff0000;
 
       if (error instanceof Error) {
-        if (error.message.includes('fetch') || error.message.includes('CedMod API')) {
+        if (
+          error.message.includes('fetch') ||
+          error.message.includes('CedMod API')
+        ) {
           description =
             'Der CedMod-Server ist momentan nicht erreichbar.\n' +
             'Bitte versuche es später erneut oder kontaktiere einen Administrator.';
