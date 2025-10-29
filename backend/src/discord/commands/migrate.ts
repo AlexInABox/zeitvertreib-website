@@ -64,7 +64,7 @@ export class MigrateCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Du bist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-              'Erstelle jetzt kostenlos deinen Account, um deine Statistiken zu migrieren!',
+            'Erstelle jetzt kostenlos deinen Account, um deine Statistiken zu migrieren!',
           )
           .setTimestamp();
 
@@ -88,8 +88,8 @@ export class MigrateCommand extends BaseCommand {
       }
 
       // Check if already migrated
-      if (playerData.migratedCedmodAt !== null) {
-        const migratedDate = new Date(playerData.migratedCedmodAt);
+      if (playerData.migratedCedmod !== null) {
+        const migratedDate = new Date(playerData.migratedCedmod);
         const formattedDate = migratedDate.toLocaleDateString('de-DE', {
           year: 'numeric',
           month: 'long',
@@ -103,7 +103,7 @@ export class MigrateCommand extends BaseCommand {
           .setTitle('⚠️ Migration bereits durchgeführt')
           .setDescription(
             `Du hast deine CedMod-Statistiken bereits am **${formattedDate}** migriert.\n\n` +
-              'Die Migration kann nur **einmal** durchgeführt werden, um Datenkonsistenz zu gewährleisten.',
+            'Die Migration kann nur **einmal** durchgeführt werden, um Datenkonsistenz zu gewährleisten.',
           )
           .setTimestamp();
 
@@ -134,7 +134,7 @@ export class MigrateCommand extends BaseCommand {
           .setTitle('❌ Keine CedMod-Daten gefunden')
           .setDescription(
             'Für deinen Account wurden keine Statistiken bei CedMod gefunden.\n\n' +
-              'Möglicherweise hast du noch nicht auf dem Server gespielt oder deine Daten wurden nicht erfasst.',
+            'Möglicherweise hast du noch nicht auf dem Server gespielt oder deine Daten wurden nicht erfasst.',
           )
           .setTimestamp();
 
@@ -216,9 +216,9 @@ export class MigrateCommand extends BaseCommand {
         .setTitle('✅ Migration erfolgreich!')
         .setDescription(
           'Deine CedMod-Statistiken wurden erfolgreich zu Zeitvertreib migriert!\n\n' +
-            '**Migrierte Statistiken:**\n' +
-            comparisons.join('\n') +
-            '\n\n*Diese Migration kann nicht rückgängig gemacht werden.*',
+          '**Migrierte Statistiken:**\n' +
+          comparisons.join('\n') +
+          '\n\n*Diese Migration kann nicht rückgängig gemacht werden.*',
         )
         .setFooter({ text: `Steam ID: ${steamId}` })
         .setTimestamp();
