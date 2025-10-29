@@ -70,6 +70,10 @@ import {
 } from './routes/slotmachine.js';
 import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
+import {
+  handleDiscordBotInteractions,
+} from './routes/discord-bot.js';
+import { PlayerlistStorage } from './discord/playerlist-storage.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -167,6 +171,9 @@ const routes: Record<
   // Discord OAuth2 routes
   'GET:/auth/discord': handleDiscordLogin,
   'GET:/auth/discord/callback': handleDiscordCallback,
+
+  // Discord Bot routes
+  'POST:/discord': handleDiscordBotInteractions,
 };
 
 export default {
@@ -286,3 +293,6 @@ export default {
     }
   },
 } satisfies ExportedHandler<Env>;
+
+// Export PlayerlistStorage for Durable Object
+export { PlayerlistStorage };
