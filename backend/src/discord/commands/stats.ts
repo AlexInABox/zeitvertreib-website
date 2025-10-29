@@ -74,7 +74,7 @@ export class StatsCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Dieser Benutzer ist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-              'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
+            'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
           )
           .setTimestamp();
 
@@ -120,39 +120,50 @@ export class StatsCommand extends BaseCommand {
         embed.setThumbnail(avatarUrl);
       }
 
+      const fields = [
+        {
+          name: '⚔️ Skill',
+          value: `**Kills:** ${stats.killcount ?? 0}\n**Deaths:** ${stats.deathcount ?? 0}\n**K/D:** ${kd}`,
+          inline: true,
+        },
+        {
+          name: '🎮 Gaming',
+          value: `**Runden:** ${stats.roundsplayed ?? 0}\n**ZVC:** ${stats.experience ?? 0}\n**Pocket Escapes:** ${stats.pocketescapes ?? 0}`,
+          inline: true,
+        },
+        {
+          name: '⏱️ Spielzeit',
+          value: `**${playtimeHours}h ${playtimeMinutes}m**`,
+          inline: true,
+        },
+        {
+          name: '💉 Drogen',
+          value: `**Medkits:** ${stats.usedmedkits ?? 0}\n**Colas:** ${stats.usedcolas ?? 0}\n**Adrenalin:** ${stats.usedadrenaline ?? 0}`,
+          inline: true,
+        },
+        {
+          name: '🎰 Slots',
+          value: `**Spins:** ${stats.slotSpins ?? 0}\n**Profit:** ${stats.slotWins ?? 0}\n-# **Verlust:** ${stats.slotLosses ?? 0}`,
+          inline: true,
+        },
+        {
+          name: '🐍 Snake',
+          value: `**Highscore:** ${stats.snakehighscore ?? 0}`,
+          inline: true,
+        },
+      ];
+
+      // Add migration hint if user hasn't migrated CedMod data yet
+      if (stats.migratedCedmod === null) {
+        fields.push({
+          name: '💡 Tipp',
+          value: '**Du hast noch alte CedMod-Statistiken?**\nNutze `/migrate` um deine alten Stats zu importieren!',
+          inline: false,
+        });
+      }
+
       embed
-        .addFields([
-          {
-            name: '⚔️ Skill',
-            value: `**Kills:** ${stats.killcount ?? 0}\n**Deaths:** ${stats.deathcount ?? 0}\n**K/D:** ${kd}`,
-            inline: true,
-          },
-          {
-            name: '🎮 Gaming',
-            value: `**Runden:** ${stats.roundsplayed ?? 0}\n**ZVC:** ${stats.experience ?? 0}\n**Pocket Escapes:** ${stats.pocketescapes ?? 0}`,
-            inline: true,
-          },
-          {
-            name: '⏱️ Spielzeit',
-            value: `**${playtimeHours}h ${playtimeMinutes}m**`,
-            inline: true,
-          },
-          {
-            name: '💉 Drogen',
-            value: `**Medkits:** ${stats.usedmedkits ?? 0}\n**Colas:** ${stats.usedcolas ?? 0}\n**Adrenalin:** ${stats.usedadrenaline ?? 0}`,
-            inline: true,
-          },
-          {
-            name: '🎰 Slots',
-            value: `**Spins:** ${stats.slotSpins ?? 0}\n**Profit:** ${stats.slotWins ?? 0}\n-# **Verlust:** ${stats.slotLosses ?? 0}`,
-            inline: true,
-          },
-          {
-            name: '🐍 Snake',
-            value: `**Highscore:** ${stats.snakehighscore ?? 0}`,
-            inline: true,
-          },
-        ])
+        .addFields(fields)
         .setFooter({ text: `Steam ID: ${stats.id}` })
         .setTimestamp();
 
