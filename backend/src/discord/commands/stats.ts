@@ -24,7 +24,12 @@ export class StatsCommand extends BaseCommand {
     },
   ];
 
-  async execute(interaction: any, helpers: CommandHelpers, env: Env, request: Request) {
+  async execute(
+    interaction: any,
+    helpers: CommandHelpers,
+    env: Env,
+    request: Request,
+  ) {
     console.log('Executing stats command');
 
     try {
@@ -69,7 +74,7 @@ export class StatsCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Dieser Benutzer ist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-            'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!'
+              'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
           )
           .setTimestamp();
 
@@ -94,53 +99,60 @@ export class StatsCommand extends BaseCommand {
 
       const stats = playerData;
 
-      const kd = (stats.deathcount ?? 0) > 0 ? ((stats.killcount ?? 0) / (stats.deathcount ?? 0)).toFixed(2) : (stats.killcount ?? 0).toFixed(2);
+      const kd =
+        (stats.deathcount ?? 0) > 0
+          ? ((stats.killcount ?? 0) / (stats.deathcount ?? 0)).toFixed(2)
+          : (stats.killcount ?? 0).toFixed(2);
       const playtimeHours = Math.floor((stats.playtime ?? 0) / 3600);
       const playtimeMinutes = Math.floor(((stats.playtime ?? 0) % 3600) / 60);
-      const displayName = stats.username || targetUsername || 'Unbekannter Spieler';
+      const displayName =
+        stats.username || targetUsername || 'Unbekannter Spieler';
 
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
         .setTitle(`📊 Statistiken für ${displayName}`)
-        .setDescription('Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮');
+        .setDescription(
+          'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮',
+        );
 
       // Set user avatar as thumbnail if available
       if (avatarUrl) {
         embed.setThumbnail(avatarUrl);
       }
 
-      embed.addFields([
-        {
-          name: '⚔️ Skill',
-          value: `**Kills:** ${stats.killcount ?? 0}\n**Deaths:** ${stats.deathcount ?? 0}\n**K/D:** ${kd}`,
-          inline: true,
-        },
-        {
-          name: '🎮 Gaming',
-          value: `**Runden:** ${stats.roundsplayed ?? 0}\n**ZVC:** ${stats.experience ?? 0}\n**Pocket Escapes:** ${stats.pocketescapes ?? 0}`,
-          inline: true,
-        },
-        {
-          name: '⏱️ Spielzeit',
-          value: `**${playtimeHours}h ${playtimeMinutes}m**`,
-          inline: true,
-        },
-        {
-          name: '💉 Drogen',
-          value: `**Medkits:** ${stats.usedmedkits ?? 0}\n**Colas:** ${stats.usedcolas ?? 0}\n**Adrenalin:** ${stats.usedadrenaline ?? 0}`,
-          inline: true,
-        },
-        {
-          name: '🎰 Slots',
-          value: `**Spins:** ${stats.slotSpins ?? 0}\n**Profit:** ${stats.slotWins ?? 0}\n-# **Verlust:** ${stats.slotLosses ?? 0}`,
-          inline: true,
-        },
-        {
-          name: '🐍 Snake',
-          value: `**Highscore:** ${stats.snakehighscore ?? 0}`,
-          inline: true,
-        },
-      ])
+      embed
+        .addFields([
+          {
+            name: '⚔️ Skill',
+            value: `**Kills:** ${stats.killcount ?? 0}\n**Deaths:** ${stats.deathcount ?? 0}\n**K/D:** ${kd}`,
+            inline: true,
+          },
+          {
+            name: '🎮 Gaming',
+            value: `**Runden:** ${stats.roundsplayed ?? 0}\n**ZVC:** ${stats.experience ?? 0}\n**Pocket Escapes:** ${stats.pocketescapes ?? 0}`,
+            inline: true,
+          },
+          {
+            name: '⏱️ Spielzeit',
+            value: `**${playtimeHours}h ${playtimeMinutes}m**`,
+            inline: true,
+          },
+          {
+            name: '💉 Drogen',
+            value: `**Medkits:** ${stats.usedmedkits ?? 0}\n**Colas:** ${stats.usedcolas ?? 0}\n**Adrenalin:** ${stats.usedadrenaline ?? 0}`,
+            inline: true,
+          },
+          {
+            name: '🎰 Slots',
+            value: `**Spins:** ${stats.slotSpins ?? 0}\n**Profit:** ${stats.slotWins ?? 0}\n-# **Verlust:** ${stats.slotLosses ?? 0}`,
+            inline: true,
+          },
+          {
+            name: '🐍 Snake',
+            value: `**Highscore:** ${stats.snakehighscore ?? 0}`,
+            inline: true,
+          },
+        ])
         .setFooter({ text: `Steam ID: ${stats.id}` })
         .setTimestamp();
 
@@ -148,14 +160,17 @@ export class StatsCommand extends BaseCommand {
     } catch (error) {
       console.error('Stats command error:', error);
       let title = '❌ Fehler';
-      let description = 'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.';
+      let description =
+        'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.';
       let color = 0xff0000;
 
       if (error instanceof Error) {
         if (error.message.startsWith('ServerError:')) {
           description =
             'Der Statistik-Server konnte deine Daten derzeit nicht abrufen.\n' +
-            'Bitte versuche es später erneut. (Fehlercode ' + error.message.split(':')[1] + ')';
+            'Bitte versuche es später erneut. (Fehlercode ' +
+            error.message.split(':')[1] +
+            ')';
         } else if (error.message.includes('EmptyData')) {
           description =
             'Für diesen Benutzer wurden **noch keine Statistiken gefunden**.\n' +

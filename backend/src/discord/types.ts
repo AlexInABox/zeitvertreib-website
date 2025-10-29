@@ -6,16 +6,15 @@ import type {
 
 // Global type declarations
 declare global {
-
   interface CommandHelpers {
     reply: (
       content:
         | string
         | {
-          content?: string;
-          embeds?: any[];
-          components?: any[];
-        },
+            content?: string;
+            embeds?: any[];
+            components?: any[];
+          },
     ) => Promise<void>;
   }
 
@@ -39,4 +38,4 @@ declare global {
   }
 }
 
-export { };
+export {};

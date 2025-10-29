@@ -3,7 +3,8 @@ import { BaseCommand } from '../base-command.js';
 
 export class PingCommand extends BaseCommand {
   override name = 'ping';
-  override description = 'Check if the bot is online and get performance statistics!';
+  override description =
+    'Check if the bot is online and get performance statistics!';
   override name_localizations = {
     de: 'ping',
   };
@@ -42,8 +43,9 @@ export class PingCommand extends BaseCommand {
         .addFields(
           {
             name: '📊 Leistungsstatistiken',
-            value: `🌐 **Region:** ${(request as any).cf?.region || 'Unbekannt'
-              }\n⏰ **Zeit:** ${new Date().toLocaleString('de-DE')}`,
+            value: `🌐 **Region:** ${
+              (request as any).cf?.region || 'Unbekannt'
+            }\n⏰ **Zeit:** ${new Date().toLocaleString('de-DE')}`,
             inline: false,
           },
           {

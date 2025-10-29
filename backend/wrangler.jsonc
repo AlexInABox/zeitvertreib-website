@@ -14,17 +14,15 @@
     "bindings": [
       {
         "name": "PLAYERLIST_STORAGE",
-        "class_name": "PlayerlistStorage"
-      }
+        "class_name": "PlayerlistStorage",
+      },
     ],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_classes": [
-        "PlayerlistStorage"
-      ]
-    }
+      "new_classes": ["PlayerlistStorage"],
+    },
   ],
   "kv_namespaces": [
     {
@@ -62,17 +60,15 @@
         "bindings": [
           {
             "name": "PLAYERLIST_STORAGE",
-            "class_name": "PlayerlistStorage"
-          }
+            "class_name": "PlayerlistStorage",
+          },
         ],
       },
       "migrations": [
         {
           "tag": "v1",
-          "new_classes": [
-            "PlayerlistStorage"
-          ]
-        }
+          "new_classes": ["PlayerlistStorage"],
+        },
       ],
       "kv_namespaces": [
         {
@@ -109,17 +105,15 @@
         "bindings": [
           {
             "name": "PLAYERLIST_STORAGE",
-            "class_name": "PlayerlistStorage"
-          }
+            "class_name": "PlayerlistStorage",
+          },
         ],
       },
       "migrations": [
         {
           "tag": "v1",
-          "new_classes": [
-            "PlayerlistStorage"
-          ]
-        }
+          "new_classes": ["PlayerlistStorage"],
+        },
       ],
       "kv_namespaces": [
         {
@@ -146,10 +140,7 @@
     },
   },
   "triggers": {
-    "crons": [
-      "0 6 * * *",
-      "*/15 * * * *"
-    ],
+    "crons": ["0 6 * * *", "*/15 * * * *"],
   },
   /**
    * Smart Placement

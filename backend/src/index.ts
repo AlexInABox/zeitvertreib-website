@@ -70,9 +70,7 @@ import {
 } from './routes/slotmachine.js';
 import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
-import {
-  handleDiscordBotInteractions,
-} from './routes/discord-bot.js';
+import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
 
 // Simple response helper for internal use
