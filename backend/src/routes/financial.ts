@@ -2,7 +2,10 @@ import { validateSession, createResponse } from '../utils.js';
 import { FinancialTransaction, RecurringTransaction } from '../types/index.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, and } from 'drizzle-orm';
-import { financialTransactions, recurringTransactions } from '../db/schema.js';
+import {
+  financialTransactions,
+  recurringTransactions,
+} from '../db/schema.js';
 
 const ADMIN_STEAM_ID = '76561198354414854';
 
@@ -54,7 +57,7 @@ export async function handleGetTransactions(
     const conditions: any[] = [];
 
     if (type && (type === 'income' || type === 'expense')) {
-      conditions.push(eq(financialTransactions.transactionType, type));
+      conditions.push(eq(financialTransactions.transaction_type, type));
     }
 
     if (category) {
@@ -67,8 +70,8 @@ export async function handleGetTransactions(
       .from(financialTransactions)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(
-        desc(financialTransactions.transactionDate),
-        desc(financialTransactions.createdAt),
+        desc(financialTransactions.transaction_date),
+        desc(financialTransactions.created_at),
       )
       .limit(limit)
       .offset(offset);
@@ -76,13 +79,13 @@ export async function handleGetTransactions(
     // Transform database records to match frontend interface
     const transformedTransactions = result.map((row) => ({
       id: row.id,
-      date: row.transactionDate,
-      type: row.transactionType,
+      date: row.transaction_date,
+      type: row.transaction_type,
       category: row.category,
       amount: row.amount,
       description: row.description,
       service: row.notes || row.category, // Use notes as service/title, fallback to category
-      created_at: row.createdAt,
+      created_at: row.created_at,
     }));
 
     return createResponse(
@@ -122,7 +125,7 @@ export async function handleGetRecurringTransactions(
     const result = await db
       .select()
       .from(recurringTransactions)
-      .orderBy(desc(recurringTransactions.createdAt));
+      .orderBy(desc(recurringTransactions.created_at));
 
     return createResponse(
       {
@@ -228,16 +231,16 @@ export async function handleCreateRecurringTransaction(
     const result = await db
       .insert(recurringTransactions)
       .values({
-        transactionType: recurring.transaction_type,
+        transaction_type: recurring.transaction_type,
         category: recurring.category,
         amount: recurring.amount,
         description: recurring.description,
         frequency: recurring.frequency,
-        startDate: recurring.start_date,
-        endDate: recurring.end_date || null,
-        nextExecution: nextExecution,
-        createdBy: adminValidation.session?.steamId || null,
-        referenceId: recurring.reference_id || null,
+        start_date: recurring.start_date,
+        end_date: recurring.end_date || null,
+        next_execution: nextExecution,
+        created_by: adminValidation.session?.steamId || null,
+        reference_id: recurring.reference_id || null,
         notes: recurring.notes || null,
       })
       .returning({ insertedId: recurringTransactions.id });
@@ -614,13 +617,13 @@ export async function handleCreateTransaction(
     const result = await db
       .insert(financialTransactions)
       .values({
-        transactionType: transaction.transaction_type,
+        transaction_type: transaction.transaction_type,
         category: transaction.category,
         amount: transaction.amount,
         description: transaction.description,
-        transactionDate: transaction.transaction_date,
-        createdBy: adminValidation.session?.steamId || null,
-        referenceId: transaction.reference_id || null,
+        transaction_date: transaction.transaction_date,
+        created_by: adminValidation.session?.steamId || null,
+        reference_id: transaction.reference_id || null,
         notes: transaction.notes || null,
       })
       .returning({ insertedId: financialTransactions.id });
