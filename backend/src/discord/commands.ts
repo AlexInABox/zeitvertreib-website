@@ -2,6 +2,7 @@ import { CommandManager } from './command-manager.js';
 import { PingCommand } from './commands/ping.js';
 import { StatsCommand } from './commands/stats.js';
 import { PlayerlistCommand } from './commands/playerlist.js';
+import { MigrateCommand } from './commands/migrate.js';
 // Create command manager instance
 export const commandManager = new CommandManager();
 
@@ -9,6 +10,7 @@ export const commandManager = new CommandManager();
 commandManager.register(new PingCommand());
 commandManager.register(new PlayerlistCommand());
 commandManager.register(new StatsCommand());
+commandManager.register(new MigrateCommand());
 
 // Export commands for backwards compatibility and registration
 export const COMMANDS = commandManager.getAll();

@@ -58,6 +58,9 @@ export const playerdata = sqliteTable('playerdata', {
   slotSpins: integer('slotSpins').notNull().default(0),
   slotWins: integer('slotWins').notNull().default(0),
   slotLosses: integer('slotLosses').notNull().default(0),
+  migratedCedmodAt: integer('migrated_cedmod', { mode: "timestamp_ms" }),
+  firstSeen: integer('first_seen', { mode: "timestamp_ms" }),
+  lastSeen: integer('last_seen', { mode: "timestamp_ms" }),
 });
 
 export const loginSecrets = sqliteTable('login_secrets', {
