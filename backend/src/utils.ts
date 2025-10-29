@@ -327,13 +327,13 @@ export async function getPlayerData(
         usedadrenaline: result.usedadrenaline ?? undefined,
         snakehighscore: result.snakehighscore ?? undefined,
         fakerank: result.fakerank ?? undefined,
-        fakerank_color: result.fakerank_color ?? undefined,
+        fakerank_color: result.fakerankColor ?? undefined,
         killcount: result.killcount ?? undefined,
         deathcount: result.deathcount ?? undefined,
-        fakerank_until: result.fakerank_until ?? undefined,
-        fakerankadmin_until: result.fakerankadmin_until ?? undefined,
-        fakerankoverride_until: result.fakerankoverride_until ?? undefined,
-        redeemed_codes: result.redeemed_codes ?? undefined,
+        fakerank_until: result.fakerankUntil ?? undefined,
+        fakerankadmin_until: result.fakerankadminUntil ?? undefined,
+        fakerankoverride_until: result.fakerankoverrideUntil ?? undefined,
+        redeemed_codes: result.redeemedCodes ?? undefined,
       } as PlayerData;
     }
 
@@ -579,8 +579,8 @@ export async function generateLoginSecret(
 
     await db.insert(loginSecrets).values({
       secret: secret,
-      steam_id: steamId,
-      expires_at: expiresAt,
+      steamId: steamId,
+      expiresAt: expiresAt,
     });
 
     console.log('[AUTH] Login secret generated successfully:', secret);
@@ -598,8 +598,8 @@ export async function validateLoginSecret(
 ): Promise<{ isValid: boolean; steamId?: string; error?: string }> {
   const result = await db
     .select({
-      steamId: loginSecrets.steam_id,
-      expiresAt: loginSecrets.expires_at,
+      steamId: loginSecrets.steamId,
+      expiresAt: loginSecrets.expiresAt,
     })
     .from(loginSecrets)
     .where(eq(loginSecrets.secret, secret))
@@ -629,7 +629,7 @@ export async function cleanupExpiredLoginSecrets(
     console.log('[AUTH] Cleaning up expired login secrets');
     await db
       .delete(loginSecrets)
-      .where(lt(loginSecrets.expires_at, Date.now()));
+      .where(lt(loginSecrets.expiresAt, Date.now()));
     console.log('[AUTH] Expired login secrets cleanup completed');
   } catch (error) {
     console.error('[AUTH] Error cleaning up expired login secrets:', error);

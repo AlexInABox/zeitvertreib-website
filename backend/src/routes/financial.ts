@@ -54,7 +54,7 @@ export async function handleGetTransactions(
     const conditions: any[] = [];
 
     if (type && (type === 'income' || type === 'expense')) {
-      conditions.push(eq(financialTransactions.transaction_type, type));
+      conditions.push(eq(financialTransactions.transactionType, type));
     }
 
     if (category) {
@@ -67,8 +67,8 @@ export async function handleGetTransactions(
       .from(financialTransactions)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(
-        desc(financialTransactions.transaction_date),
-        desc(financialTransactions.created_at),
+        desc(financialTransactions.transactionDate),
+        desc(financialTransactions.createdAt),
       )
       .limit(limit)
       .offset(offset);
@@ -76,13 +76,13 @@ export async function handleGetTransactions(
     // Transform database records to match frontend interface
     const transformedTransactions = result.map((row) => ({
       id: row.id,
-      date: row.transaction_date,
-      type: row.transaction_type,
+      date: row.transactionDate,
+      type: row.transactionType,
       category: row.category,
       amount: row.amount,
       description: row.description,
       service: row.notes || row.category, // Use notes as service/title, fallback to category
-      created_at: row.created_at,
+      created_at: row.createdAt,
     }));
 
     return createResponse(
@@ -122,7 +122,7 @@ export async function handleGetRecurringTransactions(
     const result = await db
       .select()
       .from(recurringTransactions)
-      .orderBy(desc(recurringTransactions.created_at));
+      .orderBy(desc(recurringTransactions.createdAt));
 
     return createResponse(
       {
@@ -228,16 +228,16 @@ export async function handleCreateRecurringTransaction(
     const result = await db
       .insert(recurringTransactions)
       .values({
-        transaction_type: recurring.transaction_type,
+        transactionType: recurring.transaction_type,
         category: recurring.category,
         amount: recurring.amount,
         description: recurring.description,
         frequency: recurring.frequency,
-        start_date: recurring.start_date,
-        end_date: recurring.end_date || null,
-        next_execution: nextExecution,
-        created_by: adminValidation.session?.steamId || null,
-        reference_id: recurring.reference_id || null,
+        startDate: recurring.start_date,
+        endDate: recurring.end_date || null,
+        nextExecution: nextExecution,
+        createdBy: adminValidation.session?.steamId || null,
+        referenceId: recurring.reference_id || null,
         notes: recurring.notes || null,
       })
       .returning({ insertedId: recurringTransactions.id });
@@ -614,13 +614,13 @@ export async function handleCreateTransaction(
     const result = await db
       .insert(financialTransactions)
       .values({
-        transaction_type: transaction.transaction_type,
+        transactionType: transaction.transaction_type,
         category: transaction.category,
         amount: transaction.amount,
         description: transaction.description,
-        transaction_date: transaction.transaction_date,
-        created_by: adminValidation.session?.steamId || null,
-        reference_id: transaction.reference_id || null,
+        transactionDate: transaction.transaction_date,
+        createdBy: adminValidation.session?.steamId || null,
+        referenceId: transaction.reference_id || null,
         notes: transaction.notes || null,
       })
       .returning({ insertedId: financialTransactions.id });

@@ -123,7 +123,7 @@ export async function handleSetUserFakerank(
   request: Request,
   env: Env,
 ): Promise<Response> {
-  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const db = drizzle(env.ZEITVERTREIB_DATA, { casing: "camelCase" });
   const origin = request.headers.get('Origin');
 
   try {
@@ -177,8 +177,8 @@ export async function handleSetUserFakerank(
           .update(playerdata)
           .set({
             fakerank,
-            fakerank_color: fakerank_color,
-            fakerankoverride_until: overrideUntil,
+            fakerankColor: fakerank_color,
+            fakerankadminUntil: overrideUntil,
           })
           .where(eq(playerdata.id, playerId));
       } else {
@@ -187,8 +187,8 @@ export async function handleSetUserFakerank(
           .update(playerdata)
           .set({
             fakerank,
-            fakerank_color: fakerank_color,
-            fakerankoverride_until: 0,
+            fakerankColor: fakerank_color,
+            fakerankoverrideUntil: 0,
           })
           .where(eq(playerdata.id, playerId));
       }
@@ -198,8 +198,8 @@ export async function handleSetUserFakerank(
         .update(playerdata)
         .set({
           fakerank: null,
-          fakerank_color: 'default',
-          fakerankoverride_until: 0,
+          fakerankColor: 'default',
+          fakerankoverrideUntil: 0,
         })
         .where(eq(playerdata.id, playerId));
     }
@@ -675,8 +675,8 @@ export async function handleGetAllFakeranks(
       .select({
         id: playerdata.id,
         fakerank: playerdata.fakerank,
-        fakerank_color: playerdata.fakerank_color,
-        fakerank_until: playerdata.fakerank_until,
+        fakerank_color: playerdata.fakerankColor,
+        fakerank_until: playerdata.fakerankUntil,
         experience: playerdata.experience,
       })
       .from(playerdata)

@@ -23,8 +23,8 @@ export const playerdata = sqliteTable('playerdata', {
   snakehighscore: integer('snakehighscore').default(0),
   killcount: integer('killcount').default(0),
   deathcount: integer('deathcount').default(0),
-  fakerank_until: integer('fakerank_until').default(0),
-  fakerank_color: text('fakerank_color', {
+  fakerankUntil: integer('fakerank_until').default(0),
+  fakerankColor: text('fakerank_color', {
     enum: [
       'pink',
       'red',
@@ -51,9 +51,9 @@ export const playerdata = sqliteTable('playerdata', {
       'pumpkin',
     ],
   }).default('default'),
-  fakerankadmin_until: integer('fakerankadmin_until').default(0),
-  redeemed_codes: text('redeemed_codes').default(''),
-  fakerankoverride_until: integer('fakerankoverride_until').default(0),
+  fakerankadminUntil: integer('fakerankadmin_until').default(0),
+  redeemedCodes: text('redeemed_codes').default(''),
+  fakerankoverrideUntil: integer('fakerankoverride_until').default(0),
   username: text('username').default(''),
   slotSpins: integer('slotSpins').notNull().default(0),
   slotWins: integer('slotWins').notNull().default(0),
@@ -62,9 +62,9 @@ export const playerdata = sqliteTable('playerdata', {
 
 export const loginSecrets = sqliteTable('login_secrets', {
   secret: text('secret').primaryKey(),
-  steam_id: text('steam_id').notNull(),
-  created_at: integer('created_at').default(sql`CURRENT_TIMESTAMP`),
-  expires_at: integer('expires_at').notNull(),
+  steamId: text('steam_id').notNull(),
+  createdAt: integer('created_at').default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: integer('expires_at').notNull(),
 });
 
 export const kills = sqliteTable('kills', {
@@ -76,13 +76,13 @@ export const kills = sqliteTable('kills', {
 export const redemptionCodes = sqliteTable('redemption_codes', {
   code: text('code').primaryKey(),
   credits: integer('credits').notNull(),
-  remaining_uses: integer('remaining_uses').notNull(),
-  created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  remainingUses: integer('remaining_uses').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const recurringTransactions = sqliteTable('recurring_transactions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  transaction_type: text('transaction_type', {
+  transactionType: text('transaction_type', {
     enum: ['income', 'expense'],
   }).notNull(),
   category: text('category').notNull(),
@@ -91,28 +91,28 @@ export const recurringTransactions = sqliteTable('recurring_transactions', {
   frequency: text('frequency', {
     enum: ['daily', 'weekly', 'monthly', 'yearly'],
   }).notNull(),
-  start_date: text('start_date').notNull(),
-  end_date: text('end_date'),
-  next_execution: text('next_execution').notNull(),
-  is_active: integer('is_active').default(1),
-  created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-  created_by: text('created_by'),
-  reference_id: text('reference_id'),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date'),
+  nextExecution: text('next_execution').notNull(),
+  isActive: integer('is_active').default(1),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  createdBy: text('created_by'),
+  referenceId: text('reference_id'),
   notes: text('notes'),
-  last_executed: text('last_executed'),
+  lastExecuted: text('last_executed'),
 });
 
 export const financialTransactions = sqliteTable('financial_transactions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  transaction_type: text('transaction_type', {
+  transactionType: text('transaction_type', {
     enum: ['income', 'expense'],
   }).notNull(),
   category: text('category').notNull(),
   amount: real('amount').notNull(),
   description: text('description').notNull(),
-  transaction_date: text('transaction_date').notNull(),
-  created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-  created_by: text('created_by'),
-  reference_id: text('reference_id'),
+  transactionDate: text('transaction_date').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  createdBy: text('created_by'),
+  referenceId: text('reference_id'),
   notes: text('notes'),
 });
