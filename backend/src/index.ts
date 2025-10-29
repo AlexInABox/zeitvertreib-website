@@ -10,6 +10,7 @@ import {
   handleLoginWithSecret,
 } from './routes/auth.js';
 import { handleGetStats } from './routes/stats.js';
+import { handleGetPublicStats } from './routes/public-stats.js';
 import {
   handleUploadSpray,
   handleGetSpray,
@@ -100,6 +101,9 @@ const routes: Record<
 
   // Stats
   'GET:/stats': handleGetStats,
+
+  //Public endpoints (no auth)
+  'GET:/public/stats': handleGetPublicStats,
 
   // Spray routes
   'POST:/spray/upload': handleUploadSpray,
