@@ -72,6 +72,10 @@ import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
+import {
+  handleGetPlayerlist,
+  handleUpdatePlayerlist,
+} from './routes/playerlist.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -172,6 +176,10 @@ const routes: Record<
 
   // Discord Bot routes
   'POST:/discord': handleDiscordBotInteractions,
+
+  // Playerlist routes
+  'GET:/playerlist': handleGetPlayerlist,
+  'POST:/playerlist': handleUpdatePlayerlist,
 };
 
 export default {
