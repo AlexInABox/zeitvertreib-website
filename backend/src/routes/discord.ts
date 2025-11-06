@@ -62,7 +62,10 @@ export async function handleDiscordCallback(request: Request, env: Env) {
 
     // Validate connections is an array
     if (!Array.isArray(connections)) {
-      console.error('Discord connections response is not an array:', connections);
+      console.error(
+        'Discord connections response is not an array:',
+        connections,
+      );
       return createResponse(
         { error: 'Failed to fetch Discord connections' },
         500,
