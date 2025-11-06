@@ -24,6 +24,11 @@ A lightweight Cloudflare Workers backend for Steam authentication and player sta
 - `LEADERBOARD_WEBHOOK` - Discord webhook URL for leaderboard updates
 - `LEADERBOARD_MESSAGE_ID` - Discord message ID to edit for leaderboard
 
+### MinIO/S3 Configuration
+
+- `MINIO_ACCESS_KEY` - MinIO access key for S3 storage
+- `MINIO_SECRET_KEY` - MinIO secret key for S3 storage
+
 ### Proxy Configuration (Optional)
 
 For Discord API calls, you can configure a proxy to route requests through:
@@ -48,10 +53,43 @@ When configured, all Discord API calls will automatically route through the spec
 - `GET /auth/steam/callback` - Steam login callback
 - `GET /auth/me` - Get current user info
 - `POST /auth/logout` - Logout user
+- `POST /public/upload` - Upload a file to MinIO (public, no authentication required)
 - `GET /stats` - Get player statistics (requires authentication)
 - `POST /spray/upload` - Upload and process an image as a spray (requires authentication)
 - `GET /spray/image` - Get the processed spray image (requires authentication)
 - `GET /spray/string` - Get the spray as a pixel art string (requires authentication)
+
+### File Upload Endpoint
+
+#### POST /public/upload
+
+Uploads a file of any type to MinIO S3 storage with a randomly generated name.
+
+**Request:**
+
+- Method: POST
+- Content-Type: multipart/form-data
+- Authentication: None (public endpoint)
+- Body: Form data with 'file' field containing the file to upload
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "filename": "550e8400-e29b-41d4-a716-446655440000.png",
+  "url": "https://s3.zeitvertreib.vip/test/550e8400-e29b-41d4-a716-446655440000.png",
+  "size": 12345,
+  "type": "image/png"
+}
+```
+
+**Example usage with curl:**
+
+```bash
+curl -X POST https://dev.zeitvertreib.vip/api/public/upload \
+  -F "file=@/path/to/your/file.png"
+```
 
 ### Spray Endpoints Details
 
