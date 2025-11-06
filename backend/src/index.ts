@@ -76,7 +76,12 @@ import {
   handleGetPlayerlist,
   handleUpdatePlayerlist,
 } from './routes/playerlist.js';
-import { handleFileUpload } from './routes/upload.js';
+import {
+  handleFileUpload,
+  handleListCaseFolders,
+  handleCreateCaseFolder,
+  handleListCaseFiles,
+} from './routes/upload.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -112,6 +117,9 @@ const routes: Record<
   //Public endpoints (no auth)
   'GET:/public/stats': handleGetPublicStats,
   'POST:/public/upload': handleFileUpload,
+  'GET:/public/folders': handleListCaseFolders,
+  'POST:/public/folder': handleCreateCaseFolder,
+  'GET:/public/files': handleListCaseFiles,
 
   // Spray routes
   'POST:/spray/upload': handleUploadSpray,

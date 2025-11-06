@@ -1,5 +1,75 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { createResponse } from '../utils.js';
+import { AwsClient } from 'aws4fetch';
+import { createResponse, validateSession, getPlayerData } from '../utils.js';
+import { drizzle } from 'drizzle-orm/d1';
+
+const BUCKET = 'test';
+
+// Allowed file extensions
+const ALLOWED_EXTENSIONS = [
+    // Images
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'bmp',
+    'svg',
+    // Videos
+    'mp4',
+    'webm',
+    'mov',
+    'avi',
+    'mkv',
+    // Audio
+    'mp3',
+    'wav',
+    'ogg',
+    // Documents
+    'pdf',
+    'txt',
+    'md',
+    // Archives
+    'zip',
+    'tar',
+    'gz',
+];
+
+
+const aws = (env: Env): AwsClient =>
+    new AwsClient({
+        accessKeyId: env.MINIO_ACCESS_KEY,
+        secretAccessKey: env.MINIO_SECRET_KEY,
+        service: 's3',
+        region: 'us-east-1',
+    });
+
+
+// Helper function to check if user has required permissions
+async function hasPermission(
+    request: Request,
+    db: ReturnType<typeof drizzle>,
+    env: Env,
+): Promise<boolean> {
+    const { isValid, session } = await validateSession(request, env);
+
+    if (!isValid || !session) {
+        return false;
+    }
+
+    // Get player data to check admin status
+    const playerData = await getPlayerData(session.steamId, db, env);
+
+    // Check if user has fakerank admin access based on unix timestamp
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const fakerankAdminUntil = playerData?.fakerankadmin_until || 0;
+
+    // If fakerankadmin_until is 0 or current time is past the expiration, no access
+    if (fakerankAdminUntil === 0 || currentTimestamp > fakerankAdminUntil) {
+        return false;
+    }
+
+    return true;
+}
 
 export async function handleFileUpload(
     request: Request,
@@ -8,77 +78,320 @@ export async function handleFileUpload(
     const origin = request.headers.get('Origin');
 
     try {
-        // Check if request has a file
-        const contentType = request.headers.get('content-type') || '';
+        // Get folder and extension from query parameters
+        const url = new URL(request.url);
+        const caseId = url.searchParams.get('case');
+        const extension = url.searchParams.get('extension') || '';
 
-        if (!contentType.includes('multipart/form-data')) {
+        if (!caseId) {
             return createResponse(
-                { error: 'Content-Type must be multipart/form-data' },
+                { error: 'Missing required parameter: case' },
                 400,
                 origin,
             );
         }
 
-        // Parse form data
-        const formData = await request.formData();
-        const file = formData.get('file') as File;
-
-        if (!file) {
+        // Validate case ID format (5 lowercase letters or numbers)
+        if (!/^[a-z0-9]{5}$/.test(caseId)) {
             return createResponse(
-                { error: 'No file provided. Use "file" as the form field name.' },
+                { error: 'Invalid case format. Must be 5 lowercase letters or numbers' },
                 400,
+                origin,
+            );
+        }
+
+        // Validate extension if provided
+        if (extension && !ALLOWED_EXTENSIONS.includes(extension.toLowerCase())) {
+            return createResponse(
+                {
+                    error: 'Invalid file extension',
+                    allowedExtensions: ALLOWED_EXTENSIONS,
+                },
+                400,
+                origin,
+            );
+        }
+
+        // Verify that the folder exists
+        const folderPath = `case-${caseId}`;
+        const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderPath}/`;
+        const checkRequest = await aws(env).sign(checkUrl, {
+            method: 'HEAD',
+        });
+        const checkResponse = await fetch(checkRequest);
+
+        if (checkResponse.status === 404) {
+            return createResponse(
+                { error: `Folder ${folderPath} does not exist` },
+                404,
                 origin,
             );
         }
 
         // Generate random filename
         const randomName = crypto.randomUUID();
-        const extension = file.name.split('.').pop() || '';
         const filename = extension ? `${randomName}.${extension}` : randomName;
+        const filePath = `case-${caseId}/${filename}`;
 
-        // Initialize S3 client for MinIO
-        const s3Client = new S3Client({
-            region: 'eu-west', // MinIO doesn't require a specific region, but SDK needs one
-            endpoint: 'https://s3.zeitvertreib.vip',
-            credentials: {
-                accessKeyId: env.MINIO_ACCESS_KEY,
-                secretAccessKey: env.MINIO_SECRET_KEY,
-            },
-            forcePathStyle: true, // Required for MinIO
-        });
+        // Create presigned PUT URL with 1 hour expiry
+        const presignedUrl = await aws(env).sign(
+            `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`,
+            {
+                method: 'PUT',
+                aws: { signQuery: true },
+            }
+        );
 
-        // Convert file to ArrayBuffer
-        const fileBuffer = await file.arrayBuffer();
-
-        // Upload to S3/MinIO
-        const uploadCommand = new PutObjectCommand({
-            Bucket: 'test',
-            Key: filename,
-            Body: new Uint8Array(fileBuffer),
-            ContentType: file.type || 'application/octet-stream',
-        });
-
-        await s3Client.send(uploadCommand);
-
-        // Return success with file URL
-        const fileUrl = `https://s3.zeitvertreib.vip/test/${filename}`;
-
+        // Return the presigned PUT URL
         return createResponse(
             {
-                success: true,
+                url: presignedUrl.url,
+                method: 'PUT',
                 filename,
-                url: fileUrl,
-                size: file.size,
-                type: file.type,
+                fileUrl: `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`,
+                expiresIn: 3600,
             },
             200,
             origin,
         );
     } catch (error) {
-        console.error('File upload error:', error);
+        console.error('Presigned URL generation error:', error);
         return createResponse(
             {
-                error: 'Failed to upload file',
+                error: 'Failed to generate upload URL',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            },
+            500,
+            origin,
+        );
+    }
+}
+
+export async function handleListCaseFolders(
+    request: Request,
+    env: Env,
+): Promise<Response> {
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+    const origin = request.headers.get('Origin');
+
+    try {
+        // Validate admin privileges
+        const authorized = await hasPermission(request, db, env);
+        if (!authorized) {
+            return createResponse({ error: 'Unauthorized' }, 401, origin);
+        }
+
+        // List objects with delimiter to get folders
+        const url = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&delimiter=/`;
+        const signedRequest = await aws(env).sign(url, {
+            method: 'GET',
+        });
+
+        const response = await fetch(signedRequest);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const xmlText = await response.text();
+
+        // Parse XML response to extract CommonPrefixes
+        const prefixMatches = xmlText.matchAll(/<Prefix>([^<]+)<\/Prefix>/g);
+        const caseFolders = Array.from(prefixMatches)
+            .map((match) => match[1]?.replace('/', '') || '')
+            .filter((folder) => folder.startsWith('case-'));
+
+        // Get metadata for each folder to sort by creation time
+        const foldersWithMetadata = await Promise.all(
+            caseFolders.map(async (folderName) => {
+                try {
+                    // HEAD request to get folder metadata
+                    const metadataUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
+                    const metadataRequest = await aws(env).sign(metadataUrl, {
+                        method: 'HEAD',
+                    });
+                    const metadataResponse = await fetch(metadataRequest);
+
+                    const lastModified = metadataResponse.headers.get('Last-Modified');
+                    const createdAt = lastModified ? new Date(lastModified).getTime() : 0;
+
+                    return { folderName, createdAt };
+                } catch (error) {
+                    // If we can't get metadata, put it at the end
+                    return { folderName, createdAt: 0 };
+                }
+            })
+        );
+
+        // Sort by creation time (oldest first)
+        const sortedFolders = foldersWithMetadata
+            .sort((a, b) => a.createdAt - b.createdAt)
+            .map((item) => item.folderName);
+
+        return createResponse(
+            {
+                folders: sortedFolders,
+            },
+            200,
+            origin,
+        );
+    } catch (error) {
+        console.error('List folders error:', error);
+        return createResponse(
+            {
+                error: 'Failed to list folders',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            },
+            500,
+            origin,
+        );
+    }
+}
+
+export async function handleCreateCaseFolder(
+    request: Request,
+    env: Env,
+): Promise<Response> {
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+    const origin = request.headers.get('Origin');
+
+    try {
+        // Validate admin privileges
+        const authorized = await hasPermission(request, db, env);
+        if (!authorized) {
+            return createResponse({ error: 'Unauthorized' }, 401, origin);
+        }
+
+        // Generate random 5-character alphanumeric string and check if it exists
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let folderName = '';
+        let maxAttempts = 10;
+        let attempts = 0;
+
+        while (attempts < maxAttempts) {
+            let randomId = '';
+            for (let i = 0; i < 5; i++) {
+                randomId += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            folderName = `case-${randomId}`;
+
+            // Check if folder already exists
+            const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
+            const checkRequest = await aws(env).sign(checkUrl, {
+                method: 'HEAD',
+            });
+            const checkResponse = await fetch(checkRequest);
+
+            // If folder doesn't exist (404), we can use this name
+            if (checkResponse.status === 404) {
+                break;
+            }
+
+            attempts++;
+        }
+
+        if (attempts >= maxAttempts) {
+            throw new Error('Failed to generate unique folder name after multiple attempts');
+        }
+
+        // Create a folder by uploading an empty object with trailing slash
+        const url = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
+        const signedRequest = await aws(env).sign(url, {
+            method: 'PUT',
+            body: new Uint8Array(0),
+        });
+
+        const response = await fetch(signedRequest);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        return createResponse(
+            {
+                folderName,
+            },
+            200,
+            origin,
+        );
+    } catch (error) {
+        console.error('Create folder error:', error);
+        return createResponse(
+            {
+                error: 'Failed to create folder',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            },
+            500,
+            origin,
+        );
+    }
+}
+
+export async function handleListCaseFiles(
+    request: Request,
+    env: Env,
+): Promise<Response> {
+    const origin = request.headers.get('Origin');
+
+    try {
+        // Get case ID from query parameter
+        const url = new URL(request.url);
+        const caseId = url.searchParams.get('case');
+
+        if (!caseId) {
+            return createResponse(
+                { error: 'Missing required parameter: case' },
+                400,
+                origin,
+            );
+        }
+
+        // Validate case ID format (5 lowercase letters or numbers)
+        if (!/^[a-z0-9]{5}$/.test(caseId)) {
+            return createResponse(
+                { error: 'Invalid case format. Must be 5 lowercase letters or numbers' },
+                400,
+                origin,
+            );
+        }
+
+        // List objects in the case folder
+        const folderPath = `case-${caseId}`;
+        const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${folderPath}/`;
+        const signedRequest = await aws(env).sign(listUrl, {
+            method: 'GET',
+        });
+
+        const response = await fetch(signedRequest);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const xmlText = await response.text();
+
+        // Parse XML response to extract file keys
+        const keyMatches = xmlText.matchAll(/<Key>([^<]+)<\/Key>/g);
+        const files = Array.from(keyMatches)
+            .map((match) => match[1] || '')
+            .filter((key) => key !== `${folderPath}/`) // Exclude the folder itself
+            .map((key) => key.replace(`${folderPath}/`, '')); // Remove folder prefix
+
+        return createResponse(
+            {
+                files,
+            },
+            200,
+            origin,
+        );
+    } catch (error) {
+        console.error('List case files error:', error);
+        return createResponse(
+            {
+                error: 'Failed to list files',
                 details: error instanceof Error ? error.message : 'Unknown error',
             },
             500,

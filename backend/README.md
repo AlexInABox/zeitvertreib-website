@@ -91,6 +91,8 @@ curl -X POST https://dev.zeitvertreib.vip/api/public/upload \
   -F "file=@/path/to/your/file.png"
 ```
 
+**Note:** Files are automatically deleted after 5 minutes via MinIO bucket lifecycle policy. See the MinIO setup section below for configuration details.
+
 ### Spray Endpoints Details
 
 #### POST /spray/upload
