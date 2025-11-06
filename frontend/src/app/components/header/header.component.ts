@@ -32,7 +32,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -85,6 +85,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         label: 'Fakerank Admin',
         icon: PrimeIcons.SHIELD,
         route: '/fakerank',
+      });
+      this.items.push({
+        label: 'Cases',
+        icon: PrimeIcons.FOLDER,
+        route: '/cases',
       });
     }
   }

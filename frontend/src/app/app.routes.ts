@@ -33,6 +33,14 @@ export const routes: Routes = [
     canActivate: [fakerankAdminGuard],
   },
   {
+    path: 'cases',
+    loadComponent: () =>
+      import('./case-management/case-management.component').then(
+        (m) => m.CaseManagementComponent,
+      ),
+    canActivate: [fakerankAdminGuard],
+  },
+  {
     path: 'profile',
     loadComponent: () =>
       import('./profile/profile.component').then((m) => m.ProfileComponent),

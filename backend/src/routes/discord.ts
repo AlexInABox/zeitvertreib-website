@@ -60,6 +60,16 @@ export async function handleDiscordCallback(request: Request, env: Env) {
       }).then((r) => r.json()),
     ]);
 
+    // Validate connections is an array
+    if (!Array.isArray(connections)) {
+      console.error('Discord connections response is not an array:', connections);
+      return createResponse(
+        { error: 'Failed to fetch Discord connections' },
+        500,
+        origin,
+      );
+    }
+
     // Find Steam connection
     const steam = connections.find((c: any) => c.type === 'steam');
     if (!steam) {
