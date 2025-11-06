@@ -41,6 +41,14 @@ export const routes: Routes = [
     canActivate: [fakerankAdminGuard],
   },
   {
+    path: 'cases/:id',
+    loadComponent: () =>
+      import('./case-detail/case-detail.component').then(
+        (m) => m.CaseDetailComponent,
+      ),
+    canActivate: [fakerankAdminGuard],
+  },
+  {
     path: 'profile',
     loadComponent: () =>
       import('./profile/profile.component').then((m) => m.ProfileComponent),

@@ -32,7 +32,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -80,7 +80,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     ];
 
     // Add fakerank admin dashboard if user has privileges
-    if (this.isFakerankAdmin) {
+    if (true) {
       this.items.push({
         label: 'Fakerank Admin',
         icon: PrimeIcons.SHIELD,

@@ -1,133 +1,53 @@
 <div class="case-management-container">
-  <div class="p-6 relative z-10">
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-      <div class="text-center text-white">
-        <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-xl font-medium">Lade Case-Ordner...</p>
-      </div>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="error-state">
-      <div class="error-message max-w-md mx-auto">
-        <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
-        <p class="mb-4">{{ errorMessage }}</p>
-        <button (click)="loadCaseFolders()" class="refresh-button">
-          Erneut versuchen
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div *ngIf="!isLoading && !hasError">
-      <!-- Header -->
-      <div class="header-section mb-6">
-        <div class="flex justify-between items-center">
-          <div>
-            <h1 class="text-3xl font-bold text-white mb-2">Case Management</h1>
-            <p class="text-gray-400">Verwalte Case-Ordner und deren Dateien</p>
-          </div>
-          <button
-            pButton
-            label="Neuer Case"
-            icon="pi pi-plus"
-            class="p-button-success"
-            (click)="createNewCase()"
-          ></button>
+    <div class="p-6 max-w-4xl mx-auto">
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p class="text-white mt-4">Loading cases...</p>
         </div>
-      </div>
 
-      <!-- Cases Overview -->
-      <div class="cases-grid">
-        <div *ngFor="let caseFolder of caseFolders" class="case-card">
-          <div class="case-header">
-            <div class="flex items-center gap-3">
-              <i class="pi pi-folder text-2xl text-blue-400"></i>
-              <div>
-                <h3 class="text-xl font-bold text-white">
-                  {{ caseFolder.name }}
-                </h3>
-                <p class="text-sm text-gray-400">
-                  ID: {{ getCaseId(caseFolder.name) }}
-                </p>
-              </div>
-            </div>
-            <button
-              pButton
-              [label]="
-                caseFolder.files.length > 0 ? 'Ausblenden' : 'Dateien anzeigen'
-              "
-              [icon]="
-                caseFolder.loading
-                  ? 'pi pi-spin pi-spinner'
-                  : 'pi pi-' +
-                    (caseFolder.files.length > 0 ? 'eye-slash' : 'eye')
-              "
-              class="p-button-outlined p-button-sm"
-              (click)="toggleFiles(caseFolder)"
-              [disabled]="caseFolder.loading"
-            ></button>
-          </div>
+        <!-- Error State -->
+        <div *ngIf="hasError && !isLoading" class="error-state">
+            <i class="pi pi-exclamation-circle text-4xl text-red-400 mb-3"></i>
+            <h3 class="text-xl font-bold text-white mb-2">Error</h3>
+            <p class="text-gray-300 mb-4">{{ errorMessage }}</p>
+            <button pButton label="Retry" icon="pi pi-refresh" class="p-button-outlined"
+                (click)="loadCaseFolders()"></button>
+        </div>
 
-          <!-- Files List -->
-          <div *ngIf="caseFolder.files.length > 0" class="files-section">
-            <div class="files-header">
-              <h4 class="text-sm font-semibold text-gray-300">
-                {{ caseFolder.fileCount }}
-                {{ caseFolder.fileCount === 1 ? 'Datei' : 'Dateien' }}
-              </h4>
-            </div>
-            <div class="files-list">
-              <div *ngFor="let file of caseFolder.files" class="file-item">
-                <div class="flex items-center gap-2">
-                  <i class="pi pi-file text-gray-400"></i>
-                  <span class="text-white text-sm truncate flex-1">{{
-                    file
-                  }}</span>
+        <!-- Main Content -->
+        <div *ngIf="!isLoading && !hasError">
+            <!-- Header -->
+            <div class="header-section mb-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-4xl font-bold text-white mb-2">Cases</h1>
+                        <p class="text-gray-300">Manage your case folders</p>
+                    </div>
+                    <button pButton label="New Case" icon="pi pi-plus" class="p-button-rounded"
+                        (click)="createNewCase()"></button>
                 </div>
-                <a
-                  [href]="getFileUrl(caseFolder.name, file)"
-                  target="_blank"
-                  class="file-link"
-                >
-                  <i class="pi pi-external-link"></i>
-                </a>
-              </div>
             </div>
-          </div>
 
-          <!-- Empty State -->
-          <div
-            *ngIf="
-              caseFolder.files.length === 0 &&
-              !caseFolder.loading &&
-              caseFolder.fileCount === 0
-            "
-            class="empty-state"
-          >
-            <p class="text-gray-500 text-sm">Noch keine Dateien vorhanden</p>
-          </div>
-        </div>
-      </div>
+            <!-- Cases List -->
+            <div class="cases-list">
+                <div *ngFor="let caseFolder of caseFolders" class="case-item" (click)="openCase(caseFolder)">
+                    <div class="case-content">
+                        <i class="pi pi-folder text-2xl text-blue-400"></i>
+                        <span class="case-name">{{ caseFolder.name }}</span>
+                    </div>
+                    <i class="pi pi-chevron-right text-gray-400"></i>
+                </div>
+            </div>
 
-      <!-- Empty State for No Cases -->
-      <div *ngIf="caseFolders.length === 0" class="no-cases-state">
-        <div class="text-center">
-          <i class="pi pi-folder-open text-6xl text-gray-600 mb-4"></i>
-          <h3 class="text-xl font-bold text-white mb-2">
-            Keine Cases vorhanden
-          </h3>
-          <p class="text-gray-400 mb-4">Erstelle deinen ersten Case-Ordner</p>
-          <button
-            pButton
-            label="Ersten Case erstellen"
-            icon="pi pi-plus"
-            class="p-button-success"
-            (click)="createNewCase()"
-          ></button>
+            <!-- Empty State -->
+            <div *ngIf="caseFolders.length === 0" class="empty-state">
+                <i class="pi pi-inbox text-6xl text-gray-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-white mb-2">No Cases Yet</h3>
+                <p class="text-gray-400 mb-6">Create your first case to get started</p>
+                <button pButton label="Create Case" icon="pi pi-plus" class="p-button-rounded"
+                    (click)="createNewCase()"></button>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
