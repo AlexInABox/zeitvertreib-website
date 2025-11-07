@@ -26,7 +26,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) { }
+  ) {}
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getSessionToken();
@@ -53,9 +53,11 @@ export class CaseManagementComponent implements OnInit {
       .subscribe({
         next: (response) => {
           // API returns cases ordered by creation date (oldest first), so reverse to show newest first
-          this.caseFolders = response.folders.map((folderName) => ({
-            name: folderName,
-          })).reverse();
+          this.caseFolders = response.folders
+            .map((folderName) => ({
+              name: folderName,
+            }))
+            .reverse();
           this.isLoading = false;
         },
         error: (error) => {
@@ -90,7 +92,7 @@ export class CaseManagementComponent implements OnInit {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-            (error.error?.error || 'Unknown error'),
+              (error.error?.error || 'Unknown error'),
           );
         },
       });

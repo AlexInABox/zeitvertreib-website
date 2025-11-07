@@ -31,7 +31,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getSessionToken();

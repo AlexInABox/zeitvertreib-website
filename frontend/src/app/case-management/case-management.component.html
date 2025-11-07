@@ -18,8 +18,13 @@
       </div>
       <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
       <p class="error-message">{{ errorMessage }}</p>
-      <button pButton label="Erneut versuchen" icon="pi pi-refresh" class="retry-button"
-        (click)="loadCaseFolders()"></button>
+      <button
+        pButton
+        label="Erneut versuchen"
+        icon="pi pi-refresh"
+        class="retry-button"
+        (click)="loadCaseFolders()"
+      ></button>
     </div>
 
     <!-- Main Content -->
@@ -39,9 +44,21 @@
             </p>
           </div>
           <div class="header-actions">
-            <button pButton label="Aktualisieren" icon="pi pi-refresh" class="refresh-btn" (click)="loadCaseFolders()"
-              [disabled]="isLoading"></button>
-            <button pButton label="Neuer Fall" icon="pi pi-plus" class="create-btn" (click)="createNewCase()"></button>
+            <button
+              pButton
+              label="Aktualisieren"
+              icon="pi pi-refresh"
+              class="refresh-btn"
+              (click)="loadCaseFolders()"
+              [disabled]="isLoading"
+            ></button>
+            <button
+              pButton
+              label="Neuer Fall"
+              icon="pi pi-plus"
+              class="create-btn"
+              (click)="createNewCase()"
+            ></button>
           </div>
         </div>
       </div>
@@ -66,8 +83,12 @@
 
       <!-- Cases Grid -->
       <div class="cases-grid" *ngIf="caseFolders.length > 0">
-        <div *ngFor="let caseFolder of caseFolders; let i = index" class="case-card" (click)="openCase(caseFolder)"
-          [style.animation-delay]="i * 0.05 + 's'">
+        <div
+          *ngFor="let caseFolder of caseFolders; let i = index"
+          class="case-card"
+          (click)="openCase(caseFolder)"
+          [style.animation-delay]="i * 0.05 + 's'"
+        >
           <div class="case-card-header">
             <div class="case-icon-wrapper">
               <i class="pi pi-folder-open"></i>
@@ -111,13 +132,22 @@
         </div>
         <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
         <p class="empty-description">
-          Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.
+          Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu
+          organisieren.
         </p>
-        <button pButton label="Ersten Fall erstellen" icon="pi pi-plus-circle" class="empty-action-btn"
-          (click)="createNewCase()"></button>
+        <button
+          pButton
+          label="Ersten Fall erstellen"
+          icon="pi pi-plus-circle"
+          class="empty-action-btn"
+          (click)="createNewCase()"
+        ></button>
         <div class="empty-tips">
           <p class="tip-title">💡 Tipp:</p>
-          <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
+          <p class="tip-text">
+            Fälle helfen dir, deine Dokumente und Informationen strukturiert zu
+            verwalten.
+          </p>
         </div>
       </div>
     </div>
