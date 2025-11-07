@@ -80,6 +80,21 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0 0 0.25rem 0;
+}
+
+.file-expiry {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.file-expiry::before {
+  content: '⏱';
+  font-size: 0.875rem;
 }
 
 .file-actions {

@@ -2,13 +2,8 @@
   <div class="p-6 max-w-5xl mx-auto">
     <!-- Header -->
     <div class="header-section mb-8">
-      <button
-        pButton
-        icon="pi pi-arrow-left"
-        label="Back to Cases"
-        class="p-button-text p-button-secondary mb-4"
-        (click)="goBack()"
-      ></button>
+      <button pButton icon="pi pi-arrow-left" label="Back to Cases" class="p-button-text p-button-secondary mb-4"
+        (click)="goBack()"></button>
       <h1 class="text-4xl font-bold text-white mb-2">{{ caseName }}</h1>
       <p class="text-gray-300">Case Files</p>
     </div>
@@ -24,13 +19,7 @@
       <i class="pi pi-exclamation-circle text-4xl text-red-400 mb-3"></i>
       <h3 class="text-xl font-bold text-white mb-2">Error</h3>
       <p class="text-gray-300 mb-4">{{ errorMessage }}</p>
-      <button
-        pButton
-        label="Retry"
-        icon="pi pi-refresh"
-        class="p-button-outlined"
-        (click)="loadFiles()"
-      ></button>
+      <button pButton label="Retry" icon="pi pi-refresh" class="p-button-outlined" (click)="loadFiles()"></button>
     </div>
 
     <!-- Files Grid -->
@@ -40,15 +29,11 @@
           <i class="pi pi-file text-3xl text-blue-400"></i>
         </div>
         <div class="file-info">
-          <p class="file-name">{{ file }}</p>
+          <p class="file-name">{{ file.name }}</p>
+          <p class="file-expiry">Link expires in {{ file.expiresIn / 60 }} minutes</p>
         </div>
         <div class="file-actions">
-          <a
-            [href]="getFileUrl(file)"
-            target="_blank"
-            class="file-button"
-            title="Open file"
-          >
+          <a [href]="getFileUrl(file)" target="_blank" class="file-button" title="Open file">
             <i class="pi pi-external-link"></i>
           </a>
         </div>

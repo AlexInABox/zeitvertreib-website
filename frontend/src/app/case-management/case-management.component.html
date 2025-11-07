@@ -1,71 +1,124 @@
 <div class="case-management-container">
-  <div class="p-6 max-w-4xl mx-auto">
+  <div class="content-wrapper">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
-      <p class="text-white mt-4">Loading cases...</p>
+      <p class="loading-text">Fälle werden geladen...</p>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
 
     <!-- Error State -->
     <div *ngIf="hasError && !isLoading" class="error-state">
-      <i class="pi pi-exclamation-circle text-4xl text-red-400 mb-3"></i>
-      <h3 class="text-xl font-bold text-white mb-2">Error</h3>
-      <p class="text-gray-300 mb-4">{{ errorMessage }}</p>
-      <button
-        pButton
-        label="Retry"
-        icon="pi pi-refresh"
-        class="p-button-outlined"
-        (click)="loadCaseFolders()"
-      ></button>
+      <div class="error-icon-wrapper">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
+      <p class="error-message">{{ errorMessage }}</p>
+      <button pButton label="Erneut versuchen" icon="pi pi-refresh" class="retry-button"
+        (click)="loadCaseFolders()"></button>
     </div>
 
     <!-- Main Content -->
-    <div *ngIf="!isLoading && !hasError">
-      <!-- Header -->
-      <div class="header-section mb-8">
-        <div class="flex justify-between items-center">
-          <div>
-            <h1 class="text-4xl font-bold text-white mb-2">Cases</h1>
-            <p class="text-gray-300">Manage your case folders</p>
+    <div *ngIf="!isLoading && !hasError" class="main-content">
+      <!-- Header Section -->
+      <div class="header-section">
+        <div class="header-content">
+          <div class="title-area">
+            <div class="title-wrapper">
+              <i class="pi pi-briefcase header-icon"></i>
+              <h1 class="page-title">Fallverwaltung</h1>
+            </div>
+            <p class="page-subtitle">
+              {{ caseFolders.length }}
+              {{ caseFolders.length === 1 ? 'Fall' : 'Fälle' }}
+              insgesamt
+            </p>
           </div>
-          <button
-            pButton
-            label="New Case"
-            icon="pi pi-plus"
-            class="p-button-rounded"
-            (click)="createNewCase()"
-          ></button>
+          <div class="header-actions">
+            <button pButton label="Aktualisieren" icon="pi pi-refresh" class="refresh-btn" (click)="loadCaseFolders()"
+              [disabled]="isLoading"></button>
+            <button pButton label="Neuer Fall" icon="pi pi-plus" class="create-btn" (click)="createNewCase()"></button>
+          </div>
         </div>
       </div>
 
-      <!-- Cases List -->
-      <div class="cases-list">
-        <div
-          *ngFor="let caseFolder of caseFolders"
-          class="case-item"
-          (click)="openCase(caseFolder)"
-        >
-          <div class="case-content">
-            <i class="pi pi-folder text-2xl text-blue-400"></i>
-            <span class="case-name">{{ caseFolder.name }}</span>
+      <!-- Quick Stats -->
+      <div class="stats-section" *ngIf="caseFolders.length > 0">
+        <div class="stat-card">
+          <i class="pi pi-folder stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ caseFolders.length }}</span>
+            <span class="stat-label">Aktive Fälle</span>
           </div>
-          <i class="pi pi-chevron-right text-gray-400"></i>
+        </div>
+        <div class="stat-card">
+          <i class="pi pi-clock stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ getRecentCasesCount() }}</span>
+            <span class="stat-label">Kürzlich erstellt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cases Grid -->
+      <div class="cases-grid" *ngIf="caseFolders.length > 0">
+        <div *ngFor="let caseFolder of caseFolders; let i = index" class="case-card" (click)="openCase(caseFolder)"
+          [style.animation-delay]="i * 0.05 + 's'">
+          <div class="case-card-header">
+            <div class="case-icon-wrapper">
+              <i class="pi pi-folder-open"></i>
+            </div>
+            <div class="case-badge">Fall</div>
+          </div>
+
+          <div class="case-card-body">
+            <h3 class="case-title">{{ formatCaseName(caseFolder.name) }}</h3>
+            <p class="case-id">ID: {{ caseFolder.name }}</p>
+          </div>
+
+          <div class="case-card-footer">
+            <div class="case-meta">
+              <span class="meta-item">
+                <i class="pi pi-calendar"></i>
+                Heute
+              </span>
+            </div>
+            <div class="case-action">
+              <i class="pi pi-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Hover Effect Overlay -->
+          <div class="card-overlay"></div>
         </div>
       </div>
 
       <!-- Empty State -->
       <div *ngIf="caseFolders.length === 0" class="empty-state">
-        <i class="pi pi-inbox text-6xl text-gray-500 mb-4"></i>
-        <h3 class="text-xl font-bold text-white mb-2">No Cases Yet</h3>
-        <p class="text-gray-400 mb-6">Create your first case to get started</p>
-        <button
-          pButton
-          label="Create Case"
-          icon="pi pi-plus"
-          class="p-button-rounded"
-          (click)="createNewCase()"
-        ></button>
+        <div class="empty-illustration">
+          <div class="empty-icon-wrapper">
+            <i class="pi pi-inbox"></i>
+          </div>
+          <div class="empty-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+          </div>
+        </div>
+        <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
+        <p class="empty-description">
+          Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.
+        </p>
+        <button pButton label="Ersten Fall erstellen" icon="pi pi-plus-circle" class="empty-action-btn"
+          (click)="createNewCase()"></button>
+        <div class="empty-tips">
+          <p class="tip-title">💡 Tipp:</p>
+          <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
+        </div>
       </div>
     </div>
   </div>

@@ -69,7 +69,7 @@ async function hasPermission(
   return true;
 }
 
-export async function handleFileUpload(
+export async function handleCaseFileUpload(
   request: Request,
   env: Env,
 ): Promise<Response> {
@@ -167,7 +167,7 @@ export async function handleFileUpload(
   }
 }
 
-export async function handleListCaseFolders(
+export async function handleListCases(
   request: Request,
   env: Env,
 ): Promise<Response> {
@@ -251,7 +251,7 @@ export async function handleListCaseFolders(
   }
 }
 
-export async function handleCreateCaseFolder(
+export async function handleCreateCase(
   request: Request,
   env: Env,
 ): Promise<Response> {
@@ -385,14 +385,38 @@ export async function handleListCaseFiles(
 
     // Parse XML response to extract file keys
     const keyMatches = xmlText.matchAll(/<Key>([^<]+)<\/Key>/g);
-    const files = Array.from(keyMatches)
+    const fileKeys = Array.from(keyMatches)
       .map((match) => match[1] || '')
-      .filter((key) => key !== `${folderPath}/`) // Exclude the folder itself
-      .map((key) => key.replace(`${folderPath}/`, '')); // Remove folder prefix
+      .filter((key) => key !== `${folderPath}/`); // Exclude the folder itself
+
+    // Generate presigned GET URLs for each file (valid for 20 minutes = 1200 seconds)
+    const filesWithLinks = await Promise.all(
+      fileKeys.map(async (key) => {
+        const fileName = key.replace(`${folderPath}/`, '');
+
+        // Create URL with X-Amz-Expires query parameter before signing
+        const baseUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${key}`;
+        const urlWithExpiry = `${baseUrl}?X-Amz-Expires=1200`;
+
+        const presignedUrl = await aws(env).sign(urlWithExpiry, {
+          method: 'GET',
+          aws: {
+            signQuery: true,
+          },
+        });
+
+        return {
+          name: fileName,
+          viewUrl: presignedUrl.url,
+          expiresIn: 1200, // 20 minutes in seconds
+        };
+      }),
+    );
 
     return createResponse(
       {
-        files,
+        files: filesWithLinks,
+        expiresIn: 1200,
       },
       200,
       origin,

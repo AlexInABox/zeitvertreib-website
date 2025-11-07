@@ -26,7 +26,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getSessionToken();
@@ -46,15 +46,16 @@ export class CaseManagementComponent implements OnInit {
     this.hasError = false;
 
     this.http
-      .get<{ folders: string[] }>(`${environment.apiUrl}/public/folders`, {
+      .get<{ folders: string[] }>(`${environment.apiUrl}/cases`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .subscribe({
         next: (response) => {
+          // API returns cases ordered by creation date (oldest first), so reverse to show newest first
           this.caseFolders = response.folders.map((folderName) => ({
             name: folderName,
-          }));
+          })).reverse();
           this.isLoading = false;
         },
         error: (error) => {
@@ -72,7 +73,7 @@ export class CaseManagementComponent implements OnInit {
       .post<{
         folderName: string;
       }>(
-        `${environment.apiUrl}/public/folder`,
+        `${environment.apiUrl}/cases`,
         {},
         {
           headers: this.getAuthHeaders(),
@@ -89,7 +90,7 @@ export class CaseManagementComponent implements OnInit {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-              (error.error?.error || 'Unknown error'),
+            (error.error?.error || 'Unknown error'),
           );
         },
       });
@@ -98,5 +99,16 @@ export class CaseManagementComponent implements OnInit {
   openCase(caseFolder: CaseFolder) {
     const caseId = caseFolder.name.replace('case-', '');
     this.router.navigate(['/cases', caseId]);
+  }
+
+  formatCaseName(name: string): string {
+    // Convert "case-123" to "Fall #123"
+    const caseNumber = name.replace('case-', '');
+    return `Fall #${caseNumber}`;
+  }
+
+  getRecentCasesCount(): number {
+    // For now, return total count / 3 as "recent" (could be enhanced with actual timestamps)
+    return Math.max(1, Math.ceil(this.caseFolders.length / 3));
   }
 }

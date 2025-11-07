@@ -77,11 +77,11 @@ import {
   handleUpdatePlayerlist,
 } from './routes/playerlist.js';
 import {
-  handleFileUpload,
-  handleListCaseFolders,
-  handleCreateCaseFolder,
+  handleCaseFileUpload,
+  handleListCases,
+  handleCreateCase,
   handleListCaseFiles,
-} from './routes/upload.js';
+} from './routes/cases.js';
 
 // Simple response helper for internal use
 function createResponse(
@@ -116,10 +116,10 @@ const routes: Record<
 
   //Public endpoints (no auth)
   'GET:/public/stats': handleGetPublicStats,
-  'POST:/public/upload': handleFileUpload,
-  'GET:/public/folders': handleListCaseFolders,
-  'POST:/public/folder': handleCreateCaseFolder,
-  'GET:/public/files': handleListCaseFiles,
+  'POST:/cases/upload': handleCaseFileUpload,
+  'GET:/cases': handleListCases,
+  'POST:/cases': handleCreateCase,
+  'GET:/cases/files': handleListCaseFiles,
 
   // Spray routes
   'POST:/spray/upload': handleUploadSpray,

@@ -6,6 +6,12 @@ import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../services/auth.service';
 
+interface CaseFile {
+  name: string;
+  viewUrl: string;
+  expiresIn: number;
+}
+
 @Component({
   selector: 'app-case-detail',
   imports: [CommonModule, ButtonModule],
@@ -15,7 +21,7 @@ import { AuthService } from '../services/auth.service';
 export class CaseDetailComponent implements OnInit {
   caseId: string = '';
   caseName: string = '';
-  files: string[] = [];
+  files: CaseFile[] = [];
   isLoading = true;
   hasError = false;
   errorMessage = '';
@@ -25,7 +31,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getSessionToken();
@@ -47,8 +53,8 @@ export class CaseDetailComponent implements OnInit {
     this.hasError = false;
 
     this.http
-      .get<{ files: string[] }>(
-        `${environment.apiUrl}/public/files?case=${this.caseId}`,
+      .get<{ files: CaseFile[]; expiresIn: number }>(
+        `${environment.apiUrl}/cases/files?case=${this.caseId}`,
         {
           headers: this.getAuthHeaders(),
           withCredentials: true,
@@ -68,8 +74,8 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
-  getFileUrl(fileName: string): string {
-    return `https://s3.zeitvertreib.vip/test/${this.caseName}/${fileName}`;
+  getFileUrl(file: CaseFile): string {
+    return file.viewUrl;
   }
 
   goBack() {
