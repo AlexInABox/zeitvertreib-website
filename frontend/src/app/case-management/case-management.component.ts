@@ -49,7 +49,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -137,7 +137,7 @@ export class CaseManagementComponent implements OnInit {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-            (error.error?.error || 'Unknown error'),
+              (error.error?.error || 'Unknown error'),
           );
         },
       });
@@ -156,9 +156,9 @@ export class CaseManagementComponent implements OnInit {
 
   getRecentCasesCount(): number {
     // Count cases created in the last 7 days
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return this.caseFolders.filter(
-      (caseFolder) => caseFolder.metadata.createdAt > sevenDaysAgo
+      (caseFolder) => caseFolder.metadata.createdAt > sevenDaysAgo,
     ).length;
   }
 
@@ -209,14 +209,14 @@ export class CaseManagementComponent implements OnInit {
   getTotalFilesCount(): number {
     return this.caseFolders.reduce(
       (sum, caseFolder) => sum + caseFolder.metadata.fileCount,
-      0
+      0,
     );
   }
 
   getTotalStorageSize(): string {
     const totalBytes = this.caseFolders.reduce(
       (sum, caseFolder) => sum + caseFolder.metadata.totalSize,
-      0
+      0,
     );
     return this.formatFileSize(totalBytes);
   }
@@ -244,13 +244,21 @@ export class CaseManagementComponent implements OnInit {
 
     switch (this.sortBy) {
       case 'newest':
-        return sorted.sort((a, b) => b.metadata.createdAt - a.metadata.createdAt);
+        return sorted.sort(
+          (a, b) => b.metadata.createdAt - a.metadata.createdAt,
+        );
       case 'oldest':
-        return sorted.sort((a, b) => a.metadata.createdAt - b.metadata.createdAt);
+        return sorted.sort(
+          (a, b) => a.metadata.createdAt - b.metadata.createdAt,
+        );
       case 'mostFiles':
-        return sorted.sort((a, b) => b.metadata.fileCount - a.metadata.fileCount);
+        return sorted.sort(
+          (a, b) => b.metadata.fileCount - a.metadata.fileCount,
+        );
       case 'largest':
-        return sorted.sort((a, b) => b.metadata.totalSize - a.metadata.totalSize);
+        return sorted.sort(
+          (a, b) => b.metadata.totalSize - a.metadata.totalSize,
+        );
       default:
         return sorted;
     }
@@ -271,7 +279,10 @@ export class CaseManagementComponent implements OnInit {
   }
 
   getSortLabel(): string {
-    return this.sortOptions.find(opt => opt.value === this.sortBy)?.label || 'Sortieren';
+    return (
+      this.sortOptions.find((opt) => opt.value === this.sortBy)?.label ||
+      'Sortieren'
+    );
   }
 
   clearSearch() {

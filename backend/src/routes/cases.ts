@@ -240,7 +240,9 @@ export async function handleListCases(
             // Skip the folder marker (ends with /)
             if (key === `${folderName}/`) {
               // Get creation date from folder marker
-              const folderModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
+              const folderModifiedMatch = content.match(
+                /<LastModified>([^<]+)<\/LastModified>/,
+              );
               if (folderModifiedMatch) {
                 createdAt = new Date(folderModifiedMatch[1] || '').getTime();
               }
@@ -256,7 +258,9 @@ export async function handleListCases(
             }
 
             // Extract LastModified for tracking most recent update
-            const modifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
+            const modifiedMatch = content.match(
+              /<LastModified>([^<]+)<\/LastModified>/,
+            );
             if (modifiedMatch) {
               const fileModified = new Date(modifiedMatch[1] || '').getTime();
               if (fileModified > lastModified) {
