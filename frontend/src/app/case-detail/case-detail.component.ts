@@ -66,7 +66,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -89,11 +89,11 @@ export class CaseDetailComponent implements OnInit {
 
   ngOnInit() {
     // Check auth status
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       this.isAuthenticated = !!user;
     });
 
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       this.caseId = params.get('id') || '';
       if (this.caseId) {
         this.caseName = decodeURIComponent(this.caseId);
@@ -106,7 +106,7 @@ export class CaseDetailComponent implements OnInit {
   loadMetadata() {
     this.http
       .get<CaseMetadata>(
-        `${environment.apiUrl}/cases/metadata?case=${this.caseId}`
+        `${environment.apiUrl}/cases/metadata?case=${this.caseId}`,
       )
       .subscribe({
         next: (metadata) => {
@@ -115,7 +115,7 @@ export class CaseDetailComponent implements OnInit {
         error: (error) => {
           console.error('Failed to load case metadata:', error);
           // Don't show error to user, metadata is optional
-        }
+        },
       });
   }
 
@@ -154,7 +154,7 @@ export class CaseDetailComponent implements OnInit {
     } else {
       const query = this.searchQuery.toLowerCase().trim();
       filtered = this.files.filter((file) =>
-        file.name.toLowerCase().includes(query)
+        file.name.toLowerCase().includes(query),
       );
     }
 
@@ -168,9 +168,13 @@ export class CaseDetailComponent implements OnInit {
       case 'name':
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case 'newest':
-        return sorted.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+        return sorted.sort(
+          (a, b) => (b.lastModified || 0) - (a.lastModified || 0),
+        );
       case 'oldest':
-        return sorted.sort((a, b) => (a.lastModified || 0) - (b.lastModified || 0));
+        return sorted.sort(
+          (a, b) => (a.lastModified || 0) - (b.lastModified || 0),
+        );
       case 'largest':
         return sorted.sort((a, b) => (b.size || 0) - (a.size || 0));
       case 'smallest':
@@ -180,7 +184,9 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  changeSortOrder(sortBy: 'name' | 'newest' | 'oldest' | 'largest' | 'smallest') {
+  changeSortOrder(
+    sortBy: 'name' | 'newest' | 'oldest' | 'largest' | 'smallest',
+  ) {
     this.sortBy = sortBy;
     this.sortDropdownOpen = false;
     this.filterFiles();
@@ -191,7 +197,10 @@ export class CaseDetailComponent implements OnInit {
   }
 
   getSortLabel(): string {
-    return this.sortOptions.find(opt => opt.value === this.sortBy)?.label || 'Sortieren';
+    return (
+      this.sortOptions.find((opt) => opt.value === this.sortBy)?.label ||
+      'Sortieren'
+    );
   }
 
   clearSearch() {
@@ -281,7 +290,10 @@ export class CaseDetailComponent implements OnInit {
   }
 
   getTotalSize(): string {
-    const totalBytes = this.files.reduce((sum, file) => sum + (file.size || 0), 0);
+    const totalBytes = this.files.reduce(
+      (sum, file) => sum + (file.size || 0),
+      0,
+    );
     return this.formatFileSize(totalBytes);
   }
 
@@ -301,11 +313,21 @@ export class CaseDetailComponent implements OnInit {
     const ext = this.getFileExtension(filename);
     const viewableExtensions = [
       // Images
-      'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg',
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'webp',
+      'bmp',
+      'svg',
       // Videos
-      'mp4', 'webm', 'mov',
+      'mp4',
+      'webm',
+      'mov',
       // Audio
-      'mp3', 'wav', 'ogg'
+      'mp3',
+      'wav',
+      'ogg',
     ];
     return viewableExtensions.includes(ext);
   }

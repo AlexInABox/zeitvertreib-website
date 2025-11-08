@@ -56,7 +56,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -79,7 +79,7 @@ export class CaseManagementComponent implements OnInit {
 
   ngOnInit() {
     // Check authentication status
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       this.isAuthenticated = !!user;
       this.isFakerankAdmin = this.authService.isFakerankAdmin();
 
@@ -111,7 +111,7 @@ export class CaseManagementComponent implements OnInit {
                 const metadata = await this.http
                   .get<CaseMetadata>(
                     `${environment.apiUrl}/cases/metadata?case=${caseId}`,
-                    { withCredentials: true }
+                    { withCredentials: true },
                   )
                   .toPromise();
 
@@ -134,7 +134,7 @@ export class CaseManagementComponent implements OnInit {
                   },
                 };
               }
-            })
+            }),
           );
 
           this.caseFolders = casesWithMetadata;
@@ -185,7 +185,7 @@ export class CaseManagementComponent implements OnInit {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-            (error.error?.error || 'Unknown error'),
+              (error.error?.error || 'Unknown error'),
           );
         },
       });
@@ -342,9 +342,7 @@ export class CaseManagementComponent implements OnInit {
     // Check if case exists by fetching metadata
     this.isLookingUp = true;
     this.http
-      .get<CaseMetadata>(
-        `${environment.apiUrl}/cases/metadata?case=${caseId}`
-      )
+      .get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${caseId}`)
       .subscribe({
         next: () => {
           // Case exists, navigate to it
@@ -357,7 +355,7 @@ export class CaseManagementComponent implements OnInit {
           } else {
             this.lookupError = 'Fehler beim Überprüfen des Falls';
           }
-        }
+        },
       });
   }
 

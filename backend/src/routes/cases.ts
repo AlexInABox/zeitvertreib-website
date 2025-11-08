@@ -265,11 +265,7 @@ export async function handleGetCaseMetadata(
 
     if (!listResponse.ok) {
       if (listResponse.status === 404) {
-        return createResponse(
-          { error: 'Case not found' },
-          404,
-          origin,
-        );
+        return createResponse({ error: 'Case not found' }, 404, origin);
       }
       throw new Error(`Failed to list files for ${folderName}`);
     }
@@ -282,11 +278,7 @@ export async function handleGetCaseMetadata(
 
     // If no contents found, the folder doesn't exist
     if (contentsMatches.length === 0) {
-      return createResponse(
-        { error: 'Case not found' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Case not found' }, 404, origin);
     }
 
     let fileCount = 0;
