@@ -55,7 +55,7 @@ export class CaseManagementComponent implements OnInit {
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const dropdown = target.closest('.custom-dropdown');
-    
+
     if (!dropdown && this.sortDropdownOpen) {
       this.sortDropdownOpen = false;
     }
@@ -172,7 +172,7 @@ export class CaseManagementComponent implements OnInit {
 
   formatDate(timestamp: number): string {
     if (!timestamp) return 'Unbekannt';
-    
+
     const date = new Date(timestamp);
     const now = new Date();
     const diffTime = now.getTime() - date.getTime();
@@ -182,18 +182,18 @@ export class CaseManagementComponent implements OnInit {
 
     // Just now
     if (diffMinutes < 1) return 'Gerade eben';
-    
+
     // Minutes ago
     if (diffMinutes < 60) return `Vor ${diffMinutes} Min.`;
-    
+
     // Hours ago
     if (diffHours < 24) return `Vor ${diffHours} Std.`;
-    
+
     // Days ago
     if (diffDays === 0) return 'Heute';
     if (diffDays === 1) return 'Gestern';
     if (diffDays < 7) return `Vor ${diffDays} Tagen`;
-    
+
     // Specific date for older items
     return date.toLocaleDateString('de-DE', {
       day: '2-digit',
@@ -223,7 +223,7 @@ export class CaseManagementComponent implements OnInit {
 
   filterCases() {
     let filtered: CaseFolder[];
-    
+
     if (!this.searchQuery.trim()) {
       filtered = [...this.caseFolders];
     } else {
@@ -241,7 +241,7 @@ export class CaseManagementComponent implements OnInit {
 
   sortCases(cases: CaseFolder[]): CaseFolder[] {
     const sorted = [...cases];
-    
+
     switch (this.sortBy) {
       case 'newest':
         return sorted.sort((a, b) => b.metadata.createdAt - a.metadata.createdAt);

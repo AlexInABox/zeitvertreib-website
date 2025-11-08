@@ -116,7 +116,7 @@
             [text]="true"
           ></button>
         </div>
-        
+
         <!-- Custom Sort Dropdown -->
         <div class="sort-wrapper">
           <label class="sort-label">
@@ -124,13 +124,18 @@
             Sortieren:
           </label>
           <div class="custom-dropdown">
-            <button 
+            <button
               class="dropdown-trigger"
               (click)="toggleSortDropdown()"
               type="button"
             >
               <span class="dropdown-label">{{ getSortLabel() }}</span>
-              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+              <i
+                class="pi"
+                [ngClass]="
+                  sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'
+                "
+              ></i>
             </button>
             <div class="dropdown-menu" *ngIf="sortDropdownOpen">
               <button
@@ -177,7 +182,7 @@
           <div class="case-card-body">
             <h3 class="case-title">{{ formatCaseName(caseFolder.name) }}</h3>
             <p class="case-id">ID: {{ caseFolder.name }}</p>
-            
+
             <div class="case-stats">
               <span class="stat-item" *ngIf="caseFolder.metadata.fileCount > 0">
                 <i class="pi pi-file"></i>
@@ -188,7 +193,10 @@
                 <i class="pi pi-database"></i>
                 {{ formatFileSize(caseFolder.metadata.totalSize) }}
               </span>
-              <span class="stat-item" *ngIf="caseFolder.metadata.fileCount === 0">
+              <span
+                class="stat-item"
+                *ngIf="caseFolder.metadata.fileCount === 0"
+              >
                 <i class="pi pi-inbox"></i>
                 Leer
               </span>
@@ -197,14 +205,25 @@
 
           <div class="case-card-footer">
             <div class="case-meta">
-              <span class="meta-item" [title]="'Erstellt: ' + formatDate(caseFolder.metadata.createdAt)">
+              <span
+                class="meta-item"
+                [title]="
+                  'Erstellt: ' + formatDate(caseFolder.metadata.createdAt)
+                "
+              >
                 <i class="pi pi-calendar-plus"></i>
                 {{ formatRelativeDate(caseFolder.metadata.createdAt) }}
               </span>
-              <span 
-                class="meta-item" 
-                *ngIf="caseFolder.metadata.lastModified !== caseFolder.metadata.createdAt"
-                [title]="'Zuletzt geändert: ' + formatDate(caseFolder.metadata.lastModified)"
+              <span
+                class="meta-item"
+                *ngIf="
+                  caseFolder.metadata.lastModified !==
+                  caseFolder.metadata.createdAt
+                "
+                [title]="
+                  'Zuletzt geändert: ' +
+                  formatDate(caseFolder.metadata.lastModified)
+                "
               >
                 <i class="pi pi-history"></i>
                 {{ formatRelativeDate(caseFolder.metadata.lastModified) }}
