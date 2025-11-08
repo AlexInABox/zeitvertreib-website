@@ -1,32 +1,65 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../services/auth.service';
+
+interface CaseMetadata {
+  id: string;
+  caseId: string;
+  createdAt: number;
+  lastModified: number;
+  fileCount: number;
+  totalSize: number;
+}
 
 interface CaseFolder {
   name: string;
+  metadata: CaseMetadata;
 }
 
 @Component({
   selector: 'app-case-management',
-  imports: [CommonModule, ButtonModule],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule],
   templateUrl: './case-management.component.html',
   styleUrl: './case-management.component.css',
 })
 export class CaseManagementComponent implements OnInit {
   caseFolders: CaseFolder[] = [];
+  filteredCaseFolders: CaseFolder[] = [];
+  searchQuery = '';
+  sortBy: 'newest' | 'oldest' | 'mostFiles' | 'largest' = 'newest';
+  sortDropdownOpen = false;
   isLoading = true;
   hasError = false;
   errorMessage = '';
+
+  sortOptions = [
+    { label: 'Neueste zuerst', value: 'newest' },
+    { label: 'Älteste zuerst', value: 'oldest' },
+    { label: 'Meiste Dateien', value: 'mostFiles' },
+    { label: 'Größte zuerst', value: 'largest' },
+  ];
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const dropdown = target.closest('.custom-dropdown');
+    
+    if (!dropdown && this.sortDropdownOpen) {
+      this.sortDropdownOpen = false;
+    }
+  }
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getSessionToken();
@@ -46,18 +79,19 @@ export class CaseManagementComponent implements OnInit {
     this.hasError = false;
 
     this.http
-      .get<{ folders: string[] }>(`${environment.apiUrl}/cases`, {
+      .get<{ cases: CaseMetadata[] }>(`${environment.apiUrl}/cases`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .subscribe({
         next: (response) => {
-          // API returns cases ordered by creation date (oldest first), so reverse to show newest first
-          this.caseFolders = response.folders
-            .map((folderName) => ({
-              name: folderName,
-            }))
-            .reverse();
+          // Store cases with metadata
+          this.caseFolders = response.cases.map((caseData) => ({
+            name: caseData.id,
+            metadata: caseData,
+          }));
+          // Apply initial sorting (newest first)
+          this.filterCases();
           this.isLoading = false;
         },
         error: (error) => {
@@ -84,15 +118,26 @@ export class CaseManagementComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
+          // Create a new case with initial metadata
+          const now = Date.now();
           this.caseFolders.unshift({
             name: response.folderName,
+            metadata: {
+              id: response.folderName,
+              caseId: response.folderName.replace('case-', ''),
+              createdAt: now,
+              lastModified: now,
+              fileCount: 0,
+              totalSize: 0,
+            },
           });
+          this.filterCases();
         },
         error: (error) => {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-              (error.error?.error || 'Unknown error'),
+            (error.error?.error || 'Unknown error'),
           );
         },
       });
@@ -110,7 +155,127 @@ export class CaseManagementComponent implements OnInit {
   }
 
   getRecentCasesCount(): number {
-    // For now, return total count / 3 as "recent" (could be enhanced with actual timestamps)
-    return Math.max(1, Math.ceil(this.caseFolders.length / 3));
+    // Count cases created in the last 7 days
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    return this.caseFolders.filter(
+      (caseFolder) => caseFolder.metadata.createdAt > sevenDaysAgo
+    ).length;
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  formatDate(timestamp: number): string {
+    if (!timestamp) return 'Unbekannt';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffTime = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+    // Just now
+    if (diffMinutes < 1) return 'Gerade eben';
+    
+    // Minutes ago
+    if (diffMinutes < 60) return `Vor ${diffMinutes} Min.`;
+    
+    // Hours ago
+    if (diffHours < 24) return `Vor ${diffHours} Std.`;
+    
+    // Days ago
+    if (diffDays === 0) return 'Heute';
+    if (diffDays === 1) return 'Gestern';
+    if (diffDays < 7) return `Vor ${diffDays} Tagen`;
+    
+    // Specific date for older items
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
+  formatRelativeDate(timestamp: number): string {
+    return this.formatDate(timestamp);
+  }
+
+  getTotalFilesCount(): number {
+    return this.caseFolders.reduce(
+      (sum, caseFolder) => sum + caseFolder.metadata.fileCount,
+      0
+    );
+  }
+
+  getTotalStorageSize(): string {
+    const totalBytes = this.caseFolders.reduce(
+      (sum, caseFolder) => sum + caseFolder.metadata.totalSize,
+      0
+    );
+    return this.formatFileSize(totalBytes);
+  }
+
+  filterCases() {
+    let filtered: CaseFolder[];
+    
+    if (!this.searchQuery.trim()) {
+      filtered = [...this.caseFolders];
+    } else {
+      const query = this.searchQuery.toLowerCase().trim();
+      filtered = this.caseFolders.filter((caseFolder) => {
+        const caseId = caseFolder.name.replace('case-', '').toLowerCase();
+        const caseName = this.formatCaseName(caseFolder.name).toLowerCase();
+        return caseId.includes(query) || caseName.includes(query);
+      });
+    }
+
+    // Apply sorting
+    this.filteredCaseFolders = this.sortCases(filtered);
+  }
+
+  sortCases(cases: CaseFolder[]): CaseFolder[] {
+    const sorted = [...cases];
+    
+    switch (this.sortBy) {
+      case 'newest':
+        return sorted.sort((a, b) => b.metadata.createdAt - a.metadata.createdAt);
+      case 'oldest':
+        return sorted.sort((a, b) => a.metadata.createdAt - b.metadata.createdAt);
+      case 'mostFiles':
+        return sorted.sort((a, b) => b.metadata.fileCount - a.metadata.fileCount);
+      case 'largest':
+        return sorted.sort((a, b) => b.metadata.totalSize - a.metadata.totalSize);
+      default:
+        return sorted;
+    }
+  }
+
+  changeSortOrder(sortBy: 'newest' | 'oldest' | 'mostFiles' | 'largest') {
+    this.sortBy = sortBy;
+    this.sortDropdownOpen = false;
+    this.filterCases();
+  }
+
+  toggleSortDropdown() {
+    this.sortDropdownOpen = !this.sortDropdownOpen;
+  }
+
+  closeSortDropdown() {
+    this.sortDropdownOpen = false;
+  }
+
+  getSortLabel(): string {
+    return this.sortOptions.find(opt => opt.value === this.sortBy)?.label || 'Sortieren';
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.filterCases();
   }
 }

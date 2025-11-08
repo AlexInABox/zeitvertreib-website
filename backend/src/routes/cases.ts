@@ -204,36 +204,103 @@ export async function handleListCases(
       .map((match) => match[1]?.replace('/', '') || '')
       .filter((folder) => folder.startsWith('case-'));
 
-    // Get metadata for each folder to sort by creation time
+    // Get metadata for each folder including file count and size
     const foldersWithMetadata = await Promise.all(
       caseFolders.map(async (folderName) => {
         try {
-          // HEAD request to get folder metadata
-          const metadataUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
-          const metadataRequest = await aws(env).sign(metadataUrl, {
-            method: 'HEAD',
+          // List all files in the folder to get count, size, and last modified
+          const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${folderName}/`;
+          const listRequest = await aws(env).sign(listUrl, {
+            method: 'GET',
           });
-          const metadataResponse = await fetch(metadataRequest);
+          const listResponse = await fetch(listRequest);
 
-          const lastModified = metadataResponse.headers.get('Last-Modified');
-          const createdAt = lastModified ? new Date(lastModified).getTime() : 0;
+          if (!listResponse.ok) {
+            throw new Error(`Failed to list files for ${folderName}`);
+          }
 
-          return { folderName, createdAt };
+          const listXml = await listResponse.text();
+
+          // Extract all file entries (Contents elements)
+          const contentsRegex = /<Contents>(.*?)<\/Contents>/gs;
+          const contentsMatches = Array.from(listXml.matchAll(contentsRegex));
+
+          let fileCount = 0;
+          let totalSize = 0;
+          let createdAt = 0;
+          let lastModified = 0;
+
+          for (const match of contentsMatches) {
+            const content = match[1] || '';
+
+            // Extract Key to skip the folder itself
+            const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
+            const key = keyMatch ? keyMatch[1] : '';
+
+            // Skip the folder marker (ends with /)
+            if (key === `${folderName}/`) {
+              // Get creation date from folder marker
+              const folderModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
+              if (folderModifiedMatch) {
+                createdAt = new Date(folderModifiedMatch[1] || '').getTime();
+              }
+              continue;
+            }
+
+            fileCount++;
+
+            // Extract Size
+            const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
+            if (sizeMatch) {
+              totalSize += parseInt(sizeMatch[1] || '0', 10);
+            }
+
+            // Extract LastModified for tracking most recent update
+            const modifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
+            if (modifiedMatch) {
+              const fileModified = new Date(modifiedMatch[1] || '').getTime();
+              if (fileModified > lastModified) {
+                lastModified = fileModified;
+              }
+            }
+          }
+
+          // If no creation date from folder marker, use the oldest file or 0
+          if (createdAt === 0 && lastModified > 0) {
+            createdAt = lastModified;
+          }
+
+          return {
+            id: folderName,
+            caseId: folderName.replace('case-', ''),
+            createdAt,
+            lastModified: lastModified || createdAt,
+            fileCount,
+            totalSize,
+          };
         } catch (error) {
-          // If we can't get metadata, put it at the end
-          return { folderName, createdAt: 0 };
+          console.error(`Error getting metadata for ${folderName}:`, error);
+          // Return minimal data if we can't get metadata
+          return {
+            id: folderName,
+            caseId: folderName.replace('case-', ''),
+            createdAt: 0,
+            lastModified: 0,
+            fileCount: 0,
+            totalSize: 0,
+          };
         }
       }),
     );
 
     // Sort by creation time (oldest first)
-    const sortedFolders = foldersWithMetadata
-      .sort((a, b) => a.createdAt - b.createdAt)
-      .map((item) => item.folderName);
+    const sortedFolders = foldersWithMetadata.sort(
+      (a, b) => a.createdAt - b.createdAt,
+    );
 
     return createResponse(
       {
-        folders: sortedFolders,
+        cases: sortedFolders,
       },
       200,
       origin,

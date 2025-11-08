@@ -79,12 +79,90 @@
             <span class="stat-label">Kürzlich erstellt</span>
           </div>
         </div>
+        <div class="stat-card">
+          <i class="pi pi-file stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ getTotalFilesCount() }}</span>
+            <span class="stat-label">Dateien insgesamt</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="pi pi-database stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ getTotalStorageSize() }}</span>
+            <span class="stat-label">Gesamtspeicher</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-section" *ngIf="caseFolders.length > 0">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            (input)="filterCases()"
+            placeholder="Suche nach Fall-ID oder Name... (z.B. 123 oder Fall #123)"
+            class="search-input"
+          />
+          <button
+            *ngIf="searchQuery"
+            pButton
+            icon="pi pi-times"
+            class="clear-btn"
+            (click)="clearSearch()"
+            [text]="true"
+          ></button>
+        </div>
+        
+        <!-- Custom Sort Dropdown -->
+        <div class="sort-wrapper">
+          <label class="sort-label">
+            <i class="pi pi-sort-alt"></i>
+            Sortieren:
+          </label>
+          <div class="custom-dropdown">
+            <button 
+              class="dropdown-trigger"
+              (click)="toggleSortDropdown()"
+              type="button"
+            >
+              <span class="dropdown-label">{{ getSortLabel() }}</span>
+              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+            </button>
+            <div class="dropdown-menu" *ngIf="sortDropdownOpen">
+              <button
+                *ngFor="let option of sortOptions"
+                class="dropdown-item"
+                [class.active]="sortBy === option.value"
+                (click)="changeSortOrder($any(option.value))"
+                type="button"
+              >
+                <span>{{ option.label }}</span>
+                <i class="pi pi-check" *ngIf="sortBy === option.value"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="search-results-info" *ngIf="searchQuery">
+          <span class="results-count">
+            {{ filteredCaseFolders.length }}
+            {{
+              filteredCaseFolders.length === 1
+                ? 'Fall gefunden'
+                : 'Fälle gefunden'
+            }}
+          </span>
+        </div>
       </div>
 
       <!-- Cases Grid -->
-      <div class="cases-grid" *ngIf="caseFolders.length > 0">
+      <div class="cases-grid" *ngIf="filteredCaseFolders.length > 0">
         <div
-          *ngFor="let caseFolder of caseFolders; let i = index"
+          *ngFor="let caseFolder of filteredCaseFolders; let i = index"
           class="case-card"
           (click)="openCase(caseFolder)"
           [style.animation-delay]="i * 0.05 + 's'"
@@ -99,13 +177,37 @@
           <div class="case-card-body">
             <h3 class="case-title">{{ formatCaseName(caseFolder.name) }}</h3>
             <p class="case-id">ID: {{ caseFolder.name }}</p>
+            
+            <div class="case-stats">
+              <span class="stat-item" *ngIf="caseFolder.metadata.fileCount > 0">
+                <i class="pi pi-file"></i>
+                {{ caseFolder.metadata.fileCount }}
+                {{ caseFolder.metadata.fileCount === 1 ? 'Datei' : 'Dateien' }}
+              </span>
+              <span class="stat-item" *ngIf="caseFolder.metadata.totalSize > 0">
+                <i class="pi pi-database"></i>
+                {{ formatFileSize(caseFolder.metadata.totalSize) }}
+              </span>
+              <span class="stat-item" *ngIf="caseFolder.metadata.fileCount === 0">
+                <i class="pi pi-inbox"></i>
+                Leer
+              </span>
+            </div>
           </div>
 
           <div class="case-card-footer">
             <div class="case-meta">
-              <span class="meta-item">
-                <i class="pi pi-calendar"></i>
-                Heute
+              <span class="meta-item" [title]="'Erstellt: ' + formatDate(caseFolder.metadata.createdAt)">
+                <i class="pi pi-calendar-plus"></i>
+                {{ formatRelativeDate(caseFolder.metadata.createdAt) }}
+              </span>
+              <span 
+                class="meta-item" 
+                *ngIf="caseFolder.metadata.lastModified !== caseFolder.metadata.createdAt"
+                [title]="'Zuletzt geändert: ' + formatDate(caseFolder.metadata.lastModified)"
+              >
+                <i class="pi pi-history"></i>
+                {{ formatRelativeDate(caseFolder.metadata.lastModified) }}
               </span>
             </div>
             <div class="case-action">
