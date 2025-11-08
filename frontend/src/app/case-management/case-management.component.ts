@@ -38,6 +38,13 @@ export class CaseManagementComponent implements OnInit {
   hasError = false;
   errorMessage = '';
 
+  // Public lookup state
+  isAuthenticated = false;
+  isFakerankAdmin = false;
+  lookupCaseId = '';
+  lookupError = '';
+  isLookingUp = false;
+
   sortOptions = [
     { label: 'Neueste zuerst', value: 'newest' },
     { label: 'Älteste zuerst', value: 'oldest' },
@@ -49,7 +56,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -71,7 +78,18 @@ export class CaseManagementComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadCaseFolders();
+    // Check authentication status
+    this.authService.currentUser$.subscribe(user => {
+      this.isAuthenticated = !!user;
+      this.isFakerankAdmin = this.authService.isFakerankAdmin();
+
+      // Only load cases if user is authenticated and has fakerank admin
+      if (this.isAuthenticated && this.isFakerankAdmin) {
+        this.loadCaseFolders();
+      } else {
+        this.isLoading = false;
+      }
+    });
   }
 
   loadCaseFolders() {
@@ -79,17 +97,47 @@ export class CaseManagementComponent implements OnInit {
     this.hasError = false;
 
     this.http
-      .get<{ cases: CaseMetadata[] }>(`${environment.apiUrl}/cases`, {
+      .get<{ folders: string[] }>(`${environment.apiUrl}/cases`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .subscribe({
-        next: (response) => {
-          // Store cases with metadata
-          this.caseFolders = response.cases.map((caseData) => ({
-            name: caseData.id,
-            metadata: caseData,
-          }));
+        next: async (response) => {
+          // Fetch metadata for each case
+          const casesWithMetadata = await Promise.all(
+            response.folders.map(async (folderName) => {
+              const caseId = folderName.replace('case-', '');
+              try {
+                const metadata = await this.http
+                  .get<CaseMetadata>(
+                    `${environment.apiUrl}/cases/metadata?case=${caseId}`,
+                    { withCredentials: true }
+                  )
+                  .toPromise();
+
+                return {
+                  name: folderName,
+                  metadata: metadata!,
+                };
+              } catch (error) {
+                console.error(`Error fetching metadata for ${caseId}:`, error);
+                // Return with default metadata if fetch fails
+                return {
+                  name: folderName,
+                  metadata: {
+                    id: folderName,
+                    caseId: caseId,
+                    createdAt: 0,
+                    lastModified: 0,
+                    fileCount: 0,
+                    totalSize: 0,
+                  },
+                };
+              }
+            })
+          );
+
+          this.caseFolders = casesWithMetadata;
           // Apply initial sorting (newest first)
           this.filterCases();
           this.isLoading = false;
@@ -137,7 +185,7 @@ export class CaseManagementComponent implements OnInit {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-              (error.error?.error || 'Unknown error'),
+            (error.error?.error || 'Unknown error'),
           );
         },
       });
@@ -272,6 +320,51 @@ export class CaseManagementComponent implements OnInit {
 
   toggleSortDropdown() {
     this.sortDropdownOpen = !this.sortDropdownOpen;
+  }
+
+  lookupCase() {
+    // Reset error
+    this.lookupError = '';
+
+    // Validate input
+    const caseId = this.lookupCaseId.trim().toLowerCase();
+    if (!caseId) {
+      this.lookupError = 'Bitte gib eine Fall-ID ein';
+      return;
+    }
+
+    // Validate format (5 lowercase letters or numbers)
+    if (!/^[a-z0-9]{5}$/.test(caseId)) {
+      this.lookupError = 'Fall-ID muss aus 5 Zeichen (a-z, 0-9) bestehen';
+      return;
+    }
+
+    // Check if case exists by fetching metadata
+    this.isLookingUp = true;
+    this.http
+      .get<CaseMetadata>(
+        `${environment.apiUrl}/cases/metadata?case=${caseId}`
+      )
+      .subscribe({
+        next: () => {
+          // Case exists, navigate to it
+          this.router.navigate(['/cases', caseId]);
+        },
+        error: (error) => {
+          this.isLookingUp = false;
+          if (error.status === 404) {
+            this.lookupError = 'Fall nicht gefunden';
+          } else {
+            this.lookupError = 'Fehler beim Überprüfen des Falls';
+          }
+        }
+      });
+  }
+
+  onLookupKeyPress(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      this.lookupCase();
+    }
   }
 
   closeSortDropdown() {

@@ -5,7 +5,7 @@ import {
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
 } from '@angular/router';
-import { map, take } from 'rxjs';
+import { map, take, filter } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (
@@ -15,7 +15,17 @@ export const authGuard: CanActivateFn = (
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // If we have a session token, wait for the auth check to complete
+  const hasToken = !!authService.getSessionToken();
+
   return authService.currentUser$.pipe(
+    // Skip initial null only if we have a token (meaning auth check is in progress)
+    filter((user, index) => {
+      // If no token, accept first emission (null = not logged in)
+      if (!hasToken) return true;
+      // If we have a token, skip the initial null and wait for actual data
+      return index > 0 || user !== null;
+    }),
     take(1),
     map((user) => {
       if (user) {

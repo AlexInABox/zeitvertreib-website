@@ -81,6 +81,7 @@ import {
   handleListCases,
   handleCreateCase,
   handleListCaseFiles,
+  handleGetCaseMetadata,
 } from './routes/cases.js';
 
 // Simple response helper for internal use
@@ -120,6 +121,7 @@ const routes: Record<
   'GET:/cases': handleListCases,
   'POST:/cases': handleCreateCase,
   'GET:/cases/files': handleListCaseFiles,
+  'GET:/cases/metadata': handleGetCaseMetadata,
 
   // Spray routes
   'POST:/spray/upload': handleUploadSpray,

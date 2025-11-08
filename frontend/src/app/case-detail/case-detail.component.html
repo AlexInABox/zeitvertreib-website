@@ -1,67 +1,310 @@
 <div class="case-detail-container">
-  <div class="p-6 max-w-5xl mx-auto">
-    <!-- Header -->
-    <div class="header-section mb-8">
-      <button
-        pButton
-        icon="pi pi-arrow-left"
-        label="Back to Cases"
-        class="p-button-text p-button-secondary mb-4"
-        (click)="goBack()"
-      ></button>
-      <h1 class="text-4xl font-bold text-white mb-2">{{ caseName }}</h1>
-      <p class="text-gray-300">Case Files</p>
-    </div>
-
+  <div class="content-wrapper">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
-      <p class="text-white mt-4">Loading files...</p>
+      <p class="loading-text">Dateien werden geladen...</p>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
 
     <!-- Error State -->
     <div *ngIf="hasError && !isLoading" class="error-state">
-      <i class="pi pi-exclamation-circle text-4xl text-red-400 mb-3"></i>
-      <h3 class="text-xl font-bold text-white mb-2">Error</h3>
-      <p class="text-gray-300 mb-4">{{ errorMessage }}</p>
+      <div class="error-icon-wrapper">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
+      <p class="error-message">{{ errorMessage }}</p>
       <button
         pButton
-        label="Retry"
+        label="Erneut versuchen"
         icon="pi pi-refresh"
-        class="p-button-outlined"
+        class="retry-button"
         (click)="loadFiles()"
       ></button>
     </div>
 
-    <!-- Files Grid -->
-    <div *ngIf="!isLoading && !hasError" class="files-grid">
-      <div *ngFor="let file of files" class="file-card">
-        <div class="file-icon">
-          <i class="pi pi-file text-3xl text-blue-400"></i>
-        </div>
-        <div class="file-info">
-          <p class="file-name">{{ file.name }}</p>
-          <p class="file-expiry">
-            Link expires in {{ file.expiresIn / 60 }} minutes
-          </p>
-        </div>
-        <div class="file-actions">
-          <a
-            [href]="getFileUrl(file)"
-            target="_blank"
-            class="file-button"
-            title="Open file"
-          >
-            <i class="pi pi-external-link"></i>
-          </a>
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && !hasError" class="main-content">
+      <!-- Header Section -->
+      <div class="header-section">
+        <button
+          *ngIf="isAuthenticated"
+          pButton
+          icon="pi pi-arrow-left"
+          label="Zurück zu Fällen"
+          class="back-button"
+          (click)="goBack()"
+        ></button>
+
+        <div class="header-content">
+          <div class="title-area">
+            <div class="title-wrapper">
+              <i class="pi pi-folder-open header-icon"></i>
+              <h1 class="page-title">{{ formatCaseName(caseId) }}</h1>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button
+              pButton
+              label="Aktualisieren"
+              icon="pi pi-refresh"
+              class="refresh-btn"
+              (click)="loadFiles()"
+              [disabled]="isLoading"
+            ></button>
+          </div>
         </div>
       </div>
 
-      <!-- Empty State -->
+      <!-- Quick Stats -->
+      <div class="stats-section" *ngIf="files.length > 0 || metadata">
+        <div class="stat-card" *ngIf="metadata">
+          <i class="pi pi-file stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ metadata.fileCount }}</span>
+            <span class="stat-label">Dateien</span>
+          </div>
+        </div>
+        <div class="stat-card" *ngIf="metadata">
+          <i class="pi pi-database stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{
+              formatFileSize(metadata.totalSize)
+            }}</span>
+            <span class="stat-label">Gesamtgröße</span>
+          </div>
+        </div>
+        <div class="stat-card" *ngIf="metadata">
+          <i class="pi pi-calendar stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ formatDate(metadata.createdAt) }}</span>
+            <span class="stat-label">Erstellt am</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Sort -->
+      <div class="search-section" *ngIf="files.length > 0">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            (input)="filterFiles()"
+            placeholder="Suche nach Dateinamen..."
+            class="search-input"
+          />
+          <button
+            *ngIf="searchQuery"
+            pButton
+            icon="pi pi-times"
+            class="clear-btn"
+            (click)="clearSearch()"
+            [text]="true"
+          ></button>
+        </div>
+
+        <!-- Custom Sort Dropdown -->
+        <div class="sort-wrapper">
+          <label class="sort-label">
+            <i class="pi pi-sort-alt"></i>
+            Sortieren:
+          </label>
+          <div class="custom-dropdown">
+            <button
+              class="dropdown-trigger"
+              (click)="toggleSortDropdown()"
+              type="button"
+            >
+              <span class="dropdown-label">{{ getSortLabel() }}</span>
+              <i
+                class="pi"
+                [ngClass]="
+                  sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'
+                "
+              ></i>
+            </button>
+            <div class="dropdown-menu" *ngIf="sortDropdownOpen">
+              <button
+                *ngFor="let option of sortOptions"
+                class="dropdown-item"
+                [class.active]="sortBy === option.value"
+                (click)="changeSortOrder($any(option.value))"
+                type="button"
+              >
+                <span>{{ option.label }}</span>
+                <i class="pi pi-check" *ngIf="sortBy === option.value"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="search-results-info" *ngIf="searchQuery">
+          <span class="results-count">
+            {{ filteredFiles.length }}
+            {{
+              filteredFiles.length === 1 ? 'Datei gefunden' : 'Dateien gefunden'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Files Grid -->
+      <div class="files-grid" *ngIf="filteredFiles.length > 0">
+        <div
+          *ngFor="let file of filteredFiles; let i = index"
+          class="file-card"
+          [style.animation-delay]="i * 0.05 + 's'"
+        >
+          <div class="file-card-header">
+            <div class="file-icon-wrapper">
+              <i class="pi" [ngClass]="getFileIcon(file.name)"></i>
+            </div>
+            <div class="file-badge">{{ getFileType(file.name) }}</div>
+          </div>
+
+          <div class="file-card-body">
+            <h3 class="file-title" [title]="file.name">{{ file.name }}</h3>
+            <div class="file-stats">
+              <span class="stat-item" *ngIf="file.size">
+                <i class="pi pi-database"></i>
+                {{ formatFileSize(file.size) }}
+              </span>
+              <span class="stat-item" *ngIf="file.lastModified">
+                <i class="pi pi-calendar"></i>
+                {{ formatDate(file.lastModified) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="file-card-footer">
+            <button
+              *ngIf="isViewableFile(file.name)"
+              class="file-action-btn view-btn"
+              title="Datei öffnen"
+              (click)="openViewer(file)"
+            >
+              <i class="pi pi-eye"></i>
+              <span>Ansehen</span>
+            </button>
+            <a
+              [href]="getFileUrl(file)"
+              download
+              class="file-action-btn download-btn"
+              [class.full-width]="!isViewableFile(file.name)"
+              title="Datei herunterladen"
+            >
+              <i class="pi pi-download"></i>
+              <span>Download</span>
+            </a>
+          </div>
+
+          <!-- Hover Effect Overlay -->
+          <div class="card-overlay"></div>
+        </div>
+      </div>
+
+      <!-- Empty State (no files) -->
       <div *ngIf="files.length === 0" class="empty-state">
-        <i class="pi pi-inbox text-6xl text-gray-500 mb-4"></i>
-        <h3 class="text-xl font-bold text-white mb-2">No Files Yet</h3>
-        <p class="text-gray-400">This case doesn't contain any files yet.</p>
+        <div class="empty-illustration">
+          <div class="empty-icon-wrapper">
+            <i class="pi pi-inbox"></i>
+          </div>
+          <div class="empty-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+          </div>
+        </div>
+        <h3 class="empty-title">Noch keine Dateien</h3>
+        <p class="empty-description">
+          Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu
+          beginnen.
+        </p>
+        <div class="empty-tips">
+          <p class="tip-title">💡 Tipp:</p>
+          <p class="tip-text">
+            Du kannst verschiedene Dateitypen hochladen: Bilder, Videos,
+            Dokumente und mehr.
+          </p>
+        </div>
+      </div>
+
+      <!-- Empty Search Results -->
+      <div
+        *ngIf="files.length > 0 && filteredFiles.length === 0"
+        class="empty-state"
+      >
+        <div class="empty-icon-wrapper">
+          <i class="pi pi-search"></i>
+        </div>
+        <h3 class="empty-title">Keine Ergebnisse</h3>
+        <p class="empty-description">
+          Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".
+        </p>
+        <button
+          pButton
+          label="Suche zurücksetzen"
+          icon="pi pi-times"
+          class="empty-action-btn"
+          (click)="clearSearch()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Viewer Modal -->
+  <div class="media-viewer-overlay" *ngIf="viewerOpen" (click)="closeViewer()">
+    <div class="media-viewer-content" (click)="$event.stopPropagation()">
+      <div class="viewer-header">
+        <h2 class="viewer-title">{{ viewerFile?.name }}</h2>
+        <div class="viewer-actions">
+          <a
+            [href]="viewerFile?.viewUrl"
+            download
+            class="viewer-download-btn"
+            title="Herunterladen"
+          >
+            <i class="pi pi-download"></i>
+            <span>Download</span>
+          </a>
+          <button
+            class="viewer-close-btn"
+            (click)="closeViewer()"
+            title="Schließen"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="viewer-body">
+        <!-- Image Viewer -->
+        <div *ngIf="viewerMediaType === 'image'" class="image-viewer">
+          <img [src]="viewerFile?.viewUrl" [alt]="viewerFile?.name" />
+        </div>
+
+        <!-- Video Viewer -->
+        <div *ngIf="viewerMediaType === 'video'" class="video-viewer">
+          <video controls [src]="viewerFile?.viewUrl">
+            Dein Browser unterstützt das Video-Tag nicht.
+          </video>
+        </div>
+
+        <!-- Audio Viewer -->
+        <div *ngIf="viewerMediaType === 'audio'" class="audio-viewer">
+          <div class="audio-player-wrapper">
+            <i class="pi pi-volume-up audio-icon"></i>
+            <audio controls [src]="viewerFile?.viewUrl">
+              Dein Browser unterstützt das Audio-Tag nicht.
+            </audio>
+          </div>
+        </div>
       </div>
     </div>
   </div>

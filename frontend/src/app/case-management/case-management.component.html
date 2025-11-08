@@ -1,5 +1,51 @@
 <div class="case-management-container">
   <div class="content-wrapper">
+    <!-- Public Case Lookup (when not authenticated or not fakerank admin) -->
+    <div
+      *ngIf="
+        (!isLoading && !isAuthenticated) ||
+        (!isLoading && isAuthenticated && !isFakerankAdmin)
+      "
+      class="public-lookup-container"
+    >
+      <div class="lookup-card">
+        <div class="lookup-header">
+          <i class="pi pi-search lookup-icon"></i>
+          <h1 class="lookup-title">Fall suchen</h1>
+          <p class="lookup-subtitle">Gib die 5-stellige Fall-ID ein</p>
+        </div>
+
+        <div class="lookup-body">
+          <div class="lookup-input-wrapper">
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="lookupCaseId"
+              placeholder="z.B. abc12"
+              class="lookup-input"
+              maxlength="5"
+              (keypress)="onLookupKeyPress($event)"
+              [disabled]="isLookingUp"
+            />
+            <button
+              pButton
+              label="Suchen"
+              icon="pi pi-arrow-right"
+              class="lookup-button"
+              (click)="lookupCase()"
+              [disabled]="isLookingUp"
+              [loading]="isLookingUp"
+            ></button>
+          </div>
+
+          <div *ngIf="lookupError" class="lookup-error">
+            <i class="pi pi-exclamation-circle"></i>
+            <span>{{ lookupError }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
@@ -28,7 +74,10 @@
     </div>
 
     <!-- Main Content -->
-    <div *ngIf="!isLoading && !hasError" class="main-content">
+    <div
+      *ngIf="!isLoading && !hasError && isAuthenticated && isFakerankAdmin"
+      class="main-content"
+    >
       <!-- Header Section -->
       <div class="header-section">
         <div class="header-content">
@@ -37,11 +86,6 @@
               <i class="pi pi-briefcase header-icon"></i>
               <h1 class="page-title">Fallverwaltung</h1>
             </div>
-            <p class="page-subtitle">
-              {{ caseFolders.length }}
-              {{ caseFolders.length === 1 ? 'Fall' : 'Fälle' }}
-              insgesamt
-            </p>
           </div>
           <div class="header-actions">
             <button

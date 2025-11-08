@@ -38,7 +38,7 @@ export const routes: Routes = [
       import('./case-management/case-management.component').then(
         (m) => m.CaseManagementComponent,
       ),
-    canActivate: [fakerankAdminGuard],
+    // No guard - shows lookup for non-authenticated, full list for fakerank admins
   },
   {
     path: 'cases/:id',
@@ -46,7 +46,7 @@ export const routes: Routes = [
       import('./case-detail/case-detail.component').then(
         (m) => m.CaseDetailComponent,
       ),
-    canActivate: [fakerankAdminGuard],
+    // No guard - public route
   },
   {
     path: 'profile',

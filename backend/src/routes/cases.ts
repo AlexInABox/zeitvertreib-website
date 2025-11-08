@@ -204,107 +204,9 @@ export async function handleListCases(
       .map((match) => match[1]?.replace('/', '') || '')
       .filter((folder) => folder.startsWith('case-'));
 
-    // Get metadata for each folder including file count and size
-    const foldersWithMetadata = await Promise.all(
-      caseFolders.map(async (folderName) => {
-        try {
-          // List all files in the folder to get count, size, and last modified
-          const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${folderName}/`;
-          const listRequest = await aws(env).sign(listUrl, {
-            method: 'GET',
-          });
-          const listResponse = await fetch(listRequest);
-
-          if (!listResponse.ok) {
-            throw new Error(`Failed to list files for ${folderName}`);
-          }
-
-          const listXml = await listResponse.text();
-
-          // Extract all file entries (Contents elements)
-          const contentsRegex = /<Contents>(.*?)<\/Contents>/gs;
-          const contentsMatches = Array.from(listXml.matchAll(contentsRegex));
-
-          let fileCount = 0;
-          let totalSize = 0;
-          let createdAt = 0;
-          let lastModified = 0;
-
-          for (const match of contentsMatches) {
-            const content = match[1] || '';
-
-            // Extract Key to skip the folder itself
-            const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
-            const key = keyMatch ? keyMatch[1] : '';
-
-            // Skip the folder marker (ends with /)
-            if (key === `${folderName}/`) {
-              // Get creation date from folder marker
-              const folderModifiedMatch = content.match(
-                /<LastModified>([^<]+)<\/LastModified>/,
-              );
-              if (folderModifiedMatch) {
-                createdAt = new Date(folderModifiedMatch[1] || '').getTime();
-              }
-              continue;
-            }
-
-            fileCount++;
-
-            // Extract Size
-            const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
-            if (sizeMatch) {
-              totalSize += parseInt(sizeMatch[1] || '0', 10);
-            }
-
-            // Extract LastModified for tracking most recent update
-            const modifiedMatch = content.match(
-              /<LastModified>([^<]+)<\/LastModified>/,
-            );
-            if (modifiedMatch) {
-              const fileModified = new Date(modifiedMatch[1] || '').getTime();
-              if (fileModified > lastModified) {
-                lastModified = fileModified;
-              }
-            }
-          }
-
-          // If no creation date from folder marker, use the oldest file or 0
-          if (createdAt === 0 && lastModified > 0) {
-            createdAt = lastModified;
-          }
-
-          return {
-            id: folderName,
-            caseId: folderName.replace('case-', ''),
-            createdAt,
-            lastModified: lastModified || createdAt,
-            fileCount,
-            totalSize,
-          };
-        } catch (error) {
-          console.error(`Error getting metadata for ${folderName}:`, error);
-          // Return minimal data if we can't get metadata
-          return {
-            id: folderName,
-            caseId: folderName.replace('case-', ''),
-            createdAt: 0,
-            lastModified: 0,
-            fileCount: 0,
-            totalSize: 0,
-          };
-        }
-      }),
-    );
-
-    // Sort by creation time (oldest first)
-    const sortedFolders = foldersWithMetadata.sort(
-      (a, b) => a.createdAt - b.createdAt,
-    );
-
     return createResponse(
       {
-        cases: sortedFolders,
+        folders: caseFolders,
       },
       200,
       origin,
@@ -314,6 +216,145 @@ export async function handleListCases(
     return createResponse(
       {
         error: 'Failed to list folders',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+export async function handleGetCaseMetadata(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    // Get case ID from query parameter
+    const url = new URL(request.url);
+    const caseId = url.searchParams.get('case');
+
+    if (!caseId) {
+      return createResponse(
+        { error: 'Missing required parameter: case' },
+        400,
+        origin,
+      );
+    }
+
+    // Validate case ID format (5 lowercase letters or numbers)
+    if (!/^[a-z0-9]{5}$/.test(caseId)) {
+      return createResponse(
+        {
+          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
+        },
+        400,
+        origin,
+      );
+    }
+
+    const folderName = `case-${caseId}`;
+
+    // List all files in the folder to get count, size, and last modified
+    const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${folderName}/`;
+    const listRequest = await aws(env).sign(listUrl, {
+      method: 'GET',
+    });
+    const listResponse = await fetch(listRequest);
+
+    if (!listResponse.ok) {
+      if (listResponse.status === 404) {
+        return createResponse(
+          { error: 'Case not found' },
+          404,
+          origin,
+        );
+      }
+      throw new Error(`Failed to list files for ${folderName}`);
+    }
+
+    const listXml = await listResponse.text();
+
+    // Extract all file entries (Contents elements)
+    const contentsRegex = /<Contents>(.*?)<\/Contents>/gs;
+    const contentsMatches = Array.from(listXml.matchAll(contentsRegex));
+
+    // If no contents found, the folder doesn't exist
+    if (contentsMatches.length === 0) {
+      return createResponse(
+        { error: 'Case not found' },
+        404,
+        origin,
+      );
+    }
+
+    let fileCount = 0;
+    let totalSize = 0;
+    let createdAt = 0;
+    let lastModified = 0;
+
+    for (const match of contentsMatches) {
+      const content = match[1] || '';
+
+      // Extract Key to skip the folder itself
+      const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
+      const key = keyMatch ? keyMatch[1] : '';
+
+      // Skip the folder marker (ends with /)
+      if (key === `${folderName}/`) {
+        // Get creation date from folder marker
+        const folderModifiedMatch = content.match(
+          /<LastModified>([^<]+)<\/LastModified>/,
+        );
+        if (folderModifiedMatch) {
+          createdAt = new Date(folderModifiedMatch[1] || '').getTime();
+        }
+        continue;
+      }
+
+      fileCount++;
+
+      // Extract Size
+      const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
+      if (sizeMatch) {
+        totalSize += parseInt(sizeMatch[1] || '0', 10);
+      }
+
+      // Extract LastModified for tracking most recent update
+      const modifiedMatch = content.match(
+        /<LastModified>([^<]+)<\/LastModified>/,
+      );
+      if (modifiedMatch) {
+        const fileModified = new Date(modifiedMatch[1] || '').getTime();
+        if (fileModified > lastModified) {
+          lastModified = fileModified;
+        }
+      }
+    }
+
+    // If no creation date from folder marker, use the oldest file or 0
+    if (createdAt === 0 && lastModified > 0) {
+      createdAt = lastModified;
+    }
+
+    return createResponse(
+      {
+        id: folderName,
+        caseId: caseId,
+        createdAt,
+        lastModified: lastModified || createdAt,
+        fileCount,
+        totalSize,
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Get case metadata error:', error);
+    return createResponse(
+      {
+        error: 'Failed to get case metadata',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,
