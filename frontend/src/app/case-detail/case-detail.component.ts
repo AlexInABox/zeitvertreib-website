@@ -33,7 +33,13 @@ interface CaseMetadata {
 
 @Component({
   selector: 'app-case-detail',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, InputTextarea],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    InputTextModule,
+    InputTextarea,
+  ],
   templateUrl: './case-detail.component.html',
   styleUrl: './case-detail.component.css',
 })
@@ -44,7 +50,8 @@ export class CaseDetailComponent implements OnInit {
   filteredFiles: CaseFile[] = [];
   metadata: CaseMetadata | null = null;
   searchQuery = '';
-  sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest' = 'newest';
+  sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest' =
+    'newest';
   sortDropdownOpen = false;
   isLoading = true;
   hasError = false;
@@ -94,7 +101,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -210,13 +217,9 @@ export class CaseDetailComponent implements OnInit {
       case 'name-desc':
         return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case 'newest':
-        return sorted.sort(
-          (a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0),
-        );
+        return sorted.sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
       case 'oldest':
-        return sorted.sort(
-          (a, b) => (a.uploadedAt || 0) - (b.uploadedAt || 0),
-        );
+        return sorted.sort((a, b) => (a.uploadedAt || 0) - (b.uploadedAt || 0));
       case 'largest':
         return sorted.sort((a, b) => (b.size || 0) - (a.size || 0));
       case 'smallest':
@@ -437,13 +440,14 @@ export class CaseDetailComponent implements OnInit {
     // Parse tags from comma-separated string
     const tags = this.editedTags
       .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
 
     const metadataPayload: any = {};
 
     if (this.editedNickname) metadataPayload.nickname = this.editedNickname;
-    if (this.editedDescription) metadataPayload.description = this.editedDescription;
+    if (this.editedDescription)
+      metadataPayload.description = this.editedDescription;
     if (tags.length > 0) metadataPayload.tags = tags;
 
     this.http
@@ -453,7 +457,7 @@ export class CaseDetailComponent implements OnInit {
         {
           headers: this.getAuthHeaders(),
           withCredentials: true,
-        }
+        },
       )
       .subscribe({
         next: () => {
@@ -466,7 +470,7 @@ export class CaseDetailComponent implements OnInit {
           this.isSavingMetadata = false;
           console.error('Failed to save metadata:', error);
           alert('Fehler beim Speichern der Metadaten');
-        }
+        },
       });
   }
 
@@ -488,7 +492,8 @@ export class CaseDetailComponent implements OnInit {
 
     try {
       // Get file extension
-      const fileExtension = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
+      const fileExtension =
+        this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
 
       // Request upload URL from backend
       const uploadUrlResponse = await this.http
@@ -499,7 +504,7 @@ export class CaseDetailComponent implements OnInit {
           fileUrl: string;
           expiresIn: number;
         }>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`
+          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
         )
         .toPromise();
 
@@ -512,19 +517,24 @@ export class CaseDetailComponent implements OnInit {
         this.http
           .put(uploadUrlResponse.url, this.selectedFile, {
             headers: new HttpHeaders({
-              'Content-Type': this.selectedFile!.type || 'application/octet-stream',
+              'Content-Type':
+                this.selectedFile!.type || 'application/octet-stream',
             }),
             reportProgress: true,
             observe: 'events',
           })
           .subscribe({
             next: (event) => {
-              if (event.type === 1) { // HttpEventType.UploadProgress
+              if (event.type === 1) {
+                // HttpEventType.UploadProgress
                 // Calculate upload percentage
                 if (event.total) {
-                  this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+                  this.uploadProgress = Math.round(
+                    (event.loaded / event.total) * 100,
+                  );
                 }
-              } else if (event.type === 4) { // HttpEventType.Response
+              } else if (event.type === 4) {
+                // HttpEventType.Response
                 resolve();
               }
             },
@@ -538,7 +548,9 @@ export class CaseDetailComponent implements OnInit {
       this.selectedFile = null;
 
       // Reset file input
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
       }
@@ -624,7 +636,9 @@ export class CaseDetailComponent implements OnInit {
       const url = new URL(this.medalClipUrl.trim());
       // Check if it has a protocol (http/https)
       if (!url.protocol.startsWith('http')) {
-        alert('Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)');
+        alert(
+          'Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)',
+        );
         return;
       }
     } catch (error) {
@@ -646,7 +660,7 @@ export class CaseDetailComponent implements OnInit {
         throw new Error('Fehler beim Abrufen des Medal Clips');
       }
 
-      const bypassData = await bypassResponse.json() as {
+      const bypassData = (await bypassResponse.json()) as {
         valid: boolean;
         src?: string;
         reasoning?: string;
@@ -668,9 +682,12 @@ export class CaseDetailComponent implements OnInit {
         ? fileNameWithExt.split('.').pop()!.toLowerCase()
         : 'mp4';
 
-      const mimeType = fileExtension === 'mp4' ? 'video/mp4' :
-        fileExtension === 'webm' ? 'video/webm' :
-          'video/mp4';
+      const mimeType =
+        fileExtension === 'mp4'
+          ? 'video/mp4'
+          : fileExtension === 'webm'
+            ? 'video/webm'
+            : 'video/mp4';
 
       // Generate filename with timestamp and proper extension
       const filename = `medal-clip-${Date.now()}.${fileExtension}`;
@@ -703,7 +720,9 @@ export class CaseDetailComponent implements OnInit {
         receivedLength += value.length;
 
         if (total > 0) {
-          this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
+          this.medalDownloadProgress = Math.round(
+            (receivedLength / total) * 100,
+          );
         }
       }
 
@@ -724,10 +743,9 @@ export class CaseDetailComponent implements OnInit {
 
       // Get presigned upload URL with extension parameter
       const uploadUrlResponse = await this.http
-        .get<{ url: string }>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
-          { withCredentials: true },
-        )
+        .get<{
+          url: string;
+        }>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`, { withCredentials: true })
         .toPromise();
 
       if (!uploadUrlResponse?.url) {
@@ -746,11 +764,15 @@ export class CaseDetailComponent implements OnInit {
           })
           .subscribe({
             next: (event) => {
-              if (event.type === 1) { // HttpEventType.UploadProgress
+              if (event.type === 1) {
+                // HttpEventType.UploadProgress
                 if (event.total) {
-                  this.medalUploadProgress = Math.round((event.loaded / event.total) * 100);
+                  this.medalUploadProgress = Math.round(
+                    (event.loaded / event.total) * 100,
+                  );
                 }
-              } else if (event.type === 4) { // HttpEventType.Response
+              } else if (event.type === 4) {
+                // HttpEventType.Response
                 resolve();
               }
             },
@@ -777,7 +799,10 @@ export class CaseDetailComponent implements OnInit {
       this.medalStatusMessage = '';
       console.error('Medal clip upload failed:', error);
 
-      const errorMessage = error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Fehler beim Hochladen des Medal Clips';
       alert(errorMessage);
     }
   }
