@@ -101,7 +101,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -746,7 +746,10 @@ export class CaseDetailComponent implements OnInit {
       const uploadUrlResponse = await this.http
         .get<{
           url: string;
-        }>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`, { withCredentials: true })
+        }>(
+          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
+          { withCredentials: true },
+        )
         .toPromise();
 
       if (!uploadUrlResponse?.url) {
