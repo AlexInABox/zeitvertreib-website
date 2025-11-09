@@ -699,7 +699,7 @@ export class CaseDetailComponent implements OnInit {
       const corsProxies = [
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(bypassData.src)}`,
         `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`,
-        bypassData.src // Try direct fetch as last resort
+        bypassData.src, // Try direct fetch as last resort
       ];
 
       let videoResponse: Response | null = null;
@@ -719,7 +719,10 @@ export class CaseDetailComponent implements OnInit {
       }
 
       if (!videoResponse) {
-        throw new Error(lastError?.message || 'Fehler beim Herunterladen des Videos - alle Proxy-Dienste fehlgeschlagen');
+        throw new Error(
+          lastError?.message ||
+            'Fehler beim Herunterladen des Videos - alle Proxy-Dienste fehlgeschlagen',
+        );
       }
 
       const contentLength = videoResponse.headers.get('content-length');
