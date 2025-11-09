@@ -69,6 +69,7 @@ async function hasPermission(
   return true;
 }
 
+/// GET /cases/upload?case={caseId}&extension={ext}
 export async function handleCaseFileUpload(
   request: Request,
   env: Env,
@@ -80,6 +81,7 @@ export async function handleCaseFileUpload(
     const url = new URL(request.url);
     const caseId = url.searchParams.get('case');
     const extension = url.searchParams.get('extension') || '';
+    console.log('caseId:', caseId, 'extension:', extension);
 
     if (!caseId) {
       return createResponse(
@@ -167,6 +169,7 @@ export async function handleCaseFileUpload(
   }
 }
 
+/// GET /cases
 export async function handleListCases(
   request: Request,
   env: Env,
@@ -224,6 +227,7 @@ export async function handleListCases(
   }
 }
 
+/// GET /cases/metadata?case={caseId}
 export async function handleGetCaseMetadata(
   request: Request,
   env: Env,
@@ -305,15 +309,21 @@ export async function handleGetCaseMetadata(
         continue;
       }
 
-      fileCount++;
+      // Check if this is the .meta file
+      const isMetaFile = key ? key.endsWith('/.meta') : false;
 
-      // Extract Size
-      const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
-      if (sizeMatch) {
-        totalSize += parseInt(sizeMatch[1] || '0', 10);
+      // Only count and add size for non-.meta files
+      if (!isMetaFile) {
+        fileCount++;
+
+        // Extract Size
+        const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
+        if (sizeMatch) {
+          totalSize += parseInt(sizeMatch[1] || '0', 10);
+        }
       }
 
-      // Extract LastModified for tracking most recent update
+      // Extract LastModified for tracking most recent update (including .meta file)
       const modifiedMatch = content.match(
         /<LastModified>([^<]+)<\/LastModified>/,
       );
@@ -330,18 +340,44 @@ export async function handleGetCaseMetadata(
       createdAt = lastModified;
     }
 
-    return createResponse(
-      {
-        id: folderName,
-        caseId: caseId,
-        createdAt,
-        lastModified: lastModified || createdAt,
-        fileCount,
-        totalSize,
-      },
-      200,
-      origin,
-    );
+    // Try to fetch .meta file if it exists
+    let metaData = null;
+    try {
+      const metaFileKey = `${folderName}/.meta`;
+      const metaUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${metaFileKey}`;
+      const metaRequest = await aws(env).sign(metaUrl, {
+        method: 'GET',
+      });
+      const metaResponse = await fetch(metaRequest);
+
+      if (metaResponse.ok) {
+        const metaText = await metaResponse.text();
+        try {
+          metaData = JSON.parse(metaText);
+        } catch (parseError) {
+          console.warn('Failed to parse .meta file as JSON:', parseError);
+        }
+      }
+    } catch (metaError) {
+      // .meta file doesn't exist or couldn't be fetched, that's okay
+      console.log('No .meta file found or error fetching it:', metaError);
+    }
+
+    const responseData: any = {
+      id: folderName,
+      caseId: caseId,
+      createdAt,
+      lastModified: lastModified || createdAt,
+      fileCount,
+      totalSize,
+    };
+
+    // Merge meta data directly into response if it exists
+    if (metaData !== null && typeof metaData === 'object') {
+      Object.assign(responseData, metaData);
+    }
+
+    return createResponse(responseData, 200, origin);
   } catch (error) {
     console.error('Get case metadata error:', error);
     return createResponse(
@@ -355,6 +391,7 @@ export async function handleGetCaseMetadata(
   }
 }
 
+/// POST /cases
 export async function handleCreateCase(
   request: Request,
   env: Env,
@@ -439,6 +476,113 @@ export async function handleCreateCase(
   }
 }
 
+/// PUT /cases/metadata?case={caseId}
+export async function handleUpdateCaseMetadata(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const origin = request.headers.get('Origin');
+
+  try {
+    // Validate admin privileges
+    const authorized = await hasPermission(request, db, env);
+    if (!authorized) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    // Get case ID from query parameter
+    const url = new URL(request.url);
+    const caseId = url.searchParams.get('case');
+
+    if (!caseId) {
+      return createResponse(
+        { error: 'Missing required parameter: case' },
+        400,
+        origin,
+      );
+    }
+
+    // Validate case ID format (5 lowercase letters or numbers)
+    if (!/^[a-z0-9]{5}$/.test(caseId)) {
+      return createResponse(
+        {
+          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
+        },
+        400,
+        origin,
+      );
+    }
+
+    // Parse request body as JSON
+    let metaData: any;
+    try {
+      metaData = await request.json();
+    } catch (parseError) {
+      return createResponse(
+        { error: 'Invalid JSON in request body' },
+        400,
+        origin,
+      );
+    }
+
+    // Verify that the case folder exists
+    const folderName = `case-${caseId}`;
+    const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
+    const checkRequest = await aws(env).sign(checkUrl, {
+      method: 'HEAD',
+    });
+    const checkResponse = await fetch(checkRequest);
+
+    if (checkResponse.status === 404) {
+      return createResponse({ error: 'Case not found' }, 404, origin);
+    }
+
+    // Upload the .meta file
+    const metaFileKey = `${folderName}/.meta`;
+    const metaUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${metaFileKey}`;
+    const metaJson = JSON.stringify(metaData, null, 2);
+
+    const putRequest = await aws(env).sign(metaUrl, {
+      method: 'PUT',
+      body: metaJson,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const putResponse = await fetch(putRequest);
+
+    if (!putResponse.ok) {
+      const errorText = await putResponse.text();
+      throw new Error(
+        `S3 request failed: ${putResponse.status} ${putResponse.statusText} - ${errorText}`,
+      );
+    }
+
+    return createResponse(
+      {
+        success: true,
+        caseId,
+        message: 'Metadata updated successfully',
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Update case metadata error:', error);
+    return createResponse(
+      {
+        error: 'Failed to update case metadata',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/// GET /cases/files?case={caseId}
 export async function handleListCaseFiles(
   request: Request,
   env: Env,
@@ -487,19 +631,51 @@ export async function handleListCaseFiles(
 
     const xmlText = await response.text();
 
-    // Parse XML response to extract file keys
-    const keyMatches = xmlText.matchAll(/<Key>([^<]+)<\/Key>/g);
-    const fileKeys = Array.from(keyMatches)
-      .map((match) => match[1] || '')
-      .filter((key) => key !== `${folderPath}/`); // Exclude the folder itself
+    // Parse XML response to extract file information with metadata
+    const contentsRegex = /<Contents>(.*?)<\/Contents>/gs;
+    const contentsMatches = Array.from(xmlText.matchAll(contentsRegex));
+
+    const fileData = contentsMatches
+      .map((match) => {
+        const content = match[1] || '';
+
+        // Extract Key
+        const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
+        const key = keyMatch ? keyMatch[1] : '';
+
+        // Skip the folder itself and .meta file
+        if (!key || key === `${folderPath}/` || key.endsWith('/.meta')) {
+          return null;
+        }
+
+        // Extract LastModified (creation/upload date)
+        const lastModifiedMatch = content.match(
+          /<LastModified>([^<]+)<\/LastModified>/,
+        );
+        const lastModified = lastModifiedMatch
+          ? new Date(lastModifiedMatch[1] || '').getTime()
+          : 0;
+
+        // Extract Size
+        const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
+        const size = sizeMatch ? parseInt(sizeMatch[1] || '0', 10) : 0;
+
+        const fileName = key.replace(`${folderPath}/`, '');
+
+        return {
+          key,
+          fileName,
+          lastModified,
+          size,
+        };
+      })
+      .filter((file) => file !== null);
 
     // Generate presigned GET URLs for each file (valid for 20 minutes = 1200 seconds)
     const filesWithLinks = await Promise.all(
-      fileKeys.map(async (key) => {
-        const fileName = key.replace(`${folderPath}/`, '');
-
+      fileData.map(async (fileInfo) => {
         // Create URL with X-Amz-Expires query parameter before signing
-        const baseUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${key}`;
+        const baseUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${fileInfo.key}`;
         const urlWithExpiry = `${baseUrl}?X-Amz-Expires=1200`;
 
         const presignedUrl = await aws(env).sign(urlWithExpiry, {
@@ -510,8 +686,10 @@ export async function handleListCaseFiles(
         });
 
         return {
-          name: fileName,
+          name: fileInfo.fileName,
           viewUrl: presignedUrl.url,
+          uploadedAt: fileInfo.lastModified,
+          size: fileInfo.size,
           expiresIn: 1200, // 20 minutes in seconds
         };
       }),
@@ -530,6 +708,106 @@ export async function handleListCaseFiles(
     return createResponse(
       {
         error: 'Failed to list files',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/// DELETE /cases/file?case={caseId}&filename={filename}
+export async function handleDeleteCaseFile(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const origin = request.headers.get('Origin');
+
+  try {
+    // Validate admin privileges
+    const authorized = await hasPermission(request, db, env);
+    if (!authorized) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    // Get case ID and filename from query parameters
+    const url = new URL(request.url);
+    const caseId = url.searchParams.get('case');
+    const filename = url.searchParams.get('filename');
+
+    if (!caseId) {
+      return createResponse(
+        { error: 'Missing required parameter: case' },
+        400,
+        origin,
+      );
+    }
+
+    if (!filename) {
+      return createResponse(
+        { error: 'Missing required parameter: filename' },
+        400,
+        origin,
+      );
+    }
+
+    // Validate case ID format (5 lowercase letters or numbers)
+    if (!/^[a-z0-9]{5}$/.test(caseId)) {
+      return createResponse(
+        {
+          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
+        },
+        400,
+        origin,
+      );
+    }
+
+    // Prevent deletion of .meta file
+    if (filename === '.meta') {
+      return createResponse(
+        { error: 'Cannot delete metadata file' },
+        403,
+        origin,
+      );
+    }
+
+    // Construct the file path
+    const folderPath = `case-${caseId}`;
+    const filePath = `${folderPath}/${filename}`;
+
+    // Delete the file from S3
+    const deleteUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`;
+    const deleteRequest = await aws(env).sign(deleteUrl, {
+      method: 'DELETE',
+    });
+
+    const deleteResponse = await fetch(deleteRequest);
+
+    if (!deleteResponse.ok) {
+      if (deleteResponse.status === 404) {
+        return createResponse({ error: 'File not found' }, 404, origin);
+      }
+      const errorText = await deleteResponse.text();
+      throw new Error(
+        `S3 request failed: ${deleteResponse.status} ${deleteResponse.statusText} - ${errorText}`,
+      );
+    }
+
+    return createResponse(
+      {
+        success: true,
+        message: 'File deleted successfully',
+        filename,
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Delete file error:', error);
+    return createResponse(
+      {
+        error: 'Failed to delete file',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,

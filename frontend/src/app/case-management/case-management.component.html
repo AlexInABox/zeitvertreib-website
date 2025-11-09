@@ -148,7 +148,7 @@
             pInputText
             [(ngModel)]="searchQuery"
             (input)="filterCases()"
-            placeholder="Suche nach Fall-ID oder Name... (z.B. 123 oder Fall #123)"
+            placeholder="Suche nach Fall-ID, Spitzname oder Tag..."
             class="search-input"
           />
           <button
@@ -220,12 +220,28 @@
             <div class="case-icon-wrapper">
               <i class="pi pi-folder-open"></i>
             </div>
-            <div class="case-badge">Fall</div>
+            <div
+              class="case-tags"
+              *ngIf="
+                caseFolder.metadata.tags && caseFolder.metadata.tags.length > 0
+              "
+            >
+              <span class="tag" *ngFor="let tag of caseFolder.metadata.tags">{{
+                tag
+              }}</span>
+            </div>
           </div>
 
           <div class="case-card-body">
-            <h3 class="case-title">{{ formatCaseName(caseFolder.name) }}</h3>
-            <p class="case-id">ID: {{ caseFolder.name }}</p>
+            <h3 class="case-title">
+              {{
+                caseFolder.metadata.nickname || formatCaseName(caseFolder.name)
+              }}
+            </h3>
+            <p class="case-id">
+              <span *ngIf="!caseFolder.metadata.nickname">ID: </span
+              >{{ caseFolder.name }}
+            </p>
 
             <div class="case-stats">
               <span class="stat-item" *ngIf="caseFolder.metadata.fileCount > 0">

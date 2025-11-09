@@ -82,6 +82,8 @@ import {
   handleCreateCase,
   handleListCaseFiles,
   handleGetCaseMetadata,
+  handleUpdateCaseMetadata,
+  handleDeleteCaseFile,
 } from './routes/cases.js';
 
 // Simple response helper for internal use
@@ -117,11 +119,13 @@ const routes: Record<
 
   //Public endpoints (no auth)
   'GET:/public/stats': handleGetPublicStats,
-  'POST:/cases/upload': handleCaseFileUpload,
+  'GET:/cases/upload': handleCaseFileUpload,
   'GET:/cases': handleListCases,
   'POST:/cases': handleCreateCase,
   'GET:/cases/files': handleListCaseFiles,
   'GET:/cases/metadata': handleGetCaseMetadata,
+  'PUT:/cases/metadata': handleUpdateCaseMetadata,
+  'DELETE:/cases/file': handleDeleteCaseFile,
 
   // Spray routes
   'POST:/spray/upload': handleUploadSpray,

@@ -15,6 +15,10 @@ interface CaseMetadata {
   lastModified: number;
   fileCount: number;
   totalSize: number;
+  // Optional metadata fields
+  nickname?: string;
+  description?: string;
+  tags?: string[];
 }
 
 interface CaseFolder {
@@ -56,7 +60,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -185,7 +189,7 @@ export class CaseManagementComponent implements OnInit {
           console.error('Error creating case folder:', error);
           alert(
             'Failed to create case folder: ' +
-              (error.error?.error || 'Unknown error'),
+            (error.error?.error || 'Unknown error'),
           );
         },
       });
@@ -279,7 +283,13 @@ export class CaseManagementComponent implements OnInit {
       filtered = this.caseFolders.filter((caseFolder) => {
         const caseId = caseFolder.name.replace('case-', '').toLowerCase();
         const caseName = this.formatCaseName(caseFolder.name).toLowerCase();
-        return caseId.includes(query) || caseName.includes(query);
+        const nickname = caseFolder.metadata.nickname?.toLowerCase() || '';
+        const tags = caseFolder.metadata.tags?.map(tag => tag.toLowerCase()).join(' ') || '';
+
+        return caseId.includes(query) ||
+          caseName.includes(query) ||
+          nickname.includes(query) ||
+          tags.includes(query);
       });
     }
 
