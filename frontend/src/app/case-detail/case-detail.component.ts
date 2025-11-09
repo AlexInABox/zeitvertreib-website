@@ -101,7 +101,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -692,9 +692,10 @@ export class CaseDetailComponent implements OnInit {
       // Generate filename with timestamp and proper extension
       const filename = `medal-clip-${Date.now()}.${fileExtension}`;
 
-      // Step 2: Download the video with progress tracking
+      // Step 2: Download the video with progress tracking using CORS proxy
       this.medalStatusMessage = 'Video wird heruntergeladen...';
-      const videoResponse = await fetch(bypassData.src);
+      const proxiedUrl = `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`;
+      const videoResponse = await fetch(proxiedUrl);
 
       if (!videoResponse.ok) {
         throw new Error('Fehler beim Herunterladen des Videos');
