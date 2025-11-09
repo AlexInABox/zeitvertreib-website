@@ -694,11 +694,32 @@ export class CaseDetailComponent implements OnInit {
 
       // Step 2: Download the video with progress tracking using CORS proxy
       this.medalStatusMessage = 'Video wird heruntergeladen...';
-      const proxiedUrl = `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`;
-      const videoResponse = await fetch(proxiedUrl);
 
-      if (!videoResponse.ok) {
-        throw new Error('Fehler beim Herunterladen des Videos');
+      // Try multiple CORS proxy services in case one fails
+      const corsProxies = [
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(bypassData.src)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`,
+        bypassData.src // Try direct fetch as last resort
+      ];
+
+      let videoResponse: Response | null = null;
+      let lastError: Error | null = null;
+
+      for (const proxyUrl of corsProxies) {
+        try {
+          const response = await fetch(proxyUrl);
+          if (response.ok) {
+            videoResponse = response;
+            break;
+          }
+        } catch (error) {
+          lastError = error as Error;
+          continue;
+        }
+      }
+
+      if (!videoResponse) {
+        throw new Error(lastError?.message || 'Fehler beim Herunterladen des Videos - alle Proxy-Dienste fehlgeschlagen');
       }
 
       const contentLength = videoResponse.headers.get('content-length');
