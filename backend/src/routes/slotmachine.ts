@@ -181,31 +181,52 @@ export async function handleSlotMachine(
   } {
     // Check for 3 matching symbols
     if (slot1 === slot2 && slot2 === slot3) {
-      if (slot1 === '💎') {
-        return { payout: 5000, type: 'jackpot', message: '💎 JACKPOT! 💎' };
-      } else if (slot1 === '🔥') {
+      // Check for specific symbol matches in payout table
+      const diamondPayout = PAYOUT_TABLE.find(
+        (p) => p.symbol === '💎' && p.condition === '3 Gleiche',
+      );
+      if (slot1 === '💎' && diamondPayout) {
         return {
-          payout: 500,
-          type: 'big_win',
-          message: '🔥 GROSSER GEWINN! 🔥',
+          payout: diamondPayout.payout,
+          type: diamondPayout.tier as 'jackpot',
+          message: `💎 ${diamondPayout.description} 💎`,
         };
-      } else {
-        // Other 3-of-a-kind matches - small consolation prize
+      }
+
+      const firePayout = PAYOUT_TABLE.find(
+        (p) => p.symbol === '🔥' && p.condition === '3 Gleiche',
+      );
+      if (slot1 === '🔥' && firePayout) {
         return {
-          payout: 100,
-          type: 'small_win',
-          message: '✨ 3 Gleiche! ✨',
+          payout: firePayout.payout,
+          type: firePayout.tier as 'big_win',
+          message: `🔥 ${firePayout.description} 🔥`,
+        };
+      }
+
+      // Other 3-of-a-kind matches - use "Andere" payout from table
+      const otherPayout = PAYOUT_TABLE.find(
+        (p) => p.name === 'Andere' && p.condition === '3 Gleiche',
+      );
+      if (otherPayout) {
+        return {
+          payout: otherPayout.payout,
+          type: otherPayout.tier as 'small_win',
+          message: `✨ ${otherPayout.description} ✨`,
         };
       }
     }
 
     // Check for any 2 matching symbols (mini win)
     if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
-      return {
-        payout: 22,
-        type: 'mini_win',
-        message: '✨ MINI GEWINN! ✨',
-      };
+      const miniPayout = PAYOUT_TABLE.find((p) => p.condition === '2 Gleiche');
+      if (miniPayout) {
+        return {
+          payout: miniPayout.payout,
+          type: miniPayout.tier as 'mini_win',
+          message: `✨ ${miniPayout.description} ✨`,
+        };
+      }
     }
 
     // No win
