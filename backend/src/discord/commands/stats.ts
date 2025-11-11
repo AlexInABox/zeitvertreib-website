@@ -93,7 +93,7 @@ export class StatsCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Dieser Benutzer ist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-            'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
+              'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
           )
           .setTimestamp();
 
@@ -119,7 +119,9 @@ export class StatsCommand extends BaseCommand {
       // Auto-migration logic: Check if user hasn't migrated yet
       let migrationMessage: string | null = null;
       if (playerData.migratedCedmod === null) {
-        console.log(`User ${discordId} hasn't migrated yet, attempting auto-migration...`);
+        console.log(
+          `User ${discordId} hasn't migrated yet, attempting auto-migration...`,
+        );
 
         try {
           const steamId = playerData.id;
@@ -138,7 +140,9 @@ export class StatsCommand extends BaseCommand {
               const cedmodPlayer = cedmodData.players[0];
 
               if (!cedmodPlayer) {
-                console.log('CedMod player data is undefined, skipping migration');
+                console.log(
+                  'CedMod player data is undefined, skipping migration',
+                );
               } else {
                 // Store old values for comparison
                 const oldStats = {
@@ -196,24 +200,51 @@ export class StatsCommand extends BaseCommand {
                 };
 
                 const comparisons = [
-                  createComparisonLine('Kills', oldStats.kills, cedmodPlayer.kills),
-                  createComparisonLine('Deaths', oldStats.deaths, cedmodPlayer.deaths),
-                  createComparisonLine('Colas', oldStats.colas, cedmodPlayer.colaDrink),
-                  createComparisonLine('Medkits', oldStats.medkits, cedmodPlayer.medkits),
-                  createComparisonLine('Adrenalin', oldStats.adrenaline, cedmodPlayer.adrenalineShots),
-                  createComparisonLine('Runden', oldStats.rounds, cedmodPlayer.roundsPlayed),
+                  createComparisonLine(
+                    'Kills',
+                    oldStats.kills,
+                    cedmodPlayer.kills,
+                  ),
+                  createComparisonLine(
+                    'Deaths',
+                    oldStats.deaths,
+                    cedmodPlayer.deaths,
+                  ),
+                  createComparisonLine(
+                    'Colas',
+                    oldStats.colas,
+                    cedmodPlayer.colaDrink,
+                  ),
+                  createComparisonLine(
+                    'Medkits',
+                    oldStats.medkits,
+                    cedmodPlayer.medkits,
+                  ),
+                  createComparisonLine(
+                    'Adrenalin',
+                    oldStats.adrenaline,
+                    cedmodPlayer.adrenalineShots,
+                  ),
+                  createComparisonLine(
+                    'Runden',
+                    oldStats.rounds,
+                    cedmodPlayer.roundsPlayed,
+                  ),
                 ];
 
                 migrationMessage =
                   '🎉 **CedMod-Daten erfolgreich migriert!**\n' +
                   'Deine alten Statistiken wurden automatisch importiert:\n' +
-                  comparisons.join('\n') + '\n\n';
+                  comparisons.join('\n') +
+                  '\n\n';
               }
             } else {
               console.log('No CedMod data found for user, skipping migration');
             }
           } else {
-            console.log(`CedMod API returned status ${cedmodResponse.status}, skipping migration`);
+            console.log(
+              `CedMod API returned status ${cedmodResponse.status}, skipping migration`,
+            );
           }
         } catch (migrationError) {
           console.error('Auto-migration error (non-fatal):', migrationError);
@@ -237,7 +268,7 @@ export class StatsCommand extends BaseCommand {
         .setTitle(`📊 Statistiken für ${displayName}`)
         .setDescription(
           (migrationMessage || '') +
-          'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮',
+            'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮',
         );
 
       // Set user avatar as thumbnail if available
