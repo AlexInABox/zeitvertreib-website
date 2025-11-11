@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
 
 // Payout table configuration - shared between endpoints
-const SLOT_COST = 8;
+const SLOT_COST = 10;
 const PAYOUT_TABLE = [
   {
     symbol: '💎',
@@ -28,7 +28,7 @@ const PAYOUT_TABLE = [
     symbol: '⭐🌈💫',
     name: 'Andere',
     condition: '3 Gleiche',
-    payout: 100,
+    payout: 350,
     tier: 'small_win',
     description: 'Crazy 3!!!',
   },
@@ -36,7 +36,7 @@ const PAYOUT_TABLE = [
     symbol: '🥭🍇',
     name: 'Beliebig',
     condition: '2 Gleiche',
-    payout: 22,
+    payout: 25,
     tier: 'mini_win',
     description: 'Verrückter Zweier ^^',
   },
