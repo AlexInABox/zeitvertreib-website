@@ -1739,7 +1739,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-              (response?.message || 'Unbekannter Fehler'),
+                (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -2017,7 +2017,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Save win log to localStorage
   private saveWinLog(): void {
     try {
-      localStorage.setItem(this.WIN_LOG_STORAGE_KEY, JSON.stringify(this.slotWinLog));
+      localStorage.setItem(
+        this.WIN_LOG_STORAGE_KEY,
+        JSON.stringify(this.slotWinLog),
+      );
     } catch (error) {
       console.error('Error saving win log to localStorage:', error);
     }
@@ -2028,7 +2031,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     winType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss',
     payout: number,
     symbols: [string, string, string],
-    netChange: number
+    netChange: number,
   ): void {
     const entry: SlotWinLogEntry = {
       id: Date.now(),
@@ -2036,7 +2039,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       winType,
       payout,
       symbols,
-      netChange
+      netChange,
     };
 
     // Add to beginning of array (newest first)
@@ -2062,12 +2065,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (days > 0) return days === 1 ? 'vor 1 Tag' : `vor ${days} Tagen`;
     if (hours > 0) return hours === 1 ? 'vor 1 Stunde' : `vor ${hours} Stunden`;
-    if (minutes > 0) return minutes === 1 ? 'vor 1 Minute' : `vor ${minutes} Minuten`;
+    if (minutes > 0)
+      return minutes === 1 ? 'vor 1 Minute' : `vor ${minutes} Minuten`;
     return 'Gerade eben';
   }
 
   // Get win type display info
-  getWinTypeInfo(winType: string): { emoji: string; color: string; label: string } {
+  getWinTypeInfo(winType: string): {
+    emoji: string;
+    color: string;
+    label: string;
+  } {
     switch (winType) {
       case 'jackpot':
         return { emoji: '', color: '#fbbf24', label: 'JACKPOT' };
@@ -2086,7 +2094,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getFilteredWinLog(): SlotWinLogEntry[] {
     if (this.hideLosses) {
-      return this.slotWinLog.filter(entry => entry.winType !== 'loss');
+      return this.slotWinLog.filter((entry) => entry.winType !== 'loss');
     }
     return this.slotWinLog;
   }
