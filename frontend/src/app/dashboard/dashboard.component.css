@@ -3994,65 +3994,59 @@
 }
 
 .slot-machine-btn {
-  flex: 1;
-  max-width: 250px;
-  padding: 14px 24px;
+  padding: 4px 0;
   font-size: 1rem;
   font-weight: 600;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 2px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.slot-machine-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-.slot-machine-btn:hover::before {
-  left: 100%;
+  white-space: nowrap;
+  min-height: 76px;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
 }
 
 .slot-spin-btn {
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
-  color: white;
-  box-shadow:
-    0 4px 12px rgba(139, 92, 246, 0.4),
-    0 0 20px rgba(139, 92, 246, 0.2);
+  flex: 2;
+  max-width: none;
+  min-width: 0;
+  color: #e9d5ff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
 }
 
 .slot-spin-btn:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 16px rgba(139, 92, 246, 0.5),
-    0 0 30px rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #f3e8ff;
+  transform: translateY(-1px);
 }
 
 .slot-spin-btn:active {
   transform: translateY(0);
-  box-shadow:
-    0 2px 8px rgba(139, 92, 246, 0.4),
-    0 0 15px rgba(139, 92, 246, 0.2);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.slot-spin-btn.spinning {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #f3e8ff;
+  animation: pulse-spin 1.5s ease-in-out infinite;
+  opacity: 1 !important;
+  cursor: wait;
+}
+
+.slot-spin-btn.spinning .btn-cost {
+  background: rgba(139, 92, 246, 0.1);
 }
 
 .slot-machine-btn .btn-icon {
@@ -4067,7 +4061,7 @@
 
 .slot-machine-btn .btn-cost {
   font-size: 0.75rem;
-  opacity: 0.9;
+  opacity: 1;
   font-weight: 500;
   letter-spacing: 0.3px;
   padding: 2px 8px;
@@ -4077,14 +4071,80 @@
 }
 
 .slot-machine-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none !important;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(156, 163, 175, 0.5);
 }
 
-.slot-machine-btn.spinning {
-  opacity: 0.7;
-  cursor: not-allowed;
+@keyframes pulse-spin {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+  }
+}
+
+/* Auto-Spin Button */
+.slot-autospin-btn {
+  flex: 1;
+  max-width: 160px;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: rgba(209, 213, 219, 1);
+  box-shadow: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slot-autospin-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(229, 231, 235, 1);
+  transform: translateY(-1px);
+}
+
+.slot-autospin-btn:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.slot-autospin-btn.active {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+  color: rgba(110, 231, 183, 1);
+  animation: pulse-glow-subtle 2s ease-in-out infinite;
+}
+
+.slot-autospin-btn.active:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: rgba(167, 243, 208, 1);
+  transform: translateY(-1px);
+}
+
+@keyframes pulse-glow-subtle {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+  }
+}
+
+@keyframes pulse-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }
 
 /* Slot Payout Info Section */

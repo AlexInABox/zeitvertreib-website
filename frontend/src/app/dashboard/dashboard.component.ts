@@ -219,6 +219,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     description: string;
   } | null = null;
   showPayoutInfo = false;
+  autoSpinEnabled = false;
 
   // Helper method to calculate transfer tax
   getTransferTax(amount: number | null): number {
@@ -1717,7 +1718,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1887,6 +1888,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           completedSlots++;
           if (completedSlots === slots.length) {
             this.logDisplayedSymbols(slotSymbols);
+
+            // Autospin
+            this.checkForAutoSpin();
           }
         },
         { once: true },
@@ -1903,6 +1907,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
       symbols.offsetHeight;
       symbols.style.transition = '';
     });
+  }
+
+  toggleAutoSpin(): void {
+    this.autoSpinEnabled = !this.autoSpinEnabled;
+
+    if (this.autoSpinEnabled) {
+      this.testSlotMachine();
+    }
+  }
+
+  checkForAutoSpin(): void {
+    //Wait for 1 second before auto-spinning again
+    setTimeout(() => {
+      if (this.autoSpinEnabled) {
+        this.testSlotMachine();
+      }
+    }, 500);
   }
 
   logDisplayedSymbols(slotSymbols: string[]): void {

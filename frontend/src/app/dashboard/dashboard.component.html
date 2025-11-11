@@ -430,6 +430,21 @@
                       >🪙 {{ slotMachineInfo?.cost || 10 }} ZVC</span
                     >
                   </button>
+
+                  <button
+                    (click)="toggleAutoSpin()"
+                    class="slot-machine-btn slot-autospin-btn"
+                    [class.active]="autoSpinEnabled"
+                    [disabled]="!canAffordSlotMachine()"
+                  >
+                    <span class="btn-text" *ngIf="autoSpinEnabled"
+                      >⏹️ Stoppen</span
+                    >
+
+                    <span class="btn-text" *ngIf="!autoSpinEnabled"
+                      >🔄 Autospin</span
+                    >
+                  </button>
                 </div>
 
                 <!-- Payout Info Section -->
