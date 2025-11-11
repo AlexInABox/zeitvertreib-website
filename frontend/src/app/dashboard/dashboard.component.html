@@ -498,6 +498,74 @@
                 >
                   {{ slotMachineError }}
                 </div>
+
+                <!-- Win Log -->
+                <div
+                  *ngIf="!showPayoutInfo && slotWinLog.length > 0"
+                  class="slot-win-log"
+                >
+                  <div class="win-log-header">
+                    <span class="win-log-title">📜 Letzte Spins</span>
+                    <div class="win-log-header-controls">
+                      <label class="win-log-toggle">
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="hideLosses"
+                          class="toggle-checkbox"
+                        />
+                        <span class="toggle-slider"></span>
+                      </label>
+                      <span class="win-log-count">{{
+                        getFilteredWinLog().length
+                      }}</span>
+                    </div>
+                  </div>
+                  <div class="win-log-list">
+                    <div
+                      *ngFor="
+                        let entry of getFilteredWinLog();
+                        trackBy: trackByWinLogId
+                      "
+                      class="win-log-entry"
+                      [class.win-log-jackpot]="entry.winType === 'jackpot'"
+                      [class.win-log-big-win]="entry.winType === 'big_win'"
+                      [class.win-log-win]="
+                        entry.winType === 'small_win' ||
+                        entry.winType === 'mini_win'
+                      "
+                      [class.win-log-loss]="entry.winType === 'loss'"
+                    >
+                      <div class="win-log-symbols">
+                        <span class="win-symbol">{{ entry.symbols[0] }}</span>
+                        <span class="win-symbol">{{ entry.symbols[1] }}</span>
+                        <span class="win-symbol">{{ entry.symbols[2] }}</span>
+                      </div>
+                      <div class="win-log-info">
+                        <span
+                          class="win-log-type"
+                          [style.color]="getWinTypeInfo(entry.winType).color"
+                        >
+                          {{ getWinTypeInfo(entry.winType).emoji }}
+                          {{ getWinTypeInfo(entry.winType).label }}
+                        </span>
+                        <span class="win-log-time">{{
+                          getTimeAgo(entry.timestamp)
+                        }}</span>
+                      </div>
+                      <div
+                        class="win-log-payout"
+                        [class.negative]="entry.payout === 0"
+                      >
+                        <span class="payout-amount">
+                          {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }}
+                        </span>
+                        <span class="payout-cost" *ngIf="entry.payout > 0"
+                          >-{{ slotMachineInfo?.cost || 10 }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Coming Soon Widget -->

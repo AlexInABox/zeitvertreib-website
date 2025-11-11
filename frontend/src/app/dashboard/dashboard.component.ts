@@ -70,6 +70,15 @@ interface Redeemable {
   availabilityStatus?: 'available' | 'expired' | 'sold_out';
 }
 
+interface SlotWinLogEntry {
+  id: number;
+  timestamp: number;
+  winType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss';
+  payout: number;
+  symbols: [string, string, string];
+  netChange: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [
@@ -221,6 +230,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showPayoutInfo = false;
   autoSpinEnabled = false;
 
+  // Win log properties
+  slotWinLog: SlotWinLogEntry[] = [];
+  private readonly MAX_WIN_LOG_ENTRIES = 100;
+  private readonly WIN_LOG_STORAGE_KEY = 'slotMachineWinLog';
+  hideLosses: boolean = true;
+
   // Helper method to calculate transfer tax
   getTransferTax(amount: number | null): number {
     if (!amount) return 0;
@@ -253,6 +268,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadFakerank();
     this.loadRedeemables();
     this.loadSlotMachineInfo();
+    this.loadWinLog();
 
     // Close color picker when clicking outside
     this.documentClickHandler = (event: Event) => {
@@ -356,6 +372,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Track by function for better performance in *ngFor
   trackByKiller(index: number, killer?: PlayerEntry): string {
     return killer?.displayname || index.toString();
+  }
+
+  // Track by function for win log entries
+  trackByWinLogId(index: number, entry: SlotWinLogEntry): number {
+    return entry.id;
   }
 
   // Generate random colors for gradients
@@ -1718,7 +1739,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           } else {
             alert(
               'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
+              (response?.message || 'Unbekannter Fehler'),
             );
           }
         },
@@ -1834,6 +1855,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     target1?: string,
     target2?: string,
     target3?: string,
+    onComplete?: () => void,
   ): void {
     this.reset();
 
@@ -1888,6 +1910,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           completedSlots++;
           if (completedSlots === slots.length) {
             this.logDisplayedSymbols(slotSymbols);
+
+            // Call the completion callback if provided
+            if (onComplete) {
+              onComplete();
+            }
 
             // Autospin
             this.checkForAutoSpin();
@@ -1974,6 +2001,100 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Load win log from localStorage
+  private loadWinLog(): void {
+    try {
+      const stored = localStorage.getItem(this.WIN_LOG_STORAGE_KEY);
+      if (stored) {
+        this.slotWinLog = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Error loading win log from localStorage:', error);
+      this.slotWinLog = [];
+    }
+  }
+
+  // Save win log to localStorage
+  private saveWinLog(): void {
+    try {
+      localStorage.setItem(this.WIN_LOG_STORAGE_KEY, JSON.stringify(this.slotWinLog));
+    } catch (error) {
+      console.error('Error saving win log to localStorage:', error);
+    }
+  }
+
+  // Add entry to win log
+  private addToWinLog(
+    winType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss',
+    payout: number,
+    symbols: [string, string, string],
+    netChange: number
+  ): void {
+    const entry: SlotWinLogEntry = {
+      id: Date.now(),
+      timestamp: Date.now(),
+      winType,
+      payout,
+      symbols,
+      netChange
+    };
+
+    // Add to beginning of array (newest first)
+    this.slotWinLog.unshift(entry);
+
+    // Keep only the last MAX_WIN_LOG_ENTRIES entries
+    if (this.slotWinLog.length > this.MAX_WIN_LOG_ENTRIES) {
+      this.slotWinLog = this.slotWinLog.slice(0, this.MAX_WIN_LOG_ENTRIES);
+    }
+
+    // Save to localStorage
+    this.saveWinLog();
+  }
+
+  // Get time ago string for display
+  getTimeAgo(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return days === 1 ? 'vor 1 Tag' : `vor ${days} Tagen`;
+    if (hours > 0) return hours === 1 ? 'vor 1 Stunde' : `vor ${hours} Stunden`;
+    if (minutes > 0) return minutes === 1 ? 'vor 1 Minute' : `vor ${minutes} Minuten`;
+    return 'Gerade eben';
+  }
+
+  // Get win type display info
+  getWinTypeInfo(winType: string): { emoji: string; color: string; label: string } {
+    switch (winType) {
+      case 'jackpot':
+        return { emoji: '', color: '#fbbf24', label: 'JACKPOT' };
+      case 'big_win':
+        return { emoji: '', color: '#f97316', label: 'Großgewinn' };
+      case 'small_win':
+        return { emoji: '', color: '#22d3ee', label: 'Gewinn' };
+      case 'mini_win':
+        return { emoji: '', color: '#4ade80', label: 'Mini' };
+      case 'loss':
+        return { emoji: '', color: '#d6f54dff', label: 'Verlust' };
+      default:
+        return { emoji: '', color: '#9ca3af', label: 'Unbekannt' };
+    }
+  }
+
+  getFilteredWinLog(): SlotWinLogEntry[] {
+    if (this.hideLosses) {
+      return this.slotWinLog.filter(entry => entry.winType !== 'loss');
+    }
+    return this.slotWinLog;
+  }
+
+  toggleHideLosses(): void {
+    this.hideLosses = !this.hideLosses;
+  }
+
   // Toggle payout info visibility
   togglePayoutInfo(): void {
     this.showPayoutInfo = !this.showPayoutInfo;
@@ -2052,7 +2173,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           ];
 
           // Animate to the result (don't reveal win/loss yet)
-          this.spin(mySymbols, slot1, slot2, slot3);
+          this.spin(mySymbols, slot1, slot2, slot3, () => {
+            // Log win to the win log after animation completes
+            this.addToWinLog(winType, payout, [slot1, slot2, slot3], netChange);
+          });
 
           // Wait for animation to complete before revealing result
           setTimeout(() => {
@@ -2060,53 +2184,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.slotMachineLoading = false;
             this.currentWinType = winType;
 
-            // Now reveal the result based on backend calculation
-            if (winType === 'jackpot') {
-              this.showWinningAnimation = true;
-              this.slotMachineMessage = `💎 JACKPOT! +${payout} ZVC! 💎`;
+            // Update balance based on payout
+            if (payout > 0) {
               this.userStatistics.experience =
                 (this.userStatistics.experience || 0) + payout;
-
-              setTimeout(() => {
-                this.showWinningAnimation = false;
-                this.slotMachineMessage = '';
-              }, 7000); // Longer display for jackpot
-            } else if (winType === 'big_win') {
-              this.showWinningAnimation = true;
-              this.slotMachineMessage = `🔥 GROSSER GEWINN! +${payout} ZVC! 🔥`;
-              this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + payout;
-
-              setTimeout(() => {
-                this.showWinningAnimation = false;
-                this.slotMachineMessage = '';
-              }, 6000);
-            } else if (winType === 'small_win') {
-              this.showWinningAnimation = true;
-              this.slotMachineMessage = `✨ ${message} +${payout} ZVC! ✨`;
-              this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + payout;
-
-              setTimeout(() => {
-                this.showWinningAnimation = false;
-                this.slotMachineMessage = '';
-              }, 5000);
-            } else if (winType === 'mini_win') {
-              // Mini win - no full animation, just message
-              this.slotMachineMessage = `🍒 MINI GEWINN! +${payout} ZVC! 🍒`;
-              this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + payout;
-
-              setTimeout(() => {
-                this.slotMachineMessage = '';
-              }, 4000);
-            } else {
-              // Loss
-              this.slotMachineMessage = `Leider verloren. ${netChange} ZVC`;
-
-              setTimeout(() => {
-                this.slotMachineMessage = '';
-              }, 3000);
             }
           }, 10000); // Animation duration (10 seconds)
         },
