@@ -92,7 +92,15 @@
               *ngFor="let player of deadPlayers"
               class="player-item-full dead"
             >
-              <span class="player-name-full">{{ player.Name }}</span>
+              <div class="player-name-wrapper">
+                <img
+                  *ngIf="player.AvatarUrl"
+                  [src]="player.AvatarUrl"
+                  [alt]="player.Name"
+                  class="player-avatar-small"
+                />
+                <span class="player-name-full">{{ player.Name }}</span>
+              </div>
             </div>
           </div>
         </div>
