@@ -1,4 +1,124 @@
 import { createResponse } from '../utils.js';
+import { proxyFetch } from '../proxy.js';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+import { playerdata } from '../db/schema.js';
+
+interface PlayerListItem {
+  Name: string;
+  UserId: string;
+  Health: number;
+  Team: string;
+  DiscordId?: string;
+  AvatarUrl?: string;
+}
+
+/**
+ * Builds Discord avatar URL from user ID and avatar hash
+ */
+function buildAvatarUrl(discordId: string, avatarHash: string): string {
+  const extension = avatarHash.startsWith('a_') ? 'gif' : 'png';
+  return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.${extension}?size=256`;
+}
+
+/**
+ * Fetches Discord user info from Discord API
+ */
+async function getDiscordUserAvatar(discordId: string, env: Env): Promise<string | undefined> {
+  try {
+    const url = `https://discord.com/api/v10/users/${discordId}`;
+    console.log(`[Discord API] Fetching user ${discordId} from ${url}`);
+
+    const response = await proxyFetch(
+      url,
+      {
+        headers: {
+          'Authorization': `Bot ${env.DISCORD_TOKEN}`,
+        },
+      },
+      env
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Discord API] Failed to fetch user ${discordId}: ${response.status} - ${errorText}`);
+      return undefined;
+    }
+
+    const userData = await response.json() as { avatar?: string };
+
+    if (userData.avatar) {
+      return buildAvatarUrl(discordId, userData.avatar);
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error(`Error fetching Discord avatar for ${discordId}:`, error);
+    return undefined;
+  }
+}
+
+/**
+ * Enriches playerlist with Discord information
+ */
+async function enrichPlayerlistWithDiscordData(
+  playerlist: PlayerListItem[],
+  env: Env,
+): Promise<PlayerListItem[]> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  console.log(`[Playerlist] Starting enrichment for ${playerlist.length} players`);
+
+  const enrichedPlayers = await Promise.all(
+    playerlist.map(async (player) => {
+      try {
+        // UserId is already in the correct format (e.g., "76561199367667107@steam")
+        const steamId = player.UserId;
+
+        if (!steamId) {
+          console.log(`[Playerlist] No Steam ID found for player: ${player.Name}`);
+          return player;
+        }
+
+        // Query database for Discord ID using the full UserId (with @steam)
+        const [playerData] = await db
+          .select({ discordId: playerdata.discordId })
+          .from(playerdata)
+          .where(eq(playerdata.id, steamId))
+          .limit(1);
+
+        if (!playerData?.discordId) {
+          console.log(`[Playerlist] No Discord account linked for ${player.Name} (${steamId})`);
+          return player;
+        }
+
+        const discordId = playerData.discordId.toString();
+        console.log(`[Playerlist] Found Discord ID ${discordId} for ${player.Name}`);
+
+        // Fetch Discord avatar
+        const avatarUrl = await getDiscordUserAvatar(discordId, env);
+
+        const enrichedPlayer = {
+          ...player,
+          DiscordId: discordId,
+          ...(avatarUrl && { AvatarUrl: avatarUrl }),
+        };
+
+        console.log(`[Playerlist] Enriched ${player.Name}: DiscordId=${discordId}, AvatarUrl=${avatarUrl ? 'Yes' : 'No'}`);
+
+        return enrichedPlayer;
+      } catch (error) {
+        console.error(`[Playerlist] Error enriching player ${player.Name}:`, error);
+        return player;
+      }
+    })
+  );
+
+  const enrichedCount = enrichedPlayers.filter(p => p.DiscordId).length;
+  console.log(`[Playerlist] Enrichment complete: ${enrichedCount}/${playerlist.length} players enriched`);
+
+  return enrichedPlayers;
+}
 
 /**
  * Validates the API key from the Authorization header
@@ -46,7 +166,7 @@ export async function handleGetPlayerlist(
       );
     }
 
-    const playerlistData = await response.json();
+    const playerlistData = await response.json() as PlayerListItem[];
 
     return createResponse(playerlistData, 200, origin);
   } catch (error) {
@@ -81,20 +201,25 @@ export async function handleUpdatePlayerlist(
 
   try {
     // Parse request body
-    const playerlistData = await request.json();
+    const playerlistData = await request.json() as PlayerListItem[];
+    console.log(`[Playerlist POST] Received playerlist with ${playerlistData.length} players`);
+
+    // Enrich playerlist with Discord data before storing
+    const enrichedPlayerlist = await enrichPlayerlistWithDiscordData(playerlistData, env);
+    console.log(`[Playerlist POST] Storing enriched playerlist`);
 
     // Get Durable Object instance
     const id = env.PLAYERLIST_STORAGE.idFromName('playerlist');
     const stub = env.PLAYERLIST_STORAGE.get(id);
 
-    // Update playerlist in Durable Object
+    // Update playerlist in Durable Object with enriched data
     const response = await stub.fetch(
       new Request('https://playerlist-storage.worker/playerlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(playerlistData),
+        body: JSON.stringify(enrichedPlayerlist),
       }),
     );
 

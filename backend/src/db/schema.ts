@@ -11,7 +11,7 @@ import { sql } from 'drizzle-orm';
 
 export const playerdata = sqliteTable('playerdata', {
   id: text('id').primaryKey(),
-  discordId: integer('discordId'),
+  discordId: text('discordId'),
   experience: integer('experience').default(0),
   playtime: integer('playtime').default(0),
   roundsplayed: integer('roundsplayed').default(0),

@@ -97,10 +97,13 @@ export class PlayerlistCommand extends BaseCommand {
   }
 }
 
-interface Playerlist extends Array<Player> {}
+interface Playerlist extends Array<Player> { }
 
 interface Player {
   Name: string;
+  UserId: string;
   Health: number;
   Team: string;
+  DiscordId?: string;
+  AvatarUrl?: string;
 }

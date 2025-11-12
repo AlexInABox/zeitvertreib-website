@@ -29,19 +29,10 @@ export async function handleGetPublicStats(
 
       return createResponse({ stats: playerData }, 200, origin);
     } else if (discordId) {
-      const discordIdNum = parseInt(discordId, 10);
-      if (isNaN(discordIdNum)) {
-        return createResponse(
-          { error: 'Invalid discordid parameter' },
-          400,
-          origin,
-        );
-      }
-
       const [playerData] = await db
         .select()
         .from(schema.playerdata)
-        .where(eq(schema.playerdata.discordId, discordIdNum))
+        .where(eq(schema.playerdata.discordId, discordId))
         .limit(1);
 
       if (!playerData) {

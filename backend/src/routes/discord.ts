@@ -88,7 +88,7 @@ export async function handleDiscordCallback(request: Request, env: Env) {
     }
 
     const steamId = steam.id;
-    const discordId = Number(user.id);
+    const discordId = user.id;
 
     // Unlink old Discord ID if exists elsewhere
     const existing = await db
