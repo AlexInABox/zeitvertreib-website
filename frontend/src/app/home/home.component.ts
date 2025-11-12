@@ -47,7 +47,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     },
   ];
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.fetchPlayerlist();
@@ -64,30 +64,31 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   fetchPlayerlist() {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
     const apiUrl = isLocalhost
       ? 'https://dev.zeitvertreib.vip/api/playerlist'
       : `${window.location.origin}/api/playerlist`;
 
-    this.http.get<Player[]>(apiUrl)
-      .subscribe({
-        next: (data) => {
-          this.players = data;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error fetching playerlist:', error);
-          this.isLoading = false;
-        }
-      });
+    this.http.get<Player[]>(apiUrl).subscribe({
+      next: (data) => {
+        this.players = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching playerlist:', error);
+        this.isLoading = false;
+      },
+    });
   }
 
   get alivePlayers(): Player[] {
-    return this.players.filter(p => p.Team !== 'Dead');
+    return this.players.filter((p) => p.Team !== 'Dead');
   }
 
   get deadPlayers(): Player[] {
-    return this.players.filter(p => p.Team === 'Dead');
+    return this.players.filter((p) => p.Team === 'Dead');
   }
 
   get playerCount(): number {
