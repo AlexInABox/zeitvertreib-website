@@ -7,6 +7,7 @@ interface LeaderboardEntry {
   name: string;
   value: number;
   rank: number;
+  discordId: string | null;
 }
 
 interface SteamPlayerSummary {
@@ -118,7 +119,9 @@ async function getLeaderboardData(
   slotWins: LeaderboardEntry[];
 }> {
   // Helper function to format leaderboard entries
-  const formatLeaderboard = async <T extends { id: string }>(
+  const formatLeaderboard = async <
+    T extends { id: string; discordId: string | null },
+  >(
     data: T[],
     valueKey: string,
   ): Promise<LeaderboardEntry[]> => {
@@ -127,6 +130,7 @@ async function getLeaderboardData(
         name: await getSteamUsername(item.id, env),
         value: ((item as any)[valueKey] as number) || 0,
         rank: index + 1,
+        discordId: item.discordId,
       })),
     );
     return entries;
@@ -149,7 +153,11 @@ async function getLeaderboardData(
   ] = await Promise.all([
     // Top 3 snake scores
     db
-      .select({ id: playerdata.id, snakehighscore: playerdata.snakehighscore })
+      .select({
+        id: playerdata.id,
+        snakehighscore: playerdata.snakehighscore,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.snakehighscore))
@@ -157,7 +165,11 @@ async function getLeaderboardData(
 
     // Top 3 by kills
     db
-      .select({ id: playerdata.id, killcount: playerdata.killcount })
+      .select({
+        id: playerdata.id,
+        killcount: playerdata.killcount,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.killcount))
@@ -165,7 +177,11 @@ async function getLeaderboardData(
 
     // Top 3 by deaths
     db
-      .select({ id: playerdata.id, deathcount: playerdata.deathcount })
+      .select({
+        id: playerdata.id,
+        deathcount: playerdata.deathcount,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.deathcount))
@@ -173,7 +189,11 @@ async function getLeaderboardData(
 
     // Top 3 by ZV Coins (experience)
     db
-      .select({ id: playerdata.id, experience: playerdata.experience })
+      .select({
+        id: playerdata.id,
+        experience: playerdata.experience,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.experience))
@@ -181,7 +201,11 @@ async function getLeaderboardData(
 
     // Top 3 by playtime
     db
-      .select({ id: playerdata.id, playtime: playerdata.playtime })
+      .select({
+        id: playerdata.id,
+        playtime: playerdata.playtime,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.playtime))
@@ -189,7 +213,11 @@ async function getLeaderboardData(
 
     // Top 3 by rounds played
     db
-      .select({ id: playerdata.id, roundsplayed: playerdata.roundsplayed })
+      .select({
+        id: playerdata.id,
+        roundsplayed: playerdata.roundsplayed,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.roundsplayed))
@@ -197,7 +225,11 @@ async function getLeaderboardData(
 
     // Top 3 by medkits used
     db
-      .select({ id: playerdata.id, usedmedkits: playerdata.usedmedkits })
+      .select({
+        id: playerdata.id,
+        usedmedkits: playerdata.usedmedkits,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.usedmedkits))
@@ -205,7 +237,11 @@ async function getLeaderboardData(
 
     // Top 3 by colas used
     db
-      .select({ id: playerdata.id, usedcolas: playerdata.usedcolas })
+      .select({
+        id: playerdata.id,
+        usedcolas: playerdata.usedcolas,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.usedcolas))
@@ -213,7 +249,11 @@ async function getLeaderboardData(
 
     // Top 3 by pocket escapes
     db
-      .select({ id: playerdata.id, pocketescapes: playerdata.pocketescapes })
+      .select({
+        id: playerdata.id,
+        pocketescapes: playerdata.pocketescapes,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.pocketescapes))
@@ -221,21 +261,33 @@ async function getLeaderboardData(
 
     // Top 3 by adrenaline used
     db
-      .select({ id: playerdata.id, usedadrenaline: playerdata.usedadrenaline })
+      .select({
+        id: playerdata.id,
+        usedadrenaline: playerdata.usedadrenaline,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.usedadrenaline))
       .limit(3),
 
     db
-      .select({ id: playerdata.id, slotSpins: playerdata.slotSpins })
+      .select({
+        id: playerdata.id,
+        slotSpins: playerdata.slotSpins,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.slotSpins))
       .limit(3),
 
     db
-      .select({ id: playerdata.id, slotWins: playerdata.slotWins })
+      .select({
+        id: playerdata.id,
+        slotWins: playerdata.slotWins,
+        discordId: playerdata.discordId,
+      })
       .from(playerdata)
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.slotWins))
@@ -297,12 +349,17 @@ function formatLeaderboardField(entries: LeaderboardEntry[]): string {
 
   let response = entries
     .map((entry, index) => {
+      // Use Discord mention if discordId is available, otherwise use Steam username
+      const displayName = entry.discordId
+        ? `<@${entry.discordId}>`
+        : entry.name;
+
       if (index === 0) {
-        return `**${entry.rank}. ${entry.name} (${entry.value})**`;
+        return `**${entry.rank}. ${displayName} (${entry.value})**`;
       } else if (index === 1) {
-        return `${entry.rank}. ${entry.name} (${entry.value})\n`;
+        return `${entry.rank}. ${displayName} (${entry.value})\n`;
       } else {
-        return `-# ${entry.rank}. ${entry.name} (${entry.value})\n`;
+        return `-# ${entry.rank}. ${displayName} (${entry.value})\n`;
       }
     })
     .join('')
@@ -319,12 +376,17 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
   return entries
     .map((entry, index) => {
       const formattedTime = formatPlaytime(entry.value);
+      // Use Discord mention if discordId is available, otherwise use Steam username
+      const displayName = entry.discordId
+        ? `<@${entry.discordId}>`
+        : entry.name;
+
       if (index === 0) {
-        return `**${entry.rank}. ${entry.name} (${formattedTime})**`;
+        return `**${entry.rank}. ${displayName} (${formattedTime})**`;
       } else if (index === 1) {
-        return `${entry.rank}. ${entry.name} (${formattedTime})\n`;
+        return `${entry.rank}. ${displayName} (${formattedTime})\n`;
       } else {
-        return `-# ${entry.rank}. ${entry.name} (${formattedTime})\n`;
+        return `-# ${entry.rank}. ${displayName} (${formattedTime})\n`;
       }
     })
     .join('')
