@@ -716,6 +716,123 @@ export async function handleListCaseFiles(
   }
 }
 
+/// GET /cases/file/hash?case={caseId}&filename={filename}
+export async function handleGetFileHash(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    // Get case ID and filename from query parameters
+    const url = new URL(request.url);
+    const caseId = url.searchParams.get('case');
+    const filename = url.searchParams.get('filename');
+
+    if (!caseId) {
+      return createResponse(
+        { error: 'Missing required parameter: case' },
+        400,
+        origin,
+      );
+    }
+
+    if (!filename) {
+      return createResponse(
+        { error: 'Missing required parameter: filename' },
+        400,
+        origin,
+      );
+    }
+
+    // Validate case ID format (5 lowercase letters or numbers)
+    if (!/^[a-z0-9]{5}$/.test(caseId)) {
+      return createResponse(
+        {
+          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
+        },
+        400,
+        origin,
+      );
+    }
+
+    // Construct the file path
+    const folderPath = `case-${caseId}`;
+    const filePath = `${folderPath}/${filename}`;
+
+    // Use HEAD request to get file metadata without downloading the file
+    // Retry logic to handle presigned URL issues
+    let headResponse: Response | null = null;
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const headUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`;
+        const headRequest = await aws(env).sign(headUrl, {
+          method: 'HEAD',
+        });
+
+        headResponse = await fetch(headRequest);
+
+        if (headResponse.ok) {
+          break; // Success, exit retry loop
+        }
+
+        // If 404, no point retrying
+        if (headResponse.status === 404) {
+          return createResponse({ error: 'File not found' }, 404, origin);
+        }
+
+        // For other errors, capture and retry
+        lastError = new Error(
+          `S3 request failed: ${headResponse.status} ${headResponse.statusText}`,
+        );
+
+        // Short delay before retry
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+    }
+
+    if (!headResponse || !headResponse.ok) {
+      const errorText = lastError?.message || 'Unknown error';
+      throw new Error(errorText);
+    }
+
+    // Get ETag header which contains the MD5 hash (remove quotes)
+    const etag = headResponse.headers.get('ETag')?.replace(/"/g, '') || '';
+    const contentLength = headResponse.headers.get('Content-Length') || '0';
+    const lastModified = headResponse.headers.get('Last-Modified') || '';
+
+    return createResponse(
+      {
+        filename,
+        hash: etag,
+        size: parseInt(contentLength, 10),
+        lastModified: lastModified ? new Date(lastModified).getTime() : 0,
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Get file hash error:', error);
+    return createResponse(
+      {
+        error: 'Failed to get file hash',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
 /// DELETE /cases/file?case={caseId}&filename={filename}
 export async function handleDeleteCaseFile(
   request: Request,

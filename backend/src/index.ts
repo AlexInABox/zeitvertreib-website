@@ -84,6 +84,7 @@ import {
   handleGetCaseMetadata,
   handleUpdateCaseMetadata,
   handleDeleteCaseFile,
+  handleGetFileHash,
 } from './routes/cases.js';
 
 // Simple response helper for internal use
@@ -125,6 +126,7 @@ const routes: Record<
   'GET:/cases/files': handleListCaseFiles,
   'GET:/cases/metadata': handleGetCaseMetadata,
   'PUT:/cases/metadata': handleUpdateCaseMetadata,
+  'GET:/cases/file/hash': handleGetFileHash,
   'DELETE:/cases/file': handleDeleteCaseFile,
 
   // Spray routes
