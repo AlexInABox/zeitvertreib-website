@@ -97,7 +97,7 @@ export class PlayerlistCommand extends BaseCommand {
   }
 }
 
-interface Playerlist extends Array<Player> { }
+interface Playerlist extends Array<Player> {}
 
 interface Player {
   Name: string;
