@@ -7,7 +7,6 @@ import { playerdata } from '../db/schema.js';
 interface PlayerListItem {
   Name: string;
   UserId: string;
-  Health: number;
   Team: string;
   DiscordId?: string;
   AvatarUrl?: string;

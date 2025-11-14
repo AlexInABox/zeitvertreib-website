@@ -51,7 +51,7 @@ export class PlayerlistCommand extends BaseCommand {
       } else {
         const playerFields = playerlistData.map((player: Player) => ({
           name: (player.Name || 'Unknown') + ' ‎  ‎  ‎ ',
-          value: `-# HP: ${Math.round(player.Health || 0)}\n-# Rolle: ${player.Team || 'Unknown'}`,
+          value: `-# Rolle: ${player.Team || 'Unknown'}`,
           inline: true,
         }));
 
@@ -97,12 +97,11 @@ export class PlayerlistCommand extends BaseCommand {
   }
 }
 
-interface Playerlist extends Array<Player> {}
+interface Playerlist extends Array<Player> { }
 
 interface Player {
   Name: string;
   UserId: string;
-  Health: number;
   Team: string;
   DiscordId?: string;
   AvatarUrl?: string;

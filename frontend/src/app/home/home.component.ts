@@ -11,7 +11,6 @@ import { GalleriaModule } from 'primeng/galleria';
 interface Player {
   Name: string;
   UserId: string;
-  Health: number;
   Team: string;
   DiscordId?: string;
   AvatarUrl?: string;
@@ -47,7 +46,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     },
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   ngOnInit() {
     this.fetchPlayerlist();

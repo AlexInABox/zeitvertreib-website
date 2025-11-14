@@ -215,7 +215,6 @@
 
 .player-item-full {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 0.875rem 1rem;
   background: rgba(255, 255, 255, 0.06);
@@ -314,29 +313,6 @@
   background: rgba(168, 85, 247, 0.25);
   color: rgb(233, 213, 255);
   border: 1px solid rgba(168, 85, 247, 0.4);
-}
-
-.player-health-full {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.125rem;
-}
-
-.health-value-full {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: rgb(134, 239, 172);
-  line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-.health-label-full {
-  font-size: 0.625rem;
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Empty State */
