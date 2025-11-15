@@ -253,8 +253,7 @@
               <span>{{ uploadStatusMessage }}</span>
             </div>
             <div class="progress-bar-wrapper">
-              <div class="progress-bar" [style.width.%]="uploadProgress">
-              </div>
+              <div class="progress-bar" [style.width.%]="uploadProgress"></div>
               <span class="progress-text-centered">{{ uploadETA }}</span>
             </div>
           </div>
@@ -269,11 +268,14 @@
               <span>{{ medalStatusMessage }}</span>
             </div>
             <div class="progress-bar-wrapper">
-              <div 
-                class="progress-bar" 
-                [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
-              >
-              </div>
+              <div
+                class="progress-bar"
+                [style.width.%]="
+                  medalDownloadProgress > 0
+                    ? medalDownloadProgress
+                    : medalUploadProgress
+                "
+              ></div>
               <span class="progress-text-centered">{{ medalETA }}</span>
             </div>
           </div>
