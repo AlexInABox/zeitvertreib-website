@@ -5072,7 +5072,9 @@
 }
 
 .wheel-segment {
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition:
+    filter 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .wheel-segment-active {
@@ -5299,7 +5301,8 @@
 }
 
 @keyframes pulse-wheel-spin {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
   }
   50% {
@@ -5442,9 +5445,8 @@
   .lucky-wheel-widget {
     min-height: 300px;
   }
-  
+
   .wheel-container {
     max-width: 240px;
   }
 }
-

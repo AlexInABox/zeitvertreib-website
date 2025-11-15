@@ -352,10 +352,7 @@
                 </div>
 
                 <!-- Inline Compact Payout Info -->
-                <div
-                  *ngIf="slotMachineInfo"
-                  class="slot-payout-compact"
-                >
+                <div *ngIf="slotMachineInfo" class="slot-payout-compact">
                   <div class="payout-compact-grid">
                     <div
                       *ngFor="let entry of slotMachineInfo.payoutTable"
@@ -363,9 +360,15 @@
                       [class.jackpot-entry]="entry.tier === 'jackpot'"
                       [class.big-win-entry]="entry.tier === 'big_win'"
                     >
-                      <span class="payout-compact-symbol">{{ entry.symbol }}</span>
-                      <span class="payout-compact-condition">{{ entry.condition }}</span>
-                      <span class="payout-compact-amount">+{{ entry.payout }}</span>
+                      <span class="payout-compact-symbol">{{
+                        entry.symbol
+                      }}</span>
+                      <span class="payout-compact-condition">{{
+                        entry.condition
+                      }}</span>
+                      <span class="payout-compact-amount"
+                        >+{{ entry.payout }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -413,24 +416,15 @@
                 </div>
 
                 <!-- Status Messages -->
-                <div
-                  *ngIf="slotMachineMessage"
-                  class="slot-machine-message"
-                >
+                <div *ngIf="slotMachineMessage" class="slot-machine-message">
                   {{ slotMachineMessage }}
                 </div>
-                <div
-                  *ngIf="slotMachineError"
-                  class="slot-machine-error"
-                >
+                <div *ngIf="slotMachineError" class="slot-machine-error">
                   {{ slotMachineError }}
                 </div>
 
                 <!-- Win Log -->
-                <div
-                  *ngIf="slotWinLog.length > 0"
-                  class="slot-win-log"
-                >
+                <div *ngIf="slotWinLog.length > 0" class="slot-win-log">
                   <div class="win-log-header">
                     <span class="win-log-title">📜 Letzte Spins</span>
                     <div class="win-log-header-controls">
@@ -502,13 +496,19 @@
                 </div>
 
                 <!-- Loading State -->
-                <div *ngIf="!luckyWheelInfo && !luckyWheelError" class="text-center py-8">
+                <div
+                  *ngIf="!luckyWheelInfo && !luckyWheelError"
+                  class="text-center py-8"
+                >
                   <div class="loading-spinner mx-auto mb-4"></div>
                   <p class="text-lg text-white">Lade Glücksrad...</p>
                 </div>
 
                 <!-- Error State -->
-                <div *ngIf="luckyWheelError && !luckyWheelInfo" class="text-center py-8">
+                <div
+                  *ngIf="luckyWheelError && !luckyWheelInfo"
+                  class="text-center py-8"
+                >
                   <div class="text-red-400 mb-4">⚠️</div>
                   <p class="text-red-400">{{ luckyWheelError }}</p>
                   <button
@@ -523,21 +523,56 @@
                 <div *ngIf="luckyWheelInfo">
                   <!-- Lucky Wheel SVG -->
                   <div class="wheel-container">
-                    <svg 
-                      class="lucky-wheel-svg" 
+                    <svg
+                      class="lucky-wheel-svg"
                       [class.spinning]="isWheelSpinning"
                       [style.transform]="'rotate(' + wheelRotation + 'deg)'"
                       viewBox="0 0 200 200"
                     >
                       <!-- Wheel segments -->
-                      <g *ngFor="let segment of getWheelSegments(); let i = index">
+                      <g
+                        *ngFor="
+                          let segment of getWheelSegments();
+                          let i = index
+                        "
+                      >
                         <path
                           class="wheel-segment"
-                          [attr.d]="'M 100 100 L ' + 
-                            (100 + 100 * Math.cos((i * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' ' + 
-                            (100 + 100 * Math.sin((i * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' A 100 100 0 0 1 ' + 
-                            (100 + 100 * Math.cos(((i + 1) * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' ' + 
-                            (100 + 100 * Math.sin(((i + 1) * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' Z'"
+                          [attr.d]="
+                            'M 100 100 L ' +
+                            (100 +
+                              100 *
+                                Math.cos(
+                                  (((i * 360) / getTotalSegments() - 90) *
+                                    Math.PI) /
+                                    180
+                                )) +
+                            ' ' +
+                            (100 +
+                              100 *
+                                Math.sin(
+                                  (((i * 360) / getTotalSegments() - 90) *
+                                    Math.PI) /
+                                    180
+                                )) +
+                            ' A 100 100 0 0 1 ' +
+                            (100 +
+                              100 *
+                                Math.cos(
+                                  ((((i + 1) * 360) / getTotalSegments() - 90) *
+                                    Math.PI) /
+                                    180
+                                )) +
+                            ' ' +
+                            (100 +
+                              100 *
+                                Math.sin(
+                                  ((((i + 1) * 360) / getTotalSegments() - 90) *
+                                    Math.PI) /
+                                    180
+                                )) +
+                            ' Z'
+                          "
                           [attr.fill]="segment.color"
                           stroke="rgba(0,0,0,0.3)"
                           stroke-width="1"
@@ -546,24 +581,48 @@
                           "
                         />
                       </g>
-                      
+
                       <!-- Center circle -->
-                      <circle cx="100" cy="100" r="20" fill="rgba(0,0,0,0.8)" stroke="white" stroke-width="2"/>
-                      <text x="100" y="100" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="12" font-weight="bold">
-                        {{ lastWheelMultiplier !== null && showWheelResult ? lastWheelMultiplier + 'x' : 'SPIN' }}
+                      <circle
+                        cx="100"
+                        cy="100"
+                        r="20"
+                        fill="rgba(0,0,0,0.8)"
+                        stroke="white"
+                        stroke-width="2"
+                      />
+                      <text
+                        x="100"
+                        y="100"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                        fill="white"
+                        font-size="12"
+                        font-weight="bold"
+                      >
+                        {{
+                          lastWheelMultiplier !== null && showWheelResult
+                            ? lastWheelMultiplier + 'x'
+                            : 'SPIN'
+                        }}
                       </text>
                     </svg>
-                    
+
                     <!-- Pointer arrow at top -->
                     <div class="wheel-pointer"></div>
                   </div>
 
                   <!-- Multiplier Legend (compact colored badges) -->
                   <div class="wheel-multiplier-legend">
-                    <div 
-                      *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index" 
+                    <div
+                      *ngFor="
+                        let entry of luckyWheelInfo.payoutTable;
+                        let i = index
+                      "
                       class="legend-badge"
-                      [style.background-color]="getMultiplierColor(entry.multiplier)"
+                      [style.background-color]="
+                        getMultiplierColor(entry.multiplier)
+                      "
                     >
                       {{ entry.multiplier }}x
                     </div>
@@ -572,15 +631,20 @@
                   <!-- Bet Controls -->
                   <div class="wheel-bet-controls">
                     <div class="wheel-bet-display">
-                      <button 
-                        (click)="adjustLuckyWheelBet(-10)" 
+                      <button
+                        (click)="adjustLuckyWheelBet(-10)"
                         class="wheel-bet-btn"
-                        [disabled]="luckyWheelLoading || luckyWheelBet <= luckyWheelInfo.minBet"
+                        [disabled]="
+                          luckyWheelLoading ||
+                          luckyWheelBet <= luckyWheelInfo.minBet
+                        "
                       >
                         −
                       </button>
                       <div class="wheel-bet-amount">
-                        <label class="bet-label" for="wheelBetInput">Einsatz</label>
+                        <label class="bet-label" for="wheelBetInput"
+                          >Einsatz</label
+                        >
                         <div class="bet-input-wrapper">
                           <input
                             id="wheelBetInput"
@@ -592,7 +656,10 @@
                             (input)="onLuckyWheelBetInput($event)"
                             (keydown)="onLuckyWheelBetKeydown($event)"
                             (blur)="commitLuckyWheelBetInput()"
-                            (keydown.enter)="commitLuckyWheelBetInput(); $event.preventDefault()"
+                            (keydown.enter)="
+                              commitLuckyWheelBetInput();
+                              $event.preventDefault()
+                            "
                             [disabled]="luckyWheelLoading"
                             [attr.min]="luckyWheelInfo.minBet"
                             [attr.max]="luckyWheelInfo.maxBet"
@@ -600,15 +667,18 @@
                           <span class="bet-unit">ZVC</span>
                         </div>
                       </div>
-                      <button 
-                        (click)="adjustLuckyWheelBet(10)" 
+                      <button
+                        (click)="adjustLuckyWheelBet(10)"
                         class="wheel-bet-btn"
-                        [disabled]="luckyWheelLoading || luckyWheelBet >= luckyWheelInfo.maxBet"
+                        [disabled]="
+                          luckyWheelLoading ||
+                          luckyWheelBet >= luckyWheelInfo.maxBet
+                        "
                       >
                         +
                       </button>
                     </div>
-                    
+
                     <button
                       (click)="spinLuckyWheel()"
                       class="wheel-spin-btn"
@@ -616,7 +686,9 @@
                       [disabled]="!canAffordLuckyWheel() || luckyWheelLoading"
                     >
                       <span class="btn-icon">🎡</span>
-                      <span class="btn-text">{{ isWheelSpinning ? 'Dreht...' : 'Drehen!' }}</span>
+                      <span class="btn-text">{{
+                        isWheelSpinning ? 'Dreht...' : 'Drehen!'
+                      }}</span>
                     </button>
 
                     <button
@@ -624,7 +696,11 @@
                       class="wheel-autospin-btn"
                       [class.active]="autoWheelSpinEnabled"
                       [disabled]="!luckyWheelInfo"
-                      title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}"
+                      title="{{
+                        autoWheelSpinEnabled
+                          ? 'Auto-Spin deaktivieren'
+                          : 'Auto-Spin aktivieren'
+                      }}"
                     >
                       <span *ngIf="!autoWheelSpinEnabled">🔄 Auto</span>
                       <span *ngIf="autoWheelSpinEnabled">⏹️ Stopp</span>
@@ -632,7 +708,10 @@
                   </div>
 
                   <!-- Status Messages -->
-                  <div *ngIf="luckyWheelError && luckyWheelInfo" class="wheel-error">
+                  <div
+                    *ngIf="luckyWheelError && luckyWheelInfo"
+                    class="wheel-error"
+                  >
                     {{ luckyWheelError }}
                   </div>
 
@@ -644,7 +723,10 @@
                     <div class="win-log-header">
                       <span class="win-log-title">📜 Letzte Wheel-Spins</span>
                       <div class="win-log-header-controls">
-                        <label class="win-log-toggle" title="Verluste ausblenden">
+                        <label
+                          class="win-log-toggle"
+                          title="Verluste ausblenden"
+                        >
                           <input
                             type="checkbox"
                             [(ngModel)]="hideWheelLosses"
@@ -670,7 +752,9 @@
                         <div class="win-log-symbols">
                           <span
                             class="legend-badge"
-                            [style.background-color]="getMultiplierColor(entry.multiplier)"
+                            [style.background-color]="
+                              getMultiplierColor(entry.multiplier)
+                            "
                             >{{ entry.multiplier }}x</span
                           >
                         </div>
@@ -682,9 +766,9 @@
                             {{ getWheelSpinTypeInfo(entry).emoji }}
                             {{ getWheelSpinTypeInfo(entry).label }}
                           </span>
-                          <span class="win-log-time"
-                            >{{ getTimeAgo(entry.timestamp) }}</span
-                          >
+                          <span class="win-log-time">{{
+                            getTimeAgo(entry.timestamp)
+                          }}</span>
                         </div>
                         <div
                           class="win-log-payout"

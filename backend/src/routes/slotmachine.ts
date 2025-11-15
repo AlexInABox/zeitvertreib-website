@@ -72,9 +72,12 @@ async function sendWinToDiscord(
   try {
     // Determine embed color based on win type
     let color = 0x808080; // Default gray
-    if (winType === 'jackpot') color = 0xff00ff; // Magenta for jackpot
-    else if (winType === 'big_win') color = 0xff6600; // Orange for big win
-    else if (winType === 'small_win') color = 0xffd700; // Gold for small win
+    if (winType === 'jackpot')
+      color = 0xff00ff; // Magenta for jackpot
+    else if (winType === 'big_win')
+      color = 0xff6600; // Orange for big win
+    else if (winType === 'small_win')
+      color = 0xffd700; // Gold for small win
     else if (winType === 'mini_win') color = 0x00ff00; // Green for mini win
 
     const embed = {
