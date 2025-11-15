@@ -248,54 +248,33 @@
             class="upload-progress-container"
             *ngIf="isUploading && uploadMode === 'file'"
           >
-            <div class="progress-bar-wrapper">
-              <div class="progress-bar" [style.width.%]="uploadProgress">
-                <span class="progress-text">{{ uploadProgress }}%</span>
-              </div>
-            </div>
             <div class="progress-info">
               <i class="pi pi-spin pi-spinner"></i>
-              <span>Datei wird hochgeladen...</span>
+              <span>{{ uploadStatusMessage }}</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" [style.width.%]="uploadProgress">
+              </div>
+              <span class="progress-text-centered">{{ uploadETA }}</span>
             </div>
           </div>
 
           <!-- Medal Clip Progress -->
           <div
-            class="medal-progress-container"
+            class="upload-progress-container"
             *ngIf="isFetchingMedalClip && uploadMode === 'medal'"
           >
-            <!-- Download Progress -->
-            <div class="progress-section" *ngIf="medalDownloadProgress > 0">
-              <div class="progress-label">
-                <i class="pi pi-download"></i>
-                <span>Download: {{ medalDownloadProgress }}%</span>
-              </div>
-              <div class="progress-bar-wrapper">
-                <div
-                  class="progress-bar medal-download"
-                  [style.width.%]="medalDownloadProgress"
-                ></div>
-              </div>
-            </div>
-
-            <!-- Upload Progress -->
-            <div class="progress-section" *ngIf="medalUploadProgress > 0">
-              <div class="progress-label">
-                <i class="pi pi-upload"></i>
-                <span>Upload: {{ medalUploadProgress }}%</span>
-              </div>
-              <div class="progress-bar-wrapper">
-                <div
-                  class="progress-bar medal-upload"
-                  [style.width.%]="medalUploadProgress"
-                ></div>
-              </div>
-            </div>
-
-            <!-- Status Message -->
             <div class="progress-info">
               <i class="pi pi-spin pi-spinner"></i>
               <span>{{ medalStatusMessage }}</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div 
+                class="progress-bar" 
+                [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
+              >
+              </div>
+              <span class="progress-text-centered">{{ medalETA }}</span>
             </div>
           </div>
 

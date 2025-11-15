@@ -814,6 +814,7 @@ export async function handleGetFileHash(
       {
         filename,
         hash: etag,
+        hashType: 'md5',
         size: parseInt(contentLength, 10),
         lastModified: lastModified ? new Date(lastModified).getTime() : 0,
       },

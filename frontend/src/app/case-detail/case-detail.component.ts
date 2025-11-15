@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { AuthService } from '../services/auth.service';
+import SparkMD5 from 'spark-md5';
 
 interface CaseFile {
   name: string;
@@ -76,6 +77,9 @@ export class CaseDetailComponent implements OnInit {
   // Upload state
   isUploading = false;
   uploadProgress = 0;
+  uploadStatusMessage = '';
+  uploadETA = '';
+  uploadStartTime = 0;
   selectedFile: File | null = null;
 
   // Medal clip upload state
@@ -85,6 +89,8 @@ export class CaseDetailComponent implements OnInit {
   medalDownloadProgress = 0;
   medalUploadProgress = 0;
   medalStatusMessage = '';
+  medalETA = '';
+  medalStartTime = 0;
   medalUrlInvalid = false;
 
   sortOptions = [
@@ -481,19 +487,143 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  async uploadFile() {
+  private async calculateFileHash(
+    file: File,
+    onProgress?: (progress: number) => void,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const chunkSize = 2097152; // 2MB chunks
+      const spark = new SparkMD5.ArrayBuffer();
+      const fileReader = new FileReader();
+      let currentChunk = 0;
+      const chunks = Math.ceil(file.size / chunkSize);
+
+      fileReader.onload = (e) => {
+        spark.append(e.target?.result as ArrayBuffer);
+        currentChunk++;
+
+        // Report progress
+        if (onProgress) {
+          const progress = Math.round((currentChunk / chunks) * 100);
+          onProgress(progress);
+        }
+
+        if (currentChunk < chunks) {
+          loadNext();
+        } else {
+          const hash = spark.end();
+          resolve(hash);
+        }
+      };
+
+      fileReader.onerror = () => {
+        reject(new Error('Failed to read file for hashing'));
+      };
+
+      const loadNext = () => {
+        const start = currentChunk * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        fileReader.readAsArrayBuffer(file.slice(start, end));
+      };
+
+      loadNext();
+    });
+  }
+
+  private async verifyUpload(
+    filename: string,
+    expectedHash: string,
+    maxRetries = 3,
+  ): Promise<boolean> {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Small delay before checking (allow S3 to process)
+        if (attempt > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
+        const response = await this.http
+          .get<{
+            filename: string;
+            hash: string;
+            size: number;
+            lastModified: number;
+          }>(
+            `${environment.apiUrl}/cases/file/hash?case=${this.caseId}&filename=${encodeURIComponent(filename)}`,
+          )
+          .toPromise();
+
+        if (response?.hash === expectedHash) {
+          return true;
+        }
+
+        console.warn(
+          `Hash mismatch on attempt ${attempt + 1}: expected ${expectedHash}, got ${response?.hash}`,
+        );
+      } catch (error) {
+        console.error(
+          `Hash verification attempt ${attempt + 1} failed:`,
+          error,
+        );
+      }
+    }
+
+    return false;
+  }
+
+  private calculateETA(startTime: number, progress: number): string {
+    if (progress === 0) return 'Berechne...';
+    const elapsed = Date.now() - startTime;
+    const total = (elapsed / progress) * 100;
+    const remaining = total - elapsed;
+    const seconds = Math.ceil(remaining / 1000);
+
+    if (seconds < 10) return '<10s';
+
+    // Round to nearest 10 seconds
+    const roundedSeconds = Math.ceil(seconds / 10) * 10;
+
+    if (roundedSeconds < 60) return `~${roundedSeconds}s`;
+    const minutes = Math.floor(roundedSeconds / 60);
+    const secs = roundedSeconds % 60;
+    if (secs === 0) return `~${minutes}m`;
+    return `~${minutes}m ${secs}s`;
+  }
+
+  async uploadFile(retryCount = 0) {
     if (!this.selectedFile) {
       alert('Bitte wähle eine Datei aus');
       return;
     }
 
+    const maxRetries = 3;
+
     this.isUploading = true;
     this.uploadProgress = 0;
+    this.uploadStatusMessage = 'Datei wird gehashed...';
+    this.uploadETA = '';
+    this.uploadStartTime = Date.now();
 
     try {
+      // Calculate local file hash with progress tracking
+      const hashStartTime = Date.now();
+      const localHash = await this.calculateFileHash(
+        this.selectedFile,
+        (progress) => {
+          this.uploadProgress = progress;
+          this.uploadETA = this.calculateETA(hashStartTime, progress);
+          this.uploadStatusMessage = `Datei wird gehashed... (${progress}%)`;
+        },
+      );
+      console.log('Local file hash:', localHash);
+
       // Get file extension
       const fileExtension =
         this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
+
+      this.uploadStatusMessage = 'Upload-URL wird angefordert...';
+      this.uploadProgress = 0;
+      this.uploadETA = '';
 
       // Request upload URL from backend
       const uploadUrlResponse = await this.http
@@ -511,6 +641,9 @@ export class CaseDetailComponent implements OnInit {
       if (!uploadUrlResponse) {
         throw new Error('Failed to get upload URL');
       }
+
+      this.uploadStatusMessage = 'Datei wird hochgeladen...';
+      this.uploadStartTime = Date.now();
 
       // Upload file to S3 using the presigned URL with progress tracking
       await new Promise<void>((resolve, reject) => {
@@ -532,6 +665,11 @@ export class CaseDetailComponent implements OnInit {
                   this.uploadProgress = Math.round(
                     (event.loaded / event.total) * 100,
                   );
+                  this.uploadETA = this.calculateETA(
+                    this.uploadStartTime,
+                    this.uploadProgress,
+                  );
+                  this.uploadStatusMessage = `Datei wird hochgeladen... (${this.uploadProgress}%)`;
                 }
               } else if (event.type === 4) {
                 // HttpEventType.Response
@@ -542,9 +680,42 @@ export class CaseDetailComponent implements OnInit {
           });
       });
 
+      // Verify upload by comparing hashes
+      this.uploadStatusMessage = 'Upload wird verifiziert...';
+      this.uploadProgress = 100;
+      this.uploadETA = '';
+      console.log('Verifying upload...');
+
+      const isVerified = await this.verifyUpload(
+        uploadUrlResponse.filename,
+        localHash,
+      );
+
+      if (!isVerified) {
+        if (retryCount < maxRetries) {
+          console.warn(
+            `Upload verification failed, retrying... (${retryCount + 1}/${maxRetries})`,
+          );
+          this.uploadStatusMessage = `Verifizierung fehlgeschlagen - Erneuter Versuch ${retryCount + 1}/${maxRetries}...`;
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          // Keep the same file and retry
+          await this.uploadFile(retryCount + 1);
+          return;
+        } else {
+          throw new Error(
+            'Upload-Überprüfung fehlgeschlagen: Die hochgeladene Datei stimmt nicht mit der Originaldatei überein. Bitte versuche es erneut.',
+          );
+        }
+      }
+
+      console.log('Upload verified successfully!');
+      this.uploadStatusMessage = 'Upload erfolgreich!';
+
       // Reset upload state
       this.isUploading = false;
       this.uploadProgress = 0;
+      this.uploadStatusMessage = '';
+      this.uploadETA = '';
       this.selectedFile = null;
 
       // Reset file input
@@ -559,12 +730,18 @@ export class CaseDetailComponent implements OnInit {
       this.loadFiles();
       this.loadMetadata();
 
-      alert('Datei erfolgreich hochgeladen!');
+      alert('Datei erfolgreich hochgeladen und verifiziert!');
     } catch (error) {
       this.isUploading = false;
       this.uploadProgress = 0;
+      this.uploadStatusMessage = '';
+      this.uploadETA = '';
       console.error('Upload failed:', error);
-      alert('Fehler beim Hochladen der Datei');
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Fehler beim Hochladen der Datei';
+      alert(errorMessage);
     }
   }
 
@@ -650,6 +827,8 @@ export class CaseDetailComponent implements OnInit {
     this.medalDownloadProgress = 0;
     this.medalUploadProgress = 0;
     this.medalStatusMessage = 'Medal Clip wird abgerufen...';
+    this.medalETA = '';
+    this.medalStartTime = Date.now();
 
     try {
       // Step 1: Query the Medal bypass API
@@ -694,6 +873,10 @@ export class CaseDetailComponent implements OnInit {
 
       // Step 2: Download the video with progress tracking using CORS proxy
       this.medalStatusMessage = 'Video wird heruntergeladen...';
+      this.medalDownloadProgress = 0;
+      this.medalUploadProgress = 0;
+      this.medalStartTime = Date.now();
+      this.medalETA = '';
 
       // Try multiple CORS proxy services in case one fails
       const corsProxies = [
@@ -748,6 +931,11 @@ export class CaseDetailComponent implements OnInit {
           this.medalDownloadProgress = Math.round(
             (receivedLength / total) * 100,
           );
+          this.medalETA = this.calculateETA(
+            this.medalStartTime,
+            this.medalDownloadProgress,
+          );
+          this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
         }
       }
 
@@ -763,13 +951,29 @@ export class CaseDetailComponent implements OnInit {
       const videoBlob = new Blob([videoData], { type: mimeType });
       const videoFile = new File([videoBlob], filename, { type: mimeType });
 
-      // Step 3: Upload to case storage with progress tracking
+      // Step 3: Hash the downloaded video
+      this.medalStatusMessage = 'Video wird gehashed...';
+      this.medalDownloadProgress = 100;
+      this.medalUploadProgress = 0;
+      this.medalETA = '';
+
+      const hashStartTime = Date.now();
+      const localHash = await this.calculateFileHash(videoFile, (progress) => {
+        this.medalUploadProgress = progress;
+        this.medalETA = this.calculateETA(hashStartTime, progress);
+        this.medalStatusMessage = `Video wird gehashed... (${progress}%)`;
+      });
+      console.log('Local Medal video hash:', localHash);
+
+      // Step 4: Upload to case storage with progress tracking
       this.medalStatusMessage = 'Video wird hochgeladen...';
+      this.medalStartTime = Date.now();
 
       // Get presigned upload URL with extension parameter
       const uploadUrlResponse = await this.http
         .get<{
           url: string;
+          filename: string;
         }>(
           `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
           { withCredentials: true },
@@ -798,6 +1002,11 @@ export class CaseDetailComponent implements OnInit {
                   this.medalUploadProgress = Math.round(
                     (event.loaded / event.total) * 100,
                   );
+                  this.medalETA = this.calculateETA(
+                    this.medalStartTime,
+                    this.medalUploadProgress,
+                  );
+                  this.medalStatusMessage = `Video wird hochgeladen... (${this.medalUploadProgress}%)`;
                 }
               } else if (event.type === 4) {
                 // HttpEventType.Response
@@ -808,23 +1017,43 @@ export class CaseDetailComponent implements OnInit {
           });
       });
 
+      // Verify upload by comparing hashes
+      this.medalStatusMessage = 'Upload wird verifiziert...';
+      this.medalUploadProgress = 100;
+      this.medalETA = '';
+      console.log('Verifying Medal clip upload...');
+
+      const isVerified = await this.verifyUpload(
+        uploadUrlResponse.filename,
+        localHash,
+      );
+
+      if (!isVerified) {
+        throw new Error(
+          'Upload-Überprüfung fehlgeschlagen: Die hochgeladene Datei stimmt nicht mit der Originaldatei überein.',
+        );
+      }
+
+      console.log('Medal clip upload verified successfully!');
+      this.medalStatusMessage = 'Upload erfolgreich!';
+
       // Reset state
       this.isFetchingMedalClip = false;
       this.medalDownloadProgress = 0;
       this.medalUploadProgress = 0;
       this.medalClipUrl = '';
       this.medalStatusMessage = '';
-
-      // Reload files and metadata
+      this.medalETA = ''; // Reload files and metadata
       this.loadFiles();
       this.loadMetadata();
 
-      alert('Medal Clip erfolgreich hochgeladen!');
+      alert('Medal Clip erfolgreich hochgeladen und verifiziert!');
     } catch (error) {
       this.isFetchingMedalClip = false;
       this.medalDownloadProgress = 0;
       this.medalUploadProgress = 0;
       this.medalStatusMessage = '';
+      this.medalETA = '';
       console.error('Medal clip upload failed:', error);
 
       const errorMessage =

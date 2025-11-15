@@ -1790,6 +1790,22 @@
   transform: translateX(-50%);
 }
 
+.progress-text-centered {
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .progress-info {
   display: flex;
   align-items: center;
@@ -1797,6 +1813,7 @@
   color: #a78bfa;
   font-size: 0.875rem;
   font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 
 .progress-info i {
@@ -1930,56 +1947,6 @@
 
 .medal-upload-btn {
   white-space: nowrap;
-}
-
-/* Medal Progress Container */
-.medal-progress-container {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  border-radius: 12px;
-}
-
-.progress-section {
-  margin-bottom: 1.25rem;
-}
-
-.progress-section:last-of-type {
-  margin-bottom: 1rem;
-}
-
-.progress-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  color: #cbd5e1;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.progress-label i {
-  font-size: 1rem;
-  color: #a78bfa;
-}
-
-.progress-bar.medal-download {
-  background: linear-gradient(
-    90deg,
-    rgba(59, 130, 246, 0.9),
-    rgba(96, 165, 250, 0.9)
-  );
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-}
-
-.progress-bar.medal-upload {
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.9),
-    rgba(167, 139, 250, 0.9)
-  );
-  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
 }
 
 @media (max-width: 768px) {
