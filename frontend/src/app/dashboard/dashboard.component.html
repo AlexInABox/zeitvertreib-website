@@ -335,63 +335,9 @@
               <div class="slot-machine-widget">
                 <div class="slot-machine-header">
                   <h4 class="zvcoins-section-title">🎰 Slotmaschine</h4>
-                  <div class="slot-machine-header-right">
-                    <button
-                      (click)="togglePayoutInfo()"
-                      class="slot-info-icon"
-                      title="Gewinntabelle anzeigen"
-                    >
-                      <span *ngIf="!showPayoutInfo">?</span>
-                      <span *ngIf="showPayoutInfo">✕</span>
-                    </button>
-                    <div class="slot-machine-badge">BETA</div>
-                  </div>
                 </div>
 
-                <!-- Winning Animation Overlay -->
-                <div
-                  *ngIf="showWinningAnimation && !showPayoutInfo"
-                  class="winning-animation-overlay"
-                  [class.jackpot]="currentWinType === 'jackpot'"
-                  [class.big-win]="currentWinType === 'big_win'"
-                  [class.small-win]="currentWinType === 'small_win'"
-                >
-                  <div class="winning-animation-content">
-                    <div class="confetti">🎉</div>
-                    <div class="confetti">🎊</div>
-                    <div class="confetti">✨</div>
-                    <div class="confetti" *ngIf="currentWinType === 'jackpot'">
-                      �
-                    </div>
-                    <div class="confetti" *ngIf="currentWinType === 'big_win'">
-                      🔥
-                    </div>
-                    <div
-                      class="confetti"
-                      *ngIf="
-                        currentWinType !== 'jackpot' &&
-                        currentWinType !== 'big_win'
-                      "
-                    >
-                      �💰
-                    </div>
-                    <div class="confetti">🏆</div>
-                    <div class="winning-text">
-                      <span *ngIf="currentWinType === 'jackpot'"
-                        >💎 JACKPOT! 💎</span
-                      >
-                      <span *ngIf="currentWinType === 'big_win'"
-                        >🔥 GROSSER GEWINN! 🔥</span
-                      >
-                      <span *ngIf="currentWinType === 'small_win'"
-                        >✨ GEWINN! ✨</span
-                      >
-                    </div>
-                    <div class="winning-amount">{{ slotMachineMessage }}</div>
-                  </div>
-                </div>
-
-                <div class="slotcontainer" *ngIf="!showPayoutInfo">
+                <div class="slotcontainer">
                   <div class="slot">
                     <div class="symbols" id="slot1Symbols"></div>
                   </div>
@@ -405,7 +351,26 @@
                   </div>
                 </div>
 
-                <div class="slot-machine-controls" *ngIf="!showPayoutInfo">
+                <!-- Inline Compact Payout Info -->
+                <div
+                  *ngIf="slotMachineInfo"
+                  class="slot-payout-compact"
+                >
+                  <div class="payout-compact-grid">
+                    <div
+                      *ngFor="let entry of slotMachineInfo.payoutTable"
+                      class="payout-compact-entry"
+                      [class.jackpot-entry]="entry.tier === 'jackpot'"
+                      [class.big-win-entry]="entry.tier === 'big_win'"
+                    >
+                      <span class="payout-compact-symbol">{{ entry.symbol }}</span>
+                      <span class="payout-compact-condition">{{ entry.condition }}</span>
+                      <span class="payout-compact-amount">+{{ entry.payout }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="slot-machine-controls">
                   <button
                     (click)="testSlotMachine()"
                     class="slot-machine-btn slot-spin-btn"
@@ -442,58 +407,20 @@
                     >
 
                     <span class="btn-text" *ngIf="!autoSpinEnabled"
-                      >🔄 Autospin</span
+                      >🔄 Auto</span
                     >
                   </button>
                 </div>
 
-                <!-- Payout Info Section -->
-                <div
-                  *ngIf="showPayoutInfo && slotMachineInfo"
-                  class="slot-payout-info"
-                >
-                  <div class="payout-info-header">
-                    <h5>💰 Gewinntabelle</h5>
-                  </div>
-                  <p class="payout-description">
-                    {{ slotMachineInfo.description }}
-                  </p>
-                  <div class="payout-table">
-                    <div
-                      *ngFor="let entry of slotMachineInfo.payoutTable"
-                      class="payout-entry"
-                      [class.jackpot-entry]="entry.tier === 'jackpot'"
-                      [class.big-win-entry]="entry.tier === 'big_win'"
-                      [class.small-win-entry]="entry.tier === 'small_win'"
-                      [class.mini-win-entry]="entry.tier === 'mini_win'"
-                    >
-                      <div class="payout-symbol">{{ entry.symbol }}</div>
-                      <div class="payout-details">
-                        <div class="payout-condition">
-                          {{ entry.condition }}
-                        </div>
-                        <div class="payout-description-text">
-                          {{ entry.description }}
-                        </div>
-                      </div>
-                      <div class="payout-amount">+{{ entry.payout }} ZVC</div>
-                    </div>
-                  </div>
-                  <div class="payout-footer">
-                    <p>💡 Kosten pro Dreh: {{ slotMachineInfo.cost }} ZVC</p>
-                  </div>
-                </div>
-
                 <!-- Status Messages -->
                 <div
-                  *ngIf="slotMachineMessage && !showPayoutInfo"
+                  *ngIf="slotMachineMessage"
                   class="slot-machine-message"
-                  [class.success]="showWinningAnimation"
                 >
                   {{ slotMachineMessage }}
                 </div>
                 <div
-                  *ngIf="slotMachineError && !showPayoutInfo"
+                  *ngIf="slotMachineError"
                   class="slot-machine-error"
                 >
                   {{ slotMachineError }}
@@ -501,7 +428,7 @@
 
                 <!-- Win Log -->
                 <div
-                  *ngIf="!showPayoutInfo && slotWinLog.length > 0"
+                  *ngIf="slotWinLog.length > 0"
                   class="slot-win-log"
                 >
                   <div class="win-log-header">
@@ -568,21 +495,208 @@
                 </div>
               </div>
 
-              <!-- Coming Soon Widget -->
-              <div class="coming-soon-widget">
-                <div class="coming-soon-placeholder">
-                  <div class="placeholder-icon">🎲</div>
-                  <div class="placeholder-icon">🃏</div>
-                  <div class="placeholder-icon">🎯</div>
+              <!-- Lucky Wheel Widget -->
+              <div class="lucky-wheel-widget">
+                <div class="lucky-wheel-header">
+                  <h4 class="zvcoins-section-title">🎡 Glücksrad</h4>
                 </div>
-                <div class="coming-soon-blur-overlay">
-                  <div class="coming-soon-content">
-                    <div class="coming-soon-icon">🎮</div>
-                    <h4 class="coming-soon-title">Bald verfügbar!</h4>
-                    <p class="coming-soon-subtitle">
-                      Neue Spiele kommen bald...
-                    </p>
-                    <div class="coming-soon-badge">COMING SOON</div>
+
+                <!-- Loading State -->
+                <div *ngIf="!luckyWheelInfo && !luckyWheelError" class="text-center py-8">
+                  <div class="loading-spinner mx-auto mb-4"></div>
+                  <p class="text-lg text-white">Lade Glücksrad...</p>
+                </div>
+
+                <!-- Error State -->
+                <div *ngIf="luckyWheelError && !luckyWheelInfo" class="text-center py-8">
+                  <div class="text-red-400 mb-4">⚠️</div>
+                  <p class="text-red-400">{{ luckyWheelError }}</p>
+                  <button
+                    (click)="loadLuckyWheelInfo()"
+                    class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Erneut versuchen
+                  </button>
+                </div>
+
+                <!-- Lucky Wheel Content -->
+                <div *ngIf="luckyWheelInfo">
+                  <!-- Lucky Wheel SVG -->
+                  <div class="wheel-container">
+                    <svg 
+                      class="lucky-wheel-svg" 
+                      [class.spinning]="isWheelSpinning"
+                      [style.transform]="'rotate(' + wheelRotation + 'deg)'"
+                      viewBox="0 0 200 200"
+                    >
+                      <!-- Wheel segments -->
+                      <g *ngFor="let segment of getWheelSegments(); let i = index">
+                        <path
+                          class="wheel-segment"
+                          [attr.d]="'M 100 100 L ' + 
+                            (100 + 100 * Math.cos((i * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' ' + 
+                            (100 + 100 * Math.sin((i * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' A 100 100 0 0 1 ' + 
+                            (100 + 100 * Math.cos(((i + 1) * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' ' + 
+                            (100 + 100 * Math.sin(((i + 1) * 360 / getTotalSegments() - 90) * Math.PI / 180)) + ' Z'"
+                          [attr.fill]="segment.color"
+                          stroke="rgba(0,0,0,0.3)"
+                          stroke-width="1"
+                          [class.wheel-segment-active]="
+                            winningSegmentIndex === i && showWheelResult
+                          "
+                        />
+                      </g>
+                      
+                      <!-- Center circle -->
+                      <circle cx="100" cy="100" r="20" fill="rgba(0,0,0,0.8)" stroke="white" stroke-width="2"/>
+                      <text x="100" y="100" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="12" font-weight="bold">
+                        {{ lastWheelMultiplier !== null && showWheelResult ? lastWheelMultiplier + 'x' : 'SPIN' }}
+                      </text>
+                    </svg>
+                    
+                    <!-- Pointer arrow at top -->
+                    <div class="wheel-pointer"></div>
+                  </div>
+
+                  <!-- Multiplier Legend (compact colored badges) -->
+                  <div class="wheel-multiplier-legend">
+                    <div 
+                      *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index" 
+                      class="legend-badge"
+                      [style.background-color]="getMultiplierColor(entry.multiplier)"
+                    >
+                      {{ entry.multiplier }}x
+                    </div>
+                  </div>
+
+                  <!-- Bet Controls -->
+                  <div class="wheel-bet-controls">
+                    <div class="wheel-bet-display">
+                      <button 
+                        (click)="adjustLuckyWheelBet(-10)" 
+                        class="wheel-bet-btn"
+                        [disabled]="luckyWheelLoading || luckyWheelBet <= luckyWheelInfo.minBet"
+                      >
+                        −
+                      </button>
+                      <div class="wheel-bet-amount">
+                        <label class="bet-label" for="wheelBetInput">Einsatz</label>
+                        <div class="bet-input-wrapper">
+                          <input
+                            id="wheelBetInput"
+                            class="bet-input"
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            [value]="luckyWheelBetInput"
+                            (input)="onLuckyWheelBetInput($event)"
+                            (keydown)="onLuckyWheelBetKeydown($event)"
+                            (blur)="commitLuckyWheelBetInput()"
+                            (keydown.enter)="commitLuckyWheelBetInput(); $event.preventDefault()"
+                            [disabled]="luckyWheelLoading"
+                            [attr.min]="luckyWheelInfo.minBet"
+                            [attr.max]="luckyWheelInfo.maxBet"
+                          />
+                          <span class="bet-unit">ZVC</span>
+                        </div>
+                      </div>
+                      <button 
+                        (click)="adjustLuckyWheelBet(10)" 
+                        class="wheel-bet-btn"
+                        [disabled]="luckyWheelLoading || luckyWheelBet >= luckyWheelInfo.maxBet"
+                      >
+                        +
+                      </button>
+                    </div>
+                    
+                    <button
+                      (click)="spinLuckyWheel()"
+                      class="wheel-spin-btn"
+                      [class.spinning]="isWheelSpinning"
+                      [disabled]="!canAffordLuckyWheel() || luckyWheelLoading"
+                    >
+                      <span class="btn-icon">🎡</span>
+                      <span class="btn-text">{{ isWheelSpinning ? 'Dreht...' : 'Drehen!' }}</span>
+                    </button>
+
+                    <button
+                      (click)="toggleAutoWheelSpin()"
+                      class="wheel-autospin-btn"
+                      [class.active]="autoWheelSpinEnabled"
+                      [disabled]="!luckyWheelInfo"
+                      title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}"
+                    >
+                      <span *ngIf="!autoWheelSpinEnabled">🔄 Auto</span>
+                      <span *ngIf="autoWheelSpinEnabled">⏹️ Stopp</span>
+                    </button>
+                  </div>
+
+                  <!-- Status Messages -->
+                  <div *ngIf="luckyWheelError && luckyWheelInfo" class="wheel-error">
+                    {{ luckyWheelError }}
+                  </div>
+
+                  <!-- Lucky Wheel Spin Log -->
+                  <div
+                    *ngIf="luckyWheelSpinLog.length > 0"
+                    class="slot-win-log wheel-spin-log"
+                  >
+                    <div class="win-log-header">
+                      <span class="win-log-title">📜 Letzte Wheel-Spins</span>
+                      <div class="win-log-header-controls">
+                        <label class="win-log-toggle" title="Verluste ausblenden">
+                          <input
+                            type="checkbox"
+                            [(ngModel)]="hideWheelLosses"
+                            class="toggle-checkbox"
+                          />
+                          <span class="toggle-slider"></span>
+                        </label>
+                        <span class="win-log-count">{{
+                          getFilteredWheelSpinLog().length
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="win-log-list">
+                      <div
+                        *ngFor="
+                          let entry of getFilteredWheelSpinLog();
+                          trackBy: trackByWheelSpinId
+                        "
+                        class="win-log-entry"
+                        [class.win-log-win]="entry.payout > 0"
+                        [class.win-log-loss]="entry.payout === 0"
+                      >
+                        <div class="win-log-symbols">
+                          <span
+                            class="legend-badge"
+                            [style.background-color]="getMultiplierColor(entry.multiplier)"
+                            >{{ entry.multiplier }}x</span
+                          >
+                        </div>
+                        <div class="win-log-info">
+                          <span
+                            class="win-log-type"
+                            [style.color]="getWheelSpinTypeInfo(entry).color"
+                          >
+                            {{ getWheelSpinTypeInfo(entry).emoji }}
+                            {{ getWheelSpinTypeInfo(entry).label }}
+                          </span>
+                          <span class="win-log-time"
+                            >{{ getTimeAgo(entry.timestamp) }}</span
+                          >
+                        </div>
+                        <div
+                          class="win-log-payout"
+                          [class.negative]="entry.payout === 0"
+                        >
+                          <span class="payout-amount">
+                            {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }}
+                          </span>
+                          <span class="wheel-log-bet">-{{ entry.bet }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

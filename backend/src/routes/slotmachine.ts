@@ -25,7 +25,7 @@ const PAYOUT_TABLE = [
     description: 'GROSSER GEWINN!',
   },
   {
-    symbol: '⭐🌈💫',
+    symbol: '❓',
     name: 'Andere',
     condition: '3 Gleiche',
     payout: 350,
@@ -33,7 +33,7 @@ const PAYOUT_TABLE = [
     description: 'Crazy 3!!!',
   },
   {
-    symbol: '🥭🍇',
+    symbol: '❓',
     name: 'Beliebig',
     condition: '2 Gleiche',
     payout: 25,
@@ -72,12 +72,9 @@ async function sendWinToDiscord(
   try {
     // Determine embed color based on win type
     let color = 0x808080; // Default gray
-    if (winType === 'jackpot')
-      color = 0xff00ff; // Magenta for jackpot
-    else if (winType === 'big_win')
-      color = 0xff6600; // Orange for big win
-    else if (winType === 'small_win')
-      color = 0xffd700; // Gold for small win
+    if (winType === 'jackpot') color = 0xff00ff; // Magenta for jackpot
+    else if (winType === 'big_win') color = 0xff6600; // Orange for big win
+    else if (winType === 'small_win') color = 0xffd700; // Gold for small win
     else if (winType === 'mini_win') color = 0x00ff00; // Green for mini win
 
     const embed = {
@@ -111,7 +108,7 @@ async function sendWinToDiscord(
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
     await proxyFetch(
-      env.SLOTS_WEBHOOK,
+      env.GAMBLING_WINS_WEBHOOK,
       {
         method: 'POST',
         headers: {
@@ -323,7 +320,11 @@ export async function handleSlotMachine(
     }
 
     console.log(
-      `🎰 Slot machine: ${validation.session!.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout} ZVC. Balance: ${currentBalance} → ${newBalance}`,
+      `🎰 Slot machine: ${validation.session!.steamId} ${
+        result.type
+      } with ${slot1}${slot2}${slot3}. Payout: ${
+        result.payout
+      } ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );
 
     // Increment slot spins count

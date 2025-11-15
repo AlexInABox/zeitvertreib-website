@@ -79,6 +79,36 @@ interface SlotWinLogEntry {
   netChange: number;
 }
 
+interface LuckyWheelSpinLogEntry {
+  id: number;
+  timestamp: number;
+  multiplier: number;
+  payout: number;
+  bet: number;
+  message: string;
+}
+
+interface LuckyWheelInfo {
+  minBet: number;
+  maxBet: number;
+  payoutTable: Array<{
+    multiplier: number;
+    weight: number;
+  }>;
+  description: string;
+}
+
+interface LuckyWheelResult {
+  multiplier: number;
+  payout: number;
+  newBalance: number;
+  message: string;
+  payoutTable: Array<{
+    multiplier: number;
+    weight: number;
+  }>;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [
@@ -93,6 +123,9 @@ interface SlotWinLogEntry {
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  // Expose Math to template
+  Math = Math;
+
   userStatistics: Statistics = {
     username: 'LÄDT...',
     kills: 0,
@@ -235,6 +268,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly MAX_WIN_LOG_ENTRIES = 100;
   private readonly WIN_LOG_STORAGE_KEY = 'slotMachineWinLog';
   hideLosses: boolean = true;
+  luckyWheelSpinLog: LuckyWheelSpinLogEntry[] = [];
+  private readonly WHEEL_LOG_STORAGE_KEY = 'luckyWheelSpinLog';
+  hideWheelLosses = true;
+
+  // Lucky Wheel properties
+  luckyWheelInfo: LuckyWheelInfo | null = null;
+  luckyWheelBet: number = 100;
+  luckyWheelBetInput: string = '100';
+  luckyWheelLoading = false;
+  luckyWheelError = '';
+  luckyWheelMessage = '';
+  isWheelSpinning = false;
+  wheelRotation = 0;
+  showWheelResult = false;
+  lastWheelMultiplier: number | null = null;
+  lastWheelPayout: number | null = null;
+  winningSegmentIndex: number | null = null;
+  autoWheelSpinEnabled = false;
+  private cachedWheelSegments: Array<{
+    color: string;
+    multiplier: number;
+  }> | null = null;
 
   // Helper method to calculate transfer tax
   getTransferTax(amount: number | null): number {
@@ -268,7 +323,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadFakerank();
     this.loadRedeemables();
     this.loadSlotMachineInfo();
+    this.loadLuckyWheelInfo();
     this.loadWinLog();
+    this.loadLuckyWheelSpinLog();
 
     // Close color picker when clicking outside
     this.documentClickHandler = (event: Event) => {
@@ -376,6 +433,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Track by function for win log entries
   trackByWinLogId(index: number, entry: SlotWinLogEntry): number {
+    return entry.id;
+  }
+
+  trackByWheelSpinId(index: number, entry: LuckyWheelSpinLogEntry): number {
     return entry.id;
   }
 
@@ -2054,6 +2115,58 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.saveWinLog();
   }
 
+  private loadLuckyWheelSpinLog(): void {
+    try {
+      const stored = localStorage.getItem(this.WHEEL_LOG_STORAGE_KEY);
+      if (stored) {
+        this.luckyWheelSpinLog = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error(
+        'Error loading lucky wheel spins from localStorage:',
+        error,
+      );
+      this.luckyWheelSpinLog = [];
+    }
+  }
+
+  private saveLuckyWheelSpinLog(): void {
+    try {
+      localStorage.setItem(
+        this.WHEEL_LOG_STORAGE_KEY,
+        JSON.stringify(this.luckyWheelSpinLog),
+      );
+    } catch (error) {
+      console.error('Error saving lucky wheel spins to localStorage:', error);
+    }
+  }
+
+  private addLuckyWheelSpinToLog(
+    multiplier: number,
+    payout: number,
+    bet: number,
+    message: string,
+  ): void {
+    const entry: LuckyWheelSpinLogEntry = {
+      id: Date.now(),
+      timestamp: Date.now(),
+      multiplier,
+      payout,
+      bet,
+      message,
+    };
+
+    this.luckyWheelSpinLog.unshift(entry);
+    if (this.luckyWheelSpinLog.length > this.MAX_WIN_LOG_ENTRIES) {
+      this.luckyWheelSpinLog = this.luckyWheelSpinLog.slice(
+        0,
+        this.MAX_WIN_LOG_ENTRIES,
+      );
+    }
+
+    this.saveLuckyWheelSpinLog();
+  }
+
   // Get time ago string for display
   getTimeAgo(timestamp: number): string {
     const now = Date.now();
@@ -2099,8 +2212,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.slotWinLog;
   }
 
+  getFilteredWheelSpinLog(): LuckyWheelSpinLogEntry[] {
+    if (this.hideWheelLosses) {
+      return this.luckyWheelSpinLog.filter((entry) => entry.multiplier >= 1.0);
+    }
+    return this.luckyWheelSpinLog;
+  }
+
+  getWheelSpinTypeInfo(entry: LuckyWheelSpinLogEntry): {
+    emoji: string;
+    color: string;
+    label: string;
+  } {
+    if (entry.multiplier >= 1.0) {
+      return { emoji: '✨', color: '#34d399', label: 'GEWINN' };
+    }
+    return { emoji: '💀', color: '#f87171', label: 'VERLOREN' };
+  }
+
   toggleHideLosses(): void {
     this.hideLosses = !this.hideLosses;
+  }
+
+  toggleAutoWheelSpin(): void {
+    this.autoWheelSpinEnabled = !this.autoWheelSpinEnabled;
+
+    if (this.autoWheelSpinEnabled) {
+      this.spinLuckyWheel();
+    }
+  }
+
+  checkForAutoWheelSpin(): void {
+    setTimeout(() => {
+      if (this.autoWheelSpinEnabled) {
+        this.spinLuckyWheel();
+      }
+    }, 500);
   }
 
   // Toggle payout info visibility
@@ -2214,5 +2361,412 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }, 3000);
         },
       });
+  }
+
+  // Lucky Wheel Methods
+  loadLuckyWheelInfo(): void {
+    this.luckyWheelError = ''; // Clear any previous errors
+    this.authService
+      .authenticatedGet<LuckyWheelInfo>(`${environment.apiUrl}/luckywheel/info`)
+      .subscribe({
+        next: (response) => {
+          this.luckyWheelInfo = response;
+          this.luckyWheelError = ''; // Clear error on success
+          const defaultBet =
+            typeof response.minBet === 'number'
+              ? response.minBet
+              : this.luckyWheelBet;
+          this.luckyWheelBet = this.clampLuckyWheelBet(defaultBet || 0);
+          this.syncLuckyWheelBetInput();
+        },
+        error: (error) => {
+          console.error('Error loading lucky wheel info:', error);
+          this.luckyWheelError =
+            'Fehler beim Laden des Glücksrads. Bitte versuche es erneut.';
+        },
+      });
+  }
+
+  canAffordLuckyWheel(): boolean {
+    const bet = this.getPendingLuckyWheelBet();
+    return (this.userStatistics.experience || 0) >= bet;
+  }
+
+  adjustLuckyWheelBet(amount: number): void {
+    if (!this.luckyWheelInfo) return;
+
+    this.commitLuckyWheelBetInput();
+
+    const newBet = (this.luckyWheelBet || this.luckyWheelInfo.minBet) + amount;
+
+    this.luckyWheelBet = this.clampLuckyWheelBet(newBet);
+    this.syncLuckyWheelBetInput();
+  }
+
+  onLuckyWheelBetInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let sanitized = input.value.replace(/[^0-9]/g, '');
+
+    // Remove leading zeros
+    sanitized = sanitized.replace(/^0+/, '') || '0';
+
+    // Enforce max limit if luckyWheelInfo is available
+    if (this.luckyWheelInfo) {
+      const numValue = parseInt(sanitized, 10);
+      if (!isNaN(numValue) && numValue > this.luckyWheelInfo.maxBet) {
+        sanitized = this.luckyWheelInfo.maxBet.toString();
+      }
+    }
+
+    this.luckyWheelBetInput = sanitized;
+
+    // Update the input element's value to reflect sanitization
+    input.value = sanitized;
+  }
+
+  onLuckyWheelBetKeydown(event: KeyboardEvent): void {
+    // Allow control keys: backspace, delete, tab, escape, enter, arrows
+    const controlKeys = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'Home',
+      'End',
+    ];
+
+    // Allow Ctrl/Cmd + A, C, V, X for copy/paste/select all
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())
+    ) {
+      return;
+    }
+
+    // Allow control keys
+    if (controlKeys.includes(event.key)) {
+      return;
+    }
+
+    // Block anything that's not a digit (0-9)
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  commitLuckyWheelBetInput(): void {
+    if (!this.luckyWheelInfo) {
+      const parsed = parseInt(this.luckyWheelBetInput, 10);
+      if (Number.isNaN(parsed)) {
+        this.luckyWheelBet = Math.max(0, this.luckyWheelBet || 0);
+      } else {
+        this.luckyWheelBet = Math.max(0, Math.round(parsed));
+      }
+      this.luckyWheelBetInput = (this.luckyWheelBet || 0).toString();
+      return;
+    }
+
+    const parsed = parseInt(this.luckyWheelBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      this.luckyWheelBet = this.luckyWheelInfo.minBet;
+    } else {
+      this.luckyWheelBet = this.clampLuckyWheelBet(parsed);
+    }
+    this.syncLuckyWheelBetInput();
+  }
+
+  private syncLuckyWheelBetInput(): void {
+    const fallback = this.luckyWheelInfo?.minBet ?? 0;
+    const bet = this.luckyWheelBet ?? fallback;
+    this.luckyWheelBetInput = Math.max(0, bet).toString();
+  }
+
+  private clampLuckyWheelBet(value: number): number {
+    const rounded = Math.round(value);
+    if (!this.luckyWheelInfo) {
+      return Math.max(0, rounded);
+    }
+    return Math.max(
+      this.luckyWheelInfo.minBet,
+      Math.min(this.luckyWheelInfo.maxBet, rounded),
+    );
+  }
+
+  private getPendingLuckyWheelBet(): number {
+    if (!this.luckyWheelInfo) {
+      const parsed = parseInt(this.luckyWheelBetInput, 10);
+      return Number.isNaN(parsed)
+        ? Math.max(0, this.luckyWheelBet || 0)
+        : Math.max(0, Math.round(parsed));
+    }
+
+    const parsed = parseInt(this.luckyWheelBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      return this.clampLuckyWheelBet(
+        this.luckyWheelBet || this.luckyWheelInfo.minBet,
+      );
+    }
+    return this.clampLuckyWheelBet(parsed);
+  }
+
+  spinLuckyWheel(): void {
+    if (!this.luckyWheelInfo || this.isWheelSpinning) return;
+
+    this.commitLuckyWheelBetInput();
+    const bet = this.luckyWheelBet || 0;
+
+    if (bet < this.luckyWheelInfo.minBet || bet > this.luckyWheelInfo.maxBet) {
+      this.luckyWheelError = `Einsatz muss zwischen ${this.luckyWheelInfo.minBet} und ${this.luckyWheelInfo.maxBet} ZVC liegen.`;
+      setTimeout(() => {
+        this.luckyWheelError = '';
+      }, 3000);
+      return;
+    }
+
+    if (!this.canAffordLuckyWheel()) {
+      this.luckyWheelError = `Nicht genügend ZVC! Du brauchst mindestens ${bet} ZVC.`;
+      setTimeout(() => {
+        this.luckyWheelError = '';
+      }, 3000);
+      return;
+    }
+
+    this.isWheelSpinning = true;
+    this.luckyWheelLoading = true;
+    this.luckyWheelError = '';
+    this.luckyWheelMessage = '';
+    this.showWheelResult = false;
+    this.winningSegmentIndex = null;
+
+    // Deduct the bet immediately
+    this.userStatistics.experience =
+      (this.userStatistics.experience || 0) - bet;
+
+    // Call backend
+    this.authService
+      .authenticatedPost<LuckyWheelResult>(`${environment.apiUrl}/luckywheel`, {
+        bet,
+      })
+      .subscribe({
+        next: (response) => {
+          this.lastWheelMultiplier = response.multiplier;
+          this.lastWheelPayout = response.payout;
+
+          // Find all segments matching the winning multiplier
+          const segments = this.getWheelSegments();
+          const matchingIndices: number[] = [];
+          segments.forEach((seg, idx) => {
+            if (seg.multiplier === response.multiplier) {
+              matchingIndices.push(idx);
+            }
+          });
+
+          const fallbackIndex = segments.findIndex(
+            (seg) => seg.multiplier === response.multiplier,
+          );
+
+          // Pick a random matching segment (fallback to first occurrence)
+          const targetSegmentIndex = (
+            matchingIndices.length
+              ? matchingIndices[
+                  Math.floor(Math.random() * matchingIndices.length)
+                ]
+              : fallbackIndex !== -1
+                ? fallbackIndex
+                : 0
+          )!;
+
+          const totalSegments = segments.length || 1;
+          const degreesPerSegment = 360 / totalSegments;
+
+          // Calculate the angle of the segment's center relative to the base orientation
+          const rawSegmentCenterAngle =
+            targetSegmentIndex * degreesPerSegment + degreesPerSegment / 2 - 90;
+          const segmentCenterAngle = this.normalizeAngle(rawSegmentCenterAngle);
+
+          // Pointer arrow sits at top -> -90 degrees -> normalize to 270
+          const pointerAngle = 270;
+
+          // Account for current wheel rotation so subsequent spins continue smoothly
+          const currentAngle = this.normalizeAngle(this.wheelRotation);
+
+          // Determine clockwise rotation needed from current position to align the target
+          let rotationToPointer =
+            pointerAngle - segmentCenterAngle - currentAngle;
+          rotationToPointer = this.normalizeAngle(rotationToPointer);
+
+          // Enforce at least 5 full rotations, plus up to 2 extra for drama
+          const minFullRotations = 5;
+          const extraRotations = Math.floor(Math.random() * 3); // 0-2
+          const spinDegrees =
+            (minFullRotations + extraRotations) * 360 + rotationToPointer;
+
+          this.wheelRotation += spinDegrees;
+
+          // Remember which segment should glow once the spin completes
+          const resolvedSegmentIndex = targetSegmentIndex;
+
+          // Wait for spin animation to complete
+          setTimeout(() => {
+            this.isWheelSpinning = false;
+            this.luckyWheelLoading = false;
+            this.showWheelResult = true;
+            this.winningSegmentIndex = resolvedSegmentIndex;
+
+            // Update balance with payout
+            if (response.payout > 0) {
+              this.userStatistics.experience =
+                (this.userStatistics.experience || 0) + response.payout;
+            }
+
+            this.luckyWheelMessage = response.message;
+            this.addLuckyWheelSpinToLog(
+              response.multiplier,
+              response.payout,
+              bet,
+              response.message,
+            );
+
+            this.showWheelResult = false;
+            this.luckyWheelMessage = '';
+            this.winningSegmentIndex = null;
+
+            // Check for auto-spin
+            this.checkForAutoWheelSpin();
+          }, 4000); // 4 second spin animation
+        },
+        error: (error) => {
+          this.isWheelSpinning = false;
+          this.luckyWheelLoading = false;
+
+          // Refund the bet on error
+          this.userStatistics.experience =
+            (this.userStatistics.experience || 0) + bet;
+
+          this.luckyWheelError =
+            error?.error?.error || 'Fehler beim Drehen des Glücksrads';
+
+          setTimeout(() => {
+            this.luckyWheelError = '';
+          }, 3000);
+        },
+      });
+  }
+
+  getTotalSegments(): number {
+    if (!this.luckyWheelInfo) return 1;
+    return this.luckyWheelInfo.payoutTable.reduce(
+      (sum, entry) => sum + entry.weight,
+      0,
+    );
+  }
+
+  private normalizeAngle(angle: number): number {
+    return ((angle % 360) + 360) % 360;
+  }
+
+  getMultiplierSegmentIndex(multiplier: number): number {
+    if (!this.luckyWheelInfo) return 0;
+
+    let index = 0;
+    for (const entry of this.luckyWheelInfo.payoutTable) {
+      if (entry.multiplier === multiplier) {
+        // Return the middle of this multiplier's segments
+        return index + Math.floor(entry.weight / 2);
+      }
+      index += entry.weight;
+    }
+    return 0;
+  }
+
+  getWheelSegments(): Array<{ color: string; multiplier: number }> {
+    // Return cached segments if already generated
+    if (this.cachedWheelSegments) {
+      return this.cachedWheelSegments;
+    }
+
+    if (!this.luckyWheelInfo) return [];
+
+    const segments: Array<{ color: string; multiplier: number }> = [];
+
+    // Sort payout table by multiplier to determine color palette position
+    const sortedTable = [...this.luckyWheelInfo.payoutTable].sort(
+      (a, b) => a.multiplier - b.multiplier,
+    );
+
+    this.luckyWheelInfo.payoutTable.forEach((entry) => {
+      const sortedIndex = sortedTable.findIndex(
+        (e) => e.multiplier === entry.multiplier,
+      );
+      const color = this.getColorFromPaletteIndex(
+        sortedIndex,
+        sortedTable.length,
+      );
+      for (let i = 0; i < entry.weight; i++) {
+        segments.push({ color, multiplier: entry.multiplier });
+      }
+    });
+
+    // Shuffle using seeded pseudo-random for apparent randomness
+    this.cachedWheelSegments = this.seededShuffle(segments);
+    return this.cachedWheelSegments;
+  }
+
+  seededShuffle<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    // Use a simple seeded random based on current date (changes daily)
+    const seed = new Date()
+      .toDateString()
+      .split('')
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+    // Linear Congruential Generator for pseudo-random numbers
+    let random = seed;
+    const next = () => {
+      random = (random * 1103515245 + 12345) & 0x7fffffff;
+      return random / 0x7fffffff;
+    };
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(next() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+    }
+    return shuffled;
+  }
+
+  getColorFromPaletteIndex(index: number, total: number): string {
+    // Grey to colorful palette - evenly spaced
+    const palette = [
+      '#6b7280', // Grey (lowest)
+      '#f59e0b', // Orange
+      '#8b5cf6', // Purple
+      '#3b82f6', // Blue
+      '#10b981', // Green
+      '#ec4899', // Pink/Magenta (highest)
+    ];
+
+    // Map index to palette position
+    if (total === 1) return palette[palette.length - 1];
+
+    const paletteIndex = Math.floor(
+      (index / (total - 1)) * (palette.length - 1),
+    );
+    return palette[paletteIndex];
+  }
+
+  getMultiplierColor(multiplier: number): string {
+    if (!this.luckyWheelInfo) return '#3b82f6';
+
+    const sortedTable = [...this.luckyWheelInfo.payoutTable].sort(
+      (a, b) => a.multiplier - b.multiplier,
+    );
+    const sortedIndex = sortedTable.findIndex(
+      (e) => e.multiplier === multiplier,
+    );
+
+    return this.getColorFromPaletteIndex(sortedIndex, sortedTable.length);
   }
 }

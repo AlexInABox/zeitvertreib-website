@@ -68,6 +68,7 @@ import {
   handleSlotMachine,
   handleSlotMachineInfo,
 } from './routes/slotmachine.js';
+import { handleLuckyWheel, handleLuckyWheelInfo } from './routes/luckywheel.js';
 import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
@@ -180,6 +181,10 @@ const routes: Record<
   // Slot machine routes
   'GET:/slotmachine/info': handleSlotMachineInfo,
   'POST:/slotmachine': handleSlotMachine,
+
+  // Lucky Wheel routes
+  'GET:/luckywheel/info': handleLuckyWheelInfo,
+  'POST:/luckywheel': handleLuckyWheel,
 
   // Swapped (role swap) route
   'POST:/swapped/': handleSwapped,
