@@ -119,7 +119,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => { },
+    onConfirm: () => {},
   });
 
   // Computed properties
@@ -178,7 +178,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.setupClickHandlers();
@@ -535,7 +535,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-              'Wort konnte nicht aus der Blacklist entfernt werden',
+                'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -622,7 +622,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-              'Wort konnte nicht aus der Whitelist entfernt werden',
+                'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });
