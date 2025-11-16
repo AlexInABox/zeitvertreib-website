@@ -119,7 +119,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   // Computed properties
@@ -178,7 +178,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.setupClickHandlers();
@@ -535,7 +535,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Blacklist entfernt werden',
+              'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -622,7 +622,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Whitelist entfernt werden',
+              'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });
@@ -706,22 +706,35 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
   editFakerank(user: Player) {
     this.activeTabIndex.set(0);
-    this.searchSteamId.set(user.id);
 
-    const userFakerank: UserFakerank = {
-      steamId: user.id,
-      fakerank:
-        user.fakerank && user.fakerank !== 'No Fakerank' ? user.fakerank : '',
-      fakerank_color: user.fakerank_color,
-      username: user.personaname,
-      avatarFull: user.avatarfull || '',
-    };
+    // Extract Steam ID without @steam suffix
+    const steamId = user.id.replace('@steam', '');
+    this.searchSteamId.set(steamId);
 
-    this.searchedUser.set(userFakerank);
-    this.newFakerank.set(userFakerank.fakerank || '');
-    this.tempFakerankColor.set(
-      this.getColorKeyFromHex(user.fakerank_color) || 'default',
-    );
+    // Fetch actual user data from backend instead of relying on playerlist
+    this.setLoadingState('user', true);
+
+    this.fakerankAdminService
+      .getUserFakerank(steamId)
+      .pipe(finalize(() => this.setLoadingState('user', false)))
+      .subscribe({
+        next: (userFakerank) => {
+          this.searchedUser.set(userFakerank);
+          this.newFakerank.set(userFakerank.fakerank || '');
+          this.tempFakerankColor.set(
+            this.getColorKeyFromHex(userFakerank.fakerank_color) || 'default',
+          );
+        },
+        error: (error) => {
+          this.showToast(
+            'error',
+            'Fehler',
+            error.message || 'Benutzer konnte nicht gefunden werden',
+          );
+          // Fallback: still switch to tab with the Steam ID populated
+          this.searchedUser.set(null);
+        },
+      });
   }
 
   // Utility methods
