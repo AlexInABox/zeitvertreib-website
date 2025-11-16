@@ -40,7 +40,6 @@ import {
   handleGetWhitelist,
   handleAddToWhitelist,
   handleRemoveFromWhitelist,
-  handleGetAllFakeranks,
 } from './routes/fakerank-admin.js';
 import {
   handleGetTransactions,
@@ -160,7 +159,6 @@ const routes: Record<
   'GET:/fakerank-admin/whitelist': handleGetWhitelist,
   'POST:/fakerank-admin/whitelist': handleAddToWhitelist,
   'DELETE:/fakerank-admin/whitelist': handleRemoveFromWhitelist,
-  'GET:/fakerank-admin/all-fakeranks': handleGetAllFakeranks,
 
   // Financial routes
   'GET:/financial/transactions': handleGetTransactions,
