@@ -179,7 +179,7 @@ export async function handleSetUserFakerank(
           .set({
             fakerank,
             fakerankColor: fakerank_color,
-            fakerankadminUntil: overrideUntil,
+            fakerankoverrideUntil: overrideUntil,
           })
           .where(eq(playerdata.id, playerId));
       } else {
