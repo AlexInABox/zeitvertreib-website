@@ -462,16 +462,10 @@
             <!-- Players Grid -->
             <div class="players-grid">
               @for (user of allFakeranks(); track user.steamId) {
-                <div
-                  class="player-card"
-                  [class.online]="user.isCurrentlyOnline"
-                >
+                <div class="player-card">
                   <div class="player-header">
                     <div class="player-main">
                       <span class="player-name">{{ user.username }}</span>
-                      @if (user.isCurrentlyOnline) {
-                        <span class="online-badge">🟢 Online</span>
-                      }
                     </div>
                     <span class="player-id">{{ user.steamId }}</span>
                   </div>

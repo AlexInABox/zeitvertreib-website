@@ -119,7 +119,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   // Computed properties
@@ -178,7 +178,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.setupClickHandlers();
@@ -186,8 +186,8 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     // Auto-refresh playerlist every 10 seconds when on the Current Round tab
     this.playerlistRefreshInterval = setInterval(() => {
       if (this.activeTabIndex() === 3) {
-        // Current Round tab
-        this.loadAllFakeranks();
+        // Current Round tab - use silent refresh to avoid flickering
+        this.loadAllFakeranks(true);
       }
     }, 10000);
   }
@@ -535,7 +535,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Blacklist entfernt werden',
+              'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -622,7 +622,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Whitelist entfernt werden',
+              'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });
@@ -631,12 +631,21 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   }
 
   // All Fakeranks Methods
-  loadAllFakeranks() {
-    this.setLoadingState('fakeranks', true);
+  loadAllFakeranks(silentRefresh: boolean = false) {
+    // Only show loading state on initial load, not on auto-refresh
+    if (!silentRefresh) {
+      this.setLoadingState('fakeranks', true);
+    }
 
     this.fakerankAdminService
       .getCurrentRoundPlayers()
-      .pipe(finalize(() => this.setLoadingState('fakeranks', false)))
+      .pipe(
+        finalize(() => {
+          if (!silentRefresh) {
+            this.setLoadingState('fakeranks', false);
+          }
+        }),
+      )
       .subscribe({
         next: (players) => {
           // Transform playerlist data to match Player interface
@@ -663,16 +672,14 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
             killcount: 0,
             deathcount: 0,
             fakerankadmin: false,
-            isCurrentlyOnline: p.Team !== 'Dead',
             Team: p.Team,
           }));
 
+          // Smoothly update the list without jarring DOM changes
           this.allFakeranks.set(transformedPlayers);
           // Update stats based on current playerlist
           this.stats.set({
-            currentPlayersOnline: transformedPlayers.filter(
-              (p) => p.Team !== 'Dead',
-            ).length,
+            currentPlayersOnline: transformedPlayers.length,
             uniquePlayerNames: transformedPlayers.length,
             total: transformedPlayers.length,
           });
