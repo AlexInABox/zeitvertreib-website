@@ -37,6 +37,7 @@ export interface Player {
   deathcount: number;
   fakerankadmin: boolean;
   isCurrentlyOnline?: boolean; // Add for compatibility with template
+  Team?: string; // Add for playerlist compatibility
 }
 
 export interface BlacklistItem {
@@ -70,7 +71,7 @@ export class FakerankAdminService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   private getAuthHeaders(): HttpHeaders {
     // Get session token from AuthService
@@ -247,11 +248,11 @@ export class FakerankAdminService {
             currentPage:
               Math.floor(
                 (response.pagination?.offset || 0) /
-                  (response.pagination?.limit || limit),
+                (response.pagination?.limit || limit),
               ) + 1,
             totalPages: Math.ceil(
               (response.pagination?.total || 0) /
-                (response.pagination?.limit || limit),
+              (response.pagination?.limit || limit),
             ),
             currentPlayersOnline: response.currentPlayersOnline || 0,
             uniquePlayerNames: response.uniquePlayerNames || 0,
@@ -260,4 +261,28 @@ export class FakerankAdminService {
         catchError(this.handleError),
       );
   }
+
+  // Public Playerlist - Current Round Players
+  getCurrentRoundPlayers(): Observable<PlayerlistPlayer[]> {
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+    const apiUrl = isLocalhost
+      ? 'https://dev.zeitvertreib.vip/api/playerlist'
+      : `${this.API_BASE}/playerlist`;
+
+    return this.http
+      .get<PlayerlistPlayer[]>(apiUrl)
+      .pipe(catchError(this.handleError));
+  }
+}
+
+export interface PlayerlistPlayer {
+  Name: string;
+  UserId: string;
+  Team: string;
+  DiscordId?: string;
+  AvatarUrl?: string;
+  Fakerank?: string;
+  FakerankColor?: string;
 }

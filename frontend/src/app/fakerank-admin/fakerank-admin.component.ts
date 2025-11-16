@@ -119,7 +119,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   // Computed properties
@@ -172,21 +172,31 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private documentClickHandler?: (event: Event) => void;
   private toastIdCounter = 0;
+  private playerlistRefreshInterval?: any;
 
   constructor(
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.setupClickHandlers();
     this.subscribeToAuth();
+    // Auto-refresh playerlist every 10 seconds when on the Current Round tab
+    this.playerlistRefreshInterval = setInterval(() => {
+      if (this.activeTabIndex() === 3) { // Current Round tab
+        this.loadAllFakeranks();
+      }
+    }, 10000);
   }
 
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
     this.removeClickHandlers();
+    if (this.playerlistRefreshInterval) {
+      clearInterval(this.playerlistRefreshInterval);
+    }
   }
 
   private setupClickHandlers() {
@@ -524,7 +534,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Blacklist entfernt werden',
+              'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -611,7 +621,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-                'Wort konnte nicht aus der Whitelist entfernt werden',
+              'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });
@@ -622,26 +632,55 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   // All Fakeranks Methods
   loadAllFakeranks() {
     this.setLoadingState('fakeranks', true);
-    const { limit, offset } = this.pagination();
 
     this.fakerankAdminService
-      .getAllFakeranks(limit, offset)
+      .getCurrentRoundPlayers()
       .pipe(finalize(() => this.setLoadingState('fakeranks', false)))
       .subscribe({
-        next: (response) => {
-          this.allFakeranks.set(response.data);
-          this.pagination.update((p) => ({ ...p, total: response.totalItems }));
+        next: (players) => {
+          // Transform playerlist data to match Player interface
+          const transformedPlayers: Player[] = players.map((p) => ({
+            id: p.UserId,
+            steamId: p.UserId,
+            personaname: p.Name,
+            username: p.Name,
+            avatar: p.AvatarUrl || '',
+            avatarmedium: p.AvatarUrl || '',
+            avatarfull: p.AvatarUrl || '',
+            avatarFull: p.AvatarUrl || '',
+            fakerank: p.Fakerank || 'No Fakerank',
+            fakerank_color: this.getColorHex(p.FakerankColor || 'default'),
+            fakerankallowed: true,
+            experience: 0,
+            playtime: 0,
+            roundsplayed: 0,
+            usedmedkits: 0,
+            usedcolas: 0,
+            pocketescapes: 0,
+            usedadrenaline: 0,
+            snakehighscore: 0,
+            killcount: 0,
+            deathcount: 0,
+            fakerankadmin: false,
+            isCurrentlyOnline: p.Team !== 'Dead',
+            Team: p.Team,
+          }));
+
+          this.allFakeranks.set(transformedPlayers);
+          // Update stats based on current playerlist
           this.stats.set({
-            currentPlayersOnline: response.currentPlayersOnline,
-            uniquePlayerNames: response.uniquePlayerNames,
-            total: response.totalItems,
+            currentPlayersOnline: transformedPlayers.filter(p => p.Team !== 'Dead').length,
+            uniquePlayerNames: transformedPlayers.length,
+            total: transformedPlayers.length,
           });
+          // Disable pagination since this is live data
+          this.pagination.update((p) => ({ ...p, total: transformedPlayers.length }));
         },
         error: (error) => {
           this.showToast(
             'error',
             'Fehler',
-            error.message || 'Fakeranks konnten nicht geladen werden',
+            error.message || 'Spielerliste konnte nicht geladen werden',
           );
         },
       });

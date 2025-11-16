@@ -29,8 +29,8 @@
 
 <!-- Confirmation Dialog -->
 @if (confirmationDialog().show) {
-  <div class="dialog-overlay">
-    <div class="dialog">
+  <div class="dialog-overlay" (click)="confirmDialogReject()">
+    <div class="dialog" (click)="$event.stopPropagation()">
       <div class="dialog-header">
         <h3>{{ confirmationDialog().title }}</h3>
       </div>
@@ -49,502 +49,497 @@
   </div>
 }
 
-<!-- Header -->
-<div class="admin-header">
-  <div class="container">
-    <div class="header-content">
-      <div>
-        <h1 class="admin-title">Fakerank Administration</h1>
-        <p class="admin-subtitle">Verwalte Benutzer-Fakeranks und Filter</p>
+<!-- Main Container -->
+<div class="admin-wrapper">
+  <!-- Header Card -->
+  <div class="header-card">
+    <div class="header-card-content">
+      <div class="header-info">
+        <h1 class="header-title">
+          <span class="header-icon">⚡</span>
+          Fakerank Administration
+        </h1>
+        <p class="header-subtitle">
+          Verwalte Benutzer-Fakeranks, Filter und aktuelle Spieler
+        </p>
       </div>
-      <a routerLink="/dashboard" class="btn btn-outline"
-        >← Zurück zum Dashboard</a
-      >
+      <a routerLink="/dashboard" class="back-button">
+        <span class="back-icon">←</span>
+        <span>Dashboard</span>
+      </a>
     </div>
   </div>
-</div>
 
-<!-- Main Content -->
-<div class="container">
-  <div class="admin-container">
-    <!-- Tab Navigation -->
-    <div class="tab-navigation">
+  <!-- Tab Navigation Card -->
+  <div class="tabs-card">
+    <div class="tabs-nav">
       @for (tab of TABS; track tab.id; let i = $index) {
         <button
-          class="tab-button"
+          class="tab-btn"
           [class.active]="activeTabIndex() === i"
           (click)="onTabChange(i)"
         >
           <span class="tab-icon">{{ tab.icon }}</span>
-          <span class="tab-title">{{ tab.title }}</span>
+          <span class="tab-label">{{ tab.title }}</span>
         </button>
       }
     </div>
+  </div>
 
-    <!-- Tab Content -->
-    <div class="tab-content">
-      @switch (activeTabIndex()) {
-        @case (0) {
-          <!-- User Management Tab -->
-          <div class="tab-panel">
-            <h2 class="section-title">Benutzer Fakerank verwalten</h2>
+  <!-- Content Area -->
+  <div class="content-wrapper">
+    @switch (activeTabIndex()) {
+      <!-- USER MANAGEMENT TAB -->
+      @case (0) {
+        <div class="content-card">
+          <!-- Search Section -->
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-icon">🔍</span>
+              Benutzer suchen
+            </h2>
+          </div>
 
-            <!-- User Search -->
-            <div class="search-section">
-              <div class="input-group">
-                <input
-                  type="text"
-                  class="form-input"
-                  placeholder="Steam ID eingeben (z.B. id oder id@steam)..."
-                  [ngModel]="searchSteamId()"
-                  (ngModelChange)="searchSteamId.set($event)"
-                  (keyup.enter)="searchUser()"
-                  [disabled]="loading().user"
+          <div class="search-box">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Steam ID eingeben (z.B. 76561198... oder id@steam)..."
+              [ngModel]="searchSteamId()"
+              (ngModelChange)="searchSteamId.set($event)"
+              (keyup.enter)="searchUser()"
+              [disabled]="loading().user"
+            />
+            <button
+              class="search-btn"
+              (click)="searchUser()"
+              [disabled]="loading().user || !searchSteamId().trim()"
+            >
+              @if (loading().user) {
+                <span class="spinner-small"></span>
+              } @else {
+                <span>🔍 Suchen</span>
+              }
+            </button>
+          </div>
+
+          <!-- User Result -->
+          @if (searchedUser(); as user) {
+            <div class="user-result-card">
+              <div class="user-profile">
+                <img
+                  [src]="getAvatarUrl(user.avatarFull)"
+                  alt="Avatar"
+                  class="user-avatar-large"
+                  (error)="onAvatarError($event)"
                 />
-                <button
-                  class="btn btn-primary"
-                  (click)="searchUser()"
-                  [disabled]="loading().user || !searchSteamId().trim()"
-                >
-                  @if (loading().user) {
-                    <span class="spinner"></span>
+                <div class="user-details">
+                  <h3 class="user-name">{{ user.username }}</h3>
+                  <p class="user-steam-id">{{ user.steamId }}</p>
+                  @if (user.fakerank) {
+                    <div class="current-fakerank">
+                      <span class="fakerank-label">Aktueller Fakerank:</span>
+                      <span
+                        class="fakerank-value"
+                        [style.color]="user.fakerank_color || '#ffffff'"
+                      >
+                        {{ user.fakerank }}
+                      </span>
+                    </div>
                   } @else {
-                    🔍 Suchen
+                    <p class="no-fakerank-text">Kein Fakerank gesetzt</p>
                   }
-                </button>
-              </div>
-            </div>
-
-            <!-- User Details -->
-            @if (searchedUser(); as user) {
-              <div class="user-card">
-                <div class="user-header">
-                  <img
-                    [src]="getAvatarUrl(user.avatarFull)"
-                    alt="Avatar"
-                    class="user-avatar"
-                    (error)="onAvatarError($event)"
-                  />
-                  <div class="user-info">
-                    <h3 class="user-name">{{ user.username }}</h3>
-                    <p class="user-steam-id">Steam ID: {{ user.steamId }}</p>
-                    @if (user.fakerank) {
-                      <p class="user-current-fakerank">
-                        Aktueller Fakerank: <strong>{{ user.fakerank }}</strong>
-                      </p>
-                    } @else {
-                      <p class="user-no-fakerank">Kein Fakerank gesetzt</p>
-                    }
-                  </div>
                 </div>
+              </div>
 
-                <!-- Fakerank Management -->
-                <div class="fakerank-actions">
-                  <div class="input-group">
+              <!-- Edit Form -->
+              <div class="edit-section">
+                <div class="form-row">
+                  <div class="form-group full-width">
+                    <label class="form-label">Fakerank Text</label>
                     <input
                       type="text"
-                      class="form-input"
-                      placeholder="Neuen Fakerank eingeben..."
+                      class="form-input-text"
+                      placeholder="Fakerank eingeben..."
                       [ngModel]="newFakerank()"
                       (ngModelChange)="newFakerank.set($event)"
                       (keydown)="onKeyDown($event)"
                       [disabled]="loading().user"
                     />
-                    <button
-                      class="btn btn-success"
-                      (click)="setUserFakerank()"
-                      [disabled]="loading().user || !newFakerank().trim()"
-                    >
-                      @if (loading().user) {
-                        <span class="spinner"></span>
-                      } @else {
-                        💾 Setzen
-                      }
-                    </button>
                   </div>
+                </div>
 
-                  <!-- Color Picker -->
-                  <div class="color-picker-section">
-                    <label class="color-picker-label">🎨 Farbe wählen</label>
-                    <div class="color-picker-container">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">🎨 Farbe</label>
+                    <div class="color-picker-wrapper">
                       <button
                         (click)="toggleColorPicker()"
-                        class="color-selector-button"
+                        class="color-btn"
                         [disabled]="loading().user"
                         type="button"
                       >
                         <span
-                          class="color-indicator"
+                          class="color-dot"
                           [style.background-color]="
                             getColorHex(tempFakerankColor())
                           "
                         ></span>
-                        {{ getColorName(tempFakerankColor()) }}
-                        <span class="dropdown-arrow">{{
+                        <span class="color-text">{{
+                          getColorName(tempFakerankColor())
+                        }}</span>
+                        <span class="color-arrow">{{
                           showColorPicker() ? '▲' : '▼'
                         }}</span>
                       </button>
 
                       @if (showColorPicker()) {
-                        <div class="color-picker-dropdown">
-                          <div class="color-options">
-                            @for (color of FAKERANK_COLORS; track color.key) {
-                              <button
-                                (click)="selectColor(color.key)"
-                                class="color-option"
-                                [class.selected]="
-                                  tempFakerankColor() === color.key
-                                "
-                                type="button"
-                              >
-                                <span
-                                  class="color-indicator"
-                                  [style.background-color]="color.hex"
-                                ></span>
-                                <span class="color-name">{{ color.name }}</span>
-                                @if (tempFakerankColor() === color.key) {
-                                  <span class="selected-check">✓</span>
-                                }
-                              </button>
-                            }
-                          </div>
+                        <div class="color-dropdown">
+                          @for (color of FAKERANK_COLORS; track color.key) {
+                            <button
+                              (click)="selectColor(color.key)"
+                              class="color-option-btn"
+                              [class.selected]="
+                                tempFakerankColor() === color.key
+                              "
+                              type="button"
+                            >
+                              <span
+                                class="color-dot"
+                                [style.background-color]="color.hex"
+                              ></span>
+                              <span class="color-name">{{ color.name }}</span>
+                              @if (tempFakerankColor() === color.key) {
+                                <span class="check-icon">✓</span>
+                              }
+                            </button>
+                          }
                         </div>
                       }
                     </div>
                   </div>
 
-                  <!-- Override Controls -->
-                  <div class="override-controls">
-                    <div class="override-toggle">
-                      <label class="toggle-label">
+                  <div class="form-group">
+                    <label class="form-label">🔒 Override</label>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        class="toggle-checkbox"
+                        [ngModel]="isOverrideMode()"
+                        (ngModelChange)="isOverrideMode.set($event)"
+                        [disabled]="loading().user"
+                      />
+                      <span class="toggle-track"></span>
+                      <span class="toggle-text">
+                        {{ isOverrideMode() ? 'Aktiv' : 'Inaktiv' }}
+                      </span>
+                    </label>
+                  </div>
+
+                  @if (isOverrideMode()) {
+                    <div class="form-group">
+                      <label class="form-label">⏱️ Dauer (Std.)</label>
+                      <div class="number-input">
+                        <button
+                          type="button"
+                          class="num-btn"
+                          (click)="decreaseOverrideDuration()"
+                          [disabled]="
+                            loading().user || overrideDurationHours() <= 1
+                          "
+                        >
+                          −
+                        </button>
                         <input
-                          type="checkbox"
-                          class="toggle-input"
-                          [ngModel]="isOverrideMode()"
-                          (ngModelChange)="isOverrideMode.set($event)"
+                          type="number"
+                          class="num-input"
+                          [ngModel]="overrideDurationHours()"
+                          (ngModelChange)="setOverrideDuration($event)"
+                          min="1"
+                          max="168"
                           [disabled]="loading().user"
                         />
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-text">🔒 Override-Modus</span>
-                      </label>
-                      <p class="override-description">
-                        Override ermöglicht es, einem User einen Fakerank zu
-                        setzen, auch wenn er normalerweise keine Berechtigung
-                        dazu hat.
-                      </p>
-                    </div>
-
-                    @if (isOverrideMode()) {
-                      <div class="override-duration">
-                        <label class="duration-label"
-                          >⏱️ Override-Dauer (Stunden):</label
+                        <button
+                          type="button"
+                          class="num-btn"
+                          (click)="increaseOverrideDuration()"
+                          [disabled]="
+                            loading().user || overrideDurationHours() >= 168
+                          "
                         >
-                        <div class="duration-controls">
-                          <button
-                            type="button"
-                            class="duration-btn"
-                            (click)="decreaseOverrideDuration()"
-                            [disabled]="
-                              loading().user || overrideDurationHours() <= 1
-                            "
-                          >
-                            -
-                          </button>
-                          <input
-                            type="number"
-                            class="duration-input"
-                            [ngModel]="overrideDurationHours()"
-                            (ngModelChange)="setOverrideDuration($event)"
-                            min="1"
-                            max="168"
-                            [disabled]="loading().user"
-                          />
-                          <button
-                            type="button"
-                            class="duration-btn"
-                            (click)="increaseOverrideDuration()"
-                            [disabled]="
-                              loading().user || overrideDurationHours() >= 168
-                            "
-                          >
-                            +
-                          </button>
-                        </div>
-                        <span class="duration-hint">Max: 7 Tage (168h)</span>
+                          +
+                        </button>
                       </div>
+                    </div>
+                  }
+                </div>
+
+                <div class="action-buttons">
+                  <button
+                    class="action-btn save-btn"
+                    (click)="setUserFakerank()"
+                    [disabled]="loading().user || !newFakerank().trim()"
+                  >
+                    @if (loading().user) {
+                      <span class="spinner-small"></span>
+                    } @else {
+                      <span>💾 Speichern</span>
                     }
-                  </div>
+                  </button>
 
                   @if (user.fakerank) {
                     <button
-                      class="btn btn-danger"
+                      class="action-btn delete-btn"
                       (click)="removeUserFakerank()"
                       [disabled]="loading().user"
                     >
                       @if (loading().user) {
-                        <span class="spinner"></span>
+                        <span class="spinner-small"></span>
                       } @else {
-                        🗑️ Entfernen
+                        <span>🗑️ Entfernen</span>
                       }
                     </button>
                   }
                 </div>
               </div>
-            }
-          </div>
-        }
-
-        @case (1) {
-          <!-- Blacklist Tab -->
-          <div class="tab-panel">
-            <h2 class="section-title">Blacklist verwalten</h2>
-
-            <!-- Add Word -->
-            <div class="add-section">
-              <div class="input-group">
-                <input
-                  type="text"
-                  class="form-input"
-                  placeholder="Wort zur Blacklist hinzufügen..."
-                  [ngModel]="newBlacklistWord()"
-                  (ngModelChange)="newBlacklistWord.set($event)"
-                  (keydown)="onKeyDown($event)"
-                  (keyup.enter)="addToBlacklist()"
-                />
-                <button
-                  class="btn btn-primary"
-                  (click)="addToBlacklist()"
-                  [disabled]="!newBlacklistWord().trim()"
-                >
-                  ➕ Hinzufügen
-                </button>
-              </div>
             </div>
+          }
+        </div>
+      }
 
-            <!-- Word List -->
-            @if (loading().blacklist) {
-              <div class="loading-state">
-                <span class="spinner"></span>
-                <span>Lade Blacklist...</span>
-              </div>
-            } @else {
-              @if (blacklistItems().length === 0) {
-                <div class="empty-state">
-                  <p>Keine Wörter in der Blacklist</p>
-                </div>
-              } @else {
-                <div class="items-list">
-                  @for (item of blacklistItems(); track item.id) {
-                    <div class="list-item">
-                      <div class="item-content">
-                        <span class="item-word">{{ item.word }}</span>
-                        <span class="item-date">{{
-                          formatDate(item.createdAt)
-                        }}</span>
-                      </div>
-                      <button
-                        class="btn btn-danger btn-sm"
-                        (click)="removeFromBlacklist(item)"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-            }
+      <!-- BLACKLIST TAB -->
+      @case (1) {
+        <div class="content-card">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-icon">🚫</span>
+              Blacklist verwalten
+            </h2>
           </div>
-        }
 
-        @case (2) {
-          <!-- Whitelist Tab -->
-          <div class="tab-panel">
-            <h2 class="section-title">Whitelist verwalten</h2>
+          <div class="add-word-box">
+            <input
+              type="text"
+              class="word-input"
+              placeholder="Wort zur Blacklist hinzufügen..."
+              [ngModel]="newBlacklistWord()"
+              (ngModelChange)="newBlacklistWord.set($event)"
+              (keydown)="onKeyDown($event)"
+              (keyup.enter)="addToBlacklist()"
+            />
+            <button
+              class="add-btn"
+              (click)="addToBlacklist()"
+              [disabled]="!newBlacklistWord().trim()"
+            >
+              ➕ Hinzufügen
+            </button>
+          </div>
 
-            <!-- Add Word -->
-            <div class="add-section">
-              <div class="input-group">
-                <input
-                  type="text"
-                  class="form-input"
-                  placeholder="Wort zur Whitelist hinzufügen..."
-                  [ngModel]="newWhitelistWord()"
-                  (ngModelChange)="newWhitelistWord.set($event)"
-                  (keydown)="onKeyDown($event)"
-                  (keyup.enter)="addToWhitelist()"
-                />
-                <button
-                  class="btn btn-primary"
-                  (click)="addToWhitelist()"
-                  [disabled]="!newWhitelistWord().trim()"
-                >
-                  ➕ Hinzufügen
-                </button>
-              </div>
+          @if (loading().blacklist) {
+            <div class="loading-box">
+              <span class="spinner-medium"></span>
+              <span>Lade Blacklist...</span>
             </div>
-
-            <!-- Word List -->
-            @if (loading().whitelist) {
-              <div class="loading-state">
-                <span class="spinner"></span>
-                <span>Lade Whitelist...</span>
+          } @else {
+            @if (blacklistItems().length === 0) {
+              <div class="empty-box">
+                <span class="empty-icon">📭</span>
+                <p>Keine Wörter in der Blacklist</p>
               </div>
             } @else {
-              @if (whitelistItems().length === 0) {
-                <div class="empty-state">
-                  <p>Keine Wörter in der Whitelist</p>
-                </div>
-              } @else {
-                <div class="items-list">
-                  @for (item of whitelistItems(); track item.id) {
-                    <div class="list-item">
-                      <div class="item-content">
-                        <span class="item-word">{{ item.word }}</span>
-                        <span class="item-date">{{
-                          formatDate(item.createdAt)
-                        }}</span>
-                      </div>
-                      <button
-                        class="btn btn-danger btn-sm"
-                        (click)="removeFromWhitelist(item)"
-                      >
-                        🗑️
-                      </button>
+              <div class="word-grid">
+                @for (item of blacklistItems(); track item.id) {
+                  <div class="word-item">
+                    <div class="word-info">
+                      <span class="word-text">{{ item.word }}</span>
+                      <span class="word-date">{{
+                        formatDate(item.createdAt)
+                      }}</span>
                     </div>
-                  }
-                </div>
-              }
+                    <button
+                      class="remove-btn"
+                      (click)="removeFromBlacklist(item)"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                }
+              </div>
             }
+          }
+        </div>
+      }
+
+      <!-- WHITELIST TAB -->
+      @case (2) {
+        <div class="content-card">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-icon">✅</span>
+              Whitelist verwalten
+            </h2>
           </div>
-        }
 
-        @case (3) {
-          <!-- All Fakeranks Tab -->
-          <div class="tab-panel">
-            <h2 class="section-title">Aktuelle Runde</h2>
+          <div class="add-word-box">
+            <input
+              type="text"
+              class="word-input"
+              placeholder="Wort zur Whitelist hinzufügen..."
+              [ngModel]="newWhitelistWord()"
+              (ngModelChange)="newWhitelistWord.set($event)"
+              (keydown)="onKeyDown($event)"
+              (keyup.enter)="addToWhitelist()"
+            />
+            <button
+              class="add-btn"
+              (click)="addToWhitelist()"
+              [disabled]="!newWhitelistWord().trim()"
+            >
+              ➕ Hinzufügen
+            </button>
+          </div>
 
-            @if (loading().fakeranks) {
-              <div class="loading-state">
-                <span class="spinner"></span>
-                <span>Lade Fakeranks...</span>
-              </div>
-            } @else if (allFakeranks().length === 0) {
-              <div class="empty-state">
-                <p>🔴 Keine Spieler auf dem Server</p>
+          @if (loading().whitelist) {
+            <div class="loading-box">
+              <span class="spinner-medium"></span>
+              <span>Lade Whitelist...</span>
+            </div>
+          } @else {
+            @if (whitelistItems().length === 0) {
+              <div class="empty-box">
+                <span class="empty-icon">📭</span>
+                <p>Keine Wörter in der Whitelist</p>
               </div>
             } @else {
-              <!-- Statistics -->
-              @if (stats().total > 0) {
-                <div class="stats-section">
-                  <div class="stats-grid">
-                    <div class="stat-card">
-                      <div class="stat-value">
-                        {{ stats().currentPlayersOnline }}
+              <div class="word-grid">
+                @for (item of whitelistItems(); track item.id) {
+                  <div class="word-item">
+                    <div class="word-info">
+                      <span class="word-text">{{ item.word }}</span>
+                      <span class="word-date">{{
+                        formatDate(item.createdAt)
+                      }}</span>
+                    </div>
+                    <button
+                      class="remove-btn"
+                      (click)="removeFromWhitelist(item)"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- CURRENT ROUND TAB -->
+      @case (3) {
+        <div class="content-card">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-icon">🔴</span>
+              Aktuelle Runde
+              @if (!loading().fakeranks && allFakeranks().length > 0) {
+                <span class="live-dot"></span>
+              }
+            </h2>
+          </div>
+
+          @if (loading().fakeranks) {
+            <div class="loading-box">
+              <span class="spinner-medium"></span>
+              <span>Lade Spielerdaten...</span>
+            </div>
+          } @else if (allFakeranks().length === 0) {
+            <div class="empty-box">
+              <span class="empty-icon">🔴</span>
+              <p>Keine Spieler auf dem Server</p>
+            </div>
+          } @else {
+            <!-- Players Grid -->
+            <div class="players-grid">
+              @for (user of allFakeranks(); track user.steamId) {
+                <div
+                  class="player-card"
+                  [class.online]="user.isCurrentlyOnline"
+                >
+                  <div class="player-header">
+                    <div class="player-main">
+                      <span class="player-name">{{ user.username }}</span>
+                      @if (user.isCurrentlyOnline) {
+                        <span class="online-badge">🟢 Online</span>
+                      }
+                    </div>
+                    <span class="player-id">{{ user.steamId }}</span>
+                  </div>
+
+                  <div class="player-body">
+                    @if (user.fakerank && user.fakerank !== 'No Fakerank') {
+                      <div class="player-fakerank">
+                        <span class="fakerank-label-sm">Fakerank:</span>
+                        <span
+                          class="fakerank-display"
+                          [style.color]="user.fakerank_color || '#ffffff'"
+                        >
+                          {{ user.fakerank }}
+                        </span>
                       </div>
-                      <div class="stat-label">Spieler Online</div>
-                    </div>
-                    <div class="stat-card">
-                      <div class="stat-value">
-                        {{ stats().uniquePlayerNames }}
+                    } @else {
+                      <div class="player-no-fakerank">
+                        <span class="no-rank-text">Kein Fakerank</span>
                       </div>
-                      <div class="stat-label">Eindeutige Spieler</div>
-                    </div>
-                    <div class="stat-card">
-                      <div class="stat-value">{{ stats().total }}</div>
-                      <div class="stat-label">Fakeranks Total</div>
-                    </div>
+                    }
+                  </div>
+
+                  <div class="player-footer">
+                    <button
+                      class="edit-player-btn"
+                      (click)="editFakerank(user)"
+                    >
+                      @if (user.fakerank && user.fakerank !== 'No Fakerank') {
+                        <span>✏️ Bearbeiten</span>
+                      } @else {
+                        <span>➕ Setzen</span>
+                      }
+                    </button>
                   </div>
                 </div>
               }
+            </div>
 
-              <!-- Fakeranks Table -->
-              <div class="table-container">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Benutzername</th>
-                      <th>Steam ID</th>
-                      <th>Fakerank</th>
-                      <th>Aktionen</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (user of allFakeranks(); track user.steamId) {
-                      <tr [class.online]="user.isCurrentlyOnline">
-                        <td class="user-name-cell">
-                          <div class="user-info">
-                            <span class="username">{{ user.username }}</span>
-                            @if (user.isCurrentlyOnline) {
-                              <span class="online-indicator">🟢 Online</span>
-                            }
-                          </div>
-                        </td>
-                        <td class="steam-id-cell">{{ user.steamId }}</td>
-                        <td class="fakerank-cell">
-                          @if (
-                            user.fakerank && user.fakerank !== 'No Fakerank'
-                          ) {
-                            <span
-                              class="fakerank-badge"
-                              [style.color]="user.fakerank_color || '#ffffff'"
-                            >
-                              {{ user.fakerank }}
-                            </span>
-                          } @else {
-                            <span class="no-fakerank">No Fakerank</span>
-                          }
-                        </td>
-                        <td>
-                          <button
-                            class="btn btn-outline btn-sm"
-                            (click)="editFakerank(user)"
-                          >
-                            @if (
-                              user.fakerank && user.fakerank !== 'No Fakerank'
-                            ) {
-                              ✏️ Bearbeiten
-                            } @else {
-                              ➕ Fakerank setzen
-                            }
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+            <!-- Pagination -->
+            @if (pagination().total > pagination().limit) {
+              <div class="pagination-bar">
+                <button
+                  class="page-btn"
+                  (click)="onPageChange(currentPage() - 2)"
+                  [disabled]="currentPage() === 1"
+                >
+                  ← Zurück
+                </button>
+
+                <span class="page-info">
+                  Seite {{ currentPage() }} von {{ totalPages() }}
+                  <span class="page-total"
+                    >({{ pagination().total }} gesamt)</span
+                  >
+                </span>
+
+                <button
+                  class="page-btn"
+                  (click)="onPageChange(currentPage())"
+                  [disabled]="currentPage() === totalPages()"
+                >
+                  Weiter →
+                </button>
               </div>
-
-              <!-- Pagination -->
-              @if (pagination().total > pagination().limit) {
-                <div class="pagination">
-                  <button
-                    class="btn btn-outline btn-sm"
-                    (click)="onPageChange(currentPage() - 2)"
-                    [disabled]="currentPage() === 1"
-                  >
-                    ← Vorherige
-                  </button>
-
-                  <span class="pagination-info">
-                    Seite {{ currentPage() }} von {{ totalPages() }} ({{
-                      pagination().total
-                    }}
-                    Einträge gesamt)
-                  </span>
-
-                  <button
-                    class="btn btn-outline btn-sm"
-                    (click)="onPageChange(currentPage())"
-                    [disabled]="currentPage() === totalPages()"
-                  >
-                    Nächste →
-                  </button>
-                </div>
-              }
             }
-          </div>
-        }
+          }
+        </div>
       }
-    </div>
+    }
   </div>
 </div>

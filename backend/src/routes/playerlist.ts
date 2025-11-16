@@ -10,6 +10,8 @@ interface PlayerListItem {
   Team: string;
   DiscordId?: string;
   AvatarUrl?: string;
+  Fakerank?: string;
+  FakerankColor?: string;
 }
 
 /**
@@ -63,7 +65,7 @@ async function getDiscordUserAvatar(
 }
 
 /**
- * Enriches playerlist with Discord information
+ * Enriches playerlist with Discord information and fakerank data
  */
 async function enrichPlayerlistWithDiscordData(
   playerlist: PlayerListItem[],
@@ -88,36 +90,58 @@ async function enrichPlayerlistWithDiscordData(
           return player;
         }
 
-        // Query database for Discord ID using the full UserId (with @steam)
+        // Query database for Discord ID and fakerank data using the full UserId (with @steam)
         const [playerData] = await db
-          .select({ discordId: playerdata.discordId })
+          .select({
+            discordId: playerdata.discordId,
+            fakerank: playerdata.fakerank,
+            fakerankColor: playerdata.fakerankColor,
+          })
           .from(playerdata)
           .where(eq(playerdata.id, steamId))
           .limit(1);
 
-        if (!playerData?.discordId) {
+        if (!playerData) {
           console.log(
-            `[Playerlist] No Discord account linked for ${player.Name} (${steamId})`,
+            `[Playerlist] No data found for ${player.Name} (${steamId})`,
           );
           return player;
         }
 
-        const discordId = playerData.discordId.toString();
+        const enrichedPlayer: PlayerListItem = { ...player };
+
+        // Add Discord data if available
+        if (playerData.discordId) {
+          const discordId = playerData.discordId.toString();
+          console.log(
+            `[Playerlist] Found Discord ID ${discordId} for ${player.Name}`,
+          );
+
+          // Fetch Discord avatar
+          const avatarUrl = await getDiscordUserAvatar(discordId, env);
+          enrichedPlayer.DiscordId = discordId;
+          if (avatarUrl) {
+            enrichedPlayer.AvatarUrl = avatarUrl;
+          }
+        }
+
+        // Add fakerank data if available
+        if (playerData.fakerank) {
+          enrichedPlayer.Fakerank = playerData.fakerank;
+          console.log(
+            `[Playerlist] Found fakerank "${playerData.fakerank}" for ${player.Name}`,
+          );
+        }
+
+        if (playerData.fakerankColor) {
+          enrichedPlayer.FakerankColor = playerData.fakerankColor;
+          console.log(
+            `[Playerlist] Found fakerank color "${playerData.fakerankColor}" for ${player.Name}`,
+          );
+        }
+
         console.log(
-          `[Playerlist] Found Discord ID ${discordId} for ${player.Name}`,
-        );
-
-        // Fetch Discord avatar
-        const avatarUrl = await getDiscordUserAvatar(discordId, env);
-
-        const enrichedPlayer = {
-          ...player,
-          DiscordId: discordId,
-          ...(avatarUrl && { AvatarUrl: avatarUrl }),
-        };
-
-        console.log(
-          `[Playerlist] Enriched ${player.Name}: DiscordId=${discordId}, AvatarUrl=${avatarUrl ? 'Yes' : 'No'}`,
+          `[Playerlist] Enriched ${player.Name}: DiscordId=${enrichedPlayer.DiscordId ? 'Yes' : 'No'}, Avatar=${enrichedPlayer.AvatarUrl ? 'Yes' : 'No'}, Fakerank=${enrichedPlayer.Fakerank || 'None'}, Color=${enrichedPlayer.FakerankColor || 'None'}`,
         );
 
         return enrichedPlayer;
@@ -132,8 +156,9 @@ async function enrichPlayerlistWithDiscordData(
   );
 
   const enrichedCount = enrichedPlayers.filter((p) => p.DiscordId).length;
+  const fakerankCount = enrichedPlayers.filter((p) => p.Fakerank).length;
   console.log(
-    `[Playerlist] Enrichment complete: ${enrichedCount}/${playerlist.length} players enriched`,
+    `[Playerlist] Enrichment complete: ${enrichedCount}/${playerlist.length} players with Discord, ${fakerankCount}/${playerlist.length} players with fakerank`,
   );
 
   return enrichedPlayers;
