@@ -119,7 +119,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    onConfirm: () => { },
+    onConfirm: () => {},
   });
 
   // Computed properties
@@ -178,14 +178,15 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private fakerankAdminService: FakerankAdminService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.setupClickHandlers();
     this.subscribeToAuth();
     // Auto-refresh playerlist every 10 seconds when on the Current Round tab
     this.playerlistRefreshInterval = setInterval(() => {
-      if (this.activeTabIndex() === 3) { // Current Round tab
+      if (this.activeTabIndex() === 3) {
+        // Current Round tab
         this.loadAllFakeranks();
       }
     }, 10000);
@@ -534,7 +535,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-              'Wort konnte nicht aus der Blacklist entfernt werden',
+                'Wort konnte nicht aus der Blacklist entfernt werden',
             );
           },
         });
@@ -621,7 +622,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               'error',
               'Fehler',
               error.message ||
-              'Wort konnte nicht aus der Whitelist entfernt werden',
+                'Wort konnte nicht aus der Whitelist entfernt werden',
             );
           },
         });
@@ -669,12 +670,17 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
           this.allFakeranks.set(transformedPlayers);
           // Update stats based on current playerlist
           this.stats.set({
-            currentPlayersOnline: transformedPlayers.filter(p => p.Team !== 'Dead').length,
+            currentPlayersOnline: transformedPlayers.filter(
+              (p) => p.Team !== 'Dead',
+            ).length,
             uniquePlayerNames: transformedPlayers.length,
             total: transformedPlayers.length,
           });
           // Disable pagination since this is live data
-          this.pagination.update((p) => ({ ...p, total: transformedPlayers.length }));
+          this.pagination.update((p) => ({
+            ...p,
+            total: transformedPlayers.length,
+          }));
         },
         error: (error) => {
           this.showToast(
