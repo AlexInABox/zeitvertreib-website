@@ -582,29 +582,43 @@
                         />
                       </g>
 
-                      <!-- Center circle -->
+                      <!-- Logo image in center -->
+                      <defs>
+                        <clipPath id="circleClip">
+                          <circle cx="100" cy="100" r="22" />
+                        </clipPath>
+                      </defs>
+                      <image
+                        *ngIf="
+                          !(lastWheelMultiplier !== null && showWheelResult)
+                        "
+                        href="assets/logos/logo_full_color_1to1.png"
+                        x="78"
+                        y="78"
+                        width="44"
+                        height="44"
+                        clip-path="url(#circleClip)"
+                      />
+
+                      <!-- Result display circle -->
                       <circle
+                        *ngIf="lastWheelMultiplier !== null && showWheelResult"
                         cx="100"
                         cy="100"
-                        r="20"
-                        fill="rgba(0,0,0,0.8)"
-                        stroke="white"
-                        stroke-width="2"
+                        r="22"
+                        fill="rgba(0,0,0,0.9)"
                       />
                       <text
+                        *ngIf="lastWheelMultiplier !== null && showWheelResult"
                         x="100"
                         y="100"
                         text-anchor="middle"
                         dominant-baseline="middle"
                         fill="white"
-                        font-size="12"
+                        font-size="14"
                         font-weight="bold"
                       >
-                        {{
-                          lastWheelMultiplier !== null && showWheelResult
-                            ? lastWheelMultiplier + 'x'
-                            : 'SPIN'
-                        }}
+                        {{ lastWheelMultiplier + 'x' }}
                       </text>
                     </svg>
 
