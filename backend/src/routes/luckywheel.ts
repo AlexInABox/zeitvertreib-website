@@ -209,11 +209,16 @@ export async function handleLuckyWheel(
     const netChange = payout - betAmount;
     const newBalance = currentBalance + netChange;
 
-    // Update player balance
-    await env.ZEITVERTREIB_DATA.prepare(
-      'UPDATE playerdata SET experience = ? WHERE id = ?',
-    )
-      .bind(newBalance, playerId)
+    // Update player balance and stats
+    await db
+      .update(playerdata)
+      .set({
+        experience: increment(playerdata.experience, netChange),
+        luckyWheelSpins: increment(playerdata.luckyWheelSpins, 1),
+        luckyWheelWins: increment(playerdata.luckyWheelWins, payout),
+        luckyWheelLosses: increment(playerdata.luckyWheelLosses, betAmount),
+      })
+      .where(eq(playerdata.id, playerId))
       .run();
 
     // Send webhook notification for the highest multiplier only (if bet >= 100)
