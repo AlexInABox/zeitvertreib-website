@@ -117,6 +117,7 @@ async function getLeaderboardData(
   adrenaline: LeaderboardEntry[];
   slotSpins: LeaderboardEntry[];
   slotWins: LeaderboardEntry[];
+  luckyWheelWins: LeaderboardEntry[];
 }> {
   // Helper function to format leaderboard entries
   const formatLeaderboard = async <
@@ -150,6 +151,7 @@ async function getLeaderboardData(
     adrenalineData,
     slotSpinsData,
     slotWinsData,
+    luckyWheelWinsData,
   ] = await Promise.all([
     // Top 3 snake scores
     db
@@ -292,6 +294,17 @@ async function getLeaderboardData(
       .where(ne(playerdata.id, 'anonymous'))
       .orderBy(desc(playerdata.slotWins))
       .limit(3),
+
+    db
+      .select({
+        id: playerdata.id,
+        luckyWheelWins: playerdata.luckyWheelWins,
+        discordId: playerdata.discordId,
+      })
+      .from(playerdata)
+      .where(ne(playerdata.id, 'anonymous'))
+      .orderBy(desc(playerdata.luckyWheelWins))
+      .limit(3),
   ]);
 
   return {
@@ -307,6 +320,10 @@ async function getLeaderboardData(
     adrenaline: await formatLeaderboard(adrenalineData, 'usedadrenaline'),
     slotSpins: await formatLeaderboard(slotSpinsData, 'slotSpins'),
     slotWins: await formatLeaderboard(slotWinsData, 'slotWins'),
+    luckyWheelWins: await formatLeaderboard(
+      luckyWheelWinsData,
+      'luckyWheelWins',
+    ),
   };
 }
 
@@ -475,6 +492,11 @@ function createDiscordMessage(
           {
             name: '🏆 Slots ZVC Gewinne',
             value: formatLeaderboardField(leaderboardData.slotWins),
+            inline: true,
+          },
+          {
+            name: '🏆 Glücksrad ZVC Gewinne',
+            value: formatLeaderboardField(leaderboardData.luckyWheelWins),
             inline: true,
           },
           /*

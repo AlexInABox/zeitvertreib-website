@@ -92,7 +92,7 @@ export class StatsCommand extends BaseCommand {
           .setTitle('👤 Kein Account gefunden')
           .setDescription(
             'Dieser Benutzer ist noch **nicht auf Zeitvertreib registriert**.\n\n' +
-              'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
+            'Erstelle jetzt kostenlos deinen Account, um deine Spielstatistiken zu sehen!',
           )
           .setTimestamp();
 
@@ -267,7 +267,7 @@ export class StatsCommand extends BaseCommand {
         .setTitle(`📊 Statistiken für ${displayName}`)
         .setDescription(
           (migrationMessage || '') +
-            'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮',
+          'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮',
         );
 
       // Set user avatar as thumbnail if available
@@ -298,7 +298,12 @@ export class StatsCommand extends BaseCommand {
         },
         {
           name: '🎰 Slots',
-          value: `**Spins:** ${stats.slotSpins ?? 0}\n**Profit:** ${stats.slotWins ?? 0}\n-# **Verlust:** ${stats.slotLosses ?? 0}`,
+          value: `**Spins:** ${stats.slotSpins ?? 0}\n**Gewinn:** ${stats.slotWins ?? 0}\n-# **Verbrannt:** ${stats.slotLosses ?? 0}`,
+          inline: true,
+        },
+        {
+          name: '🍀 Glücksrad',
+          value: `**Spins:** ${stats.luckyWheelSpins ?? 0}\n**Gewinn:** ${stats.luckyWheelWins ?? 0}\n**Verbrannt:** ${stats.luckyWheelLosses ?? 0}`,
           inline: true,
         },
         {
