@@ -11,6 +11,7 @@ import {
 } from './routes/auth.js';
 import { handleGetStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
+import { handleGetZeitvertreibCoins } from './routes/zvc.js';
 import {
   handleUploadSpray,
   handleGetSpray,
@@ -120,6 +121,7 @@ const routes: Record<
 
   //Public endpoints (no auth)
   'GET:/public/stats': handleGetPublicStats,
+  'GET:/public/zvc': handleGetZeitvertreibCoins,
   'GET:/cases/upload': handleCaseFileUpload,
   'GET:/cases': handleListCases,
   'POST:/cases': handleCreateCase,
