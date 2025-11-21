@@ -13,44 +13,32 @@ export async function handleGetZeitvertreibCoins(
   env: Env,
 ): Promise<Response> {
   const origin = request.headers.get('Origin');
-  const url = new URL(request.url);
-  const userIdQuery = url.searchParams.get('userId');
+  const userIds = new URL(request.url).searchParams.getAll('userId');
 
-  if (!userIdQuery) {
+  if (userIds.length === 0) {
     return createResponse([], 200, origin);
   }
 
-  const userIds = userIdQuery.split(',');
-  const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
-
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const steamIdsToQuery: string[] = [];
   const discordIdsToQuery: string[] = [];
+  const idMap: { [dbId: string]: string } = {};
 
-  const steamToOriginalIdMap: { [steamId: string]: string } = {};
-  const discordToOriginalIdMap: { [discordId: string]: string } = {};
-
+  // Parse and categorize user IDs
   for (const id of userIds) {
-    const parts = id.split('@');
-    if (parts.length !== 2) continue;
-
-    const value = parts[0];
-    const type = parts[1];
-
-    if (!value) continue;
+    const [value, type] = id.split('@');
+    if (!value || !type) continue;
 
     if (type === 'steam') {
-      // Steam IDs are stored WITH @steam suffix in DB
-      const steamIdWithSuffix = `${value}@steam`;
-      steamIdsToQuery.push(steamIdWithSuffix);
-      steamToOriginalIdMap[steamIdWithSuffix] = id;
+      steamIdsToQuery.push(id);
+      idMap[id] = id;
     } else if (type === 'discord') {
       discordIdsToQuery.push(value);
-      discordToOriginalIdMap[value] = id;
+      idMap[value] = id;
     }
   }
 
-  const finalSteamIds: string[] = [...steamIdsToQuery];
-
+  // Look up Discord users to get their Steam IDs
   if (discordIdsToQuery.length > 0) {
     const discordUsers = await db
       .select({
@@ -61,36 +49,33 @@ export async function handleGetZeitvertreibCoins(
       .where(inArray(schema.playerdata.discordId, discordIdsToQuery));
 
     for (const user of discordUsers) {
-      if (user.steamid && user.discordid) {
-        const originalId = discordToOriginalIdMap[user.discordid];
-        if (originalId) {
-          finalSteamIds.push(user.steamid);
-          steamToOriginalIdMap[user.steamid] = originalId;
-        }
+      const originalId = user.discordid && idMap[user.discordid];
+      if (user.steamid && originalId) {
+        steamIdsToQuery.push(user.steamid);
+        idMap[user.steamid] = originalId;
       }
     }
   }
 
-  if (finalSteamIds.length === 0) {
+  if (steamIdsToQuery.length === 0) {
     return createResponse([], 200, origin);
   }
 
-  const uniqueSteamIds = [...new Set(finalSteamIds)];
-
+  // Query ZVC for all Steam IDs
   const zvcResult = await db
     .select({
       steamid: schema.playerdata.id,
       zvc: schema.playerdata.experience,
     })
     .from(schema.playerdata)
-    .where(inArray(schema.playerdata.id, uniqueSteamIds));
+    .where(inArray(schema.playerdata.id, [...new Set(steamIdsToQuery)]));
 
   const response: ZvcResponse[] = zvcResult
     .map((row) => ({
-      userId: steamToOriginalIdMap[row.steamid],
+      userId: idMap[row.steamid],
       zvc: row.zvc ?? 0,
     }))
-    .filter((item) => item.userId !== undefined) as ZvcResponse[];
+    .filter((item) => item.userId) as ZvcResponse[];
 
   return createResponse(response, 200, origin);
 }
