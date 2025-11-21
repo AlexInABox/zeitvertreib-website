@@ -51,7 +51,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     '20.jpg',
     '21.jpg',
     '22.jpg',
-    '23.mp4'
+    '23.mp4',
   ];
   players: Player[] = [];
   isLoading = true;
@@ -60,7 +60,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   showGalleryBadge = true;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];
@@ -138,7 +138,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   previousImage(event: Event) {
     event.stopPropagation();
-    this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+    this.currentImageIndex =
+      (this.currentImageIndex - 1 + this.images.length) % this.images.length;
   }
 
   scrollToGallery(event: Event) {
