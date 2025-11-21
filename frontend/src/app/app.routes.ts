@@ -12,11 +12,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'youtube',
-    loadComponent: () =>
-      import('./youtube/youtube.component').then((m) => m.YoutubeComponent),
-  },
-  {
     path: 'dashboard',
     loadComponent: () =>
       import('./dashboard/dashboard.component').then(

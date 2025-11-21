@@ -6,7 +6,6 @@ import { AnimateOnScrollModule } from 'primeng/animateonscroll';
 import { ImageModule } from 'primeng/image';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
-import { GalleriaModule } from 'primeng/galleria';
 
 interface Player {
   Name: string;
@@ -24,29 +23,48 @@ interface Player {
     ImageModule,
     PanelModule,
     CardModule,
-    GalleriaModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  images: string[] = ['0.jpg', '1.jpg', '2.jpg', '3.jpg'];
+  images: string[] = [
+    '0.jpg',
+    '1.jpg',
+    '2.jpg',
+    '3.jpg',
+    '4.jpg',
+    '5.jpg',
+    '6.jpg',
+    '7.jpg',
+    '8.gif',
+    '9.jpg',
+    '10.jpg',
+    '11.jpg',
+    '13.jpg',
+    '14.jpg',
+    '15.jpg',
+    '16.jpg',
+    '17.jpg',
+    '18.jpg',
+    '19.jpg',
+    '20.jpg',
+    '21.jpg',
+    '22.jpg',
+    '23.mp4'
+  ];
   players: Player[] = [];
   isLoading = true;
   private intervalId: any;
+  lightboxOpen = false;
+  currentImageIndex = 0;
+  showGalleryBadge = true;
 
-  responsiveOptions: any[] = [
-    {
-      breakpoint: '1300px',
-      numVisible: 2,
-    },
-    {
-      breakpoint: '500px',
-      numVisible: 1,
-    },
-  ];
+  constructor(private http: HttpClient) { }
 
-  constructor(private http: HttpClient) {}
+  get currentImage(): string {
+    return this.images[this.currentImageIndex];
+  }
 
   ngOnInit() {
     this.fetchPlayerlist();
@@ -54,12 +72,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.intervalId = setInterval(() => {
       this.fetchPlayerlist();
     }, 10000);
+
+    // Setup scroll listener to hide badge when gallery is visible
+    window.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+    window.removeEventListener('scroll', this.handleScroll.bind(this));
   }
 
   fetchPlayerlist() {
@@ -96,5 +118,43 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   get aliveCount(): number {
     return this.alivePlayers.length;
+  }
+
+  openLightbox(index: number) {
+    this.currentImageIndex = index;
+    this.lightboxOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeLightbox() {
+    this.lightboxOpen = false;
+    document.body.style.overflow = '';
+  }
+
+  nextImage(event: Event) {
+    event.stopPropagation();
+    this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length;
+  }
+
+  previousImage(event: Event) {
+    event.stopPropagation();
+    this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+  }
+
+  scrollToGallery(event: Event) {
+    event.preventDefault();
+    const gallerySection = document.getElementById('gallery-section');
+    if (gallerySection) {
+      gallerySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  handleScroll() {
+    const gallerySection = document.getElementById('gallery-section');
+    if (gallerySection) {
+      const rect = gallerySection.getBoundingClientRect();
+      // Hide badge when gallery section is in viewport (top of section is visible)
+      this.showGalleryBadge = rect.top > window.innerHeight * 0.3;
+    }
   }
 }
