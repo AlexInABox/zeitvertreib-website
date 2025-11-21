@@ -39,8 +39,10 @@ export async function handleGetZeitvertreibCoins(
     if (!value) continue;
 
     if (type === 'steam') {
-      steamIdsToQuery.push(value);
-      steamToOriginalIdMap[value] = id;
+      // Steam IDs are stored WITH @steam suffix in DB
+      const steamIdWithSuffix = `${value}@steam`;
+      steamIdsToQuery.push(steamIdWithSuffix);
+      steamToOriginalIdMap[steamIdWithSuffix] = id;
     } else if (type === 'discord') {
       discordIdsToQuery.push(value);
       discordToOriginalIdMap[value] = id;
