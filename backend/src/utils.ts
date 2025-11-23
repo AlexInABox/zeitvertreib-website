@@ -573,7 +573,7 @@ export const increment = (column: AnyColumn, value = 1) => {
 };
 
 export const greatest = (column: AnyColumn, value: number) => {
-  return sql`GREATEST(${column}, ${value})`;
+  return sql`MAX(${column}, ${value})`;
 };
 
 export function checkApiKey(request: Request, apiKey: string): boolean {

@@ -86,36 +86,30 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
   }
 
   for (const [userId, stats] of Object.entries(body.players)) {
-    // Check if userId already exists in the database. If not create with userId and default values
     const existingPlayer = await db.select().from(playerdata).where(eq(playerdata.id, userId)).limit(1);
     if (existingPlayer.length === 0) {
-      await db.insert(playerdata).values({
-        id: userId,
-      });
+      await db.insert(playerdata).values({ id: userId });
     }
+
+    const killCount = body.kills.filter((kill) => kill.Attacker === userId).length;
+    const deathCount = body.kills.filter((kill) => kill.Target === userId).length;
 
     const updateData: Record<string, any> = {
       experience: increment(playerdata.experience, stats.zvc || 0),
       playtime: increment(playerdata.playtime, stats.timePlayed || 0),
       roundsplayed: increment(playerdata.roundsplayed, stats.roundsPlayed || 0),
-      usedmedkits: increment(playerdata.usedmedkits, stats.medkits || 0),
-      usedcolas: increment(playerdata.usedcolas, stats.colas || 0),
-      pocketescapes: increment(playerdata.pocketescapes, stats.pocketEscapes || 0),
-      usedadrenaline: increment(playerdata.usedadrenaline, stats.adrenaline || 0),
-      snakehighscore: greatest(playerdata.snakehighscore, stats.snakeScore || 0),
-      killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === userId).length),
-      deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === userId).length),
+      killcount: increment(playerdata.killcount, killCount),
+      deathcount: increment(playerdata.deathcount, deathCount),
     };
 
-    if (stats.fakeRankAllowed) {
-      updateData['fakerankUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
-    }
-    if (stats.fakeRankAdmin) {
-      updateData['fakerankadminUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
-    }
-    if (stats.username) {
-      updateData['username'] = stats.username;
-    }
+    if (stats.medkits) updateData['usedmedkits'] = increment(playerdata.usedmedkits, stats.medkits);
+    if (stats.colas) updateData['usedcolas'] = increment(playerdata.usedcolas, stats.colas);
+    if (stats.pocketEscapes) updateData['pocketescapes'] = increment(playerdata.pocketescapes, stats.pocketEscapes);
+    if (stats.adrenaline) updateData['usedadrenaline'] = increment(playerdata.usedadrenaline, stats.adrenaline);
+    if (stats.snakeScore) updateData['snakehighscore'] = greatest(playerdata.snakehighscore, stats.snakeScore);
+    if (stats.fakeRankAllowed) updateData['fakerankUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
+    if (stats.fakeRankAdmin) updateData['fakerankadminUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
+    if (stats.username) updateData['username'] = stats.username;
 
     await db.update(playerdata).set(updateData).where(eq(playerdata.id, userId));
   }
