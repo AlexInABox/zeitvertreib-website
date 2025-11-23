@@ -100,7 +100,7 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
         experience: increment(playerdata.experience, stats.zvc || 0),
         playtime: increment(playerdata.playtime, stats.timePlayed || 0),
         roundsplayed: increment(playerdata.roundsplayed, stats.roundsPlayed || 0),
-        usedmedkits: increment(playerdata.usedadrenaline, stats.medkits || 0),
+        usedmedkits: increment(playerdata.usedmedkits, stats.medkits || 0),
         usedcolas: increment(playerdata.usedcolas, stats.colas || 0),
         pocketescapes: increment(playerdata.pocketescapes, stats.pocketEscapes || 0),
         usedadrenaline: increment(playerdata.usedadrenaline, stats.adrenaline || 0),
@@ -128,3 +128,4 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
   }
   return createResponse({ success: true }, 200);
 }
+
