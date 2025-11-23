@@ -128,4 +128,3 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
   }
   return createResponse({ success: true }, 200);
 }
-
