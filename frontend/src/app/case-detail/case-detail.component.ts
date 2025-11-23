@@ -34,13 +34,7 @@ interface CaseMetadata {
 
 @Component({
   selector: 'app-case-detail',
-  imports: [
-    CommonModule,
-    FormsModule,
-    ButtonModule,
-    InputTextModule,
-    InputTextarea,
-  ],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, InputTextarea],
   templateUrl: './case-detail.component.html',
   styleUrl: './case-detail.component.css',
 })
@@ -51,8 +45,7 @@ export class CaseDetailComponent implements OnInit {
   filteredFiles: CaseFile[] = [];
   metadata: CaseMetadata | null = null;
   searchQuery = '';
-  sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest' =
-    'newest';
+  sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest' = 'newest';
   sortDropdownOpen = false;
   isLoading = true;
   hasError = false;
@@ -153,23 +146,19 @@ export class CaseDetailComponent implements OnInit {
   }
 
   loadMetadata() {
-    this.http
-      .get<CaseMetadata>(
-        `${environment.apiUrl}/cases/metadata?case=${this.caseId}`,
-      )
-      .subscribe({
-        next: (metadata) => {
-          this.metadata = metadata;
-          // Load metadata into edit fields
-          this.editedNickname = metadata.nickname || '';
-          this.editedDescription = metadata.description || '';
-          this.editedTags = metadata.tags?.join(', ') || '';
-        },
-        error: (error) => {
-          console.error('Failed to load case metadata:', error);
-          // Don't show error to user, metadata is optional
-        },
-      });
+    this.http.get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`).subscribe({
+      next: (metadata) => {
+        this.metadata = metadata;
+        // Load metadata into edit fields
+        this.editedNickname = metadata.nickname || '';
+        this.editedDescription = metadata.description || '';
+        this.editedTags = metadata.tags?.join(', ') || '';
+      },
+      error: (error) => {
+        console.error('Failed to load case metadata:', error);
+        // Don't show error to user, metadata is optional
+      },
+    });
   }
 
   loadFiles() {
@@ -177,13 +166,10 @@ export class CaseDetailComponent implements OnInit {
     this.hasError = false;
 
     this.http
-      .get<{ files: CaseFile[]; expiresIn: number }>(
-        `${environment.apiUrl}/cases/files?case=${this.caseId}`,
-        {
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
+      .get<{ files: CaseFile[]; expiresIn: number }>(`${environment.apiUrl}/cases/files?case=${this.caseId}`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .subscribe({
         next: (response) => {
           this.files = response.files;
@@ -206,9 +192,7 @@ export class CaseDetailComponent implements OnInit {
       filtered = [...this.files];
     } else {
       const query = this.searchQuery.toLowerCase().trim();
-      filtered = this.files.filter((file) =>
-        file.name.toLowerCase().includes(query),
-      );
+      filtered = this.files.filter((file) => file.name.toLowerCase().includes(query));
     }
 
     this.filteredFiles = this.sortFiles(filtered);
@@ -235,9 +219,7 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  changeSortOrder(
-    sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest',
-  ) {
+  changeSortOrder(sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest') {
     this.sortBy = sortBy;
     this.sortDropdownOpen = false;
     this.filterFiles();
@@ -248,10 +230,7 @@ export class CaseDetailComponent implements OnInit {
   }
 
   getSortLabel(): string {
-    return (
-      this.sortOptions.find((opt) => opt.value === this.sortBy)?.label ||
-      'Sortieren'
-    );
+    return this.sortOptions.find((opt) => opt.value === this.sortBy)?.label || 'Sortieren';
   }
 
   clearSearch() {
@@ -341,10 +320,7 @@ export class CaseDetailComponent implements OnInit {
   }
 
   getTotalSize(): string {
-    const totalBytes = this.files.reduce(
-      (sum, file) => sum + (file.size || 0),
-      0,
-    );
+    const totalBytes = this.files.reduce((sum, file) => sum + (file.size || 0), 0);
     return this.formatFileSize(totalBytes);
   }
 
@@ -452,19 +428,14 @@ export class CaseDetailComponent implements OnInit {
     const metadataPayload: any = {};
 
     if (this.editedNickname) metadataPayload.nickname = this.editedNickname;
-    if (this.editedDescription)
-      metadataPayload.description = this.editedDescription;
+    if (this.editedDescription) metadataPayload.description = this.editedDescription;
     if (tags.length > 0) metadataPayload.tags = tags;
 
     this.http
-      .put(
-        `${environment.apiUrl}/cases/metadata?case=${this.caseId}`,
-        metadataPayload,
-        {
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
+      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, metadataPayload, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .subscribe({
         next: () => {
           this.isSavingMetadata = false;
@@ -487,10 +458,7 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  private async calculateFileHash(
-    file: File,
-    onProgress?: (progress: number) => void,
-  ): Promise<string> {
+  private async calculateFileHash(file: File, onProgress?: (progress: number) => void): Promise<string> {
     return new Promise((resolve, reject) => {
       const chunkSize = 2097152; // 2MB chunks
       const spark = new SparkMD5.ArrayBuffer();
@@ -530,11 +498,7 @@ export class CaseDetailComponent implements OnInit {
     });
   }
 
-  private async verifyUpload(
-    filename: string,
-    expectedHash: string,
-    maxRetries = 3,
-  ): Promise<boolean> {
+  private async verifyUpload(filename: string, expectedHash: string, maxRetries = 3): Promise<boolean> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         // Small delay before checking (allow S3 to process)
@@ -548,23 +512,16 @@ export class CaseDetailComponent implements OnInit {
             hash: string;
             size: number;
             lastModified: number;
-          }>(
-            `${environment.apiUrl}/cases/file/hash?case=${this.caseId}&filename=${encodeURIComponent(filename)}`,
-          )
+          }>(`${environment.apiUrl}/cases/file/hash?case=${this.caseId}&filename=${encodeURIComponent(filename)}`)
           .toPromise();
 
         if (response?.hash === expectedHash) {
           return true;
         }
 
-        console.warn(
-          `Hash mismatch on attempt ${attempt + 1}: expected ${expectedHash}, got ${response?.hash}`,
-        );
+        console.warn(`Hash mismatch on attempt ${attempt + 1}: expected ${expectedHash}, got ${response?.hash}`);
       } catch (error) {
-        console.error(
-          `Hash verification attempt ${attempt + 1} failed:`,
-          error,
-        );
+        console.error(`Hash verification attempt ${attempt + 1} failed:`, error);
       }
     }
 
@@ -607,19 +564,15 @@ export class CaseDetailComponent implements OnInit {
     try {
       // Calculate local file hash with progress tracking
       const hashStartTime = Date.now();
-      const localHash = await this.calculateFileHash(
-        this.selectedFile,
-        (progress) => {
-          this.uploadProgress = progress;
-          this.uploadETA = this.calculateETA(hashStartTime, progress);
-          this.uploadStatusMessage = `Datei wird gehashed... (${progress}%)`;
-        },
-      );
+      const localHash = await this.calculateFileHash(this.selectedFile, (progress) => {
+        this.uploadProgress = progress;
+        this.uploadETA = this.calculateETA(hashStartTime, progress);
+        this.uploadStatusMessage = `Datei wird gehashed... (${progress}%)`;
+      });
       console.log('Local file hash:', localHash);
 
       // Get file extension
-      const fileExtension =
-        this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
+      const fileExtension = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
 
       this.uploadStatusMessage = 'Upload-URL wird angefordert...';
       this.uploadProgress = 0;
@@ -633,9 +586,7 @@ export class CaseDetailComponent implements OnInit {
           filename: string;
           fileUrl: string;
           expiresIn: number;
-        }>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
-        )
+        }>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`)
         .toPromise();
 
       if (!uploadUrlResponse) {
@@ -650,8 +601,7 @@ export class CaseDetailComponent implements OnInit {
         this.http
           .put(uploadUrlResponse.url, this.selectedFile, {
             headers: new HttpHeaders({
-              'Content-Type':
-                this.selectedFile!.type || 'application/octet-stream',
+              'Content-Type': this.selectedFile!.type || 'application/octet-stream',
             }),
             reportProgress: true,
             observe: 'events',
@@ -662,13 +612,8 @@ export class CaseDetailComponent implements OnInit {
                 // HttpEventType.UploadProgress
                 // Calculate upload percentage
                 if (event.total) {
-                  this.uploadProgress = Math.round(
-                    (event.loaded / event.total) * 100,
-                  );
-                  this.uploadETA = this.calculateETA(
-                    this.uploadStartTime,
-                    this.uploadProgress,
-                  );
+                  this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+                  this.uploadETA = this.calculateETA(this.uploadStartTime, this.uploadProgress);
                   this.uploadStatusMessage = `Datei wird hochgeladen... (${this.uploadProgress}%)`;
                 }
               } else if (event.type === 4) {
@@ -686,16 +631,11 @@ export class CaseDetailComponent implements OnInit {
       this.uploadETA = '';
       console.log('Verifying upload...');
 
-      const isVerified = await this.verifyUpload(
-        uploadUrlResponse.filename,
-        localHash,
-      );
+      const isVerified = await this.verifyUpload(uploadUrlResponse.filename, localHash);
 
       if (!isVerified) {
         if (retryCount < maxRetries) {
-          console.warn(
-            `Upload verification failed, retrying... (${retryCount + 1}/${maxRetries})`,
-          );
+          console.warn(`Upload verification failed, retrying... (${retryCount + 1}/${maxRetries})`);
           this.uploadStatusMessage = `Verifizierung fehlgeschlagen - Erneuter Versuch ${retryCount + 1}/${maxRetries}...`;
           await new Promise((resolve) => setTimeout(resolve, 1000));
           // Keep the same file and retry
@@ -719,9 +659,7 @@ export class CaseDetailComponent implements OnInit {
       this.selectedFile = null;
 
       // Reset file input
-      const fileInput = document.querySelector(
-        'input[type="file"]',
-      ) as HTMLInputElement;
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
       }
@@ -737,10 +675,7 @@ export class CaseDetailComponent implements OnInit {
       this.uploadStatusMessage = '';
       this.uploadETA = '';
       console.error('Upload failed:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Fehler beim Hochladen der Datei';
+      const errorMessage = error instanceof Error ? error.message : 'Fehler beim Hochladen der Datei';
       alert(errorMessage);
     }
   }
@@ -813,9 +748,7 @@ export class CaseDetailComponent implements OnInit {
       const url = new URL(this.medalClipUrl.trim());
       // Check if it has a protocol (http/https)
       if (!url.protocol.startsWith('http')) {
-        alert(
-          'Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)',
-        );
+        alert('Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)');
         return;
       }
     } catch (error) {
@@ -857,16 +790,9 @@ export class CaseDetailComponent implements OnInit {
       const urlPath = bypassData.src.split('?')[0]; // Remove query parameters
       const pathParts = urlPath.split('/');
       const fileNameWithExt = pathParts[pathParts.length - 1]; // Get last part (filename)
-      const fileExtension = fileNameWithExt.includes('.')
-        ? fileNameWithExt.split('.').pop()!.toLowerCase()
-        : 'mp4';
+      const fileExtension = fileNameWithExt.includes('.') ? fileNameWithExt.split('.').pop()!.toLowerCase() : 'mp4';
 
-      const mimeType =
-        fileExtension === 'mp4'
-          ? 'video/mp4'
-          : fileExtension === 'webm'
-            ? 'video/webm'
-            : 'video/mp4';
+      const mimeType = fileExtension === 'mp4' ? 'video/mp4' : fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
 
       // Generate filename with timestamp and proper extension
       const filename = `medal-clip-${Date.now()}.${fileExtension}`;
@@ -903,8 +829,7 @@ export class CaseDetailComponent implements OnInit {
 
       if (!videoResponse) {
         throw new Error(
-          lastError?.message ||
-            'Fehler beim Herunterladen des Videos - alle Proxy-Dienste fehlgeschlagen',
+          lastError?.message || 'Fehler beim Herunterladen des Videos - alle Proxy-Dienste fehlgeschlagen',
         );
       }
 
@@ -928,13 +853,8 @@ export class CaseDetailComponent implements OnInit {
         receivedLength += value.length;
 
         if (total > 0) {
-          this.medalDownloadProgress = Math.round(
-            (receivedLength / total) * 100,
-          );
-          this.medalETA = this.calculateETA(
-            this.medalStartTime,
-            this.medalDownloadProgress,
-          );
+          this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
+          this.medalETA = this.calculateETA(this.medalStartTime, this.medalDownloadProgress);
           this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
         }
       }
@@ -974,10 +894,9 @@ export class CaseDetailComponent implements OnInit {
         .get<{
           url: string;
           filename: string;
-        }>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
-          { withCredentials: true },
-        )
+        }>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`, {
+          withCredentials: true,
+        })
         .toPromise();
 
       if (!uploadUrlResponse?.url) {
@@ -999,13 +918,8 @@ export class CaseDetailComponent implements OnInit {
               if (event.type === 1) {
                 // HttpEventType.UploadProgress
                 if (event.total) {
-                  this.medalUploadProgress = Math.round(
-                    (event.loaded / event.total) * 100,
-                  );
-                  this.medalETA = this.calculateETA(
-                    this.medalStartTime,
-                    this.medalUploadProgress,
-                  );
+                  this.medalUploadProgress = Math.round((event.loaded / event.total) * 100);
+                  this.medalETA = this.calculateETA(this.medalStartTime, this.medalUploadProgress);
                   this.medalStatusMessage = `Video wird hochgeladen... (${this.medalUploadProgress}%)`;
                 }
               } else if (event.type === 4) {
@@ -1023,10 +937,7 @@ export class CaseDetailComponent implements OnInit {
       this.medalETA = '';
       console.log('Verifying Medal clip upload...');
 
-      const isVerified = await this.verifyUpload(
-        uploadUrlResponse.filename,
-        localHash,
-      );
+      const isVerified = await this.verifyUpload(uploadUrlResponse.filename, localHash);
 
       if (!isVerified) {
         throw new Error(
@@ -1056,10 +967,7 @@ export class CaseDetailComponent implements OnInit {
       this.medalETA = '';
       console.error('Medal clip upload failed:', error);
 
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Fehler beim Hochladen des Medal Clips';
+      const errorMessage = error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips';
       alert(errorMessage);
     }
   }

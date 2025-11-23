@@ -21,19 +21,17 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // If user is already logged in, redirect to intended destination or dashboard
-    this.authSubscription = this.authService.currentUser$.subscribe(
-      (user: SteamUser | null) => {
-        if (user) {
-          const redirectUrl = sessionStorage.getItem('redirectUrl');
-          if (redirectUrl) {
-            sessionStorage.removeItem('redirectUrl');
-            this.router.navigate([redirectUrl]);
-          } else {
-            this.router.navigate(['/dashboard']);
-          }
+    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
+      if (user) {
+        const redirectUrl = sessionStorage.getItem('redirectUrl');
+        if (redirectUrl) {
+          sessionStorage.removeItem('redirectUrl');
+          this.router.navigate([redirectUrl]);
+        } else {
+          this.router.navigate(['/dashboard']);
         }
-      },
-    );
+      }
+    });
   }
 
   ngOnDestroy() {

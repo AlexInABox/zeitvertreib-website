@@ -82,46 +82,27 @@ export class FinancialService {
   }
 
   getTransactionById(id: number): Observable<FinancialTransaction> {
-    return this.http.get<FinancialTransaction>(
-      `${this.apiUrl}/financial/transactions/${id}`,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    return this.http.get<FinancialTransaction>(`${this.apiUrl}/financial/transactions/${id}`, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
-  createTransaction(
-    transaction: Omit<FinancialTransaction, 'id' | 'created_at'>,
-  ): Observable<FinancialTransaction> {
-    return this.http.post<FinancialTransaction>(
-      `${this.apiUrl}/financial/transactions`,
-      transaction,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+  createTransaction(transaction: Omit<FinancialTransaction, 'id' | 'created_at'>): Observable<FinancialTransaction> {
+    return this.http.post<FinancialTransaction>(`${this.apiUrl}/financial/transactions`, transaction, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
-  updateTransaction(
-    id: number,
-    transaction: Partial<FinancialTransaction>,
-  ): Observable<FinancialTransaction> {
-    return this.http.put<FinancialTransaction>(
-      `${this.apiUrl}/financial/transactions/${id}`,
-      transaction,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+  updateTransaction(id: number, transaction: Partial<FinancialTransaction>): Observable<FinancialTransaction> {
+    return this.http.put<FinancialTransaction>(`${this.apiUrl}/financial/transactions/${id}`, transaction, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
   deleteTransaction(id: number): Observable<void> {
-    return this.http.delete<void>(
-      `${this.apiUrl}/financial/transactions/${id}`,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    return this.http.delete<void>(`${this.apiUrl}/financial/transactions/${id}`, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
   getSummary(): Observable<FinancialSummary> {
@@ -133,47 +114,30 @@ export class FinancialService {
   // Recurring transactions methods
   getRecurringTransactions(): Observable<RecurringTransaction[]> {
     return this.http
-      .get<{ recurring_transactions: RecurringTransaction[]; total: number }>(
-        `${this.apiUrl}/financial/recurring`,
-        {
-          headers: this.getAuthHeaders(),
-        },
-      )
+      .get<{ recurring_transactions: RecurringTransaction[]; total: number }>(`${this.apiUrl}/financial/recurring`, {
+        headers: this.getAuthHeaders(),
+      })
       .pipe(map((response: any) => response.recurring_transactions || []));
   }
 
   getRecurringTransactionById(id: number): Observable<RecurringTransaction> {
-    return this.http.get<RecurringTransaction>(
-      `${this.apiUrl}/financial/recurring/${id}`,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    return this.http.get<RecurringTransaction>(`${this.apiUrl}/financial/recurring/${id}`, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
   createRecurringTransaction(
     transaction: Omit<RecurringTransaction, 'id' | 'created_at' | 'is_active'>,
   ): Observable<RecurringTransaction> {
-    return this.http.post<RecurringTransaction>(
-      `${this.apiUrl}/financial/recurring`,
-      transaction,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    return this.http.post<RecurringTransaction>(`${this.apiUrl}/financial/recurring`, transaction, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
-  updateRecurringTransaction(
-    id: number,
-    transaction: Partial<RecurringTransaction>,
-  ): Observable<RecurringTransaction> {
-    return this.http.put<RecurringTransaction>(
-      `${this.apiUrl}/financial/recurring/${id}`,
-      transaction,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+  updateRecurringTransaction(id: number, transaction: Partial<RecurringTransaction>): Observable<RecurringTransaction> {
+    return this.http.put<RecurringTransaction>(`${this.apiUrl}/financial/recurring/${id}`, transaction, {
+      headers: this.getAuthHeaders(),
+    });
   }
 
   deleteRecurringTransaction(id: number): Observable<void> {

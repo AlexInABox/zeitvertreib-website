@@ -23,15 +23,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.authSubscription = this.authService.currentUser$.subscribe(
-      (user: SteamUser | null) => {
-        this.currentUser = user;
-        if (!user) {
-          // If user is not logged in, redirect to login page
-          this.router.navigate(['/login']);
-        }
-      },
-    );
+    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
+      this.currentUser = user;
+      if (!user) {
+        // If user is not logged in, redirect to login page
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
   ngOnDestroy() {

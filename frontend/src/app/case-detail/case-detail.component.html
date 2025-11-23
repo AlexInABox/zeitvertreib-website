@@ -18,13 +18,7 @@
       </div>
       <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
       <p class="error-message">{{ errorMessage }}</p>
-      <button
-        pButton
-        label="Erneut versuchen"
-        icon="pi pi-refresh"
-        class="retry-button"
-        (click)="loadFiles()"
-      ></button>
+      <button pButton label="Erneut versuchen" icon="pi pi-refresh" class="retry-button" (click)="loadFiles()"></button>
     </div>
 
     <!-- Main Content -->
@@ -46,24 +40,14 @@
               <i class="pi pi-folder-open header-icon"></i>
               <div class="title-text">
                 <h1 class="page-title">
-                  <span class="nickname">{{
-                    metadata?.nickname || formatCaseName(caseId)
-                  }}</span>
-                  <span class="case-id" *ngIf="metadata?.nickname"
-                    >#{{ caseId }}</span
-                  >
+                  <span class="nickname">{{ metadata?.nickname || formatCaseName(caseId) }}</span>
+                  <span class="case-id" *ngIf="metadata?.nickname">#{{ caseId }}</span>
                 </h1>
-                <p
-                  class="case-description"
-                  *ngIf="metadata?.description && !isEditingMetadata"
-                >
+                <p class="case-description" *ngIf="metadata?.description && !isEditingMetadata">
                   {{ metadata?.description }}
                 </p>
                 <ng-container *ngIf="metadata?.tags as tags">
-                  <div
-                    class="case-tags"
-                    *ngIf="tags.length > 0 && !isEditingMetadata"
-                  >
+                  <div class="case-tags" *ngIf="tags.length > 0 && !isEditingMetadata">
                     <span class="tag" *ngFor="let tag of tags">
                       {{ tag }}
                     </span>
@@ -161,24 +145,12 @@
 
           <!-- Upload Mode Toggle -->
           <div class="upload-mode-toggle">
-            <button
-              class="mode-btn"
-              [class.active]="uploadMode === 'file'"
-              (click)="uploadMode = 'file'"
-            >
+            <button class="mode-btn" [class.active]="uploadMode === 'file'" (click)="uploadMode = 'file'">
               <i class="pi pi-file"></i>
               <span>Datei</span>
             </button>
-            <button
-              class="mode-btn medal-btn"
-              [class.active]="uploadMode === 'medal'"
-              (click)="uploadMode = 'medal'"
-            >
-              <img
-                src="/assets/medal/medal_logo.png"
-                alt="Medal"
-                class="medal-logo"
-              />
+            <button class="mode-btn medal-btn" [class.active]="uploadMode === 'medal'" (click)="uploadMode = 'medal'">
+              <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
               <span>Medal Clip</span>
             </button>
           </div>
@@ -196,9 +168,7 @@
               <label for="fileInput" class="file-input-label">
                 <i class="pi pi-paperclip"></i>
                 <span *ngIf="!selectedFile">Datei auswählen</span>
-                <span *ngIf="selectedFile" class="file-name">{{
-                  selectedFile.name
-                }}</span>
+                <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
               </label>
             </div>
             <button
@@ -236,18 +206,13 @@
               icon="pi pi-cloud-download"
               class="upload-btn medal-upload-btn"
               (click)="uploadMedalClip()"
-              [disabled]="
-                !medalClipUrl || medalUrlInvalid || isFetchingMedalClip
-              "
+              [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
               [loading]="isFetchingMedalClip"
             ></button>
           </div>
 
           <!-- File Upload Progress Bar -->
-          <div
-            class="upload-progress-container"
-            *ngIf="isUploading && uploadMode === 'file'"
-          >
+          <div class="upload-progress-container" *ngIf="isUploading && uploadMode === 'file'">
             <div class="progress-info">
               <i class="pi pi-spin pi-spinner"></i>
               <span>{{ uploadStatusMessage }}</span>
@@ -259,10 +224,7 @@
           </div>
 
           <!-- Medal Clip Progress -->
-          <div
-            class="upload-progress-container"
-            *ngIf="isFetchingMedalClip && uploadMode === 'medal'"
-          >
+          <div class="upload-progress-container" *ngIf="isFetchingMedalClip && uploadMode === 'medal'">
             <div class="progress-info">
               <i class="pi pi-spin pi-spinner"></i>
               <span>{{ medalStatusMessage }}</span>
@@ -270,11 +232,7 @@
             <div class="progress-bar-wrapper">
               <div
                 class="progress-bar"
-                [style.width.%]="
-                  medalDownloadProgress > 0
-                    ? medalDownloadProgress
-                    : medalUploadProgress
-                "
+                [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
               ></div>
               <span class="progress-text-centered">{{ medalETA }}</span>
             </div>
@@ -282,14 +240,8 @@
 
           <div class="upload-info" *ngIf="!isUploading && !isFetchingMedalClip">
             <i class="pi pi-info-circle"></i>
-            <span *ngIf="uploadMode === 'file'"
-              >Erlaubte Dateitypen: Bilder, Videos, Audio, PDF, TXT,
-              Archive</span
-            >
-            <span *ngIf="uploadMode === 'medal'"
-              >Füge deine Medal.tv Clip-URL ein und lade das Video direkt
-              hoch</span
-            >
+            <span *ngIf="uploadMode === 'file'">Erlaubte Dateitypen: Bilder, Videos, Audio, PDF, TXT, Archive</span>
+            <span *ngIf="uploadMode === 'medal'">Füge deine Medal.tv Clip-URL ein und lade das Video direkt hoch</span>
           </div>
         </div>
       </div>
@@ -306,9 +258,7 @@
         <div class="stat-card" *ngIf="metadata">
           <i class="pi pi-database stat-icon"></i>
           <div class="stat-info">
-            <span class="stat-value">{{
-              formatFileSize(metadata.totalSize)
-            }}</span>
+            <span class="stat-value">{{ formatFileSize(metadata.totalSize) }}</span>
             <span class="stat-label">Gesamtgröße</span>
           </div>
         </div>
@@ -350,18 +300,9 @@
             Sortieren:
           </label>
           <div class="custom-dropdown">
-            <button
-              class="dropdown-trigger"
-              (click)="toggleSortDropdown()"
-              type="button"
-            >
+            <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
               <span class="dropdown-label">{{ getSortLabel() }}</span>
-              <i
-                class="pi"
-                [ngClass]="
-                  sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'
-                "
-              ></i>
+              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
             <div class="dropdown-menu" *ngIf="sortDropdownOpen">
               <button
@@ -381,9 +322,7 @@
         <div class="search-results-info" *ngIf="searchQuery">
           <span class="results-count">
             {{ filteredFiles.length }}
-            {{
-              filteredFiles.length === 1 ? 'Datei gefunden' : 'Dateien gefunden'
-            }}
+            {{ filteredFiles.length === 1 ? 'Datei gefunden' : 'Dateien gefunden' }}
           </span>
         </div>
       </div>
@@ -430,9 +369,7 @@
               [href]="getFileUrl(file)"
               download
               class="file-action-btn download-btn"
-              [class.full-width]="
-                !isViewableFile(file.name) && !isFakerankAdmin
-              "
+              [class.full-width]="!isViewableFile(file.name) && !isFakerankAdmin"
               title="Datei herunterladen"
             >
               <i class="pi pi-download"></i>
@@ -467,31 +404,20 @@
           </div>
         </div>
         <h3 class="empty-title">Noch keine Dateien</h3>
-        <p class="empty-description">
-          Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu
-          beginnen.
-        </p>
+        <p class="empty-description">Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
         <div class="empty-tips">
           <p class="tip-title">💡 Tipp:</p>
-          <p class="tip-text">
-            Du kannst verschiedene Dateitypen hochladen: Bilder, Videos,
-            Dokumente und mehr.
-          </p>
+          <p class="tip-text">Du kannst verschiedene Dateitypen hochladen: Bilder, Videos, Dokumente und mehr.</p>
         </div>
       </div>
 
       <!-- Empty Search Results -->
-      <div
-        *ngIf="files.length > 0 && filteredFiles.length === 0"
-        class="empty-state"
-      >
+      <div *ngIf="files.length > 0 && filteredFiles.length === 0" class="empty-state">
         <div class="empty-icon-wrapper">
           <i class="pi pi-search"></i>
         </div>
         <h3 class="empty-title">Keine Ergebnisse</h3>
-        <p class="empty-description">
-          Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".
-        </p>
+        <p class="empty-description">Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".</p>
         <button
           pButton
           label="Suche zurücksetzen"
@@ -509,20 +435,11 @@
       <div class="viewer-header">
         <h2 class="viewer-title">{{ viewerFile?.name }}</h2>
         <div class="viewer-actions">
-          <a
-            [href]="viewerFile?.viewUrl"
-            download
-            class="viewer-download-btn"
-            title="Herunterladen"
-          >
+          <a [href]="viewerFile?.viewUrl" download class="viewer-download-btn" title="Herunterladen">
             <i class="pi pi-download"></i>
             <span>Download</span>
           </a>
-          <button
-            class="viewer-close-btn"
-            (click)="closeViewer()"
-            title="Schließen"
-          >
+          <button class="viewer-close-btn" (click)="closeViewer()" title="Schließen">
             <i class="pi pi-times"></i>
           </button>
         </div>
@@ -536,18 +453,14 @@
 
         <!-- Video Viewer -->
         <div *ngIf="viewerMediaType === 'video'" class="video-viewer">
-          <video controls [src]="viewerFile?.viewUrl">
-            Dein Browser unterstützt das Video-Tag nicht.
-          </video>
+          <video controls [src]="viewerFile?.viewUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
         </div>
 
         <!-- Audio Viewer -->
         <div *ngIf="viewerMediaType === 'audio'" class="audio-viewer">
           <div class="audio-player-wrapper">
             <i class="pi pi-volume-up audio-icon"></i>
-            <audio controls [src]="viewerFile?.viewUrl">
-              Dein Browser unterstützt das Audio-Tag nicht.
-            </audio>
+            <audio controls [src]="viewerFile?.viewUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
           </div>
         </div>
       </div>

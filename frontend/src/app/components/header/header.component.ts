@@ -11,14 +11,7 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
-  imports: [
-    Menubar,
-    CommonModule,
-    RouterModule,
-    ButtonModule,
-    AvatarModule,
-    AvatarGroupModule,
-  ],
+  imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
@@ -38,21 +31,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.updateMenuItems();
 
     // Subscribe to user authentication status
-    this.authSubscription = this.authService.currentUser$.subscribe(
-      (user: SteamUser | null) => {
-        this.currentUser = user;
-        this.userLoggedIn = !!user;
-        this.avatarIcon = user?.avatarfull || '';
-      },
-    );
+    this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
+      this.currentUser = user;
+      this.userLoggedIn = !!user;
+      this.avatarIcon = user?.avatarfull || '';
+    });
 
     // Subscribe to user data changes (including fakerank admin status)
-    this.userDataSubscription = this.authService.currentUserData$.subscribe(
-      (_userData: UserData | null) => {
-        this.isFakerankAdmin = this.authService.isFakerankAdmin();
-        this.updateMenuItems(); // Update menu items when admin status changes
-      },
-    );
+    this.userDataSubscription = this.authService.currentUserData$.subscribe((_userData: UserData | null) => {
+      this.isFakerankAdmin = this.authService.isFakerankAdmin();
+      this.updateMenuItems(); // Update menu items when admin status changes
+    });
   }
 
   private updateMenuItems() {

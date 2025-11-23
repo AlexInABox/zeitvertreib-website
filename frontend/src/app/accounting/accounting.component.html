@@ -25,11 +25,7 @@
       </div>
       <div class="stat-value">
         <span class="amount">{{ currentBalance | number: '1.2-2' }}€</span>
-        <span
-          class="status"
-          [class.positive]="currentBalance >= 0"
-          [class.negative]="currentBalance < 0"
-        >
+        <span class="status" [class.positive]="currentBalance >= 0" [class.negative]="currentBalance < 0">
           {{ currentBalance >= 0 ? 'Überschuss' : 'Defizit' }}
         </span>
       </div>
@@ -52,9 +48,7 @@
         </div>
         <div class="summary-item neutral">
           <span class="label">Bilanz</span>
-          <span class="value"
-            >{{ monthlyIncome - monthlyExpenses | number: '1.2-2' }}€</span
-          >
+          <span class="value">{{ monthlyIncome - monthlyExpenses | number: '1.2-2' }}€</span>
         </div>
       </div>
     </div>
@@ -66,18 +60,10 @@
         <span>Kostendeckung</span>
       </div>
       <div class="coverage-display">
-        <div
-          class="coverage-circle"
-          [style.--percentage]="coveragePercentage + '%'"
-        >
-          <span class="percentage"
-            >{{ coveragePercentage | number: '1.0-0' }}%</span
-          >
+        <div class="coverage-circle" [style.--percentage]="coveragePercentage + '%'">
+          <span class="percentage">{{ coveragePercentage | number: '1.0-0' }}%</span>
         </div>
-        <span
-          class="coverage-label"
-          [class.covered]="coveragePercentage >= 100"
-        >
+        <span class="coverage-label" [class.covered]="coveragePercentage >= 100">
           {{ coveragePercentage >= 100 ? 'Gedeckt' : 'Unterdeckt' }}
         </span>
       </div>
@@ -89,18 +75,10 @@
     <div class="section-header">
       <h3>Letzte Transaktionen</h3>
       <div class="filter-buttons">
-        <button
-          class="filter-btn"
-          [class.active]="currentFilter === 'all'"
-          (click)="filterTransactions('all')"
-        >
+        <button class="filter-btn" [class.active]="currentFilter === 'all'" (click)="filterTransactions('all')">
           Alle
         </button>
-        <button
-          class="filter-btn"
-          [class.active]="currentFilter === 'income'"
-          (click)="filterTransactions('income')"
-        >
+        <button class="filter-btn" [class.active]="currentFilter === 'income'" (click)="filterTransactions('income')">
           Einnahmen
         </button>
         <button
@@ -128,8 +106,7 @@
               [class.positive]="event.type === 'income'"
               [class.negative]="event.type === 'expense'"
             >
-              {{ event.type === 'income' ? '+' : '-'
-              }}{{ event.amount | number: '1.2-2' }}€
+              {{ event.type === 'income' ? '+' : '-' }}{{ event.amount | number: '1.2-2' }}€
             </span>
           </div>
           <div class="transaction-details">
@@ -139,18 +116,10 @@
         </div>
 
         <div *ngIf="isAdmin" class="admin-actions">
-          <button
-            class="action-btn edit"
-            (click)="editTransaction(event)"
-            title="Bearbeiten"
-          >
+          <button class="action-btn edit" (click)="editTransaction(event)" title="Bearbeiten">
             <i class="pi pi-pencil"></i>
           </button>
-          <button
-            class="action-btn delete"
-            (click)="deleteTransaction(event)"
-            title="Löschen"
-          >
+          <button class="action-btn delete" (click)="deleteTransaction(event)" title="Löschen">
             <i class="pi pi-trash"></i>
           </button>
         </div>
@@ -169,26 +138,19 @@
           [class.positive]="threeMonthProjection >= 0"
           [class.negative]="threeMonthProjection < 0"
         >
-          {{ threeMonthProjection >= 0 ? '+' : ''
-          }}{{ threeMonthProjection | number: '1.2-2' }}€
+          {{ threeMonthProjection >= 0 ? '+' : '' }}{{ threeMonthProjection | number: '1.2-2' }}€
         </span>
       </div>
       <div class="projection-card">
         <span class="projection-label">Laufzeit bei akt. Saldo</span>
-        <span class="projection-value"
-          >{{ burnRate | number: '1.0-0' }} Monate</span
-        >
+        <span class="projection-value">{{ burnRate | number: '1.0-0' }} Monate</span>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Transaction Modal -->
-<div
-  *ngIf="showTransactionModal"
-  class="modal-overlay"
-  (click)="closeTransactionModal()"
->
+<div *ngIf="showTransactionModal" class="modal-overlay" (click)="closeTransactionModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>
@@ -199,11 +161,7 @@
       </button>
     </div>
 
-    <form
-      class="transaction-form"
-      (ngSubmit)="saveTransaction()"
-      #transactionForm="ngForm"
-    >
+    <form class="transaction-form" (ngSubmit)="saveTransaction()" #transactionForm="ngForm">
       <div class="form-row">
         <div class="form-group">
           <label>Typ</label>
@@ -230,11 +188,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Kategorie</label>
-          <select
-            [(ngModel)]="transactionFormData.category"
-            name="category"
-            required
-          >
+          <select [(ngModel)]="transactionFormData.category" name="category" required>
             <option value="">Auswählen</option>
             <option value="hosting">Server-Hosting</option>
             <option value="domain">Domain</option>
@@ -246,12 +200,7 @@
         </div>
         <div class="form-group">
           <label>Datum</label>
-          <input
-            type="date"
-            [(ngModel)]="transactionFormData.date"
-            name="date"
-            required
-          />
+          <input type="date" [(ngModel)]="transactionFormData.date" name="date" required />
         </div>
       </div>
 
@@ -278,18 +227,8 @@
       </div>
 
       <div class="form-actions">
-        <button
-          type="button"
-          class="btn secondary"
-          (click)="closeTransactionModal()"
-        >
-          Abbrechen
-        </button>
-        <button
-          type="submit"
-          class="btn primary"
-          [disabled]="!transactionForm.valid || isSubmitting"
-        >
+        <button type="button" class="btn secondary" (click)="closeTransactionModal()">Abbrechen</button>
+        <button type="submit" class="btn primary" [disabled]="!transactionForm.valid || isSubmitting">
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
           {{ editingTransaction ? 'Speichern' : 'Hinzufügen' }}
         </button>
@@ -299,30 +238,18 @@
 </div>
 
 <!-- Recurring Transaction Modal -->
-<div
-  *ngIf="showRecurringModal"
-  class="modal-overlay"
-  (click)="closeRecurringModal()"
->
+<div *ngIf="showRecurringModal" class="modal-overlay" (click)="closeRecurringModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>
-        {{
-          editingRecurring
-            ? 'Wiederkehrende Transaktion bearbeiten'
-            : 'Neue wiederkehrende Transaktion'
-        }}
+        {{ editingRecurring ? 'Wiederkehrende Transaktion bearbeiten' : 'Neue wiederkehrende Transaktion' }}
       </h3>
       <button class="modal-close" (click)="closeRecurringModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <form
-      class="transaction-form"
-      (ngSubmit)="saveRecurringTransaction()"
-      #recurringForm="ngForm"
-    >
+    <form class="transaction-form" (ngSubmit)="saveRecurringTransaction()" #recurringForm="ngForm">
       <div class="form-row">
         <div class="form-group">
           <label>Typ</label>
@@ -349,11 +276,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Kategorie</label>
-          <select
-            [(ngModel)]="recurringFormData.category"
-            name="category"
-            required
-          >
+          <select [(ngModel)]="recurringFormData.category" name="category" required>
             <option value="">Auswählen</option>
             <option value="hosting">Server-Hosting</option>
             <option value="domain">Domain</option>
@@ -365,11 +288,7 @@
         </div>
         <div class="form-group">
           <label>Häufigkeit</label>
-          <select
-            [(ngModel)]="recurringFormData.frequency"
-            name="frequency"
-            required
-          >
+          <select [(ngModel)]="recurringFormData.frequency" name="frequency" required>
             <option value="">Auswählen</option>
             <option value="monthly">Monatlich</option>
             <option value="yearly">Jährlich</option>
@@ -381,20 +300,11 @@
       <div class="form-row">
         <div class="form-group">
           <label>Startdatum</label>
-          <input
-            type="date"
-            [(ngModel)]="recurringFormData.start_date"
-            name="start_date"
-            required
-          />
+          <input type="date" [(ngModel)]="recurringFormData.start_date" name="start_date" required />
         </div>
         <div class="form-group">
           <label>Enddatum (optional)</label>
-          <input
-            type="date"
-            [(ngModel)]="recurringFormData.end_date"
-            name="end_date"
-          />
+          <input type="date" [(ngModel)]="recurringFormData.end_date" name="end_date" />
         </div>
       </div>
 
@@ -421,18 +331,8 @@
       </div>
 
       <div class="form-actions">
-        <button
-          type="button"
-          class="btn secondary"
-          (click)="closeRecurringModal()"
-        >
-          Abbrechen
-        </button>
-        <button
-          type="submit"
-          class="btn primary"
-          [disabled]="!recurringForm.valid || isSubmitting"
-        >
+        <button type="button" class="btn secondary" (click)="closeRecurringModal()">Abbrechen</button>
+        <button type="submit" class="btn primary" [disabled]="!recurringForm.valid || isSubmitting">
           <i class="pi pi-spin pi-spinner" *ngIf="isSubmitting"></i>
           {{ editingRecurring ? 'Speichern' : 'Hinzufügen' }}
         </button>

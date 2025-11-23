@@ -49,11 +49,7 @@ strong,
 }
 
 body {
-  background: linear-gradient(
-    45deg,
-    hsla(273, 97%, 31%, 1) 27%,
-    hsla(319, 73%, 41%, 1) 100%
-  );
+  background: linear-gradient(45deg, hsla(273, 97%, 31%, 1) 27%, hsla(319, 73%, 41%, 1) 100%);
   background-attachment: fixed;
   background-size: cover;
   min-height: 100vh;
@@ -399,9 +395,7 @@ body {
 }
 
 .font-mono {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
 .leading-relaxed {

@@ -11,11 +11,7 @@
         </a>
       </ng-container>
       <ng-template #urlRef>
-        <a
-          *ngIf="item.url; else noLink"
-          [href]="item.url"
-          class="p-menubar-item-link"
-        >
+        <a *ngIf="item.url; else noLink" [href]="item.url" class="p-menubar-item-link">
           <span [class]="item.icon"></span>
           <span class="ml-2">{{ item.label }}</span>
         </a>
@@ -32,18 +28,10 @@
       <div class="flex items-center gap-2" style="white-space: nowrap">
         <a href="https://dsc.gg/zeit" target="_blank">
           <!-- Desktop version with text -->
-          <p-button
-            label="Discord beitreten"
-            icon="pi pi-discord"
-            styleClass="p-button-outlined hidden sm:inline-flex"
-          >
+          <p-button label="Discord beitreten" icon="pi pi-discord" styleClass="p-button-outlined hidden sm:inline-flex">
           </p-button>
           <!-- Mobile version with icon only -->
-          <p-button
-            icon="pi pi-discord"
-            styleClass="p-button-outlined sm:hidden"
-          >
-          </p-button>
+          <p-button icon="pi pi-discord" styleClass="p-button-outlined sm:hidden"> </p-button>
         </a>
         <div class="relative profile-button-container">
           <a

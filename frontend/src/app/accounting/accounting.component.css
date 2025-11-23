@@ -80,20 +80,12 @@
 }
 
 .stat-card.primary {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.2),
-    rgba(29, 78, 216, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(29, 78, 216, 0.1));
   border-color: rgba(59, 130, 246, 0.3);
 }
 
 .stat-card.negative {
-  background: linear-gradient(
-    135deg,
-    rgba(239, 68, 68, 0.2),
-    rgba(185, 28, 28, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.1));
   border-color: rgba(239, 68, 68, 0.3);
 }
 
@@ -176,10 +168,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: conic-gradient(
-    #10b981 var(--percentage),
-    rgba(255, 255, 255, 0.2) 0
-  );
+  background: conic-gradient(#10b981 var(--percentage), rgba(255, 255, 255, 0.2) 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1115,11 +1104,7 @@
 }
 
 .help-popup {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.1),
-    rgba(79, 70, 229, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(79, 70, 229, 0.1));
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 12px;
   padding: 1rem;

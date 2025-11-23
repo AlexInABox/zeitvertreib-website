@@ -2,10 +2,7 @@
   <div class="content-wrapper">
     <!-- Public Case Lookup (when not authenticated or not fakerank admin) -->
     <div
-      *ngIf="
-        (!isLoading && !isAuthenticated) ||
-        (!isLoading && isAuthenticated && !isFakerankAdmin)
-      "
+      *ngIf="(!isLoading && !isAuthenticated) || (!isLoading && isAuthenticated && !isFakerankAdmin)"
       class="public-lookup-container"
     >
       <div class="lookup-card">
@@ -74,10 +71,7 @@
     </div>
 
     <!-- Main Content -->
-    <div
-      *ngIf="!isLoading && !hasError && isAuthenticated && isFakerankAdmin"
-      class="main-content"
-    >
+    <div *ngIf="!isLoading && !hasError && isAuthenticated && isFakerankAdmin" class="main-content">
       <!-- Header Section -->
       <div class="header-section">
         <div class="header-content">
@@ -96,13 +90,7 @@
               (click)="loadCaseFolders()"
               [disabled]="isLoading"
             ></button>
-            <button
-              pButton
-              label="Neuer Fall"
-              icon="pi pi-plus"
-              class="create-btn"
-              (click)="createNewCase()"
-            ></button>
+            <button pButton label="Neuer Fall" icon="pi pi-plus" class="create-btn" (click)="createNewCase()"></button>
           </div>
         </div>
       </div>
@@ -168,18 +156,9 @@
             Sortieren:
           </label>
           <div class="custom-dropdown">
-            <button
-              class="dropdown-trigger"
-              (click)="toggleSortDropdown()"
-              type="button"
-            >
+            <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
               <span class="dropdown-label">{{ getSortLabel() }}</span>
-              <i
-                class="pi"
-                [ngClass]="
-                  sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'
-                "
-              ></i>
+              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
             <div class="dropdown-menu" *ngIf="sortDropdownOpen">
               <button
@@ -199,11 +178,7 @@
         <div class="search-results-info" *ngIf="searchQuery">
           <span class="results-count">
             {{ filteredCaseFolders.length }}
-            {{
-              filteredCaseFolders.length === 1
-                ? 'Fall gefunden'
-                : 'Fälle gefunden'
-            }}
+            {{ filteredCaseFolders.length === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
           </span>
         </div>
       </div>
@@ -220,28 +195,16 @@
             <div class="case-icon-wrapper">
               <i class="pi pi-folder-open"></i>
             </div>
-            <div
-              class="case-tags"
-              *ngIf="
-                caseFolder.metadata.tags && caseFolder.metadata.tags.length > 0
-              "
-            >
-              <span class="tag" *ngFor="let tag of caseFolder.metadata.tags">{{
-                tag
-              }}</span>
+            <div class="case-tags" *ngIf="caseFolder.metadata.tags && caseFolder.metadata.tags.length > 0">
+              <span class="tag" *ngFor="let tag of caseFolder.metadata.tags">{{ tag }}</span>
             </div>
           </div>
 
           <div class="case-card-body">
             <h3 class="case-title">
-              {{
-                caseFolder.metadata.nickname || formatCaseName(caseFolder.name)
-              }}
+              {{ caseFolder.metadata.nickname || formatCaseName(caseFolder.name) }}
             </h3>
-            <p class="case-id">
-              <span *ngIf="!caseFolder.metadata.nickname">ID: </span
-              >{{ caseFolder.name }}
-            </p>
+            <p class="case-id"><span *ngIf="!caseFolder.metadata.nickname">ID: </span>{{ caseFolder.name }}</p>
 
             <div class="case-stats">
               <span class="stat-item" *ngIf="caseFolder.metadata.fileCount > 0">
@@ -253,10 +216,7 @@
                 <i class="pi pi-database"></i>
                 {{ formatFileSize(caseFolder.metadata.totalSize) }}
               </span>
-              <span
-                class="stat-item"
-                *ngIf="caseFolder.metadata.fileCount === 0"
-              >
+              <span class="stat-item" *ngIf="caseFolder.metadata.fileCount === 0">
                 <i class="pi pi-inbox"></i>
                 Leer
               </span>
@@ -265,25 +225,14 @@
 
           <div class="case-card-footer">
             <div class="case-meta">
-              <span
-                class="meta-item"
-                [title]="
-                  'Erstellt: ' + formatDate(caseFolder.metadata.createdAt)
-                "
-              >
+              <span class="meta-item" [title]="'Erstellt: ' + formatDate(caseFolder.metadata.createdAt)">
                 <i class="pi pi-calendar-plus"></i>
                 {{ formatRelativeDate(caseFolder.metadata.createdAt) }}
               </span>
               <span
                 class="meta-item"
-                *ngIf="
-                  caseFolder.metadata.lastModified !==
-                  caseFolder.metadata.createdAt
-                "
-                [title]="
-                  'Zuletzt geändert: ' +
-                  formatDate(caseFolder.metadata.lastModified)
-                "
+                *ngIf="caseFolder.metadata.lastModified !== caseFolder.metadata.createdAt"
+                [title]="'Zuletzt geändert: ' + formatDate(caseFolder.metadata.lastModified)"
               >
                 <i class="pi pi-history"></i>
                 {{ formatRelativeDate(caseFolder.metadata.lastModified) }}
@@ -312,10 +261,7 @@
           </div>
         </div>
         <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
-        <p class="empty-description">
-          Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu
-          organisieren.
-        </p>
+        <p class="empty-description">Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
         <button
           pButton
           label="Ersten Fall erstellen"
@@ -325,10 +271,7 @@
         ></button>
         <div class="empty-tips">
           <p class="tip-title">💡 Tipp:</p>
-          <p class="tip-text">
-            Fälle helfen dir, deine Dokumente und Informationen strukturiert zu
-            verwalten.
-          </p>
+          <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
         </div>
       </div>
     </div>

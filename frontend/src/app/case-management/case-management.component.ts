@@ -113,10 +113,7 @@ export class CaseManagementComponent implements OnInit {
               const caseId = folderName.replace('case-', '');
               try {
                 const metadata = await this.http
-                  .get<CaseMetadata>(
-                    `${environment.apiUrl}/cases/metadata?case=${caseId}`,
-                    { withCredentials: true },
-                  )
+                  .get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${caseId}`, { withCredentials: true })
                   .toPromise();
 
                 return {
@@ -149,8 +146,7 @@ export class CaseManagementComponent implements OnInit {
         error: (error) => {
           console.error('Error loading case folders:', error);
           this.hasError = true;
-          this.errorMessage =
-            error.error?.error || 'Failed to load case folders';
+          this.errorMessage = error.error?.error || 'Failed to load case folders';
           this.isLoading = false;
         },
       });
@@ -187,10 +183,7 @@ export class CaseManagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating case folder:', error);
-          alert(
-            'Failed to create case folder: ' +
-              (error.error?.error || 'Unknown error'),
-          );
+          alert('Failed to create case folder: ' + (error.error?.error || 'Unknown error'));
         },
       });
   }
@@ -209,9 +202,7 @@ export class CaseManagementComponent implements OnInit {
   getRecentCasesCount(): number {
     // Count cases created in the last 7 days
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return this.caseFolders.filter(
-      (caseFolder) => caseFolder.metadata.createdAt > sevenDaysAgo,
-    ).length;
+    return this.caseFolders.filter((caseFolder) => caseFolder.metadata.createdAt > sevenDaysAgo).length;
   }
 
   formatFileSize(bytes: number): string {
@@ -259,17 +250,11 @@ export class CaseManagementComponent implements OnInit {
   }
 
   getTotalFilesCount(): number {
-    return this.caseFolders.reduce(
-      (sum, caseFolder) => sum + caseFolder.metadata.fileCount,
-      0,
-    );
+    return this.caseFolders.reduce((sum, caseFolder) => sum + caseFolder.metadata.fileCount, 0);
   }
 
   getTotalStorageSize(): string {
-    const totalBytes = this.caseFolders.reduce(
-      (sum, caseFolder) => sum + caseFolder.metadata.totalSize,
-      0,
-    );
+    const totalBytes = this.caseFolders.reduce((sum, caseFolder) => sum + caseFolder.metadata.totalSize, 0);
     return this.formatFileSize(totalBytes);
   }
 
@@ -284,16 +269,9 @@ export class CaseManagementComponent implements OnInit {
         const caseId = caseFolder.name.replace('case-', '').toLowerCase();
         const caseName = this.formatCaseName(caseFolder.name).toLowerCase();
         const nickname = caseFolder.metadata.nickname?.toLowerCase() || '';
-        const tags =
-          caseFolder.metadata.tags?.map((tag) => tag.toLowerCase()).join(' ') ||
-          '';
+        const tags = caseFolder.metadata.tags?.map((tag) => tag.toLowerCase()).join(' ') || '';
 
-        return (
-          caseId.includes(query) ||
-          caseName.includes(query) ||
-          nickname.includes(query) ||
-          tags.includes(query)
-        );
+        return caseId.includes(query) || caseName.includes(query) || nickname.includes(query) || tags.includes(query);
       });
     }
 
@@ -306,21 +284,13 @@ export class CaseManagementComponent implements OnInit {
 
     switch (this.sortBy) {
       case 'newest':
-        return sorted.sort(
-          (a, b) => b.metadata.createdAt - a.metadata.createdAt,
-        );
+        return sorted.sort((a, b) => b.metadata.createdAt - a.metadata.createdAt);
       case 'oldest':
-        return sorted.sort(
-          (a, b) => a.metadata.createdAt - b.metadata.createdAt,
-        );
+        return sorted.sort((a, b) => a.metadata.createdAt - b.metadata.createdAt);
       case 'mostFiles':
-        return sorted.sort(
-          (a, b) => b.metadata.fileCount - a.metadata.fileCount,
-        );
+        return sorted.sort((a, b) => b.metadata.fileCount - a.metadata.fileCount);
       case 'largest':
-        return sorted.sort(
-          (a, b) => b.metadata.totalSize - a.metadata.totalSize,
-        );
+        return sorted.sort((a, b) => b.metadata.totalSize - a.metadata.totalSize);
       default:
         return sorted;
     }
@@ -355,22 +325,20 @@ export class CaseManagementComponent implements OnInit {
 
     // Check if case exists by fetching metadata
     this.isLookingUp = true;
-    this.http
-      .get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${caseId}`)
-      .subscribe({
-        next: () => {
-          // Case exists, navigate to it
-          this.router.navigate(['/cases', caseId]);
-        },
-        error: (error) => {
-          this.isLookingUp = false;
-          if (error.status === 404) {
-            this.lookupError = 'Fall nicht gefunden';
-          } else {
-            this.lookupError = 'Fehler beim Überprüfen des Falls';
-          }
-        },
-      });
+    this.http.get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${caseId}`).subscribe({
+      next: () => {
+        // Case exists, navigate to it
+        this.router.navigate(['/cases', caseId]);
+      },
+      error: (error) => {
+        this.isLookingUp = false;
+        if (error.status === 404) {
+          this.lookupError = 'Fall nicht gefunden';
+        } else {
+          this.lookupError = 'Fehler beim Überprüfen des Falls';
+        }
+      },
+    });
   }
 
   onLookupKeyPress(event: KeyboardEvent) {
@@ -384,10 +352,7 @@ export class CaseManagementComponent implements OnInit {
   }
 
   getSortLabel(): string {
-    return (
-      this.sortOptions.find((opt) => opt.value === this.sortBy)?.label ||
-      'Sortieren'
-    );
+    return this.sortOptions.find((opt) => opt.value === this.sortBy)?.label || 'Sortieren';
   }
 
   clearSearch() {

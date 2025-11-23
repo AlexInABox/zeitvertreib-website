@@ -78,15 +78,11 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
   // Helper methods for override duration
   decreaseOverrideDuration() {
-    this.overrideDurationHours.set(
-      Math.max(1, this.overrideDurationHours() - 1),
-    );
+    this.overrideDurationHours.set(Math.max(1, this.overrideDurationHours() - 1));
   }
 
   increaseOverrideDuration() {
-    this.overrideDurationHours.set(
-      Math.min(168, this.overrideDurationHours() + 1),
-    );
+    this.overrideDurationHours.set(Math.min(168, this.overrideDurationHours() + 1));
   }
 
   setOverrideDuration(value: number) {
@@ -128,12 +124,8 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     return this.authService.isFakerankAdmin();
   });
   hasSearchedUser = computed(() => !!this.searchedUser());
-  currentPage = computed(
-    () => Math.floor(this.pagination().offset / this.pagination().limit) + 1,
-  );
-  totalPages = computed(() =>
-    Math.ceil(this.pagination().total / this.pagination().limit),
-  );
+  currentPage = computed(() => Math.floor(this.pagination().offset / this.pagination().limit) + 1);
+  totalPages = computed(() => Math.ceil(this.pagination().total / this.pagination().limit));
 
   // Constants
   readonly FAKERANK_COLORS: FakerankColor[] = [
@@ -217,23 +209,21 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToAuth() {
-    this.authSubscription = this.authService.currentUserData$.subscribe(
-      (userData: UserData | null) => {
-        this.userData.set(userData);
+    this.authSubscription = this.authService.currentUserData$.subscribe((userData: UserData | null) => {
+      this.userData.set(userData);
 
-        if (!userData?.user) {
-          this.router.navigate(['/login']);
-          return;
-        }
+      if (!userData?.user) {
+        this.router.navigate(['/login']);
+        return;
+      }
 
-        if (!this.isFakerankAdmin()) {
-          this.router.navigate(['/dashboard']);
-          return;
-        }
+      if (!this.isFakerankAdmin()) {
+        this.router.navigate(['/dashboard']);
+        return;
+      }
 
-        this.loadInitialData();
-      },
-    );
+      this.loadInitialData();
+    });
   }
 
   private loadInitialData() {
@@ -243,11 +233,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   }
 
   // Toast notification methods
-  private showToast(
-    severity: 'success' | 'error' | 'warn' | 'info',
-    summary: string,
-    detail: string,
-  ) {
+  private showToast(severity: 'success' | 'error' | 'warn' | 'info', summary: string, detail: string) {
     const toast: ToastMessage = {
       id: ++this.toastIdCounter,
       severity,
@@ -263,16 +249,10 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
   }
 
   removeToast(id: number) {
-    this.toastMessages.update((messages) =>
-      messages.filter((toast) => toast.id !== id),
-    );
+    this.toastMessages.update((messages) => messages.filter((toast) => toast.id !== id));
   }
 
-  private showConfirmation(
-    title: string,
-    message: string,
-    onConfirm: () => void,
-  ) {
+  private showConfirmation(title: string, message: string, onConfirm: () => void) {
     this.confirmationDialog.set({
       show: true,
       title,
@@ -338,16 +318,10 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.searchedUser.set(user);
           this.newFakerank.set(user.fakerank || '');
-          this.tempFakerankColor.set(
-            this.getColorKeyFromHex(user.fakerank_color) || 'default',
-          );
+          this.tempFakerankColor.set(this.getColorKeyFromHex(user.fakerank_color) || 'default');
         },
         error: (error) => {
-          this.showToast(
-            'error',
-            'Fehler',
-            error.message || 'Benutzer konnte nicht gefunden werden',
-          );
+          this.showToast('error', 'Fehler', error.message || 'Benutzer konnte nicht gefunden werden');
           this.searchedUser.set(null);
         },
       });
@@ -363,16 +337,8 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
     }
 
     // Validate fakerank content - ban parentheses and commas
-    if (
-      fakerank.includes('(') ||
-      fakerank.includes(')') ||
-      fakerank.includes(',')
-    ) {
-      this.showToast(
-        'error',
-        'Fehler',
-        'Fakerank darf keine Klammern () oder Kommas enthalten',
-      );
+    if (fakerank.includes('(') || fakerank.includes(')') || fakerank.includes(',')) {
+      this.showToast('error', 'Fehler', 'Fakerank darf keine Klammern () oder Kommas enthalten');
       return;
     }
 
@@ -389,28 +355,16 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.setLoadingState('user', false)))
       .subscribe({
         next: () => {
-          const overrideText = this.isOverrideMode()
-            ? ` (Override für ${this.overrideDurationHours()}h)`
-            : '';
-          this.showToast(
-            'success',
-            'Erfolg',
-            `Fakerank erfolgreich gesetzt${overrideText}`,
-          );
-          this.searchedUser.update((u) =>
-            u ? { ...u, fakerank: fakerank.trim() } : u,
-          );
+          const overrideText = this.isOverrideMode() ? ` (Override für ${this.overrideDurationHours()}h)` : '';
+          this.showToast('success', 'Erfolg', `Fakerank erfolgreich gesetzt${overrideText}`);
+          this.searchedUser.update((u) => (u ? { ...u, fakerank: fakerank.trim() } : u));
 
           if (this.activeTabIndex() === 3) {
             this.loadAllFakeranks();
           }
         },
         error: (error) => {
-          this.showToast(
-            'error',
-            'Fehler',
-            error.message || 'Fakerank konnte nicht gesetzt werden',
-          );
+          this.showToast('error', 'Fehler', error.message || 'Fakerank konnte nicht gesetzt werden');
         },
       });
   }
@@ -430,14 +384,8 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
           .pipe(finalize(() => this.setLoadingState('user', false)))
           .subscribe({
             next: () => {
-              this.showToast(
-                'success',
-                'Erfolg',
-                'Fakerank erfolgreich entfernt',
-              );
-              this.searchedUser.update((u) =>
-                u ? { ...u, fakerank: null } : u,
-              );
+              this.showToast('success', 'Erfolg', 'Fakerank erfolgreich entfernt');
+              this.searchedUser.update((u) => (u ? { ...u, fakerank: null } : u));
               this.newFakerank.set('');
 
               if (this.activeTabIndex() === 3) {
@@ -445,11 +393,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
               }
             },
             error: (error) => {
-              this.showToast(
-                'error',
-                'Fehler',
-                error.message || 'Fakerank konnte nicht entfernt werden',
-              );
+              this.showToast('error', 'Fehler', error.message || 'Fakerank konnte nicht entfernt werden');
             },
           });
       },
@@ -468,11 +412,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
           this.blacklistItems.set(response.blacklistedWords);
         },
         error: (error) => {
-          this.showToast(
-            'error',
-            'Fehler',
-            error.message || 'Blacklist konnte nicht geladen werden',
-          );
+          this.showToast('error', 'Fehler', error.message || 'Blacklist konnte nicht geladen werden');
         },
       });
   }
@@ -486,11 +426,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
     // Validate word content - ban parentheses and commas
     if (word.includes('(') || word.includes(')') || word.includes(',')) {
-      this.showToast(
-        'error',
-        'Fehler',
-        'Wort darf keine Klammern () oder Kommas enthalten',
-      );
+      this.showToast('error', 'Fehler', 'Wort darf keine Klammern () oder Kommas enthalten');
       return;
     }
 
@@ -509,11 +445,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         this.newBlacklistWord.set('');
       },
       error: (error) => {
-        this.showToast(
-          'error',
-          'Fehler',
-          error.message || 'Wort konnte nicht zur Blacklist hinzugefügt werden',
-        );
+        this.showToast('error', 'Fehler', error.message || 'Wort konnte nicht zur Blacklist hinzugefügt werden');
       },
     });
   }
@@ -526,17 +458,10 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         this.fakerankAdminService.removeFromBlacklist(item.word).subscribe({
           next: () => {
             this.showToast('success', 'Erfolg', 'Wort aus Blacklist entfernt');
-            this.blacklistItems.update((items) =>
-              items.filter((b) => b.id !== item.id),
-            );
+            this.blacklistItems.update((items) => items.filter((b) => b.id !== item.id));
           },
           error: (error) => {
-            this.showToast(
-              'error',
-              'Fehler',
-              error.message ||
-                'Wort konnte nicht aus der Blacklist entfernt werden',
-            );
+            this.showToast('error', 'Fehler', error.message || 'Wort konnte nicht aus der Blacklist entfernt werden');
           },
         });
       },
@@ -555,11 +480,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
           this.whitelistItems.set(response.whitelistedWords);
         },
         error: (error) => {
-          this.showToast(
-            'error',
-            'Fehler',
-            error.message || 'Whitelist konnte nicht geladen werden',
-          );
+          this.showToast('error', 'Fehler', error.message || 'Whitelist konnte nicht geladen werden');
         },
       });
   }
@@ -573,11 +494,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
     // Validate word content - ban parentheses and commas
     if (word.includes('(') || word.includes(')') || word.includes(',')) {
-      this.showToast(
-        'error',
-        'Fehler',
-        'Wort darf keine Klammern () oder Kommas enthalten',
-      );
+      this.showToast('error', 'Fehler', 'Wort darf keine Klammern () oder Kommas enthalten');
       return;
     }
 
@@ -596,11 +513,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         this.newWhitelistWord.set('');
       },
       error: (error) => {
-        this.showToast(
-          'error',
-          'Fehler',
-          error.message || 'Wort konnte nicht zur Whitelist hinzugefügt werden',
-        );
+        this.showToast('error', 'Fehler', error.message || 'Wort konnte nicht zur Whitelist hinzugefügt werden');
       },
     });
   }
@@ -613,17 +526,10 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         this.fakerankAdminService.removeFromWhitelist(item.word).subscribe({
           next: () => {
             this.showToast('success', 'Erfolg', 'Wort aus Whitelist entfernt');
-            this.whitelistItems.update((items) =>
-              items.filter((w) => w.id !== item.id),
-            );
+            this.whitelistItems.update((items) => items.filter((w) => w.id !== item.id));
           },
           error: (error) => {
-            this.showToast(
-              'error',
-              'Fehler',
-              error.message ||
-                'Wort konnte nicht aus der Whitelist entfernt werden',
-            );
+            this.showToast('error', 'Fehler', error.message || 'Wort konnte nicht aus der Whitelist entfernt werden');
           },
         });
       },
@@ -690,11 +596,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
           }));
         },
         error: (error) => {
-          this.showToast(
-            'error',
-            'Fehler',
-            error.message || 'Spielerliste konnte nicht geladen werden',
-          );
+          this.showToast('error', 'Fehler', error.message || 'Spielerliste konnte nicht geladen werden');
         },
       });
   }
@@ -721,16 +623,10 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
         next: (userFakerank) => {
           this.searchedUser.set(userFakerank);
           this.newFakerank.set(userFakerank.fakerank || '');
-          this.tempFakerankColor.set(
-            this.getColorKeyFromHex(userFakerank.fakerank_color) || 'default',
-          );
+          this.tempFakerankColor.set(this.getColorKeyFromHex(userFakerank.fakerank_color) || 'default');
         },
         error: (error) => {
-          this.showToast(
-            'error',
-            'Fehler',
-            error.message || 'Benutzer konnte nicht gefunden werden',
-          );
+          this.showToast('error', 'Fehler', error.message || 'Benutzer konnte nicht gefunden werden');
           // Fallback: still switch to tab with the Steam ID populated
           this.searchedUser.set(null);
         },
@@ -789,9 +685,7 @@ export class FakerankAdminComponent implements OnInit, OnDestroy {
 
   getColorKeyFromHex(hex: string | null): string | null {
     if (!hex) return null;
-    const color = this.FAKERANK_COLORS.find(
-      (c) => c.hex.toLowerCase() === hex.toLowerCase(),
-    );
+    const color = this.FAKERANK_COLORS.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
     return color?.key || null;
   }
 }

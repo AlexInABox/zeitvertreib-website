@@ -85,8 +85,7 @@ export class FakerankAdminService {
 
   private handleError(error: any): Observable<never> {
     console.error('FakerankAdminService error:', error);
-    const message =
-      error.error?.error || error.message || 'An unknown error occurred';
+    const message = error.error?.error || error.message || 'An unknown error occurred';
     return throwError(() => new Error(message));
   }
 
@@ -146,13 +145,10 @@ export class FakerankAdminService {
     count: number;
   }> {
     return this.http
-      .get<{ blacklistedWords: BlacklistItem[]; count: number }>(
-        `${this.API_BASE}/fakerank-admin/blacklist`,
-        {
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
+      .get<{ blacklistedWords: BlacklistItem[]; count: number }>(`${this.API_BASE}/fakerank-admin/blacklist`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .pipe(catchError(this.handleError));
   }
 
@@ -171,14 +167,11 @@ export class FakerankAdminService {
 
   removeFromBlacklist(word: string): Observable<{ success: boolean }> {
     return this.http
-      .delete<{ success: boolean }>(
-        `${this.API_BASE}/fakerank-admin/blacklist`,
-        {
-          body: { word },
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
+      .delete<{ success: boolean }>(`${this.API_BASE}/fakerank-admin/blacklist`, {
+        body: { word },
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .pipe(catchError(this.handleError));
   }
 
@@ -188,13 +181,10 @@ export class FakerankAdminService {
     count: number;
   }> {
     return this.http
-      .get<{ whitelistedWords: WhitelistItem[]; count: number }>(
-        `${this.API_BASE}/fakerank-admin/whitelist`,
-        {
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
+      .get<{ whitelistedWords: WhitelistItem[]; count: number }>(`${this.API_BASE}/fakerank-admin/whitelist`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .pipe(catchError(this.handleError));
   }
 
@@ -213,25 +203,17 @@ export class FakerankAdminService {
 
   removeFromWhitelist(word: string): Observable<{ success: boolean }> {
     return this.http
-      .delete<{ success: boolean }>(
-        `${this.API_BASE}/fakerank-admin/whitelist`,
-        {
-          body: { word },
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
+      .delete<{ success: boolean }>(`${this.API_BASE}/fakerank-admin/whitelist`, {
+        body: { word },
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .pipe(catchError(this.handleError));
   }
 
   // All Fakeranks Management
-  getAllFakeranks(
-    limit: number = 50,
-    offset: number = 0,
-  ): Observable<PaginatedFakeranks> {
-    const params = new HttpParams()
-      .set('limit', limit.toString())
-      .set('offset', offset.toString());
+  getAllFakeranks(limit: number = 50, offset: number = 0): Observable<PaginatedFakeranks> {
+    const params = new HttpParams().set('limit', limit.toString()).set('offset', offset.toString());
 
     return this.http
       .get<any>(`${this.API_BASE}/fakerank-admin/all-fakeranks`, {
@@ -245,15 +227,8 @@ export class FakerankAdminService {
           return {
             data: response.users || [],
             totalItems: response.pagination?.total || 0,
-            currentPage:
-              Math.floor(
-                (response.pagination?.offset || 0) /
-                  (response.pagination?.limit || limit),
-              ) + 1,
-            totalPages: Math.ceil(
-              (response.pagination?.total || 0) /
-                (response.pagination?.limit || limit),
-            ),
+            currentPage: Math.floor((response.pagination?.offset || 0) / (response.pagination?.limit || limit)) + 1,
+            totalPages: Math.ceil((response.pagination?.total || 0) / (response.pagination?.limit || limit)),
             currentPlayersOnline: response.currentPlayersOnline || 0,
             uniquePlayerNames: response.uniquePlayerNames || 0,
           } as PaginatedFakeranks;
@@ -264,16 +239,10 @@ export class FakerankAdminService {
 
   // Public Playerlist - Current Round Players
   getCurrentRoundPlayers(): Observable<PlayerlistPlayer[]> {
-    const isLocalhost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
-    const apiUrl = isLocalhost
-      ? 'https://dev.zeitvertreib.vip/api/playerlist'
-      : `${this.API_BASE}/playerlist`;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const apiUrl = isLocalhost ? 'https://dev.zeitvertreib.vip/api/playerlist' : `${this.API_BASE}/playerlist`;
 
-    return this.http
-      .get<PlayerlistPlayer[]>(apiUrl)
-      .pipe(catchError(this.handleError));
+    return this.http.get<PlayerlistPlayer[]>(apiUrl).pipe(catchError(this.handleError));
   }
 }
 

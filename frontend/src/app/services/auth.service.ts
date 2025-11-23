@@ -70,10 +70,7 @@ export class AuthService {
       try {
         localStorage.setItem('sessionToken', token);
       } catch (error) {
-        console.warn(
-          '[AUTH] Failed to store session token in localStorage (Safari ITP?)',
-          error,
-        );
+        console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?)', error);
       }
 
       // Clean up URL and redirect if needed
@@ -182,9 +179,7 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    return this.authenticatedPost(`${environment.apiUrl}/auth/logout`).pipe(
-      catchError(() => of(null)),
-    );
+    return this.authenticatedPost(`${environment.apiUrl}/auth/logout`).pipe(catchError(() => of(null)));
   }
 
   performLogout(): void {
@@ -349,10 +344,7 @@ export class AuthService {
           try {
             localStorage.setItem('sessionToken', response.sessionId);
           } catch (error) {
-            console.warn(
-              '[AUTH] Failed to store session token in localStorage (Safari ITP?)',
-              error,
-            );
+            console.warn('[AUTH] Failed to store session token in localStorage (Safari ITP?)', error);
           }
 
           this.currentUserSubject.next(response.user);

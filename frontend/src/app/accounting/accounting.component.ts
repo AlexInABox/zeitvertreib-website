@@ -2,10 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrimeIcons } from 'primeng/api';
-import {
-  FinancialService,
-  RecurringTransaction,
-} from '../services/financial.service';
+import { FinancialService, RecurringTransaction } from '../services/financial.service';
 import { AuthService } from '../services/auth.service';
 
 interface EventItem {
@@ -125,9 +122,7 @@ export class AccountingComponent implements OnInit {
               (transaction.type || transaction.transaction_type) === 'income'
                 ? PrimeIcons.PLUS_CIRCLE
                 : PrimeIcons.MINUS_CIRCLE,
-            type: (transaction.type || transaction.transaction_type) as
-              | 'income'
-              | 'expense',
+            type: (transaction.type || transaction.transaction_type) as 'income' | 'expense',
           }));
         } else {
           console.log('No transactions received, using sample data');
@@ -293,9 +288,7 @@ export class AccountingComponent implements OnInit {
 
     // Calculate current month's income and expenses
     const currentMonthEvents = this.events.filter(
-      (event) =>
-        event.date.getMonth() === currentMonth &&
-        event.date.getFullYear() === currentYear,
+      (event) => event.date.getMonth() === currentMonth && event.date.getFullYear() === currentYear,
     );
 
     this.monthlyIncome = currentMonthEvents
@@ -321,13 +314,8 @@ export class AccountingComponent implements OnInit {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const recentEvents = this.events.filter(
-      (event) => event.date >= sixMonthsAgo,
-    );
-    const monthlyTotals = new Map<
-      string,
-      { income: number; expenses: number }
-    >();
+    const recentEvents = this.events.filter((event) => event.date >= sixMonthsAgo);
+    const monthlyTotals = new Map<string, { income: number; expenses: number }>();
 
     recentEvents.forEach((event) => {
       const monthKey = `${event.date.getFullYear()}-${event.date.getMonth()}`;
@@ -344,24 +332,17 @@ export class AccountingComponent implements OnInit {
     });
 
     const months = Array.from(monthlyTotals.values());
-    this.averageMonthlyIncome =
-      months.reduce((sum, month) => sum + month.income, 0) / months.length || 0;
-    this.averageMonthlyExpenses =
-      months.reduce((sum, month) => sum + month.expenses, 0) / months.length ||
-      0;
+    this.averageMonthlyIncome = months.reduce((sum, month) => sum + month.income, 0) / months.length || 0;
+    this.averageMonthlyExpenses = months.reduce((sum, month) => sum + month.expenses, 0) / months.length || 0;
 
     // Calculate coverage percentage
     this.coveragePercentage =
       this.averageMonthlyExpenses > 0
-        ? Math.min(
-            100,
-            (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100,
-          )
+        ? Math.min(100, (this.averageMonthlyIncome / this.averageMonthlyExpenses) * 100)
         : 100;
 
     // Calculate 3-month projection
-    this.threeMonthProjection =
-      (this.averageMonthlyIncome - this.averageMonthlyExpenses) * 3;
+    this.threeMonthProjection = (this.averageMonthlyIncome - this.averageMonthlyExpenses) * 3;
 
     // Calculate burn rate (how many months current balance will last)
     this.burnRate =
@@ -411,9 +392,7 @@ export class AccountingComponent implements OnInit {
     months.forEach((monthData) => {
       monthData.balance = monthData.income - monthData.expenses;
       monthData.coveragePercentage =
-        monthData.expenses > 0
-          ? Math.min(100, (monthData.income / monthData.expenses) * 100)
-          : 100;
+        monthData.expenses > 0 ? Math.min(100, (monthData.income / monthData.expenses) * 100) : 100;
     });
 
     this.monthlyBreakdown = Array.from(months.values());
@@ -424,14 +403,10 @@ export class AccountingComponent implements OnInit {
 
     switch (filter) {
       case 'income':
-        this.filteredEvents = this.events.filter(
-          (event) => event.type === 'income',
-        );
+        this.filteredEvents = this.events.filter((event) => event.type === 'income');
         break;
       case 'expenses':
-        this.filteredEvents = this.events.filter(
-          (event) => event.type === 'expense',
-        );
+        this.filteredEvents = this.events.filter((event) => event.type === 'expense');
         break;
       default:
         this.filteredEvents = [...this.events];
@@ -465,9 +440,7 @@ export class AccountingComponent implements OnInit {
   }
 
   deleteTransaction(event: EventItem) {
-    if (
-      confirm('Sind Sie sicher, dass Sie diese Transaktion löschen möchten?')
-    ) {
+    if (confirm('Sind Sie sicher, dass Sie diese Transaktion löschen möchten?')) {
       // Find the transaction ID (we need to add this to EventItem interface)
       const transactionId = (event as any).id;
       if (transactionId) {
@@ -479,8 +452,7 @@ export class AccountingComponent implements OnInit {
           error: (error) => {
             console.error('Error deleting transaction:', error);
             alert(
-              'Fehler beim Löschen der Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
+              'Fehler beim Löschen der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'),
             );
           },
         });
@@ -521,26 +493,24 @@ export class AccountingComponent implements OnInit {
     if (this.editingTransaction) {
       // Update existing transaction
       const transactionId = (this.editingTransaction as any).id;
-      this.financialService
-        .updateTransaction(transactionId, transactionData)
-        .subscribe({
-          next: () => {
-            console.log('Transaction updated successfully');
-            this.loadFinancialData(); // Reload data
-            this.closeTransactionModal();
-          },
-          error: (error) => {
-            console.error('Error updating transaction:', error);
-            alert(
-              'Fehler beim Aktualisieren der Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
-            );
-            this.isSubmitting = false; // Reset loading state on error
-          },
-          complete: () => {
-            this.isSubmitting = false;
-          },
-        });
+      this.financialService.updateTransaction(transactionId, transactionData).subscribe({
+        next: () => {
+          console.log('Transaction updated successfully');
+          this.loadFinancialData(); // Reload data
+          this.closeTransactionModal();
+        },
+        error: (error) => {
+          console.error('Error updating transaction:', error);
+          alert(
+            'Fehler beim Aktualisieren der Transaktion: ' +
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
+          );
+          this.isSubmitting = false; // Reset loading state on error
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        },
+      });
     } else {
       // Create new transaction
       this.financialService.createTransaction(transactionData).subscribe({
@@ -552,8 +522,7 @@ export class AccountingComponent implements OnInit {
         error: (error) => {
           console.error('Error creating transaction:', error);
           alert(
-            'Fehler beim Erstellen der Transaktion: ' +
-              (error.error?.error || error.message || 'Unbekannter Fehler'),
+            'Fehler beim Erstellen der Transaktion: ' + (error.error?.error || error.message || 'Unbekannter Fehler'),
           );
           this.isSubmitting = false; // Reset loading state on error
         },
@@ -604,28 +573,22 @@ export class AccountingComponent implements OnInit {
   }
 
   deleteRecurringTransaction(recurring: RecurringTransaction) {
-    if (
-      confirm(
-        'Sind Sie sicher, dass Sie diese wiederkehrende Transaktion löschen möchten?',
-      )
-    ) {
+    if (confirm('Sind Sie sicher, dass Sie diese wiederkehrende Transaktion löschen möchten?')) {
       const recurringId = recurring.id;
       if (recurringId) {
-        this.financialService
-          .deleteRecurringTransaction(recurringId)
-          .subscribe({
-            next: () => {
-              console.log('Recurring transaction deleted successfully');
-              this.loadRecurringTransactions(); // Reload data
-            },
-            error: (error) => {
-              console.error('Error deleting recurring transaction:', error);
-              alert(
-                'Fehler beim Löschen der wiederkehrenden Transaktion: ' +
-                  (error.error?.error || error.message || 'Unbekannter Fehler'),
-              );
-            },
-          });
+        this.financialService.deleteRecurringTransaction(recurringId).subscribe({
+          next: () => {
+            console.log('Recurring transaction deleted successfully');
+            this.loadRecurringTransactions(); // Reload data
+          },
+          error: (error) => {
+            console.error('Error deleting recurring transaction:', error);
+            alert(
+              'Fehler beim Löschen der wiederkehrenden Transaktion: ' +
+                (error.error?.error || error.message || 'Unbekannter Fehler'),
+            );
+          },
+        });
       } else {
         alert('Wiederkehrende Transaktion ID nicht gefunden');
       }
@@ -653,11 +616,7 @@ export class AccountingComponent implements OnInit {
       category: this.recurringFormData.category,
       amount: Number(this.recurringFormData.amount),
       description: this.recurringFormData.description,
-      frequency: this.recurringFormData.frequency as
-        | 'daily'
-        | 'weekly'
-        | 'monthly'
-        | 'yearly',
+      frequency: this.recurringFormData.frequency as 'daily' | 'weekly' | 'monthly' | 'yearly',
       start_date: this.recurringFormData.start_date,
       ...(this.recurringFormData.end_date && {
         end_date: this.recurringFormData.end_date,
@@ -672,48 +631,44 @@ export class AccountingComponent implements OnInit {
     if (this.editingRecurring) {
       // Update existing recurring transaction
       const recurringId = this.editingRecurring.id!;
-      this.financialService
-        .updateRecurringTransaction(recurringId, recurringData)
-        .subscribe({
-          next: () => {
-            console.log('Recurring transaction updated successfully');
-            this.loadRecurringTransactions(); // Reload data
-            this.closeRecurringModal();
-          },
-          error: (error) => {
-            console.error('Error updating recurring transaction:', error);
-            alert(
-              'Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
-            );
-            this.isSubmitting = false;
-          },
-          complete: () => {
-            this.isSubmitting = false;
-          },
-        });
+      this.financialService.updateRecurringTransaction(recurringId, recurringData).subscribe({
+        next: () => {
+          console.log('Recurring transaction updated successfully');
+          this.loadRecurringTransactions(); // Reload data
+          this.closeRecurringModal();
+        },
+        error: (error) => {
+          console.error('Error updating recurring transaction:', error);
+          alert(
+            'Fehler beim Aktualisieren der wiederkehrenden Transaktion: ' +
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
+          );
+          this.isSubmitting = false;
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        },
+      });
     } else {
       // Create new recurring transaction
-      this.financialService
-        .createRecurringTransaction(recurringData)
-        .subscribe({
-          next: () => {
-            console.log('Recurring transaction created successfully');
-            this.loadRecurringTransactions(); // Reload data
-            this.closeRecurringModal();
-          },
-          error: (error) => {
-            console.error('Error creating recurring transaction:', error);
-            alert(
-              'Fehler beim Erstellen der wiederkehrenden Transaktion: ' +
-                (error.error?.error || error.message || 'Unbekannter Fehler'),
-            );
-            this.isSubmitting = false;
-          },
-          complete: () => {
-            this.isSubmitting = false;
-          },
-        });
+      this.financialService.createRecurringTransaction(recurringData).subscribe({
+        next: () => {
+          console.log('Recurring transaction created successfully');
+          this.loadRecurringTransactions(); // Reload data
+          this.closeRecurringModal();
+        },
+        error: (error) => {
+          console.error('Error creating recurring transaction:', error);
+          alert(
+            'Fehler beim Erstellen der wiederkehrenden Transaktion: ' +
+              (error.error?.error || error.message || 'Unbekannter Fehler'),
+          );
+          this.isSubmitting = false;
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        },
+      });
     }
   }
 

@@ -111,14 +111,7 @@ interface LuckyWheelResult {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [
-    ButtonModule,
-    CardModule,
-    ChartModule,
-    AvatarModule,
-    CommonModule,
-    FormsModule,
-  ],
+  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -245,8 +238,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   slotMachineMessage = '';
   isSpinning = false;
   showWinningAnimation = false;
-  currentWinType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss' =
-    'loss';
+  currentWinType: 'jackpot' | 'big_win' | 'small_win' | 'mini_win' | 'loss' = 'loss';
   slotMachineInfo: {
     cost: number;
     payoutTable: Array<{
@@ -350,11 +342,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Handle toggle change to trigger background removal
   async onBackgroundRemovalToggle(): Promise<void> {
-    if (
-      this.removeBackground &&
-      this.selectedFile &&
-      !this.backgroundRemovalProcessing
-    ) {
+    if (this.removeBackground && this.selectedFile && !this.backgroundRemovalProcessing) {
       // Process image for preview when toggle is turned on
       try {
         await this.processImageWithBackgroundRemoval(this.selectedFile);
@@ -399,18 +387,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   get hasKillers(): boolean {
-    return (
-      Array.isArray(this.userStatistics?.lastkillers) &&
-      this.userStatistics.lastkillers.length > 0
-    );
+    return Array.isArray(this.userStatistics?.lastkillers) && this.userStatistics.lastkillers.length > 0;
   }
 
   // Safe method to truncate display names
   truncateDisplayName(name?: string, maxLength = 15): string {
     if (!name) return 'Unbekannt';
-    return name.length > maxLength
-      ? `${name.substring(0, maxLength)}...`
-      : name;
+    return name.length > maxLength ? `${name.substring(0, maxLength)}...` : name;
   }
 
   // Safe method to get avatar with fallback
@@ -442,11 +425,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Generate random colors for gradients
   generateRandomColors(): void {
-    this.randomColors = [
-      this.getRandomColor(),
-      this.getRandomColor(),
-      this.getRandomColor(),
-    ];
+    this.randomColors = [this.getRandomColor(), this.getRandomColor(), this.getRandomColor()];
     this.applyRandomColors();
   }
 
@@ -476,18 +455,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private applyRandomColors(): void {
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
-      root.style.setProperty(
-        '--random-color-1',
-        this.randomColors[0] ?? '#000000',
-      );
-      root.style.setProperty(
-        '--random-color-2',
-        this.randomColors[1] ?? '#000000',
-      );
-      root.style.setProperty(
-        '--random-color-3',
-        this.randomColors[2] ?? '#000000',
-      );
+      root.style.setProperty('--random-color-1', this.randomColors[0] ?? '#000000');
+      root.style.setProperty('--random-color-2', this.randomColors[1] ?? '#000000');
+      root.style.setProperty('--random-color-3', this.randomColors[2] ?? '#000000');
     }
   }
 
@@ -495,103 +465,91 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.hasError = false;
 
-    this.authService
-      .authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`)
-      .subscribe({
-        next: (response) => {
-          if (response?.stats) {
-            this.userStatistics = {
-              ...this.userStatistics, // Keep defaults for missing properties
-              ...response.stats,
-            };
-            // Update fakerankAllowed from timestamp-based calculation
-            this.fakerankAllowed = this.authService.canEditFakerank();
-            this.hasFakerankOverride = this.authService.hasFakerankOverride();
-            this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
-            // Update timers after loading stats
-            this.updateAccessTimers();
-          }
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Fehler beim Laden der Benutzerstatistiken:', error);
-          this.hasError = true;
-          this.errorMessage = 'Statistiken konnten nicht geladen werden';
-          this.isLoading = false;
-        },
-      });
+    this.authService.authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`).subscribe({
+      next: (response) => {
+        if (response?.stats) {
+          this.userStatistics = {
+            ...this.userStatistics, // Keep defaults for missing properties
+            ...response.stats,
+          };
+          // Update fakerankAllowed from timestamp-based calculation
+          this.fakerankAllowed = this.authService.canEditFakerank();
+          this.hasFakerankOverride = this.authService.hasFakerankOverride();
+          this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
+          // Update timers after loading stats
+          this.updateAccessTimers();
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Fehler beim Laden der Benutzerstatistiken:', error);
+        this.hasError = true;
+        this.errorMessage = 'Statistiken konnten nicht geladen werden';
+        this.isLoading = false;
+      },
+    });
   }
 
   // Load the current spray image
   private loadCurrentSpray(): void {
     // Add cache-busting parameter to avoid browser caching issues
     const timestamp = new Date().getTime();
-    this.authService
-      .authenticatedGetBlob(`${environment.apiUrl}/spray/image?t=${timestamp}`)
-      .subscribe({
-        next: (response: Blob) => {
-          // Clean up previous object URL to prevent memory leaks
-          if (this.currentSprayImage) {
-            URL.revokeObjectURL(this.currentSprayImage);
-          }
-          // Convert blob to object URL for display
-          this.currentSprayImage = URL.createObjectURL(response);
-        },
-        error: (error) => {
-          // No spray found is fine, just don't set an image
-          if (error.status !== 404) {
-            console.error('Error loading spray:', error);
-          }
-          // Clean up previous object URL
-          if (this.currentSprayImage) {
-            URL.revokeObjectURL(this.currentSprayImage);
-          }
-          this.currentSprayImage = null;
-        },
-      });
+    this.authService.authenticatedGetBlob(`${environment.apiUrl}/spray/image?t=${timestamp}`).subscribe({
+      next: (response: Blob) => {
+        // Clean up previous object URL to prevent memory leaks
+        if (this.currentSprayImage) {
+          URL.revokeObjectURL(this.currentSprayImage);
+        }
+        // Convert blob to object URL for display
+        this.currentSprayImage = URL.createObjectURL(response);
+      },
+      error: (error) => {
+        // No spray found is fine, just don't set an image
+        if (error.status !== 404) {
+          console.error('Error loading spray:', error);
+        }
+        // Clean up previous object URL
+        if (this.currentSprayImage) {
+          URL.revokeObjectURL(this.currentSprayImage);
+        }
+        this.currentSprayImage = null;
+      },
+    });
   }
 
   // Load upload limits for images
   private loadUploadLimits(): void {
-    this.authService
-      .authenticatedGet<UploadLimits>(
-        `${environment.apiUrl}/spray/upload-limits`,
-      )
-      .subscribe({
-        next: (response) => {
-          this.uploadLimits = response;
-        },
-        error: (error) => {
-          console.error('Error loading upload limits:', error);
-          // Provide fallback limits if API call fails
-          this.uploadLimits = {
-            maxOriginalSize: 5 * 1024 * 1024, // 5MB
-            maxThumbnailSize: 10 * 1024, // 10KB
-            maxOriginalSizeMB: 5,
-            maxThumbnailSizeKB: 10,
-            supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
-            message: 'Maximale Bildgröße: 5MB',
-          };
-        },
-      });
+    this.authService.authenticatedGet<UploadLimits>(`${environment.apiUrl}/spray/upload-limits`).subscribe({
+      next: (response) => {
+        this.uploadLimits = response;
+      },
+      error: (error) => {
+        console.error('Error loading upload limits:', error);
+        // Provide fallback limits if API call fails
+        this.uploadLimits = {
+          maxOriginalSize: 5 * 1024 * 1024, // 5MB
+          maxThumbnailSize: 10 * 1024, // 10KB
+          maxOriginalSizeMB: 5,
+          maxThumbnailSizeKB: 10,
+          supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
+          message: 'Maximale Bildgröße: 5MB',
+        };
+      },
+    });
   }
 
   // Load spray ban status for current user
   private loadSprayBanStatus(): void {
-    this.authService
-      .authenticatedGet<SprayBanStatus>(
-        `${environment.apiUrl}/spray/ban-status`,
-      )
-      .subscribe({
-        next: (response) => {
-          this.sprayBanStatus = response;
-        },
-        error: (error) => {
-          console.error('Error loading spray ban status:', error);
-          // If we can't load ban status, assume not banned for safety
-          this.sprayBanStatus = { isBanned: false };
-        },
-      });
+    this.authService.authenticatedGet<SprayBanStatus>(`${environment.apiUrl}/spray/ban-status`).subscribe({
+      next: (response) => {
+        this.sprayBanStatus = response;
+      },
+      error: (error) => {
+        console.error('Error loading spray ban status:', error);
+        // If we can't load ban status, assume not banned for safety
+        this.sprayBanStatus = { isBanned: false };
+      },
+    });
   }
 
   // Load available zeitvertreib coin redeemables
@@ -608,15 +566,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           // Sort redeemables by price (ascending - cheapest first)
-          this.redeemables = (response?.redeemables || []).sort(
-            (a, b) => a.price - b.price,
-          );
+          this.redeemables = (response?.redeemables || []).sort((a, b) => a.price - b.price);
           this.redeemablesLoading = false;
         },
         error: (error) => {
           console.error('Error loading redeemables:', error);
-          this.redeemablesError =
-            'Fehler beim Laden der verfügbaren Belohnungen';
+          this.redeemablesError = 'Fehler beim Laden der verfügbaren Belohnungen';
           this.redeemablesLoading = false;
         },
       });
@@ -663,17 +618,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Validate file type - no GIFs allowed
       if (!file.type.startsWith('image/') || file.type === 'image/gif') {
-        this.sprayUploadError =
-          'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
         target.value = ''; // Clear the input
         return;
       }
 
       // Check if file type is supported
-      if (
-        this.uploadLimits?.supportedFormats &&
-        !this.uploadLimits.supportedFormats.includes(file.type)
-      ) {
+      if (this.uploadLimits?.supportedFormats && !this.uploadLimits.supportedFormats.includes(file.type)) {
         this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
         target.value = ''; // Clear the input
         return;
@@ -723,17 +674,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const file = files[0];
       if (file && file.type.startsWith('image/') && file.type !== 'image/gif') {
         // Check if file type is supported
-        if (
-          this.uploadLimits?.supportedFormats &&
-          !this.uploadLimits.supportedFormats.includes(file.type)
-        ) {
+        if (this.uploadLimits?.supportedFormats && !this.uploadLimits.supportedFormats.includes(file.type)) {
           this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
           return;
         }
         this.setSelectedFile(file);
       } else {
-        this.sprayUploadError =
-          'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       }
     }
   }
@@ -745,20 +692,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Validate file type - only images, no GIFs
-    if (
-      !this.selectedFile.type.startsWith('image/') ||
-      this.selectedFile.type === 'image/gif'
-    ) {
-      this.sprayUploadError =
-        'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+    if (!this.selectedFile.type.startsWith('image/') || this.selectedFile.type === 'image/gif') {
+      this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
       return;
     }
 
     // Validate supported formats
-    if (
-      this.uploadLimits?.supportedFormats &&
-      !this.uploadLimits.supportedFormats.includes(this.selectedFile.type)
-    ) {
+    if (this.uploadLimits?.supportedFormats && !this.uploadLimits.supportedFormats.includes(this.selectedFile.type)) {
       this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
       return;
     }
@@ -777,9 +717,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       // Process image with background removal if enabled
-      const fileToProcess = await this.processImageWithBackgroundRemoval(
-        this.selectedFile,
-      );
+      const fileToProcess = await this.processImageWithBackgroundRemoval(this.selectedFile);
 
       // Process the image (no more GIF processing since GIFs are not supported)
       const processedData = await this.processImageForUpload(fileToProcess);
@@ -799,9 +737,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         formData.append('pixelData', processedData.pixelData); // Single string for images
       }
 
-      await this.authService
-        .authenticatedPost(`${environment.apiUrl}/spray/upload`, formData)
-        .toPromise();
+      await this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
 
       this.sprayUploadLoading = false;
       this.sprayUploadSuccess = true;
@@ -820,9 +756,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       // Reset file input
-      const fileInput = document.getElementById(
-        'sprayFileInput',
-      ) as HTMLInputElement;
+      const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
 
       // Reload spray image
@@ -830,10 +764,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       console.error('Spray upload error:', error);
       this.sprayUploadLoading = false;
-      this.sprayUploadError =
-        error?.error?.error ||
-        error?.message ||
-        'Fehler beim Hochladen des Sprays';
+      this.sprayUploadError = error?.error?.error || error?.message || 'Fehler beim Hochladen des Sprays';
       this.sprayUploadSuccess = false;
     }
   }
@@ -849,37 +780,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sprayUploadSuccess = false;
     this.sprayDeleteSuccess = false;
 
-    this.authService
-      .authenticatedDelete(`${environment.apiUrl}/spray/delete`)
-      .subscribe({
-        next: (_response: any) => {
-          this.sprayUploadLoading = false;
-          this.sprayDeleteSuccess = true;
-          this.sprayUploadSuccess = false;
-          this.sprayUploadError = '';
+    this.authService.authenticatedDelete(`${environment.apiUrl}/spray/delete`).subscribe({
+      next: (_response: any) => {
+        this.sprayUploadLoading = false;
+        this.sprayDeleteSuccess = true;
+        this.sprayUploadSuccess = false;
+        this.sprayUploadError = '';
 
-          // Clear the cached image URL to avoid browser caching issues
-          if (this.currentSprayImage) {
-            URL.revokeObjectURL(this.currentSprayImage);
-          }
-          this.currentSprayImage = null;
+        // Clear the cached image URL to avoid browser caching issues
+        if (this.currentSprayImage) {
+          URL.revokeObjectURL(this.currentSprayImage);
+        }
+        this.currentSprayImage = null;
 
-          // Clear any selected file as well
-          this.selectedFile = null;
-          const fileInput = document.getElementById(
-            'sprayFileInputMini',
-          ) as HTMLInputElement;
-          if (fileInput) fileInput.value = '';
-        },
-        error: (error: any) => {
-          console.error('Spray deletion error:', error);
-          this.sprayUploadLoading = false;
-          this.sprayUploadError =
-            error.error?.error || 'Fehler beim Löschen des Sprays';
-          this.sprayUploadSuccess = false;
-          this.sprayDeleteSuccess = false;
-        },
-      });
+        // Clear any selected file as well
+        this.selectedFile = null;
+        const fileInput = document.getElementById('sprayFileInputMini') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      },
+      error: (error: any) => {
+        console.error('Spray deletion error:', error);
+        this.sprayUploadLoading = false;
+        this.sprayUploadError = error.error?.error || 'Fehler beim Löschen des Sprays';
+        this.sprayUploadSuccess = false;
+        this.sprayDeleteSuccess = false;
+      },
+    });
   }
 
   get hasSpray(): boolean {
@@ -913,9 +839,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.removeBackground = false;
 
     // Reset file input
-    const fileInput = document.getElementById(
-      'sprayFileInput',
-    ) as HTMLInputElement;
+    const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   }
 
@@ -956,10 +880,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       formData.append('image', file);
 
       const response = (await this.authService
-        .authenticatedPost(
-          `${environment.apiUrl}/spray/remove-background`,
-          formData,
-        )
+        .authenticatedPost(`${environment.apiUrl}/spray/remove-background`, formData)
         .toPromise()) as BackgroundRemovalResponse;
 
       if (!response?.success || !response?.processedImageUrl) {
@@ -992,16 +913,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.backgroundRemovalProcessing = false;
       console.error('Background removal failed:', error);
       this.sprayUploadError =
-        'Hintergrundentfernung fehlgeschlagen: ' +
-        (error instanceof Error ? error.message : 'Unbekannter Fehler');
+        'Hintergrundentfernung fehlgeschlagen: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler');
       return file; // Fall back to original file
     }
   }
 
   // Process image to create 50x50 thumbnail and high-quality pixel data
-  private async processImageForUpload(
-    file: File,
-  ): Promise<{ smallImage: Blob; pixelData: string }> {
+  private async processImageForUpload(file: File): Promise<{ smallImage: Blob; pixelData: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -1011,61 +929,41 @@ export class DashboardComponent implements OnInit, OnDestroy {
           // Create 50x50 thumbnail (for storage/display)
           const thumbnailCanvas = document.createElement('canvas');
           const thumbnailCtx = thumbnailCanvas.getContext('2d');
-          if (!thumbnailCtx)
-            throw new Error(
-              'Konnte 2D-Kontext für Thumbnail-Canvas nicht erhalten',
-            );
+          if (!thumbnailCtx) throw new Error('Konnte 2D-Kontext für Thumbnail-Canvas nicht erhalten');
 
           thumbnailCanvas.width = 50;
           thumbnailCanvas.height = 50;
 
           // Scale thumbnail so the longest side becomes 50px
-          const { width: thumbWidth, height: thumbHeight } =
-            this.scaleToLongestSide(img.width, img.height, 50);
+          const { width: thumbWidth, height: thumbHeight } = this.scaleToLongestSide(img.width, img.height, 50);
           const thumbOffsetX = (50 - thumbWidth) / 2;
           const thumbOffsetY = (50 - thumbHeight) / 2;
 
           thumbnailCtx.clearRect(0, 0, 50, 50);
-          thumbnailCtx.drawImage(
-            img,
-            thumbOffsetX,
-            thumbOffsetY,
-            thumbWidth,
-            thumbHeight,
-          );
+          thumbnailCtx.drawImage(img, thumbOffsetX, thumbOffsetY, thumbWidth, thumbHeight);
 
           // Create high-quality canvas for pixel art generation
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx)
-            throw new Error(
-              'Konnte 2D-Kontext für Pixel-Canvas nicht erhalten',
-            );
+          if (!pixelCtx) throw new Error('Konnte 2D-Kontext für Pixel-Canvas nicht erhalten');
 
           pixelCanvas.width = pixelArtQuality;
           pixelCanvas.height = pixelArtQuality;
 
           // Scale for pixel art so the longest side becomes pixelArtQuality
-          const { width: pixelWidth, height: pixelHeight } =
-            this.scaleToLongestSide(img.width, img.height, pixelArtQuality);
+          const { width: pixelWidth, height: pixelHeight } = this.scaleToLongestSide(
+            img.width,
+            img.height,
+            pixelArtQuality,
+          );
           const pixelOffsetX = (pixelArtQuality - pixelWidth) / 2;
           const pixelOffsetY = (pixelArtQuality - pixelHeight) / 2;
 
           pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
-          pixelCtx.drawImage(
-            img,
-            pixelOffsetX,
-            pixelOffsetY,
-            pixelWidth,
-            pixelHeight,
-          );
+          pixelCtx.drawImage(img, pixelOffsetX, pixelOffsetY, pixelWidth, pixelHeight);
 
           // Extract pixel data from high-quality canvas to create pixel art string
-          const pixelData = this.createPixelArtFromCanvas(
-            pixelCtx,
-            pixelArtQuality,
-            pixelArtQuality,
-          );
+          const pixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
 
           // Convert thumbnail canvas to blob for storage
           thumbnailCanvas.toBlob(
@@ -1091,11 +989,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // Create pixel art string from canvas data (like the C# version)
-  private createPixelArtFromCanvas(
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-  ): string {
+  private createPixelArtFromCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): string {
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data; // RGBA array
     let result = '';
@@ -1113,12 +1007,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const alpha = data[index + 3];
 
         // Ensure all values are defined
-        if (
-          r === undefined ||
-          g === undefined ||
-          b === undefined ||
-          alpha === undefined
-        ) {
+        if (r === undefined || g === undefined || b === undefined || alpha === undefined) {
           continue;
         }
 
@@ -1244,13 +1133,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.fakerankLoading) return;
 
     // Validate fakerank content - ban parentheses and commas
-    if (
-      this.fakerankValue.includes('(') ||
-      this.fakerankValue.includes(')') ||
-      this.fakerankValue.includes(',')
-    ) {
-      this.fakerankError =
-        'Fakerank darf keine Klammern () oder Kommas enthalten';
+    if (this.fakerankValue.includes('(') || this.fakerankValue.includes(')') || this.fakerankValue.includes(',')) {
+      this.fakerankError = 'Fakerank darf keine Klammern () oder Kommas enthalten';
       return;
     }
 
@@ -1294,8 +1178,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error saving fakerank:', error);
-          this.fakerankError =
-            error?.error?.error || 'Fehler beim Speichern des Fakeranks';
+          this.fakerankError = error?.error?.error || 'Fehler beim Speichern des Fakeranks';
           this.fakerankLoading = false;
         },
       });
@@ -1328,8 +1211,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error deleting fakerank:', error);
-          this.fakerankError =
-            error?.error?.error || 'Fehler beim Löschen des Fakeranks';
+          this.fakerankError = error?.error?.error || 'Fehler beim Löschen des Fakeranks';
           this.fakerankLoading = false;
         },
       });
@@ -1396,15 +1278,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.codeRedemptionLoading = false;
           if (response?.success) {
             this.codeRedemptionSuccess = true;
-            this.codeRedemptionMessage =
-              response.message || 'Code erfolgreich eingelöst!';
+            this.codeRedemptionMessage = response.message || 'Code erfolgreich eingelöst!';
 
             // Update the user balance if provided
             if (response.newBalance !== undefined) {
               this.userStatistics.experience = response.newBalance;
             } else if (response.credits) {
-              this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + response.credits;
+              this.userStatistics.experience = (this.userStatistics.experience || 0) + response.credits;
             }
 
             // Clear the input after successful redemption
@@ -1414,8 +1294,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             window.location.reload();
           } else {
             this.codeRedemptionSuccess = false;
-            this.codeRedemptionMessage =
-              response?.message || 'Code konnte nicht eingelöst werden';
+            this.codeRedemptionMessage = response?.message || 'Code konnte nicht eingelöst werden';
           }
         },
         error: (error) => {
@@ -1537,8 +1416,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
             // Update the user balance immediately with the new balance from server
             if (response.transfer?.senderNewBalance !== undefined) {
-              this.userStatistics.experience =
-                response.transfer.senderNewBalance;
+              this.userStatistics.experience = response.transfer.senderNewBalance;
             }
 
             // Clear the inputs after successful transfer
@@ -1551,8 +1429,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }, 5000);
           } else {
             this.transferSuccess = false;
-            this.transferMessage =
-              response?.message || 'Transfer fehlgeschlagen';
+            this.transferMessage = response?.message || 'Transfer fehlgeschlagen';
           }
         },
         error: (error) => {
@@ -1638,9 +1515,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (petKey === 'none' || this.ownedCosmetics.pets.includes(petKey)) {
       this.selectedPet = petKey;
     } else {
-      alert(
-        `Du besitzt diesen Begleiter noch nicht! Kaufe ihn im Cosmetic Shop.`,
-      );
+      alert(`Du besitzt diesen Begleiter noch nicht! Kaufe ihn im Cosmetic Shop.`);
     }
   }
 
@@ -1671,9 +1546,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   openCosmeticShop(): void {
-    alert(
-      'Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.',
-    );
+    alert('Cosmetic Shop wird bald verfügbar sein! Hier kannst du neue Hüte, Begleiter und Aura-Effekte kaufen.');
   }
 
   // Format time remaining for display
@@ -1701,10 +1574,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Update access timers
   private updateAccessTimers(): void {
     this.fakerankTimeRemaining = this.authService.getFakerankTimeRemaining();
-    this.fakerankAdminTimeRemaining =
-      this.authService.getFakerankAdminTimeRemaining();
-    this.fakerankOverrideTimeRemaining =
-      this.authService.getFakerankOverrideTimeRemaining();
+    this.fakerankAdminTimeRemaining = this.authService.getFakerankAdminTimeRemaining();
+    this.fakerankOverrideTimeRemaining = this.authService.getFakerankOverrideTimeRemaining();
     this.fakerankAllowed = this.authService.canEditFakerank();
     this.hasFakerankOverride = this.authService.hasFakerankOverride();
     this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
@@ -1742,9 +1613,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Check if item is still available
     if (!this.isAvailable(redeemable)) {
-      alert(
-        `❌ Item nicht verfügbar\n\n${redeemable.name} ist nicht mehr verfügbar zum Einlösen.`,
-      );
+      alert(`❌ Item nicht verfügbar\n\n${redeemable.name} ist nicht mehr verfügbar zum Einlösen.`);
       return;
     }
 
@@ -1791,17 +1660,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.userStatistics.experience = response.newBalance;
 
             // Show success message
-            alert(
-              `🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`,
-            );
+            alert(`🎉 Erfolgreich eingelöst!\n\n${response.message}\n\nNeues Guthaben: ${response.newBalance} ZVC`);
 
             // Force refresh the entire page to ensure all data is updated
             window.location.reload();
           } else {
-            alert(
-              'Fehler beim Einlösen: ' +
-                (response?.message || 'Unbekannter Fehler'),
-            );
+            alert('Fehler beim Einlösen: ' + (response?.message || 'Unbekannter Fehler'));
           }
         },
         error: (error) => {
@@ -1824,15 +1688,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   isAvailable(redeemable: Redeemable): boolean {
-    return (
-      !redeemable.isExpired && redeemable.availabilityStatus === 'available'
-    );
+    return !redeemable.isExpired && redeemable.availabilityStatus === 'available';
   }
 
   isExpired(redeemable: Redeemable): boolean {
-    return (
-      !!redeemable.isExpired || redeemable.availabilityStatus === 'expired'
-    );
+    return !!redeemable.isExpired || redeemable.availabilityStatus === 'expired';
   }
 
   isSoldOut(redeemable: Redeemable): boolean {
@@ -1871,9 +1731,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (timeDiff <= 0) return 'Abgelaufen';
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-    );
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
     if (days > 0) {
       return `${days}d ${hours}h`;
@@ -1911,13 +1769,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return div;
   }
 
-  spin(
-    slotSymbols: string[],
-    target1?: string,
-    target2?: string,
-    target3?: string,
-    onComplete?: () => void,
-  ): void {
+  spin(slotSymbols: string[], target1?: string, target2?: string, target3?: string, onComplete?: () => void): void {
     this.reset();
 
     const slots = document.querySelectorAll('.slot');
@@ -1939,8 +1791,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       // Get symbol height AFTER adding symbols
-      const symbolHeight =
-        symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
+      const symbolHeight = symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
 
       // Random number of full rotations (2-6)
       const randomRotations = Math.floor(Math.random() * 8) + 4;
@@ -1952,14 +1803,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (targetSymbol && slotSymbols.includes(targetSymbol)) {
         // Land on specific symbol after random full spins
         const targetIndex = slotSymbols.indexOf(targetSymbol);
-        const fullRotations =
-          randomRotations * slotSymbols.length * symbolHeight;
+        const fullRotations = randomRotations * slotSymbols.length * symbolHeight;
         targetOffset = -(fullRotations + (targetIndex + 1) * symbolHeight);
       } else {
         // Random position after random full spins
         const randomIndex = Math.floor(Math.random() * slotSymbols.length);
-        const fullRotations =
-          randomRotations * slotSymbols.length * symbolHeight;
+        const fullRotations = randomRotations * slotSymbols.length * symbolHeight;
         targetOffset = -(fullRotations + (randomIndex + 1) * symbolHeight);
       }
 
@@ -2020,13 +1869,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     slots.forEach((slot) => {
       const symbols = slot.querySelector('.symbols') as HTMLElement;
-      const symbolHeight =
-        symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
+      const symbolHeight = symbols.querySelector('.symbolInSlot')?.clientHeight || 150;
       const topValue = Math.abs(parseInt(symbols.style.top, 10));
 
       // Account for the question mark at the beginning
-      const symbolIndex =
-        (Math.floor(topValue / symbolHeight) - 1) % slotSymbols.length;
+      const symbolIndex = (Math.floor(topValue / symbolHeight) - 1) % slotSymbols.length;
       const displayedSymbol = slotSymbols[symbolIndex];
       if (displayedSymbol) {
         displayedSymbols.push(displayedSymbol);
@@ -2078,10 +1925,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Save win log to localStorage
   private saveWinLog(): void {
     try {
-      localStorage.setItem(
-        this.WIN_LOG_STORAGE_KEY,
-        JSON.stringify(this.slotWinLog),
-      );
+      localStorage.setItem(this.WIN_LOG_STORAGE_KEY, JSON.stringify(this.slotWinLog));
     } catch (error) {
       console.error('Error saving win log to localStorage:', error);
     }
@@ -2122,31 +1966,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.luckyWheelSpinLog = JSON.parse(stored);
       }
     } catch (error) {
-      console.error(
-        'Error loading lucky wheel spins from localStorage:',
-        error,
-      );
+      console.error('Error loading lucky wheel spins from localStorage:', error);
       this.luckyWheelSpinLog = [];
     }
   }
 
   private saveLuckyWheelSpinLog(): void {
     try {
-      localStorage.setItem(
-        this.WHEEL_LOG_STORAGE_KEY,
-        JSON.stringify(this.luckyWheelSpinLog),
-      );
+      localStorage.setItem(this.WHEEL_LOG_STORAGE_KEY, JSON.stringify(this.luckyWheelSpinLog));
     } catch (error) {
       console.error('Error saving lucky wheel spins to localStorage:', error);
     }
   }
 
-  private addLuckyWheelSpinToLog(
-    multiplier: number,
-    payout: number,
-    bet: number,
-    message: string,
-  ): void {
+  private addLuckyWheelSpinToLog(multiplier: number, payout: number, bet: number, message: string): void {
     const entry: LuckyWheelSpinLogEntry = {
       id: Date.now(),
       timestamp: Date.now(),
@@ -2158,10 +1991,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.luckyWheelSpinLog.unshift(entry);
     if (this.luckyWheelSpinLog.length > this.MAX_WIN_LOG_ENTRIES) {
-      this.luckyWheelSpinLog = this.luckyWheelSpinLog.slice(
-        0,
-        this.MAX_WIN_LOG_ENTRIES,
-      );
+      this.luckyWheelSpinLog = this.luckyWheelSpinLog.slice(0, this.MAX_WIN_LOG_ENTRIES);
     }
 
     this.saveLuckyWheelSpinLog();
@@ -2178,8 +2008,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (days > 0) return days === 1 ? 'vor 1 Tag' : `vor ${days} Tagen`;
     if (hours > 0) return hours === 1 ? 'vor 1 Stunde' : `vor ${hours} Stunden`;
-    if (minutes > 0)
-      return minutes === 1 ? 'vor 1 Minute' : `vor ${minutes} Minuten`;
+    if (minutes > 0) return minutes === 1 ? 'vor 1 Minute' : `vor ${minutes} Minuten`;
     return 'Gerade eben';
   }
 
@@ -2289,8 +2118,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showWinningAnimation = false;
 
     // Deduct the cost immediately (cost to play)
-    this.userStatistics.experience =
-      (this.userStatistics.experience || 0) - cost;
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - cost;
 
     // Call backend to get the result
     this.authService
@@ -2341,8 +2169,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
             // Update balance based on payout
             if (payout > 0) {
-              this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + payout;
+              this.userStatistics.experience = (this.userStatistics.experience || 0) + payout;
             }
           }, 10000); // Animation duration (10 seconds)
         },
@@ -2351,10 +2178,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.slotMachineLoading = false;
           // Refund the cost on error
           const cost = this.slotMachineInfo?.cost || 10;
-          this.userStatistics.experience =
-            (this.userStatistics.experience || 0) + cost;
-          this.slotMachineError =
-            error?.error?.error || 'Fehler beim Spielen der Slotmaschine';
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + cost;
+          this.slotMachineError = error?.error?.error || 'Fehler beim Spielen der Slotmaschine';
 
           setTimeout(() => {
             this.slotMachineError = '';
@@ -2366,25 +2191,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Lucky Wheel Methods
   loadLuckyWheelInfo(): void {
     this.luckyWheelError = ''; // Clear any previous errors
-    this.authService
-      .authenticatedGet<LuckyWheelInfo>(`${environment.apiUrl}/luckywheel/info`)
-      .subscribe({
-        next: (response) => {
-          this.luckyWheelInfo = response;
-          this.luckyWheelError = ''; // Clear error on success
-          const defaultBet =
-            typeof response.minBet === 'number'
-              ? response.minBet
-              : this.luckyWheelBet;
-          this.luckyWheelBet = this.clampLuckyWheelBet(defaultBet || 0);
-          this.syncLuckyWheelBetInput();
-        },
-        error: (error) => {
-          console.error('Error loading lucky wheel info:', error);
-          this.luckyWheelError =
-            'Fehler beim Laden des Glücksrads. Bitte versuche es erneut.';
-        },
-      });
+    this.authService.authenticatedGet<LuckyWheelInfo>(`${environment.apiUrl}/luckywheel/info`).subscribe({
+      next: (response) => {
+        this.luckyWheelInfo = response;
+        this.luckyWheelError = ''; // Clear error on success
+        const defaultBet = typeof response.minBet === 'number' ? response.minBet : this.luckyWheelBet;
+        this.luckyWheelBet = this.clampLuckyWheelBet(defaultBet || 0);
+        this.syncLuckyWheelBetInput();
+      },
+      error: (error) => {
+        console.error('Error loading lucky wheel info:', error);
+        this.luckyWheelError = 'Fehler beim Laden des Glücksrads. Bitte versuche es erneut.';
+      },
+    });
   }
 
   canAffordLuckyWheel(): boolean {
@@ -2426,23 +2245,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onLuckyWheelBetKeydown(event: KeyboardEvent): void {
     // Allow control keys: backspace, delete, tab, escape, enter, arrows
-    const controlKeys = [
-      'Backspace',
-      'Delete',
-      'Tab',
-      'Escape',
-      'Enter',
-      'ArrowLeft',
-      'ArrowRight',
-      'Home',
-      'End',
-    ];
+    const controlKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
 
     // Allow Ctrl/Cmd + A, C, V, X for copy/paste/select all
-    if (
-      (event.ctrlKey || event.metaKey) &&
-      ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())
-    ) {
+    if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
       return;
     }
 
@@ -2489,25 +2295,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.luckyWheelInfo) {
       return Math.max(0, rounded);
     }
-    return Math.max(
-      this.luckyWheelInfo.minBet,
-      Math.min(this.luckyWheelInfo.maxBet, rounded),
-    );
+    return Math.max(this.luckyWheelInfo.minBet, Math.min(this.luckyWheelInfo.maxBet, rounded));
   }
 
   private getPendingLuckyWheelBet(): number {
     if (!this.luckyWheelInfo) {
       const parsed = parseInt(this.luckyWheelBetInput, 10);
-      return Number.isNaN(parsed)
-        ? Math.max(0, this.luckyWheelBet || 0)
-        : Math.max(0, Math.round(parsed));
+      return Number.isNaN(parsed) ? Math.max(0, this.luckyWheelBet || 0) : Math.max(0, Math.round(parsed));
     }
 
     const parsed = parseInt(this.luckyWheelBetInput, 10);
     if (Number.isNaN(parsed)) {
-      return this.clampLuckyWheelBet(
-        this.luckyWheelBet || this.luckyWheelInfo.minBet,
-      );
+      return this.clampLuckyWheelBet(this.luckyWheelBet || this.luckyWheelInfo.minBet);
     }
     return this.clampLuckyWheelBet(parsed);
   }
@@ -2542,8 +2341,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.winningSegmentIndex = null;
 
     // Deduct the bet immediately
-    this.userStatistics.experience =
-      (this.userStatistics.experience || 0) - bet;
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - bet;
 
     // Call backend
     this.authService
@@ -2564,16 +2362,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }
           });
 
-          const fallbackIndex = segments.findIndex(
-            (seg) => seg.multiplier === response.multiplier,
-          );
+          const fallbackIndex = segments.findIndex((seg) => seg.multiplier === response.multiplier);
 
           // Pick a random matching segment (fallback to first occurrence)
           const targetSegmentIndex = (
             matchingIndices.length
-              ? matchingIndices[
-                  Math.floor(Math.random() * matchingIndices.length)
-                ]
+              ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)]
               : fallbackIndex !== -1
                 ? fallbackIndex
                 : 0
@@ -2583,8 +2377,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const degreesPerSegment = 360 / totalSegments;
 
           // Calculate the angle of the segment's center relative to the base orientation
-          const rawSegmentCenterAngle =
-            targetSegmentIndex * degreesPerSegment + degreesPerSegment / 2 - 90;
+          const rawSegmentCenterAngle = targetSegmentIndex * degreesPerSegment + degreesPerSegment / 2 - 90;
           const segmentCenterAngle = this.normalizeAngle(rawSegmentCenterAngle);
 
           // Pointer arrow sits at top -> -90 degrees -> normalize to 270
@@ -2594,15 +2387,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const currentAngle = this.normalizeAngle(this.wheelRotation);
 
           // Determine clockwise rotation needed from current position to align the target
-          let rotationToPointer =
-            pointerAngle - segmentCenterAngle - currentAngle;
+          let rotationToPointer = pointerAngle - segmentCenterAngle - currentAngle;
           rotationToPointer = this.normalizeAngle(rotationToPointer);
 
           // Enforce at least 5 full rotations, plus up to 2 extra for drama
           const minFullRotations = 5;
           const extraRotations = Math.floor(Math.random() * 3); // 0-2
-          const spinDegrees =
-            (minFullRotations + extraRotations) * 360 + rotationToPointer;
+          const spinDegrees = (minFullRotations + extraRotations) * 360 + rotationToPointer;
 
           this.wheelRotation += spinDegrees;
 
@@ -2618,17 +2409,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
             // Update balance with payout
             if (response.payout > 0) {
-              this.userStatistics.experience =
-                (this.userStatistics.experience || 0) + response.payout;
+              this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
             }
 
             this.luckyWheelMessage = response.message;
-            this.addLuckyWheelSpinToLog(
-              response.multiplier,
-              response.payout,
-              bet,
-              response.message,
-            );
+            this.addLuckyWheelSpinToLog(response.multiplier, response.payout, bet, response.message);
 
             this.showWheelResult = false;
             this.luckyWheelMessage = '';
@@ -2643,11 +2428,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.luckyWheelLoading = false;
 
           // Refund the bet on error
-          this.userStatistics.experience =
-            (this.userStatistics.experience || 0) + bet;
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
 
-          this.luckyWheelError =
-            error?.error?.error || 'Fehler beim Drehen des Glücksrads';
+          this.luckyWheelError = error?.error?.error || 'Fehler beim Drehen des Glücksrads';
 
           setTimeout(() => {
             this.luckyWheelError = '';
@@ -2658,10 +2441,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getTotalSegments(): number {
     if (!this.luckyWheelInfo) return 1;
-    return this.luckyWheelInfo.payoutTable.reduce(
-      (sum, entry) => sum + entry.weight,
-      0,
-    );
+    return this.luckyWheelInfo.payoutTable.reduce((sum, entry) => sum + entry.weight, 0);
   }
 
   private normalizeAngle(angle: number): number {
@@ -2693,18 +2473,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const segments: Array<{ color: string; multiplier: number }> = [];
 
     // Sort payout table by multiplier to determine color palette position
-    const sortedTable = [...this.luckyWheelInfo.payoutTable].sort(
-      (a, b) => a.multiplier - b.multiplier,
-    );
+    const sortedTable = [...this.luckyWheelInfo.payoutTable].sort((a, b) => a.multiplier - b.multiplier);
 
     this.luckyWheelInfo.payoutTable.forEach((entry) => {
-      const sortedIndex = sortedTable.findIndex(
-        (e) => e.multiplier === entry.multiplier,
-      );
-      const color = this.getColorFromPaletteIndex(
-        sortedIndex,
-        sortedTable.length,
-      );
+      const sortedIndex = sortedTable.findIndex((e) => e.multiplier === entry.multiplier);
+      const color = this.getColorFromPaletteIndex(sortedIndex, sortedTable.length);
       for (let i = 0; i < entry.weight; i++) {
         segments.push({ color, multiplier: entry.multiplier });
       }
@@ -2751,21 +2524,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Map index to palette position
     if (total === 1) return palette[palette.length - 1];
 
-    const paletteIndex = Math.floor(
-      (index / (total - 1)) * (palette.length - 1),
-    );
+    const paletteIndex = Math.floor((index / (total - 1)) * (palette.length - 1));
     return palette[paletteIndex];
   }
 
   getMultiplierColor(multiplier: number): string {
     if (!this.luckyWheelInfo) return '#3b82f6';
 
-    const sortedTable = [...this.luckyWheelInfo.payoutTable].sort(
-      (a, b) => a.multiplier - b.multiplier,
-    );
-    const sortedIndex = sortedTable.findIndex(
-      (e) => e.multiplier === multiplier,
-    );
+    const sortedTable = [...this.luckyWheelInfo.payoutTable].sort((a, b) => a.multiplier - b.multiplier);
+    const sortedIndex = sortedTable.findIndex((e) => e.multiplier === multiplier);
 
     return this.getColorFromPaletteIndex(sortedIndex, sortedTable.length);
   }

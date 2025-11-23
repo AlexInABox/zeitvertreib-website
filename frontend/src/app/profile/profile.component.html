@@ -3,13 +3,7 @@
     <!-- Profile Header -->
     <p-card header="Profil" styleClass="mb-4">
       <div class="flex items-center space-x-4">
-        <p-avatar
-          [image]="currentUser.avatarfull"
-          size="xlarge"
-          shape="circle"
-          class="profile-avatar"
-        >
-        </p-avatar>
+        <p-avatar [image]="currentUser.avatarfull" size="xlarge" shape="circle" class="profile-avatar"> </p-avatar>
         <div>
           <h2 class="text-2xl font-bold mb-2 text-gray-900">
             {{ currentUser.personaname }}
@@ -23,13 +17,7 @@
               (onClick)="openSteamProfile()"
             >
             </p-button>
-            <p-button
-              label="Abmelden"
-              icon="pi pi-sign-out"
-              severity="danger"
-              (onClick)="logout()"
-            >
-            </p-button>
+            <p-button label="Abmelden" icon="pi pi-sign-out" severity="danger" (onClick)="logout()"> </p-button>
           </div>
         </div>
       </div>
@@ -39,21 +27,15 @@
     <p-card header="Profil Details" styleClass="mb-4 profile-details-card">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Profilname</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-1">Profilname</label>
           <p class="text-gray-900">{{ currentUser.personaname }}</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Steam ID</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-1">Steam ID</label>
           <p class="text-gray-900 font-mono">{{ currentUser.steamid }}</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Profil URL</label
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-1">Profil URL</label>
           <p class="text-gray-900 break-all">{{ currentUser.profileurl }}</p>
         </div>
       </div>

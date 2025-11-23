@@ -16,11 +16,7 @@
   gap: 0.875rem;
   padding: 1.25rem 1.5rem;
   max-width: 320px;
-  background: linear-gradient(
-    135deg,
-    rgba(147, 51, 234, 0.25) 0%,
-    rgba(79, 70, 229, 0.25) 100%
-  );
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25) 0%, rgba(79, 70, 229, 0.25) 100%);
   backdrop-filter: blur(16px);
   border-radius: 0 1rem 1rem 0;
   box-shadow:
@@ -58,12 +54,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   transform: rotate(45deg);
   transition: all 0.6s ease;
   pointer-events: none;
@@ -80,11 +71,7 @@
     0 12px 24px rgba(147, 51, 234, 0.3),
     inset 0 -2px 4px rgba(0, 0, 0, 0.1);
   border-color: rgba(147, 51, 234, 0.7);
-  background: linear-gradient(
-    135deg,
-    rgba(147, 51, 234, 0.35) 0%,
-    rgba(79, 70, 229, 0.35) 100%
-  );
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.35) 0%, rgba(79, 70, 229, 0.35) 100%);
 }
 
 .badge-icon {

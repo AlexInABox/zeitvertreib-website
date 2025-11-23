@@ -17,13 +17,7 @@ interface Player {
 
 @Component({
   selector: 'app-home',
-  imports: [
-    CommonModule,
-    AnimateOnScrollModule,
-    ImageModule,
-    PanelModule,
-    CardModule,
-  ],
+  imports: [CommonModule, AnimateOnScrollModule, ImageModule, PanelModule, CardModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -85,9 +79,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   fetchPlayerlist() {
-    const isLocalhost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const apiUrl = isLocalhost
       ? 'https://dev.zeitvertreib.vip/api/playerlist'
       : `${window.location.origin}/api/playerlist`;
@@ -138,8 +130,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   previousImage(event: Event) {
     event.stopPropagation();
-    this.currentImageIndex =
-      (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+    this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
   }
 
   scrollToGallery(event: Event) {

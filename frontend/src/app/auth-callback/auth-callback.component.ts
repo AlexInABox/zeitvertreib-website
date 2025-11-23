@@ -141,8 +141,7 @@ export class AuthCallbackComponent implements OnInit {
       }
     } catch (error) {
       console.error('[AUTH-CALLBACK] Authentication callback failed:', error);
-      this.error =
-        'Authentication failed. This might be due to browser security settings.';
+      this.error = 'Authentication failed. This might be due to browser security settings.';
       this.message = '';
     }
   }

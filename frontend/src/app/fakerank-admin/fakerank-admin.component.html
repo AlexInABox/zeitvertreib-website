@@ -38,12 +38,8 @@
         <p>{{ confirmationDialog().message }}</p>
       </div>
       <div class="dialog-footer">
-        <button class="btn btn-secondary" (click)="confirmDialogReject()">
-          Abbrechen
-        </button>
-        <button class="btn btn-danger" (click)="confirmDialogAccept()">
-          Bestätigen
-        </button>
+        <button class="btn btn-secondary" (click)="confirmDialogReject()">Abbrechen</button>
+        <button class="btn btn-danger" (click)="confirmDialogAccept()">Bestätigen</button>
       </div>
     </div>
   </div>
@@ -59,9 +55,7 @@
           <span class="header-icon">⚡</span>
           Fakerank Administration
         </h1>
-        <p class="header-subtitle">
-          Verwalte Benutzer-Fakeranks, Filter und aktuelle Spieler
-        </p>
+        <p class="header-subtitle">Verwalte Benutzer-Fakeranks, Filter und aktuelle Spieler</p>
       </div>
       <a routerLink="/dashboard" class="back-button">
         <span class="back-icon">←</span>
@@ -74,11 +68,7 @@
   <div class="tabs-card">
     <div class="tabs-nav">
       @for (tab of TABS; track tab.id; let i = $index) {
-        <button
-          class="tab-btn"
-          [class.active]="activeTabIndex() === i"
-          (click)="onTabChange(i)"
-        >
+        <button class="tab-btn" [class.active]="activeTabIndex() === i" (click)="onTabChange(i)">
           <span class="tab-icon">{{ tab.icon }}</span>
           <span class="tab-label">{{ tab.title }}</span>
         </button>
@@ -110,11 +100,7 @@
               (keyup.enter)="searchUser()"
               [disabled]="loading().user"
             />
-            <button
-              class="search-btn"
-              (click)="searchUser()"
-              [disabled]="loading().user || !searchSteamId().trim()"
-            >
+            <button class="search-btn" (click)="searchUser()" [disabled]="loading().user || !searchSteamId().trim()">
               @if (loading().user) {
                 <span class="spinner-small"></span>
               } @else {
@@ -139,10 +125,7 @@
                   @if (user.fakerank) {
                     <div class="current-fakerank">
                       <span class="fakerank-label">Aktueller Fakerank:</span>
-                      <span
-                        class="fakerank-value"
-                        [style.color]="user.fakerank_color || '#ffffff'"
-                      >
+                      <span class="fakerank-value" [style.color]="user.fakerank_color || '#ffffff'">
                         {{ user.fakerank }}
                       </span>
                     </div>
@@ -173,24 +156,10 @@
                   <div class="form-group">
                     <label class="form-label">🎨 Farbe</label>
                     <div class="color-picker-wrapper color-picker-container">
-                      <button
-                        (click)="toggleColorPicker()"
-                        class="color-btn"
-                        [disabled]="loading().user"
-                        type="button"
-                      >
-                        <span
-                          class="color-dot"
-                          [style.background-color]="
-                            getColorHex(tempFakerankColor())
-                          "
-                        ></span>
-                        <span class="color-text">{{
-                          getColorName(tempFakerankColor())
-                        }}</span>
-                        <span class="color-arrow">{{
-                          showColorPicker() ? '▲' : '▼'
-                        }}</span>
+                      <button (click)="toggleColorPicker()" class="color-btn" [disabled]="loading().user" type="button">
+                        <span class="color-dot" [style.background-color]="getColorHex(tempFakerankColor())"></span>
+                        <span class="color-text">{{ getColorName(tempFakerankColor()) }}</span>
+                        <span class="color-arrow">{{ showColorPicker() ? '▲' : '▼' }}</span>
                       </button>
 
                       @if (showColorPicker()) {
@@ -199,15 +168,10 @@
                             <button
                               (click)="selectColor(color.key)"
                               class="color-option-btn"
-                              [class.selected]="
-                                tempFakerankColor() === color.key
-                              "
+                              [class.selected]="tempFakerankColor() === color.key"
                               type="button"
                             >
-                              <span
-                                class="color-dot"
-                                [style.background-color]="color.hex"
-                              ></span>
+                              <span class="color-dot" [style.background-color]="color.hex"></span>
                               <span class="color-name">{{ color.name }}</span>
                               @if (tempFakerankColor() === color.key) {
                                 <span class="check-icon">✓</span>
@@ -244,9 +208,7 @@
                           type="button"
                           class="num-btn"
                           (click)="decreaseOverrideDuration()"
-                          [disabled]="
-                            loading().user || overrideDurationHours() <= 1
-                          "
+                          [disabled]="loading().user || overrideDurationHours() <= 1"
                         >
                           −
                         </button>
@@ -263,9 +225,7 @@
                           type="button"
                           class="num-btn"
                           (click)="increaseOverrideDuration()"
-                          [disabled]="
-                            loading().user || overrideDurationHours() >= 168
-                          "
+                          [disabled]="loading().user || overrideDurationHours() >= 168"
                         >
                           +
                         </button>
@@ -288,11 +248,7 @@
                   </button>
 
                   @if (user.fakerank) {
-                    <button
-                      class="action-btn delete-btn"
-                      (click)="removeUserFakerank()"
-                      [disabled]="loading().user"
-                    >
+                    <button class="action-btn delete-btn" (click)="removeUserFakerank()" [disabled]="loading().user">
                       @if (loading().user) {
                         <span class="spinner-small"></span>
                       } @else {
@@ -327,11 +283,7 @@
               (keydown)="onKeyDown($event)"
               (keyup.enter)="addToBlacklist()"
             />
-            <button
-              class="add-btn"
-              (click)="addToBlacklist()"
-              [disabled]="!newBlacklistWord().trim()"
-            >
+            <button class="add-btn" (click)="addToBlacklist()" [disabled]="!newBlacklistWord().trim()">
               ➕ Hinzufügen
             </button>
           </div>
@@ -353,16 +305,9 @@
                   <div class="word-item">
                     <div class="word-info">
                       <span class="word-text">{{ item.word }}</span>
-                      <span class="word-date">{{
-                        formatDate(item.createdAt)
-                      }}</span>
+                      <span class="word-date">{{ formatDate(item.createdAt) }}</span>
                     </div>
-                    <button
-                      class="remove-btn"
-                      (click)="removeFromBlacklist(item)"
-                    >
-                      🗑️
-                    </button>
+                    <button class="remove-btn" (click)="removeFromBlacklist(item)">🗑️</button>
                   </div>
                 }
               </div>
@@ -391,11 +336,7 @@
               (keydown)="onKeyDown($event)"
               (keyup.enter)="addToWhitelist()"
             />
-            <button
-              class="add-btn"
-              (click)="addToWhitelist()"
-              [disabled]="!newWhitelistWord().trim()"
-            >
+            <button class="add-btn" (click)="addToWhitelist()" [disabled]="!newWhitelistWord().trim()">
               ➕ Hinzufügen
             </button>
           </div>
@@ -417,16 +358,9 @@
                   <div class="word-item">
                     <div class="word-info">
                       <span class="word-text">{{ item.word }}</span>
-                      <span class="word-date">{{
-                        formatDate(item.createdAt)
-                      }}</span>
+                      <span class="word-date">{{ formatDate(item.createdAt) }}</span>
                     </div>
-                    <button
-                      class="remove-btn"
-                      (click)="removeFromWhitelist(item)"
-                    >
-                      🗑️
-                    </button>
+                    <button class="remove-btn" (click)="removeFromWhitelist(item)">🗑️</button>
                   </div>
                 }
               </div>
@@ -474,10 +408,7 @@
                     @if (user.fakerank && user.fakerank !== 'No Fakerank') {
                       <div class="player-fakerank">
                         <span class="fakerank-label-sm">Fakerank:</span>
-                        <span
-                          class="fakerank-display"
-                          [style.color]="user.fakerank_color || '#ffffff'"
-                        >
+                        <span class="fakerank-display" [style.color]="user.fakerank_color || '#ffffff'">
                           {{ user.fakerank }}
                         </span>
                       </div>
@@ -489,10 +420,7 @@
                   </div>
 
                   <div class="player-footer">
-                    <button
-                      class="edit-player-btn"
-                      (click)="editFakerank(user)"
-                    >
+                    <button class="edit-player-btn" (click)="editFakerank(user)">
                       @if (user.fakerank && user.fakerank !== 'No Fakerank') {
                         <span>✏️ Bearbeiten</span>
                       } @else {
@@ -507,19 +435,13 @@
             <!-- Pagination -->
             @if (pagination().total > pagination().limit) {
               <div class="pagination-bar">
-                <button
-                  class="page-btn"
-                  (click)="onPageChange(currentPage() - 2)"
-                  [disabled]="currentPage() === 1"
-                >
+                <button class="page-btn" (click)="onPageChange(currentPage() - 2)" [disabled]="currentPage() === 1">
                   ← Zurück
                 </button>
 
                 <span class="page-info">
                   Seite {{ currentPage() }} von {{ totalPages() }}
-                  <span class="page-total"
-                    >({{ pagination().total }} gesamt)</span
-                  >
+                  <span class="page-total">({{ pagination().total }} gesamt)</span>
                 </span>
 
                 <button
