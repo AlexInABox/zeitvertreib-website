@@ -23,11 +23,7 @@ export async function handleDiscordCallback(request: Request, env: Env) {
   const code = url.searchParams.get('code');
 
   if (!code) {
-    return createResponse(
-      { error: 'No authorization code received' },
-      400,
-      origin,
-    );
+    return createResponse({ error: 'No authorization code received' }, 400, origin);
   }
 
   try {
@@ -62,15 +58,8 @@ export async function handleDiscordCallback(request: Request, env: Env) {
 
     // Validate connections is an array
     if (!Array.isArray(connections)) {
-      console.error(
-        'Discord connections response is not an array:',
-        connections,
-      );
-      return createResponse(
-        { error: 'Failed to fetch Discord connections' },
-        500,
-        origin,
-      );
+      console.error('Discord connections response is not an array:', connections);
+      return createResponse({ error: 'Failed to fetch Discord connections' }, 500, origin);
     }
 
     // Find Steam connection
@@ -91,16 +80,9 @@ export async function handleDiscordCallback(request: Request, env: Env) {
     const discordId = user.id;
 
     // Unlink old Discord ID if exists elsewhere
-    const existing = await db
-      .select()
-      .from(playerdata)
-      .where(eq(playerdata.discordId, discordId))
-      .limit(1);
+    const existing = await db.select().from(playerdata).where(eq(playerdata.discordId, discordId)).limit(1);
     if (existing[0]) {
-      await db
-        .update(playerdata)
-        .set({ discordId: null })
-        .where(eq(playerdata.id, existing[0].id));
+      await db.update(playerdata).set({ discordId: null }).where(eq(playerdata.id, existing[0].id));
     }
 
     // Link Discord to Steam account
@@ -118,11 +100,7 @@ export async function handleDiscordCallback(request: Request, env: Env) {
     // Fetch Steam data and create session
     const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
     if (!steamUser) {
-      return createResponse(
-        { error: 'Could not fetch Steam user data' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Could not fetch Steam user data' }, 500, origin);
     }
 
     const sessionId = await createSession(steamId, steamUser, env);
@@ -131,10 +109,7 @@ export async function handleDiscordCallback(request: Request, env: Env) {
 
     redirectUrl.searchParams.set('token', sessionId);
     if (url.searchParams.has('redirect')) {
-      redirectUrl.searchParams.set(
-        'redirect',
-        url.searchParams.get('redirect')!,
-      );
+      redirectUrl.searchParams.set('redirect', url.searchParams.get('redirect')!);
     }
 
     return new Response(null, {

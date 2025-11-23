@@ -1,12 +1,4 @@
-import {
-  sqliteTable,
-  check,
-  text,
-  integer,
-  index,
-  real,
-  numeric,
-} from 'drizzle-orm/sqlite-core';
+import { sqliteTable, check, text, integer, index, real, numeric } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 export const playerdata = sqliteTable('playerdata', {

@@ -9,12 +9,7 @@ export class PlayerlistCommand extends BaseCommand {
     de: 'Aktuelle Spielerliste vom Spiel anzeigen!',
   };
 
-  async execute(
-    interaction: any,
-    helpers: CommandHelpers,
-    env: Env,
-    request: Request,
-  ) {
+  async execute(interaction: any, helpers: CommandHelpers, env: Env, request: Request) {
     console.log('Executing playerlist command');
 
     try {
@@ -30,9 +25,7 @@ export class PlayerlistCommand extends BaseCommand {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch playerlist: ${response.status} ${response.statusText}`,
-        );
+        throw new Error(`Failed to fetch playerlist: ${response.status} ${response.statusText}`);
       }
 
       const playerlistData: Playerlist = await response.json();
@@ -41,10 +34,7 @@ export class PlayerlistCommand extends BaseCommand {
         throw new Error('Durable Object returned invalid data format');
       }
 
-      const embed = new EmbedBuilder()
-        .setTitle('👥 Aktuelle Spielerliste')
-        .setColor(0x00ff00)
-        .setTimestamp();
+      const embed = new EmbedBuilder().setTitle('👥 Aktuelle Spielerliste').setColor(0x00ff00).setTimestamp();
 
       if (playerlistData.length === 0) {
         embed.setDescription('Keine Spieler online');
@@ -59,9 +49,7 @@ export class PlayerlistCommand extends BaseCommand {
         const maxFields = 25;
         if (playerFields.length > maxFields) {
           embed.addFields(playerFields.slice(0, maxFields));
-          embed.setDescription(
-            `⚠️ Nur die ersten ${maxFields} von ${playerFields.length} Spielern werden angezeigt.`,
-          );
+          embed.setDescription(`⚠️ Nur die ersten ${maxFields} von ${playerFields.length} Spielern werden angezeigt.`);
         } else {
           embed.addFields(playerFields);
         }
@@ -75,8 +63,7 @@ export class PlayerlistCommand extends BaseCommand {
     } catch (error) {
       console.error('Playerlist command error:', error);
 
-      let errorMessage =
-        'Fehler beim Abrufen der Spielerliste aus dem Durable Object.';
+      let errorMessage = 'Fehler beim Abrufen der Spielerliste aus dem Durable Object.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch playerlist')) {

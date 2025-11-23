@@ -7,12 +7,7 @@ export abstract class BaseCommand {
   readonly description_localizations?: Record<string, string>;
   readonly options?: any[];
 
-  abstract execute(
-    interaction: any,
-    helpers: CommandHelpers,
-    env: Env,
-    request: Request,
-  ): Promise<void>;
+  abstract execute(interaction: any, helpers: CommandHelpers, env: Env, request: Request): Promise<void>;
 
   toJSON() {
     return {

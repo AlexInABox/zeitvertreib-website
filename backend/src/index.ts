@@ -9,7 +9,7 @@ import {
   handleGenerateLoginSecret,
   handleLoginWithSecret,
 } from './routes/auth.js';
-import { handleGetStats } from './routes/stats.js';
+import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins } from './routes/zvc.js';
 import {
@@ -55,28 +55,15 @@ import {
   processRecurringTransactions,
   handleTransferZVC,
 } from './routes/financial.js';
-import {
-  handleGetRedeemables,
-  handleRedeemItem,
-  handleRedeemCode,
-} from './routes/redeemables.js';
-import {
-  updateLeaderboard,
-  handleLeaderboardUpdate,
-} from './routes/leaderboard.js';
-import {
-  handleSlotMachine,
-  handleSlotMachineInfo,
-} from './routes/slotmachine.js';
+import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './routes/redeemables.js';
+import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
+import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
 import { handleLuckyWheel, handleLuckyWheelInfo } from './routes/luckywheel.js';
 import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
-import {
-  handleGetPlayerlist,
-  handleUpdatePlayerlist,
-} from './routes/playerlist.js';
+import { handleGetPlayerlist, handleUpdatePlayerlist } from './routes/playerlist.js';
 import {
   handleCaseFileUpload,
   handleListCases,
@@ -89,11 +76,7 @@ import {
 } from './routes/cases.js';
 
 // Simple response helper for internal use
-function createResponse(
-  data: any,
-  status = 200,
-  origin?: string | null,
-): Response {
+function createResponse(data: any, status = 200, origin?: string | null): Response {
   const headers: Record<string, string> = {
     'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Credentials': 'true',
@@ -104,10 +87,7 @@ function createResponse(
 }
 
 // Route mapping: path + method -> handler function
-const routes: Record<
-  string,
-  (request: Request, env: Env, ctx?: ExecutionContext) => Promise<Response>
-> = {
+const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext) => Promise<Response>> = {
   // Auth routes
   'GET:/auth/steam': handleSteamLogin,
   'GET:/auth/steam/callback': handleSteamCallback,
@@ -118,6 +98,7 @@ const routes: Record<
 
   // Stats
   'GET:/stats': handleGetStats,
+  'POST:/stats': handlePostStats,
 
   //Public endpoints (no auth)
   'GET:/public/stats': handleGetPublicStats,
@@ -206,11 +187,7 @@ const routes: Record<
 };
 
 export default {
-  async fetch(
-    request: Request,
-    env: Env,
-    ctx: ExecutionContext,
-  ): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const origin = request.headers.get('Origin');
 
     // Handle preflight OPTIONS requests
@@ -279,16 +256,12 @@ export default {
       let routeKey = `${request.method}:${pathname}`;
 
       // Check for dynamic routes
-      const transactionIdMatch = pathname.match(
-        /^\/financial\/transactions\/(\d+)$/,
-      );
+      const transactionIdMatch = pathname.match(/^\/financial\/transactions\/(\d+)$/);
       if (transactionIdMatch) {
         routeKey = `${request.method}:/financial/transactions`;
       }
 
-      const recurringIdMatch = pathname.match(
-        /^\/financial\/recurring\/(\d+)$/,
-      );
+      const recurringIdMatch = pathname.match(/^\/financial\/recurring\/(\d+)$/);
       if (recurringIdMatch) {
         routeKey = `${request.method}:/financial/recurring`;
       }
@@ -304,11 +277,7 @@ export default {
     }
   },
 
-  async scheduled(
-    controller: ScheduledController,
-    env: Env,
-    ctx: ExecutionContext,
-  ): Promise<void> {
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
 
     // Process recurring transactions daily (6:00 AM)

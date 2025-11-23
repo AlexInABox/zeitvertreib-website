@@ -78,9 +78,7 @@ async function sendLuckyWheelMegaWinToDiscord(
       env,
     );
 
-    console.log(
-      `✅ Sent ${multiplier}x mega win notification to Discord for ${steamId}`,
-    );
+    console.log(`✅ Sent ${multiplier}x mega win notification to Discord for ${steamId}`);
   } catch (error) {
     console.error('Error sending lucky wheel win to Discord webhook:', error);
   }
@@ -90,10 +88,7 @@ async function sendLuckyWheelMegaWinToDiscord(
  * GET /luckywheel/info
  * Get lucky wheel payout table and information
  */
-export async function handleLuckyWheelInfo(
-  request: Request,
-  _env: Env,
-): Promise<Response> {
+export async function handleLuckyWheelInfo(request: Request, _env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   return createResponse(
@@ -112,11 +107,7 @@ export async function handleLuckyWheelInfo(
  * POST /luckywheel
  * Play lucky wheel - bet between 1-500 ZVC for a chance to multiply your bet!
  */
-export async function handleLuckyWheel(
-  request: Request,
-  env: Env,
-  ctx?: ExecutionContext,
-): Promise<Response> {
+export async function handleLuckyWheel(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -133,12 +124,7 @@ export async function handleLuckyWheel(
     const body = (await request.json()) as { bet: number };
     betAmount = parseInt(String(body.bet));
 
-    if (
-      isNaN(betAmount) ||
-      betAmount < MIN_BET ||
-      betAmount > MAX_BET ||
-      !Number.isInteger(betAmount)
-    ) {
+    if (isNaN(betAmount) || betAmount < MIN_BET || betAmount > MAX_BET || !Number.isInteger(betAmount)) {
       return createResponse(
         {
           error: `Ungültiger Einsatz. Muss zwischen ${MIN_BET} und ${MAX_BET} ZVC liegen.`,
@@ -162,9 +148,7 @@ export async function handleLuckyWheel(
 
   try {
     // Get current balance
-    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare(
-      'SELECT experience FROM playerdata WHERE id = ?',
-    )
+    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare('SELECT experience FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first()) as { experience: number } | null;
 
@@ -186,10 +170,7 @@ export async function handleLuckyWheel(
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
     // Weighted random selection using crypto.getRandomValues
-    const totalWeight = LUCKYWHEEL_TABLE.reduce(
-      (sum, entry) => sum + entry.weight,
-      0,
-    );
+    const totalWeight = LUCKYWHEEL_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
 
     const randomBuffer = new Uint32Array(1);
     crypto.getRandomValues(randomBuffer);
@@ -222,14 +203,8 @@ export async function handleLuckyWheel(
       .run();
 
     // Send webhook notification for the highest multiplier only (if bet >= 100)
-    const maxMultiplier = Math.max(
-      ...LUCKYWHEEL_TABLE.map((entry) => entry.multiplier),
-    );
-    if (
-      selectedEntry.multiplier >= maxMultiplier &&
-      maxMultiplier > 0 &&
-      betAmount >= 100
-    ) {
+    const maxMultiplier = Math.max(...LUCKYWHEEL_TABLE.map((entry) => entry.multiplier));
+    if (selectedEntry.multiplier >= maxMultiplier && maxMultiplier > 0 && betAmount >= 100) {
       // Get Steam username from cache
       let steamNickname = validation.session!.steamId;
       try {
@@ -253,17 +228,13 @@ export async function handleLuckyWheel(
             selectedEntry.multiplier,
             payout,
             env,
-          ).catch((error) =>
-            console.error('Failed to send webhook notification:', error),
-          ),
+          ).catch((error) => console.error('Failed to send webhook notification:', error)),
         );
       }
     }
 
     console.log(
-      `🎰 Lucky Wheel: ${
-        validation.session!.steamId
-      } bet ${betAmount} ZVC, got ${
+      `🎰 Lucky Wheel: ${validation.session!.steamId} bet ${betAmount} ZVC, got ${
         selectedEntry.multiplier
       }x (${payout} ZVC). Balance: ${currentBalance} → ${newBalance}`,
     );
@@ -275,9 +246,7 @@ export async function handleLuckyWheel(
         payout: payout,
         netChange: netChange,
         message:
-          payout > 0
-            ? `${selectedEntry.multiplier}x - ${payout} ZVC gewonnen!`
-            : 'Viel Glück beim nächsten Mal!',
+          payout > 0 ? `${selectedEntry.multiplier}x - ${payout} ZVC gewonnen!` : 'Viel Glück beim nächsten Mal!',
         payoutTable: LUCKYWHEEL_TABLE,
       },
       200,

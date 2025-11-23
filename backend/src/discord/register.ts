@@ -4,8 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env' });
 
-const { DISCORD_TOKEN, DISCORD_APPLICATION_ID, GUILD_ID, PROXY_HOST } =
-  process.env;
+const { DISCORD_TOKEN, DISCORD_APPLICATION_ID, GUILD_ID, PROXY_HOST } = process.env;
 
 // Create a mock env object for the registration script
 const env = {
@@ -34,10 +33,7 @@ if (GUILD_ID) {
   if (clearResponse.ok) {
     console.log('✅ Successfully cleared old guild commands');
   } else {
-    console.warn(
-      '⚠️ Failed to clear old guild commands:',
-      await clearResponse.text(),
-    );
+    console.warn('⚠️ Failed to clear old guild commands:', await clearResponse.text());
     // Continue with registration anyway
   }
 
@@ -56,16 +52,9 @@ if (GUILD_ID) {
 
   if (clearResponse.ok) {
     const data = (await setResponse.json()) as any[];
-    console.log(
-      `✅ Registered ${data.length} commands: ${data
-        .map((c) => c.name)
-        .join(', ')}`,
-    );
+    console.log(`✅ Registered ${data.length} commands: ${data.map((c) => c.name).join(', ')}`);
   } else {
-    console.warn(
-      '⚠️ Failed to set guild commands:',
-      await clearResponse.text(),
-    );
+    console.warn('⚠️ Failed to set guild commands:', await clearResponse.text());
   }
 }
 

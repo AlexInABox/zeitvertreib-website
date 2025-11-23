@@ -8,10 +8,7 @@ interface ZvcResponse {
   zvc: number;
 }
 
-export async function handleGetZeitvertreibCoins(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetZeitvertreibCoins(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
   const userIds = new URL(request.url).searchParams.getAll('userId');
 

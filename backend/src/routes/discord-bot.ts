@@ -15,18 +15,13 @@ interface VerificationResult {
   interaction?: APIInteraction;
 }
 
-async function verifyDiscordRequest(
-  request: Request,
-  env: Env,
-): Promise<VerificationResult> {
+async function verifyDiscordRequest(request: Request, env: Env): Promise<VerificationResult> {
   const signature = request.headers.get('x-signature-ed25519');
   const timestamp = request.headers.get('x-signature-timestamp');
   const body = await request.text();
 
   const isValidRequest =
-    signature &&
-    timestamp &&
-    (await verifyKey(body, signature, timestamp, env.DISCORD_PUBLIC_KEY));
+    signature && timestamp && (await verifyKey(body, signature, timestamp, env.DISCORD_PUBLIC_KEY));
 
   if (!isValidRequest) return { isValid: false };
 
@@ -65,16 +60,12 @@ export async function handleDiscordBotInteractions(
     const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
 
     // Override the internal fetch method by monkey-patching
-    (rest as any).fetch = (url: string, init: any) =>
-      proxyFetch(url, init, env);
+    (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
 
     const helpers = {
       reply: async (content: string | any) => {
         const body = typeof content === 'string' ? { content } : content;
-        await rest.patch(
-          Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token),
-          { body },
-        );
+        await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), { body });
       },
     };
 

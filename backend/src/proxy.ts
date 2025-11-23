@@ -1,8 +1,4 @@
-export async function proxyFetch(
-  url: string,
-  options: RequestInit = {},
-  env: Env,
-): Promise<Response> {
+export async function proxyFetch(url: string, options: RequestInit = {}, env: Env): Promise<Response> {
   try {
     const target = new URL(url);
 

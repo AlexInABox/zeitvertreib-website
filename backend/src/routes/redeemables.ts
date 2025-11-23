@@ -19,8 +19,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
   {
     id: 'fakerank_14d',
     name: 'Fakerank (14 Tage)',
-    description:
-      'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
+    description: 'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
     emoji: '✨',
     price: 300,
   },
@@ -70,10 +69,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
  * GET /redeemables
  * Returns all available zeitvertreib coin redeemables
  */
-export async function handleGetRedeemables(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetRedeemables(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session (any valid Steam user can read)
@@ -86,13 +82,10 @@ export async function handleGetRedeemables(
     // Mark expired limited-time items but keep them in the list
     const currentDate = new Date().toISOString();
     const processedRedeemables = ZEITVERTREIB_REDEEMABLES.map((item) => {
-      const isExpired =
-        item.redeemableuntil && item.redeemableuntil < currentDate;
+      const isExpired = item.redeemableuntil && item.redeemableuntil < currentDate;
 
       // Use manually set availabilityStatus if it exists, otherwise calculate based on expiration
-      const availabilityStatus =
-        item.availabilityStatus ||
-        (isExpired ? ('expired' as const) : ('available' as const));
+      const availabilityStatus = item.availabilityStatus || (isExpired ? ('expired' as const) : ('available' as const));
 
       return {
         ...item,
@@ -105,8 +98,7 @@ export async function handleGetRedeemables(
       {
         redeemables: processedRedeemables,
         total: processedRedeemables.length,
-        available: processedRedeemables.filter((item) => !item.isExpired)
-          .length,
+        available: processedRedeemables.filter((item) => !item.isExpired).length,
         expired: processedRedeemables.filter((item) => item.isExpired).length,
         timestamp: currentDate,
       },
@@ -115,11 +107,7 @@ export async function handleGetRedeemables(
     );
   } catch (error) {
     console.error('Error getting redeemables:', error);
-    return createResponse(
-      { error: 'Failed to fetch redeemables' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to fetch redeemables' }, 500, origin);
   }
 }
 
@@ -127,10 +115,7 @@ export async function handleGetRedeemables(
  * POST /redeemables/redeem
  * Redeems a zeitvertreib coin item for the authenticated user
  */
-export async function handleRedeemItem(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleRedeemItem(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -149,15 +134,9 @@ export async function handleRedeemItem(
     }
 
     // Find the redeemable item
-    const redeemable = ZEITVERTREIB_REDEEMABLES.find(
-      (item) => item.id === itemId,
-    );
+    const redeemable = ZEITVERTREIB_REDEEMABLES.find((item) => item.id === itemId);
     if (!redeemable) {
-      return createResponse(
-        { error: 'Redeemable item not found' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Redeemable item not found' }, 404, origin);
     }
 
     // Check if item is still available (for limited time items)
@@ -166,8 +145,7 @@ export async function handleRedeemItem(
       if (redeemable.redeemableuntil < currentDate) {
         return createResponse(
           {
-            error:
-              'This item has expired and is no longer available for redemption',
+            error: 'This item has expired and is no longer available for redemption',
           },
           410, // Gone
           origin,
@@ -212,17 +190,11 @@ export async function handleRedeemItem(
       .returning({ updatedId: playerdata.id });
 
     if (updateResult.length === 0) {
-      return createResponse(
-        { error: 'Failed to process redemption' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Failed to process redemption' }, 500, origin);
     }
 
     // Log the redemption
-    console.log(
-      `Player ${playerId} is redeeming ${redeemable.id} for ${redeemable.price} ZV Coins`,
-    );
+    console.log(`Player ${playerId} is redeeming ${redeemable.id} for ${redeemable.price} ZV Coins`);
 
     // Apply the redeemed item effects
     await applyRedeemableEffects(redeemable, playerId, env);
@@ -247,11 +219,7 @@ export async function handleRedeemItem(
 /**
  * Apply the effects of a redeemed item to the player
  */
-async function applyRedeemableEffects(
-  redeemable: Redeemable,
-  playerId: string,
-  env: Env,
-): Promise<void> {
+async function applyRedeemableEffects(redeemable: Redeemable, playerId: string, env: Env): Promise<void> {
   switch (redeemable.id) {
     case 'fakerank_14d':
       // Add 14 days if still active, otherwise reset to 14 days from now
@@ -272,11 +240,8 @@ async function applyRedeemableEffects(
 
     case 'vip_status_30d':
       // VIP status includes fakerank access for 30 days
-      const thirtyDaysTimestamp =
-        Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
-      await env.ZEITVERTREIB_DATA.prepare(
-        'UPDATE playerdata SET fakerank_until = ? WHERE id = ?',
-      )
+      const thirtyDaysTimestamp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
+      await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET fakerank_until = ? WHERE id = ?')
         .bind(thirtyDaysTimestamp, playerId)
         .run();
       break;
@@ -296,10 +261,7 @@ async function applyRedeemableEffects(
  * POST /redeem-code
  * Redeems a promotional code for ZV Coins
  */
-export async function handleRedeemCode(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleRedeemCode(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -354,9 +316,7 @@ export async function handleRedeemCode(
     }
 
     // Check if player has already redeemed this code
-    const redeemedCodes = playerData.redeemed_codes
-      ? playerData.redeemed_codes.split(',')
-      : [];
+    const redeemedCodes = playerData.redeemed_codes ? playerData.redeemed_codes.split(',') : [];
     if (redeemedCodes.includes(code)) {
       return createResponse(
         { error: 'Du hast diesen Code bereits eingelöst' },
@@ -370,8 +330,7 @@ export async function handleRedeemCode(
     const newBalance = currentBalance + codeData.credits;
 
     // Add code to player's redeemed codes list
-    const updatedRedeemedCodes =
-      redeemedCodes.length > 0 ? `${playerData.redeemed_codes},${code}` : code;
+    const updatedRedeemedCodes = redeemedCodes.length > 0 ? `${playerData.redeemed_codes},${code}` : code;
 
     // Update player balance and redeemed codes
     const updatePlayerResult = await env.ZEITVERTREIB_DATA.prepare(
@@ -381,11 +340,7 @@ export async function handleRedeemCode(
       .run();
 
     if (!updatePlayerResult.success) {
-      return createResponse(
-        { error: 'Fehler beim Gutschreiben der Credits' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Fehler beim Gutschreiben der Credits' }, 500, origin);
     }
 
     // Decrease remaining uses for the code
@@ -398,9 +353,7 @@ export async function handleRedeemCode(
     if (!updateCodeResult.success) {
       // If code update fails, we should ideally rollback the player balance update
       // For now, just log the error but still return success since player got the credits
-      console.error(
-        `Failed to update code usage for ${code}, player ${playerId} received credits anyway`,
-      );
+      console.error(`Failed to update code usage for ${code}, player ${playerId} received credits anyway`);
     }
 
     // Log the redemption
@@ -422,10 +375,6 @@ export async function handleRedeemCode(
     );
   } catch (error) {
     console.error('Error redeeming code:', error);
-    return createResponse(
-      { error: 'Fehler beim Einlösen des Codes' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Fehler beim Einlösen des Codes' }, 500, origin);
   }
 }

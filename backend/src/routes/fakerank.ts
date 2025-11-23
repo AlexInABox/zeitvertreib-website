@@ -1,25 +1,14 @@
-import {
-  validateSession,
-  createResponse,
-  getPlayerData,
-  fetchDiscordWithProxy,
-} from '../utils.js';
+import { validateSession, createResponse, getPlayerData, fetchDiscordWithProxy } from '../utils.js';
 import OpenAI from 'openai';
 import { profanity } from '@2toad/profanity';
 import { EmbedBuilder } from '@discordjs/builders';
 import { drizzle } from 'drizzle-orm/d1';
 
 // Send accepted fakerank to Discord webhook for moderation tracking
-async function sendFakerankToDiscord(
-  steamId: string,
-  fakerank: string,
-  env: Env,
-): Promise<void> {
+async function sendFakerankToDiscord(steamId: string, fakerank: string, env: Env): Promise<void> {
   try {
     if (!env.SPRAY_MOD_WEBHOOK) {
-      console.log(
-        'No Discord webhook URL configured, skipping Discord notification',
-      );
+      console.log('No Discord webhook URL configured, skipping Discord notification');
       return;
     }
 
@@ -122,9 +111,7 @@ async function sendFakerankToDiscord(
         errorText,
       );
     } else {
-      console.log(
-        `Successfully sent fakerank notification to Discord for Steam ID: ${steamId}`,
-      );
+      console.log(`Successfully sent fakerank notification to Discord for Steam ID: ${steamId}`);
     }
   } catch (error) {
     console.error('Error sending fakerank to Discord webhook:', error);
@@ -148,10 +135,7 @@ async function loadBlacklist(env: Env): Promise<void> {
 }
 
 // GET: Retrieve user's fakerank information
-export async function getFakerank(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function getFakerank(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -164,11 +148,7 @@ export async function getFakerank(
 
   const playerId = `${session!.steamId}@steam`;
   try {
-    const playerData = await getPlayerData(
-      playerId.replace('@steam', ''),
-      db,
-      env,
-    );
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
     // Calculate fakerank access based on timestamp
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
@@ -188,19 +168,12 @@ export async function getFakerank(
     );
   } catch (error) {
     console.error('Error fetching fakerank:', error);
-    return createResponse(
-      { error: 'Fakerank konnte nicht abgerufen werden' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Fakerank konnte nicht abgerufen werden' }, 500, origin);
   }
 }
 
 // POST/PATCH: Create or update user's fakerank
-export async function updateFakerank(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function updateFakerank(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -214,22 +187,15 @@ export async function updateFakerank(
   const playerId = `${session!.steamId}@steam`;
   try {
     // Check if user is allowed to set fakeranks based on timestamp
-    const playerData = await getPlayerData(
-      playerId.replace('@steam', ''),
-      db,
-      env,
-    );
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
     // Check if user has valid fakerank access (regular access)
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const fakerankOverrideUntil =
-      Number(playerData?.fakerankoverride_until) || 0;
+    const fakerankOverrideUntil = Number(playerData?.fakerankoverride_until) || 0;
 
-    const hasFakerankAccess =
-      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
-    const hasOverrideAccess =
-      fakerankOverrideUntil > 0 && currentTimestamp < fakerankOverrideUntil;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasOverrideAccess = fakerankOverrideUntil > 0 && currentTimestamp < fakerankOverrideUntil;
 
     // User can edit if they have regular access OR if they only have override (no regular access)
     // But if they have both, regular access takes precedence and they can edit
@@ -253,14 +219,8 @@ export async function updateFakerank(
     const banData = await env.SESSIONS.get(banKey);
     if (banData) {
       const ban = JSON.parse(banData);
-      console.log(
-        `Steam ID ${steamId} is banned from setting fakeranks: ${ban.reason}`,
-      );
-      return createResponse(
-        { error: 'Du wurdest vom Setzen von Fakeranks gesperrt' },
-        403,
-        origin,
-      );
+      console.log(`Steam ID ${steamId} is banned from setting fakeranks: ${ban.reason}`);
+      return createResponse({ error: 'Du wurdest vom Setzen von Fakeranks gesperrt' }, 403, origin);
     }
 
     // Parse request body
@@ -270,11 +230,7 @@ export async function updateFakerank(
     };
 
     if (!body.fakerank && body.fakerank !== '') {
-      return createResponse(
-        { error: 'Fakerank ist erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Fakerank ist erforderlich' }, 400, origin);
     }
 
     // Validate fakerank_color if provided
@@ -306,33 +262,17 @@ export async function updateFakerank(
 
     const fakerankColor = body.fakerank_color || 'default';
     if (!validColors.includes(fakerankColor)) {
-      return createResponse(
-        { error: 'Ungültige Fakerank-Farbe ausgewählt' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Ungültige Fakerank-Farbe ausgewählt' }, 400, origin);
     }
 
     // Validate fakerank length (optional, adjust as needed)
     if (body.fakerank.length > 50) {
-      return createResponse(
-        { error: 'Fakerank darf maximal 50 Zeichen lang sein' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Fakerank darf maximal 50 Zeichen lang sein' }, 400, origin);
     }
 
     // Validate fakerank content - ban parentheses and commas
-    if (
-      body.fakerank.includes('(') ||
-      body.fakerank.includes(')') ||
-      body.fakerank.includes(',')
-    ) {
-      return createResponse(
-        { error: 'Fakerank darf keine Klammern () oder Kommas enthalten' },
-        400,
-        origin,
-      );
+    if (body.fakerank.includes('(') || body.fakerank.includes(')') || body.fakerank.includes(',')) {
+      return createResponse({ error: 'Fakerank darf keine Klammern () oder Kommas enthalten' }, 400, origin);
     }
 
     // First, check whitelist - if whitelisted, skip all other content validation
@@ -359,11 +299,7 @@ export async function updateFakerank(
       try {
         // Check built-in profanity detection
         const containsProfanity = profanity.exists(body.fakerank);
-        const containsProfanityWithLangs = profanity.exists(body.fakerank, [
-          'en',
-          'de',
-          'fr',
-        ]);
+        const containsProfanityWithLangs = profanity.exists(body.fakerank, ['en', 'de', 'fr']);
 
         // Manual check against our blacklist (more reliable than library for custom words)
         const blacklistData = await env.SESSIONS.get('fakerank_blacklist');
@@ -379,19 +315,11 @@ export async function updateFakerank(
         }
 
         if (containsProfanity || containsProfanityWithLangs || isBlacklisted) {
-          return createResponse(
-            { error: 'Fakerank enthält unangemessene Inhalte' },
-            400,
-            origin,
-          );
+          return createResponse({ error: 'Fakerank enthält unangemessene Inhalte' }, 400, origin);
         }
       } catch (profanityError) {
         console.error('Error checking profanity:', profanityError);
-        return createResponse(
-          { error: 'Inhalt konnte nicht validiert werden' },
-          500,
-          origin,
-        );
+        return createResponse({ error: 'Inhalt konnte nicht validiert werden' }, 500, origin);
       }
 
       try {
@@ -407,32 +335,20 @@ export async function updateFakerank(
         if (Array.isArray(results) && results.length > 0) {
           for (const result of results) {
             if (result.flagged) {
-              return createResponse(
-                { error: 'Fakerank enthält unangemessene Inhalte' },
-                400,
-                origin,
-              );
+              return createResponse({ error: 'Fakerank enthält unangemessene Inhalte' }, 400, origin);
             }
           }
         }
       } catch (moderationError) {
         console.error('Error with OpenAI moderation:', moderationError);
-        return createResponse(
-          { error: 'Inhalt konnte nicht validiert werden' },
-          500,
-          origin,
-        );
+        return createResponse({ error: 'Inhalt konnte nicht validiert werden' }, 500, origin);
       }
     } else {
-      console.log(
-        `Fakerank "${body.fakerank}" is whitelisted, skipping content validation`,
-      );
+      console.log(`Fakerank "${body.fakerank}" is whitelisted, skipping content validation`);
     }
 
     // Check if player exists in database
-    const existingPlayer = await env.ZEITVERTREIB_DATA.prepare(
-      'SELECT id FROM playerdata WHERE id = ?',
-    )
+    const existingPlayer = await env.ZEITVERTREIB_DATA.prepare('SELECT id FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first();
 
@@ -447,9 +363,7 @@ export async function updateFakerank(
           .run();
       } else {
         // Update existing player's fakerank and color only
-        await env.ZEITVERTREIB_DATA.prepare(
-          'UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?',
-        )
+        await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET fakerank = ?, fakerank_color = ? WHERE id = ?')
           .bind(body.fakerank, fakerankColor, playerId)
           .run();
       }
@@ -491,10 +405,7 @@ export async function updateFakerank(
 }
 
 // DELETE: Remove user's fakerank
-export async function deleteFakerank(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function deleteFakerank(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -508,17 +419,12 @@ export async function deleteFakerank(
   const playerId = `${session!.steamId}@steam`;
   try {
     // Check if user is allowed to modify fakeranks based on timestamp
-    const playerData = await getPlayerData(
-      playerId.replace('@steam', ''),
-      db,
-      env,
-    );
+    const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
     // Check if user has valid fakerank access
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData?.fakerank_until) || 0;
-    const hasFakerankAccess =
-      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
     if (!hasFakerankAccess) {
       return createResponse(
@@ -532,17 +438,13 @@ export async function deleteFakerank(
     }
 
     // Check if player exists in database
-    const existingPlayer = await env.ZEITVERTREIB_DATA.prepare(
-      'SELECT id FROM playerdata WHERE id = ?',
-    )
+    const existingPlayer = await env.ZEITVERTREIB_DATA.prepare('SELECT id FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first();
 
     if (existingPlayer) {
       // Set fakerank to NULL and reset color to default
-      await env.ZEITVERTREIB_DATA.prepare(
-        'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
-      )
+      await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?')
         .bind('default', playerId)
         .run();
 
@@ -566,19 +468,12 @@ export async function deleteFakerank(
     }
   } catch (error) {
     console.error('Error deleting fakerank:', error);
-    return createResponse(
-      { error: 'Fakerank konnte nicht gelöscht werden' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Fakerank konnte nicht gelöscht werden' }, 500, origin);
   }
 }
 
 // Handle Discord moderation action - delete fakerank and blacklist word
-export async function handleFakerankModerationDelete(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleFakerankModerationDelete(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -588,19 +483,13 @@ export async function handleFakerankModerationDelete(
     const fakerank = url.searchParams.get('fakerank');
 
     if (!steamId || !fakerank) {
-      return createResponse(
-        { error: 'steamId und fakerank sind erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId und fakerank sind erforderlich' }, 400, origin);
     }
 
     const playerId = `${steamId}@steam`;
 
     // Delete the fakerank from database and reset color
-    await env.ZEITVERTREIB_DATA.prepare(
-      'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
-    )
+    await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?')
       .bind('default', playerId)
       .run();
 
@@ -620,9 +509,7 @@ export async function handleFakerankModerationDelete(
       await env.SESSIONS.put(blacklistKey, JSON.stringify(blacklistedWords));
     }
 
-    console.log(
-      `Moderator deleted fakerank "${fakerank}" for Steam ID: ${steamId} and added to blacklist`,
-    );
+    console.log(`Moderator deleted fakerank "${fakerank}" for Steam ID: ${steamId} and added to blacklist`);
 
     return createResponse(
       {
@@ -635,19 +522,12 @@ export async function handleFakerankModerationDelete(
     );
   } catch (error) {
     console.error('Error handling fakerank moderation delete:', error);
-    return createResponse(
-      { error: 'Failed to process moderation action' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }
 
 // Handle Discord moderation action - delete fakerank, blacklist word, and ban user
-export async function handleFakerankModerationBan(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleFakerankModerationBan(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -657,19 +537,13 @@ export async function handleFakerankModerationBan(
     const fakerank = url.searchParams.get('fakerank');
 
     if (!steamId || !fakerank) {
-      return createResponse(
-        { error: 'steamId und fakerank sind erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId und fakerank sind erforderlich' }, 400, origin);
     }
 
     const playerId = `${steamId}@steam`;
 
     // Delete the fakerank from database and reset color
-    await env.ZEITVERTREIB_DATA.prepare(
-      'UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?',
-    )
+    await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET fakerank = NULL, fakerank_color = ? WHERE id = ?')
       .bind('default', playerId)
       .run();
 
@@ -700,9 +574,7 @@ export async function handleFakerankModerationBan(
     };
     await env.SESSIONS.put(banKey, JSON.stringify(banData));
 
-    console.log(
-      `Moderator banned Steam ID: ${steamId}, deleted fakerank "${fakerank}", and added to blacklist`,
-    );
+    console.log(`Moderator banned Steam ID: ${steamId}, deleted fakerank "${fakerank}", and added to blacklist`);
 
     return createResponse(
       {
@@ -715,10 +587,6 @@ export async function handleFakerankModerationBan(
     );
   } catch (error) {
     console.error('Error handling fakerank moderation ban:', error);
-    return createResponse(
-      { error: 'Failed to process moderation action' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }

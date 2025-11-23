@@ -42,21 +42,7 @@ const PAYOUT_TABLE = [
   },
 ];
 
-const SLOT_EMOJIS = [
-  '🍒',
-  '🍉',
-  '🍇',
-  '🔔',
-  '⭐',
-  '💎',
-  '🌈',
-  '🔥',
-  '🪙',
-  '💰',
-  '💫',
-  '🎇',
-  '🌟',
-];
+const SLOT_EMOJIS = ['🍒', '🍉', '🍇', '🔔', '⭐', '💎', '🌈', '🔥', '🪙', '💰', '💫', '🎇', '🌟'];
 
 /**
  * Send slot machine win to Discord webhook
@@ -132,10 +118,7 @@ async function sendWinToDiscord(
  * GET /slotmachine/info
  * Get slot machine payout table and information
  */
-export async function handleSlotMachineInfo(
-  request: Request,
-  _env: Env,
-): Promise<Response> {
+export async function handleSlotMachineInfo(request: Request, _env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   return createResponse(
@@ -154,11 +137,7 @@ export async function handleSlotMachineInfo(
  * POST /slotmachine
  * Play the slot machine game - costs 10 ZVC, chance to win big!
  */
-export async function handleSlotMachine(
-  request: Request,
-  env: Env,
-  ctx?: ExecutionContext,
-): Promise<Response> {
+export async function handleSlotMachine(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -182,9 +161,7 @@ export async function handleSlotMachine(
     // Check for 3 matching symbols
     if (slot1 === slot2 && slot2 === slot3) {
       // Check for specific symbol matches in payout table
-      const diamondPayout = PAYOUT_TABLE.find(
-        (p) => p.symbol === '💎' && p.condition === '3 Gleiche',
-      );
+      const diamondPayout = PAYOUT_TABLE.find((p) => p.symbol === '💎' && p.condition === '3 Gleiche');
       if (slot1 === '💎' && diamondPayout) {
         return {
           payout: diamondPayout.payout,
@@ -193,9 +170,7 @@ export async function handleSlotMachine(
         };
       }
 
-      const firePayout = PAYOUT_TABLE.find(
-        (p) => p.symbol === '🔥' && p.condition === '3 Gleiche',
-      );
+      const firePayout = PAYOUT_TABLE.find((p) => p.symbol === '🔥' && p.condition === '3 Gleiche');
       if (slot1 === '🔥' && firePayout) {
         return {
           payout: firePayout.payout,
@@ -205,9 +180,7 @@ export async function handleSlotMachine(
       }
 
       // Other 3-of-a-kind matches - use "Andere" payout from table
-      const otherPayout = PAYOUT_TABLE.find(
-        (p) => p.name === 'Andere' && p.condition === '3 Gleiche',
-      );
+      const otherPayout = PAYOUT_TABLE.find((p) => p.name === 'Andere' && p.condition === '3 Gleiche');
       if (otherPayout) {
         return {
           payout: otherPayout.payout,
@@ -239,9 +212,7 @@ export async function handleSlotMachine(
 
   try {
     // Get current balance
-    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare(
-      'SELECT experience FROM playerdata WHERE id = ?',
-    )
+    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare('SELECT experience FROM playerdata WHERE id = ?')
       .bind(playerId)
       .first()) as { experience: number } | null;
 
@@ -280,18 +251,12 @@ export async function handleSlotMachine(
     const newBalance = currentBalance + netChange;
 
     // Update player balance (using experience field as ZVC)
-    await env.ZEITVERTREIB_DATA.prepare(
-      'UPDATE playerdata SET experience = ? WHERE id = ?',
-    )
+    await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET experience = ? WHERE id = ?')
       .bind(newBalance, playerId)
       .run();
 
     // Send webhook notification for significant wins only (jackpot, big_win, small_win)
-    if (
-      result.type === 'jackpot' ||
-      result.type === 'big_win' ||
-      result.type === 'small_win'
-    ) {
+    if (result.type === 'jackpot' || result.type === 'big_win' || result.type === 'small_win') {
       // Get Steam username from cache
       let steamNickname = validation.session!.steamId;
       try {
@@ -315,17 +280,13 @@ export async function handleSlotMachine(
             result.payout,
             result.type,
             env,
-          ).catch((error) =>
-            console.error('Failed to send webhook notification:', error),
-          ),
+          ).catch((error) => console.error('Failed to send webhook notification:', error)),
         );
       }
     }
 
     console.log(
-      `🎰 Slot machine: ${validation.session!.steamId} ${
-        result.type
-      } with ${slot1}${slot2}${slot3}. Payout: ${
+      `🎰 Slot machine: ${validation.session!.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${
         result.payout
       } ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );

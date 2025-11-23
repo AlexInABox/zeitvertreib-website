@@ -22,20 +22,13 @@ function validateApiKey(request: Request, env: Env): boolean {
  * Requires valid API key authentication
  * Query params: userid (steamid@steam), price (integer)
  */
-export async function handleSwapped(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleSwapped(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate API key
   if (!validateApiKey(request, env)) {
-    return createResponse(
-      { error: 'Unauthorized: Invalid or missing API key' },
-      401,
-      origin,
-    );
+    return createResponse({ error: 'Unauthorized: Invalid or missing API key' }, 401, origin);
   }
 
   try {
@@ -46,43 +39,23 @@ export async function handleSwapped(
 
     // Validate required parameters
     if (!userid) {
-      return createResponse(
-        { error: 'Bad Request: Missing userid parameter' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Bad Request: Missing userid parameter' }, 400, origin);
     }
 
     if (!priceStr) {
-      return createResponse(
-        { error: 'Bad Request: Missing price parameter' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Bad Request: Missing price parameter' }, 400, origin);
     }
 
     const price = parseInt(priceStr, 10);
     if (isNaN(price) || price < 0) {
-      return createResponse(
-        { error: 'Bad Request: Invalid price value' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Bad Request: Invalid price value' }, 400, origin);
     }
 
     // Query the player's current experience (ZVC)
-    const player = await db
-      .select()
-      .from(playerdata)
-      .where(eq(playerdata.id, userid))
-      .limit(1);
+    const player = await db.select().from(playerdata).where(eq(playerdata.id, userid)).limit(1);
 
     if (player.length === 0 || !player[0]) {
-      return createResponse(
-        { error: 'Bad Request: Player not found' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Bad Request: Player not found' }, 400, origin);
     }
 
     const currentExp = player[0].experience || 0;
@@ -102,10 +75,7 @@ export async function handleSwapped(
 
     // Subtract the price from player's experience
     const newExp = currentExp - price;
-    await db
-      .update(playerdata)
-      .set({ experience: newExp })
-      .where(eq(playerdata.id, userid));
+    await db.update(playerdata).set({ experience: newExp }).where(eq(playerdata.id, userid));
 
     // Return success response
     return createResponse(

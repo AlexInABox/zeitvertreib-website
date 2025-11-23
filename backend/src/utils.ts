@@ -1,10 +1,5 @@
 // Consolidated utilities
-import {
-  SessionData,
-  SteamUser,
-  Statistics,
-  PlayerData,
-} from './types/index.js';
+import { SessionData, SteamUser, Statistics, PlayerData } from './types/index.js';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql } from 'drizzle-orm';
@@ -12,20 +7,12 @@ import { playerdata, kills, loginSecrets } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 
 // Discord API proxy utility
-export async function fetchDiscordWithProxy(
-  url: string,
-  options: RequestInit,
-  env: Env,
-): Promise<Response> {
+export async function fetchDiscordWithProxy(url: string, options: RequestInit, env: Env): Promise<Response> {
   return proxyFetch(url, options, env);
 }
 
 // Response helpers
-export function createResponse(
-  data: any,
-  status = 200,
-  origin?: string | null,
-): Response {
+export function createResponse(data: any, status = 200, origin?: string | null): Response {
   const headers: Record<string, string> = {
     'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Credentials': 'true',
@@ -81,11 +68,7 @@ export async function validateSession(
   return { isValid: true, session, steamId: session.steamId };
 }
 
-export async function createSession(
-  steamId: string,
-  steamUser: SteamUser,
-  env: Env,
-): Promise<string> {
+export async function createSession(steamId: string, steamUser: SteamUser, env: Env): Promise<string> {
   const sessionId = crypto.randomUUID();
   const duration = 7 * 24 * 60 * 60 * 1000 * 4 * 3; // 3 months
   const now = Date.now();
@@ -138,10 +121,7 @@ export function generateSteamLoginUrl(request: Request): string {
   return `https://steamcommunity.com/openid/login?${params.toString()}`;
 }
 
-export async function verifySteamResponse(
-  params: Record<string, string>,
-  env: Env,
-): Promise<boolean> {
+export async function verifySteamResponse(params: Record<string, string>, env: Env): Promise<boolean> {
   if (params['openid.mode'] !== 'id_res') return false;
 
   const verifyParams = new URLSearchParams(params);
@@ -180,11 +160,7 @@ export function extractSteamId(identity?: string): string | null {
  * @param env - Cloudflare environment with KV access
  * @returns Steam user data or null if not found
  */
-export async function fetchSteamUserData(
-  steamId: string,
-  apiKey: string,
-  env: Env,
-): Promise<SteamUser | null> {
+export async function fetchSteamUserData(steamId: string, apiKey: string, env: Env): Promise<SteamUser | null> {
   const cacheKey = `steam_user:${steamId}`;
   let cachedData: { userData: SteamUser; cachedAt: number } | null = null;
 
@@ -201,9 +177,7 @@ export async function fetchSteamUserData(
 
       // If cache is fresh (less than 1 hour), use it immediately
       if (cacheAge < maxFreshAge) {
-        console.log(
-          `Using fresh cached Steam user data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`,
-        );
+        console.log(`Using fresh cached Steam user data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`);
         console.log('Chache data: ' + cachedData);
         return cachedData.userData;
       }
@@ -212,9 +186,7 @@ export async function fetchSteamUserData(
         `Cache is stale for Steam user ${steamId} (age: ${Math.round(cacheAge / 1000)}s), attempting to refresh...`,
       );
     } else {
-      console.log(
-        `No cache found for Steam user ${steamId}, fetching fresh data...`,
-      );
+      console.log(`No cache found for Steam user ${steamId}, fetching fresh data...`);
     }
   } catch (cacheError) {
     console.warn('Failed to read from cache:', cacheError);
@@ -243,9 +215,7 @@ export async function fetchSteamUserData(
       data = JSON.parse(responseText) as { response: { players: SteamUser[] } };
     } catch (parseError) {
       console.error('Failed to parse Steam API response as JSON:', parseError);
-      throw new Error(
-        `Steam API returned invalid JSON: ${responseText.substring(0, 100)}`,
-      );
+      throw new Error(`Steam API returned invalid JSON: ${responseText.substring(0, 100)}`);
     }
 
     const userData = data.response?.players?.[0] || null;
@@ -273,9 +243,7 @@ export async function fetchSteamUserData(
     // Steam API failed - use stale cache if available, regardless of age
     if (cachedData) {
       const cacheAge = Date.now() - cachedData.cachedAt;
-      console.log(
-        `Steam API failed, using stale cached data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`,
-      );
+      console.log(`Steam API failed, using stale cached data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`);
       return cachedData.userData;
     }
 
@@ -285,11 +253,7 @@ export async function fetchSteamUserData(
   }
 }
 
-export async function refreshSteamUserData(
-  steamId: string,
-  apiKey: string,
-  env: Env,
-): Promise<SteamUser | null> {
+export async function refreshSteamUserData(steamId: string, apiKey: string, env: Env): Promise<SteamUser | null> {
   // Force a refresh attempt by fetching data (cache will be used as fallback if Steam fails)
   // We don't clear cache anymore, just attempt to get fresh data
   console.log(`Attempting to refresh Steam user data for ${steamId}...`);
@@ -306,11 +270,7 @@ export async function getPlayerData(
     const playerId = `${steamId}@steam`;
     console.log('Fetching player data for ID:', playerId);
 
-    const result = await db
-      .select()
-      .from(playerdata)
-      .where(eq(playerdata.id, playerId))
-      .get();
+    const result = await db.select().from(playerdata).where(eq(playerdata.id, playerId)).get();
 
     console.log('Player data result:', result);
 
@@ -345,18 +305,10 @@ export async function getPlayerData(
 }
 
 // New kills table helpers
-export async function getPlayerKillsCount(
-  steamId: string,
-  db: ReturnType<typeof drizzle>,
-  _env: Env,
-): Promise<number> {
+export async function getPlayerKillsCount(steamId: string, db: ReturnType<typeof drizzle>, _env: Env): Promise<number> {
   try {
     const playerId = `${steamId}@steam`;
-    const result = await db
-      .select({ count: count() })
-      .from(kills)
-      .where(eq(kills.attacker, playerId))
-      .get();
+    const result = await db.select({ count: count() }).from(kills).where(eq(kills.attacker, playerId)).get();
 
     return result?.count || 0;
   } catch (error) {
@@ -372,11 +324,7 @@ export async function getPlayerDeathsCount(
 ): Promise<number> {
   try {
     const playerId = `${steamId}@steam`;
-    const result = await db
-      .select({ count: count() })
-      .from(kills)
-      .where(eq(kills.target, playerId))
-      .get();
+    const result = await db.select({ count: count() }).from(kills).where(eq(kills.target, playerId)).get();
 
     return result?.count || 0;
   } catch (error) {
@@ -411,11 +359,7 @@ export async function getPlayerLastKillers(
     const killersData = await Promise.all(
       uniqueAttackers.map(async (attacker) => {
         const steamId = attacker.replace('@steam', '');
-        const steamUser = await fetchSteamUserData(
-          steamId,
-          env.STEAM_API_KEY,
-          env,
-        );
+        const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
         return {
           displayname: steamUser?.personaname || 'Unknown Player',
           avatarmedium: steamUser?.avatarmedium || '',
@@ -468,11 +412,7 @@ export async function getPlayerLastKills(
     const targetsData = await Promise.all(
       uniqueTargets.map(async (target) => {
         const steamId = target.replace('@steam', '');
-        const steamUser = await fetchSteamUserData(
-          steamId,
-          env.STEAM_API_KEY,
-          env,
-        );
+        const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
         return {
           displayname: steamUser?.personaname || 'Unknown Player',
           avatarmedium: steamUser?.avatarmedium || '',
@@ -566,11 +506,7 @@ export async function mapPlayerDataToStats(
 }
 
 // Login secret helpers
-export async function generateLoginSecret(
-  steamId: string,
-  db: ReturnType<typeof drizzle>,
-  _env: Env,
-): Promise<string> {
+export async function generateLoginSecret(steamId: string, db: ReturnType<typeof drizzle>, _env: Env): Promise<string> {
   try {
     const secret = crypto.randomUUID();
     const expiresAt = Date.now() + 40 * 60 * 1000; // 40 minutes from now
@@ -621,10 +557,7 @@ export async function validateLoginSecret(
   return { isValid: true, steamId: result.steamId };
 }
 
-export async function cleanupExpiredLoginSecrets(
-  db: ReturnType<typeof drizzle>,
-  _env: Env,
-): Promise<void> {
+export async function cleanupExpiredLoginSecrets(db: ReturnType<typeof drizzle>, _env: Env): Promise<void> {
   try {
     console.log('[AUTH] Cleaning up expired login secrets');
     await db.delete(loginSecrets).where(lt(loginSecrets.expiresAt, Date.now()));
@@ -638,3 +571,17 @@ export async function cleanupExpiredLoginSecrets(
 export const increment = (column: AnyColumn, value = 1) => {
   return sql`${column} + ${value}`;
 };
+
+export const greatest = (column: AnyColumn, value: number) => {
+  return sql`GREATEST(${column}, ${value})`;
+};
+
+export function checkApiKey(request: Request, apiKey: string): boolean {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return false;
+  }
+
+  const token = authHeader.substring(7);
+  return token === apiKey;
+}

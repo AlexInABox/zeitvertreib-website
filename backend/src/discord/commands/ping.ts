@@ -3,8 +3,7 @@ import { BaseCommand } from '../base-command.js';
 
 export class PingCommand extends BaseCommand {
   override name = 'ping';
-  override description =
-    'Check if the bot is online and get performance statistics!';
+  override description = 'Check if the bot is online and get performance statistics!';
   override name_localizations = {
     de: 'ping',
   };
@@ -26,15 +25,8 @@ export class PingCommand extends BaseCommand {
     },
   ];
 
-  async execute(
-    interaction: any,
-    helpers: CommandHelpers,
-    env: Env,
-    request: Request,
-  ) {
-    const showLatency =
-      interaction.data.options?.find((opt: any) => opt.name === 'show_latency')
-        ?.value || false;
+  async execute(interaction: any, helpers: CommandHelpers, env: Env, request: Request) {
+    const showLatency = interaction.data.options?.find((opt: any) => opt.name === 'show_latency')?.value || false;
 
     if (showLatency) {
       const embed = new EmbedBuilder()

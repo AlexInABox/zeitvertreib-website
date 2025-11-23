@@ -1,9 +1,4 @@
-import {
-  validateSession,
-  createResponse,
-  getPlayerData,
-  fetchSteamUserData,
-} from '../utils.js';
+import { validateSession, createResponse, getPlayerData, fetchSteamUserData } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, isNotNull } from 'drizzle-orm';
@@ -24,11 +19,7 @@ interface Player {
 }
 
 // Helper function to check if user is fakerank admin
-async function validateFakerankAdmin(
-  request: Request,
-  db: ReturnType<typeof drizzle>,
-  env: Env,
-) {
+async function validateFakerankAdmin(request: Request, db: ReturnType<typeof drizzle>, env: Env) {
   const { isValid, session, error } = await validateSession(request, env);
 
   if (!isValid) {
@@ -54,10 +45,7 @@ async function validateFakerankAdmin(
 }
 
 // GET user fakerank by steamid
-export async function handleGetUserFakerank(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetUserFakerank(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -72,11 +60,7 @@ export async function handleGetUserFakerank(
     const steamId = url.searchParams.get('steamId');
 
     if (!steamId) {
-      return createResponse(
-        { error: 'steamId parameter required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId parameter required' }, 400, origin);
     }
 
     // Get player data for the requested user
@@ -95,15 +79,13 @@ export async function handleGetUserFakerank(
 
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const fakerankUntil = Number(playerData.fakerank_until) || 0;
-    const hasFakerankAccess =
-      fakerankUntil > 0 && currentTimestamp < fakerankUntil;
+    const hasFakerankAccess = fakerankUntil > 0 && currentTimestamp < fakerankUntil;
 
     return createResponse(
       {
         steamId,
         username: steamUserData?.personaname || `Player ${steamId.slice(-4)}`,
-        avatarFull:
-          steamUserData?.avatarfull || steamUserData?.avatarmedium || null,
+        avatarFull: steamUserData?.avatarfull || steamUserData?.avatarmedium || null,
         fakerank: playerData.fakerank || null,
         fakerank_color: playerData.fakerank_color || 'default',
         fakerank_until: fakerankUntil,
@@ -119,10 +101,7 @@ export async function handleGetUserFakerank(
 }
 
 // SET user fakerank by steamid
-export async function handleSetUserFakerank(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleSetUserFakerank(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA, { casing: 'camelCase' });
   const origin = request.headers.get('Origin');
 
@@ -134,13 +113,7 @@ export async function handleSetUserFakerank(
     }
 
     const body = (await request.json()) as any;
-    const {
-      steamId,
-      fakerank,
-      fakerank_color = 'default',
-      isOverride = false,
-      overrideDurationHours = 24,
-    } = body;
+    const { steamId, fakerank, fakerank_color = 'default', isOverride = false, overrideDurationHours = 24 } = body;
 
     if (!steamId) {
       return createResponse({ error: 'steamId is required' }, 400, origin);
@@ -151,17 +124,8 @@ export async function handleSetUserFakerank(
     }
 
     // Validate fakerank content - ban parentheses and commas
-    if (
-      fakerank &&
-      (fakerank.includes('(') ||
-        fakerank.includes(')') ||
-        fakerank.includes(','))
-    ) {
-      return createResponse(
-        { error: 'Fakerank darf keine Klammern () oder Kommas enthalten' },
-        400,
-        origin,
-      );
+    if (fakerank && (fakerank.includes('(') || fakerank.includes(')') || fakerank.includes(','))) {
+      return createResponse({ error: 'Fakerank darf keine Klammern () oder Kommas enthalten' }, 400, origin);
     }
 
     // Update the user's fakerank
@@ -172,8 +136,7 @@ export async function handleSetUserFakerank(
       // Set fakerank
       if (isOverride) {
         // Set as override fakerank with expiration
-        const overrideUntil =
-          Math.floor(Date.now() / 1000) + overrideDurationHours * 3600;
+        const overrideUntil = Math.floor(Date.now() / 1000) + overrideDurationHours * 3600;
         await db
           .update(playerdata)
           .set({
@@ -228,10 +191,7 @@ export async function handleSetUserFakerank(
 }
 
 // GET blacklisted words
-export async function handleGetBlacklist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetBlacklist(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -271,10 +231,7 @@ export async function handleGetBlacklist(
 }
 
 // ADD word to blacklist
-export async function handleAddToBlacklist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleAddToBlacklist(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -305,14 +262,9 @@ export async function handleAddToBlacklist(
     // Add word if not already present
     if (!blacklistedWords.includes(wordLower)) {
       blacklistedWords.push(wordLower);
-      await env.SESSIONS.put(
-        'fakerank_blacklist',
-        JSON.stringify(blacklistedWords),
-      );
+      await env.SESSIONS.put('fakerank_blacklist', JSON.stringify(blacklistedWords));
 
-      console.log(
-        `Admin ${adminCheck.session!.steamId} added "${wordLower}" to blacklist`,
-      );
+      console.log(`Admin ${adminCheck.session!.steamId} added "${wordLower}" to blacklist`);
 
       return createResponse(
         {
@@ -342,10 +294,7 @@ export async function handleAddToBlacklist(
 }
 
 // REMOVE word from blacklist
-export async function handleRemoveFromBlacklist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleRemoveFromBlacklist(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -378,14 +327,9 @@ export async function handleRemoveFromBlacklist(
     blacklistedWords = blacklistedWords.filter((w) => w !== wordLower);
 
     if (blacklistedWords.length < initialLength) {
-      await env.SESSIONS.put(
-        'fakerank_blacklist',
-        JSON.stringify(blacklistedWords),
-      );
+      await env.SESSIONS.put('fakerank_blacklist', JSON.stringify(blacklistedWords));
 
-      console.log(
-        `Admin ${adminCheck.session!.steamId} removed "${wordLower}" from blacklist`,
-      );
+      console.log(`Admin ${adminCheck.session!.steamId} removed "${wordLower}" from blacklist`);
 
       return createResponse(
         {
@@ -414,10 +358,7 @@ export async function handleRemoveFromBlacklist(
 }
 
 // GET whitelisted words
-export async function handleGetWhitelist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetWhitelist(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -457,10 +398,7 @@ export async function handleGetWhitelist(
 }
 
 // ADD word to whitelist
-export async function handleAddToWhitelist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleAddToWhitelist(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -491,14 +429,9 @@ export async function handleAddToWhitelist(
     // Add word if not already present
     if (!whitelistedWords.includes(wordLower)) {
       whitelistedWords.push(wordLower);
-      await env.SESSIONS.put(
-        'fakerank_whitelist',
-        JSON.stringify(whitelistedWords),
-      );
+      await env.SESSIONS.put('fakerank_whitelist', JSON.stringify(whitelistedWords));
 
-      console.log(
-        `Admin ${adminCheck.session!.steamId} added "${wordLower}" to whitelist`,
-      );
+      console.log(`Admin ${adminCheck.session!.steamId} added "${wordLower}" to whitelist`);
 
       return createResponse(
         {
@@ -528,10 +461,7 @@ export async function handleAddToWhitelist(
 }
 
 // REMOVE word from whitelist
-export async function handleRemoveFromWhitelist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleRemoveFromWhitelist(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -564,14 +494,9 @@ export async function handleRemoveFromWhitelist(
     whitelistedWords = whitelistedWords.filter((w) => w !== wordLower);
 
     if (whitelistedWords.length < initialLength) {
-      await env.SESSIONS.put(
-        'fakerank_whitelist',
-        JSON.stringify(whitelistedWords),
-      );
+      await env.SESSIONS.put('fakerank_whitelist', JSON.stringify(whitelistedWords));
 
-      console.log(
-        `Admin ${adminCheck.session!.steamId} removed "${wordLower}" from whitelist`,
-      );
+      console.log(`Admin ${adminCheck.session!.steamId} removed "${wordLower}" from whitelist`);
 
       return createResponse(
         {

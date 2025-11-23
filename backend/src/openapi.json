@@ -1592,14 +1592,7 @@
             "description": "Full avatar URL"
           }
         },
-        "required": [
-          "steamid",
-          "personaname",
-          "profileurl",
-          "avatar",
-          "avatarmedium",
-          "avatarfull"
-        ]
+        "required": ["steamid", "personaname", "profileurl", "avatar", "avatarmedium", "avatarfull"]
       },
       "SessionData": {
         "type": "object",
@@ -1769,13 +1762,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "transaction_type",
-          "category",
-          "amount",
-          "description",
-          "transaction_date"
-        ]
+        "required": ["transaction_type", "category", "amount", "description", "transaction_date"]
       },
       "FinancialTransactionInput": {
         "type": "object",
@@ -1804,13 +1791,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "transaction_type",
-          "category",
-          "amount",
-          "description",
-          "transaction_date"
-        ]
+        "required": ["transaction_type", "category", "amount", "description", "transaction_date"]
       },
       "RecurringTransaction": {
         "type": "object",
@@ -1917,14 +1898,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "transaction_type",
-          "category",
-          "amount",
-          "description",
-          "frequency",
-          "start_date"
-        ]
+        "required": ["transaction_type", "category", "amount", "description", "frequency", "start_date"]
       },
       "Redeemable": {
         "type": "object",

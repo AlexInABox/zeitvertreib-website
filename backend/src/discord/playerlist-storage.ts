@@ -56,31 +56,22 @@ export class PlayerlistStorage {
 
     // Validate that it's an array
     if (!Array.isArray(playerlistData)) {
-      return new Response(
-        JSON.stringify({ error: 'Playerlist must be an array' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'Playerlist must be an array' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Optional: Validate player objects structure
     const isValidPlayerlist = playerlistData.every(
-      (player) =>
-        typeof player === 'object' &&
-        player !== null &&
-        typeof player.Name === 'string',
+      (player) => typeof player === 'object' && player !== null && typeof player.Name === 'string',
     );
 
     if (!isValidPlayerlist) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid player data structure' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'Invalid player data structure' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Store the playerlist with timestamp

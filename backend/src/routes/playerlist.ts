@@ -25,10 +25,7 @@ function buildAvatarUrl(discordId: string, avatarHash: string): string {
 /**
  * Fetches Discord user info from Discord API
  */
-async function getDiscordUserAvatar(
-  discordId: string,
-  env: Env,
-): Promise<string | undefined> {
+async function getDiscordUserAvatar(discordId: string, env: Env): Promise<string | undefined> {
   try {
     const url = `https://discord.com/api/v10/users/${discordId}`;
     console.log(`[Discord API] Fetching user ${discordId} from ${url}`);
@@ -45,9 +42,7 @@ async function getDiscordUserAvatar(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(
-        `[Discord API] Failed to fetch user ${discordId}: ${response.status} - ${errorText}`,
-      );
+      console.error(`[Discord API] Failed to fetch user ${discordId}: ${response.status} - ${errorText}`);
       return undefined;
     }
 
@@ -67,15 +62,10 @@ async function getDiscordUserAvatar(
 /**
  * Enriches playerlist with Discord information and fakerank data
  */
-async function enrichPlayerlistWithDiscordData(
-  playerlist: PlayerListItem[],
-  env: Env,
-): Promise<PlayerListItem[]> {
+async function enrichPlayerlistWithDiscordData(playerlist: PlayerListItem[], env: Env): Promise<PlayerListItem[]> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
-  console.log(
-    `[Playerlist] Starting enrichment for ${playerlist.length} players`,
-  );
+  console.log(`[Playerlist] Starting enrichment for ${playerlist.length} players`);
 
   const enrichedPlayers = await Promise.all(
     playerlist.map(async (player) => {
@@ -84,9 +74,7 @@ async function enrichPlayerlistWithDiscordData(
         const steamId = player.UserId;
 
         if (!steamId) {
-          console.log(
-            `[Playerlist] No Steam ID found for player: ${player.Name}`,
-          );
+          console.log(`[Playerlist] No Steam ID found for player: ${player.Name}`);
           return player;
         }
 
@@ -102,9 +90,7 @@ async function enrichPlayerlistWithDiscordData(
           .limit(1);
 
         if (!playerData) {
-          console.log(
-            `[Playerlist] No data found for ${player.Name} (${steamId})`,
-          );
+          console.log(`[Playerlist] No data found for ${player.Name} (${steamId})`);
           return player;
         }
 
@@ -113,9 +99,7 @@ async function enrichPlayerlistWithDiscordData(
         // Add Discord data if available
         if (playerData.discordId) {
           const discordId = playerData.discordId.toString();
-          console.log(
-            `[Playerlist] Found Discord ID ${discordId} for ${player.Name}`,
-          );
+          console.log(`[Playerlist] Found Discord ID ${discordId} for ${player.Name}`);
 
           // Fetch Discord avatar
           const avatarUrl = await getDiscordUserAvatar(discordId, env);
@@ -128,16 +112,12 @@ async function enrichPlayerlistWithDiscordData(
         // Add fakerank data if available
         if (playerData.fakerank) {
           enrichedPlayer.Fakerank = playerData.fakerank;
-          console.log(
-            `[Playerlist] Found fakerank "${playerData.fakerank}" for ${player.Name}`,
-          );
+          console.log(`[Playerlist] Found fakerank "${playerData.fakerank}" for ${player.Name}`);
         }
 
         if (playerData.fakerankColor) {
           enrichedPlayer.FakerankColor = playerData.fakerankColor;
-          console.log(
-            `[Playerlist] Found fakerank color "${playerData.fakerankColor}" for ${player.Name}`,
-          );
+          console.log(`[Playerlist] Found fakerank color "${playerData.fakerankColor}" for ${player.Name}`);
         }
 
         console.log(
@@ -146,10 +126,7 @@ async function enrichPlayerlistWithDiscordData(
 
         return enrichedPlayer;
       } catch (error) {
-        console.error(
-          `[Playerlist] Error enriching player ${player.Name}:`,
-          error,
-        );
+        console.error(`[Playerlist] Error enriching player ${player.Name}:`, error);
         return player;
       }
     }),
@@ -182,10 +159,7 @@ function validateApiKey(request: Request, env: Env): boolean {
  * Fetches the current playerlist from Durable Object storage
  * Public endpoint - no authentication required
  */
-export async function handleGetPlayerlist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetPlayerlist(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -215,11 +189,7 @@ export async function handleGetPlayerlist(
     return createResponse(playerlistData, 200, origin);
   } catch (error) {
     console.error('Error fetching playerlist:', error);
-    return createResponse(
-      { error: 'Internal server error while fetching playerlist' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Internal server error while fetching playerlist' }, 500, origin);
   }
 }
 
@@ -228,33 +198,21 @@ export async function handleGetPlayerlist(
  * Updates the playerlist in Durable Object storage
  * Requires valid API key authentication via Bearer token
  */
-export async function handleUpdatePlayerlist(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleUpdatePlayerlist(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate API key
   if (!validateApiKey(request, env)) {
-    return createResponse(
-      { error: 'Unauthorized: Invalid or missing API key' },
-      401,
-      origin,
-    );
+    return createResponse({ error: 'Unauthorized: Invalid or missing API key' }, 401, origin);
   }
 
   try {
     // Parse request body
     const playerlistData = (await request.json()) as PlayerListItem[];
-    console.log(
-      `[Playerlist POST] Received playerlist with ${playerlistData.length} players`,
-    );
+    console.log(`[Playerlist POST] Received playerlist with ${playerlistData.length} players`);
 
     // Enrich playerlist with Discord data before storing
-    const enrichedPlayerlist = await enrichPlayerlistWithDiscordData(
-      playerlistData,
-      env,
-    );
+    const enrichedPlayerlist = await enrichPlayerlistWithDiscordData(playerlistData, env);
     console.log(`[Playerlist POST] Storing enriched playerlist`);
 
     // Get Durable Object instance
@@ -282,17 +240,9 @@ export async function handleUpdatePlayerlist(
       );
     }
 
-    return createResponse(
-      { success: true, message: 'Playerlist updated successfully' },
-      200,
-      origin,
-    );
+    return createResponse({ success: true, message: 'Playerlist updated successfully' }, 200, origin);
   } catch (error) {
     console.error('Error updating playerlist:', error);
-    return createResponse(
-      { error: 'Internal server error while updating playerlist' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Internal server error while updating playerlist' }, 500, origin);
   }
 }

@@ -43,12 +43,7 @@ export class StatsCommand extends BaseCommand {
     },
   ];
 
-  async execute(
-    interaction: any,
-    helpers: CommandHelpers,
-    env: Env,
-    request: Request,
-  ) {
+  async execute(interaction: any, helpers: CommandHelpers, env: Env, request: Request) {
     console.log('Executing stats command');
 
     try {
@@ -80,11 +75,7 @@ export class StatsCommand extends BaseCommand {
       if (!discordId) throw new Error('Missing Discord user ID');
 
       // Query the database directly
-      let [playerData] = await db
-        .select()
-        .from(playerdata)
-        .where(eq(playerdata.discordId, discordId))
-        .limit(1);
+      let [playerData] = await db.select().from(playerdata).where(eq(playerdata.discordId, discordId)).limit(1);
 
       if (!playerData) {
         const notFoundEmbed = new EmbedBuilder()
@@ -118,9 +109,7 @@ export class StatsCommand extends BaseCommand {
       // Auto-migration logic: Check if user hasn't migrated yet
       let migrationMessage: string | null = null;
       if (playerData.migratedCedmod === null) {
-        console.log(
-          `User ${discordId} hasn't migrated yet, attempting auto-migration...`,
-        );
+        console.log(`User ${discordId} hasn't migrated yet, attempting auto-migration...`);
 
         try {
           const steamId = playerData.id;
@@ -139,9 +128,7 @@ export class StatsCommand extends BaseCommand {
               const cedmodPlayer = cedmodData.players[0];
 
               if (!cedmodPlayer) {
-                console.log(
-                  'CedMod player data is undefined, skipping migration',
-                );
+                console.log('CedMod player data is undefined, skipping migration');
               } else {
                 // Store old values for comparison
                 const oldStats = {
@@ -170,10 +157,7 @@ export class StatsCommand extends BaseCommand {
                 }
 
                 // Update database
-                await db
-                  .update(playerdata)
-                  .set(updateData)
-                  .where(eq(playerdata.discordId, discordId));
+                await db.update(playerdata).set(updateData).where(eq(playerdata.discordId, discordId));
 
                 // Refresh playerData with updated values
                 const updatedPlayerData = await db
@@ -187,11 +171,7 @@ export class StatsCommand extends BaseCommand {
                 }
 
                 // Create comparison strings for migration message
-                const createComparisonLine = (
-                  label: string,
-                  oldValue: number,
-                  newValue: number | undefined,
-                ) => {
+                const createComparisonLine = (label: string, oldValue: number, newValue: number | undefined) => {
                   if (newValue === undefined || newValue === null) {
                     return `${label}: ${oldValue} → ❌`;
                   }
@@ -199,36 +179,12 @@ export class StatsCommand extends BaseCommand {
                 };
 
                 const comparisons = [
-                  createComparisonLine(
-                    'Kills',
-                    oldStats.kills,
-                    cedmodPlayer.kills,
-                  ),
-                  createComparisonLine(
-                    'Deaths',
-                    oldStats.deaths,
-                    cedmodPlayer.deaths,
-                  ),
-                  createComparisonLine(
-                    'Colas',
-                    oldStats.colas,
-                    cedmodPlayer.colaDrink,
-                  ),
-                  createComparisonLine(
-                    'Medkits',
-                    oldStats.medkits,
-                    cedmodPlayer.medkits,
-                  ),
-                  createComparisonLine(
-                    'Adrenalin',
-                    oldStats.adrenaline,
-                    cedmodPlayer.adrenalineShots,
-                  ),
-                  createComparisonLine(
-                    'Runden',
-                    oldStats.rounds,
-                    cedmodPlayer.roundsPlayed,
-                  ),
+                  createComparisonLine('Kills', oldStats.kills, cedmodPlayer.kills),
+                  createComparisonLine('Deaths', oldStats.deaths, cedmodPlayer.deaths),
+                  createComparisonLine('Colas', oldStats.colas, cedmodPlayer.colaDrink),
+                  createComparisonLine('Medkits', oldStats.medkits, cedmodPlayer.medkits),
+                  createComparisonLine('Adrenalin', oldStats.adrenaline, cedmodPlayer.adrenalineShots),
+                  createComparisonLine('Runden', oldStats.rounds, cedmodPlayer.roundsPlayed),
                 ];
 
                 migrationMessage =
@@ -241,9 +197,7 @@ export class StatsCommand extends BaseCommand {
               console.log('No CedMod data found for user, skipping migration');
             }
           } else {
-            console.log(
-              `CedMod API returned status ${cedmodResponse.status}, skipping migration`,
-            );
+            console.log(`CedMod API returned status ${cedmodResponse.status}, skipping migration`);
           }
         } catch (migrationError) {
           console.error('Auto-migration error (non-fatal):', migrationError);
@@ -259,16 +213,12 @@ export class StatsCommand extends BaseCommand {
           : (stats.killcount ?? 0).toFixed(2);
       const playtimeHours = Math.floor((stats.playtime ?? 0) / 3600);
       const playtimeMinutes = Math.floor(((stats.playtime ?? 0) % 3600) / 60);
-      const displayName =
-        stats.username || targetUsername || 'Unbekannter Spieler';
+      const displayName = stats.username || targetUsername || 'Unbekannter Spieler';
 
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
         .setTitle(`📊 Statistiken für ${displayName}`)
-        .setDescription(
-          (migrationMessage || '') +
-            'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮',
-        );
+        .setDescription((migrationMessage || '') + 'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮');
 
       // Set user avatar as thumbnail if available
       if (avatarUrl) {
@@ -322,8 +272,7 @@ export class StatsCommand extends BaseCommand {
     } catch (error) {
       console.error('Stats command error:', error);
       let title = '❌ Fehler';
-      let description =
-        'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.';
+      let description = 'Es ist ein unerwarteter Fehler aufgetreten. Bitte versuche es später erneut.';
       let color = 0xff0000;
 
       if (error instanceof Error) {
@@ -339,16 +288,11 @@ export class StatsCommand extends BaseCommand {
             'Spiele ein paar Runden, um Daten zu sammeln!';
           color = 0xffa500;
         } else if (error.message.includes('fetch')) {
-          description =
-            'Der Statistik-Server ist momentan nicht erreichbar.\nBitte versuche es später erneut.';
+          description = 'Der Statistik-Server ist momentan nicht erreichbar.\nBitte versuche es später erneut.';
         }
       }
 
-      const errorEmbed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(description)
-        .setColor(color)
-        .setTimestamp();
+      const errorEmbed = new EmbedBuilder().setTitle(title).setDescription(description).setColor(color).setTimestamp();
 
       await helpers.reply({ embeds: [errorEmbed.toJSON()] });
     }

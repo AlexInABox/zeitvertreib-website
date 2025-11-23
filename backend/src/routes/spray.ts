@@ -1,8 +1,4 @@
-import {
-  validateSession,
-  createResponse,
-  fetchDiscordWithProxy,
-} from '../utils.js';
+import { validateSession, createResponse, fetchDiscordWithProxy } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { EmbedBuilder } from '@discordjs/builders';
 import OpenAI from 'openai';
@@ -34,9 +30,7 @@ async function sendSprayToDiscord(
 ): Promise<void> {
   try {
     if (!env.SPRAY_MOD_WEBHOOK) {
-      console.log(
-        'No Discord webhook URL configured, skipping Discord notification',
-      );
+      console.log('No Discord webhook URL configured, skipping Discord notification');
       return;
     }
 
@@ -193,9 +187,7 @@ async function sendSprayToDiscord(
         await env.SESSIONS.put(messageIdKey, messageId);
       }
 
-      console.log(
-        `Successfully sent accepted spray to Discord for Steam ID: ${steamId}, Message ID: ${messageId}`,
-      );
+      console.log(`Successfully sent accepted spray to Discord for Steam ID: ${steamId}, Message ID: ${messageId}`);
     }
   } catch (error) {
     console.error('Error sending spray to Discord webhook:', error);
@@ -367,9 +359,7 @@ async function updateDiscordWebhookMessage(
         errorText,
       );
     } else {
-      console.log(
-        `Successfully updated Discord message for Steam ID: ${steamId}, action: ${action}`,
-      );
+      console.log(`Successfully updated Discord message for Steam ID: ${steamId}, action: ${action}`);
     }
   } catch (error) {
     console.error('Error updating Discord webhook message:', error);
@@ -380,31 +370,20 @@ async function updateDiscordWebhookMessage(
 async function generateImageHash(imageBuffer: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', imageBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
 
 // Convert image buffer to data URL for storage
-async function convertImageToDataURL(
-  imageBuffer: ArrayBuffer,
-): Promise<string> {
+async function convertImageToDataURL(imageBuffer: ArrayBuffer): Promise<string> {
   try {
     const uint8Array = new Uint8Array(imageBuffer);
 
     // Detect image format
     const isJPEG = uint8Array[0] === 0xff && uint8Array[1] === 0xd8;
-    const isPNG =
-      uint8Array[0] === 0x89 &&
-      uint8Array[1] === 0x50 &&
-      uint8Array[2] === 0x4e &&
-      uint8Array[3] === 0x47;
+    const isPNG = uint8Array[0] === 0x89 && uint8Array[1] === 0x50 && uint8Array[2] === 0x4e && uint8Array[3] === 0x47;
     const isWebP =
-      uint8Array[8] === 0x57 &&
-      uint8Array[9] === 0x45 &&
-      uint8Array[10] === 0x42 &&
-      uint8Array[11] === 0x50;
+      uint8Array[8] === 0x57 && uint8Array[9] === 0x45 && uint8Array[10] === 0x42 && uint8Array[11] === 0x50;
 
     // Determine MIME type
     let mimeType = 'image/png'; // Default
@@ -438,11 +417,7 @@ function createMinimalValidJPEG(): string {
 }
 
 // Check image safety using OpenAI Moderation API with hash-based caching
-async function checkImageSafety(
-  imageFile: File,
-  env: Env,
-  steamId: string,
-): Promise<boolean> {
+async function checkImageSafety(imageFile: File, env: Env, steamId: string): Promise<boolean> {
   try {
     // Check if user is banned from uploading sprays
     const banKey = `spray_ban_${steamId}`;
@@ -474,9 +449,7 @@ async function checkImageSafety(
 
       // Use cached result if it's still valid
       if (cacheAge < cacheValidityPeriod) {
-        console.log(
-          `Using cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`,
-        );
+        console.log(`Using cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`);
 
         // Send to Discord webhook if image is safe and we have steamId
         if (isSafe) {
@@ -551,9 +524,7 @@ async function checkImageSafety(
 
     // Store the result in KV cache for 7 days (TTL handled by expiration check above)
     await env.SESSIONS.put(cacheKey, JSON.stringify(cacheData));
-    console.log(
-      `Cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`,
-    );
+    console.log(`Cached moderation result for image hash ${imageHash}: ${isSafe ? 'safe' : 'unsafe'}`);
 
     // Send to Discord webhook if image is safe and we have steamId
     if (isSafe && steamId) {
@@ -569,10 +540,7 @@ async function checkImageSafety(
   }
 }
 
-export async function handleUploadSpray(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleUploadSpray(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -587,11 +555,7 @@ export async function handleUploadSpray(
     // Check if request contains multipart form data
     const contentType = request.headers.get('Content-Type');
     if (!contentType?.includes('multipart/form-data')) {
-      return createResponse(
-        { error: 'Multipart form data required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Multipart form data required' }, 400, origin);
     }
 
     const formData = await request.formData();
@@ -616,11 +580,7 @@ export async function handleUploadSpray(
       !UPLOAD_LIMITS.SUPPORTED_MIME_TYPES.includes(smallImage.type as any) ||
       !UPLOAD_LIMITS.SUPPORTED_MIME_TYPES.includes(originalImage.type as any)
     ) {
-      return createResponse(
-        { error: 'Ungültiger Dateityp. Nur PNG, JPG und WEBP sind erlaubt.' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Ungültiger Dateityp. Nur PNG, JPG und WEBP sind erlaubt.' }, 400, origin);
     }
 
     // Validate file sizes using defined limits
@@ -647,11 +607,7 @@ export async function handleUploadSpray(
     // Check image content safety with OpenAI using the original image
     const isSafe = await checkImageSafety(originalImage, env, steamId);
     if (!isSafe) {
-      return createResponse(
-        { error: 'Bildinhalt nicht erlaubt. Bitte wähle ein anderes Bild.' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Bildinhalt nicht erlaubt. Bitte wähle ein anderes Bild.' }, 400, origin);
     }
 
     // Process the pre-resized thumbnail and use pre-computed pixel data
@@ -691,10 +647,7 @@ export async function handleUploadSpray(
   }
 }
 
-export async function handleGetSpray(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetSpray(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -710,11 +663,7 @@ export async function handleGetSpray(
     const sprayDataString = await env.SESSIONS.get(sprayKey);
 
     if (!sprayDataString) {
-      return createResponse(
-        { error: 'Kein Spray für diesen Benutzer gefunden' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Kein Spray für diesen Benutzer gefunden' }, 404, origin);
     }
 
     const sprayData = JSON.parse(sprayDataString);
@@ -749,10 +698,7 @@ export async function handleGetSpray(
   }
 }
 
-export async function handleGetSprayString(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetSprayString(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -768,11 +714,7 @@ export async function handleGetSprayString(
     const sprayDataString = await env.SESSIONS.get(sprayKey);
 
     if (!sprayDataString) {
-      return createResponse(
-        { error: 'Kein Spray für diesen Benutzer gefunden' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Kein Spray für diesen Benutzer gefunden' }, 404, origin);
     }
 
     const sprayData = JSON.parse(sprayDataString);
@@ -791,18 +733,11 @@ export async function handleGetSprayString(
     );
   } catch (error) {
     console.error('Error retrieving spray string:', error);
-    return createResponse(
-      { error: 'Failed to retrieve spray string' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to retrieve spray string' }, 500, origin);
   }
 }
 
-export async function handleDeleteSpray(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleDeleteSpray(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -819,11 +754,7 @@ export async function handleDeleteSpray(
     // Check if spray exists
     const existingSpray = await env.SESSIONS.get(sprayKey);
     if (!existingSpray) {
-      return createResponse(
-        { error: 'Kein Spray zum Löschen gefunden' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Kein Spray zum Löschen gefunden' }, 404, origin);
     }
 
     // Delete the spray from KV storage
@@ -844,10 +775,7 @@ export async function handleDeleteSpray(
 }
 
 // Handle Discord moderation action - delete spray
-export async function handleModerationDelete(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleModerationDelete(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -856,25 +784,15 @@ export async function handleModerationDelete(
     const imageHash = url.searchParams.get('imageHash');
 
     if (!steamId || !imageHash) {
-      return createResponse(
-        { error: 'steamId und imageHash sind erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId und imageHash sind erforderlich' }, 400, origin);
     }
 
     // Check if spray exists before deleting
     const sprayKey = `spray_${steamId}`;
     const existingSpray = await env.SESSIONS.get(sprayKey);
     if (!existingSpray) {
-      console.log(
-        `No spray found for Steam ID: ${steamId}, skipping delete action`,
-      );
-      return createResponse(
-        { success: true, message: 'No spray found to delete' },
-        200,
-        origin,
-      );
+      console.log(`No spray found for Steam ID: ${steamId}, skipping delete action`);
+      return createResponse({ success: true, message: 'No spray found to delete' }, 200, origin);
     }
 
     // Delete the spray from KV storage
@@ -895,9 +813,7 @@ export async function handleModerationDelete(
     // Update Discord webhook message to show action taken
     await updateDiscordWebhookMessage(steamId, imageHash, 'deleted', env);
 
-    console.log(
-      `Moderator deleted spray for Steam ID: ${steamId}, hash: ${imageHash}`,
-    );
+    console.log(`Moderator deleted spray for Steam ID: ${steamId}, hash: ${imageHash}`);
 
     return createResponse(
       {
@@ -909,19 +825,12 @@ export async function handleModerationDelete(
     );
   } catch (error) {
     console.error('Error handling moderation delete:', error);
-    return createResponse(
-      { error: 'Failed to process moderation action' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }
 
 // Handle Discord moderation action - delete spray and ban user
-export async function handleModerationBan(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleModerationBan(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -930,11 +839,7 @@ export async function handleModerationBan(
     const imageHash = url.searchParams.get('imageHash');
 
     if (!steamId || !imageHash) {
-      return createResponse(
-        { error: 'steamId und imageHash sind erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId und imageHash sind erforderlich' }, 400, origin);
     }
 
     // Check if user is already banned
@@ -942,11 +847,7 @@ export async function handleModerationBan(
     const existingBan = await env.SESSIONS.get(banKey);
     if (existingBan) {
       console.log(`User ${steamId} is already banned, skipping ban action`);
-      return createResponse(
-        { success: true, message: 'User is already banned' },
-        200,
-        origin,
-      );
+      return createResponse({ success: true, message: 'User is already banned' }, 200, origin);
     }
 
     // Delete the spray from KV storage (if it exists)
@@ -975,9 +876,7 @@ export async function handleModerationBan(
     // Update Discord webhook message to show action taken
     await updateDiscordWebhookMessage(steamId, imageHash, 'banned', env);
 
-    console.log(
-      `Moderator banned Steam ID: ${steamId} and deleted spray with hash: ${imageHash}`,
-    );
+    console.log(`Moderator banned Steam ID: ${steamId} and deleted spray with hash: ${imageHash}`);
 
     return createResponse(
       {
@@ -989,19 +888,12 @@ export async function handleModerationBan(
     );
   } catch (error) {
     console.error('Error handling moderation ban:', error);
-    return createResponse(
-      { error: 'Failed to process moderation action' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }
 
 // Check if user is banned from spray uploads
-export async function handleGetSprayBanStatus(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetSprayBanStatus(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   // Validate session
@@ -1043,10 +935,7 @@ export async function handleGetSprayBanStatus(
 }
 
 // Get upload limits for images
-export async function handleGetUploadLimits(
-  request: Request,
-  _env: Env,
-): Promise<Response> {
+export async function handleGetUploadLimits(request: Request, _env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -1064,19 +953,12 @@ export async function handleGetUploadLimits(
     );
   } catch (error) {
     console.error('Error getting upload limits:', error);
-    return createResponse(
-      { error: 'Failed to get upload limits' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to get upload limits' }, 500, origin);
   }
 }
 
 // Handle Discord moderation action - unban user
-export async function handleModerationUnban(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleModerationUnban(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -1085,11 +967,7 @@ export async function handleModerationUnban(
     const imageHash = url.searchParams.get('imageHash');
 
     if (!steamId || !imageHash) {
-      return createResponse(
-        { error: 'steamId und imageHash sind erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId und imageHash sind erforderlich' }, 400, origin);
     }
 
     // Check if user is actually banned before unbanning
@@ -1097,11 +975,7 @@ export async function handleModerationUnban(
     const banData = await env.SESSIONS.get(banKey);
     if (!banData) {
       console.log(`User ${steamId} is not banned, skipping unban action`);
-      return createResponse(
-        { success: true, message: 'User is not banned' },
-        200,
-        origin,
-      );
+      return createResponse({ success: true, message: 'User is not banned' }, 200, origin);
     }
 
     // Remove the ban from KV storage
@@ -1122,19 +996,12 @@ export async function handleModerationUnban(
     );
   } catch (error) {
     console.error('Error handling moderation unban:', error);
-    return createResponse(
-      { error: 'Failed to process moderation action' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }
 
 // Handle Discord moderation action - undelete spray (remove block flag)
-export async function handleModerationUndelete(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleModerationUndelete(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -1143,37 +1010,21 @@ export async function handleModerationUndelete(
     const imageHash = url.searchParams.get('imageHash');
 
     if (!steamId || !imageHash) {
-      return createResponse(
-        { error: 'steamId und imageHash sind erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'steamId und imageHash sind erforderlich' }, 400, origin);
     }
 
     // Check if image is actually blocked before undeleting
     const cacheKey = `moderation_${imageHash}`;
     const cachedResult = await env.SESSIONS.get(cacheKey);
     if (!cachedResult) {
-      console.log(
-        `Image hash ${imageHash} is not blocked, skipping undelete action`,
-      );
-      return createResponse(
-        { success: true, message: 'Image is not blocked' },
-        200,
-        origin,
-      );
+      console.log(`Image hash ${imageHash} is not blocked, skipping undelete action`);
+      return createResponse({ success: true, message: 'Image is not blocked' }, 200, origin);
     }
 
     const cached = JSON.parse(cachedResult);
     if (!cached.blocked) {
-      console.log(
-        `Image hash ${imageHash} is not blocked, skipping undelete action`,
-      );
-      return createResponse(
-        { success: true, message: 'Image is not blocked' },
-        200,
-        origin,
-      );
+      console.log(`Image hash ${imageHash} is not blocked, skipping undelete action`);
+      return createResponse({ success: true, message: 'Image is not blocked' }, 200, origin);
     }
 
     // Remove the block flag from the image hash cache
@@ -1194,19 +1045,12 @@ export async function handleModerationUndelete(
     );
   } catch (error) {
     console.error('Error handling moderation undelete:', error);
-    return createResponse(
-      { error: 'Failed to process moderation action' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process moderation action' }, 500, origin);
   }
 }
 
 // Handle background removal via Replicate API
-export async function handleBackgroundRemoval(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleBackgroundRemoval(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -1238,9 +1082,7 @@ export async function handleBackgroundRemoval(
 
     // Convert image to base64 data URL for Replicate
     const imageBuffer = await imageFile.arrayBuffer();
-    const base64Image = btoa(
-      String.fromCharCode(...new Uint8Array(imageBuffer)),
-    );
+    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
     const mimeType = imageFile.type;
     const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
@@ -1255,8 +1097,7 @@ export async function handleBackgroundRemoval(
           Prefer: 'wait',
         },
         body: JSON.stringify({
-          version:
-            'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003',
+          version: 'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003',
           input: {
             image: dataUrl,
           },
@@ -1267,16 +1108,8 @@ export async function handleBackgroundRemoval(
 
     if (!replicateResponse.ok) {
       const errorText = await replicateResponse.text();
-      console.error(
-        'Replicate API error:',
-        replicateResponse.status,
-        errorText,
-      );
-      return createResponse(
-        { error: 'Background removal service failed' },
-        500,
-        origin,
-      );
+      console.error('Replicate API error:', replicateResponse.status, errorText);
+      return createResponse({ error: 'Background removal service failed' }, 500, origin);
     }
 
     const result = (await replicateResponse.json()) as {
@@ -1287,11 +1120,7 @@ export async function handleBackgroundRemoval(
     // Check if the result has the output URL
     if (!result.output) {
       console.error('Replicate API did not return output:', result);
-      return createResponse(
-        { error: 'Background removal processing failed' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Background removal processing failed' }, 500, origin);
     }
 
     // Return the URL of the processed image
@@ -1306,10 +1135,6 @@ export async function handleBackgroundRemoval(
     );
   } catch (error) {
     console.error('Error handling background removal:', error);
-    return createResponse(
-      { error: 'Failed to process background removal' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to process background removal' }, 500, origin);
   }
 }

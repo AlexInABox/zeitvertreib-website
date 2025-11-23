@@ -29,10 +29,7 @@ async function validateAdminAccess(
  * GET /financial/transactions
  * Returns all financial transactions (requires valid Steam auth)
  */
-export async function handleGetTransactions(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetTransactions(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -66,10 +63,7 @@ export async function handleGetTransactions(
       .select()
       .from(financialTransactions)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(
-        desc(financialTransactions.transactionDate),
-        desc(financialTransactions.createdAt),
-      )
+      .orderBy(desc(financialTransactions.transactionDate), desc(financialTransactions.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -105,10 +99,7 @@ export async function handleGetTransactions(
  * GET /financial/recurring
  * Returns all recurring transactions (requires valid Steam auth)
  */
-export async function handleGetRecurringTransactions(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetRecurringTransactions(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -119,10 +110,7 @@ export async function handleGetRecurringTransactions(
   }
 
   try {
-    const result = await db
-      .select()
-      .from(recurringTransactions)
-      .orderBy(desc(recurringTransactions.createdAt));
+    const result = await db.select().from(recurringTransactions).orderBy(desc(recurringTransactions.createdAt));
 
     return createResponse(
       {
@@ -134,11 +122,7 @@ export async function handleGetRecurringTransactions(
     );
   } catch (error) {
     console.error('Error fetching recurring transactions:', error);
-    return createResponse(
-      { error: 'Failed to fetch recurring transactions' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to fetch recurring transactions' }, 500, origin);
   }
 }
 
@@ -146,10 +130,7 @@ export async function handleGetRecurringTransactions(
  * POST /financial/recurring
  * Creates a new recurring transaction (requires admin Steam ID)
  */
-export async function handleCreateRecurringTransaction(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleCreateRecurringTransaction(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -166,48 +147,23 @@ export async function handleCreateRecurringTransaction(
   }
 
   try {
-    const recurring: Omit<
-      RecurringTransaction,
-      'id' | 'created_at' | 'is_active'
-    > = await request.json();
+    const recurring: Omit<RecurringTransaction, 'id' | 'created_at' | 'is_active'> = await request.json();
 
     // Validate required fields
-    if (
-      !recurring.transaction_type ||
-      !['income', 'expense'].includes(recurring.transaction_type)
-    ) {
-      return createResponse(
-        { error: 'Valid transaction_type required (income or expense)' },
-        400,
-        origin,
-      );
+    if (!recurring.transaction_type || !['income', 'expense'].includes(recurring.transaction_type)) {
+      return createResponse({ error: 'Valid transaction_type required (income or expense)' }, 400, origin);
     }
 
-    if (
-      !recurring.frequency ||
-      !['daily', 'weekly', 'monthly', 'yearly'].includes(recurring.frequency)
-    ) {
-      return createResponse(
-        { error: 'Valid frequency required (daily, weekly, monthly, yearly)' },
-        400,
-        origin,
-      );
+    if (!recurring.frequency || !['daily', 'weekly', 'monthly', 'yearly'].includes(recurring.frequency)) {
+      return createResponse({ error: 'Valid frequency required (daily, weekly, monthly, yearly)' }, 400, origin);
     }
 
     if (!recurring.category || typeof recurring.category !== 'string') {
       return createResponse({ error: 'Category is required' }, 400, origin);
     }
 
-    if (
-      !recurring.amount ||
-      typeof recurring.amount !== 'number' ||
-      recurring.amount <= 0
-    ) {
-      return createResponse(
-        { error: 'Valid amount (positive number) is required' },
-        400,
-        origin,
-      );
+    if (!recurring.amount || typeof recurring.amount !== 'number' || recurring.amount <= 0) {
+      return createResponse({ error: 'Valid amount (positive number) is required' }, 400, origin);
     }
 
     if (!recurring.description || typeof recurring.description !== 'string') {
@@ -219,10 +175,7 @@ export async function handleCreateRecurringTransaction(
     }
 
     // Calculate next execution date
-    const nextExecution = calculateNextExecution(
-      recurring.start_date,
-      recurring.frequency,
-    );
+    const nextExecution = calculateNextExecution(recurring.start_date, recurring.frequency);
 
     // Insert recurring transaction using Drizzle
     const result = await db
@@ -252,11 +205,7 @@ export async function handleCreateRecurringTransaction(
     );
   } catch (error) {
     console.error('Error creating recurring transaction:', error);
-    return createResponse(
-      { error: 'Failed to create recurring transaction' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to create recurring transaction' }, 500, origin);
   }
 }
 
@@ -264,10 +213,7 @@ export async function handleCreateRecurringTransaction(
  * PUT /financial/recurring/{id}
  * Updates a recurring transaction (requires admin Steam ID)
  */
-export async function handleUpdateRecurringTransaction(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleUpdateRecurringTransaction(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -288,11 +234,7 @@ export async function handleUpdateRecurringTransaction(
     const id = url.pathname.split('/').pop();
 
     if (!id || isNaN(parseInt(id))) {
-      return createResponse(
-        { error: 'Valid transaction ID required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Valid transaction ID required' }, 400, origin);
     }
 
     const updates: any = await request.json();
@@ -333,25 +275,13 @@ export async function handleUpdateRecurringTransaction(
       .returning({ updatedId: recurringTransactions.id });
 
     if (result.length === 0) {
-      return createResponse(
-        { error: 'Recurring transaction not found' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Recurring transaction not found' }, 404, origin);
     }
 
-    return createResponse(
-      { message: 'Recurring transaction updated successfully' },
-      200,
-      origin,
-    );
+    return createResponse({ message: 'Recurring transaction updated successfully' }, 200, origin);
   } catch (error) {
     console.error('Error updating recurring transaction:', error);
-    return createResponse(
-      { error: 'Failed to update recurring transaction' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to update recurring transaction' }, 500, origin);
   }
 }
 
@@ -359,10 +289,7 @@ export async function handleUpdateRecurringTransaction(
  * DELETE /financial/recurring/{id}
  * Deletes a recurring transaction (requires admin Steam ID)
  */
-export async function handleDeleteRecurringTransaction(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleDeleteRecurringTransaction(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -383,11 +310,7 @@ export async function handleDeleteRecurringTransaction(
     const id = url.pathname.split('/').pop();
 
     if (!id || isNaN(parseInt(id))) {
-      return createResponse(
-        { error: 'Valid transaction ID required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Valid transaction ID required' }, 400, origin);
     }
 
     const result = await db
@@ -396,25 +319,13 @@ export async function handleDeleteRecurringTransaction(
       .returning({ deletedId: recurringTransactions.id });
 
     if (result.length === 0) {
-      return createResponse(
-        { error: 'Recurring transaction not found' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Recurring transaction not found' }, 404, origin);
     }
 
-    return createResponse(
-      { message: 'Recurring transaction deleted successfully' },
-      200,
-      origin,
-    );
+    return createResponse({ message: 'Recurring transaction deleted successfully' }, 200, origin);
   } catch (error) {
     console.error('Error deleting recurring transaction:', error);
-    return createResponse(
-      { error: 'Failed to delete recurring transaction' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to delete recurring transaction' }, 500, origin);
   }
 }
 
@@ -447,10 +358,7 @@ function calculateNextExecution(startDate: string, frequency: string): string {
  * Cron job function to process recurring transactions
  * This will be called daily by Cloudflare Workers cron
  */
-export async function processRecurringTransactions(
-  _db: ReturnType<typeof drizzle>,
-  env: Env,
-): Promise<void> {
+export async function processRecurringTransactions(_db: ReturnType<typeof drizzle>, env: Env): Promise<void> {
   const today = new Date().toISOString().split('T')[0] ?? '';
 
   try {
@@ -466,8 +374,7 @@ export async function processRecurringTransactions(
       .bind(today, today)
       .all();
 
-    const recurringTransactions =
-      result.results as unknown as RecurringTransaction[];
+    const recurringTransactions = result.results as unknown as RecurringTransaction[];
 
     for (const recurring of recurringTransactions) {
       try {
@@ -493,10 +400,7 @@ export async function processRecurringTransactions(
           .run();
 
         // Update the recurring transaction's next execution date
-        const nextExecution = calculateNextExecution(
-          today,
-          recurring.frequency,
-        );
+        const nextExecution = calculateNextExecution(today, recurring.frequency);
 
         await env.ZEITVERTREIB_DATA.prepare(
           `
@@ -508,20 +412,13 @@ export async function processRecurringTransactions(
           .bind(nextExecution, today, recurring.id)
           .run();
 
-        console.log(
-          `Processed recurring transaction #${recurring.id}: ${recurring.description}`,
-        );
+        console.log(`Processed recurring transaction #${recurring.id}: ${recurring.description}`);
       } catch (error) {
-        console.error(
-          `Error processing recurring transaction #${recurring.id}:`,
-          error,
-        );
+        console.error(`Error processing recurring transaction #${recurring.id}:`, error);
       }
     }
 
-    console.log(
-      `Processed ${recurringTransactions.length} recurring transactions for ${today}`,
-    );
+    console.log(`Processed ${recurringTransactions.length} recurring transactions for ${today}`);
   } catch (error) {
     console.error('Error processing recurring transactions:', error);
   }
@@ -531,10 +428,7 @@ export async function processRecurringTransactions(
  * POST /financial/transactions
  * Creates a new financial transaction (requires admin Steam ID)
  */
-export async function handleCreateTransaction(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleCreateTransaction(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -551,63 +445,33 @@ export async function handleCreateTransaction(
   }
 
   try {
-    const transaction: Omit<FinancialTransaction, 'id' | 'created_at'> =
-      await request.json();
+    const transaction: Omit<FinancialTransaction, 'id' | 'created_at'> = await request.json();
 
     // Validate required fields
-    if (
-      !transaction.transaction_type ||
-      !['income', 'expense'].includes(transaction.transaction_type)
-    ) {
-      return createResponse(
-        { error: 'Valid transaction_type required (income or expense)' },
-        400,
-        origin,
-      );
+    if (!transaction.transaction_type || !['income', 'expense'].includes(transaction.transaction_type)) {
+      return createResponse({ error: 'Valid transaction_type required (income or expense)' }, 400, origin);
     }
 
     if (!transaction.category || typeof transaction.category !== 'string') {
       return createResponse({ error: 'Category is required' }, 400, origin);
     }
 
-    if (
-      !transaction.amount ||
-      typeof transaction.amount !== 'number' ||
-      transaction.amount <= 0
-    ) {
-      return createResponse(
-        { error: 'Valid amount (positive number) is required' },
-        400,
-        origin,
-      );
+    if (!transaction.amount || typeof transaction.amount !== 'number' || transaction.amount <= 0) {
+      return createResponse({ error: 'Valid amount (positive number) is required' }, 400, origin);
     }
 
-    if (
-      !transaction.description ||
-      typeof transaction.description !== 'string'
-    ) {
+    if (!transaction.description || typeof transaction.description !== 'string') {
       return createResponse({ error: 'Description is required' }, 400, origin);
     }
 
-    if (
-      !transaction.transaction_date ||
-      typeof transaction.transaction_date !== 'string'
-    ) {
-      return createResponse(
-        { error: 'Transaction date is required' },
-        400,
-        origin,
-      );
+    if (!transaction.transaction_date || typeof transaction.transaction_date !== 'string') {
+      return createResponse({ error: 'Transaction date is required' }, 400, origin);
     }
 
     // Validate date format (should be YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(transaction.transaction_date)) {
-      return createResponse(
-        { error: 'Transaction date must be in YYYY-MM-DD format' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Transaction date must be in YYYY-MM-DD format' }, 400, origin);
     }
 
     // Insert transaction using Drizzle
@@ -635,11 +499,7 @@ export async function handleCreateTransaction(
     );
   } catch (error) {
     console.error('Error creating financial transaction:', error);
-    return createResponse(
-      { error: 'Failed to create transaction' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to create transaction' }, 500, origin);
   }
 }
 
@@ -647,10 +507,7 @@ export async function handleCreateTransaction(
  * PUT /financial/transactions/{id}
  * Updates a financial transaction (requires admin Steam ID)
  */
-export async function handleUpdateTransaction(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleUpdateTransaction(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -671,11 +528,7 @@ export async function handleUpdateTransaction(
     const transactionId = url.pathname.split('/').pop();
 
     if (!transactionId || isNaN(parseInt(transactionId))) {
-      return createResponse(
-        { error: 'Valid transaction ID required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Valid transaction ID required' }, 400, origin);
     }
 
     const updates: Partial<FinancialTransaction> = await request.json();
@@ -684,10 +537,7 @@ export async function handleUpdateTransaction(
     const updateFields: string[] = [];
     const params: any[] = [];
 
-    if (
-      updates.transaction_type &&
-      ['income', 'expense'].includes(updates.transaction_type)
-    ) {
+    if (updates.transaction_type && ['income', 'expense'].includes(updates.transaction_type)) {
       updateFields.push('transaction_type = ?');
       params.push(updates.transaction_type);
     }
@@ -697,11 +547,7 @@ export async function handleUpdateTransaction(
       params.push(updates.category);
     }
 
-    if (
-      updates.amount &&
-      typeof updates.amount === 'number' &&
-      updates.amount > 0
-    ) {
+    if (updates.amount && typeof updates.amount === 'number' && updates.amount > 0) {
       updateFields.push('amount = ?');
       params.push(updates.amount);
     }
@@ -711,10 +557,7 @@ export async function handleUpdateTransaction(
       params.push(updates.description);
     }
 
-    if (
-      updates.transaction_date &&
-      /^\d{4}-\d{2}-\d{2}$/.test(updates.transaction_date)
-    ) {
+    if (updates.transaction_date && /^\d{4}-\d{2}-\d{2}$/.test(updates.transaction_date)) {
       updateFields.push('transaction_date = ?');
       params.push(updates.transaction_date);
     }
@@ -730,11 +573,7 @@ export async function handleUpdateTransaction(
     }
 
     if (updateFields.length === 0) {
-      return createResponse(
-        { error: 'No valid fields to update' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'No valid fields to update' }, 400, origin);
     }
 
     // Add transaction ID to params
@@ -751,11 +590,7 @@ export async function handleUpdateTransaction(
       .run();
 
     if (!result.success) {
-      return createResponse(
-        { error: 'Failed to update transaction' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Failed to update transaction' }, 500, origin);
     }
 
     if (result.meta.changes === 0) {
@@ -771,11 +606,7 @@ export async function handleUpdateTransaction(
     );
   } catch (error) {
     console.error('Error updating financial transaction:', error);
-    return createResponse(
-      { error: 'Failed to update transaction' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to update transaction' }, 500, origin);
   }
 }
 
@@ -783,10 +614,7 @@ export async function handleUpdateTransaction(
  * DELETE /financial/transactions/{id}
  * Deletes a financial transaction (requires admin Steam ID)
  */
-export async function handleDeleteTransaction(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleDeleteTransaction(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -807,11 +635,7 @@ export async function handleDeleteTransaction(
     const transactionId = url.pathname.split('/').pop();
 
     if (!transactionId || isNaN(parseInt(transactionId))) {
-      return createResponse(
-        { error: 'Valid transaction ID required' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Valid transaction ID required' }, 400, origin);
     }
 
     const result = await env.ZEITVERTREIB_DATA.prepare(
@@ -823,11 +647,7 @@ export async function handleDeleteTransaction(
       .run();
 
     if (!result.success) {
-      return createResponse(
-        { error: 'Failed to delete transaction' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Failed to delete transaction' }, 500, origin);
     }
 
     if (result.meta.changes === 0) {
@@ -843,11 +663,7 @@ export async function handleDeleteTransaction(
     );
   } catch (error) {
     console.error('Error deleting financial transaction:', error);
-    return createResponse(
-      { error: 'Failed to delete transaction' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Failed to delete transaction' }, 500, origin);
   }
 }
 
@@ -855,10 +671,7 @@ export async function handleDeleteTransaction(
  * GET /financial/summary
  * Returns financial summary statistics (requires valid Steam auth)
  */
-export async function handleGetSummary(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetSummary(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -941,10 +754,7 @@ export async function handleGetSummary(
  * POST /transfer-zvc
  * Transfer ZV Coins (experience) from one user to another with 10% tax
  */
-export async function handleTransferZVC(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleTransferZVC(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -962,50 +772,26 @@ export async function handleTransferZVC(
     const { recipient, amount } = body;
 
     // Validate input
-    if (
-      !recipient ||
-      typeof recipient !== 'string' ||
-      recipient.trim() === ''
-    ) {
-      return createResponse(
-        { error: 'Empfänger ist erforderlich' },
-        400,
-        origin,
-      );
+    if (!recipient || typeof recipient !== 'string' || recipient.trim() === '') {
+      return createResponse({ error: 'Empfänger ist erforderlich' }, 400, origin);
     }
 
     if (!amount || typeof amount !== 'number' || amount <= 0) {
-      return createResponse(
-        { error: 'Gültiger Betrag ist erforderlich' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Gültiger Betrag ist erforderlich' }, 400, origin);
     }
 
     if (!Number.isInteger(amount)) {
-      return createResponse(
-        { error: 'Betrag muss eine ganze Zahl sein' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Betrag muss eine ganze Zahl sein' }, 400, origin);
     }
 
     // Validate minimum transfer amount
     if (amount < 100) {
-      return createResponse(
-        { error: 'Mindestbetrag für Transfers: 100 ZVC' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Mindestbetrag für Transfers: 100 ZVC' }, 400, origin);
     }
 
     // Validate maximum transfer amount
     if (amount > 50000) {
-      return createResponse(
-        { error: 'Maximaler Transferbetrag: 50.000 ZVC' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Maximaler Transferbetrag: 50.000 ZVC' }, 400, origin);
     }
 
     const senderSteamId = validation.steamId! + '@steam';
@@ -1013,11 +799,7 @@ export async function handleTransferZVC(
 
     // Prevent self-transfer
     if (senderSteamId === cleanRecipient) {
-      return createResponse(
-        { error: 'Du kannst nicht an dich selbst senden' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Du kannst nicht an dich selbst senden' }, 400, origin);
     }
 
     // Calculate tax (10%)
@@ -1026,9 +808,7 @@ export async function handleTransferZVC(
     const totalCost = amount + taxAmount; // Total amount to deduct from sender
 
     // Check if sender has enough ZVC (needs 110% of transfer amount)
-    const senderData = (await env.ZEITVERTREIB_DATA.prepare(
-      'SELECT experience FROM playerdata WHERE id = ?',
-    )
+    const senderData = (await env.ZEITVERTREIB_DATA.prepare('SELECT experience FROM playerdata WHERE id = ?')
       .bind(senderSteamId)
       .first()) as { experience: number } | null;
 
@@ -1065,16 +845,12 @@ export async function handleTransferZVC(
     // Check if it's a valid Steam ID format (17 digits)
     if (/^\d{17}$/.test(recipientSteamId)) {
       // It's a Steam ID - query by id column with @steam suffix
-      recipientData = (await env.ZEITVERTREIB_DATA.prepare(
-        'SELECT id, experience FROM playerdata WHERE id = ?',
-      )
+      recipientData = (await env.ZEITVERTREIB_DATA.prepare('SELECT id, experience FROM playerdata WHERE id = ?')
         .bind(recipientSteamId + '@steam')
         .first()) as { id: string; experience: number } | null;
     } else {
       // It's not a Steam ID - treat as username and query by username column
-      recipientData = (await env.ZEITVERTREIB_DATA.prepare(
-        'SELECT id, experience FROM playerdata WHERE username = ?',
-      )
+      recipientData = (await env.ZEITVERTREIB_DATA.prepare('SELECT id, experience FROM playerdata WHERE username = ?')
         .bind(cleanRecipient)
         .first()) as { id: string; experience: number } | null;
     }
@@ -1095,16 +871,12 @@ export async function handleTransferZVC(
     // Perform the transfer in a transaction
     try {
       // Deduct total cost from sender (amount + tax)
-      await env.ZEITVERTREIB_DATA.prepare(
-        'UPDATE playerdata SET experience = experience - ? WHERE id = ?',
-      )
+      await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET experience = experience - ? WHERE id = ?')
         .bind(totalCost, senderSteamId)
         .run();
 
       // Add only the transfer amount to recipient (not including tax)
-      await env.ZEITVERTREIB_DATA.prepare(
-        'UPDATE playerdata SET experience = experience + ? WHERE id = ?',
-      )
+      await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET experience = experience + ? WHERE id = ?')
         .bind(amount, finalRecipientId)
         .run();
 
@@ -1130,11 +902,7 @@ export async function handleTransferZVC(
       );
     } catch (dbError) {
       console.error('Database error during transfer:', dbError);
-      return createResponse(
-        { error: 'Transfer fehlgeschlagen - Datenbankfehler' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Transfer fehlgeschlagen - Datenbankfehler' }, 500, origin);
     }
   } catch (error) {
     console.error('Error in ZVC transfer:', error);

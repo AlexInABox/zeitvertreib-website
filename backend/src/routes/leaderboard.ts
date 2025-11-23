@@ -93,10 +93,7 @@ async function getSteamUsername(steamId: string, env: Env): Promise<string> {
 
     return playerName;
   } catch (error) {
-    console.error(
-      `Fehler beim Abrufen des Steam Benutzernamens für ${steamId}:`,
-      error,
-    );
+    console.error(`Fehler beim Abrufen des Steam Benutzernamens für ${steamId}:`, error);
     return 'Unbekannt';
   }
 }
@@ -120,9 +117,7 @@ async function getLeaderboardData(
   luckyWheelWins: LeaderboardEntry[];
 }> {
   // Helper function to format leaderboard entries
-  const formatLeaderboard = async <
-    T extends { id: string; discordId: string | null },
-  >(
+  const formatLeaderboard = async <T extends { id: string; discordId: string | null }>(
     data: T[],
     valueKey: string,
   ): Promise<LeaderboardEntry[]> => {
@@ -320,10 +315,7 @@ async function getLeaderboardData(
     adrenaline: await formatLeaderboard(adrenalineData, 'usedadrenaline'),
     slotSpins: await formatLeaderboard(slotSpinsData, 'slotSpins'),
     slotWins: await formatLeaderboard(slotWinsData, 'slotWins'),
-    luckyWheelWins: await formatLeaderboard(
-      luckyWheelWinsData,
-      'luckyWheelWins',
-    ),
+    luckyWheelWins: await formatLeaderboard(luckyWheelWinsData, 'luckyWheelWins'),
   };
 }
 
@@ -335,18 +327,14 @@ function formatPlaytime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
     const remainingSeconds = seconds % 60;
-    return remainingSeconds > 0
-      ? `${minutes}m ${remainingSeconds}s`
-      : `${minutes}m`;
+    return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
   }
 
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
 
   if (hours < 24) {
-    return remainingMinutes > 0
-      ? `${hours}h ${remainingMinutes}m`
-      : `${hours}h`;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   }
 
   const days = Math.floor(hours / 24);
@@ -367,9 +355,7 @@ function formatLeaderboardField(entries: LeaderboardEntry[]): string {
   let response = entries
     .map((entry, index) => {
       // Use Discord mention if discordId is available, otherwise use Steam username
-      const displayName = entry.discordId
-        ? `<@${entry.discordId}>`
-        : entry.name;
+      const displayName = entry.discordId ? `<@${entry.discordId}>` : entry.name;
 
       if (index === 0) {
         return `**${entry.rank}. ${displayName} (${entry.value})**`;
@@ -394,9 +380,7 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
     .map((entry, index) => {
       const formattedTime = formatPlaytime(entry.value);
       // Use Discord mention if discordId is available, otherwise use Steam username
-      const displayName = entry.discordId
-        ? `<@${entry.discordId}>`
-        : entry.name;
+      const displayName = entry.discordId ? `<@${entry.discordId}>` : entry.name;
 
       if (index === 0) {
         return `**${entry.rank}. ${displayName} (${formattedTime})**`;
@@ -411,11 +395,7 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
 }
 
 function createDiscordMessage(
-  leaderboardData: ReturnType<typeof getLeaderboardData> extends Promise<
-    infer T
-  >
-    ? T
-    : never,
+  leaderboardData: ReturnType<typeof getLeaderboardData> extends Promise<infer T> ? T : never,
 ): DiscordMessage {
   // Create timestamp for last update
   const now = new Date();
@@ -533,18 +513,11 @@ function createDiscordMessage(
 }
 
 // Discord API proxy utility
-async function fetchDiscordWithProxy(
-  url: string,
-  options: RequestInit,
-  env: Env,
-): Promise<Response> {
+async function fetchDiscordWithProxy(url: string, options: RequestInit, env: Env): Promise<Response> {
   return proxyFetch(url, options, env);
 }
 
-async function sendOrUpdateDiscordMessage(
-  env: Env,
-  message: DiscordMessage,
-): Promise<boolean> {
+async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Promise<boolean> {
   try {
     const webhookUrl = env.LEADERBOARD_WEBHOOK;
     const messageId = env.LEADERBOARD_MESSAGE_ID;
@@ -573,16 +546,10 @@ async function sendOrUpdateDiscordMessage(
           console.log('Discord Bestenliste erfolgreich aktualisiert');
           return true;
         } else {
-          console.log(
-            'Nachricht bearbeiten fehlgeschlagen, erstelle neue:',
-            editResponse.status,
-          );
+          console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', editResponse.status);
         }
       } catch (error) {
-        console.log(
-          'Nachricht bearbeiten fehlgeschlagen, erstelle neue:',
-          error,
-        );
+        console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', error);
       }
     }
 
@@ -601,20 +568,11 @@ async function sendOrUpdateDiscordMessage(
 
     if (response.ok) {
       const responseData = (await response.json()) as { id: string };
-      console.log(
-        `Neue Discord Bestenliste gesendet mit ID: ${responseData.id}`,
-      );
-      console.log(
-        'Du möchtest vielleicht LEADERBOARD_MESSAGE_ID aktualisieren zu:',
-        responseData.id,
-      );
+      console.log(`Neue Discord Bestenliste gesendet mit ID: ${responseData.id}`);
+      console.log('Du möchtest vielleicht LEADERBOARD_MESSAGE_ID aktualisieren zu:', responseData.id);
       return true;
     } else {
-      console.error(
-        'Discord Nachricht senden fehlgeschlagen:',
-        response.status,
-        await response.text(),
-      );
+      console.error('Discord Nachricht senden fehlgeschlagen:', response.status, await response.text());
       return false;
     }
   } catch (error) {
@@ -623,10 +581,7 @@ async function sendOrUpdateDiscordMessage(
   }
 }
 
-export async function updateLeaderboard(
-  db: ReturnType<typeof drizzle>,
-  env: Env,
-): Promise<boolean> {
+export async function updateLeaderboard(db: ReturnType<typeof drizzle>, env: Env): Promise<boolean> {
   try {
     console.log('Starte Bestenliste Update...');
 
@@ -653,10 +608,7 @@ export async function updateLeaderboard(
 }
 
 // HTTP endpoint to manually trigger leaderboard update
-export async function handleLeaderboardUpdate(
-  _request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleLeaderboardUpdate(_request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   try {
     const success = await updateLeaderboard(db, env);
@@ -664,9 +616,7 @@ export async function handleLeaderboardUpdate(
     return new Response(
       JSON.stringify({
         success,
-        message: success
-          ? 'Bestenliste erfolgreich aktualisiert'
-          : 'Bestenliste Update fehlgeschlagen',
+        message: success ? 'Bestenliste erfolgreich aktualisiert' : 'Bestenliste Update fehlgeschlagen',
       }),
       {
         status: success ? 200 : 500,

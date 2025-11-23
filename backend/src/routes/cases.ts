@@ -43,11 +43,7 @@ const aws = (env: Env): AwsClient =>
   });
 
 // Helper function to check if user has required permissions
-async function hasPermission(
-  request: Request,
-  db: ReturnType<typeof drizzle>,
-  env: Env,
-): Promise<boolean> {
+async function hasPermission(request: Request, db: ReturnType<typeof drizzle>, env: Env): Promise<boolean> {
   const { isValid, session } = await validateSession(request, env);
 
   if (!isValid || !session) {
@@ -70,10 +66,7 @@ async function hasPermission(
 }
 
 /// GET /cases/upload?case={caseId}&extension={ext}
-export async function handleCaseFileUpload(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleCaseFileUpload(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -84,11 +77,7 @@ export async function handleCaseFileUpload(
     console.log('caseId:', caseId, 'extension:', extension);
 
     if (!caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: case' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
     // Validate case ID format (5 lowercase letters or numbers)
@@ -123,11 +112,7 @@ export async function handleCaseFileUpload(
     const checkResponse = await fetch(checkRequest);
 
     if (checkResponse.status === 404) {
-      return createResponse(
-        { error: `Folder ${folderPath} does not exist` },
-        404,
-        origin,
-      );
+      return createResponse({ error: `Folder ${folderPath} does not exist` }, 404, origin);
     }
 
     // Generate random filename
@@ -136,13 +121,10 @@ export async function handleCaseFileUpload(
     const filePath = `case-${caseId}/${filename}`;
 
     // Create presigned PUT URL with 1 hour expiry
-    const presignedUrl = await aws(env).sign(
-      `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`,
-      {
-        method: 'PUT',
-        aws: { signQuery: true },
-      },
-    );
+    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`, {
+      method: 'PUT',
+      aws: { signQuery: true },
+    });
 
     // Return the presigned PUT URL
     return createResponse(
@@ -170,10 +152,7 @@ export async function handleCaseFileUpload(
 }
 
 /// GET /cases
-export async function handleListCases(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleListCases(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -194,9 +173,7 @@ export async function handleListCases(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(
-        `S3 request failed: ${response.status} ${response.statusText} - ${errorText}`,
-      );
+      throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const xmlText = await response.text();
@@ -228,10 +205,7 @@ export async function handleListCases(
 }
 
 /// GET /cases/metadata?case={caseId}
-export async function handleGetCaseMetadata(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetCaseMetadata(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -240,11 +214,7 @@ export async function handleGetCaseMetadata(
     const caseId = url.searchParams.get('case');
 
     if (!caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: case' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
     // Validate case ID format (5 lowercase letters or numbers)
@@ -300,9 +270,7 @@ export async function handleGetCaseMetadata(
       // Skip the folder marker (ends with /)
       if (key === `${folderName}/`) {
         // Get creation date from folder marker
-        const folderModifiedMatch = content.match(
-          /<LastModified>([^<]+)<\/LastModified>/,
-        );
+        const folderModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
         if (folderModifiedMatch) {
           createdAt = new Date(folderModifiedMatch[1] || '').getTime();
         }
@@ -324,9 +292,7 @@ export async function handleGetCaseMetadata(
       }
 
       // Extract LastModified for tracking most recent update (including .meta file)
-      const modifiedMatch = content.match(
-        /<LastModified>([^<]+)<\/LastModified>/,
-      );
+      const modifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
       if (modifiedMatch) {
         const fileModified = new Date(modifiedMatch[1] || '').getTime();
         if (fileModified > lastModified) {
@@ -392,10 +358,7 @@ export async function handleGetCaseMetadata(
 }
 
 /// POST /cases
-export async function handleCreateCase(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleCreateCase(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -435,9 +398,7 @@ export async function handleCreateCase(
     }
 
     if (attempts >= maxAttempts) {
-      throw new Error(
-        'Failed to generate unique folder name after multiple attempts',
-      );
+      throw new Error('Failed to generate unique folder name after multiple attempts');
     }
 
     // Create a folder by uploading an empty object with trailing slash
@@ -451,9 +412,7 @@ export async function handleCreateCase(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(
-        `S3 request failed: ${response.status} ${response.statusText} - ${errorText}`,
-      );
+      throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     return createResponse(
@@ -477,10 +436,7 @@ export async function handleCreateCase(
 }
 
 /// PUT /cases/metadata?case={caseId}
-export async function handleUpdateCaseMetadata(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleUpdateCaseMetadata(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -496,11 +452,7 @@ export async function handleUpdateCaseMetadata(
     const caseId = url.searchParams.get('case');
 
     if (!caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: case' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
     // Validate case ID format (5 lowercase letters or numbers)
@@ -519,11 +471,7 @@ export async function handleUpdateCaseMetadata(
     try {
       metaData = await request.json();
     } catch (parseError) {
-      return createResponse(
-        { error: 'Invalid JSON in request body' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Invalid JSON in request body' }, 400, origin);
     }
 
     // Verify that the case folder exists
@@ -555,9 +503,7 @@ export async function handleUpdateCaseMetadata(
 
     if (!putResponse.ok) {
       const errorText = await putResponse.text();
-      throw new Error(
-        `S3 request failed: ${putResponse.status} ${putResponse.statusText} - ${errorText}`,
-      );
+      throw new Error(`S3 request failed: ${putResponse.status} ${putResponse.statusText} - ${errorText}`);
     }
 
     return createResponse(
@@ -583,10 +529,7 @@ export async function handleUpdateCaseMetadata(
 }
 
 /// GET /cases/files?case={caseId}
-export async function handleListCaseFiles(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleListCaseFiles(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -595,11 +538,7 @@ export async function handleListCaseFiles(
     const caseId = url.searchParams.get('case');
 
     if (!caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: case' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
     // Validate case ID format (5 lowercase letters or numbers)
@@ -624,9 +563,7 @@ export async function handleListCaseFiles(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(
-        `S3 request failed: ${response.status} ${response.statusText} - ${errorText}`,
-      );
+      throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const xmlText = await response.text();
@@ -649,12 +586,8 @@ export async function handleListCaseFiles(
         }
 
         // Extract LastModified (creation/upload date)
-        const lastModifiedMatch = content.match(
-          /<LastModified>([^<]+)<\/LastModified>/,
-        );
-        const lastModified = lastModifiedMatch
-          ? new Date(lastModifiedMatch[1] || '').getTime()
-          : 0;
+        const lastModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
+        const lastModified = lastModifiedMatch ? new Date(lastModifiedMatch[1] || '').getTime() : 0;
 
         // Extract Size
         const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
@@ -717,10 +650,7 @@ export async function handleListCaseFiles(
 }
 
 /// GET /cases/file/hash?case={caseId}&filename={filename}
-export async function handleGetFileHash(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleGetFileHash(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -730,19 +660,11 @@ export async function handleGetFileHash(
     const filename = url.searchParams.get('filename');
 
     if (!caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: case' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
     if (!filename) {
-      return createResponse(
-        { error: 'Missing required parameter: filename' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: filename' }, 400, origin);
     }
 
     // Validate case ID format (5 lowercase letters or numbers)
@@ -784,9 +706,7 @@ export async function handleGetFileHash(
         }
 
         // For other errors, capture and retry
-        lastError = new Error(
-          `S3 request failed: ${headResponse.status} ${headResponse.statusText}`,
-        );
+        lastError = new Error(`S3 request failed: ${headResponse.status} ${headResponse.statusText}`);
 
         // Short delay before retry
         if (attempt < 2) {
@@ -835,10 +755,7 @@ export async function handleGetFileHash(
 }
 
 /// DELETE /cases/file?case={caseId}&filename={filename}
-export async function handleDeleteCaseFile(
-  request: Request,
-  env: Env,
-): Promise<Response> {
+export async function handleDeleteCaseFile(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -855,19 +772,11 @@ export async function handleDeleteCaseFile(
     const filename = url.searchParams.get('filename');
 
     if (!caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: case' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
     if (!filename) {
-      return createResponse(
-        { error: 'Missing required parameter: filename' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: filename' }, 400, origin);
     }
 
     // Validate case ID format (5 lowercase letters or numbers)
@@ -883,11 +792,7 @@ export async function handleDeleteCaseFile(
 
     // Prevent deletion of .meta file
     if (filename === '.meta') {
-      return createResponse(
-        { error: 'Cannot delete metadata file' },
-        403,
-        origin,
-      );
+      return createResponse({ error: 'Cannot delete metadata file' }, 403, origin);
     }
 
     // Construct the file path
@@ -907,9 +812,7 @@ export async function handleDeleteCaseFile(
         return createResponse({ error: 'File not found' }, 404, origin);
       }
       const errorText = await deleteResponse.text();
-      throw new Error(
-        `S3 request failed: ${deleteResponse.status} ${deleteResponse.statusText} - ${errorText}`,
-      );
+      throw new Error(`S3 request failed: ${deleteResponse.status} ${deleteResponse.statusText} - ${errorText}`);
     }
 
     return createResponse(
