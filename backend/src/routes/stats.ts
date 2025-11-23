@@ -94,28 +94,30 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
       });
     }
 
-    await db
-      .update(playerdata)
-      .set({
-        experience: increment(playerdata.experience, stats.zvc || 0),
-        playtime: increment(playerdata.playtime, stats.timePlayed || 0),
-        roundsplayed: increment(playerdata.roundsplayed, stats.roundsPlayed || 0),
-        usedmedkits: increment(playerdata.usedmedkits, stats.medkits || 0),
-        usedcolas: increment(playerdata.usedcolas, stats.colas || 0),
-        pocketescapes: increment(playerdata.pocketescapes, stats.pocketEscapes || 0),
-        usedadrenaline: increment(playerdata.usedadrenaline, stats.adrenaline || 0),
-        snakehighscore: greatest(playerdata.snakehighscore, stats.snakeScore || 0),
-        killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === userId).length),
-        deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === userId).length),
-        fakerankUntil: stats.fakeRankAllowed
-          ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          : playerdata.fakerankUntil,
-        fakerankadminUntil: stats.fakeRankAdmin
-          ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          : playerdata.fakerankadminUntil,
-        username: stats.username || playerdata.username,
-      })
-      .where(eq(playerdata.id, userId));
+    const updateData: Record<string, any> = {
+      experience: increment(playerdata.experience, stats.zvc || 0),
+      playtime: increment(playerdata.playtime, stats.timePlayed || 0),
+      roundsplayed: increment(playerdata.roundsplayed, stats.roundsPlayed || 0),
+      usedmedkits: increment(playerdata.usedmedkits, stats.medkits || 0),
+      usedcolas: increment(playerdata.usedcolas, stats.colas || 0),
+      pocketescapes: increment(playerdata.pocketescapes, stats.pocketEscapes || 0),
+      usedadrenaline: increment(playerdata.usedadrenaline, stats.adrenaline || 0),
+      snakehighscore: greatest(playerdata.snakehighscore, stats.snakeScore || 0),
+      killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === userId).length),
+      deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === userId).length),
+    };
+
+    if (stats.fakeRankAllowed) {
+      updateData['fakerankUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
+    }
+    if (stats.fakeRankAdmin) {
+      updateData['fakerankadminUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
+    }
+    if (stats.username) {
+      updateData['username'] = stats.username;
+    }
+
+    await db.update(playerdata).set(updateData).where(eq(playerdata.id, userId));
   }
 
   // Add all kill records to the kills table
