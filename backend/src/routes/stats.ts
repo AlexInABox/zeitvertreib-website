@@ -108,7 +108,8 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     if (stats.adrenaline) updateData['usedadrenaline'] = increment(playerdata.usedadrenaline, stats.adrenaline);
     if (stats.snakeScore) updateData['snakehighscore'] = greatest(playerdata.snakehighscore, stats.snakeScore);
     if (stats.fakeRankAllowed) updateData['fakerankUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
-    if (stats.fakeRankAdmin) updateData['fakerankadminUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
+    if (stats.fakeRankAdmin)
+      updateData['fakerankadminUntil'] = Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000);
     if (stats.username) updateData['username'] = stats.username;
 
     await db.update(playerdata).set(updateData).where(eq(playerdata.id, userId));
