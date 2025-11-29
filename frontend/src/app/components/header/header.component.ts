@@ -25,7 +25,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -56,24 +56,30 @@ export class HeaderComponent implements OnInit, OnDestroy {
         icon: PrimeIcons.WALLET,
         route: '/accounting',
       },
+
       {
         label: 'Dashboard',
         icon: PrimeIcons.USER,
         route: '/dashboard',
       },
+      {
+        label: 'Cases',
+        icon: PrimeIcons.FOLDER,
+        route: '/cases',
+      },
+      {
+        label: 'Bewerben',
+        icon: PrimeIcons.PAPERCLIP,
+        url: '/bewerben',
+      },
     ];
 
     // Add fakerank admin dashboard if user has privileges
-    if (true) {
+    if (this.isFakerankAdmin) {
       this.items.push({
         label: 'Fakerank Admin',
         icon: PrimeIcons.SHIELD,
         route: '/fakerank',
-      });
-      this.items.push({
-        label: 'Cases',
-        icon: PrimeIcons.FOLDER,
-        route: '/cases',
       });
     }
   }
