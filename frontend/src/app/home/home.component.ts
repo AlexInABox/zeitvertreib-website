@@ -55,7 +55,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   showGalleryBadge = true;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];
