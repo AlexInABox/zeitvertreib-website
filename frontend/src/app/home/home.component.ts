@@ -55,7 +55,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   showGalleryBadge = true;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];
@@ -149,5 +149,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       // Hide badge when gallery section is in viewport (top of section is visible)
       this.showGalleryBadge = rect.top > window.innerHeight * 0.3;
     }
+  }
+
+  get yearsSinceFounding(): number {
+    const foundingDate = new Date(2021, 8, 19); // September 19, 2021 (month is 0-indexed)
+    const now = new Date();
+    const diffTime = now.getTime() - foundingDate.getTime();
+    const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+    return Math.floor(diffYears);
   }
 }
