@@ -112,14 +112,17 @@
   <!-- Spacer after playerlist (only when visible) -->
   <div *ngIf="!isLoading && players.length > 0" class="playerlist-spacer"></div>
 
-  <p-card header="Was ist Zeitvertreib?">
-    <p class="leading-relaxed">
+  <!-- About Section with Discord Integration -->
+  <div pAnimateOnScroll enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000" class="about-card">
+    <h2 class="about-title">Was ist Zeitvertreib?</h2>
+    <p class="about-text">
       Zeitvertreib ist ein anfängerfreundlicher Server für das Spiel
       <strong>SCP: Secret Laboratory</strong> auf Steam. Unser Ziel ist es, neuen Spieler:innen den Einstieg in die Welt
       von SCP: Secret Laboratory zu erleichtern und gleichzeitig erfahrenen Spieler:innen ein erweitertes und
       komfortableres Spielerlebnis zu bieten.
     </p>
-  </p-card>
+    <app-discord-stats variant="full"></app-discord-stats>
+  </div>
 
   <div class="h-10rem"></div>
   <div class="flex flex-wrap justify-center gap-8">
@@ -165,7 +168,7 @@
       enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
       class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
     >
-      <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">300+</span>
+      <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">400+</span>
       <span class="text-2xl font-bold">Spieler</span>
       <span class="text-center">Täglich kommen neue Spieler auf unseren Discord!</span>
     </div>

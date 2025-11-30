@@ -8,7 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { AuthService } from '../services/auth.service';
-import SparkMD5 from 'spark-md5';
+import { createMD5 } from 'hash-wasm';
 
 interface CaseFile {
   name: string;
@@ -100,7 +100,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -459,43 +459,26 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private async calculateFileHash(file: File, onProgress?: (progress: number) => void): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const chunkSize = 2097152; // 2MB chunks
-      const spark = new SparkMD5.ArrayBuffer();
-      const fileReader = new FileReader();
-      let currentChunk = 0;
-      const chunks = Math.ceil(file.size / chunkSize);
+    const chunkSize = 2097152; // 2MB chunks
+    const chunks = Math.ceil(file.size / chunkSize);
+    const md5 = await createMD5();
+    md5.init();
 
-      fileReader.onload = (e) => {
-        spark.append(e.target?.result as ArrayBuffer);
-        currentChunk++;
+    for (let currentChunk = 0; currentChunk < chunks; currentChunk++) {
+      const start = currentChunk * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+      const buffer = await chunk.arrayBuffer();
+      md5.update(new Uint8Array(buffer));
 
-        // Report progress
-        if (onProgress) {
-          const progress = Math.round((currentChunk / chunks) * 100);
-          onProgress(progress);
-        }
+      // Report progress
+      if (onProgress) {
+        const progress = Math.round(((currentChunk + 1) / chunks) * 100);
+        onProgress(progress);
+      }
+    }
 
-        if (currentChunk < chunks) {
-          loadNext();
-        } else {
-          const hash = spark.end();
-          resolve(hash);
-        }
-      };
-
-      fileReader.onerror = () => {
-        reject(new Error('Failed to read file for hashing'));
-      };
-
-      const loadNext = () => {
-        const start = currentChunk * chunkSize;
-        const end = Math.min(start + chunkSize, file.size);
-        fileReader.readAsArrayBuffer(file.slice(start, end));
-      };
-
-      loadNext();
-    });
+    return md5.digest('hex');
   }
 
   private async verifyUpload(filename: string, expectedHash: string, maxRetries = 3): Promise<boolean> {

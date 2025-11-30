@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
 
 interface BackgroundRemovalResponse {
   success: boolean;
@@ -109,15 +110,24 @@ interface LuckyWheelResult {
   }>;
 }
 
+interface DiscordInviteResponse {
+  approximate_member_count: number;
+  approximate_presence_count: number;
+}
+
 @Component({
   selector: 'app-dashboard',
-  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule],
+  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule, DiscordStatsComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   // Expose Math to template
   Math = Math;
+
+  // Discord stats
+  discordMemberCount = 0;
+  discordOnlineCount = 0;
 
   userStatistics: Statistics = {
     username: 'LÄDT...',

@@ -6,6 +6,7 @@ import { AnimateOnScrollModule } from 'primeng/animateonscroll';
 import { ImageModule } from 'primeng/image';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
+import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
 
 interface Player {
   Name: string;
@@ -17,7 +18,7 @@ interface Player {
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, AnimateOnScrollModule, ImageModule, PanelModule, CardModule],
+  imports: [CommonModule, AnimateOnScrollModule, ImageModule, PanelModule, CardModule, DiscordStatsComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -54,7 +55,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   showGalleryBadge = true;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];

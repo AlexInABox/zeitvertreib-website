@@ -204,6 +204,56 @@
   /* Optional: Add space between child elements */
 }
 
+/* Home intro row: description + discord widget */
+.home-intro-row {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  width: 100%;
+  /* ensure both children share same height */
+  min-height: 500px;
+}
+
+.home-intro-text {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.home-intro-text p {
+  margin: 0;
+}
+
+.home-discord {
+  flex: 0 0 350px;
+  max-width: 350px;
+  display: flex;
+  align-items: stretch;
+}
+
+.home-discord iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .home-intro-row {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .home-discord {
+    flex: 1 1 auto;
+    max-width: none;
+    height: 400px;
+  }
+
+  .home-discord iframe {
+    height: 100%;
+  }
+}
+
 /* Full Width Playerlist Section - Top Position */
 .playerlist-section-top {
   width: 100%;
@@ -214,6 +264,49 @@
 /* Spacer after playerlist (always visible) */
 .playerlist-spacer {
   height: 8rem;
+}
+
+/* About Card - Was ist Zeitvertreib */
+.about-card {
+  width: 100%;
+  max-width: 700px;
+  padding: 1.5rem 2rem;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.about-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 1rem 0;
+}
+
+.about-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 1.25rem 0;
+}
+
+.about-text strong {
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .about-card {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .about-title {
+    font-size: 1.25rem;
+  }
+
+  .about-text {
+    font-size: 0.95rem;
+  }
 }
 
 .playerlist-card {
