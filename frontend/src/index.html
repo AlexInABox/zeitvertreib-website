@@ -10,5 +10,16 @@
 
   <body>
     <app-root></app-root>
+
+    <!-- Ko-fi Floating Widget -->
+    <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
+    <script>
+      kofiWidgetOverlay.draw('zeitvertreib', {
+        type: 'floating-chat',
+        'floating-chat.donateButton.text': 'Unterstütze uns!',
+        'floating-chat.donateButton.background-color': '#72a4f2',
+        'floating-chat.donateButton.text-color': '#fff',
+      });
+    </script>
   </body>
 </html>

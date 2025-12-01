@@ -11,7 +11,12 @@
         </a>
       </ng-container>
       <ng-template #urlRef>
-        <a *ngIf="item.url; else noLink" [href]="item.url" class="p-menubar-item-link">
+        <a
+          *ngIf="item.url; else noLink"
+          [href]="item.url"
+          [target]="item.target || '_self'"
+          class="p-menubar-item-link"
+        >
           <span [class]="item.icon"></span>
           <span class="ml-2">{{ item.label }}</span>
         </a>
