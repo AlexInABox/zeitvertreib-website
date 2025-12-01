@@ -74,6 +74,7 @@ import {
   handleDeleteCaseFile,
   handleGetFileHash,
 } from './routes/cases.js';
+import { handleKofiWebhook } from './routes/kofi.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -184,6 +185,9 @@ const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext
   // Playerlist routes
   'GET:/playerlist': handleGetPlayerlist,
   'POST:/playerlist': handleUpdatePlayerlist,
+
+  // Ko-fi webhook
+  'POST:/kofi/webhook': handleKofiWebhook,
 };
 
 export default {
