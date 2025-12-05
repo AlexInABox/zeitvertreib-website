@@ -9,9 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    defaults:
-      run:
-        working-directory: overwatch
 
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +35,7 @@ jobs:
 
       - uses: docker/build-push-action@v4
         with:
-          context: overwatch
+          context: .
+          file: overwatch/Dockerfile
           push: true
           tags: ${{ steps.tags.outputs.tags }}
