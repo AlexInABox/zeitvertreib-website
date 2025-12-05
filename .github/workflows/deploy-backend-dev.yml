@@ -3,9 +3,6 @@ name: Deploy Backend to Dev
 on:
   push:
     branches: [dev]
-    paths:
-      - "backend/**"
-      - "types/**"
 
 jobs:
   deploy:
