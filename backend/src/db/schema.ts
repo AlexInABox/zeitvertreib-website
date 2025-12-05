@@ -58,6 +58,15 @@ export const playerdata = sqliteTable('playerdata', {
   lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
 });
 
+export const discordInfo = sqliteTable('discord_info', {
+  discordId: text('discordId').primaryKey(),
+  username: text('username').notNull(),
+  displayName: text('display_name').notNull(),
+  boosterSince: integer('booster_since', { mode: 'timestamp_ms' }).notNull().default(new Date(0)),
+  donatorSince: integer('donator_since', { mode: 'timestamp_ms' }).notNull().default(new Date(0)),
+  teamSince: integer('team_since', { mode: 'timestamp_ms' }).notNull().default(new Date(0)),
+});
+
 export const loginSecrets = sqliteTable('login_secrets', {
   secret: text('secret').primaryKey(),
   steamId: text('steam_id').notNull(),

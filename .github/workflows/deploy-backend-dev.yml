@@ -2,9 +2,9 @@ name: Deploy Backend to Dev
 
 on:
   push:
-    branches: [ dev ]
+    branches: [dev]
     paths:
-      - 'backend/**'
+      - "backend/**"
 
 jobs:
   deploy:
@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies

@@ -1,0 +1,10 @@
+{
+  "name": "@zeitvertreib/types",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./discord-tracker.ts",
+  "types": "./discord-tracker.ts",
+  "exports": {
+    "./discord-tracker": "./discord-tracker.ts"
+  }
+}

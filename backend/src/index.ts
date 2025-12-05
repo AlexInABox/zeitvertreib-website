@@ -64,6 +64,7 @@ import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
 import { handleGetPlayerlist, handleUpdatePlayerlist } from './routes/playerlist.js';
+import { handleDiscordTrackerUpdate, handleDiscordTrackerDelete } from './routes/discord-tracker.js';
 import {
   handleCaseFileUpload,
   handleListCases,
@@ -185,6 +186,10 @@ const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext
   // Playerlist routes
   'GET:/playerlist': handleGetPlayerlist,
   'POST:/playerlist': handleUpdatePlayerlist,
+
+  // Discord tracker route (Overwatch bot)
+  'POST:/discord-tracker': handleDiscordTrackerUpdate,
+  'DELETE:/discord-tracker': handleDiscordTrackerDelete,
 
   // Ko-fi webhook
   'POST:/kofi/webhook': handleKofiWebhook,
