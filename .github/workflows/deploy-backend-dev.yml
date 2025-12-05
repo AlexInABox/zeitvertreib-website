@@ -39,7 +39,9 @@ jobs:
         run: npx tsc
 
       - name: Pull real database schema
-        run: NODE_ENV=production npx drizzle-kit pull
+        run: |
+          NODE_ENV=production npx drizzle-kit pull
+          sed -i 's/\\\\\"1970-01-01T00:00:00.000Z\\\\\"/0/g' drizzle/schema.ts
 
       - name: Test build with real schema
         run: |
