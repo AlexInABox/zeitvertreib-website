@@ -2,10 +2,13 @@
 FROM node:24-alpine AS build
 WORKDIR /app
 
-# Copy types package first
+# Copy and build types package first
 COPY types ../types
+WORKDIR /types
+RUN npm install && npm run build
 
 # Copy overwatch package
+WORKDIR /app
 COPY overwatch/package*.json ./
 COPY overwatch/ .
 
