@@ -1,0 +1,9 @@
+LICENSE
+node_modules
+package-lock.json
+dist
+.wrangler
+.vscode
+.dev.vars
+.env
+.github

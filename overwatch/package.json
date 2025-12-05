@@ -1,0 +1,29 @@
+{
+  "name": "zeitvertreib-overwatch",
+  "version": "1.0.0",
+  "description": "A discord bot that reads every chat message sent in the Zeitvertreib Discord Server and filters bad stuff! ",
+  "homepage": "https://github.com/AlexInABox/zeitvertreib-overwatch#readme",
+  "bugs": {
+    "url": "https://github.com/AlexInABox/zeitvertreib-overwatch/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexInABox/zeitvertreib-overwatch.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "AlexInABox",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "npx tsc && node dist/index.js"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.1",
+    "prettier": "3.6.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.1",
+    "openai": "^5.12.2"
+  }
+}
