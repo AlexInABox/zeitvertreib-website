@@ -4,28 +4,36 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import type {
+  UserFakerank,
+  BlacklistItem,
+  WhitelistItem,
+  GetBlacklistResponse,
+  GetWhitelistResponse,
+  AddToBlacklistResponse,
+  AddToWhitelistResponse,
+  RemoveFromBlacklistResponse,
+  RemoveFromWhitelistResponse,
+  FakerankColor,
+} from '@zeitvertreib/types';
 
-export interface UserFakerank {
-  steamId: string;
-  fakerank: string | null;
-  fakerank_color: string | null;
-  username: string;
-  avatarFull: string;
-}
+// Re-export types for backwards compatibility
+export type { UserFakerank, BlacklistItem, WhitelistItem, FakerankColor } from '@zeitvertreib/types';
 
+// Player interface for template compatibility - allows string for fakerank_color (for hex colors)
 export interface Player {
   id: string;
-  steamId: string; // Add for compatibility with template
+  steamId: string;
   personaname: string;
-  username: string; // Add for compatibility with template
+  username: string;
   avatar: string;
   avatarmedium: string;
   avatarfull: string;
-  avatarFull: string; // Add for compatibility with template
-  fakerank: string;
-  fakerank_color: string;
+  avatarFull: string;
+  fakerank: string | null;
+  fakerank_color: string; // Can be FakerankColor or hex string
   fakerankallowed: boolean;
-  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
+  experience: number;
   playtime: number;
   roundsplayed: number;
   usedmedkits: number;
@@ -36,20 +44,8 @@ export interface Player {
   killcount: number;
   deathcount: number;
   fakerankadmin: boolean;
-  isCurrentlyOnline?: boolean; // Add for compatibility with template
-  Team?: string; // Add for playerlist compatibility
-}
-
-export interface BlacklistItem {
-  id: number;
-  word: string;
-  createdAt: string;
-}
-
-export interface WhitelistItem {
-  id: number;
-  word: string;
-  createdAt: string;
+  isCurrentlyOnline?: boolean;
+  Team?: string;
 }
 
 export interface PaginatedFakeranks {
@@ -57,7 +53,6 @@ export interface PaginatedFakeranks {
   totalItems: number;
   currentPage: number;
   totalPages: number;
-  // Playerlist metadata
   currentPlayersOnline: number;
   uniquePlayerNames: number;
 }
@@ -71,7 +66,7 @@ export class FakerankAdminService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   private getAuthHeaders(): HttpHeaders {
     // Get session token from AuthService
@@ -140,21 +135,18 @@ export class FakerankAdminService {
   }
 
   // Blacklist Management
-  getBlacklist(): Observable<{
-    blacklistedWords: BlacklistItem[];
-    count: number;
-  }> {
+  getBlacklist(): Observable<GetBlacklistResponse> {
     return this.http
-      .get<{ blacklistedWords: BlacklistItem[]; count: number }>(`${this.API_BASE}/fakerank-admin/blacklist`, {
+      .get<GetBlacklistResponse>(`${this.API_BASE}/fakerank-admin/blacklist`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .pipe(catchError(this.handleError));
   }
 
-  addToBlacklist(word: string): Observable<{ success: boolean; id: number }> {
+  addToBlacklist(word: string): Observable<AddToBlacklistResponse> {
     return this.http
-      .post<{ success: boolean; id: number }>(
+      .post<AddToBlacklistResponse>(
         `${this.API_BASE}/fakerank-admin/blacklist`,
         { word },
         {
@@ -165,9 +157,9 @@ export class FakerankAdminService {
       .pipe(catchError(this.handleError));
   }
 
-  removeFromBlacklist(word: string): Observable<{ success: boolean }> {
+  removeFromBlacklist(word: string): Observable<RemoveFromBlacklistResponse> {
     return this.http
-      .delete<{ success: boolean }>(`${this.API_BASE}/fakerank-admin/blacklist`, {
+      .delete<RemoveFromBlacklistResponse>(`${this.API_BASE}/fakerank-admin/blacklist`, {
         body: { word },
         headers: this.getAuthHeaders(),
         withCredentials: true,
@@ -176,21 +168,18 @@ export class FakerankAdminService {
   }
 
   // Whitelist Management
-  getWhitelist(): Observable<{
-    whitelistedWords: WhitelistItem[];
-    count: number;
-  }> {
+  getWhitelist(): Observable<GetWhitelistResponse> {
     return this.http
-      .get<{ whitelistedWords: WhitelistItem[]; count: number }>(`${this.API_BASE}/fakerank-admin/whitelist`, {
+      .get<GetWhitelistResponse>(`${this.API_BASE}/fakerank-admin/whitelist`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .pipe(catchError(this.handleError));
   }
 
-  addToWhitelist(word: string): Observable<{ success: boolean; id: number }> {
+  addToWhitelist(word: string): Observable<AddToWhitelistResponse> {
     return this.http
-      .post<{ success: boolean; id: number }>(
+      .post<AddToWhitelistResponse>(
         `${this.API_BASE}/fakerank-admin/whitelist`,
         { word },
         {
@@ -201,9 +190,9 @@ export class FakerankAdminService {
       .pipe(catchError(this.handleError));
   }
 
-  removeFromWhitelist(word: string): Observable<{ success: boolean }> {
+  removeFromWhitelist(word: string): Observable<RemoveFromWhitelistResponse> {
     return this.http
-      .delete<{ success: boolean }>(`${this.API_BASE}/fakerank-admin/whitelist`, {
+      .delete<RemoveFromWhitelistResponse>(`${this.API_BASE}/fakerank-admin/whitelist`, {
         body: { word },
         headers: this.getAuthHeaders(),
         withCredentials: true,

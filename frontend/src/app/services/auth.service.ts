@@ -2,36 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
+import type { SteamUser, PlayerData, GetUserResponse } from '@zeitvertreib/types';
 
-export interface SteamUser {
-  steamid: string;
-  personaname: string;
-  profileurl: string;
-  avatar: string;
-  avatarmedium: string;
-  avatarfull: string;
-}
-
-export interface PlayerData {
-  id: string;
-  experience: number; // Keep property name for DB compatibility, but represents ZV Coins
-  playtime: number;
-  roundsplayed: number;
-  usedmedkits: number;
-  usedcolas: number;
-  pocketescapes: number;
-  usedadrenaline: number;
-  fakerank: string;
-  snakehighscore: number;
-  killcount: number;
-  deathcount: number;
-  fakerankallowed: boolean | number;
-  fakerank_color: string;
-  fakerank_until?: number; // Unix timestamp for fakerank expiration
-  fakerankadmin_until?: number; // Unix timestamp for fakerank admin expiration
-  fakerankoverride_until?: number; // Unix timestamp for admin-set fakerank override
-  redeemed_codes?: string;
-}
+// Re-export types for backwards compatibility
+export type { SteamUser, PlayerData } from '@zeitvertreib/types';
 
 export interface UserData {
   user: SteamUser;

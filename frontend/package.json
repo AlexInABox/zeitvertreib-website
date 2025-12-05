@@ -17,6 +17,7 @@
     "@angular/platform-browser-dynamic": "^19.1.0",
     "@angular/router": "^19.1.0",
     "@primeng/themes": "^19.0.6",
+    "@zeitvertreib/types": "file:../types",
     "chart.js": "^4.4.8",
     "gifuct-js": "^2.1.2",
     "hash-wasm": "^4.12.0",

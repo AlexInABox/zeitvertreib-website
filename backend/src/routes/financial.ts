@@ -1,5 +1,5 @@
 import { validateSession, createResponse } from '../utils.js';
-import { FinancialTransaction, RecurringTransaction } from '../types/index.js';
+import type { FinancialTransaction, RecurringTransaction } from '@zeitvertreib/types';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, and } from 'drizzle-orm';
 import { financialTransactions, recurringTransactions } from '../db/schema.js';

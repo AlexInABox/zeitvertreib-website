@@ -1,5 +1,5 @@
 // Consolidated utilities
-import { SessionData, SteamUser, Statistics, PlayerData } from './types/index.js';
+import type { SessionData, SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql } from 'drizzle-orm';

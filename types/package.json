@@ -2,9 +2,29 @@
   "name": "@zeitvertreib/types",
   "version": "1.0.0",
   "private": true,
-  "main": "./discord-tracker.ts",
-  "types": "./discord-tracker.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "./discord-tracker": "./discord-tracker.ts"
-  }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./discord-tracker": {
+      "types": "./dist/discord-tracker.d.ts",
+      "import": "./dist/discord-tracker.js",
+      "default": "./dist/discord-tracker.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "files": [
+    "dist"
+  ]
 }
