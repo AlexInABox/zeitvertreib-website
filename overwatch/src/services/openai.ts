@@ -2,8 +2,12 @@ import OpenAI from 'openai';
 
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
-export function buildModerationPrompt(context: string, username: string, messageContent: string): string {
-    return `
+export function buildModerationPrompt(
+  context: string,
+  username: string,
+  messageContent: string,
+): string {
+  return `
 You are a chill, context-aware Discord moderator for an SCP: Secret Laboratory gaming community.
 Your goal is to catch **severe toxicity** while allowing banter, opinions, and gaming jargon.
 

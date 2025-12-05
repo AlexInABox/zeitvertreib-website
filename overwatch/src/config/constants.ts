@@ -11,16 +11,16 @@ export const SUPPORT_CHANNEL_ID = '889505316994166825';
 
 // Ticket detection phrases
 export const TICKET_PHRASES = [
-    ['wie', 'entbann'],
-    ['wo', 'entbann'],
-    ['wo', 'melde'],
-    ['wie', 'melde'],
-    ['wo', 'report'],
-    ['wie', 'report'],
-    ['wo', 'beschwer'],
-    ['wie', 'beschwer'],
-    ['ticket'],
-    ['support'],
+  ['wie', 'entbann'],
+  ['wo', 'entbann'],
+  ['wo', 'melde'],
+  ['wie', 'melde'],
+  ['wo', 'report'],
+  ['wie', 'report'],
+  ['wo', 'beschwer'],
+  ['wie', 'beschwer'],
+  ['ticket'],
+  ['support'],
 ];
 
 // Member tracking
