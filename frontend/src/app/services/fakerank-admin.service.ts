@@ -66,7 +66,7 @@ export class FakerankAdminService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   private getAuthHeaders(): HttpHeaders {
     // Get session token from AuthService
