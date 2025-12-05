@@ -26,11 +26,11 @@ export async function handleDiscordTrackerUpdate(request: Request, env: Env): Pr
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    // Convert timestamps: null means no role, use Date(0) as default in DB
+    // Convert timestamps: null means no role, use 0 as default in DB
     // Non-null values are timestamps in milliseconds
-    const boosterSince = member.roles.boosterSince ? new Date(member.roles.boosterSince) : new Date(0);
-    const donatorSince = member.roles.donatorSince ? new Date(member.roles.donatorSince) : new Date(0);
-    const teamSince = member.roles.teamSince ? new Date(member.roles.teamSince) : new Date(0);
+    const boosterSince = member.roles.boosterSince ?? 0;
+    const donatorSince = member.roles.donatorSince ?? 0;
+    const teamSince = member.roles.teamSince ?? 0;
 
     // Upsert the member data
     await db

@@ -62,9 +62,9 @@ export const discordInfo = sqliteTable('discord_info', {
   discordId: text('discordId').primaryKey(),
   username: text('username').notNull(),
   displayName: text('display_name').notNull(),
-  boosterSince: integer('booster_since', { mode: 'timestamp_ms' }).notNull(),
-  donatorSince: integer('donator_since', { mode: 'timestamp_ms' }).notNull(),
-  teamSince: integer('team_since', { mode: 'timestamp_ms' }).notNull(),
+  boosterSince: integer('booster_since').notNull().default(0),
+  donatorSince: integer('donator_since').notNull().default(0),
+  teamSince: integer('team_since').notNull().default(0),
 });
 
 export const loginSecrets = sqliteTable('login_secrets', {
