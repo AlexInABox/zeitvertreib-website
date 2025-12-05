@@ -20,7 +20,9 @@ jobs:
 
       - id: tags
         run: |
-          IMG="ghcr.io/${{ github.repository_owner }}/zeitvertreib-overwatch"
+          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          IMG="ghcr.io/${OWNER}/zeitvertreib-overwatch"
+
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
             echo "tags=$IMG:latest" >> $GITHUB_OUTPUT
           else
