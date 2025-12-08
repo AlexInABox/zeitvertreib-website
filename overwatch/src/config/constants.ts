@@ -25,4 +25,4 @@ export const TICKET_PHRASES = [
 
 // Member tracking
 export const DATA_FILE_PATH = path.join(__dirname, '../../data/members.json');
-export const TRACKING_INTERVAL_MS = 60 * 1000; // 1 minute
+export const TRACKING_INTERVAL_MS = 60 * 1000 * 2; // 2 minute
