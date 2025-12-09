@@ -1,4 +1,3 @@
-import openapi from './openapi.json';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './db/schema.js';
 import {
@@ -11,7 +10,7 @@ import {
 } from './routes/auth.js';
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
-import { handleGetZeitvertreibCoins } from './routes/zvc.js';
+import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
 import {
   handleUploadSpray,
   handleGetSpray,
@@ -42,19 +41,6 @@ import {
   handleAddToWhitelist,
   handleRemoveFromWhitelist,
 } from './routes/fakerank-admin.js';
-import {
-  handleGetTransactions,
-  handleCreateTransaction,
-  handleUpdateTransaction,
-  handleDeleteTransaction,
-  handleGetSummary,
-  handleGetRecurringTransactions,
-  handleCreateRecurringTransaction,
-  handleUpdateRecurringTransaction,
-  handleDeleteRecurringTransaction,
-  processRecurringTransactions,
-  handleTransferZVC,
-} from './routes/financial.js';
 import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './routes/redeemables.js';
 import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
 import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
@@ -145,17 +131,6 @@ const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext
   'POST:/fakerank-admin/whitelist': handleAddToWhitelist,
   'DELETE:/fakerank-admin/whitelist': handleRemoveFromWhitelist,
 
-  // Financial routes
-  'GET:/financial/transactions': handleGetTransactions,
-  'POST:/financial/transactions': handleCreateTransaction,
-  'PUT:/financial/transactions': handleUpdateTransaction,
-  'DELETE:/financial/transactions': handleDeleteTransaction,
-  'GET:/financial/recurring': handleGetRecurringTransactions,
-  'POST:/financial/recurring': handleCreateRecurringTransaction,
-  'PUT:/financial/recurring': handleUpdateRecurringTransaction,
-  'DELETE:/financial/recurring': handleDeleteRecurringTransaction,
-  'GET:/financial/summary': handleGetSummary,
-
   // Redeemables routes
   'GET:/redeemables': handleGetRedeemables,
   'POST:/redeemables/redeem': handleRedeemItem,
@@ -220,6 +195,7 @@ export default {
         pathname = pathname.substring(4);
       }
 
+      /*
       if (pathname === '/openapi.json' && request.method === 'GET') {
         return new Response(JSON.stringify(openapi), {
           status: 200,
@@ -260,20 +236,10 @@ export default {
           headers: { 'Content-Type': 'text/html' },
         });
       }
+        */
 
-      // Handle routes with dynamic paths (transactions/{id}, recurring/{id})
-      let routeKey = `${request.method}:${pathname}`;
-
-      // Check for dynamic routes
-      const transactionIdMatch = pathname.match(/^\/financial\/transactions\/(\d+)$/);
-      if (transactionIdMatch) {
-        routeKey = `${request.method}:/financial/transactions`;
-      }
-
-      const recurringIdMatch = pathname.match(/^\/financial\/recurring\/(\d+)$/);
-      if (recurringIdMatch) {
-        routeKey = `${request.method}:/financial/recurring`;
-      }
+      // Determine route key from method + pathname
+      const routeKey = `${request.method}:${pathname}`;
 
       const handler = routes[routeKey];
       if (handler) {
@@ -289,12 +255,7 @@ export default {
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
 
-    // Process recurring transactions daily (6:00 AM)
-    if (controller.cron === '0 6 * * *') {
-      ctx.waitUntil(processRecurringTransactions(db, env));
-    }
-
-    // Update leaderboard every 30 minutes
+    // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
       ctx.waitUntil(updateLeaderboard(db, env));
     }

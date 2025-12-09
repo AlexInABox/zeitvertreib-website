@@ -44,14 +44,14 @@ const aws = (env: Env): AwsClient =>
 
 // Helper function to check if user has required permissions
 async function hasPermission(request: Request, db: ReturnType<typeof drizzle>, env: Env): Promise<boolean> {
-  const { isValid, session } = await validateSession(request, env);
+  const { status, steamId } = await validateSession(request, env);
 
-  if (!isValid || !session) {
+  if (status !== 'valid' || !steamId) {
     return false;
   }
 
   // Get player data to check admin status
-  const playerData = await getPlayerData(session.steamId, db, env);
+  const playerData = await getPlayerData(steamId, db, env);
 
   // Check if user has fakerank admin access based on unix timestamp
   const currentTimestamp = Math.floor(Date.now() / 1000);

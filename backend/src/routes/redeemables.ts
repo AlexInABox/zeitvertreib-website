@@ -74,8 +74,8 @@ export async function handleGetRedeemables(request: Request, env: Env): Promise<
 
   // Validate session (any valid Steam user can read)
   const validation = await validateSession(request, env);
-  if (!validation.isValid) {
-    return createResponse({ error: validation.error }, 401, origin);
+  if (validation.status !== 'valid') {
+    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
   try {
@@ -121,8 +121,8 @@ export async function handleRedeemItem(request: Request, env: Env): Promise<Resp
 
   // Validate session
   const validation = await validateSession(request, env);
-  if (!validation.isValid) {
-    return createResponse({ error: validation.error }, 401, origin);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
   try {
@@ -153,7 +153,7 @@ export async function handleRedeemItem(request: Request, env: Env): Promise<Resp
       }
     }
 
-    const playerId = `${validation.session!.steamId}@steam`;
+    const playerId = `${validation.steamId}@steam`;
 
     // Get current player data to check ZV Coins balance
     const playerData = await db
@@ -262,12 +262,13 @@ async function applyRedeemableEffects(redeemable: Redeemable, playerId: string, 
  * Redeems a promotional code for ZV Coins
  */
 export async function handleRedeemCode(request: Request, env: Env): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   // Validate session
   const validation = await validateSession(request, env);
-  if (!validation.isValid) {
-    return createResponse({ error: validation.error }, 401, origin);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
   try {
@@ -284,10 +285,10 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     )
       .bind(code)
       .first()) as {
-      code: string;
-      credits: number;
-      remaining_uses: number;
-    } | null;
+        code: string;
+        credits: number;
+        remaining_uses: number;
+      } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
@@ -302,7 +303,7 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
       );
     }
 
-    const playerId = `${validation.session!.steamId}@steam`;
+    const playerId = `${validation.steamId}@steam`;
 
     // Get current player data including redeemed codes
     const playerData = (await env.ZEITVERTREIB_DATA.prepare(

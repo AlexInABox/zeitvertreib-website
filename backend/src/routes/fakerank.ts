@@ -1,8 +1,9 @@
-import { validateSession, createResponse, getPlayerData, fetchDiscordWithProxy } from '../utils.js';
+import { validateSession, createResponse, getPlayerData } from '../utils.js';
 import OpenAI from 'openai';
 import { profanity } from '@2toad/profanity';
 import { EmbedBuilder } from '@discordjs/builders';
 import { drizzle } from 'drizzle-orm/d1';
+import { proxyFetch } from '../proxy.js';
 
 // Send accepted fakerank to Discord webhook for moderation tracking
 async function sendFakerankToDiscord(steamId: string, fakerank: string, env: Env): Promise<void> {
@@ -89,7 +90,7 @@ async function sendFakerankToDiscord(steamId: string, fakerank: string, env: Env
     const webhookUrl = new URL(env.SPRAY_MOD_WEBHOOK);
     webhookUrl.searchParams.set('with_components', 'true');
 
-    const response = await fetchDiscordWithProxy(
+    const response = await proxyFetch(
       webhookUrl.toString(),
       {
         method: 'POST',
@@ -140,13 +141,13 @@ export async function getFakerank(request: Request, env: Env): Promise<Response>
   const origin = request.headers.get('Origin');
 
   // Validate session first
-  const { isValid, session, error } = await validateSession(request, env);
+  const { status, steamId } = await validateSession(request, env);
 
-  if (!isValid) {
-    return createResponse({ error: error! }, 401, origin);
+  if (status !== 'valid' || !steamId) {
+    return createResponse({ error: status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
-  const playerId = `${session!.steamId}@steam`;
+  const playerId = `${steamId}@steam`;
   try {
     const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
 
@@ -178,13 +179,13 @@ export async function updateFakerank(request: Request, env: Env): Promise<Respon
   const origin = request.headers.get('Origin');
 
   // Validate session first
-  const { isValid, session, error } = await validateSession(request, env);
+  const { status, steamId } = await validateSession(request, env);
 
-  if (!isValid) {
-    return createResponse({ error: error! }, 401, origin);
+  if (status !== 'valid' || !steamId) {
+    return createResponse({ error: status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
-  const playerId = `${session!.steamId}@steam`;
+  const playerId = `${steamId}@steam`;
   try {
     // Check if user is allowed to set fakeranks based on timestamp
     const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);
@@ -410,13 +411,13 @@ export async function deleteFakerank(request: Request, env: Env): Promise<Respon
   const origin = request.headers.get('Origin');
 
   // Validate session first
-  const { isValid, session, error } = await validateSession(request, env);
+  const { status, steamId } = await validateSession(request, env);
 
-  if (!isValid) {
-    return createResponse({ error: error! }, 401, origin);
+  if (status !== 'valid' || !steamId) {
+    return createResponse({ error: status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
-  const playerId = `${session!.steamId}@steam`;
+  const playerId = `${steamId}@steam`;
   try {
     // Check if user is allowed to modify fakeranks based on timestamp
     const playerData = await getPlayerData(playerId.replace('@steam', ''), db, env);

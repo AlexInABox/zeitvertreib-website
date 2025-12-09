@@ -14,7 +14,7 @@
   "author": "AlexInABox",
   "main": "dist/index.js",
   "scripts": {
-    "start": "npx tsc && node dist/index.js"
+    "start": "rm -rf node_modules/ && npm i && npx tsc && node dist/index.js"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.1",

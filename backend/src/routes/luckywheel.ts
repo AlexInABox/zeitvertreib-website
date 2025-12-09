@@ -112,11 +112,11 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
 
   // Validate session
   const validation = await validateSession(request, env);
-  if (!validation.isValid) {
-    return createResponse({ error: validation.error }, 401, origin);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
   }
 
-  const playerId = `${validation.session!.steamId}@steam`;
+  const playerId = `${validation.steamId}@steam`;
 
   // Parse request body for bet amount
   let betAmount: number;
@@ -206,9 +206,9 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     const maxMultiplier = Math.max(...LUCKYWHEEL_TABLE.map((entry) => entry.multiplier));
     if (selectedEntry.multiplier >= maxMultiplier && maxMultiplier > 0 && betAmount >= 100) {
       // Get Steam username from cache
-      let steamNickname = validation.session!.steamId;
+      let steamNickname = validation.steamId!;
       try {
-        const userCacheKey = `steam_user:${validation.session!.steamId}`;
+        const userCacheKey = `steam_user:${validation.steamId}`;
         const cachedUserData = await env.SESSIONS.get(userCacheKey);
         if (cachedUserData) {
           const userData = JSON.parse(cachedUserData);
@@ -222,7 +222,7 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
       if (ctx) {
         ctx.waitUntil(
           sendLuckyWheelMegaWinToDiscord(
-            validation.session!.steamId,
+            validation.steamId!,
             steamNickname,
             betAmount,
             selectedEntry.multiplier,
@@ -234,8 +234,7 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     }
 
     console.log(
-      `🎰 Lucky Wheel: ${validation.session!.steamId} bet ${betAmount} ZVC, got ${
-        selectedEntry.multiplier
+      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${selectedEntry.multiplier
       }x (${payout} ZVC). Balance: ${currentBalance} → ${newBalance}`,
     );
 

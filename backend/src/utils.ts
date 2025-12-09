@@ -6,11 +6,6 @@ import { eq, count, lt, sql } from 'drizzle-orm';
 import { playerdata, kills, loginSecrets } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 
-// Discord API proxy utility
-export async function fetchDiscordWithProxy(url: string, options: RequestInit, env: Env): Promise<Response> {
-  return proxyFetch(url, options, env);
-}
-
 // Response helpers
 export function createResponse(data: any, status = 200, origin?: string | null): Response {
   const headers: Record<string, string> = {
@@ -30,43 +25,33 @@ export function createResponse(data: any, status = 200, origin?: string | null):
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-// Session helpers
-function getSessionId(request: Request): string | null {
-  const authHeader = request.headers.get('Authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-
-  const cookieHeader = request.headers.get('Cookie');
-  if (!cookieHeader) return null;
-
-  const match = cookieHeader.match(/session=([^;]+)/);
-  return match?.[1] || null;
-}
-
+// Extract steamId from a request's session and return session status
 export async function validateSession(
   request: Request,
-  env: Env,
-): Promise<{
-  isValid: boolean;
-  session?: SessionData;
-  steamId?: string;
-  error?: string;
-}> {
-  const sessionId = getSessionId(request);
-  if (!sessionId) return { isValid: false, error: 'No session found' };
+  env: Env
+): Promise<{ status: 'valid' | 'expired' | 'invalid'; steamId?: string }> {
 
-  const sessionData = await env.ZEITVERTREIB_SESSIONS.get(sessionId);
-  if (!sessionData) return { isValid: false, error: 'Invalid session' };
+  const sessionId =
+    request.headers.get('Authorization')?.replace(/^Bearer /, '') ??
+    request.headers.get('Cookie')?.match(/session=([^;]+)/)?.[1] ??
+    null;
 
-  const session: SessionData = JSON.parse(sessionData);
+  if (!sessionId) return { status: 'invalid' };
+
+  const raw = await env.ZEITVERTREIB_SESSIONS.get(sessionId);
+  if (!raw) return { status: 'invalid' };
+
+  const session: SessionData = JSON.parse(raw);
+
   if (Date.now() > session.expiresAt) {
     await env.ZEITVERTREIB_SESSIONS.delete(sessionId);
-    return { isValid: false, error: 'Session expired' };
+    return { status: 'expired' };
   }
 
-  return { isValid: true, session, steamId: session.steamId };
+  return { status: 'valid', steamId: session.steamId };
 }
+
+
 
 export async function createSession(steamId: string, steamUser: SteamUser, env: Env): Promise<string> {
   const sessionId = crypto.randomUUID();
@@ -88,7 +73,11 @@ export async function createSession(steamId: string, steamUser: SteamUser, env: 
 }
 
 export async function deleteSession(request: Request, env: Env): Promise<void> {
-  const sessionId = getSessionId(request);
+  const sessionId =
+    request.headers.get('Authorization')?.replace(/^Bearer /, '') ??
+    request.headers.get('Cookie')?.match(/session=([^;]+)/)?.[1] ??
+    null;
+
   if (sessionId) {
     await env.ZEITVERTREIB_SESSIONS.delete(sessionId);
   }

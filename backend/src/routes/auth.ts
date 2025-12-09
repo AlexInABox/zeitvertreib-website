@@ -93,18 +93,24 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   const origin = request.headers.get('Origin');
-  const { isValid, session, error } = await validateSession(request, env);
+  const { status, steamId } = await validateSession(request, env);
 
-  if (!isValid) {
-    return createResponse({ error: error! }, 401, origin);
+  if (status !== 'valid' || !steamId) {
+    return createResponse({ error: status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+  }
+
+  // Get Steam user data
+  const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+  if (!steamUser) {
+    return createResponse({ error: 'Failed to fetch Steam user data' }, 500, origin);
   }
 
   // Get player data including fakerankadmin flag
-  const playerData = await getPlayerData(session!.steamId, db, env);
+  const playerData = await getPlayerData(steamId, db, env);
 
   return createResponse(
     {
-      user: session!.steamUser,
+      user: steamUser,
       playerData: playerData,
     },
     200,

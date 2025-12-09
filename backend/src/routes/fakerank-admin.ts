@@ -20,14 +20,14 @@ interface Player {
 
 // Helper function to check if user is fakerank admin
 async function validateFakerankAdmin(request: Request, db: ReturnType<typeof drizzle>, env: Env) {
-  const { isValid, session, error } = await validateSession(request, env);
+  const { status, steamId } = await validateSession(request, env);
 
-  if (!isValid) {
-    return { isValid: false, error: error || 'Not authenticated' };
+  if (status !== 'valid' || !steamId) {
+    return { isValid: false, error: status === 'expired' ? 'Session expired' : 'Not authenticated' };
   }
 
   // Get player data to check admin status
-  const playerData = await getPlayerData(session!.steamId, db, env);
+  const playerData = await getPlayerData(steamId, db, env);
 
   // Check if user has fakerank admin access based on unix timestamp
   const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -41,7 +41,7 @@ async function validateFakerankAdmin(request: Request, db: ReturnType<typeof dri
     };
   }
 
-  return { isValid: true, session, playerData };
+  return { isValid: true, steamId, playerData };
 }
 
 // GET user fakerank by steamid
@@ -169,7 +169,7 @@ export async function handleSetUserFakerank(request: Request, env: Env): Promise
     }
 
     console.log(
-      `Admin ${adminCheck.session!.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`,
+      `Admin ${adminCheck.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`,
     );
 
     return createResponse(
@@ -264,7 +264,7 @@ export async function handleAddToBlacklist(request: Request, env: Env): Promise<
       blacklistedWords.push(wordLower);
       await env.SESSIONS.put('fakerank_blacklist', JSON.stringify(blacklistedWords));
 
-      console.log(`Admin ${adminCheck.session!.steamId} added "${wordLower}" to blacklist`);
+      console.log(`Admin ${adminCheck.steamId} added "${wordLower}" to blacklist`);
 
       return createResponse(
         {
@@ -329,7 +329,7 @@ export async function handleRemoveFromBlacklist(request: Request, env: Env): Pro
     if (blacklistedWords.length < initialLength) {
       await env.SESSIONS.put('fakerank_blacklist', JSON.stringify(blacklistedWords));
 
-      console.log(`Admin ${adminCheck.session!.steamId} removed "${wordLower}" from blacklist`);
+      console.log(`Admin ${adminCheck.steamId} removed "${wordLower}" from blacklist`);
 
       return createResponse(
         {
@@ -431,7 +431,7 @@ export async function handleAddToWhitelist(request: Request, env: Env): Promise<
       whitelistedWords.push(wordLower);
       await env.SESSIONS.put('fakerank_whitelist', JSON.stringify(whitelistedWords));
 
-      console.log(`Admin ${adminCheck.session!.steamId} added "${wordLower}" to whitelist`);
+      console.log(`Admin ${adminCheck.steamId} added "${wordLower}" to whitelist`);
 
       return createResponse(
         {
@@ -496,7 +496,7 @@ export async function handleRemoveFromWhitelist(request: Request, env: Env): Pro
     if (whitelistedWords.length < initialLength) {
       await env.SESSIONS.put('fakerank_whitelist', JSON.stringify(whitelistedWords));
 
-      console.log(`Admin ${adminCheck.session!.steamId} removed "${wordLower}" from whitelist`);
+      console.log(`Admin ${adminCheck.steamId} removed "${wordLower}" from whitelist`);
 
       return createResponse(
         {

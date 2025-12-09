@@ -250,7 +250,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -448,91 +448,7 @@ export interface LuckyWheelPlayResponse {
 export type TransactionType = 'income' | 'expense';
 export type TransactionFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-export interface FinancialTransaction {
-  id?: number;
-  transaction_type: TransactionType;
-  category: string;
-  amount: number;
-  description: string;
-  transaction_date: string;
-  created_at?: string;
-  created_by?: string;
-  reference_id?: string;
-  notes?: string;
-}
-
-export interface RecurringTransaction {
-  id?: number;
-  transaction_type: TransactionType;
-  category: string;
-  amount: number;
-  description: string;
-  frequency: TransactionFrequency;
-  start_date: string;
-  end_date?: string;
-  next_execution: string;
-  is_active: boolean;
-  created_at?: string;
-  created_by?: string;
-  reference_id?: string;
-  notes?: string;
-  last_executed?: string;
-}
-
-/** GET /financial/transactions response */
-export interface GetTransactionsResponse {
-  transactions: FinancialTransaction[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-/** POST /financial/transactions request */
-export interface CreateTransactionRequest {
-  transaction_type: TransactionType;
-  category: string;
-  amount: number;
-  description: string;
-  transaction_date: string;
-  reference_id?: string;
-  notes?: string;
-}
-
-/** POST /financial/transactions response */
-export interface CreateTransactionResponse {
-  message: string;
-  id: number;
-}
-
-/** GET /financial/recurring response */
-export interface GetRecurringTransactionsResponse {
-  recurring_transactions: RecurringTransaction[];
-  total: number;
-}
-
-/** POST /financial/recurring request */
-export interface CreateRecurringTransactionRequest {
-  transaction_type: TransactionType;
-  category: string;
-  amount: number;
-  description: string;
-  frequency: TransactionFrequency;
-  start_date: string;
-  end_date?: string;
-  reference_id?: string;
-  notes?: string;
-}
-
-/** POST /financial/recurring response */
-export interface CreateRecurringTransactionResponse {
-  message: string;
-  id: number;
-}
-
-// ============================================================================
-// Cases Types
-// ============================================================================
-
+// Financial types removed — the backend no longer exposes `/financial` endpoints.
 /** GET /cases response */
 export interface ListCasesResponse {
   folders: string[];

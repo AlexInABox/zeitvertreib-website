@@ -1,4 +1,4 @@
-import { validateSession, createResponse, fetchDiscordWithProxy } from '../utils.js';
+import { validateSession, createResponse } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { EmbedBuilder } from '@discordjs/builders';
 import OpenAI from 'openai';
@@ -159,7 +159,7 @@ async function sendSprayToDiscord(
     webhookUrl.searchParams.set('with_components', 'true');
     webhookUrl.searchParams.set('wait', 'true'); // Get message ID in response
 
-    const response = await fetchDiscordWithProxy(
+    const response = await proxyFetch(
       webhookUrl.toString(),
       {
         method: 'POST',
@@ -337,7 +337,7 @@ async function updateDiscordWebhookMessage(
     const webhookUrl = new URL(env.SPRAY_MOD_WEBHOOK);
     const updateUrl = `${webhookUrl.origin}${webhookUrl.pathname}/messages/${messageId}`;
 
-    const response = await fetchDiscordWithProxy(
+    const response = await proxyFetch(
       updateUrl,
       {
         method: 'PATCH',
@@ -545,11 +545,11 @@ export async function handleUploadSpray(request: Request, env: Env): Promise<Res
 
   // Validate session
   const sessionValidation = await validateSession(request, env);
-  if (!sessionValidation.isValid || !sessionValidation.session) {
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
     return createResponse({ error: 'Authentication required' }, 401, origin);
   }
 
-  const { steamId } = sessionValidation.session;
+  const { steamId } = sessionValidation;
 
   try {
     // Check if request contains multipart form data
@@ -652,11 +652,11 @@ export async function handleGetSpray(request: Request, env: Env): Promise<Respon
 
   // Validate session
   const sessionValidation = await validateSession(request, env);
-  if (!sessionValidation.isValid || !sessionValidation.session) {
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
     return createResponse({ error: 'Authentication required' }, 401, origin);
   }
 
-  const { steamId } = sessionValidation.session;
+  const { steamId } = sessionValidation;
 
   try {
     const sprayKey = `spray_${steamId}`;
@@ -703,11 +703,11 @@ export async function handleGetSprayString(request: Request, env: Env): Promise<
 
   // Validate session
   const sessionValidation = await validateSession(request, env);
-  if (!sessionValidation.isValid || !sessionValidation.session) {
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
     return createResponse({ error: 'Authentication required' }, 401, origin);
   }
 
-  const { steamId } = sessionValidation.session;
+  const { steamId } = sessionValidation;
 
   try {
     const sprayKey = `spray_${steamId}`;
@@ -742,11 +742,11 @@ export async function handleDeleteSpray(request: Request, env: Env): Promise<Res
 
   // Validate session
   const sessionValidation = await validateSession(request, env);
-  if (!sessionValidation.isValid || !sessionValidation.session) {
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
     return createResponse({ error: 'Authentication required' }, 401, origin);
   }
 
-  const { steamId } = sessionValidation.session;
+  const { steamId } = sessionValidation;
 
   try {
     const sprayKey = `spray_${steamId}`;
@@ -898,11 +898,11 @@ export async function handleGetSprayBanStatus(request: Request, env: Env): Promi
 
   // Validate session
   const sessionValidation = await validateSession(request, env);
-  if (!sessionValidation.isValid || !sessionValidation.session) {
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
     return createResponse({ error: 'Authentication required' }, 401, origin);
   }
 
-  const { steamId } = sessionValidation.session;
+  const { steamId } = sessionValidation;
 
   try {
     // Check if user is banned from uploading sprays
@@ -1056,7 +1056,7 @@ export async function handleBackgroundRemoval(request: Request, env: Env): Promi
   try {
     // Validate session
     const sessionValidation = await validateSession(request, env);
-    if (!sessionValidation.isValid || !sessionValidation.session?.steamId) {
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "NODE_ENV=production npx drizzle-kit pull && sed -i 's/\\\\\"1970-01-01T00:00:00.000Z\\\\\"/0/g' drizzle/schema.ts && npx tsc",
+    "build": "rm -rf node_modules/ && npm i && rm -rf dist/ && NODE_ENV=production npx drizzle-kit pull && npx tsc",
     "start": "wrangler dev --ip 127.0.0.1",
     "db:init": "wrangler d1 execute zeitvertreib-data -e dev --local --command 'SELECT 1;'"
   },
