@@ -3,7 +3,7 @@ import type { SessionData, SteamUser, Statistics, PlayerData } from '@zeitvertre
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets } from './db/schema.js';
+import { playerdata, kills, loginSecrets, discordInfo } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 
 // Response helpers
@@ -570,4 +570,37 @@ export function checkApiKey(request: Request, apiKey: string): boolean {
 
   const token = authHeader.substring(7);
   return token === apiKey;
+}
+
+export async function isModerator(steamId: string, env: Env): Promise<boolean> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
+  if (!playerdataResult || !playerdataResult.discordId) return false;
+
+  const discordInfoResult = await db.select().from(discordInfo).where(eq(discordInfo.discordId, playerdataResult.discordId)).get();
+  if (!discordInfoResult) return false;
+
+  return discordInfoResult.teamSince > 0;
+}
+
+export async function isDonator(steamId: string, env: Env): Promise<boolean> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
+  if (!playerdataResult || !playerdataResult.discordId) return false;
+
+  const discordInfoResult = await db.select().from(discordInfo).where(eq(discordInfo.discordId, playerdataResult.discordId)).get();
+  if (!discordInfoResult) return false;
+
+  return discordInfoResult.donatorSince > 0;
+}
+
+export async function isBooster(steamId: string, env: Env): Promise<boolean> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
+  if (!playerdataResult || !playerdataResult.discordId) return false;
+
+  const discordInfoResult = await db.select().from(discordInfo).where(eq(discordInfo.discordId, playerdataResult.discordId)).get();
+  if (!discordInfoResult) return false;
+
+  return discordInfoResult.boosterSince > 0;
 }
