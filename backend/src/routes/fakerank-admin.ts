@@ -168,9 +168,7 @@ export async function handleSetUserFakerank(request: Request, env: Env): Promise
         .where(eq(playerdata.id, playerId));
     }
 
-    console.log(
-      `Admin ${adminCheck.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`,
-    );
+    console.log(`Admin ${adminCheck.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`);
 
     return createResponse(
       {

@@ -88,7 +88,11 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
   // Validate session for the sender
   const validation = await validateSession(request, env);
   if (validation.status !== 'valid') {
-    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   try {

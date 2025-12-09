@@ -75,7 +75,11 @@ export async function handleGetRedeemables(request: Request, env: Env): Promise<
   // Validate session (any valid Steam user can read)
   const validation = await validateSession(request, env);
   if (validation.status !== 'valid') {
-    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   try {
@@ -122,7 +126,11 @@ export async function handleRedeemItem(request: Request, env: Env): Promise<Resp
   // Validate session
   const validation = await validateSession(request, env);
   if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   try {
@@ -268,7 +276,11 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
   // Validate session
   const validation = await validateSession(request, env);
   if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   try {
@@ -285,10 +297,10 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     )
       .bind(code)
       .first()) as {
-        code: string;
-        credits: number;
-        remaining_uses: number;
-      } | null;
+      code: string;
+      credits: number;
+      remaining_uses: number;
+    } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);

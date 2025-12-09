@@ -143,7 +143,11 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
   // Validate session
   const validation = await validateSession(request, env);
   if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   const playerId = `${validation.steamId}@steam`;
@@ -286,7 +290,8 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     }
 
     console.log(
-      `🎰 Slot machine: ${validation.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout
+      `🎰 Slot machine: ${validation.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${
+        result.payout
       } ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );
 

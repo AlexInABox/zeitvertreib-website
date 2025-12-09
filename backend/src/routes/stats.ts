@@ -30,14 +30,7 @@ export async function handleGetStats(request: Request, env: Env): Promise<Respon
     }
 
     const playerData = await getPlayerData(steamId, db, env);
-    const stats = await mapPlayerDataToStats(
-      playerData,
-      steamUser.personaname,
-      steamUser.avatarfull,
-      steamId,
-      db,
-      env,
-    );
+    const stats = await mapPlayerDataToStats(playerData, steamUser.personaname, steamUser.avatarfull, steamId, db, env);
 
     return createResponse({ stats }, 200, origin);
   } catch (error) {

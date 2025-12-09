@@ -28,9 +28,8 @@ export function createResponse(data: any, status = 200, origin?: string | null):
 // Extract steamId from a request's session and return session status
 export async function validateSession(
   request: Request,
-  env: Env
+  env: Env,
 ): Promise<{ status: 'valid' | 'expired' | 'invalid'; steamId?: string }> {
-
   const sessionId =
     request.headers.get('Authorization')?.replace(/^Bearer /, '') ??
     request.headers.get('Cookie')?.match(/session=([^;]+)/)?.[1] ??
@@ -50,8 +49,6 @@ export async function validateSession(
 
   return { status: 'valid', steamId: session.steamId };
 }
-
-
 
 export async function createSession(steamId: string, steamUser: SteamUser, env: Env): Promise<string> {
   const sessionId = crypto.randomUUID();

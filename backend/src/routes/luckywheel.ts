@@ -113,7 +113,11 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
   // Validate session
   const validation = await validateSession(request, env);
   if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   const playerId = `${validation.steamId}@steam`;
@@ -234,7 +238,8 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     }
 
     console.log(
-      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${selectedEntry.multiplier
+      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${
+        selectedEntry.multiplier
       }x (${payout} ZVC). Balance: ${currentBalance} → ${newBalance}`,
     );
 
