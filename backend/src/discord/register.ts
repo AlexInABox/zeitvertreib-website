@@ -50,11 +50,11 @@ if (GUILD_ID) {
     env,
   );
 
-  if (clearResponse.ok) {
+  if (setResponse.ok) {
     const data = (await setResponse.json()) as any[];
     console.log(`✅ Registered ${data.length} commands: ${data.map((c) => c.name).join(', ')}`);
   } else {
-    console.warn('⚠️ Failed to set guild commands:', await clearResponse.text());
+    console.warn('⚠️ Failed to set guild commands:', await setResponse.text());
   }
 }
 

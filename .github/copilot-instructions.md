@@ -35,11 +35,21 @@ const { bar, baz } = zoo();
 ```
 ### No raw SQL queries!
 ```typescript
-// ✅ CORRECT: Use Drizzle ORM methods
+// ✅ CORRECT: Always use Drizzle ORM methods
 const users = await db.select().from(usersTable).where(eq(usersTable.id, userId));
-// ❌ WRONG: Raw SQL queries (forbidden)
-const users = await db.preapare(`SELECT * FROM users WHERE id = ?`).bind(userId).run();
+
+// ✅ CORRECT: Drizzle ORM with prepared statements
+const stmt = db.select().from(usersTable).where(eq(usersTable.id, placeholder("userId"))).prepare();
+const users = await stmt.execute({ userId });
+
+// ❌ WRONG: Raw SQL queries via D1 (NEVER USE)
+const users = await db.prepare(`SELECT * FROM users WHERE id = ?`).bind(userId).run();
+
+// ❌ WRONG: Raw SQL via env.ZEITVERTREIB_DATA (NEVER USE)  
+const users = await env.ZEITVERTREIB_DATA.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
 ```
+
+**IMPORTANT**: Always import and use the Drizzle database instance and schema, never directly access `env.ZEITVERTREIB_DATA` or write raw SQL queries.
 
 ### Discord Communication
 - Discord communication **must always use `proxyFetch()` as a drop-in replacement for `fetch()`** to circumvent false positives from Discord's IP-based rate limits.
