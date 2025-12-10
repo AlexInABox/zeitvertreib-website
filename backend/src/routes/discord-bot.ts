@@ -104,13 +104,17 @@ export async function handleDiscordBotInteractions(
         const clickerId = interaction.member?.user?.id || interaction.user?.id;
 
         if (clickerId !== challengerId) {
-          return createResponse({
-            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-              content: '❌ Nur der Ersteller der Challenge kann sie abbrechen!',
-              flags: 64 // Ephemeral
-            }
-          }, 200, origin);
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Nur der Ersteller der Challenge kann sie abbrechen!',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
         }
 
         const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
@@ -124,8 +128,8 @@ export async function handleDiscordBotInteractions(
                   body: {
                     content: '❌ **Münzwurf-Challenge abgebrochen!**',
                     embeds: [],
-                    components: []
-                  }
+                    components: [],
+                  },
                 });
               } catch (error) {
                 console.error('Cancel error:', error);
@@ -160,13 +164,17 @@ export async function handleDiscordBotInteractions(
         }
 
         if (participantId === challengerId) {
-          return createResponse({
-            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-              content: 'Du kannst nicht gegen dich selbst spielen!',
-              flags: 64 // Ephemeral
-            }
-          }, 200, origin);
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: 'Du kannst nicht gegen dich selbst spielen!',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
         }
 
         // Rest client for database operations
@@ -181,18 +189,20 @@ export async function handleDiscordBotInteractions(
                 const db = drizzle(env.ZEITVERTREIB_DATA);
 
                 // Check both players' balances using Drizzle ORM
-                const challengerBalanceResult = await db.select({
-                  experience: playerdata.experience,
-                  discordId: playerdata.discordId
-                })
+                const challengerBalanceResult = await db
+                  .select({
+                    experience: playerdata.experience,
+                    discordId: playerdata.discordId,
+                  })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, challengerId))
                   .limit(1);
 
-                const participantBalanceResult = await db.select({
-                  experience: playerdata.experience,
-                  discordId: playerdata.discordId
-                })
+                const participantBalanceResult = await db
+                  .select({
+                    experience: playerdata.experience,
+                    discordId: playerdata.discordId,
+                  })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, participantId))
                   .limit(1);
@@ -204,13 +214,15 @@ export async function handleDiscordBotInteractions(
                 if (!challengerBalance) {
                   await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
-                      embeds: [{
-                        title: '🔗 Challenger-Account nicht verknüpft!',
-                        description: 'Der Ersteller der Challenge hat keinen verknüpften Zeitvertreib-Account mehr.',
-                        color: 0xff6b6b
-                      }],
-                      components: []
-                    }
+                      embeds: [
+                        {
+                          title: '🔗 Challenger-Account nicht verknüpft!',
+                          description: 'Der Ersteller der Challenge hat keinen verknüpften Zeitvertreib-Account mehr.',
+                          color: 0xff6b6b,
+                        },
+                      ],
+                      components: [],
+                    },
                   });
                   return;
                 }
@@ -219,17 +231,22 @@ export async function handleDiscordBotInteractions(
                 if (!participantBalance) {
                   await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
-                      embeds: [{
-                        title: '🔗 Discord-Account nicht verknüpft!',
-                        description: 'Du musst deinen Discord-Account erst mit Zeitvertreib verknüpfen, um ZVC-Features nutzen zu können.',
-                        color: 0xff6b6b,
-                        fields: [{
-                          name: '👆 Hier verknüpfen:',
-                          value: 'https://dev.zeitvertreib.vip/login'
-                        }]
-                      }],
-                      components: []
-                    }
+                      embeds: [
+                        {
+                          title: '🔗 Discord-Account nicht verknüpft!',
+                          description:
+                            'Du musst deinen Discord-Account erst mit Zeitvertreib verknüpfen, um ZVC-Features nutzen zu können.',
+                          color: 0xff6b6b,
+                          fields: [
+                            {
+                              name: '👆 Hier verknüpfen:',
+                              value: 'https://dev.zeitvertreib.vip/login',
+                            },
+                          ],
+                        },
+                      ],
+                      components: [],
+                    },
                   });
                   return;
                 }
@@ -238,8 +255,8 @@ export async function handleDiscordBotInteractions(
                   await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Challenger hat nicht genügend ZVC!',
-                      components: []
-                    }
+                      components: [],
+                    },
                   });
                   return;
                 }
@@ -248,8 +265,8 @@ export async function handleDiscordBotInteractions(
                   await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Du hast nicht genügend ZVC für diesen Münzwurf!',
-                      components: []
-                    }
+                      components: [],
+                    },
                   });
                   return;
                 }
@@ -264,27 +281,31 @@ export async function handleDiscordBotInteractions(
                 const winnerReceives = amount - tax;
 
                 // Update balances using Drizzle ORM
-                await db.update(playerdata)
+                await db
+                  .update(playerdata)
                   .set({ experience: sql`${playerdata.experience} + ${winnerReceives}` })
                   .where(eq(playerdata.discordId, winnerId));
 
-                await db.update(playerdata)
+                await db
+                  .update(playerdata)
                   .set({ experience: sql`${playerdata.experience} - ${amount}` })
                   .where(eq(playerdata.discordId, loserId));
 
                 // Get updated balances and usernames using Drizzle ORM
-                const winnerDataResult = await db.select({
-                  experience: playerdata.experience,
-                  username: playerdata.username
-                })
+                const winnerDataResult = await db
+                  .select({
+                    experience: playerdata.experience,
+                    username: playerdata.username,
+                  })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, winnerId))
                   .limit(1);
 
-                const loserDataResult = await db.select({
-                  experience: playerdata.experience,
-                  username: playerdata.username
-                })
+                const loserDataResult = await db
+                  .select({
+                    experience: playerdata.experience,
+                    username: playerdata.username,
+                  })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, loserId))
                   .limit(1);
@@ -292,13 +313,15 @@ export async function handleDiscordBotInteractions(
                 const winnerData = winnerDataResult[0];
                 const loserData = loserDataResult[0];
 
-                const winnerUser = winnerId === participantId ?
-                  (interaction.member?.user || interaction.user) :
-                  await rest.get(Routes.user(challengerId)) as any;
+                const winnerUser =
+                  winnerId === participantId
+                    ? interaction.member?.user || interaction.user
+                    : ((await rest.get(Routes.user(challengerId))) as any);
 
-                const loserUser = loserId === participantId ?
-                  (interaction.member?.user || interaction.user) :
-                  await rest.get(Routes.user(challengerId)) as any;
+                const loserUser =
+                  loserId === participantId
+                    ? interaction.member?.user || interaction.user
+                    : ((await rest.get(Routes.user(challengerId))) as any);
 
                 const winnerDisplayName = winnerUser?.global_name || winnerUser?.username || 'Unknown';
                 const loserDisplayName = loserUser?.global_name || loserUser?.username || 'Unknown';
@@ -318,46 +341,45 @@ export async function handleDiscordBotInteractions(
                     {
                       name: `🏆 Gewinner: ${winnerDisplayName}${winnerSteamName}`,
                       value: `${formatBalance((winnerId === participantId ? participantBalance.experience : challengerBalance.experience) || 0)} ➜ ${formatBalance(winnerData?.experience || 0)}`,
-                      inline: false
+                      inline: false,
                     },
                     {
                       name: `💸 Verlierer: ${loserDisplayName}${loserSteamName}`,
                       value: `${formatBalance((loserId === participantId ? participantBalance.experience : challengerBalance.experience) || 0)} ➜ ${formatBalance(loserData?.experience || 0)}`,
-                      inline: false
+                      inline: false,
                     },
                     {
                       name: '💰 Einsatz',
                       value: `${amount.toLocaleString('de-DE')} ZVC`,
-                      inline: true
+                      inline: true,
                     },
                     {
                       name: '🏦 Steuer (5%)',
                       value: `${tax.toLocaleString('de-DE')} ZVC`,
-                      inline: true
+                      inline: true,
                     },
                     {
                       name: '✨ Gewinner erhält',
                       value: `${winnerReceives.toLocaleString('de-DE')} ZVC`,
-                      inline: true
-                    }
-                  ]
+                      inline: true,
+                    },
+                  ],
                 };
 
                 await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
                   body: {
                     content: '',
                     embeds: [resultEmbed],
-                    components: []
-                  }
+                    components: [],
+                  },
                 });
-
               } catch (error) {
                 console.error('Coinflip error:', error);
                 await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
                   body: {
                     content: '❌ Ein Fehler ist beim Münzwurf aufgetreten!',
-                    components: []
-                  }
+                    components: [],
+                  },
                 });
               }
             })(),
