@@ -574,8 +574,13 @@ export function checkApiKey(request: Request, apiKey: string): boolean {
 
 export async function isModerator(steamId: string, env: Env): Promise<boolean> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
-  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
-  if (!playerdataResult || !playerdataResult.discordId) return false;
+  let id = steamId.endsWith("@steam") ? steamId : `${steamId}@steam`;
+
+  const playerdataResult = await db
+    .select()
+    .from(playerdata)
+    .where(eq(playerdata.id, id))
+    .get(); if (!playerdataResult || !playerdataResult.discordId) return false;
 
   const discordInfoResult = await db
     .select()
@@ -589,8 +594,13 @@ export async function isModerator(steamId: string, env: Env): Promise<boolean> {
 
 export async function isDonator(steamId: string, env: Env): Promise<boolean> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
-  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
-  if (!playerdataResult || !playerdataResult.discordId) return false;
+  let id = steamId.endsWith("@steam") ? steamId : `${steamId}@steam`;
+
+  const playerdataResult = await db
+    .select()
+    .from(playerdata)
+    .where(eq(playerdata.id, id))
+    .get(); if (!playerdataResult || !playerdataResult.discordId) return false;
 
   const discordInfoResult = await db
     .select()
@@ -604,8 +614,13 @@ export async function isDonator(steamId: string, env: Env): Promise<boolean> {
 
 export async function isBooster(steamId: string, env: Env): Promise<boolean> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
-  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
-  if (!playerdataResult || !playerdataResult.discordId) return false;
+  let id = steamId.endsWith("@steam") ? steamId : `${steamId}@steam`;
+
+  const playerdataResult = await db
+    .select()
+    .from(playerdata)
+    .where(eq(playerdata.id, id))
+    .get(); if (!playerdataResult || !playerdataResult.discordId) return false;
 
   const discordInfoResult = await db
     .select()
