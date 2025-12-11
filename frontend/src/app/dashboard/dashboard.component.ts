@@ -182,7 +182,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showFakerankHelp = false;
   fakerankAllowed = false;
   fakerankTimeRemaining = 0;
-  fakerankAdminTimeRemaining = 0;
   fakerankOverrideTimeRemaining = 0;
   hasFakerankOverride = false;
   isFakerankReadOnly = false;
@@ -316,7 +315,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     auras: ['blue'] as string[], // User owns blue aura
   };
 
-  constructor(private authService: AuthService) {
+  constructor(public authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
     this.loadCurrentSpray();
@@ -1584,7 +1583,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Update access timers
   private updateAccessTimers(): void {
     this.fakerankTimeRemaining = this.authService.getFakerankTimeRemaining();
-    this.fakerankAdminTimeRemaining = this.authService.getFakerankAdminTimeRemaining();
     this.fakerankOverrideTimeRemaining = this.authService.getFakerankOverrideTimeRemaining();
     this.fakerankAllowed = this.authService.canEditFakerank();
     this.hasFakerankOverride = this.authService.hasFakerankOverride();

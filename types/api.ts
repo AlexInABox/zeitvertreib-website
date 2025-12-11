@@ -60,6 +60,9 @@ export interface PlayerData {
 export interface GetUserResponse {
   user: SteamUser;
   playerData: PlayerData | null;
+  isModerator: boolean;
+  isDonator: boolean;
+  isBooster: boolean;
 }
 
 /** POST /auth/logout response */

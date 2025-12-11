@@ -1149,7 +1149,7 @@
                   {{ formatTimeRemaining(fakerankTimeRemaining) }}
                 </span>
                 <!-- Admin Badge -->
-                <span *ngIf="fakerankAdminTimeRemaining > 0" class="fakerank-admin-badge"> Admin </span>
+                <span *ngIf="authService.isFakerankAdmin()" class="fakerank-admin-badge"> Admin </span>
               </div>
               <div class="flex items-center gap-2">
                 <button (click)="showFakerankHelp = true" class="help-button" title="Was ist ein Fakerank?">?</button>

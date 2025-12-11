@@ -10,6 +10,9 @@ import {
   getPlayerData,
   generateLoginSecret,
   validateLoginSecret,
+  isModerator,
+  isDonator,
+  isBooster,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 
@@ -105,13 +108,21 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
     return createResponse({ error: 'Failed to fetch Steam user data' }, 500, origin);
   }
 
-  // Get player data including fakerankadmin flag
+  // Get player data
   const playerData = await getPlayerData(steamId, db, env);
+
+  // Get privilege status
+  const isModeratorUser = await isModerator(steamId, env);
+  const isDonatorUser = await isDonator(steamId, env);
+  const isBoosterUser = await isBooster(steamId, env);
 
   return createResponse(
     {
       user: steamUser,
       playerData: playerData,
+      isModerator: isModeratorUser,
+      isDonator: isDonatorUser,
+      isBooster: isBoosterUser,
     },
     200,
     origin,

@@ -1,4 +1,4 @@
-import { validateSession, createResponse, getPlayerData, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, getPlayerData, fetchSteamUserData, isModerator } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, isNotNull } from 'drizzle-orm';
@@ -18,32 +18,6 @@ interface Player {
   Team: string;
 }
 
-// Helper function to check if user is fakerank admin
-async function validateFakerankAdmin(request: Request, db: ReturnType<typeof drizzle>, env: Env) {
-  const { status, steamId } = await validateSession(request, env);
-
-  if (status !== 'valid' || !steamId) {
-    return { isValid: false, error: status === 'expired' ? 'Session expired' : 'Not authenticated' };
-  }
-
-  // Get player data to check admin status
-  const playerData = await getPlayerData(steamId, db, env);
-
-  // Check if user has fakerank admin access based on unix timestamp
-  const currentTimestamp = Math.floor(Date.now() / 1000);
-  const fakerankAdminUntil = playerData?.fakerankadmin_until || 0;
-
-  // If fakerankadmin_until is 0 or current time is past the expiration, no access
-  if (fakerankAdminUntil === 0 || currentTimestamp > fakerankAdminUntil) {
-    return {
-      isValid: false,
-      error: 'Insufficient privileges - fakerank admin access expired',
-    };
-  }
-
-  return { isValid: true, steamId, playerData };
-}
-
 // GET user fakerank by steamid
 export async function handleGetUserFakerank(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -51,9 +25,14 @@ export async function handleGetUserFakerank(request: Request, env: Env): Promise
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const url = new URL(request.url);
@@ -107,9 +86,14 @@ export async function handleSetUserFakerank(request: Request, env: Env): Promise
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const body = (await request.json()) as any;
@@ -168,7 +152,7 @@ export async function handleSetUserFakerank(request: Request, env: Env): Promise
         .where(eq(playerdata.id, playerId));
     }
 
-    console.log(`Admin ${adminCheck.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`);
+    console.log(`Admin ${sessionValidation.steamId} updated fakerank for ${steamId}: "${fakerank}" (override: ${isOverride})`);
 
     return createResponse(
       {
@@ -195,9 +179,14 @@ export async function handleGetBlacklist(request: Request, env: Env): Promise<Re
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const blacklistData = await env.SESSIONS.get('fakerank_blacklist');
@@ -235,9 +224,14 @@ export async function handleAddToBlacklist(request: Request, env: Env): Promise<
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const body = (await request.json()) as any;
@@ -262,7 +256,7 @@ export async function handleAddToBlacklist(request: Request, env: Env): Promise<
       blacklistedWords.push(wordLower);
       await env.SESSIONS.put('fakerank_blacklist', JSON.stringify(blacklistedWords));
 
-      console.log(`Admin ${adminCheck.steamId} added "${wordLower}" to blacklist`);
+      console.log(`Admin ${sessionValidation.steamId} added "${wordLower}" to blacklist`);
 
       return createResponse(
         {
@@ -298,9 +292,14 @@ export async function handleRemoveFromBlacklist(request: Request, env: Env): Pro
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const body = (await request.json()) as any;
@@ -327,7 +326,7 @@ export async function handleRemoveFromBlacklist(request: Request, env: Env): Pro
     if (blacklistedWords.length < initialLength) {
       await env.SESSIONS.put('fakerank_blacklist', JSON.stringify(blacklistedWords));
 
-      console.log(`Admin ${adminCheck.steamId} removed "${wordLower}" from blacklist`);
+      console.log(`Admin ${sessionValidation.steamId} removed "${wordLower}" from blacklist`);
 
       return createResponse(
         {
@@ -362,9 +361,14 @@ export async function handleGetWhitelist(request: Request, env: Env): Promise<Re
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const whitelistData = await env.SESSIONS.get('fakerank_whitelist');
@@ -402,9 +406,14 @@ export async function handleAddToWhitelist(request: Request, env: Env): Promise<
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const body = (await request.json()) as any;
@@ -429,7 +438,7 @@ export async function handleAddToWhitelist(request: Request, env: Env): Promise<
       whitelistedWords.push(wordLower);
       await env.SESSIONS.put('fakerank_whitelist', JSON.stringify(whitelistedWords));
 
-      console.log(`Admin ${adminCheck.steamId} added "${wordLower}" to whitelist`);
+      console.log(`Admin ${sessionValidation.steamId} added "${wordLower}" to whitelist`);
 
       return createResponse(
         {
@@ -465,9 +474,14 @@ export async function handleRemoveFromWhitelist(request: Request, env: Env): Pro
 
   try {
     // Validate admin privileges
-    const adminCheck = await validateFakerankAdmin(request, db, env);
-    if (!adminCheck.isValid) {
-      return createResponse({ error: adminCheck.error }, 401, origin);
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Invalid or expired session' }, 401, origin);
+    }
+
+    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    if (!isModeratorUser) {
+      return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
 
     const body = (await request.json()) as any;
@@ -494,7 +508,7 @@ export async function handleRemoveFromWhitelist(request: Request, env: Env): Pro
     if (whitelistedWords.length < initialLength) {
       await env.SESSIONS.put('fakerank_whitelist', JSON.stringify(whitelistedWords));
 
-      console.log(`Admin ${adminCheck.steamId} removed "${wordLower}" from whitelist`);
+      console.log(`Admin ${sessionValidation.steamId} removed "${wordLower}" from whitelist`);
 
       return createResponse(
         {

@@ -10,6 +10,9 @@ export type { SteamUser, PlayerData } from '@zeitvertreib/types';
 export interface UserData {
   user: SteamUser;
   playerData: PlayerData | null;
+  isModerator: boolean;
+  isDonator: boolean;
+  isBooster: boolean;
 }
 
 @Injectable({
@@ -178,28 +181,8 @@ export class AuthService {
 
   isFakerankAdmin(): boolean {
     const userData = this.currentUserDataSubject.value;
-    const fakerankAdminUntil = userData?.playerData?.fakerankadmin_until;
-
-    // Check if user has admin access based on unix timestamp
-    if (!fakerankAdminUntil || fakerankAdminUntil === 0) {
-      return false;
-    }
-
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    return currentTimestamp < fakerankAdminUntil;
-  }
-
-  // Get remaining fakerank admin access time in seconds
-  getFakerankAdminTimeRemaining(): number {
-    const userData = this.currentUserDataSubject.value;
-    const fakerankAdminUntil = userData?.playerData?.fakerankadmin_until;
-
-    if (!fakerankAdminUntil || fakerankAdminUntil === 0) {
-      return 0;
-    }
-
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    return Math.max(0, fakerankAdminUntil - currentTimestamp);
+    // Use the isModerator field from backend instead of fakerankadmin_until
+    return userData?.isModerator ?? false;
   }
 
   // Get remaining fakerank access time in seconds
