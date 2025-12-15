@@ -51,6 +51,7 @@ import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
 import { handleGetPlayerlist, handleUpdatePlayerlist } from './routes/playerlist.js';
 import { handleDiscordTrackerUpdate, handleDiscordTrackerDelete } from './routes/discord-tracker.js';
+import { handleGetAdventCalendar, handleRedeemAdventDoor } from './routes/adventcalendar.js';
 import {
   handleCaseFileUpload,
   handleListCases,
@@ -146,6 +147,10 @@ const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext
 
   // Swapped (role swap) route
   'POST:/swapped/': handleSwapped,
+
+  // Advent Calendar routes
+  'GET:/adventcalendar': handleGetAdventCalendar,
+  'POST:/adventcalendar/redeem': handleRedeemAdventDoor,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
@@ -258,6 +263,17 @@ export default {
     // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
       ctx.waitUntil(updateLeaderboard(db, env));
+    }
+
+    // Flush advent calendar table on January 2nd at 03:00 UTC
+    if (controller.cron === '0 3 2 1 *') {
+      console.log('Running annual advent calendar flush...');
+      try {
+        await db.delete(schema.adventCalendar);
+        console.log('Advent calendar table flushed successfully');
+      } catch (error) {
+        console.error('Failed to flush advent calendar:', error);
+      }
     }
   },
 } satisfies ExportedHandler<Env>;

@@ -25,7 +25,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -62,6 +62,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         label: 'Dashboard',
         icon: PrimeIcons.USER,
         route: '/dashboard',
+      },
+      {
+        label: 'Adventskalender',
+        icon: PrimeIcons.GIFT,
+        route: '/advent',
       },
       {
         label: 'Cases',

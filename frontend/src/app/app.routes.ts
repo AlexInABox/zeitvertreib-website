@@ -9,6 +9,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'advent',
+    loadComponent: () => import('./advent-calendar/advent-calendar.component').then((m) => m.AdventCalendarComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'fakerank',
     loadComponent: () => import('./fakerank-admin/fakerank-admin.component').then((m) => m.FakerankAdminComponent),
     canActivate: [fakerankAdminGuard],

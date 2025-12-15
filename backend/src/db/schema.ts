@@ -86,3 +86,32 @@ export const redemptionCodes = sqliteTable('redemption_codes', {
   remainingUses: integer('remaining_uses').notNull(),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
+
+
+export const adventCalendar = sqliteTable('advent_calendar', {
+  userId: text('user_id').primaryKey().notNull(),
+  day1: integer('day_1').notNull().default(0),
+  day2: integer('day_2').notNull().default(0),
+  day3: integer('day_3').notNull().default(0),
+  day4: integer('day_4').notNull().default(0),
+  day5: integer('day_5').notNull().default(0),
+  day6: integer('day_6').notNull().default(0),
+  day7: integer('day_7').notNull().default(0),
+  day8: integer('day_8').notNull().default(0),
+  day9: integer('day_9').notNull().default(0),
+  day10: integer('day_10').notNull().default(0),
+  day11: integer('day_11').notNull().default(0),
+  day12: integer('day_12').notNull().default(0),
+  day13: integer('day_13').notNull().default(0),
+  day14: integer('day_14').notNull().default(0),
+  day15: integer('day_15').notNull().default(0),
+  day16: integer('day_16').notNull().default(0),
+  day17: integer('day_17').notNull().default(0),
+  day18: integer('day_18').notNull().default(0),
+  day19: integer('day_19').notNull().default(0),
+  day20: integer('day_20').notNull().default(0),
+  day21: integer('day_21').notNull().default(0),
+  day22: integer('day_22').notNull().default(0),
+  day23: integer('day_23').notNull().default(0),
+  day24: integer('day_24').notNull().default(0),
+});

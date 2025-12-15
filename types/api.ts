@@ -253,7 +253,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -486,6 +486,37 @@ export interface RedeemCodeResponse {
   success: boolean;
   credits: number;
   message: string;
+}
+
+// ============================================================================
+// Advent Calendar Types
+// ============================================================================
+
+export interface AdventCalendarDoor {
+  day: number;
+  opened: boolean;
+  redeemedAt: number;
+  reward?: number; // Only present for opened doors
+}
+
+/** GET /adventcalendar response */
+export interface GetAdventCalendarResponse {
+  calendar: {
+    doors: AdventCalendarDoor[];
+  } | null; // null when not December
+}
+
+/** POST /adventcalendar/redeem request */
+export interface RedeemAdventDoorRequest {
+  day: number;
+}
+
+/** POST /adventcalendar/redeem response */
+export interface RedeemAdventDoorResponse {
+  success: boolean;
+  day: number;
+  reward: number;
+  newZvc: number;
 }
 
 // ============================================================================
