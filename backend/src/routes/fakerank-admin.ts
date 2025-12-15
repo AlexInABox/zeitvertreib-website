@@ -1,7 +1,6 @@
 import { validateSession, createResponse, getPlayerData, fetchSteamUserData, isModerator } from '../utils.js';
-import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, isNotNull } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
 
 // Extend the Env interface to include DISCORD_WORKER_API_KEY
@@ -9,13 +8,6 @@ declare global {
   interface Env {
     DISCORD_WORKER_API_KEY: string;
   }
-}
-
-interface Player {
-  Name: string;
-  UserId: string;
-  Health: number;
-  Team: string;
 }
 
 // GET user fakerank by steamid
