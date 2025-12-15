@@ -13,5 +13,5 @@ export class AppComponent {
   title = 'zeitvertreib-website';
   showHeader = true;
 
-  constructor() { }
+  constructor() {}
 }

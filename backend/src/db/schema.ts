@@ -87,7 +87,6 @@ export const redemptionCodes = sqliteTable('redemption_codes', {
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
-
 export const adventCalendar = sqliteTable('advent_calendar', {
   userId: text('user_id').primaryKey().notNull(),
   day1: integer('day_1').notNull().default(0),
