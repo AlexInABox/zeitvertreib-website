@@ -2,6 +2,7 @@ import { createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
+import type { SwappedRequest, SwappedResponse } from '@zeitvertreib/types';
 
 /**
  * Validates the API key from the Authorization header
@@ -20,7 +21,7 @@ function validateApiKey(request: Request, env: Env): boolean {
  * POST /swapped/
  * Handles role swap requests from the plugin
  * Requires valid API key authentication
- * Query params: userid (steamid@steam), price (integer)
+ * Body: { userid: string, price: number }
  */
 export async function handleSwapped(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -32,22 +33,21 @@ export async function handleSwapped(request: Request, env: Env): Promise<Respons
   }
 
   try {
-    // Parse query parameters
-    const url = new URL(request.url);
-    const userid = url.searchParams.get('userid');
-    const priceStr = url.searchParams.get('price');
+    // Parse request body
+    const body = await request.json() as SwappedRequest;
+    const userid = body.userid;
+    const price = body.price;
 
     // Validate required parameters
     if (!userid) {
-      return createResponse({ error: 'Bad Request: Missing userid parameter' }, 400, origin);
+      return createResponse({ error: 'Bad Request: Missing userid field' }, 400, origin);
     }
 
-    if (!priceStr) {
-      return createResponse({ error: 'Bad Request: Missing price parameter' }, 400, origin);
+    if (price === undefined || price === null) {
+      return createResponse({ error: 'Bad Request: Missing price field' }, 400, origin);
     }
 
-    const price = parseInt(priceStr, 10);
-    if (isNaN(price) || price < 0) {
+    if (typeof price !== 'number' || isNaN(price) || price < 0) {
       return createResponse({ error: 'Bad Request: Invalid price value' }, 400, origin);
     }
 
@@ -78,17 +78,10 @@ export async function handleSwapped(request: Request, env: Env): Promise<Respons
     await db.update(playerdata).set({ experience: newExp }).where(eq(playerdata.id, userid));
 
     // Return success response
-    return createResponse(
-      {
-        success: true,
-        userid: userid,
-        previousBalance: currentExp,
-        newBalance: newExp,
-        deducted: price,
-      },
-      200,
-      origin,
-    );
+    const response: SwappedResponse = {
+      success: true,
+    };
+    return createResponse(response, 200, origin);
   } catch (error) {
     console.error('Error in handleSwapped:', error);
     return createResponse({ error: 'Internal Server Error' }, 500, origin);

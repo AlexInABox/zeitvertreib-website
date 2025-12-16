@@ -18,13 +18,17 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist/ && tsc",
-    "prepublishOnly": "npm run build"
+    "build": "rm -rf dist/ && tsc && npm run build:csharp",
+    "build:csharp": "mkdir -p dist/csharp && npm run build:csharp:api && npm run build:csharp:discord-tracker",
+    "build:csharp:api": "quicktype api.ts --src-lang typescript --lang csharp --namespace Zeitvertreib.Types --out dist/csharp/Api.cs --features complete --array-type list",
+    "build:csharp:discord-tracker": "quicktype discord-tracker.ts --src-lang typescript --lang csharp --namespace Zeitvertreib.Types.DiscordTracker --out dist/csharp/DiscordTracker.cs --features complete --array-type list"
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "quicktype": "^23.2.6"
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {}
 }

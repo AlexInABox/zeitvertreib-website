@@ -253,7 +253,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -527,3 +527,19 @@ export interface ApiErrorResponse {
   error: string;
   details?: string;
 }
+
+// ============================================================================
+// Swapped Role Swap Types
+// ============================================================================
+
+/** POST /swapped/ request */
+export interface SwappedRequest {
+  userid: string;
+  price: number;
+}
+
+/** POST /swapped/ response */
+export interface SwappedResponse {
+  success: boolean;
+}
+
