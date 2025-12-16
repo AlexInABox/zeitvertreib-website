@@ -38,7 +38,7 @@ public static class EventHandlers
 
         while (true)
         {
-            yield return Timing.WaitForSeconds(150f);
+            yield return Timing.WaitForSeconds(60f);
 
             try
             {
