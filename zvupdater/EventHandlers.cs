@@ -20,7 +20,7 @@ public static class EventHandlers
     
     private static void OnWaitingForPlayers()
     {
-        LabApi.Loader.PluginLoader.Plugins.First().Key.
+        
     }
 
     
