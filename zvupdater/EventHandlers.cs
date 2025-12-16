@@ -93,7 +93,7 @@ public static class EventHandlers
                     {
                         player.ClearBroadcasts();
                         player.SendBroadcast(
-                            "<size=40><color=#FFAA00><b>⚠ Update empfangen ⚠</b></color></size>\n" +
+                            "<size=40><color=#FFAA00><b>⚠ Zeitvertreib Update empfangen ⚠</b></color></size>\n" +
                             "<size=30><color=#FFFFFF>Der Server wird <b>nach der Runde</b> automatisch neugestartet.</color></size>",
                             30
                         );
