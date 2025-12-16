@@ -277,7 +277,7 @@ jobs:
 
       - name: Deploy to Cloudflare (prod)
         if: github.ref == 'refs/heads/main'
-        run: npx wrangler deploy
+        run: npx wrangler deploy -e production
 
   deploy-backend:
     name: 🚀 Deploy Backend
