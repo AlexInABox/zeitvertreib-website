@@ -1,0 +1,279 @@
+<div class="case-management-container">
+  <div class="content-wrapper">
+    <!-- Public Case Lookup (when not authenticated or not fakerank admin) -->
+    <div
+      *ngIf="(!isLoading && !isAuthenticated) || (!isLoading && isAuthenticated && !isFakerankAdmin)"
+      class="public-lookup-container"
+    >
+      <div class="lookup-card">
+        <div class="lookup-header">
+          <i class="pi pi-search lookup-icon"></i>
+          <h1 class="lookup-title">Fall suchen</h1>
+          <p class="lookup-subtitle">Gib die 5-stellige Fall-ID ein</p>
+        </div>
+
+        <div class="lookup-body">
+          <div class="lookup-input-wrapper">
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="lookupCaseId"
+              placeholder="z.B. abc12"
+              class="lookup-input"
+              maxlength="5"
+              (keypress)="onLookupKeyPress($event)"
+              [disabled]="isLookingUp"
+            />
+            <button
+              pButton
+              label="Suchen"
+              icon="pi pi-arrow-right"
+              class="lookup-button"
+              (click)="lookupCase()"
+              [disabled]="isLookingUp"
+              [loading]="isLookingUp"
+            ></button>
+          </div>
+
+          <div *ngIf="lookupError" class="lookup-error">
+            <i class="pi pi-exclamation-circle"></i>
+            <span>{{ lookupError }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Fälle werden geladen...</p>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="error-state">
+      <div class="error-icon-wrapper">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
+      <p class="error-message">{{ errorMessage }}</p>
+      <button
+        pButton
+        label="Erneut versuchen"
+        icon="pi pi-refresh"
+        class="retry-button"
+        (click)="loadCaseFolders()"
+      ></button>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && !hasError && isAuthenticated && isFakerankAdmin" class="main-content">
+      <!-- Header Section -->
+      <div class="header-section">
+        <div class="header-content">
+          <div class="title-area">
+            <div class="title-wrapper">
+              <i class="pi pi-briefcase header-icon"></i>
+              <h1 class="page-title">Fallverwaltung</h1>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button
+              pButton
+              label="Aktualisieren"
+              icon="pi pi-refresh"
+              class="refresh-btn"
+              (click)="loadCaseFolders()"
+              [disabled]="isLoading"
+            ></button>
+            <button pButton label="Neuer Fall" icon="pi pi-plus" class="create-btn" (click)="createNewCase()"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-section" *ngIf="caseFolders.length > 0">
+        <div class="stat-card">
+          <i class="pi pi-folder stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ caseFolders.length }}</span>
+            <span class="stat-label">Aktive Fälle</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="pi pi-clock stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ getRecentCasesCount() }}</span>
+            <span class="stat-label">Kürzlich erstellt</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="pi pi-file stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ getTotalFilesCount() }}</span>
+            <span class="stat-label">Dateien insgesamt</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="pi pi-database stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ getTotalStorageSize() }}</span>
+            <span class="stat-label">Gesamtspeicher</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-section" *ngIf="caseFolders.length > 0">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            (input)="filterCases()"
+            placeholder="Suche nach Fall-ID, Spitzname oder Tag..."
+            class="search-input"
+          />
+          <button
+            *ngIf="searchQuery"
+            pButton
+            icon="pi pi-times"
+            class="clear-btn"
+            (click)="clearSearch()"
+            [text]="true"
+          ></button>
+        </div>
+
+        <!-- Custom Sort Dropdown -->
+        <div class="sort-wrapper">
+          <label class="sort-label">
+            <i class="pi pi-sort-alt"></i>
+            Sortieren:
+          </label>
+          <div class="custom-dropdown">
+            <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
+              <span class="dropdown-label">{{ getSortLabel() }}</span>
+              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+            </button>
+            <div class="dropdown-menu" *ngIf="sortDropdownOpen">
+              <button
+                *ngFor="let option of sortOptions"
+                class="dropdown-item"
+                [class.active]="sortBy === option.value"
+                (click)="changeSortOrder($any(option.value))"
+                type="button"
+              >
+                <span>{{ option.label }}</span>
+                <i class="pi pi-check" *ngIf="sortBy === option.value"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="search-results-info" *ngIf="searchQuery">
+          <span class="results-count">
+            {{ filteredCaseFolders.length }}
+            {{ filteredCaseFolders.length === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Cases Grid -->
+      <div class="cases-grid" *ngIf="filteredCaseFolders.length > 0">
+        <div
+          *ngFor="let caseFolder of filteredCaseFolders; let i = index"
+          class="case-card"
+          (click)="openCase(caseFolder)"
+          [style.animation-delay]="i * 0.05 + 's'"
+        >
+          <div class="case-card-header">
+            <div class="case-icon-wrapper">
+              <i class="pi pi-folder-open"></i>
+            </div>
+            <div class="case-tags" *ngIf="caseFolder.metadata.tags && caseFolder.metadata.tags.length > 0">
+              <span class="tag" *ngFor="let tag of caseFolder.metadata.tags">{{ tag }}</span>
+            </div>
+          </div>
+
+          <div class="case-card-body">
+            <h3 class="case-title">
+              {{ caseFolder.metadata.nickname || formatCaseName(caseFolder.name) }}
+            </h3>
+            <p class="case-id"><span *ngIf="!caseFolder.metadata.nickname">ID: </span>{{ caseFolder.name }}</p>
+
+            <div class="case-stats">
+              <span class="stat-item" *ngIf="caseFolder.metadata.fileCount > 0">
+                <i class="pi pi-file"></i>
+                {{ caseFolder.metadata.fileCount }}
+                {{ caseFolder.metadata.fileCount === 1 ? 'Datei' : 'Dateien' }}
+              </span>
+              <span class="stat-item" *ngIf="caseFolder.metadata.totalSize > 0">
+                <i class="pi pi-database"></i>
+                {{ formatFileSize(caseFolder.metadata.totalSize) }}
+              </span>
+              <span class="stat-item" *ngIf="caseFolder.metadata.fileCount === 0">
+                <i class="pi pi-inbox"></i>
+                Leer
+              </span>
+            </div>
+          </div>
+
+          <div class="case-card-footer">
+            <div class="case-meta">
+              <span class="meta-item" [title]="'Erstellt: ' + formatDate(caseFolder.metadata.createdAt)">
+                <i class="pi pi-calendar-plus"></i>
+                {{ formatRelativeDate(caseFolder.metadata.createdAt) }}
+              </span>
+              <span
+                class="meta-item"
+                *ngIf="caseFolder.metadata.lastModified !== caseFolder.metadata.createdAt"
+                [title]="'Zuletzt geändert: ' + formatDate(caseFolder.metadata.lastModified)"
+              >
+                <i class="pi pi-history"></i>
+                {{ formatRelativeDate(caseFolder.metadata.lastModified) }}
+              </span>
+            </div>
+            <div class="case-action">
+              <i class="pi pi-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Hover Effect Overlay -->
+          <div class="card-overlay"></div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="caseFolders.length === 0" class="empty-state">
+        <div class="empty-illustration">
+          <div class="empty-icon-wrapper">
+            <i class="pi pi-inbox"></i>
+          </div>
+          <div class="empty-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+          </div>
+        </div>
+        <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
+        <p class="empty-description">Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
+        <button
+          pButton
+          label="Ersten Fall erstellen"
+          icon="pi pi-plus-circle"
+          class="empty-action-btn"
+          (click)="createNewCase()"
+        ></button>
+        <div class="empty-tips">
+          <p class="tip-title">💡 Tipp:</p>
+          <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1365 @@
+<div class="dashboard-container">
+  <div class="p-6 relative z-10">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="text-center text-white">
+        <div class="loading-spinner mx-auto mb-4"></div>
+        <p class="text-xl font-medium">Lade Statistiken...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="error-state">
+      <div class="error-message max-w-md mx-auto">
+        <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
+        <p class="mb-4">{{ errorMessage }}</p>
+        <button (click)="refreshStats()" class="refresh-button">Erneut versuchen</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && !hasError" class="dashboard-grid">
+      <!-- Stats Overview -->
+      <div class="grid-item stats-overview">
+        <div class="stats-card p-6 rounded-2xl auto-height">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Kills -->
+            <div class="stat-item" style="--stat-color: #10b981; --stat-color-light: #34d399">
+              <div class="stat-indicator"></div>
+              <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+                <h5 class="stat-label m-0 mb-1">Abschüsse</h5>
+                <p class="stat-value m-0">
+                  {{ userStatistics.kills | number: '1.0-0' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Deaths -->
+            <div class="stat-item" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa">
+              <div class="stat-indicator"></div>
+              <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+                <h5 class="stat-label m-0 mb-1">Todesfälle</h5>
+                <p class="stat-value m-0">
+                  {{ userStatistics.deaths | number: '1.0-0' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Playtime -->
+            <div class="stat-item" style="--stat-color: #eab308; --stat-color-light: #facc15">
+              <div class="stat-indicator"></div>
+              <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+                <h5 class="stat-label m-0 mb-1">Spielzeit</h5>
+                <p class="stat-value m-0">
+                  {{ playtimeFormatted }}
+                </p>
+              </div>
+            </div>
+            <!-- K/D Ratio -->
+            <div class="stat-item" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa">
+              <div class="stat-indicator"></div>
+              <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+                <h5 class="stat-label m-0 mb-1">K/D Ratio</h5>
+                <p class="stat-value m-0">
+                  {{ kdRatio }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player Card -->
+      <div class="grid-item player-card-container">
+        <div class="player-card">
+          <!-- Avatar Header -->
+          <div class="player-avatar-container" *ngIf="userStatistics.avatarFull">
+            <img
+              class="player-avatar"
+              [src]="getAvatarUrl(userStatistics.avatarFull)"
+              [alt]="userStatistics.username || 'Player Avatar'"
+              loading="lazy"
+              (error)="onImageError($event)"
+            />
+          </div>
+
+          <!-- Player Info -->
+          <div class="p-6">
+            <h2 class="text-2xl font-bold text-white mb-2 cardHeader">
+              Willkommen zurück,<br />
+              <span class="text-gradient">{{ userStatistics.username || 'Spieler' }}</span>
+            </h2>
+
+            <p class="text-lg text-gray-300 mb-6">
+              {{ leaderboardText }}
+            </p>
+
+            <!-- Stats List -->
+            <div class="space-y-3">
+              <div class="player-info-item">
+                <span class="player-info-label">Gespielte Runden:</span>
+                <span class="player-info-value">{{ userStatistics.roundsplayed | number: '1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Spielzeit:</span>
+                <span class="player-info-value">{{ playtimeFormatted }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Benutzte Medkits:</span>
+                <span class="player-info-value">{{ userStatistics.usedmedkits | number: '1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Getrunkene Colas:</span>
+                <span class="player-info-value">{{ userStatistics.usedcolas | number: '1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Pocket Escapes:</span>
+                <span class="player-info-value">{{ userStatistics.pocketescapes | number: '1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Benutzte Adrenalin:</span>
+                <span class="player-info-value">{{ userStatistics.usedadrenaline | number: '1.0-0' }}</span>
+              </div>
+
+              <div class="player-info-item">
+                <span class="player-info-label">Snake Highscore:</span>
+                <span class="player-info-value">{{ userStatistics.snakehighscore | number: '1.0-0' }}</span>
+              </div>
+            </div>
+
+            <!-- Discord Stats -->
+            <app-discord-stats variant="full"></app-discord-stats>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZV Coins Widget -->
+      <div class="grid-item zvcoins-container">
+        <div class="stats-card p-6 rounded-2xl">
+          <h3 class="text-xl font-bold text-white mb-4 cardHeader flex items-center justify-between">
+            <span>🪙 Zeitvertreib Coins</span>
+            <span class="zvcoins-balance-inline"> {{ userStatistics.experience | number: '1.0-0' }} ZVC </span>
+          </h3>
+
+          <!-- Code Redemption and Transfer Combined -->
+          <div class="zvcoins-balance-code-section mb-6">
+            <div class="zvcoins-combined-card">
+              <!-- Code Redemption Area -->
+              <div class="zvcoins-code-area">
+                <div class="zvcoins-code-header">
+                  <div class="zvcoins-code-icon">🎫</div>
+                  <div class="zvcoins-code-info">
+                    <p class="zvcoins-code-label">Code einlösen</p>
+                  </div>
+                </div>
+
+                <!-- Code Info Tip -->
+                <div class="zvcoins-code-tip">
+                  <div class="code-tip-icon">💡</div>
+                  <div class="code-tip-text">
+                    Codes kannst du auf unserem
+                    <strong>Discord-Server</strong> oder bei speziellen Events gewinnen!!
+                  </div>
+                </div>
+
+                <div class="zvcoins-code-input-section">
+                  <div class="zvcoins-code-input-group">
+                    <input
+                      type="text"
+                      [(ngModel)]="redeemCode"
+                      placeholder="Gib deinen Code hier ein..."
+                      class="zvcoins-code-input"
+                      (keyup.enter)="redeemCodeAction()"
+                      [disabled]="codeRedemptionLoading"
+                    />
+                    <button
+                      class="zvcoins-code-btn"
+                      (click)="redeemCodeAction()"
+                      [disabled]="!redeemCode || codeRedemptionLoading"
+                    >
+                      <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
+                      <span *ngIf="codeRedemptionLoading">⏳ Wird eingelöst...</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vertical Divider -->
+              <div class="zvcoins-divider"></div>
+
+              <!-- ZVC Transfer Area -->
+              <div class="zvcoins-transfer-area">
+                <div class="zvcoins-transfer-header">
+                  <div class="zvcoins-transfer-icon">💸</div>
+                  <div class="zvcoins-transfer-info">
+                    <p class="zvcoins-transfer-label">Zeitvertreib Coins senden</p>
+                  </div>
+                </div>
+
+                <!-- Transaction Tax Disclaimer -->
+                <div class="zvcoins-transfer-disclaimer">
+                  <div class="transfer-disclaimer-icon">⚠️</div>
+                  <div class="transfer-disclaimer-text">
+                    <strong>Transaktionsgebühr:</strong> Auf jede Transaktion wird eine 10% Steuer erhoben.
+                    <strong>Mindestbetrag:</strong> 100 ZVC.
+                  </div>
+                </div>
+
+                <!-- Transfer Cost Info -->
+                <div *ngIf="transferAmount && transferAmount > 0" class="zvcoins-transfer-cost-info">
+                  <div class="transfer-cost-item">
+                    <span class="cost-label">Betrag:</span>
+                    <span class="cost-value">{{ transferAmount }} ZVC</span>
+                  </div>
+                  <div class="transfer-cost-item">
+                    <span class="cost-label">Steuer (10%):</span>
+                    <span class="cost-value">{{ getTransferTax(transferAmount) }} ZVC</span>
+                  </div>
+                  <div class="transfer-cost-item transfer-cost-total">
+                    <span class="cost-label">Gesamt:</span>
+                    <span class="cost-value">{{ getTransferTotalCost(transferAmount) }} ZVC</span>
+                  </div>
+                </div>
+
+                <div class="zvcoins-transfer-input-section">
+                  <div class="zvcoins-transfer-input-group">
+                    <input
+                      type="text"
+                      [(ngModel)]="transferRecipient"
+                      placeholder="Steam ID oder Benutzername"
+                      class="zvcoins-transfer-input zvcoins-transfer-recipient"
+                      [disabled]="transferLoading"
+                    />
+                    <input
+                      type="text"
+                      [(ngModel)]="transferAmount"
+                      placeholder="Betrag"
+                      class="zvcoins-transfer-input zvcoins-transfer-amount"
+                      [disabled]="transferLoading"
+                    />
+                    <button
+                      class="zvcoins-transfer-btn"
+                      (click)="transferZVC()"
+                      [disabled]="
+                        !transferRecipient ||
+                        !transferAmount ||
+                        transferAmount <= 0 ||
+                        transferAmount < 100 ||
+                        transferAmount > 50000 ||
+                        getTransferTotalCost(transferAmount) > (userStatistics.experience || 0) ||
+                        transferLoading
+                      "
+                    >
+                      <span *ngIf="!transferLoading">💸 Senden</span>
+                      <span *ngIf="transferLoading">⏳ Wird gesendet...</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message displays outside the card for better visibility -->
+            <div
+              *ngIf="codeRedemptionMessage"
+              class="zvcoins-message mt-3"
+              [class.success]="codeRedemptionSuccess"
+              [class.error]="!codeRedemptionSuccess"
+            >
+              {{ codeRedemptionMessage }}
+            </div>
+            <div
+              *ngIf="transferMessage"
+              class="zvcoins-message mt-3"
+              [class.success]="transferSuccess"
+              [class.error]="!transferSuccess"
+            >
+              {{ transferMessage }}
+            </div>
+          </div>
+
+          <!-- Games Section: Slot Machine and Coming Soon -->
+          <div class="zvcoins-balance-code-section mb-6">
+            <div class="zvcoins-games-card">
+              <!-- Slot machine-->
+              <div class="slot-machine-widget">
+                <div class="slot-machine-header">
+                  <h4 class="zvcoins-section-title">🎰 Slotmaschine</h4>
+                </div>
+
+                <div class="slotcontainer">
+                  <div class="slot">
+                    <div class="symbols" id="slot1Symbols"></div>
+                  </div>
+
+                  <div class="slot">
+                    <div class="symbols" id="slot2Symbols"></div>
+                  </div>
+
+                  <div class="slot">
+                    <div class="symbols" id="slot3Symbols"></div>
+                  </div>
+                </div>
+
+                <!-- Inline Compact Payout Info -->
+                <div *ngIf="slotMachineInfo" class="slot-payout-compact">
+                  <div class="payout-compact-grid">
+                    <div
+                      *ngFor="let entry of slotMachineInfo.payoutTable"
+                      class="payout-compact-entry"
+                      [class.jackpot-entry]="entry.tier === 'jackpot'"
+                      [class.big-win-entry]="entry.tier === 'big_win'"
+                    >
+                      <span class="payout-compact-symbol">{{ entry.symbol }}</span>
+                      <span class="payout-compact-condition">{{ entry.condition }}</span>
+                      <span class="payout-compact-amount">+{{ entry.payout }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="slot-machine-controls">
+                  <button
+                    (click)="testSlotMachine()"
+                    class="slot-machine-btn slot-spin-btn"
+                    [disabled]="isSpinning || !canAffordSlotMachine()"
+                    [class.spinning]="isSpinning"
+                    [class.disabled]="!canAffordSlotMachine()"
+                  >
+                    <span class="btn-text" *ngIf="!isSpinning && canAffordSlotMachine()">🎰 Start!!! 🎰</span>
+                    <span class="btn-text" *ngIf="!isSpinning && !canAffordSlotMachine()">❌ Nicht genug ZVC ❌</span>
+                    <span class="btn-text" *ngIf="isSpinning">🎰 Dreht... 🎰</span>
+                    <span class="btn-cost">🪙 {{ slotMachineInfo?.cost || 10 }} ZVC</span>
+                  </button>
+
+                  <button
+                    (click)="toggleAutoSpin()"
+                    class="slot-machine-btn slot-autospin-btn"
+                    [class.active]="autoSpinEnabled"
+                    [disabled]="!canAffordSlotMachine()"
+                  >
+                    <span class="btn-text" *ngIf="autoSpinEnabled">⏹️ Stoppen</span>
+
+                    <span class="btn-text" *ngIf="!autoSpinEnabled">🔄 Auto</span>
+                  </button>
+                </div>
+
+                <!-- Status Messages -->
+                <div *ngIf="slotMachineMessage" class="slot-machine-message">
+                  {{ slotMachineMessage }}
+                </div>
+                <div *ngIf="slotMachineError" class="slot-machine-error">
+                  {{ slotMachineError }}
+                </div>
+
+                <!-- Win Log -->
+                <div *ngIf="slotWinLog.length > 0" class="slot-win-log">
+                  <div class="win-log-header">
+                    <span class="win-log-title">📜 Letzte Spins</span>
+                    <div class="win-log-header-controls">
+                      <label class="win-log-toggle">
+                        <input type="checkbox" [(ngModel)]="hideLosses" class="toggle-checkbox" />
+                        <span class="toggle-slider"></span>
+                      </label>
+                      <span class="win-log-count">{{ getFilteredWinLog().length }}</span>
+                    </div>
+                  </div>
+                  <div class="win-log-list">
+                    <div
+                      *ngFor="let entry of getFilteredWinLog(); trackBy: trackByWinLogId"
+                      class="win-log-entry"
+                      [class.win-log-jackpot]="entry.winType === 'jackpot'"
+                      [class.win-log-big-win]="entry.winType === 'big_win'"
+                      [class.win-log-win]="entry.winType === 'small_win' || entry.winType === 'mini_win'"
+                      [class.win-log-loss]="entry.winType === 'loss'"
+                    >
+                      <div class="win-log-symbols">
+                        <span class="win-symbol">{{ entry.symbols[0] }}</span>
+                        <span class="win-symbol">{{ entry.symbols[1] }}</span>
+                        <span class="win-symbol">{{ entry.symbols[2] }}</span>
+                      </div>
+                      <div class="win-log-info">
+                        <span class="win-log-type" [style.color]="getWinTypeInfo(entry.winType).color">
+                          {{ getWinTypeInfo(entry.winType).emoji }}
+                          {{ getWinTypeInfo(entry.winType).label }}
+                        </span>
+                        <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
+                      </div>
+                      <div class="win-log-payout" [class.negative]="entry.payout === 0">
+                        <span class="payout-amount"> {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }} </span>
+                        <span class="payout-cost" *ngIf="entry.payout > 0">-{{ slotMachineInfo?.cost || 10 }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lucky Wheel Widget -->
+              <div class="lucky-wheel-widget">
+                <div class="lucky-wheel-header">
+                  <h4 class="zvcoins-section-title">🎡 Glücksrad</h4>
+                </div>
+
+                <!-- Loading State -->
+                <div *ngIf="!luckyWheelInfo && !luckyWheelError" class="text-center py-8">
+                  <div class="loading-spinner mx-auto mb-4"></div>
+                  <p class="text-lg text-white">Lade Glücksrad...</p>
+                </div>
+
+                <!-- Error State -->
+                <div *ngIf="luckyWheelError && !luckyWheelInfo" class="text-center py-8">
+                  <div class="text-red-400 mb-4">⚠️</div>
+                  <p class="text-red-400">{{ luckyWheelError }}</p>
+                  <button
+                    (click)="loadLuckyWheelInfo()"
+                    class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Erneut versuchen
+                  </button>
+                </div>
+
+                <!-- Lucky Wheel Content -->
+                <div *ngIf="luckyWheelInfo">
+                  <!-- Lucky Wheel SVG -->
+                  <div class="wheel-container">
+                    <svg
+                      class="lucky-wheel-svg"
+                      [class.spinning]="isWheelSpinning"
+                      [style.transform]="'rotate(' + wheelRotation + 'deg)'"
+                      viewBox="0 0 200 200"
+                    >
+                      <!-- Wheel segments -->
+                      <g *ngFor="let segment of getWheelSegments(); let i = index">
+                        <path
+                          class="wheel-segment"
+                          [attr.d]="
+                            'M 100 100 L ' +
+                            (100 + 100 * Math.cos((((i * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
+                            ' ' +
+                            (100 + 100 * Math.sin((((i * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
+                            ' A 100 100 0 0 1 ' +
+                            (100 + 100 * Math.cos(((((i + 1) * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
+                            ' ' +
+                            (100 + 100 * Math.sin(((((i + 1) * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
+                            ' Z'
+                          "
+                          [attr.fill]="segment.color"
+                          stroke="rgba(0,0,0,0.3)"
+                          stroke-width="1"
+                          [class.wheel-segment-active]="winningSegmentIndex === i && showWheelResult"
+                        />
+                      </g>
+
+                      <!-- Logo image in center -->
+                      <defs>
+                        <clipPath id="circleClip">
+                          <circle cx="100" cy="100" r="22" />
+                        </clipPath>
+                      </defs>
+                      <image
+                        *ngIf="!(lastWheelMultiplier !== null && showWheelResult)"
+                        href="assets/logos/logo_full_color_1to1.png"
+                        x="78"
+                        y="78"
+                        width="44"
+                        height="44"
+                        clip-path="url(#circleClip)"
+                      />
+
+                      <!-- Result display circle -->
+                      <circle
+                        *ngIf="lastWheelMultiplier !== null && showWheelResult"
+                        cx="100"
+                        cy="100"
+                        r="22"
+                        fill="rgba(0,0,0,0.9)"
+                      />
+                      <text
+                        *ngIf="lastWheelMultiplier !== null && showWheelResult"
+                        x="100"
+                        y="100"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                        fill="white"
+                        font-size="14"
+                        font-weight="bold"
+                      >
+                        {{ lastWheelMultiplier + 'x' }}
+                      </text>
+                    </svg>
+
+                    <!-- Pointer arrow at top -->
+                    <div class="wheel-pointer"></div>
+                  </div>
+
+                  <!-- Multiplier Legend (compact colored badges) -->
+                  <div class="wheel-multiplier-legend">
+                    <div
+                      *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index"
+                      class="legend-badge"
+                      [style.background-color]="getMultiplierColor(entry.multiplier)"
+                    >
+                      {{ entry.multiplier }}x
+                    </div>
+                  </div>
+
+                  <!-- Bet Controls -->
+                  <div class="wheel-bet-controls">
+                    <div class="wheel-bet-display">
+                      <button
+                        (click)="adjustLuckyWheelBet(-10)"
+                        class="wheel-bet-btn"
+                        [disabled]="luckyWheelLoading || luckyWheelBet <= luckyWheelInfo.minBet"
+                      >
+                        −
+                      </button>
+                      <div class="wheel-bet-amount">
+                        <label class="bet-label" for="wheelBetInput">Einsatz</label>
+                        <div class="bet-input-wrapper">
+                          <input
+                            id="wheelBetInput"
+                            class="bet-input"
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            [value]="luckyWheelBetInput"
+                            (input)="onLuckyWheelBetInput($event)"
+                            (keydown)="onLuckyWheelBetKeydown($event)"
+                            (blur)="commitLuckyWheelBetInput()"
+                            (keydown.enter)="commitLuckyWheelBetInput(); $event.preventDefault()"
+                            [disabled]="luckyWheelLoading"
+                            [attr.min]="luckyWheelInfo.minBet"
+                            [attr.max]="luckyWheelInfo.maxBet"
+                          />
+                          <span class="bet-unit">ZVC</span>
+                        </div>
+                      </div>
+                      <button
+                        (click)="adjustLuckyWheelBet(10)"
+                        class="wheel-bet-btn"
+                        [disabled]="luckyWheelLoading || luckyWheelBet >= luckyWheelInfo.maxBet"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <button
+                      (click)="spinLuckyWheel()"
+                      class="wheel-spin-btn"
+                      [class.spinning]="isWheelSpinning"
+                      [disabled]="!canAffordLuckyWheel() || luckyWheelLoading"
+                    >
+                      <span class="btn-icon">🎡</span>
+                      <span class="btn-text">{{ isWheelSpinning ? 'Dreht...' : 'Drehen!' }}</span>
+                    </button>
+
+                    <button
+                      (click)="toggleAutoWheelSpin()"
+                      class="wheel-autospin-btn"
+                      [class.active]="autoWheelSpinEnabled"
+                      [disabled]="!luckyWheelInfo"
+                      title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}"
+                    >
+                      <span *ngIf="!autoWheelSpinEnabled">🔄 Auto</span>
+                      <span *ngIf="autoWheelSpinEnabled">⏹️ Stopp</span>
+                    </button>
+                  </div>
+
+                  <!-- Status Messages -->
+                  <div *ngIf="luckyWheelError && luckyWheelInfo" class="wheel-error">
+                    {{ luckyWheelError }}
+                  </div>
+
+                  <!-- Lucky Wheel Spin Log -->
+                  <div *ngIf="luckyWheelSpinLog.length > 0" class="slot-win-log wheel-spin-log">
+                    <div class="win-log-header">
+                      <span class="win-log-title">📜 Letzte Wheel-Spins</span>
+                      <div class="win-log-header-controls">
+                        <label class="win-log-toggle" title="Verluste ausblenden">
+                          <input type="checkbox" [(ngModel)]="hideWheelLosses" class="toggle-checkbox" />
+                          <span class="toggle-slider"></span>
+                        </label>
+                        <span class="win-log-count">{{ getFilteredWheelSpinLog().length }}</span>
+                      </div>
+                    </div>
+                    <div class="win-log-list">
+                      <div
+                        *ngFor="let entry of getFilteredWheelSpinLog(); trackBy: trackByWheelSpinId"
+                        class="win-log-entry"
+                        [class.win-log-win]="entry.payout > 0"
+                        [class.win-log-loss]="entry.payout === 0"
+                      >
+                        <div class="win-log-symbols">
+                          <span class="legend-badge" [style.background-color]="getMultiplierColor(entry.multiplier)"
+                            >{{ entry.multiplier }}x</span
+                          >
+                        </div>
+                        <div class="win-log-info">
+                          <span class="win-log-type" [style.color]="getWheelSpinTypeInfo(entry).color">
+                            {{ getWheelSpinTypeInfo(entry).emoji }}
+                            {{ getWheelSpinTypeInfo(entry).label }}
+                          </span>
+                          <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
+                        </div>
+                        <div class="win-log-payout" [class.negative]="entry.payout === 0">
+                          <span class="payout-amount"> {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }} </span>
+                          <span class="wheel-log-bet">-{{ entry.bet }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Redeemable Items -->
+          <div class="zvcoins-rewards-section mb-4">
+            <h4 class="zvcoins-section-title">🎁 Belohnungen einlösen</h4>
+
+            <!-- Loading State -->
+            <div *ngIf="redeemablesLoading" class="text-center py-8">
+              <div class="loading-spinner mx-auto mb-4"></div>
+              <p class="text-lg text-white">Lade Belohnungen...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="redeemablesError && !redeemablesLoading" class="text-center py-8">
+              <div class="text-red-400 mb-4">⚠️</div>
+              <p class="text-red-400">{{ redeemablesError }}</p>
+              <button
+                (click)="loadRedeemables()"
+                class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+
+            <!-- Redeemables Grid -->
+            <div *ngIf="!redeemablesLoading && !redeemablesError" class="zvcoins-rewards-grid">
+              <div
+                *ngFor="let redeemable of redeemables"
+                class="zvcoins-reward-card"
+                [class.zvcoins-affordable]="canAfford(redeemable.price) && isAvailable(redeemable)"
+                [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
+                [class.zvcoins-expired]="isExpired(redeemable)"
+                [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+              >
+                <!-- Limited Time Badge -->
+                <div
+                  *ngIf="isLimitedTime(redeemable) && !isExpired(redeemable) && !isSoldOut(redeemable)"
+                  class="zvcoins-limited-badge"
+                >
+                  ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
+                </div>
+
+                <!-- Expired Badge -->
+                <div *ngIf="isExpired(redeemable)" class="zvcoins-expired-badge">❌ Nicht mehr verfügbar</div>
+
+                <!-- Sold Out Badge -->
+                <div *ngIf="isSoldOut(redeemable)" class="zvcoins-sold-out-badge">🚫 Ausverkauft</div>
+
+                <div class="zvcoins-reward-header">
+                  <div class="zvcoins-reward-icon-large">
+                    {{ redeemable.emoji }}
+                  </div>
+                  <div class="zvcoins-reward-details">
+                    <h5 class="zvcoins-reward-title">
+                      {{ redeemable.name }}
+                    </h5>
+                    <p class="zvcoins-reward-description">
+                      {{ redeemable.description }}
+                    </p>
+                  </div>
+                  <div class="zvcoins-reward-price">
+                    <span class="zvcoins-price-amount">{{ redeemable.price | number: '1.0-0' }}</span>
+                    <span class="zvcoins-price-currency">ZVC</span>
+                  </div>
+                </div>
+                <div class="zvcoins-reward-progress">
+                  <div class="zvcoins-progress-container">
+                    <div class="zvcoins-progress-track">
+                      <div
+                        class="zvcoins-progress-bar-fill"
+                        [style.width.%]="getProgressPercentage(userStatistics.experience || 0, redeemable.price)"
+                      ></div>
+                    </div>
+                    <span class="zvcoins-progress-text">
+                      {{ getProgressPercentage(userStatistics.experience || 0, redeemable.price) | number: '1.0-0' }}%
+                    </span>
+                  </div>
+                  <button
+                    class="zvcoins-redeem-btn"
+                    [disabled]="!canRedeem(redeemable)"
+                    [class.zvcoins-redeem-available]="canRedeem(redeemable)"
+                    [class.zvcoins-expired]="isExpired(redeemable)"
+                    [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                    (click)="redeemItem(redeemable)"
+                  >
+                    {{ getAvailabilityText(redeemable) }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- No redeemables available message -->
+              <div *ngIf="redeemables.length === 0" class="text-center py-8 col-span-full">
+                <div class="text-6xl mb-4">🎁</div>
+                <p class="text-lg text-gray-300">Keine Belohnungen verfügbar</p>
+                <p class="text-sm text-gray-400 mt-2">Schau später wieder vorbei!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Spray Card -->
+      <div class="grid-item spray-card-container">
+        <div class="stats-card p-6 rounded-2xl auto-height">
+          <!-- Help Popup (replaces entire card content when shown) -->
+          <div *ngIf="showSprayHelp" class="help-popup h-full">
+            <div class="help-content h-full">
+              <div class="help-title">Custom Spray - Dein persönliches Zeichen! 🎨</div>
+              <div class="help-text">
+                Mit einem Custom Spray kannst du dein eigenes Bild als persönliches Zeichen im Spiel verwenden.
+              </div>
+              <div class="help-text">
+                <strong>Wie funktioniert es?</strong><br />
+                • Lade ein beliebiges Bild oder GIF hoch<br />
+                • PNG/JPG bis 10MB, GIFs bis 2MB (max. 20 Frames)<br />
+                • Das Bild wird automatisch optimiert und ins Spiel übertragen<br />
+                • Nutze es, um Wände oder Oberflächen zu markieren
+              </div>
+              <div class="help-text">
+                <strong>Tipp:</strong> Einfache Designs und klare Formen funktionieren am besten! GIFs werden animiert
+                dargestellt.
+              </div>
+              <button (click)="showSprayHelp = false" class="help-close-btn">Verstanden! ✨</button>
+            </div>
+          </div>
+
+          <!-- Regular Card Content -->
+          <div *ngIf="!showSprayHelp">
+            <h3 class="text-xl font-bold text-white flex items-center justify-between cardHeader">
+              <div class="flex items-center gap-2">🎨 <span>Custom Spray</span></div>
+              <button (click)="showSprayHelp = true" class="help-button" title="Hilfe anzeigen">?</button>
+            </h3>
+
+            <!-- Banned State -->
+            <div *ngIf="isSprayBanned" class="fakerank-not-allowed">
+              <div class="not-allowed-icon">🚫</div>
+              <div class="not-allowed-message">
+                <p class="not-allowed-title">Spray-Uploads gesperrt!</p>
+                <p class="not-allowed-text">
+                  Du wurdest von Spray-Uploads ausgeschlossen.
+                  <span *ngIf="sprayBanStatus && sprayBanStatus.banReason">
+                    <br /><strong>Grund:</strong>
+                    {{ sprayBanStatus.banReason }}
+                  </span>
+                </p>
+                <p class="not-allowed-link" *ngIf="sprayBanStatus && sprayBanStatus.permanent">
+                  <strong>Diese Sperre ist permanent.</strong>
+                </p>
+                <p class="not-allowed-link" *ngIf="sprayBanStatus && !sprayBanStatus.permanent">
+                  Kontaktiere die Moderation unter
+                  <a href="https://dsc.gg/zeit" style="text-decoration: none"><strong>dsc.gg/zeit</strong></a>
+                  für weitere Informationen.
+                </p>
+              </div>
+            </div>
+
+            <!-- Normal Spray Functionality (only if not banned) -->
+            <div *ngIf="!isSprayBanned">
+              <!-- Current Spray Display -->
+              <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
+                <div class="spray-preview-container mx-auto relative">
+                  <div class="spray-preview">
+                    <img [src]="currentSprayImage" alt="Current Spray" class="spray-image" />
+                  </div>
+                  <button
+                    (click)="removeSpray()"
+                    class="remove-spray-button"
+                    [disabled]="sprayUploadLoading"
+                    title="Spray löschen"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <!-- No Spray State -->
+              <div *ngIf="!hasSpray && !selectedFile" class="text-center py-4">
+                <div class="text-4xl mb-2">🎨</div>
+                <p class="text-gray-300 text-sm">Kein Spray hochgeladen</p>
+              </div>
+
+              <!-- Upload Section with Drag & Drop -->
+              <div class="spray-upload">
+                <div
+                  class="upload-area"
+                  [class.has-file]="selectedFile && !sprayUploadLoading"
+                  [class.loading]="sprayUploadLoading"
+                  [class.drag-over]="isDragOver"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                >
+                  <input
+                    type="file"
+                    id="sprayFileInput"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    (change)="onFileSelected($event)"
+                    class="file-input"
+                  />
+                  <label for="sprayFileInput" class="upload-label">
+                    <div class="upload-content">
+                      <div
+                        *ngIf="!sprayUploadLoading && !selectedFile && !backgroundRemovalProcessing"
+                        class="text-center"
+                      >
+                        <div class="text-2xl mb-2">📁</div>
+                        <p class="font-medium">Klicken oder hierher ziehen</p>
+                        <p class="text-sm opacity-75">PNG, JPG, WEBP</p>
+                        <p class="text-xs opacity-60 mt-1" *ngIf="uploadLimits">
+                          {{ uploadLimits.message }}
+                        </p>
+                        <p class="text-xs opacity-60 mt-1" *ngIf="!uploadLimits">Max: 5MB (Bilder)</p>
+                      </div>
+
+                      <!-- Original File Preview -->
+                      <div
+                        *ngIf="
+                          selectedFile && selectedFilePreview && !sprayUploadLoading && !backgroundRemovalProcessing
+                        "
+                        class="text-center"
+                      >
+                        <div class="file-preview-container mb-2">
+                          <div class="preview-wrapper" [class.bg-removed]="processedImagePreview">
+                            <img
+                              [src]="processedImagePreview || selectedFilePreview"
+                              alt="Selected Image Preview"
+                              class="file-preview-image"
+                            />
+                            <!-- Subtle glow effect for background removed images -->
+                            <div *ngIf="processedImagePreview" class="bg-removed-glow"></div>
+                          </div>
+                        </div>
+                        <p class="font-medium">{{ selectedFileName }}</p>
+                        <div class="preview-status">
+                          <p class="text-sm opacity-75">
+                            {{ processedImagePreview ? 'Bereit zum Upload' : 'Bereit zum Upload' }}
+                          </p>
+                          <!-- Clean status indicator below the image -->
+                          <div *ngIf="processedImagePreview" class="bg-removed-status">
+                            <span class="status-icon">✨</span>
+                            <span class="status-text">Hintergrund entfernt</span>
+                          </div>
+                        </div>
+                        <p
+                          *ngIf="removeBackground && !processedImagePreview"
+                          class="text-xs mt-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        >
+                          🪄 Hintergrund wird entfernt
+                        </p>
+                      </div>
+
+                      <div *ngIf="backgroundRemovalProcessing" class="text-center">
+                        <div class="loading-spinner mx-auto mb-2"></div>
+                        <p class="font-medium">Entferne Hintergrund...</p>
+                        <p class="text-sm opacity-75">Dies kann einen Moment dauern</p>
+                      </div>
+                      <div *ngIf="sprayUploadLoading" class="text-center">
+                        <div class="loading-spinner mx-auto mb-2"></div>
+                        <p class="font-medium">Wird hochgeladen...</p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div *ngIf="selectedFile && !sprayUploadLoading" class="upload-actions mt-3">
+                  <button
+                    (click)="uploadSpray()"
+                    class="upload-button"
+                    [disabled]="backgroundRemovalProcessing"
+                    [class.disabled]="backgroundRemovalProcessing"
+                  >
+                    {{ backgroundRemovalProcessing ? 'Wird verarbeitet...' : 'Hochladen' }}
+                  </button>
+                  <button (click)="clearAllPreviews()" class="cancel-button">Abbrechen</button>
+                </div>
+              </div>
+
+              <!-- Background Removal Toggle -->
+              <div class="background-removal-toggle mt-4">
+                <div class="toggle-container">
+                  <div class="toggle-header">
+                    <div class="toggle-info">
+                      <div class="toggle-icon">🪄</div>
+                      <div class="toggle-content">
+                        <h4 class="toggle-title">Automatische Hintergrundentfernung</h4>
+                        <p class="toggle-description">
+                          Entfernt automatisch den Hintergrund mit KI - über unseren Server!
+                        </p>
+                      </div>
+                    </div>
+                    <div class="toggle-switch-container">
+                      <label class="toggle-switch">
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="removeBackground"
+                          [disabled]="sprayUploadLoading || backgroundRemovalProcessing"
+                          (change)="onBackgroundRemovalToggle()"
+                        />
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Status indicator -->
+                  <div class="toggle-status" [class.active]="removeBackground">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">
+                      {{
+                        removeBackground
+                          ? 'Aktiviert - Hintergrund wird mit KI entfernt'
+                          : 'Deaktiviert - Originalbild wird verwendet'
+                      }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Privacy Policy Notice -->
+              <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
+                <!-- Compact Default State -->
+                <div *ngIf="!showPrivacyDetails" class="flex items-center gap-3 p-4 md:p-5">
+                  <div class="text-yellow-400 text-xl leading-none">⚠️</div>
+                  <div class="text-sm text-yellow-100 leading-relaxed">
+                    <strong>Datenschutzhinweis:</strong>
+                    <span
+                      class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
+                      (click)="showPrivacyDetails = true"
+                      >Details anzeigen
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Expanded Privacy Details -->
+                <div *ngIf="showPrivacyDetails" id="privacy-details" class="privacy-expanded p-4 md:p-5">
+                  <div class="flex items-start gap-3 mb-3">
+                    <div class="text-yellow-400 text-xl leading-none">⚠️</div>
+                    <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
+                      Datenschutzhinweis - Wichtige Informationen
+                    </h4>
+
+                    <span
+                      class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
+                      (click)="showPrivacyDetails = false"
+                      title="Schließen"
+                      role="button"
+                      aria-label="Datenschutzhinweis schließen"
+                      aria-expanded="true"
+                      aria-controls="privacy-details"
+                    >
+                      ✕
+                    </span>
+                  </div>
+
+                  <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
+                    <li class="leading-relaxed">
+                      <span class="font-semibold">Öffentliche Verfügbarkeit und Datenübertragung:</span>
+                      Ihr hochgeladenes Bild wird öffentlich zugänglich und kann an unseren Discord-Server übertragen
+                      werden, welcher auf US-amerikanischen Servern außerhalb unserer direkten Kontrolle gehostet wird.
+                      Diese Übertragung erfolgt zur technischen Bereitstellung des Services.
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold">Datenlöschung und Persistenz:</span>
+                      Eine Löschung des Bildes durch Sie garantiert nicht die vollständige und endgültige Entfernung von
+                      unseren Systemen, Discord-Servern oder beteiligten Drittsystemen. Kopien können in Backups, Caches
+                      oder anderen technischen Systemen verbleiben.
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold">Automatisierte Inhaltsmoderation:</span>
+                      Alle hochgeladenen Bilder werden automatisiert mittels OpenAI-Moderation (Modell
+                      „omni-moderation-latest“) geprüft. Dabei können Ihre Bilddaten an OpenAI übermittelt werden. Die
+                      Verarbeitung erfolgt zur Erkennung und Vermeidung unzulässiger Inhalte.
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold">Moderationsmaßnahmen und Account-Sperrung:</span>
+                      Wir behalten uns vor, hochgeladene Bilder jederzeit und ohne Vorankündigung zu löschen. Bei
+                      Verstößen gegen diese Hinweise, gegen gesetzliche Vorgaben oder bei missbräuchlicher Nutzung kann
+                      Ihr Account ohne vorherige Warnung gesperrt werden.
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold">Internationale Datenübertragung:</span>
+                      Durch die Nutzung von Discord-Servern und die Einbindung des OpenAI-Moderationsdienstes kann eine
+                      Übertragung Ihrer Daten in die USA und ggf. weitere Drittländer erfolgen, in denen ein anderes
+                      Datenschutzniveau als in Deutschland/EU gilt.
+                    </li>
+
+                    <li class="leading-relaxed font-semibold p-2 rounded">
+                      <span class="font-semibold">Einverständniserklärung:</span>
+                      Durch das Hochladen eines Bildes erklären Sie sich mit den oben genannten Bedingungen
+                      einverstanden und bestätigen, dass Sie die rechtlichen Konsequenzen verstanden haben.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Rules Widget -->
+              <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
+                <!-- Compact Default State -->
+                <div *ngIf="!showRulesDetails" class="flex items-center gap-3 p-4 md:p-5">
+                  <div class="text-yellow-400 text-xl leading-none">📋</div>
+                  <div class="text-sm text-yellow-100 leading-relaxed">
+                    <strong>Regeln für Inhalte:</strong>
+                    <span
+                      class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
+                      (click)="showRulesDetails = true"
+                      >Details anzeigen
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Expanded Rules Details -->
+                <div *ngIf="showRulesDetails" id="rules-details" class="privacy-expanded p-4 md:p-5">
+                  <div class="flex items-start gap-3 mb-3">
+                    <div class="text-yellow-400 text-xl leading-none">📋</div>
+                    <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
+                      Inhaltsregeln - Was ist nicht erlaubt
+                    </h4>
+
+                    <span
+                      class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
+                      (click)="showRulesDetails = false"
+                      title="Schließen"
+                      role="button"
+                      aria-label="Regeln schließen"
+                      aria-expanded="true"
+                      aria-controls="rules-details"
+                    >
+                      ✕
+                    </span>
+                  </div>
+
+                  <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
+                    <li class="leading-relaxed">
+                      <span class="font-semibold block text-yellow-200">I. Unzulässige Inhalte:</span>
+                      <ul class="pl-4 space-y-2 list-disc">
+                        <li>Pornographische, erotische oder sexuelle Inhalte sowie Darstellungen von Nacktheit.</li>
+                        <li>Politische Inhalte jeglicher Art, unabhängig von der Ausrichtung.</li>
+                        <li>
+                          Ausschnitte oder Teilansichten aus verbotenem Material, auch wenn diese keine explizite
+                          Darstellung enthalten.
+                        </li>
+                      </ul>
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold block text-yellow-200">II. Flaggen:</span>
+                      <ul class="pl-4 space-y-2 list-disc">
+                        <li>
+                          Zulässig sind ausschließlich Flaggen existierender Staaten, die von den Vereinten Nationen
+                          anerkannt sind.
+                        </li>
+                        <li>
+                          Eigene, selbst entworfene Flaggen sind erlaubt, sofern sie keinen Bezug zu bestehenden
+                          Nationen aufweisen.
+                        </li>
+                      </ul>
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold block text-yellow-200">III. Kommunikation und Verhalten:</span>
+                      <ul class="pl-4 space-y-2 list-disc">
+                        <li>
+                          Hasserfüllte Aussagen, diskriminierende Äußerungen oder Beleidigungen sind nicht gestattet.
+                        </li>
+                      </ul>
+                    </li>
+
+                    <li class="leading-relaxed">
+                      <span class="font-semibold block text-yellow-200">IV. Abbildungen von Personen:</span>
+                      <ul class="pl-4 space-y-2 list-disc">
+                        <li>Darstellungen von Kindern oder Jugendlichen sind strikt untersagt.</li>
+                        <li>
+                          Dies gilt auch für Personen, die minderjährig wirken, selbst wenn sie tatsächlich volljährig
+                          sind.
+                        </li>
+                      </ul>
+                    </li>
+
+                    <li class="leading-relaxed font-semibold p-2 rounded bg-yellow-800/30">
+                      <span class="font-semibold">V. Konsequenzen bei Verstößen:</span>
+                      Bei Zuwiderhandlungen wird der betreffende Account ohne vorherige Ankündigung gesperrt.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Messages -->
+              <div *ngIf="sprayUploadError" class="error-message mt-3">
+                {{ sprayUploadError }}
+              </div>
+              <div *ngIf="sprayUploadSuccess" class="success-message mt-3">Spray erfolgreich hochgeladen!</div>
+              <div *ngIf="sprayDeleteSuccess" class="success-message mt-3">Spray erfolgreich gelöscht!</div>
+            </div>
+            <!-- End of non-banned functionality -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Fakerank Card -->
+      <div class="grid-item fakerank-container">
+        <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
+          <!-- Help Popup (replaces entire card content when shown) -->
+          <div *ngIf="showFakerankHelp" class="help-popup h-full">
+            <div class="help-content h-full">
+              <div class="help-title">Fakerank - Dein persönlicher Spitzname! ✨</div>
+              <div class="help-text">
+                Ein Fakerank ist einfach ein cooler Spitzname, den du dir selbst geben kannst! Es hat nichts mit deinem
+                echten Rang im Spiel zu tun - es ist nur zur Dekoration und macht dein Profil persönlicher.
+              </div>
+              <div class="help-text">
+                <strong>Wann kannst du es nutzen?</strong><br />
+                Jederzeit! Sei kreativ - ob "Pizza Liebhaber", "Sniper Pro" oder "Chaos König" - es ist dein
+                persönlicher Touch.
+              </div>
+              <div class="help-text">
+                <strong>Tipp:</strong> Wähle etwas, das deine Persönlichkeit oder deinen Spielstil widerspiegelt. Andere
+                Spieler werden es sehen können!
+              </div>
+              <button (click)="showFakerankHelp = false" class="help-close-btn">Verstanden! ✨</button>
+            </div>
+          </div>
+
+          <!-- Regular Card Content -->
+          <div *ngIf="!showFakerankHelp">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between cardHeader">
+              <div class="flex items-center gap-2">
+                ✨ <span>Fakerank</span>
+                <!-- Timer Badge -->
+                <span *ngIf="fakerankTimeRemaining > 0" class="fakerank-timer-badge">
+                  {{ formatTimeRemaining(fakerankTimeRemaining) }}
+                </span>
+                <!-- Admin Badge -->
+                <span *ngIf="authService.isFakerankAdmin()" class="fakerank-admin-badge"> Admin </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button (click)="showFakerankHelp = true" class="help-button" title="Was ist ein Fakerank?">?</button>
+              </div>
+            </h3>
+
+            <!-- Display Mode -->
+            <div *ngIf="!isEditingFakerank" class="fakerank-display">
+              <!-- Check if user can edit fakeranks -->
+              <div *ngIf="fakerankAllowed">
+                <!-- Show override info if user has override (but can still edit) -->
+                <div *ngIf="hasFakerankOverride && !isFakerankReadOnly" class="override-info-banner">
+                  <div class="override-banner-icon">🛡️</div>
+                  <div class="override-banner-text">
+                    <span class="override-banner-title">Admin-Override aktiv</span>
+                    <span class="override-banner-subtitle" *ngIf="fakerankOverrideTimeRemaining > 0">
+                      Du kannst trotzdem bearbeiten · Verbleibt:
+                      {{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="nickname-container mb-4">
+                  <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
+                    <div *ngIf="currentFakerank" class="nickname-display">
+                      <div class="nickname-icon">✨</div>
+                      <div class="nickname-text">
+                        <span class="nickname-label">Dein Spitzname:</span>
+                        <span class="nickname-value" [style.color]="getColorHex(currentFakerankColor)">{{
+                          currentFakerank
+                        }}</span>
+                        <div class="nickname-color-info">
+                          <span
+                            class="color-indicator"
+                            [style.background-color]="getColorHex(currentFakerankColor)"
+                          ></span>
+                          {{ getColorName(currentFakerankColor) }}
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="!currentFakerank" class="nickname-empty-state">
+                      <div class="nickname-icon">💭</div>
+                      <div class="nickname-text">
+                        <span class="nickname-label">Noch kein Spitzname</span>
+                        <span class="nickname-subtitle">Gib dir einen coolen Namen!</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="fakerank-actions">
+                  <button
+                    (click)="startEditingFakerank()"
+                    class="fakerank-btn fakerank-btn-primary"
+                    [disabled]="fakerankLoading"
+                  >
+                    {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
+                  </button>
+                  <button
+                    *ngIf="currentFakerank"
+                    (click)="deleteFakerank()"
+                    class="fakerank-btn fakerank-btn-danger"
+                    [disabled]="fakerankLoading"
+                  >
+                    🗑️ Löschen
+                  </button>
+                </div>
+              </div>
+
+              <!-- Override fakerank (read-only, set by admin) -->
+              <div *ngIf="isFakerankReadOnly" class="fakerank-override">
+                <div class="nickname-container mb-4">
+                  <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
+                    <div *ngIf="currentFakerank" class="nickname-display override-display">
+                      <div class="nickname-icon">🔒</div>
+                      <div class="nickname-text">
+                        <span class="nickname-label">Admin-Spitzname:</span>
+                        <span class="nickname-value" [style.color]="getColorHex(currentFakerankColor)">{{
+                          currentFakerank
+                        }}</span>
+                      </div>
+                      <div class="override-badge">
+                        <span class="override-text">Override</span>
+                        <span class="override-timer" *ngIf="fakerankOverrideTimeRemaining > 0">
+                          {{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}
+                        </span>
+                      </div>
+                    </div>
+                    <div *ngIf="!currentFakerank" class="nickname-empty-display">
+                      <div class="nickname-icon">🔒</div>
+                      <span class="nickname-placeholder">Admin kann dir einen Spitzname zuweisen</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="override-info">
+                  <div class="override-icon">🛡️</div>
+                  <div class="override-message">
+                    <p class="override-title">Admin-Override aktiv</p>
+                    <p class="override-text">
+                      Dein Spitzname wurde von einem Admin gesetzt und kann nicht bearbeitet werden.
+                      <span *ngIf="fakerankOverrideTimeRemaining > 0">
+                        Verbleibt:
+                        <strong>{{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}</strong>
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Not allowed message -->
+              <div *ngIf="!fakerankAllowed" class="fakerank-not-allowed">
+                <div class="not-allowed-icon">🔒</div>
+                <div class="not-allowed-message">
+                  <p class="not-allowed-title">Noch nicht freigeschaltet!</p>
+                  <p class="not-allowed-text">
+                    Du bist noch nicht für diese Zeitvertreib-Funktion freigeschaltet! Du kannst entweder den
+                    Discord-Server
+                    <strong>boosten</strong>, über
+                    <strong style="white-space: nowrap">ko-fi.com</strong>
+                    spenden oder durch sehr aktives Spielen auf dem SCP-Server
+                    <strong>VIP</strong> werden.
+                  </p>
+                  <p class="not-allowed-link">
+                    Tritt dem Discord unter
+                    <a href="https://dsc.gg/zeit" style="text-decoration: none"><strong>dsc.gg/zeit</strong></a>
+                    bei für weitere Informationen.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <div *ngIf="isEditingFakerank && fakerankAllowed" class="fakerank-edit">
+              <div class="nickname-editor mb-4">
+                <label class="editor-label"> ✨ Dein neuer Spitzname </label>
+                <div class="fakerank-input-container">
+                  <input
+                    type="text"
+                    [(ngModel)]="fakerankValue"
+                    placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..."
+                    maxlength="50"
+                    class="nickname-input"
+                    [disabled]="fakerankLoading"
+                    [style.color]="getColorHex(tempFakerankColor)"
+                    (keydown)="onKeyDown($event)"
+                    (keyup.enter)="saveFakerank()"
+                    (keyup.escape)="cancelEditingFakerank()"
+                  />
+                  <div class="fakerank-char-count">{{ fakerankValue.length }}/50</div>
+                </div>
+
+                <!-- Color Picker Section -->
+                <div class="color-picker-section mt-3">
+                  <label class="editor-label">🎨 Farbe wählen</label>
+                  <div class="color-picker-container">
+                    <button (click)="toggleColorPicker()" class="color-selector-button" [disabled]="fakerankLoading">
+                      <span class="color-indicator" [style.background-color]="getColorHex(tempFakerankColor)"></span>
+                      {{ getColorName(tempFakerankColor) }}
+                      <span class="dropdown-arrow">{{ showColorPicker ? '▲' : '▼' }}</span>
+                    </button>
+
+                    <div *ngIf="showColorPicker" class="color-picker-dropdown">
+                      <div class="color-options">
+                        <button
+                          *ngFor="let color of fakerankColors"
+                          (click)="selectColor(color.key)"
+                          class="color-option"
+                          [class.selected]="tempFakerankColor === color.key"
+                        >
+                          <span class="color-indicator" [style.background-color]="color.hex"></span>
+                          <span class="color-name">{{ color.name }}</span>
+                          <span *ngIf="tempFakerankColor === color.key" class="selected-check">✓</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="editor-hint">💡 Sei kreativ! Dies ist nur ein Spitzname zur Dekoration.</div>
+              </div>
+              <div class="fakerank-actions">
+                <button
+                  (click)="saveFakerank()"
+                  class="fakerank-btn fakerank-btn-success"
+                  [disabled]="fakerankLoading || fakerankValue.trim().length === 0"
+                >
+                  {{ fakerankLoading ? '💾 Speichern...' : '💾 Speichern' }}
+                </button>
+                <button
+                  (click)="cancelEditingFakerank()"
+                  class="fakerank-btn fakerank-btn-secondary"
+                  [disabled]="fakerankLoading"
+                >
+                  ❌ Abbrechen
+                </button>
+              </div>
+            </div>
+
+            <!-- Success Message -->
+            <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">
+              🎉 Spitzname erfolgreich gespeichert!
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">
+              {{ fakerankError }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

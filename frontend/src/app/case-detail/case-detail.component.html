@@ -1,0 +1,469 @@
+<div class="case-detail-container">
+  <div class="content-wrapper">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Dateien werden geladen...</p>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="error-state">
+      <div class="error-icon-wrapper">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
+      <p class="error-message">{{ errorMessage }}</p>
+      <button pButton label="Erneut versuchen" icon="pi pi-refresh" class="retry-button" (click)="loadFiles()"></button>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && !hasError" class="main-content">
+      <!-- Header Section -->
+      <div class="header-section">
+        <button
+          *ngIf="isAuthenticated"
+          pButton
+          icon="pi pi-arrow-left"
+          label="Zurück zu Fällen"
+          class="back-button"
+          (click)="goBack()"
+        ></button>
+
+        <div class="header-content">
+          <div class="title-area">
+            <div class="title-wrapper">
+              <i class="pi pi-folder-open header-icon"></i>
+              <div class="title-text">
+                <h1 class="page-title">
+                  <span class="nickname">{{ metadata?.nickname || formatCaseName(caseId) }}</span>
+                  <span class="case-id" *ngIf="metadata?.nickname">#{{ caseId }}</span>
+                </h1>
+                <p class="case-description" *ngIf="metadata?.description && !isEditingMetadata">
+                  {{ metadata?.description }}
+                </p>
+                <ng-container *ngIf="metadata?.tags as tags">
+                  <div class="case-tags" *ngIf="tags.length > 0 && !isEditingMetadata">
+                    <span class="tag" *ngFor="let tag of tags">
+                      {{ tag }}
+                    </span>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button
+              *ngIf="isFakerankAdmin && !isEditingMetadata"
+              pButton
+              label="Bearbeiten"
+              icon="pi pi-pencil"
+              class="edit-btn"
+              (click)="startEditingMetadata()"
+            ></button>
+            <button
+              pButton
+              label="Aktualisieren"
+              icon="pi pi-refresh"
+              class="refresh-btn"
+              (click)="loadFiles()"
+              [disabled]="isLoading"
+            ></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metadata Editor -->
+      <div *ngIf="isEditingMetadata" class="metadata-editor">
+        <div class="editor-header">
+          <h3 class="editor-title">Fall-Informationen bearbeiten</h3>
+        </div>
+        <div class="editor-body">
+          <div class="form-field">
+            <label>Spitzname</label>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="editedNickname"
+              placeholder="z.B. Wichtiger Fall"
+              class="form-input"
+            />
+          </div>
+          <div class="form-field">
+            <label>Beschreibung</label>
+            <textarea
+              pInputTextarea
+              [(ngModel)]="editedDescription"
+              placeholder="Beschreibe diesen Fall..."
+              rows="3"
+              class="form-input"
+            ></textarea>
+          </div>
+          <div class="form-field">
+            <label>Tags (kommagetrennt)</label>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="editedTags"
+              placeholder="z.B. wichtig, dringend, 2024"
+              class="form-input"
+            />
+          </div>
+        </div>
+        <div class="editor-footer">
+          <button
+            pButton
+            label="Abbrechen"
+            icon="pi pi-times"
+            class="cancel-btn"
+            (click)="cancelEditingMetadata()"
+            [disabled]="isSavingMetadata"
+          ></button>
+          <button
+            pButton
+            label="Speichern"
+            icon="pi pi-check"
+            class="save-btn"
+            (click)="saveMetadata()"
+            [disabled]="isSavingMetadata"
+            [loading]="isSavingMetadata"
+          ></button>
+        </div>
+      </div>
+
+      <!-- File Upload Section -->
+      <div class="upload-section">
+        <div class="upload-card">
+          <div class="upload-header">
+            <i class="pi pi-cloud-upload upload-icon"></i>
+            <h3 class="upload-title">Datei hochladen</h3>
+          </div>
+
+          <!-- Upload Mode Toggle -->
+          <div class="upload-mode-toggle">
+            <button class="mode-btn" [class.active]="uploadMode === 'file'" (click)="uploadMode = 'file'">
+              <i class="pi pi-file"></i>
+              <span>Datei</span>
+            </button>
+            <button class="mode-btn medal-btn" [class.active]="uploadMode === 'medal'" (click)="uploadMode = 'medal'">
+              <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
+              <span>Medal Clip</span>
+            </button>
+          </div>
+
+          <!-- File Upload Mode -->
+          <div class="upload-body" *ngIf="uploadMode === 'file'">
+            <div class="file-input-wrapper">
+              <input
+                type="file"
+                id="fileInput"
+                class="file-input"
+                (change)="onFileSelected($event)"
+                [disabled]="isUploading"
+              />
+              <label for="fileInput" class="file-input-label">
+                <i class="pi pi-paperclip"></i>
+                <span *ngIf="!selectedFile">Datei auswählen</span>
+                <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
+              </label>
+            </div>
+            <button
+              pButton
+              label="Hochladen"
+              icon="pi pi-upload"
+              class="upload-btn"
+              (click)="uploadFile()"
+              [disabled]="!selectedFile || isUploading"
+              [loading]="isUploading"
+            ></button>
+          </div>
+
+          <!-- Medal Clip Upload Mode -->
+          <div class="upload-body" *ngIf="uploadMode === 'medal'">
+            <div class="medal-input-wrapper">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="medalClipUrl"
+                (ngModelChange)="onMedalUrlChange()"
+                placeholder="https://medal.tv/games/.../clips/..."
+                class="medal-input"
+                [class.invalid]="medalUrlInvalid"
+                [disabled]="isFetchingMedalClip"
+              />
+              <span class="medal-url-error" *ngIf="medalUrlInvalid">
+                <i class="pi pi-exclamation-circle"></i>
+                Bitte gib eine gültige URL ein
+              </span>
+            </div>
+            <button
+              pButton
+              label="Medal Clip hochladen"
+              icon="pi pi-cloud-download"
+              class="upload-btn medal-upload-btn"
+              (click)="uploadMedalClip()"
+              [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
+              [loading]="isFetchingMedalClip"
+            ></button>
+          </div>
+
+          <!-- File Upload Progress Bar -->
+          <div class="upload-progress-container" *ngIf="isUploading && uploadMode === 'file'">
+            <div class="progress-info">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>{{ uploadStatusMessage }}</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" [style.width.%]="uploadProgress"></div>
+              <span class="progress-text-centered">{{ uploadETA }}</span>
+            </div>
+          </div>
+
+          <!-- Medal Clip Progress -->
+          <div class="upload-progress-container" *ngIf="isFetchingMedalClip && uploadMode === 'medal'">
+            <div class="progress-info">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>{{ medalStatusMessage }}</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div
+                class="progress-bar"
+                [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
+              ></div>
+              <span class="progress-text-centered">{{ medalETA }}</span>
+            </div>
+          </div>
+
+          <div class="upload-info" *ngIf="!isUploading && !isFetchingMedalClip">
+            <i class="pi pi-info-circle"></i>
+            <span *ngIf="uploadMode === 'file'">Erlaubte Dateitypen: Bilder, Videos, Audio, PDF, TXT, Archive</span>
+            <span *ngIf="uploadMode === 'medal'">Füge deine Medal.tv Clip-URL ein und lade das Video direkt hoch</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-section" *ngIf="files.length > 0 || metadata">
+        <div class="stat-card" *ngIf="metadata">
+          <i class="pi pi-file stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ metadata.fileCount }}</span>
+            <span class="stat-label">Dateien</span>
+          </div>
+        </div>
+        <div class="stat-card" *ngIf="metadata">
+          <i class="pi pi-database stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ formatFileSize(metadata.totalSize) }}</span>
+            <span class="stat-label">Gesamtgröße</span>
+          </div>
+        </div>
+        <div class="stat-card" *ngIf="metadata">
+          <i class="pi pi-calendar stat-icon"></i>
+          <div class="stat-info">
+            <span class="stat-value">{{ formatDate(metadata.createdAt) }}</span>
+            <span class="stat-label">Erstellt am</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Sort -->
+      <div class="search-section" *ngIf="files.length > 0">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            (input)="filterFiles()"
+            placeholder="Suche nach Dateinamen..."
+            class="search-input"
+          />
+          <button
+            *ngIf="searchQuery"
+            pButton
+            icon="pi pi-times"
+            class="clear-btn"
+            (click)="clearSearch()"
+            [text]="true"
+          ></button>
+        </div>
+
+        <!-- Custom Sort Dropdown -->
+        <div class="sort-wrapper">
+          <label class="sort-label">
+            <i class="pi pi-sort-alt"></i>
+            Sortieren:
+          </label>
+          <div class="custom-dropdown">
+            <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
+              <span class="dropdown-label">{{ getSortLabel() }}</span>
+              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+            </button>
+            <div class="dropdown-menu" *ngIf="sortDropdownOpen">
+              <button
+                *ngFor="let option of sortOptions"
+                class="dropdown-item"
+                [class.active]="sortBy === option.value"
+                (click)="changeSortOrder($any(option.value))"
+                type="button"
+              >
+                <span>{{ option.label }}</span>
+                <i class="pi pi-check" *ngIf="sortBy === option.value"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="search-results-info" *ngIf="searchQuery">
+          <span class="results-count">
+            {{ filteredFiles.length }}
+            {{ filteredFiles.length === 1 ? 'Datei gefunden' : 'Dateien gefunden' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Files Grid -->
+      <div class="files-grid" *ngIf="filteredFiles.length > 0">
+        <div
+          *ngFor="let file of filteredFiles; let i = index"
+          class="file-card"
+          [style.animation-delay]="i * 0.05 + 's'"
+        >
+          <div class="file-card-header">
+            <div class="file-icon-wrapper">
+              <i class="pi" [ngClass]="getFileIcon(file.name)"></i>
+            </div>
+            <div class="file-badge">{{ getFileType(file.name) }}</div>
+          </div>
+
+          <div class="file-card-body">
+            <h3 class="file-title" [title]="file.name">{{ file.name }}</h3>
+            <div class="file-stats">
+              <span class="stat-item" *ngIf="file.size">
+                <i class="pi pi-database"></i>
+                {{ formatFileSize(file.size) }}
+              </span>
+              <span class="stat-item" *ngIf="file.uploadedAt">
+                <i class="pi pi-calendar"></i>
+                {{ formatDate(file.uploadedAt) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="file-card-footer">
+            <button
+              *ngIf="isViewableFile(file.name)"
+              class="file-action-btn view-btn"
+              title="Datei öffnen"
+              (click)="openViewer(file)"
+            >
+              <i class="pi pi-eye"></i>
+              <span>Ansehen</span>
+            </button>
+            <a
+              [href]="getFileUrl(file)"
+              download
+              class="file-action-btn download-btn"
+              [class.full-width]="!isViewableFile(file.name) && !isFakerankAdmin"
+              title="Datei herunterladen"
+            >
+              <i class="pi pi-download"></i>
+              <span>Download</span>
+            </a>
+            <button
+              *ngIf="isFakerankAdmin"
+              class="file-action-btn delete-btn"
+              title="Datei löschen"
+              (click)="deleteFile(file)"
+            >
+              <i class="pi pi-trash"></i>
+              <span>Löschen</span>
+            </button>
+          </div>
+
+          <!-- Hover Effect Overlay -->
+          <div class="card-overlay"></div>
+        </div>
+      </div>
+
+      <!-- Empty State (no files) -->
+      <div *ngIf="files.length === 0" class="empty-state">
+        <div class="empty-illustration">
+          <div class="empty-icon-wrapper">
+            <i class="pi pi-inbox"></i>
+          </div>
+          <div class="empty-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+          </div>
+        </div>
+        <h3 class="empty-title">Noch keine Dateien</h3>
+        <p class="empty-description">Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
+        <div class="empty-tips">
+          <p class="tip-title">💡 Tipp:</p>
+          <p class="tip-text">Du kannst verschiedene Dateitypen hochladen: Bilder, Videos, Dokumente und mehr.</p>
+        </div>
+      </div>
+
+      <!-- Empty Search Results -->
+      <div *ngIf="files.length > 0 && filteredFiles.length === 0" class="empty-state">
+        <div class="empty-icon-wrapper">
+          <i class="pi pi-search"></i>
+        </div>
+        <h3 class="empty-title">Keine Ergebnisse</h3>
+        <p class="empty-description">Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".</p>
+        <button
+          pButton
+          label="Suche zurücksetzen"
+          icon="pi pi-times"
+          class="empty-action-btn"
+          (click)="clearSearch()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Viewer Modal -->
+  <div class="media-viewer-overlay" *ngIf="viewerOpen" (click)="closeViewer()">
+    <div class="media-viewer-content" (click)="$event.stopPropagation()">
+      <div class="viewer-header">
+        <h2 class="viewer-title">{{ viewerFile?.name }}</h2>
+        <div class="viewer-actions">
+          <a [href]="viewerFile?.viewUrl" download class="viewer-download-btn" title="Herunterladen">
+            <i class="pi pi-download"></i>
+            <span>Download</span>
+          </a>
+          <button class="viewer-close-btn" (click)="closeViewer()" title="Schließen">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="viewer-body">
+        <!-- Image Viewer -->
+        <div *ngIf="viewerMediaType === 'image'" class="image-viewer">
+          <img [src]="viewerFile?.viewUrl" [alt]="viewerFile?.name" />
+        </div>
+
+        <!-- Video Viewer -->
+        <div *ngIf="viewerMediaType === 'video'" class="video-viewer">
+          <video controls [src]="viewerFile?.viewUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
+        </div>
+
+        <!-- Audio Viewer -->
+        <div *ngIf="viewerMediaType === 'audio'" class="audio-viewer">
+          <div class="audio-player-wrapper">
+            <i class="pi pi-volume-up audio-icon"></i>
+            <audio controls [src]="viewerFile?.viewUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

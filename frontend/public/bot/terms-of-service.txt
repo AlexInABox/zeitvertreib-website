@@ -1,0 +1,25 @@
+Nutzungsbedingungen für Zeitvertreib
+
+1. Geltungsbereich
+Diese Nutzungsbedingungen gelten für die Nutzung der Dienste von Zeitvertreib, einschließlich des Discord-Bots, der OAuth2 zur Verifizierung verwendet und Discord- sowie Steam-IDs speichert, sowie für die Nutzung der Website zeitvertreib.vip und zugehöriger Subdomains.
+
+2. Nutzung des Bots
+- Der Bot darf ausschließlich für den vorgesehenen Zweck genutzt werden.
+- Die Nutzung erfolgt auf eigene Verantwortung.
+- Das unautorisierte Auslesen, Manipulieren oder Weitergeben von Daten ist untersagt.
+
+3. Verhaltensregeln
+- Nutzer dürfen die Dienste nicht für illegale Zwecke verwenden.
+- Jeglicher Missbrauch oder Verstöße gegen die Regeln können zum Ausschluss aus den Diensten führen.
+
+4. Haftungsausschluss
+- Der Betreiber übernimmt keine Haftung für Schäden, die durch die Nutzung der Dienste entstehen.
+- Es besteht keine Garantie für ständige Erreichbarkeit oder fehlerfreie Funktion der Dienste.
+
+5. Änderungen der Nutzungsbedingungen
+Der Betreiber behält sich das Recht vor, diese Nutzungsbedingungen jederzeit zu ändern. Nutzer werden über wesentliche Änderungen informiert.
+
+6. Kontakt
+Fragen zu den Nutzungsbedingungen können per E-Mail an webmaster@zeitvertreib.vip gestellt werden.
+
+Mit der Nutzung der Dienste erklärt sich der Nutzer mit diesen Nutzungsbedingungen einverstanden.

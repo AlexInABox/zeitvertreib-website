@@ -1,0 +1,14 @@
+﻿<Project>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net481" Version="1.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="System.Net.Http" Version="4.3.4"/>
+        <PackageReference Update="Newtonsoft.Json" Version="13.0.4"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="..\types\dist\csharp\Api.cs" Link="Types\Api.cs"/>
+    </ItemGroup>
+</Project>

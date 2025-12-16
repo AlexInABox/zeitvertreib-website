@@ -1,0 +1,248 @@
+<div class="image-container">
+  <img class="imageincontainer" src="/assets/logos/logo_full_fitting.png" alt="Zeitvertreib Logo" width="100px" />
+</div>
+
+<!-- Gallery Badge Post-it -->
+<a
+  [class.badge-hidden]="!showGalleryBadge"
+  (click)="scrollToGallery($event)"
+  class="gallery-badge"
+  pAnimateOnScroll
+  enterClass="animate-enter fade-in-10 rotate-in animate-duration-800"
+>
+  <span class="badge-icon">📸</span>
+  <span class="badge-text">
+    <span class="badge-title">Bildergalerie</span>
+    <span class="badge-subtitle">Server-Eindrücke</span>
+  </span>
+  <span class="badge-arrow">↓</span>
+</a>
+<div class="welcome-container">
+  <!-- Playerlist Section - Full Width at Top (Hidden when empty) -->
+  <div
+    *ngIf="!isLoading && players.length > 0"
+    pAnimateOnScroll
+    enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
+    class="playerlist-section-top"
+  >
+    <div class="playerlist-card">
+      <!-- Header -->
+      <div class="playerlist-header">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <span>👥 Live Spielerliste</span>
+          <span class="live-indicator"></span>
+        </h3>
+        <div class="playerlist-stats">
+          <div class="stat-badge">
+            <span class="stat-value">{{ playerCount }}</span>
+            <span class="stat-label">Online</span>
+          </div>
+          <div class="stat-badge alive" *ngIf="aliveCount > 0">
+            <span class="stat-value">{{ aliveCount }}</span>
+            <span class="stat-label">Am Leben</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="playerlist-empty">
+        <div class="loading-spinner"></div>
+        <p class="text-white mt-4">Lade Spielerdaten...</p>
+      </div>
+
+      <!-- Player List -->
+      <div *ngIf="!isLoading && players.length > 0" class="playerlist-content-full">
+        <!-- Alive Players -->
+        <div *ngIf="alivePlayers.length > 0" class="player-group-full">
+          <div class="group-header-full alive">
+            <span class="group-icon">💚</span>
+            <span class="group-title">Am Leben</span>
+            <span class="group-count">{{ aliveCount }}</span>
+          </div>
+          <div class="player-grid-full">
+            <div *ngFor="let player of alivePlayers" class="player-item-full alive">
+              <div class="player-info-full">
+                <div class="player-name-wrapper">
+                  <img
+                    *ngIf="player.AvatarUrl"
+                    [src]="player.AvatarUrl"
+                    [alt]="player.Name"
+                    class="player-avatar-small"
+                  />
+                  <span class="player-name-full">{{ player.Name }}</span>
+                </div>
+                <span class="player-team-full" [attr.data-team]="player.Team">
+                  {{ player.Team }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dead Players -->
+        <div *ngIf="deadPlayers.length > 0" class="player-group-full">
+          <div class="group-header-full dead">
+            <span class="group-icon">💀</span>
+            <span class="group-title">Tot</span>
+            <span class="group-count">{{ deadPlayers.length }}</span>
+          </div>
+          <div class="player-grid-full collapsed">
+            <div *ngFor="let player of deadPlayers" class="player-item-full dead">
+              <div class="player-name-wrapper">
+                <img
+                  *ngIf="player.AvatarUrl"
+                  [src]="player.AvatarUrl"
+                  [alt]="player.Name"
+                  class="player-avatar-small"
+                />
+                <span class="player-name-full">{{ player.Name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div *ngIf="!isLoading && players.length > 0" class="playerlist-footer">
+        <span class="footer-text">🔄 Aktualisiert alle 10 Sekunden</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spacer after playerlist (only when visible) -->
+  <div *ngIf="!isLoading && players.length > 0" class="playerlist-spacer"></div>
+
+  <!-- About Section with Discord Integration -->
+  <div pAnimateOnScroll enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000" class="about-card">
+    <h2 class="about-title">Was ist Zeitvertreib?</h2>
+    <p class="about-text">
+      Zeitvertreib ist ein anfängerfreundlicher Server für das Spiel
+      <strong>SCP: Secret Laboratory</strong> auf Steam. Unser Ziel ist es, neuen Spieler:innen den Einstieg in die Welt
+      von SCP: Secret Laboratory zu erleichtern und gleichzeitig erfahrenen Spieler:innen ein erweitertes und
+      komfortableres Spielerlebnis zu bieten.
+    </p>
+    <app-discord-stats variant="full"></app-discord-stats>
+  </div>
+
+  <div class="h-10rem"></div>
+  <div class="flex flex-wrap justify-center gap-8">
+    <div
+      pAnimateOnScroll
+      enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
+      <div class="rounded-full border-2 border-white w-12 h-12 flex items-center justify-center">
+        <i class="pi pi-map-marker text-2xl"></i>
+      </div>
+      <span class="text-2xl font-bold">Standort</span>
+      <span class="text-center">Server in Nürnberg - zentral in Deutschland, nah an Österreich.</span>
+    </div>
+    <div
+      pAnimateOnScroll
+      enterClass="animate-enter fade-in-10 zoom-in-75 animate-duration-1000"
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
+      <div class="rounded-full border-2 border-white w-12 h-12 flex items-center justify-center">
+        <i class="pi pi-crown text-2xl"></i>
+      </div>
+      <span class="text-2xl font-bold">Gameplay</span>
+      <span class="text-center">Vanilla Feeling mit sinnvollen QoL-Plugins - perfekt abgestimmt.</span>
+    </div>
+    <div
+      pAnimateOnScroll
+      enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
+      <div class="rounded-full border-2 border-white w-12 h-12 flex items-center justify-center">
+        <i class="pi pi-shield text-2xl"></i>
+      </div>
+      <span class="text-2xl font-bold">Moderation</span>
+      <span class="text-center">Unser aktives Team sorgt für Fairness und schnelle Hilfe.</span>
+    </div>
+  </div>
+
+  <div class="h-5rem"></div>
+  <div class="flex flex-wrap justify-center gap-8">
+    <div
+      pAnimateOnScroll
+      enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
+      <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">400+</span>
+      <span class="text-2xl font-bold">Spieler</span>
+      <span class="text-center">Täglich kommen neue Spieler auf unseren Discord!</span>
+    </div>
+    <div
+      pAnimateOnScroll
+      enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
+      <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">2</span>
+      <span class="text-2xl font-bold">Server</span>
+      <span class="text-center">Ein zweiter Server steht immer als Backup bereit.</span>
+    </div>
+    <div
+      pAnimateOnScroll
+      enterClass="animate-enter fade-in-10 zoom-in-50 animate-duration-1000"
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
+      <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">{{ yearsSinceFounding }}+</span>
+      <span class="text-2xl font-bold">Jahre</span>
+      <span class="text-center">Unser Projekt besteht seit über {{ yearsSinceFounding }} Jahren!</span>
+    </div>
+  </div>
+
+  <div class="h-10rem" id="gallery-section"></div>
+
+  <h2 pAnimateOnScroll enterClass="animate-enter fade-in-10 animate-duration-1000" class="gallery-title">
+    ✨ Bilder sagen mehr als 1000 Worte ✨
+  </h2>
+
+  <div pAnimateOnScroll enterClass="animate-enter fade-in-10 animate-duration-1000" class="masonry-gallery">
+    <div *ngFor="let item of images; let i = index" class="masonry-item" (click)="openLightbox(i)">
+      <video
+        *ngIf="item.endsWith('.mp4')"
+        [src]="'/assets/showcase/full/' + item"
+        autoplay
+        loop
+        muted
+        playsinline
+        class="masonry-media"
+      ></video>
+      <img
+        *ngIf="!item.endsWith('.mp4')"
+        [src]="'/assets/showcase/full/' + item"
+        [alt]="'Screenshot ' + item"
+        class="masonry-media"
+      />
+    </div>
+  </div>
+
+  <!-- Lightbox Overlay -->
+  <div *ngIf="lightboxOpen" class="lightbox-overlay" (click)="closeLightbox()">
+    <button class="lightbox-close" (click)="closeLightbox()">&times;</button>
+    <button class="lightbox-nav lightbox-prev" (click)="previousImage($event)" *ngIf="images.length > 1">
+      <i class="pi pi-chevron-left"></i>
+    </button>
+    <button class="lightbox-nav lightbox-next" (click)="nextImage($event)" *ngIf="images.length > 1">
+      <i class="pi pi-chevron-right"></i>
+    </button>
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <video
+        *ngIf="currentImage.endsWith('.mp4')"
+        [src]="'/assets/showcase/full/' + currentImage"
+        autoplay
+        loop
+        muted
+        playsinline
+        class="lightbox-media"
+      ></video>
+      <img
+        *ngIf="!currentImage.endsWith('.mp4')"
+        [src]="'/assets/showcase/full/' + currentImage"
+        [alt]="'Screenshot ' + currentImage"
+        class="lightbox-media"
+      />
+    </div>
+  </div>
+</div>

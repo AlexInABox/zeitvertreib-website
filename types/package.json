@@ -1,0 +1,35 @@
+{
+  "name": "@zeitvertreib/types",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./discord-tracker": {
+      "types": "./dist/discord-tracker.d.ts",
+      "import": "./dist/discord-tracker.js",
+      "default": "./dist/discord-tracker.js"
+    }
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc && npm run build:csharp",
+    "build:csharp": "mkdirp dist/csharp && npm run build:csharp:api && npm run build:csharp:discord-tracker",
+    "build:csharp:api": "quicktype api.ts --src-lang typescript --lang csharp --namespace Zeitvertreib.Types --out dist/csharp/Api.cs --features complete --array-type list",
+    "build:csharp:discord-tracker": "quicktype discord-tracker.ts --src-lang typescript --lang csharp --namespace Zeitvertreib.Types.DiscordTracker --out dist/csharp/DiscordTracker.cs --features complete --array-type list"
+  },
+  "devDependencies": {
+    "mkdirp": "^3.0.1",
+    "quicktype": "^23.2.6",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.2"
+  },
+  "files": [
+    "dist"
+  ]
+}

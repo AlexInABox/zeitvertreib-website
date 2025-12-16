@@ -1,0 +1,17 @@
+#logo-svg {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+/* Profile button container */
+.profile-button-container {
+  position: relative;
+}
+
+/* Base menu styling - positioning is handled by JavaScript */
+::ng-deep .user-profile-menu.p-tieredmenu {
+  z-index: 9999 !important;
+  min-width: 200px !important;
+  max-width: 280px !important;
+}

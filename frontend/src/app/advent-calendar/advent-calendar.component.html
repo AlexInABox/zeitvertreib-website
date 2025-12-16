@@ -1,0 +1,161 @@
+<div class="advent-page">
+  <!-- Snow -->
+  <div class="snowfall" aria-hidden="true">
+    <div
+      class="snowflake"
+      *ngFor="let flake of snowflakes"
+      [style.left.%]="flake.left"
+      [style.animation-delay.s]="flake.delay"
+      [style.font-size.px]="flake.size"
+    >
+      ❄
+    </div>
+  </div>
+
+  <div class="advent-shell">
+    <!-- Loading / Error States -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="advent-card">
+        <div class="loading-spinner"></div>
+        <p class="muted">Lade Adventskalender...</p>
+      </div>
+    </div>
+
+    <div *ngIf="hasError && !isLoading" class="error-state">
+      <div class="advent-card">
+        <p class="eyebrow">Hoppla</p>
+        <h3>Fehler beim Laden</h3>
+        <p class="muted">{{ errorMessage }}</p>
+        <button class="pill-btn" (click)="loadCalendar()">Erneut versuchen</button>
+      </div>
+    </div>
+
+    <!-- Not December -->
+    <div *ngIf="!isLoading && !hasError && !isDecember" class="not-december">
+      <div class="advent-card">
+        <div class="badge-row">
+          <span class="chip chip-ice">🎄 Außerhalb des Dezembers</span>
+          <span class="chip chip-soft">Komm im Dezember zurück</span>
+        </div>
+        <h1>Zeitvertreib Adventskalender</h1>
+        <p class="lede">Der Kalender erwacht jedes Jahr im Dezember. Komm zurück, um täglich ZVC zu sammeln.</p>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && !hasError && isDecember" class="content-grid">
+      <div class="advent-card">
+        <div class="advent-card-header">
+          <div class="header-left">
+            <h1 class="title">🎄 Zeitvertreib Adventskalender</h1>
+            <p class="subtitle">Öffne jeden Tag ein Türchen und sammle ZVC.</p>
+          </div>
+
+          <div class="header-stats">
+            <div class="stat-badge">
+              <span class="stat-value">{{ openedCount }}</span>
+              <span class="stat-label">Geöffnet</span>
+            </div>
+            <div class="stat-badge">
+              <span class="stat-value">{{ currentDay }}</span>
+              <span class="stat-label">Dez</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="advent-card-body hero-body">
+          <div class="badge-row">
+            <span class="chip chip-christmas">🎁 {{ openedCount }} / 24</span>
+            <span class="chip chip-ice">📅 {{ currentDay }}. Dezember</span>
+          </div>
+
+          <div class="progress-track segmented" aria-label="Fortschritt pro Tag (24 Segmente inkl. heute)">
+            <ng-container *ngFor="let door of doors">
+              <div
+                class="progress-segment"
+                [class.segment-opened]="door.opened && door.day !== currentDay"
+                [class.segment-past]="!door.opened && door.day < currentDay"
+                [class.segment-locked]="door.day > currentDay"
+                [class.segment-today]="door.day === currentDay"
+              ></div>
+            </ng-container>
+          </div>
+
+          <div class="status-legend">
+            <span><span class="legend-dot status-open"></span> Geöffnet</span>
+            <span><span class="legend-dot status-available"></span> Heute</span>
+            <span><span class="legend-dot status-locked"></span> Gesperrt</span>
+            <span><span class="legend-dot status-past"></span> Verpasst</span>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-panel">
+              <p class="stat-kicker">Geöffnet</p>
+              <p class="stat-value">{{ openedCount }}</p>
+              <p class="stat-desc">Geschaffte Türchen</p>
+            </div>
+            <ng-container *ngIf="isDonator; else donorUpsell">
+              <div class="stat-panel donator-hint">
+                <p class="hint-title">Danke — du bist großartig! ❤️</p>
+                <p class="hint-text">Als Dank kannst du verpasste Türchen öffnen!!</p>
+              </div>
+            </ng-container>
+            <ng-template #donorUpsell>
+              <div class="stat-panel donator-hint" *ngIf="missedCount > 0">
+                <p class="hint-title">Türchen verpasst? 🎁</p>
+                <p class="hint-text">Unterstütze Zeitvertreib und hol sie nach.</p>
+                <a
+                  class="donator-btn compact"
+                  href="https://ko-fi.com/zeitvertreib"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  >❤️ Jetzt unterstützen</a
+                >
+              </div>
+            </ng-template>
+            <div class="stat-panel">
+              <p class="stat-kicker">Zukünftig</p>
+              <p class="stat-value">{{ lockedCount }}</p>
+              <p class="stat-desc">Noch gesperrte Türchen</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="advent-card">
+        <div class="advent-card-header">
+          <div class="header-left">
+            <h3 class="title-sm">🎄 24 Türchen</h3>
+            <p class="subtitle">❤️ Spendenlegenden können auch verpasste Türchen öffnen!</p>
+          </div>
+        </div>
+
+        <div class="advent-card-body">
+          <div class="door-grid">
+            <div
+              *ngFor="let door of doors"
+              class="door-tile"
+              [class.opened]="door.opened"
+              [class.available]="getDoorState(door) === 'available'"
+              [class.locked]="getDoorState(door) === 'locked'"
+              [class.past]="getDoorState(door) === 'past'"
+              [class.openable-past]="isDonator && !door.opened && door.day < currentDay"
+              (click)="openDoor(door)"
+            >
+              <div class="door-face">
+                <div class="door-meta">
+                  <span class="pill today-pill" *ngIf="getDoorState(door) === 'available'">🎁 Heute</span>
+                  <span class="pill locked-pill" *ngIf="getDoorState(door) === 'locked'">🔒 Gesperrt</span>
+                  <span class="pill past-pill" *ngIf="getDoorState(door) === 'past'">⏰ Verpasst</span>
+                  <span class="pill opened-pill" *ngIf="door.opened">✅ Geöffnet</span>
+                </div>
+                <div class="door-number">{{ door.day }}</div>
+                <div class="door-reward" *ngIf="door.opened">+{{ door.reward }} ZVC</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

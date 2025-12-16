@@ -1,0 +1,59 @@
+<div class="m-3">
+  <p-menubar [model]="items">
+    <ng-template #start>
+      <img id="logo-svg" src="/assets/logos/{{ inverted }}" alt="Logo" />
+    </ng-template>
+    <ng-template #item let-item>
+      <ng-container *ngIf="item.route; else urlRef">
+        <a [routerLink]="item.route" class="p-menubar-item-link">
+          <span [class]="item.icon"></span>
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </ng-container>
+      <ng-template #urlRef>
+        <a
+          *ngIf="item.url; else noLink"
+          [href]="item.url"
+          [target]="item.target || '_self'"
+          class="p-menubar-item-link"
+        >
+          <span [class]="item.icon"></span>
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </ng-template>
+      <ng-template #noLink>
+        <div class="p-menubar-item-link">
+          <span [class]="item.icon"></span>
+          <span class="ml-2">{{ item.label }}</span>
+          <span class="pi pi-fw pi-angle-down ml-2"></span>
+        </div>
+      </ng-template>
+    </ng-template>
+    <ng-template #end>
+      <div class="flex items-center gap-2" style="white-space: nowrap">
+        <a href="https://dsc.gg/zeit" target="_blank">
+          <!-- Desktop version with text -->
+          <p-button label="Discord beitreten" icon="pi pi-discord" styleClass="p-button-outlined hidden sm:inline-flex">
+          </p-button>
+          <!-- Mobile version with icon only -->
+          <p-button icon="pi pi-discord" styleClass="p-button-outlined sm:hidden"> </p-button>
+        </a>
+        <div class="relative profile-button-container">
+          <a
+            [routerLink]="userLoggedIn ? '/profile' : '/login'"
+            class="relative overflow-hidden w-full border-0 bg-transparent flex items-start p-2 pl-4 rounded-xl cursor-pointer transition-colors duration-200 text-decoration-none"
+          >
+            <ng-container *ngIf="userLoggedIn; else showIcon">
+              <p-avatar [image]="avatarIcon" class="mr-2" shape="circle" />
+            </ng-container>
+
+            <ng-template #showIcon>
+              <i class="pi pi-user mr-2"></i>
+              <!-- Dies ist das Symbol, das angezeigt wird, wenn nicht angemeldet -->
+            </ng-template>
+          </a>
+        </div>
+      </div>
+    </ng-template>
+  </p-menubar>
+</div>
