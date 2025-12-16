@@ -34,7 +34,7 @@ export async function handleSwapped(request: Request, env: Env): Promise<Respons
 
   try {
     // Parse request body
-    const body = await request.json() as SwappedRequest;
+    const body = (await request.json()) as SwappedRequest;
     const userid = body.userid;
     const price = body.price;
 
