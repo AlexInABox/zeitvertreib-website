@@ -342,3 +342,85 @@ jobs:
           file: overwatch/Dockerfile
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+
+  create-release:
+    name: 📦 Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend, deploy-overwatch]
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all plugin artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Determine version tag
+        id: version
+        run: |
+          # Get the latest tag, or default to v0.0.0 if none exist
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+
+          # Remove 'v' prefix and split into parts
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Increment patch version
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+
+          # Use v1.0.0 if this is the first release
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            NEW_VERSION="v1.0.0"
+          fi
+
+          echo "tag=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "previous_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG="${{ steps.version.outputs.previous_tag }}"
+          NEW_TAG="${{ steps.version.outputs.tag }}"
+
+          if [ "$PREVIOUS_TAG" = "v0.0.0" ]; then
+            # First release - get all commits
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            # Get commits since last tag
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse)
+          fi
+
+          # Create changelog with sections
+          cat > changelog.md << 'EOF'
+          ## 🚀 What's Changed
+
+          EOF
+          echo "$CHANGELOG" >> changelog.md
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Prepare plugin DLLs
+        run: |
+          mkdir -p release-assets
+          find artifacts -name "*.dll" -exec cp {} release-assets/ \;
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: true
+          files: release-assets/*.dll
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
