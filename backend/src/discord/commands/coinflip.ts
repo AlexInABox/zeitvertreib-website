@@ -58,7 +58,7 @@ export class CoinflipCommand extends BaseCommand {
             fields: [
               {
                 name: '👆 Hier verknüpfen:',
-                value: 'https://dev.zeitvertreib.vip/login',
+                value: env.FRONTEND_URL + '/link',
               },
             ],
           },

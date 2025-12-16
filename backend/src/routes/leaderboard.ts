@@ -396,6 +396,7 @@ function formatPlaytimeLeaderboardField(entries: LeaderboardEntry[]): string {
 
 function createDiscordMessage(
   leaderboardData: ReturnType<typeof getLeaderboardData> extends Promise<infer T> ? T : never,
+  env: Env,
 ): DiscordMessage {
   // Create timestamp for last update
   const now = new Date();
@@ -504,7 +505,7 @@ function createDiscordMessage(
             emoji: {
               name: '👾',
             },
-            url: 'https://dev.zeitvertreib.vip/dashboard',
+            url: env.FRONTEND_URL + '/dashboard',
           },
         ],
       },
@@ -589,7 +590,7 @@ export async function updateLeaderboard(db: ReturnType<typeof drizzle>, env: Env
     const leaderboardData = await getLeaderboardData(db, env);
 
     // Create Discord message
-    const discordMessage = createDiscordMessage(leaderboardData);
+    const discordMessage = createDiscordMessage(leaderboardData, env);
 
     // Send or update Discord message
     const success = await sendOrUpdateDiscordMessage(env, discordMessage);

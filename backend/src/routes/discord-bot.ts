@@ -240,7 +240,7 @@ export async function handleDiscordBotInteractions(
                           fields: [
                             {
                               name: '👆 Hier verknüpfen:',
-                              value: 'https://dev.zeitvertreib.vip/login',
+                              value: env.FRONTEND_URL + '/login',
                             },
                           ],
                         },

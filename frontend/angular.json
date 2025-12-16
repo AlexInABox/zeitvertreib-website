@@ -49,7 +49,28 @@
                 }
               ]
             },
-            "development": {
+            "dev": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1MB",
+                  "maximumError": "10MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ]
+            },
+            "local": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
@@ -67,11 +88,14 @@
             "production": {
               "buildTarget": "zeitvertreib-website:build:production"
             },
-            "development": {
-              "buildTarget": "zeitvertreib-website:build:development"
+            "dev": {
+              "buildTarget": "zeitvertreib-website:build:dev"
+            },
+            "local": {
+              "buildTarget": "zeitvertreib-website:build:local"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "local"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"

@@ -2,9 +2,10 @@
   "name": "zeitvertreib-website",
   "version": "0.0.0",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve --configuration development",
-    "build": "rm -rf node_modules/ && npm i && ng build --configuration production"
+    "start": "ng serve --configuration local",
+    "build": "rm -rf node_modules/ && npm i && ng build --configuration production",
+    "build:dev": "rm -rf node_modules/ && npm i && ng build --configuration dev",
+    "build:local": "rm -rf node_modules/ && npm i && ng build --configuration local"
   },
   "private": true,
   "dependencies": {
