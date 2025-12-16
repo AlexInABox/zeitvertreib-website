@@ -82,6 +82,7 @@ public static class EventHandlers
 
                 if (inactive is >= WarnTime and < ReplaceTime)
                 {
+                    player.ClearBroadcasts();
                     player.SendBroadcast(
                         "<size=40><color=#FFAA00><b>⚠ Bist du AFK?</b></color></size>\n\n" +
                         "<size=30><color=#FFFFFF>Du wirst in <b>10 Sekunden</b> durch einen Zuschauer ersetzt.</color></size>",
@@ -133,14 +134,13 @@ public static class EventHandlers
                 randomSpectator.AddAmmo(ammo.Key, ammo.Value);
             randomSpectator.CurrentItem = afkPlayer.CurrentItem;
             afkPlayer.ClearInventory();
-            
+
             randomSpectator.ClearBroadcasts();
             randomSpectator.SendBroadcast(
                 "<size=45><color=#55FFFF><b>AFK-Ersetzung</b></color></size>\n" +
                 "<size=32><color=#FFFFFF>Du wurdest als Ersatz für einen</color> <color=#FF5555><b>inaktiven Spieler</b></color> <color=#FFFFFF>eingesetzt.</color></size>",
                 30
             );
-
         }
 
         afkPlayer.DropEverything();
@@ -152,7 +152,6 @@ public static class EventHandlers
             "<size=32><color=#FFFFFF>Du wurdest durch einen</color> <color=#55FFFF><b>zufälligen Zuschauer</b></color> <color=#FFFFFF>ersetzt.</color></size>",
             30
         );
-        
     }
 
     private static void EnsurePlayerTracked(Player player)

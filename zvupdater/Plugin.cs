@@ -9,8 +9,6 @@ namespace zvupdater;
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>
 {
-    
-    
     public override string Name { get; } = "ZV Updater";
 
     public override string Description { get; } =

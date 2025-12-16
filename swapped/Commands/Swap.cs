@@ -130,16 +130,16 @@ public class Swap : ICommand
             string url = $"{Plugin.Instance.Config!.EndpointUrl}/swapped/";
             Logger.Debug($"Sende Swap-POST-Anfrage an: {url}");
 
-            SwappedRequest request = new SwappedRequest
+            SwappedRequest request = new()
             {
                 Userid = player.UserId,
-                Price = Plugin.Instance.RoleCosts[role],
+                Price = Plugin.Instance.RoleCosts[role]
             };
             string jsonBody = request.ToJson();
 
             using HttpClient client = new();
             client.DefaultRequestHeaders.Add("Authorization", "Bearer " + Plugin.Instance.Config!.ApiKey);
-            StringContent content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+            StringContent content = new(jsonBody, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await client.PostAsync(url, content);
 
             if (response.StatusCode != HttpStatusCode.OK)
