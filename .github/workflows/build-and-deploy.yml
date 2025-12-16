@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # ============================================
   # BUILD JOBS - Run in parallel to verify all builds pass
@@ -366,35 +370,25 @@ jobs:
       - name: Determine version tag
         id: version
         run: |
-          # Get the latest tag, or default to v0.0.0 if none exist
+          # Get the latest build number
           git fetch --tags
-          LATEST_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | head -n 1)
+          LATEST_TAG=$(git tag -l "build-*" --sort=-v:refname | head -n 1)
 
           if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v0.0.0"
+            BUILD_NUMBER=1
+          else
+            # Extract number from build-XXX
+            BUILD_NUMBER=${LATEST_TAG#build-}
+            BUILD_NUMBER=$((BUILD_NUMBER + 1))
           fi
 
-          echo "Latest tag found: $LATEST_TAG"
+          NEW_TAG="build-${BUILD_NUMBER}"
 
-          # Remove 'v' prefix and split into parts
-          VERSION=${LATEST_TAG#v}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-          # Increment patch version
-          PATCH=$((PATCH + 1))
-          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-
-          # Use v1.0.0 if this is the first release
-          if [ "$LATEST_TAG" = "v0.0.0" ]; then
-            NEW_VERSION="v1.0.0"
-          fi
-
-          echo "New version: $NEW_VERSION"
-          echo "tag=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+          echo "New tag: $NEW_TAG"
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "previous_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-
-      - name: Prepare plugin DLLs
-        run: |
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           mkdir -p release-assets
           find artifacts -name "*.dll" -exec cp {} release-assets/ \;
           ls -lah release-assets/
@@ -403,7 +397,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Release ${{ steps.version.outputs.tag }}
+          name: Build ${{ steps.version.outputs.build_number }}
           draft: true
           files: release-assets/*.dll
           make_latest: true
