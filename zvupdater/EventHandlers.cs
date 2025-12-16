@@ -80,6 +80,7 @@ public static class EventHandlers
 
                     ServerStatic.StopNextRound = ServerStatic.NextRoundAction.Restart;
                     Plugin.Instance.Config!.CurrentlyInstalledBuild = newestBuild;
+                    Plugin.Instance.SaveConfig();
 
                     if (Player.ReadyList.Count(p => p.IsPlayer) == 0)
                     {
@@ -92,9 +93,9 @@ public static class EventHandlers
                     {
                         player.ClearBroadcasts();
                         player.SendBroadcast(
-                            "<size=40><color=#FFAA00><b>⚠ Update empfangen ⚠</b></color></size>\n\n" +
-                            "<size=30><color=#FFFFFF>Der Server wird, <b>nach der Runde</b>, automatisch neugestartet.</color></size>",
-                            15
+                            "<size=40><color=#FFAA00><b>⚠ Update empfangen ⚠</b></color></size>\n" +
+                            "<size=30><color=#FFFFFF>Der Server wird <b>nach der Runde</b> automatisch neugestartet.</color></size>",
+                            30
                         );
                     }
                 }
