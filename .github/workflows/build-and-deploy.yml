@@ -67,6 +67,7 @@ jobs:
       REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
       EXILED_REFERENCES: ${{ github.workspace }}/References
       AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
+      SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
 
     steps:
       - name: Checkout code
@@ -101,6 +102,9 @@ jobs:
             $target = Join-Path $env:EXILED_REFERENCES $_.Name
             if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
           }
+
+          # Download SnakeAPI.dll directly into EXILED_REFERENCES
+          Invoke-WebRequest -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll") -ErrorAction Stop
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
