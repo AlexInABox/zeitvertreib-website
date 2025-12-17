@@ -11,6 +11,7 @@ namespace Reporter;
 public class TinyServer
 {
     private const string WebhookUrl = "https://zeitvertreib.vip/api/playerlist";
+    private static readonly HttpClient HttpClient = new();
 
     private TinyServer()
     {
@@ -38,25 +39,21 @@ public class TinyServer
             Logger.Debug($"Uploading to endpoint: {WebhookUrl}", Plugin.Instance.Config!.Debug);
             Logger.Debug($"Payload: {json}", Plugin.Instance.Config!.Debug);
 
-            using (HttpClient client = new())
+            using HttpRequestMessage requestMessage = new(HttpMethod.Post, WebhookUrl);
+            requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            if (!string.IsNullOrEmpty(Plugin.Instance.Config!.ApiKey))
+                requestMessage.Headers.Add("Authorization", $"Bearer {Plugin.Instance.Config.ApiKey}");
+            HttpResponseMessage response = await HttpClient.SendAsync(requestMessage);
+
+            if (response.IsSuccessStatusCode)
             {
-                // Add authorization header if API key is configured
-                if (!string.IsNullOrEmpty(Plugin.Instance.Config!.ApiKey))
-                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {Plugin.Instance.Config.ApiKey}");
-
-                StringContent content = new(json, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PostAsync(WebhookUrl, content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Logger.Info($"Sent playerlist ({playerList.Count})!");
-                }
-                else
-                {
-                    string responseText = await response.Content.ReadAsStringAsync();
-                    Logger.Error(
-                        $"Failed to send playerlist to webhook: {response.StatusCode} - {response.ReasonPhrase}. Response: {responseText}");
-                }
+                Logger.Info($"Sent playerlist ({playerList.Count})!");
+            }
+            else
+            {
+                string responseText = await response.Content.ReadAsStringAsync();
+                Logger.Error(
+                    $"Failed to send playerlist to webhook: {response.StatusCode} - {response.ReasonPhrase}. Response: {responseText}");
             }
         }
         catch (Exception ex)
