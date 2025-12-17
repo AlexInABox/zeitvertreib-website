@@ -223,7 +223,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank { }
+export interface GetUserFakerankResponse extends UserFakerank {}
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -513,7 +513,6 @@ export interface SwappedResponse {
   success: boolean;
 }
 
-
 // ============================================================================
 // ZVC Types
 // ============================================================================
@@ -552,8 +551,7 @@ export interface TransferZvcResponse {
 
 /** POST /stats request */
 export interface StatsPostRequest {
-  players:
-  {
+  players: {
     userid: string;
     timePlayed?: number;
     roundsPlayed?: number;

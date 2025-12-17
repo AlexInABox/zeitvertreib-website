@@ -40,8 +40,6 @@ export async function handleGetStats(request: Request, env: Env): Promise<Respon
   }
 }
 
-
-
 export async function handlePostStats(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
