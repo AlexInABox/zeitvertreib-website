@@ -3,11 +3,13 @@
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "afkreplace", "afkreplace\afkreplace.csproj", "{E1BD143F-4951-45C6-B975-8CF48097F137}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afkreplace", "Afkreplace\Afkreplace.csproj", "{E1BD143F-4951-45C6-B975-8CF48097F137}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "swapped", "swapped\swapped.csproj", "{9ACACCC7-CC43-4120-958F-A6D949E55256}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swapped", "Swapped\Swapped.csproj", "{9ACACCC7-CC43-4120-958F-A6D949E55256}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zvupdater", "zvupdater\zvupdater.csproj", "{FF1CE1F4-F005-44C7-941C-B9D12ABB103B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Updater", "Updater\Updater.csproj", "{FF1CE1F4-F005-44C7-941C-B9D12ABB103B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracked", "Tracked\Tracked.csproj", "{8FA93B5B-DB37-45D6-9F66-D56B617E3A61}"
 EndProject
 
 Global
@@ -21,5 +23,7 @@ Global
 		{9ACACCC7-CC43-4120-958F-A6D949E55256}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FF1CE1F4-F005-44C7-941C-B9D12ABB103B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF1CE1F4-F005-44C7-941C-B9D12ABB103B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FA93B5B-DB37-45D6-9F66-D56B617E3A61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FA93B5B-DB37-45D6-9F66-D56B617E3A61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -131,36 +131,6 @@ export interface GetStatsResponse {
   stats: Statistics;
 }
 
-/** POST /stats request body */
-export interface PostStatsRequest {
-  players: Record<
-    string,
-    {
-      timePlayed?: number;
-      roundsPlayed?: number;
-      medkits?: number;
-      colas?: number;
-      adrenaline?: number;
-      pocketEscapes?: number;
-      zvc?: number;
-      snakeScore?: number;
-      fakeRankAllowed?: boolean;
-      fakeRankAdmin?: boolean;
-      username?: string;
-    }
-  >;
-  kills: {
-    Attacker: string;
-    Target: string;
-    Timestamp: number;
-  }[];
-}
-
-/** POST /stats response */
-export interface PostStatsResponse {
-  success: boolean;
-}
-
 // ============================================================================
 // Leaderboard Types
 // ============================================================================
@@ -253,7 +223,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -540,5 +510,71 @@ export interface SwappedRequest {
 
 /** POST /swapped/ response */
 export interface SwappedResponse {
+  success: boolean;
+}
+
+
+// ============================================================================
+// ZVC Types
+// ============================================================================
+
+/** GET /zvc response */
+export interface ZvcGetResponse {
+  users: {
+    userid: string;
+    zvc: number;
+  }[];
+}
+
+/** POST /transfer-zvc request */
+export interface TransferZvcRequest {
+  recipient: string;
+  amount: number;
+}
+
+/** POST /transfer-zvc response */
+export interface TransferZvcResponse {
+  success: boolean;
+  message: string;
+  transfer: {
+    amount: number;
+    tax: number;
+    totalCost: number;
+    recipient: string;
+    senderNewBalance: number;
+    recipientNewBalance: number;
+  };
+}
+
+// ============================================================================
+// Stats Types
+// ============================================================================
+
+/** POST /stats request */
+export interface StatsPostRequest {
+  players:
+  {
+    userid: string;
+    timePlayed?: number;
+    roundsPlayed?: number;
+    medkits?: number;
+    colas?: number;
+    adrenaline?: number;
+    pocketEscapes?: number;
+    zvc?: number;
+    snakeScore?: number;
+    fakeRankAllowed?: boolean;
+    fakeRankAdmin?: boolean;
+    username?: string;
+  }[];
+  kills: {
+    Attacker: string;
+    Target: string;
+    Timestamp: number;
+  }[];
+}
+
+/** POST /stats response */
+export interface StatsPostResponse {
   success: boolean;
 }

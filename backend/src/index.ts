@@ -92,6 +92,7 @@ const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext
   //Public endpoints (no auth)
   'GET:/public/stats': handleGetPublicStats,
   'GET:/public/zvc': handleGetZeitvertreibCoins,
+  'GET:/zvc': handleGetZeitvertreibCoins,
   'GET:/cases/upload': handleCaseFileUpload,
   'GET:/cases': handleListCases,
   'POST:/cases': handleCreateCase,

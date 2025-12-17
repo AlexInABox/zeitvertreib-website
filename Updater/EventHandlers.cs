@@ -10,7 +10,7 @@ using LabApi.Features.Wrappers;
 using MEC;
 using Newtonsoft.Json.Linq;
 
-namespace zvupdater;
+namespace updater;
 
 public static class EventHandlers
 {

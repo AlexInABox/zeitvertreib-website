@@ -2,78 +2,49 @@ import { drizzle } from 'drizzle-orm/d1';
 import { inArray, eq } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
 import { createResponse, validateSession } from '../utils.js';
+import type { ZvcGetResponse } from '@zeitvertreib/types';
 
-interface ZvcResponse {
-  userId: string;
-  zvc: number;
-}
-
+/**
+ * GET /zvc
+ * Public endpoint to retrieve ZVC balances for multiple users
+ * Query params: userId (can be repeated)
+ */
 export async function handleGetZeitvertreibCoins(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
-  const userIds = new URL(request.url).searchParams.getAll('userId');
+  const url = new URL(request.url);
+  const userIds = url.searchParams.getAll('userId');
 
   if (userIds.length === 0) {
-    return createResponse([], 200, origin);
+    const emptyResponse: ZvcGetResponse = { users: [] };
+    return createResponse(emptyResponse, 200, origin);
   }
 
   const db = drizzle(env.ZEITVERTREIB_DATA);
-  const steamIdsToQuery: string[] = [];
-  const discordIdsToQuery: string[] = [];
-  const idMap: { [dbId: string]: string } = {};
 
-  // Parse and categorize user IDs
-  for (const id of userIds) {
-    const [value, type] = id.split('@');
-    if (!value || !type) continue;
-
-    if (type === 'steam') {
-      steamIdsToQuery.push(id);
-      idMap[id] = id;
-    } else if (type === 'discord') {
-      discordIdsToQuery.push(value);
-      idMap[value] = id;
+  userIds.forEach((id, index) => {
+    if (!id.endsWith('@steam')) {
+      userIds[index] = `${id}@steam`;
     }
-  }
+  });
 
-  // Look up Discord users to get their Steam IDs
-  if (discordIdsToQuery.length > 0) {
-    const discordUsers = await db
-      .select({
-        steamid: schema.playerdata.id,
-        discordid: schema.playerdata.discordId,
-      })
-      .from(schema.playerdata)
-      .where(inArray(schema.playerdata.discordId, discordIdsToQuery));
-
-    for (const user of discordUsers) {
-      const originalId = user.discordid && idMap[user.discordid];
-      if (user.steamid && originalId) {
-        steamIdsToQuery.push(user.steamid);
-        idMap[user.steamid] = originalId;
-      }
-    }
-  }
-
-  if (steamIdsToQuery.length === 0) {
-    return createResponse([], 200, origin);
-  }
-
-  // Query ZVC for all Steam IDs
-  const zvcResult = await db
+  const results = await db
     .select({
-      steamid: schema.playerdata.id,
-      zvc: schema.playerdata.experience,
+      id: schema.playerdata.id,
+      experience: schema.playerdata.experience,
     })
     .from(schema.playerdata)
-    .where(inArray(schema.playerdata.id, [...new Set(steamIdsToQuery)]));
+    .where(inArray(schema.playerdata.id, userIds));
 
-  const response: ZvcResponse[] = zvcResult
-    .map((row) => ({
-      userId: idMap[row.steamid],
-      zvc: row.zvc ?? 0,
-    }))
-    .filter((item) => item.userId) as ZvcResponse[];
+  // Map results to the response format
+  const users = userIds.map((id) => {
+    const userData = results.find((row) => row.id === id);
+    return {
+      userid: id,
+      zvc: userData ? userData.experience || 0 : 0,
+    };
+  });
 
+  const response: ZvcGetResponse = { users };
   return createResponse(response, 200, origin);
 }
 

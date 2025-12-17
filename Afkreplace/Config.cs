@@ -1,4 +1,4 @@
-namespace AFKReplace;
+namespace afkreplace;
 
 public class Config
 {

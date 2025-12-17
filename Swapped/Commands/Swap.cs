@@ -6,11 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using CommandSystem;
 using LabApi.Features.Console;
-using LabApi.Features.Wrappers;
 using PlayerRoles;
 using Zeitvertreib.Types;
+using Player = LabApi.Features.Wrappers.Player;
 
-namespace Swapped.Commands;
+namespace swapped.Commands;
 
 [CommandHandler(typeof(ClientCommandHandler))]
 public class Swap : ICommand
