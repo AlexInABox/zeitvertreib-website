@@ -5,8 +5,6 @@ import { eq } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
 import type { PlayerlistPostRequest, PlayerlistPostRequestItem } from '@zeitvertreib/types';
 
-
-
 /**
  * Builds Discord avatar URL from user ID and avatar hash
  */
@@ -55,7 +53,10 @@ async function getDiscordUserAvatar(discordId: string, env: Env): Promise<string
 /**
  * Enriches playerlist with Discord information and fakerank data
  */
-async function enrichPlayerlistWithDiscordData(playerlist: PlayerlistPostRequestItem[], env: Env): Promise<PlayerlistPostRequestItem[]> {
+async function enrichPlayerlistWithDiscordData(
+  playerlist: PlayerlistPostRequestItem[],
+  env: Env,
+): Promise<PlayerlistPostRequestItem[]> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   console.log(`[Playerlist] Starting enrichment for ${playerlist.length} players`);
