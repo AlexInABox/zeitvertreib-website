@@ -1,4 +1,4 @@
-namespace updater;
+namespace Updater;
 
 public class Config
 {

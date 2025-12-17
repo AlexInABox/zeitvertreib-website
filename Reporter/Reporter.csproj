@@ -1,0 +1,6 @@
+<Project>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <PackageReference Include="Discord.Net" Version="3.18.0"/>
+    </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-namespace Updater;
+namespace Reporter;
 
 public class Translation
 {

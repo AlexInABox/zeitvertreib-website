@@ -10,7 +10,7 @@ using PlayerRoles;
 using Zeitvertreib.Types;
 using Player = LabApi.Features.Wrappers.Player;
 
-namespace swapped.Commands;
+namespace Swapped.Commands;
 
 [CommandHandler(typeof(ClientCommandHandler))]
 public class Swap : ICommand

@@ -223,7 +223,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -576,3 +576,24 @@ export interface StatsPostRequest {
 export interface StatsPostResponse {
   success: boolean;
 }
+
+
+// ============================================================================
+// Playerlist Types
+// ============================================================================
+
+export interface PlayerlistPostRequestItem {
+  Name: string;
+  UserId: string;
+  Team: string;
+  DiscordId?: string;
+  AvatarUrl?: string;
+  Fakerank?: string;
+  FakerankColor?: string;
+}
+
+/** POST /playerlist request*/
+export interface PlayerlistPostRequest {
+  players: PlayerlistPostRequestItem[];
+}
+
