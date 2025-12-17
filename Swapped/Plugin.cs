@@ -7,7 +7,7 @@ using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 using PlayerRoles;
 
-namespace swapped;
+namespace Swapped;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>

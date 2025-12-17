@@ -9,7 +9,7 @@ using PlayerRoles;
 using UnityEngine;
 using Random = System.Random;
 
-namespace afkreplace;
+namespace Afkreplace;
 
 public static class EventHandlers
 {

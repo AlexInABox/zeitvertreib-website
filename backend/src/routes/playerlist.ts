@@ -3,16 +3,7 @@ import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
-
-interface PlayerListItem {
-  Name: string;
-  UserId: string;
-  Team: string;
-  DiscordId?: string;
-  AvatarUrl?: string;
-  Fakerank?: string;
-  FakerankColor?: string;
-}
+import type { PlayerlistPostRequest, PlayerlistPostRequestItem } from '@zeitvertreib/types';
 
 /**
  * Builds Discord avatar URL from user ID and avatar hash
@@ -62,7 +53,10 @@ async function getDiscordUserAvatar(discordId: string, env: Env): Promise<string
 /**
  * Enriches playerlist with Discord information and fakerank data
  */
-async function enrichPlayerlistWithDiscordData(playerlist: PlayerListItem[], env: Env): Promise<PlayerListItem[]> {
+async function enrichPlayerlistWithDiscordData(
+  playerlist: PlayerlistPostRequestItem[],
+  env: Env,
+): Promise<PlayerlistPostRequestItem[]> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   console.log(`[Playerlist] Starting enrichment for ${playerlist.length} players`);
@@ -94,7 +88,7 @@ async function enrichPlayerlistWithDiscordData(playerlist: PlayerListItem[], env
           return player;
         }
 
-        const enrichedPlayer: PlayerListItem = { ...player };
+        const enrichedPlayer: PlayerlistPostRequestItem = { ...player };
 
         // Add Discord data if available
         if (playerData.discordId) {
@@ -184,7 +178,7 @@ export async function handleGetPlayerlist(request: Request, env: Env): Promise<R
       );
     }
 
-    const playerlistData = (await response.json()) as PlayerListItem[];
+    const playerlistData = (await response.json()) as PlayerlistPostRequestItem[];
 
     return createResponse(playerlistData, 200, origin);
   } catch (error) {
@@ -208,11 +202,11 @@ export async function handleUpdatePlayerlist(request: Request, env: Env): Promis
 
   try {
     // Parse request body
-    const playerlistData = (await request.json()) as PlayerListItem[];
-    console.log(`[Playerlist POST] Received playerlist with ${playerlistData.length} players`);
+    const requestBody = (await request.json()) as PlayerlistPostRequest;
+    console.log(`[Playerlist POST] Received playerlist with ${requestBody.players.length} players`);
 
     // Enrich playerlist with Discord data before storing
-    const enrichedPlayerlist = await enrichPlayerlistWithDiscordData(playerlistData, env);
+    const enrichedPlayerlist = await enrichPlayerlistWithDiscordData(requestBody.players, env);
     console.log(`[Playerlist POST] Storing enriched playerlist`);
 
     // Get Durable Object instance

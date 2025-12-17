@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Updater", "Updater\Updater.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracked", "Tracked\Tracked.csproj", "{8FA93B5B-DB37-45D6-9F66-D56B617E3A61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reporter", "Reporter\Reporter.csproj", "{D0701339-06A3-4373-84F2-29894B8DBC95}"
+EndProject
 
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,5 +27,7 @@ Global
 		{FF1CE1F4-F005-44C7-941C-B9D12ABB103B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8FA93B5B-DB37-45D6-9F66-D56B617E3A61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FA93B5B-DB37-45D6-9F66-D56B617E3A61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0701339-06A3-4373-84F2-29894B8DBC95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0701339-06A3-4373-84F2-29894B8DBC95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,21 +1,21 @@
-﻿using System;
+using System;
 using LabApi.Features;
 using LabApi.Features.Console;
 using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 
-namespace Updater;
+namespace Reporter;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>
 {
-    public override string Name { get; } = "Updater";
+    public override string Name { get; } = "Reporter";
 
     public override string Description { get; } =
-        "Auto updater for plugins made by AlexInABox. Keeps ZV plugins up to date with the latest versions from GitHub.";
+        "Just some code omg--.";
 
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(1, 0, 0);
+    public override Version Version { get; } = new(1, 5, 0);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
     public Translation Translation { get; private set; }
 

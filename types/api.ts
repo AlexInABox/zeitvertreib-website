@@ -576,3 +576,22 @@ export interface StatsPostRequest {
 export interface StatsPostResponse {
   success: boolean;
 }
+
+// ============================================================================
+// Playerlist Types
+// ============================================================================
+
+export interface PlayerlistPostRequestItem {
+  Name: string;
+  UserId: string;
+  Team: string;
+  DiscordId?: string;
+  AvatarUrl?: string;
+  Fakerank?: string;
+  FakerankColor?: string;
+}
+
+/** POST /playerlist request*/
+export interface PlayerlistPostRequest {
+  players: PlayerlistPostRequestItem[];
+}

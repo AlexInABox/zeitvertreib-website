@@ -1,4 +1,4 @@
-namespace afkreplace;
+namespace Afkreplace;
 
 public class Config
 {
