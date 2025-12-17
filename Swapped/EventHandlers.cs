@@ -7,7 +7,7 @@ using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
 
-namespace Swapped;
+namespace swapped;
 
 public static class EventHandlers
 {

@@ -1,4 +1,4 @@
-namespace Swapped;
+namespace swapped;
 
 public class Translation
 {

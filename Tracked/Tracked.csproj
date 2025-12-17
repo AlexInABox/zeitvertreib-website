@@ -1,0 +1,6 @@
+﻿<Project>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <Reference Include="SnakeAPI" HintPath="$(EXILED_REFERENCES)\SnakeAPI.dll" Publicize="false"/>
+    </ItemGroup>
+</Project>

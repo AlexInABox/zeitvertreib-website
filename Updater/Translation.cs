@@ -1,4 +1,4 @@
-namespace zvupdater;
+namespace updater;
 
 public class Translation
 {

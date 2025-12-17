@@ -11,6 +11,7 @@ import {
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
+import type { StatsPostRequest } from '@zeitvertreib/types';
 
 export async function handleGetStats(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -39,30 +40,6 @@ export async function handleGetStats(request: Request, env: Env): Promise<Respon
   }
 }
 
-interface StatsPayload {
-  players: Record<
-    string,
-    {
-      timePlayed?: number;
-      roundsPlayed?: number;
-      medkits?: number;
-      colas?: number;
-      adrenaline?: number;
-      pocketEscapes?: number;
-      zvc?: number;
-      snakeScore?: number;
-      fakeRankAllowed?: boolean;
-      fakeRankAdmin?: boolean;
-      username?: string;
-    }
-  >;
-  kills: {
-    Attacker: string;
-    Target: string;
-    Timestamp: number;
-  }[];
-}
-
 export async function handlePostStats(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
@@ -71,9 +48,9 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     return createResponse({ error: 'Unauthorized' }, 401);
   }
 
-  let body: StatsPayload;
+  let body: StatsPostRequest;
   try {
-    body = (await request.json()) as StatsPayload;
+    body = (await request.json()) as StatsPostRequest;
   } catch {
     return createResponse({ error: 'Invalid JSON' }, 400);
   }
@@ -85,37 +62,40 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     return createResponse({ error: 'Missing required fields' }, 400);
   }
 
-  for (const [userId, stats] of Object.entries(body.players)) {
+  for (const player of body.players) {
+    if (!player.userid.endsWith('@steam')) {
+      player.userid = `${player.userid}@steam`;
+    }
     // Check if userId already exists in the database. If not create with userId and default values
-    const existingPlayer = await db.select().from(playerdata).where(eq(playerdata.id, userId)).limit(1);
+    const existingPlayer = await db.select().from(playerdata).where(eq(playerdata.id, player.userid)).limit(1);
     if (existingPlayer.length === 0) {
       await db.insert(playerdata).values({
-        id: userId,
+        id: player.userid,
       });
     }
 
     await db
       .update(playerdata)
       .set({
-        experience: increment(playerdata.experience, stats.zvc || 0),
-        playtime: increment(playerdata.playtime, stats.timePlayed || 0),
-        roundsplayed: increment(playerdata.roundsplayed, stats.roundsPlayed || 0),
-        usedmedkits: increment(playerdata.usedadrenaline, stats.medkits || 0),
-        usedcolas: increment(playerdata.usedcolas, stats.colas || 0),
-        pocketescapes: increment(playerdata.pocketescapes, stats.pocketEscapes || 0),
-        usedadrenaline: increment(playerdata.usedadrenaline, stats.adrenaline || 0),
-        snakehighscore: greatest(playerdata.snakehighscore, stats.snakeScore || 0),
-        killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === userId).length),
-        deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === userId).length),
-        fakerankUntil: stats.fakeRankAllowed
+        experience: increment(playerdata.experience, player.zvc || 0),
+        playtime: increment(playerdata.playtime, player.timePlayed || 0),
+        roundsplayed: increment(playerdata.roundsplayed, player.roundsPlayed || 0),
+        usedmedkits: increment(playerdata.usedmedkits, player.medkits || 0),
+        usedcolas: increment(playerdata.usedcolas, player.colas || 0),
+        pocketescapes: increment(playerdata.pocketescapes, player.pocketEscapes || 0),
+        usedadrenaline: increment(playerdata.usedadrenaline, player.adrenaline || 0),
+        snakehighscore: greatest(playerdata.snakehighscore, player.snakeScore || 0),
+        killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === player.userid).length),
+        deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === player.userid).length),
+        fakerankUntil: player.fakeRankAllowed
           ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
           : playerdata.fakerankUntil,
-        fakerankadminUntil: stats.fakeRankAdmin
+        fakerankadminUntil: player.fakeRankAdmin
           ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
           : playerdata.fakerankadminUntil,
-        username: stats.username || playerdata.username,
+        username: player.username || playerdata.username,
       })
-      .where(eq(playerdata.id, userId));
+      .where(eq(playerdata.id, player.userid));
   }
 
   // Add all kill records to the kills table
