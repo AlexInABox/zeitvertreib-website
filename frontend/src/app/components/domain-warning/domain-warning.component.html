@@ -1,0 +1,20 @@
+<div class="warning-overlay" *ngIf="showWarning">
+  <div class="warning-modal">
+    <h2 class="warning-title">Experimentelle Version!!</h2>
+    <p class="warning-message">
+      Du nutzt eine experimentelle Version dieser Website. Funktionen können eingeschränkt oder instabil sein.
+      Transaktionen, einschließlich Käufe mit ZVC, können nicht garantiert werden.
+    </p>
+    <div class="warning-buttons">
+      <button class="btn btn-primary" (click)="switchToProduction()">Zur Hauptseite wechseln</button>
+      <button
+        class="btn btn-secondary"
+        (click)="dismissWarning()"
+        [disabled]="!allowDismiss"
+        [attr.aria-disabled]="!allowDismiss"
+      >
+        {{ allowDismiss ? 'Ich weiß, was ich tue' : 'Ich weiß, was ich tue (' + secondsLeft + 's)' }}
+      </button>
+    </div>
+  </div>
+</div>

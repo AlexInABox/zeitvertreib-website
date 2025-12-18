@@ -1,0 +1,130 @@
+.warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.warning-modal {
+  background: rgba(255, 255, 255, 0.85);
+  color: #111827;
+  border: 1px solid rgba(180, 27, 133, 0.12);
+  border-radius: 14px;
+  padding: 1.75rem;
+  max-width: 560px;
+  width: 92%;
+  box-shadow: 0 8px 36px rgba(15, 23, 42, 0.12);
+  animation: slideUp 0.32s cubic-bezier(0.2, 0.9, 0.4, 1);
+  text-align: left;
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.warning-icon {
+  font-size: 2.25rem;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+}
+
+.warning-title {
+  font-family: 'BerlinTypeWeb', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #0f1724;
+  margin: 0 0 0.5rem 0;
+}
+
+.warning-message {
+  font-family: 'BerlinTypeWeb', sans-serif;
+  font-size: 1rem;
+  color: #1f2937;
+  line-height: 1.5;
+  margin: 0 0 1.25rem 0;
+}
+
+.warning-message strong {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.warning-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  font-family: 'BerlinTypeWeb', sans-serif;
+  font-weight: 700;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #8a1565 100%);
+  color: var(--primary-contrast);
+  box-shadow: 0 8px 28px rgba(180, 27, 133, 0.12);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #0f1724;
+  border: 1px solid rgba(15, 23, 36, 0.08);
+}
+
+.btn-secondary[disabled],
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .warning-modal {
+    padding: 1.25rem;
+  }
+  .warning-title {
+    font-size: 1.25rem;
+  }
+  .warning-message {
+    font-size: 0.95rem;
+  }
+  .warning-buttons {
+    justify-content: center;
+    flex-direction: column;
+  }
+}

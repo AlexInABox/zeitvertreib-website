@@ -1,15 +1,11 @@
-name: Build and Deploy
+name: Build and Deploy (Production)
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
 
 jobs:
   # ============================================
@@ -19,6 +15,7 @@ jobs:
   build-types:
     name: 🔨 Build Types
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: types
@@ -40,9 +37,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Upload types artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: types-dist
+          path: types/dist/
+
   discover-plugins:
     name: 🔍 Discover C# Plugins
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       projects: ${{ steps.set-projects.outputs.projects }}
     steps:
@@ -56,79 +60,21 @@ jobs:
           echo "projects=$projects" >> $GITHUB_OUTPUT
 
   build-plugins:
-    name: 🔨 Build C# Plugins
+    name: 🔨 Build C# Plugin
     needs: [build-types, discover-plugins]
-    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         plugin: ${{ fromJson(needs.discover-plugins.outputs.projects) }}
-    env:
-      REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
-      EXILED_REFERENCES: ${{ github.workspace }}/References
-      AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
-      SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: "npm"
-          cache-dependency-path: types/package-lock.json
-
-      - name: Build shared types
-        working-directory: types
-        run: |
-          npm install
-          npm run build
-
-      - name: Restore NuGet packages
-        run: nuget restore ${{ matrix.plugin }}
-
-      - name: Download dependencies
-        shell: pwsh
-        run: |
-          Invoke-WebRequest -Uri $env:REFERENCES_URL -OutFile "$env:GITHUB_WORKSPACE/Dev.zip"
-          Expand-Archive -Path "$env:GITHUB_WORKSPACE/Dev.zip" -DestinationPath $env:EXILED_REFERENCES
-
-          Invoke-WebRequest -Uri $env:AUDIO_PLAYER_API_URL -OutFile "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip"
-          Expand-Archive -Path "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip" -DestinationPath "$env:GITHUB_WORKSPACE/AudioPlayerApi"
-
-          Get-ChildItem "$env:GITHUB_WORKSPACE/AudioPlayerApi/dependencies" -Filter *.dll | ForEach-Object {
-            $target = Join-Path $env:EXILED_REFERENCES $_.Name
-            if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
-          }
-
-          # Download SnakeAPI.dll directly into EXILED_REFERENCES
-          Invoke-WebRequest -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll") -ErrorAction Stop
-
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Build plugin
-        run: msbuild ${{ matrix.plugin }} -t:Rebuild -property:Configuration=Release
-
-      - name: Get plugin name
-        id: plugin-name
-        shell: pwsh
-        run: |
-          $pluginPath = "${{ matrix.plugin }}"
-          $pluginName = [System.IO.Path]::GetFileNameWithoutExtension($pluginPath)
-          echo "name=$pluginName" >> $env:GITHUB_OUTPUT
-
-      - name: Upload DLL as artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ steps.plugin-name.outputs.name }}-dll
-          path: ${{ steps.plugin-name.outputs.name }}/bin/Release/**/${{ steps.plugin-name.outputs.name }}.dll
+    uses: ./.github/workflows/build-plugin-reusable.yml
+    with:
+      plugin: ${{ matrix.plugin }}
 
   build-frontend:
     name: 🔨 Build Frontend
     runs-on: ubuntu-latest
+    needs: [build-types]
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -151,17 +97,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build (dev)
-        if: github.ref == 'refs/heads/dev'
-        run: npm run build:dev
-
-      - name: Build (prod)
-        if: github.ref == 'refs/heads/main'
+      - name: Build
         run: npm run build
 
   build-backend:
     name: 🔨 Build Backend
     runs-on: ubuntu-latest
+    needs: [build-types]
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
@@ -190,12 +133,7 @@ jobs:
       - name: Prepare environment
         run: cp .env.example .env
 
-      - name: Verify Wrangler types (dev)
-        if: github.ref == 'refs/heads/dev'
-        run: npx wrangler types -e dev
-
-      - name: Verify Wrangler types (prod)
-        if: github.ref == 'refs/heads/main'
+      - name: Verify Wrangler types
         run: npx wrangler types -e production
 
       - name: Test build with code schema
@@ -217,6 +155,7 @@ jobs:
   build-overwatch:
     name: 🔨 Build Overwatch
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v6
@@ -239,7 +178,7 @@ jobs:
     name: 🚀 Deploy Frontend
     runs-on: ubuntu-latest
     needs: [build-frontend, build-backend, build-overwatch, build-plugins]
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -258,34 +197,26 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build shared types
-        working-directory: types
-        run: npm install && npm run build
+      - name: Download types artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: types-dist
+          path: types/dist
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build (dev)
-        if: github.ref == 'refs/heads/dev'
-        run: npm run build:dev
-
-      - name: Build (prod)
-        if: github.ref == 'refs/heads/main'
+      - name: Build
         run: npm run build
 
-      - name: Deploy to Cloudflare (dev)
-        if: github.ref == 'refs/heads/dev'
-        run: npx wrangler deploy -e dev
-
-      - name: Deploy to Cloudflare (prod)
-        if: github.ref == 'refs/heads/main'
+      - name: Deploy to Cloudflare
         run: npx wrangler deploy -e production
 
   deploy-backend:
     name: 🚀 Deploy Backend
     runs-on: ubuntu-latest
     needs: [build-frontend, build-backend, build-overwatch, build-plugins]
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
@@ -304,9 +235,11 @@ jobs:
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
-      - name: Build shared types
-        working-directory: types
-        run: npm install && npm run build
+      - name: Download types artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: types-dist
+          path: types/dist
 
       - name: Install dependencies
         run: npm install
@@ -317,18 +250,14 @@ jobs:
       - name: Build
         run: npx tsc
 
-      - name: Deploy to Cloudflare (dev)
-        if: github.ref == 'refs/heads/dev'
-        run: npx wrangler deploy -e dev
-
       - name: Deploy to Cloudflare (prod)
-        if: github.ref == 'refs/heads/main'
         run: npx wrangler deploy -e production
 
   deploy-overwatch:
     name: 🚀 Deploy Overwatch
     runs-on: ubuntu-latest
     needs: [build-frontend, build-backend, build-overwatch, build-plugins]
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
@@ -368,7 +297,7 @@ jobs:
     name: 📦 Create GitHub Release
     runs-on: ubuntu-latest
     needs: [deploy-frontend, deploy-backend, deploy-overwatch]
-    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
     permissions:
       contents: write
 
