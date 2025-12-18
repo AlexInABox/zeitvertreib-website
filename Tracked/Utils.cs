@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using LabApi.Features.Wrappers;
 using MEC;
 using Zeitvertreib.Types;
 using Logger = LabApi.Features.Console.Logger;
@@ -21,7 +22,8 @@ public static class Utils
     {
         while (true)
         {
-            _ = FetchAllZvc();
+            if (!Round.IsRoundEnded)
+                _ = FetchAllZvc();
             yield return Timing.WaitForSeconds(15f);
         }
         // ReSharper disable once IteratorNeverReturns
