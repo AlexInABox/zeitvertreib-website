@@ -123,7 +123,7 @@ export const sprays = sqliteTable('sprays', {
   deletedAt: integer('deleted_at').notNull().default(0),
 });
 
-export const spray_bans = sqliteTable('spray_bans', {
+export const sprayBans = sqliteTable('spray_bans', {
   userid: text('userid').primaryKey(),
   bannedAt: integer('banned_at').notNull().default(0),
   reason: text('reason').notNull(),

@@ -15,7 +15,7 @@ import {
   isBooster,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { spray_bans } from '../db/schema.js';
+import { sprayBans } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { proxyFetch } from '../proxy.js';
 
@@ -121,7 +121,7 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
 
   // Check if user is spray banned
   const steamIdWithSuffix = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
-  const sprayBanResult = await db.select().from(spray_bans).where(eq(spray_bans.userid, steamIdWithSuffix)).limit(1);
+  const sprayBanResult = await db.select().from(sprayBans).where(eq(sprayBans.userid, steamIdWithSuffix)).limit(1);
 
   const sprayBanInfo = sprayBanResult[0];
   let bannedByUsername = null;

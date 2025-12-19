@@ -11,7 +11,7 @@ import { createResponse } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
-import { playerdata, sprays, spray_bans } from '../db/schema.js';
+import { playerdata, sprays, sprayBans } from '../db/schema.js';
 
 interface VerificationResult {
   isValid: boolean;
@@ -645,7 +645,7 @@ export async function handleDiscordBotInteractions(
 
                 // Add user to ban table with provided reason
                 await db
-                  .insert(spray_bans)
+                  .insert(sprayBans)
                   .values({
                     userid: userId,
                     bannedAt: currentTimestamp,
@@ -743,7 +743,7 @@ export async function handleDiscordBotInteractions(
                 }
 
                 // Remove from ban table
-                await db.delete(spray_bans).where(eq(spray_bans.userid, userId));
+                await db.delete(sprayBans).where(eq(sprayBans.userid, userId));
 
                 // Check if spray is deleted to determine which buttons to show
                 const sprayData = await db.select().from(sprays).where(eq(sprays.id, sprayId)).limit(1);
@@ -772,33 +772,33 @@ export async function handleDiscordBotInteractions(
                 // Show restore + ban buttons if spray is deleted, otherwise delete + ban buttons
                 const buttonComponents = isDeleted
                   ? [
-                      {
-                        type: 2,
-                        style: 2, // Gray
-                        label: 'Restore Spray',
-                        custom_id: `spray_undelete:${sprayId}:${userId}`,
-                      },
-                      {
-                        type: 2,
-                        style: 4, // Red
-                        label: 'Ban User',
-                        custom_id: `spray_ban:${sprayId}:${userId}`,
-                      },
-                    ]
+                    {
+                      type: 2,
+                      style: 2, // Gray
+                      label: 'Restore Spray',
+                      custom_id: `spray_undelete:${sprayId}:${userId}`,
+                    },
+                    {
+                      type: 2,
+                      style: 4, // Red
+                      label: 'Ban User',
+                      custom_id: `spray_ban:${sprayId}:${userId}`,
+                    },
+                  ]
                   : [
-                      {
-                        type: 2,
-                        style: 4, // Red
-                        label: 'Delete Spray',
-                        custom_id: `spray_delete:${sprayId}:${userId}`,
-                      },
-                      {
-                        type: 2,
-                        style: 4, // Red
-                        label: 'Ban User',
-                        custom_id: `spray_ban:${sprayId}:${userId}`,
-                      },
-                    ];
+                    {
+                      type: 2,
+                      style: 4, // Red
+                      label: 'Delete Spray',
+                      custom_id: `spray_delete:${sprayId}:${userId}`,
+                    },
+                    {
+                      type: 2,
+                      style: 4, // Red
+                      label: 'Ban User',
+                      custom_id: `spray_ban:${sprayId}:${userId}`,
+                    },
+                  ];
 
                 await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
                   body: {
