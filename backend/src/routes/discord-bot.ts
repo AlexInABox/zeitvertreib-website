@@ -644,12 +644,15 @@ export async function handleDiscordBotInteractions(
                 await db.update(sprays).set({ deletedAt: currentTimestamp }).where(eq(sprays.id, sprayId));
 
                 // Add user to ban table with provided reason
-                await db.insert(spray_bans).values({
-                  userid: userId,
-                  bannedAt: currentTimestamp,
-                  reason: reason,
-                  bannedByDiscordId: moderatorId,
-                }).onConflictDoNothing();
+                await db
+                  .insert(spray_bans)
+                  .values({
+                    userid: userId,
+                    bannedAt: currentTimestamp,
+                    reason: reason,
+                    bannedByDiscordId: moderatorId,
+                  })
+                  .onConflictDoNothing();
 
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {
@@ -665,7 +668,10 @@ export async function handleDiscordBotInteractions(
                 updatedEmbed.title = '🔨 User banned from sprays!';
                 updatedEmbed.color = 0x7c2d12; // Dark red
                 const epochTimestamp = Math.floor(Date.now() / 1000);
-                const formattedReason = reason.split('\n').map((line: string) => '> ' + line).join('\n');
+                const formattedReason = reason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
                 updatedEmbed.description += `\n–––––––––––\n**Banned** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
 
                 await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
@@ -757,39 +763,42 @@ export async function handleDiscordBotInteractions(
                 updatedEmbed.title = '✅ User unbanned from sprays!';
                 updatedEmbed.color = 0x10b981; // Green
                 const epochTimestamp = Math.floor(Date.now() / 1000);
-                const formattedReason = reason.split('\n').map((line: string) => '> ' + line).join('\n');
+                const formattedReason = reason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
                 updatedEmbed.description += `\n–––––––––––\n**Unbanned** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
 
                 // Show restore + ban buttons if spray is deleted, otherwise delete + ban buttons
                 const buttonComponents = isDeleted
                   ? [
-                    {
-                      type: 2,
-                      style: 2, // Gray
-                      label: 'Restore Spray',
-                      custom_id: `spray_undelete:${sprayId}:${userId}`,
-                    },
-                    {
-                      type: 2,
-                      style: 4, // Red
-                      label: 'Ban User',
-                      custom_id: `spray_ban:${sprayId}:${userId}`,
-                    },
-                  ]
+                      {
+                        type: 2,
+                        style: 2, // Gray
+                        label: 'Restore Spray',
+                        custom_id: `spray_undelete:${sprayId}:${userId}`,
+                      },
+                      {
+                        type: 2,
+                        style: 4, // Red
+                        label: 'Ban User',
+                        custom_id: `spray_ban:${sprayId}:${userId}`,
+                      },
+                    ]
                   : [
-                    {
-                      type: 2,
-                      style: 4, // Red
-                      label: 'Delete Spray',
-                      custom_id: `spray_delete:${sprayId}:${userId}`,
-                    },
-                    {
-                      type: 2,
-                      style: 4, // Red
-                      label: 'Ban User',
-                      custom_id: `spray_ban:${sprayId}:${userId}`,
-                    },
-                  ];
+                      {
+                        type: 2,
+                        style: 4, // Red
+                        label: 'Delete Spray',
+                        custom_id: `spray_delete:${sprayId}:${userId}`,
+                      },
+                      {
+                        type: 2,
+                        style: 4, // Red
+                        label: 'Ban User',
+                        custom_id: `spray_ban:${sprayId}:${userId}`,
+                      },
+                    ];
 
                 await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
                   body: {

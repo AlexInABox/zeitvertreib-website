@@ -121,11 +121,7 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
 
   // Check if user is spray banned
   const steamIdWithSuffix = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
-  const sprayBanResult = await db
-    .select()
-    .from(spray_bans)
-    .where(eq(spray_bans.userid, steamIdWithSuffix))
-    .limit(1);
+  const sprayBanResult = await db.select().from(spray_bans).where(eq(spray_bans.userid, steamIdWithSuffix)).limit(1);
 
   const sprayBanInfo = sprayBanResult[0];
   let bannedByUsername = null;
