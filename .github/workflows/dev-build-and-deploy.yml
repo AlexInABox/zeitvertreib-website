@@ -34,11 +34,30 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get last successful run commit
+        id: last-success
+        run: |
+          # Get the SHA of the last successful workflow run
+          LAST_SUCCESS_SHA=$(gh run list \
+            --workflow="${{ github.workflow }}" \
+            --branch="${{ github.ref_name }}" \
+            --status=success \
+            --limit=1 \
+            --json headSha \
+            --jq '.[0].headSha')
+
+          # Fallback to github.event.before if no previous successful run
+          BASE_SHA="${LAST_SUCCESS_SHA:-${{ github.event.before }}}"
+          echo "base=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "Using base SHA: $BASE_SHA"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Check path filters
         uses: dorny/paths-filter@v3
         id: filter
         with:
-          base: ${{ github.event.before }}
+          base: ${{ steps.last-success.outputs.base }}
           filters: |
             types:
               - 'types/**'
@@ -56,8 +75,11 @@ jobs:
       - name: Find changed plugins
         id: find-plugins
         run: |
+          # Get base SHA from previous step
+          BASE_SHA="${{ steps.last-success.outputs.base }}"
+
           # Get list of changed files
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA ${{ github.sha }})
 
           # Find changed plugin directories (start with capital letter)
           PLUGINS=$(echo "$CHANGED_FILES" | grep -E '^[A-Z][^/]*/' | cut -d'/' -f1 | sort -u || true)
