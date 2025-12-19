@@ -444,27 +444,24 @@ export async function handleDiscordBotInteractions(
                   updatedEmbed.color = 0xef4444; // Red
                   updatedEmbed.description += `\n\n**Deleted by:** <@${moderatorId}> (${moderatorName})`;
 
-                  await rest.patch(
-                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
-                    {
-                      body: {
-                        embeds: [updatedEmbed],
-                        components: [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 2, // Gray
-                                label: 'Undelete Spray',
-                                custom_id: `spray_undelete:${sprayId}:${userId}`,
-                              },
-                            ],
-                          },
-                        ],
-                      },
+                  await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                    body: {
+                      embeds: [updatedEmbed],
+                      components: [
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 2, // Gray
+                              label: 'Undelete Spray',
+                              custom_id: `spray_undelete:${sprayId}:${userId}`,
+                            },
+                          ],
+                        },
+                      ],
                     },
-                  );
+                  });
                 } else {
                   // Mark spray as undeleted
                   await db.update(sprays).set({ deletedAt: 0 }).where(eq(sprays.id, sprayId));
@@ -482,27 +479,24 @@ export async function handleDiscordBotInteractions(
                     .replace(/\n\n\*\*Restored by:.*$/m, '');
                   updatedEmbed.description += `\n\n**Restored by:** <@${moderatorId}> (${moderatorName})`;
 
-                  await rest.patch(
-                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
-                    {
-                      body: {
-                        embeds: [updatedEmbed],
-                        components: [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 4, // Red
-                                label: 'Delete Spray',
-                                custom_id: `spray_delete:${sprayId}:${userId}`,
-                              },
-                            ],
-                          },
-                        ],
-                      },
+                  await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                    body: {
+                      embeds: [updatedEmbed],
+                      components: [
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 4, // Red
+                              label: 'Delete Spray',
+                              custom_id: `spray_delete:${sprayId}:${userId}`,
+                            },
+                          ],
+                        },
+                      ],
                     },
-                  );
+                  });
                 }
               } catch (error) {
                 console.error('Spray moderation error:', error);
