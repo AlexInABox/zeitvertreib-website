@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net4.8.1</TargetFramework>
+        <LangVersion>12.0</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" ExcludeAssets="runtime" ReferenceOutputAssembly="false" Private="true"/>
+        <Reference Include="Assembly-CSharp" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp.dll" Publicize="true"/>
+        <Reference Include="Assembly-CSharp-firstpass" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp-firstpass.dll" Private="false"/>
+        <Reference Include="Mirror" HintPath="$(EXILED_REFERENCES)\Mirror.dll" Private="false" Publicize="true"/>
+        <Reference Include="System.Net.Http" HintPath="$(EXILED_REFERENCES)\System.Net.Http.dll" Private="false"/>
+        <Reference Include="UnityEngine.CoreModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.CoreModule.dll" Private="false"/>
+        <Reference Include="UnityEngine.PhysicsModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="false"/>
+        <Reference Include="CommandSystem.Core" HintPath="$(EXILED_REFERENCES)\CommandSystem.Core.dll" Private="false"/>
+        <Reference Include="AudioPlayerApi" HintPath="$(EXILED_REFERENCES)\AudioPlayerApi.dll" Private="false"/>
+        <Reference Include="TextMeshPro" HintPath="$(EXILED_REFERENCES)\Unity.TextMeshPro.dll" Private="false"/>
+        <Reference Include="UnityEngine.UI" HintPath="$(EXILED_REFERENCES)\UnityEngine.UI.dll" Private="false"/>
+        <!-- Custom LabApi.dll for testing incase of development LabApi builds: -->
+        <!-- <Reference Include="Northwood.LabAPI" HintPath="$(EXILED_REFERENCES)\LabApi.dll" Private="false"/> -->
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Northwood.LabAPI" Version="1.1.4"/>
+    </ItemGroup>
+</Project>

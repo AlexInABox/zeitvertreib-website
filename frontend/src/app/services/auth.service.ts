@@ -216,6 +216,12 @@ export class AuthService {
     return currentTimestamp < fakerankOverrideUntil;
   }
 
+  // Check if user is a donator
+  isDonator(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isDonator ?? false;
+  }
+
   // Get remaining fakerank override time in seconds
   getFakerankOverrideTimeRemaining(): number {
     const userData = this.currentUserDataSubject.value;

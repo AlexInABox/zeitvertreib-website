@@ -12,18 +12,10 @@ import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
 import {
-  handleUploadSpray,
+  handlePostSpray,
   handleGetSpray,
-  handleGetSprayString,
   handleDeleteSpray,
-  handleModerationDelete,
-  handleModerationBan,
-  handleModerationUnban,
-  handleModerationUndelete,
-  handleGetUploadLimits,
-  handleGetSprayBanStatus,
-  handleBackgroundRemoval,
-} from './routes/spray.js';
+} from './routes/spray-new.js';
 import {
   getFakerank,
   updateFakerank,
@@ -103,17 +95,9 @@ const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext
   'DELETE:/cases/file': handleDeleteCaseFile,
 
   // Spray routes
-  'POST:/spray/upload': handleUploadSpray,
-  'POST:/spray/remove-background': handleBackgroundRemoval,
-  'GET:/spray/image': handleGetSpray,
-  'GET:/spray/string': handleGetSprayString,
-  'DELETE:/spray/delete': handleDeleteSpray,
-  'GET:/spray/moderate/delete': handleModerationDelete,
-  'GET:/spray/moderate/ban': handleModerationBan,
-  'GET:/spray/moderate/unban': handleModerationUnban,
-  'GET:/spray/moderate/undelete': handleModerationUndelete,
-  'GET:/spray/upload-limits': handleGetUploadLimits,
-  'GET:/spray/ban-status': handleGetSprayBanStatus,
+  'POST:/spray': handlePostSpray,
+  'GET:/spray': handleGetSpray,
+  'DELETE:/spray': handleDeleteSpray,
 
   // Fakerank routes
   'GET:/fakerank': getFakerank,

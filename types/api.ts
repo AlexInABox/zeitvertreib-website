@@ -223,7 +223,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -594,4 +594,38 @@ export interface PlayerlistPostRequestItem {
 /** POST /playerlist request*/
 export interface PlayerlistPostRequest {
   players: PlayerlistPostRequestItem[];
+}
+
+// ============================================================================
+// Spray Types
+// ============================================================================
+
+type Base64URLString = string;
+
+/** POST /spray request */
+export interface SprayPostRequest {
+  name: string;
+  full_res: Base64URLString;
+  text_toy: string;
+}
+
+/** DELETE /spray request */
+export interface SprayDeleteRequest {
+  id: number;
+}
+
+/** GET /spray request params*/
+export interface SprayGetRequest {
+  full_res?: boolean;
+  text_toy?: boolean;
+}
+
+/** GET /spray response */
+export interface SprayGetResponseItem {
+  sprays: {
+    id: number;
+    name: string;
+    full_res?: Base64URLString;
+    text_toy?: string;
+  }[];
 }

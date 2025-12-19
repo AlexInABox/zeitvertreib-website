@@ -28,7 +28,7 @@ VALUES (
   'unknown',
   'unknown',
   2840140800,
-  2840140800,
+  0,
   2840140800
 )
 ON CONFLICT(discordId) DO UPDATE SET

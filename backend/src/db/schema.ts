@@ -114,3 +114,11 @@ export const adventCalendar = sqliteTable('advent_calendar', {
   day23: integer('day_23').notNull().default(0),
   day24: integer('day_24').notNull().default(0),
 });
+
+export const sprays = sqliteTable('sprays', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userid: text('userid').notNull(),
+  name: text('name').notNull(),
+  uploadedAt: integer('uploaded_at').notNull().default(0),
+  deletedAt: integer('deleted_at').notNull().default(0),
+});
