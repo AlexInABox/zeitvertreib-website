@@ -11,7 +11,7 @@ import { createResponse } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
-import { playerdata } from '../db/schema.js';
+import { playerdata, sprays } from '../db/schema.js';
 
 interface VerificationResult {
   isValid: boolean;
@@ -387,6 +387,130 @@ export async function handleDiscordBotInteractions(
         }
 
         // Acknowledge the interaction
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle spray delete/undelete button
+    if (customId.startsWith('spray_delete:') || customId.startsWith('spray_undelete:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const action = parts[0]; // 'spray_delete' or 'spray_undelete'
+        const sprayId = parseInt(parts[1] || '0');
+        const userId = parts[2] || '';
+
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        if (!moderatorId || !sprayId) {
+          return createResponse({ error: 'Invalid spray moderation data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                if (action === 'spray_delete') {
+                  // Mark spray as deleted
+                  const currentTimestamp = Math.floor(Date.now() / 1000);
+                  await db.update(sprays).set({ deletedAt: currentTimestamp }).where(eq(sprays.id, sprayId));
+
+                  // Update Discord message
+                  const currentMessage: any = await rest.get(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                  );
+
+                  const updatedEmbed = currentMessage.embeds[0];
+                  updatedEmbed.title = '🗑️ Spray deleted!';
+                  updatedEmbed.color = 0xef4444; // Red
+                  updatedEmbed.description += `\n\n**Deleted by:** <@${moderatorId}> (${moderatorName})`;
+
+                  await rest.patch(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                    {
+                      body: {
+                        embeds: [updatedEmbed],
+                        components: [
+                          {
+                            type: 1,
+                            components: [
+                              {
+                                type: 2,
+                                style: 2, // Gray
+                                label: 'Undelete Spray',
+                                custom_id: `spray_undelete:${sprayId}:${userId}`,
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  );
+                } else {
+                  // Mark spray as undeleted
+                  await db.update(sprays).set({ deletedAt: 0 }).where(eq(sprays.id, sprayId));
+
+                  // Update Discord message
+                  const currentMessage: any = await rest.get(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                  );
+
+                  const updatedEmbed = currentMessage.embeds[0];
+                  updatedEmbed.title = '🔄 Spray restored!';
+                  updatedEmbed.color = 0x10b981; // Green
+                  updatedEmbed.description = updatedEmbed.description
+                    .replace(/\n\n\*\*Deleted by:.*$/m, '')
+                    .replace(/\n\n\*\*Restored by:.*$/m, '');
+                  updatedEmbed.description += `\n\n**Restored by:** <@${moderatorId}> (${moderatorName})`;
+
+                  await rest.patch(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                    {
+                      body: {
+                        embeds: [updatedEmbed],
+                        components: [
+                          {
+                            type: 1,
+                            components: [
+                              {
+                                type: 2,
+                                style: 4, // Red
+                                label: 'Delete Spray',
+                                custom_id: `spray_delete:${sprayId}:${userId}`,
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  );
+                }
+              } catch (error) {
+                console.error('Spray moderation error:', error);
+              }
+            })(),
+          );
+        }
+
         return createResponse(
           {
             type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
