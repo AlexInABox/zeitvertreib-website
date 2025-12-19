@@ -772,33 +772,33 @@ export async function handleDiscordBotInteractions(
                 // Show restore + ban buttons if spray is deleted, otherwise delete + ban buttons
                 const buttonComponents = isDeleted
                   ? [
-                    {
-                      type: 2,
-                      style: 2, // Gray
-                      label: 'Restore Spray',
-                      custom_id: `spray_undelete:${sprayId}:${userId}`,
-                    },
-                    {
-                      type: 2,
-                      style: 4, // Red
-                      label: 'Ban User',
-                      custom_id: `spray_ban:${sprayId}:${userId}`,
-                    },
-                  ]
+                      {
+                        type: 2,
+                        style: 2, // Gray
+                        label: 'Restore Spray',
+                        custom_id: `spray_undelete:${sprayId}:${userId}`,
+                      },
+                      {
+                        type: 2,
+                        style: 4, // Red
+                        label: 'Ban User',
+                        custom_id: `spray_ban:${sprayId}:${userId}`,
+                      },
+                    ]
                   : [
-                    {
-                      type: 2,
-                      style: 4, // Red
-                      label: 'Delete Spray',
-                      custom_id: `spray_delete:${sprayId}:${userId}`,
-                    },
-                    {
-                      type: 2,
-                      style: 4, // Red
-                      label: 'Ban User',
-                      custom_id: `spray_ban:${sprayId}:${userId}`,
-                    },
-                  ];
+                      {
+                        type: 2,
+                        style: 4, // Red
+                        label: 'Delete Spray',
+                        custom_id: `spray_delete:${sprayId}:${userId}`,
+                      },
+                      {
+                        type: 2,
+                        style: 4, // Red
+                        label: 'Ban User',
+                        custom_id: `spray_ban:${sprayId}:${userId}`,
+                      },
+                    ];
 
                 await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
                   body: {
