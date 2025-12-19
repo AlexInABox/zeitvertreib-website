@@ -484,7 +484,12 @@ export async function handleGetUploadLimits(request: Request, _env: Env): Promis
 }
 
 // Re-export moderation route handlers from spray-moderation.ts
-export { handleModerationDelete, handleModerationBan, handleModerationUnban, handleModerationUndelete } from './spray-moderation.js';
+export {
+  handleModerationDelete,
+  handleModerationBan,
+  handleModerationUnban,
+  handleModerationUndelete,
+} from './spray-moderation.js';
 
 // Handle background removal via Replicate API
 export async function handleBackgroundRemoval(request: Request, env: Env): Promise<Response> {

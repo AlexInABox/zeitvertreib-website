@@ -11,11 +11,7 @@ import {
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
-import {
-  handlePostSpray,
-  handleGetSpray,
-  handleDeleteSpray,
-} from './routes/spray-new.js';
+import { handlePostSpray, handleGetSpray, handleDeleteSpray } from './routes/spray-new.js';
 import {
   getFakerank,
   updateFakerank,

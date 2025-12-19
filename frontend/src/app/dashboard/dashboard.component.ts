@@ -479,9 +479,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Load all sprays for the user (max 3)
   private loadSprays(): void {
     this.authService
-      .authenticatedGet<{ sprays: Array<{ id: number; name: string; full_res: string }> }>(
-        `${environment.apiUrl}/spray?full_res=true`,
-      )
+      .authenticatedGet<{
+        sprays: Array<{ id: number; name: string; full_res: string }>;
+      }>(`${environment.apiUrl}/spray?full_res=true`)
       .subscribe({
         next: (response) => {
           const sprays = response.sprays || [];
