@@ -149,6 +149,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   sprayError = '';
   spraySuccess = '';
   isDonator = false;
+  // Spray ban information
+  isSprayBanned = false;
+  sprayBanReason: string | null = null;
+  sprayBannedBy: string | null = null;
   // Preview modal state
   previewModalOpen = false;
   previewModalSlotIndex: number | null = null;
@@ -333,6 +337,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Check if user is a donator
     this.isDonator = this.authService.isDonator();
+
+    // Check spray ban status
+    this.isSprayBanned = this.authService.isSprayBanned();
+    this.sprayBanReason = this.authService.getSprayBanReason();
+    this.sprayBannedBy = this.authService.getSprayBannedBy();
 
     // Start the access timer when component initializes
     this.startAccessTimer();
@@ -825,11 +834,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private async processImageForSpray(file: File): Promise<{ pixelData: string; base64Data: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         try {
-          const pixelArtQuality = 100;
+          // Create compressed WebP version under 50KB
+          const compressedCanvas = document.createElement('canvas');
+          const compressedCtx = compressedCanvas.getContext('2d');
+          if (!compressedCtx) throw new Error('Could not get canvas context');
 
-          // Create high-quality canvas for pixel art generation
+          compressedCanvas.width = img.width;
+          compressedCanvas.height = img.height;
+          compressedCtx.drawImage(img, 0, 0);
+
+          // Compress to WebP with lossy quality, aiming for < 50KB
+          let quality = 0.8;
+          let base64Data = '';
+          let compressed = false;
+
+          while (quality >= 0.1 && !compressed) {
+            base64Data = await new Promise<string>((resolveCompress) => {
+              compressedCanvas.toBlob(
+                (blob) => {
+                  if (blob && blob.size < 50 * 1024) {
+                    compressed = true;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    resolveCompress(reader.result as string);
+                  };
+                  reader.readAsDataURL(blob!);
+                },
+                'image/webp',
+                quality,
+              );
+            });
+            quality -= 0.1;
+          }
+
+          // Create pixel art from original
+          const pixelArtQuality = 100;
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
           if (!pixelCtx) throw new Error('Could not get canvas context');
@@ -851,9 +893,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           // Extract pixel data for text toy
           const pixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
-
-          // Convert canvas to base64 (data URL format)
-          const base64Data = pixelCanvas.toDataURL('image/png');
 
           resolve({ pixelData, base64Data });
         } catch (error) {

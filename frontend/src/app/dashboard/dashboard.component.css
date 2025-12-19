@@ -5365,6 +5365,70 @@
   text-align: center;
 }
 
+/* Spray Ban Warning */
+.spray-ban-warning {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 0.95rem;
+  border: 2px solid rgba(220, 38, 38, 0.6);
+  background: rgba(127, 29, 29, 0.25);
+  backdrop-filter: blur(12px);
+}
+
+.spray-ban-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.spray-ban-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.spray-ban-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fca5a5;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.spray-ban-reason,
+.spray-ban-mod,
+.spray-ban-contact {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.spray-ban-reason strong,
+.spray-ban-mod strong {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.spray-ban-contact {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(220, 38, 38, 0.3);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.spray-ban-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.spray-ban-link:visited {
+  color: inherit;
+}
+
 .spray-locked-title {
   margin: 0;
   font-size: 1.05rem;

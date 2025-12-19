@@ -718,12 +718,27 @@
       <!-- Custom Sprays -->
       <div class="grid-item spray-card-container">
         <div class="stats-card p-6 rounded-2xl">
-          <div class="spray-header">
+          <div class="spray-header" *ngIf="!isSprayBanned">
             <h3 class="spray-title">🎨 Custom Sprays</h3>
             <p class="spray-subtitle">Bis zu {{ isDonator ? '3' : '2' }} Sprays hochladen</p>
           </div>
 
-          <div class="spray-grid">
+          <!-- Spray Ban Warning -->
+          <div *ngIf="isSprayBanned" class="spray-ban-warning">
+            <div class="spray-ban-icon">🔨</div>
+            <div class="spray-ban-content">
+              <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
+              <p class="spray-ban-reason"><strong>Grund:</strong> {{ sprayBanReason }}</p>
+              <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ sprayBannedBy }}</p>
+              <p class="spray-ban-contact">
+                Öffne ein Ticket auf unserem
+                <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"><strong>Discord-Server</strong></a
+                >.
+              </p>
+            </div>
+          </div>
+
+          <div class="spray-grid" *ngIf="!isSprayBanned">
             <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
               <!-- Locked Slot -->
               <div *ngIf="i === 2 && !isDonator" class="spray-locked">

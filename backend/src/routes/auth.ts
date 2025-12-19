@@ -15,6 +15,9 @@ import {
   isBooster,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
+import { spray_bans } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
+import { proxyFetch } from '../proxy.js';
 
 export async function handleSteamLogin(request: Request, _env: Env): Promise<Response> {
   return createResponse(generateSteamLoginUrl(request), 302);
@@ -116,6 +119,38 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
   const isDonatorUser = await isDonator(steamId, env);
   const isBoosterUser = await isBooster(steamId, env);
 
+  // Check if user is spray banned
+  const steamIdWithSuffix = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+  const sprayBanResult = await db
+    .select()
+    .from(spray_bans)
+    .where(eq(spray_bans.userid, steamIdWithSuffix))
+    .limit(1);
+
+  const sprayBanInfo = sprayBanResult[0];
+  let bannedByUsername = null;
+
+  if (sprayBanInfo) {
+    // Fetch moderator's Discord username
+    try {
+      const moderatorResponse = await proxyFetch(
+        `https://discord.com/api/v10/users/${sprayBanInfo.bannedByDiscordId}`,
+        {
+          headers: {
+            Authorization: `Bot ${env.DISCORD_TOKEN}`,
+          },
+        },
+        env,
+      );
+      if (moderatorResponse.ok) {
+        const moderatorData: any = await moderatorResponse.json();
+        bannedByUsername = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+      }
+    } catch (error) {
+      console.error('Failed to fetch moderator username:', error);
+    }
+  }
+
   return createResponse(
     {
       user: steamUser,
@@ -123,6 +158,9 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
       isModerator: isModeratorUser,
       isDonator: isDonatorUser,
       isBooster: isBoosterUser,
+      isSprayBanned: !!sprayBanInfo,
+      sprayBanReason: sprayBanInfo?.reason || null,
+      sprayBannedBy: bannedByUsername,
     },
     200,
     origin,
