@@ -672,7 +672,7 @@ export async function handleDiscordBotInteractions(
                   .insert(deletedSprays)
                   .values({
                     sha256: sha256Hash,
-                    uploadedByUserId: userId,
+                    uploadedByUserid: userId,
                     deletedByDiscordId: moderatorId,
                     reason: deleteReason,
                   })
@@ -923,7 +923,7 @@ export async function handleDiscordBotInteractions(
                   .insert(deletedSprays)
                   .values({
                     sha256: sha256Hash,
-                    uploadedByUserId: userId,
+                    uploadedByUserid: userId,
                     deletedByDiscordId: moderatorId,
                     reason: reason,
                   })
@@ -1067,24 +1067,24 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: sha256Hash
                       ? [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 3, // Green
-                                label: 'Unblock Hash',
-                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
-                              },
-                              {
-                                type: 2,
-                                style: 4, // Red
-                                label: 'Ban User',
-                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
-                              },
-                            ],
-                          },
-                        ]
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 3, // Green
+                              label: 'Unblock Hash',
+                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                            },
+                            {
+                              type: 2,
+                              style: 4, // Red
+                              label: 'Ban User',
+                              custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                            },
+                          ],
+                        },
+                      ]
                       : [],
                   },
                 });

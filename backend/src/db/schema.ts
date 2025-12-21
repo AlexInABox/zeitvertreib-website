@@ -132,7 +132,7 @@ export const sprayBans = sqliteTable('spray_bans', {
 
 export const deletedSprays = sqliteTable('deleted_sprays', {
   sha256: text('sha256').notNull().primaryKey(),
-  uploadedByUserId: text('uploaded_by_userid').notNull(),
+  uploadedByUserid: text('uploaded_by_userid').notNull(),
   deletedByDiscordId: text('deleted_by_discord_id').notNull(),
   reason: text('reason').notNull(),
 });
