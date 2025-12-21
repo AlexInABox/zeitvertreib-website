@@ -653,7 +653,10 @@ export async function handleDiscordBotInteractions(
                       const base64Request = await aws.sign(base64Url, { method: 'DELETE' });
                       const base64Response = await fetch(base64Request);
                       if (!base64Response.ok) {
-                        console.warn(`Failed to delete .base64 file for spray ${idToDelete}:`, await base64Response.text());
+                        console.warn(
+                          `Failed to delete .base64 file for spray ${idToDelete}:`,
+                          await base64Response.text(),
+                        );
                       }
                     } catch (e) {
                       console.warn(`Failed to delete .base64 for spray ${idToDelete}:`, e);
@@ -1064,24 +1067,24 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: sha256Hash
                       ? [
-                        {
-                          type: 1,
-                          components: [
-                            {
-                              type: 2,
-                              style: 3, // Green
-                              label: 'Unblock Hash',
-                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
-                            },
-                            {
-                              type: 2,
-                              style: 4, // Red
-                              label: 'Ban User',
-                              custom_id: `spray_ban:${sha256Hash}:${userId}`,
-                            },
-                          ],
-                        },
-                      ]
+                          {
+                            type: 1,
+                            components: [
+                              {
+                                type: 2,
+                                style: 3, // Green
+                                label: 'Unblock Hash',
+                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                              },
+                              {
+                                type: 2,
+                                style: 4, // Red
+                                label: 'Ban User',
+                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                              },
+                            ],
+                          },
+                        ]
                       : [],
                   },
                 });

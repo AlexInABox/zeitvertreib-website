@@ -208,10 +208,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     const userIsDonator = await isDonator(userid, env);
     const maxSprays = userIsDonator ? 3 : 2;
 
-    const existingSprays = await db
-      .select()
-      .from(sprays)
-      .where(eq(sprays.userid, userid));
+    const existingSprays = await db.select().from(sprays).where(eq(sprays.userid, userid));
 
     if (existingSprays.length >= maxSprays) {
       return createResponse(
@@ -436,10 +433,7 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
     const includeText = url.searchParams.get('text_toy') === 'true';
 
     // Fetch sprays from database
-    const userSprays = await db
-      .select()
-      .from(sprays)
-      .where(eq(sprays.userid, userid));
+    const userSprays = await db.select().from(sprays).where(eq(sprays.userid, userid));
 
     // Build response
     const folder = getSprayFolder(origin);
