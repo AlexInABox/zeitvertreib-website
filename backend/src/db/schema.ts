@@ -119,8 +119,8 @@ export const sprays = sqliteTable('sprays', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userid: text('userid').notNull(),
   name: text('name').notNull(),
+  sha256: text('sha256').notNull(),
   uploadedAt: integer('uploaded_at').notNull().default(0),
-  deletedAt: integer('deleted_at').notNull().default(0),
 });
 
 export const sprayBans = sqliteTable('spray_bans', {
@@ -128,4 +128,11 @@ export const sprayBans = sqliteTable('spray_bans', {
   bannedAt: integer('banned_at').notNull().default(0),
   reason: text('reason').notNull(),
   bannedByDiscordId: text('banned_by_discord_id').notNull(),
+});
+
+export const deletedSprays = sqliteTable('deleted_sprays', {
+  sha256: text('sha256').notNull().primaryKey(),
+  uploadedByUserId: text('uploaded_by_userid').notNull(),
+  deletedByDiscordId: text('deleted_by_discord_id').notNull(),
+  reason: text('reason').notNull(),
 });

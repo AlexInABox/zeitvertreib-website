@@ -1,7 +1,7 @@
 import { AwsClient } from 'aws4fetch';
 import { createResponse, validateSession, isDonator } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { sprays, playerdata, sprayBans } from '../db/schema.js';
+import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { proxyFetch } from '../proxy.js';
 import type { SprayPostRequest, SprayDeleteRequest, SprayGetResponseItem } from '@zeitvertreib/types';
@@ -38,6 +38,7 @@ async function sendSprayModerationNotification(
   userid: string,
   sprayName: string,
   base64Image: string,
+  sha256Hash: string,
 ): Promise<void> {
   try {
     const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -78,7 +79,7 @@ async function sendSprayModerationNotification(
       }
     }
 
-    // Convert base64 to buffer
+    // Convert base64 to buffer and compute SHA256 hash
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
     const fileSize = (imageBuffer.length / 1024).toFixed(2); // KB
@@ -91,8 +92,8 @@ async function sendSprayModerationNotification(
     const payload = {
       embeds: [
         {
-          title: '🎨 Spray uploaded!',
-          description: `**User:** ${discordName} (Discord: \`${discordId}\` | Steam: \`${userid}\`)\n**Steam Username:** ${steamUsername}\n**Spray Name:** ${sprayName}\n**File Size:** ${fileSize} KB`,
+          title: 'Spray uploaded!',
+          description: `Discord: ${discordName} (\`${discordId}\`)\nSteam: ${steamUsername} (\`${userid}\`)\nSpray Name: ${sprayName}\nSHA256: \`${sha256Hash}\`\nFile Size: ${fileSize} KB`,
           color: 0x3b82f6,
           timestamp: new Date().toISOString(),
         },
@@ -105,13 +106,13 @@ async function sendSprayModerationNotification(
               type: 2,
               style: 4,
               label: 'Delete Spray',
-              custom_id: `spray_delete:${sprayId}:${userid}`,
+              custom_id: `spray_delete:${sha256Hash}:${userid}`,
             },
             {
               type: 2,
               style: 4,
               label: 'Ban User',
-              custom_id: `spray_ban:${sprayId}:${userid}`,
+              custom_id: `spray_ban:${sha256Hash}:${userid}`,
             },
           ],
         },
@@ -121,7 +122,7 @@ async function sendSprayModerationNotification(
     formData.append('payload_json', JSON.stringify(payload));
 
     // Send message to Discord
-    await proxyFetch(
+    const response = await proxyFetch(
       `https://discord.com/api/v10/channels/${MODERATION_CHANNEL_ID}/messages`,
       {
         method: 'POST',
@@ -132,8 +133,15 @@ async function sendSprayModerationNotification(
       },
       env,
     );
+
+    if (response.ok) {
+      console.log(`✅ Discord notification sent successfully for spray ${sprayId}`);
+    } else {
+      const errorText = await response.text();
+      console.error(`❌ Discord API error (${response.status}):`, errorText);
+    }
   } catch (error) {
-    console.error('Failed to send Discord moderation notification:', error);
+    console.error('❌ Failed to send Discord moderation notification:', error);
     // Don't throw - we don't want to fail the spray upload if Discord notification fails
   }
 }
@@ -142,7 +150,7 @@ async function sendSprayModerationNotification(
  * POST /spray
  * Upload a new spray
  */
-export async function handlePostSpray(request: Request, env: Env): Promise<Response> {
+export async function handlePostSpray(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
@@ -203,7 +211,7 @@ export async function handlePostSpray(request: Request, env: Env): Promise<Respo
     const existingSprays = await db
       .select()
       .from(sprays)
-      .where(and(eq(sprays.userid, userid), eq(sprays.deletedAt, 0)));
+      .where(eq(sprays.userid, userid));
 
     if (existingSprays.length >= maxSprays) {
       return createResponse(
@@ -211,6 +219,25 @@ export async function handlePostSpray(request: Request, env: Env): Promise<Respo
           error: `Spray limit reached. ${userIsDonator ? 'Donators' : 'Users'} can have up to ${maxSprays} sprays.`,
         },
         400,
+        origin,
+      );
+    }
+
+    // Compute SHA-256 hash of the raw image data (truncate to first 10 chars)
+    const base64Data = full_res.replace(/^data:image\/\w+;base64,/, '');
+    const imageBuffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', imageBuffer);
+    const fullHash = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const sha256 = fullHash.substring(0, 10); // Truncate to first 10 chars (5 bytes)
+
+    // Check if hash is blocked
+    const blockedSpray = await db.select().from(deletedSprays).where(eq(deletedSprays.sha256, sha256)).limit(1);
+    if (blockedSpray.length > 0) {
+      return createResponse(
+        { error: 'This spray has been blocked by moderators and cannot be uploaded.' },
+        403,
         origin,
       );
     }
@@ -223,7 +250,7 @@ export async function handlePostSpray(request: Request, env: Env): Promise<Respo
         userid,
         name,
         uploadedAt: currentTimestamp,
-        deletedAt: 0,
+        sha256,
       })
       .returning({ id: sprays.id });
 
@@ -269,7 +296,11 @@ export async function handlePostSpray(request: Request, env: Env): Promise<Respo
     }
 
     // Send Discord moderation notification (non-blocking)
-    await sendSprayModerationNotification(env, sprayId, userid, name, full_res);
+    ctx.waitUntil(
+      sendSprayModerationNotification(env, sprayId, userid, name, full_res, sha256).catch((error) =>
+        console.error('❌ Failed to send Discord notification:', error),
+      ),
+    );
 
     return createResponse(
       {
@@ -295,9 +326,9 @@ export async function handlePostSpray(request: Request, env: Env): Promise<Respo
 
 /**
  * DELETE /spray
- * Soft delete a spray
+ * Hard delete a spray
  */
-export async function handleDeleteSpray(request: Request, env: Env): Promise<Response> {
+export async function handleDeleteSpray(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
@@ -335,9 +366,30 @@ export async function handleDeleteSpray(request: Request, env: Env): Promise<Res
       return createResponse({ error: 'Spray not found or access denied' }, 404, origin);
     }
 
-    // Soft delete
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    await db.update(sprays).set({ deletedAt: currentTimestamp }).where(eq(sprays.id, id));
+    // Delete from S3 (use environment-specific folder)
+    const folder = getSprayFolder(origin);
+    const basePath = `${folder}/${id}`;
+    const txtPath = `${basePath}.txt`;
+    const base64Path = `${basePath}.base64`;
+
+    // Delete .txt file
+    const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
+    const txtRequest = await aws(env).sign(txtUrl, { method: 'DELETE' });
+    const txtResponse = await fetch(txtRequest);
+    if (!txtResponse.ok) {
+      console.warn(`Failed to delete .txt file for spray ${id}:`, await txtResponse.text());
+    }
+
+    // Delete .base64 file
+    const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
+    const base64Request = await aws(env).sign(base64Url, { method: 'DELETE' });
+    const base64Response = await fetch(base64Request);
+    if (!base64Response.ok) {
+      console.warn(`Failed to delete .base64 file for spray ${id}:`, await base64Response.text());
+    }
+
+    // Permanently delete from database
+    await db.delete(sprays).where(eq(sprays.id, id));
 
     return createResponse(
       {
@@ -364,7 +416,7 @@ export async function handleDeleteSpray(request: Request, env: Env): Promise<Res
  * GET /spray
  * Get all sprays for the authenticated user
  */
-export async function handleGetSpray(request: Request, env: Env): Promise<Response> {
+export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
@@ -387,7 +439,7 @@ export async function handleGetSpray(request: Request, env: Env): Promise<Respon
     const userSprays = await db
       .select()
       .from(sprays)
-      .where(and(eq(sprays.userid, userid), eq(sprays.deletedAt, 0)));
+      .where(eq(sprays.userid, userid));
 
     // Build response
     const folder = getSprayFolder(origin);

@@ -11,7 +11,7 @@ import {
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
-import { handlePostSpray, handleGetSpray, handleDeleteSpray } from './routes/spray-new.js';
+import { handlePostSpray, handleGetSpray, handleDeleteSpray } from './routes/sprays.js';
 import {
   getFakerank,
   updateFakerank,
@@ -64,7 +64,7 @@ function createResponse(data: any, status = 200, origin?: string | null): Respon
 }
 
 // Route mapping: path + method -> handler function
-const routes: Record<string, (request: Request, env: Env, ctx?: ExecutionContext) => Promise<Response>> = {
+const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext) => Promise<Response>> = {
   // Auth routes
   'GET:/auth/steam': handleSteamLogin,
   'GET:/auth/steam/callback': handleSteamCallback,
