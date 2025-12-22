@@ -2,7 +2,7 @@ import { AwsClient } from 'aws4fetch';
 import { createResponse, validateSession, isDonator } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { proxyFetch } from '../proxy.js';
 import type { SprayPostRequest, SprayDeleteRequest, SprayGetResponseItem } from '@zeitvertreib/types';
 
@@ -411,40 +411,64 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
 
 /**
  * GET /spray
- * Get all sprays for the authenticated user
+ * Get sprays for user(s)
+ * - Without API key: returns authenticated user's sprays only
+ * - With valid SPRAYED_API_KEY: returns sprays for all requested userids
  */
 export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   try {
-    // Authenticate
-    const sessionValidation = await validateSession(request, env);
-    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentication required' }, 401, origin);
-    }
-
-    let userid = sessionValidation.steamId;
-    userid = userid.endsWith('@steam') ? userid : `${userid}@steam`;
-
     // Parse query params
     const url = new URL(request.url);
     const includeFull = url.searchParams.get('full_res') === 'true';
     const includeText = url.searchParams.get('text_toy') === 'true';
+    const requestedUserids = url.searchParams.getAll('userids');
+
+    // Check for API key authentication
+    const authHeader = request.headers.get('Authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const hasValidApiKey = bearerToken === env.SPRAYED_API_KEY;
+
+    let useridsToFetch: string[] = [];
+
+    if (hasValidApiKey) {
+      // API key authenticated: allow querying multiple userids
+      if (requestedUserids.length === 0) {
+        return createResponse({ error: 'userids parameter required when using API key' }, 400, origin);
+      }
+      useridsToFetch = requestedUserids.map((id) => (id.endsWith('@steam') ? id : `${id}@steam`));
+    } else {
+      // Session authenticated: only allow querying own sprays
+      const sessionValidation = await validateSession(request, env);
+      if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+        return createResponse({ error: 'Authentication required' }, 401, origin);
+      }
+
+      let userid = sessionValidation.steamId;
+      userid = userid.endsWith('@steam') ? userid : `${userid}@steam`;
+      useridsToFetch = [userid];
+    }
 
     // Fetch sprays from database
-    const userSprays = await db.select().from(sprays).where(eq(sprays.userid, userid));
+    let allSprays = await db
+      .select()
+      .from(sprays)
+      .where(inArray(sprays.userid, useridsToFetch));
 
     // Build response
     const folder = getSprayFolder(origin);
     const sprayItems = await Promise.all(
-      userSprays.map(async (spray) => {
+      allSprays.map(async (spray) => {
         const item: {
+          userid: string;
           id: number;
           name: string;
           full_res?: string;
           text_toy?: string;
         } = {
+          userid: spray.userid,
           id: spray.id,
           name: spray.name,
         };

@@ -513,49 +513,66 @@ function createDiscordMessage(
   };
 }
 
-// Discord API proxy utility
-async function fetchDiscordWithProxy(url: string, options: RequestInit, env: Env): Promise<Response> {
-  return proxyFetch(url, options, env);
-}
 
 async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Promise<boolean> {
   try {
     const webhookUrl = env.LEADERBOARD_WEBHOOK;
-    const messageId = env.LEADERBOARD_MESSAGE_ID;
 
     if (!webhookUrl) {
       console.error('LEADERBOARD_WEBHOOK Umgebungsvariable nicht gesetzt');
       return false;
     }
 
-    // First, try to edit the existing message if messageId is provided
-    if (messageId) {
-      try {
-        const editResponse = await fetchDiscordWithProxy(
-          `${webhookUrl}/messages/${messageId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(message),
+    // First, try to get the latest message in the channel
+    try {
+      const messagesResponse = await proxyFetch(
+        `${webhookUrl}?limit=1`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          env,
-        );
+        },
+        env,
+      );
 
-        if (editResponse.ok) {
-          console.log('Discord Bestenliste erfolgreich aktualisiert');
-          return true;
-        } else {
-          console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', editResponse.status);
+      if (messagesResponse.ok) {
+        const messages = (await messagesResponse.json()) as Array<{ id: string }> | null;
+
+        if (messages && messages.length > 0) {
+          const latestMessageId = messages[0]?.id;
+
+          // Try to edit the latest message
+          try {
+            const editResponse = await proxyFetch(
+              `${webhookUrl}/messages/${latestMessageId}`,
+              {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(message),
+              },
+              env,
+            );
+
+            if (editResponse.ok) {
+              console.log('Discord Bestenliste erfolgreich aktualisiert');
+              return true;
+            } else {
+              console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', editResponse.status);
+            }
+          } catch (error) {
+            console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', error);
+          }
         }
-      } catch (error) {
-        console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', error);
       }
+    } catch (error) {
+      console.log('Fehler beim Abrufen der letzten Nachricht, erstelle neue:', error);
     }
 
-    // If editing failed or no messageId, send a new message
-    const response = await fetchDiscordWithProxy(
+    // If editing failed, send a new message
+    const response = await proxyFetch(
       `${webhookUrl}?wait=true`,
       {
         method: 'POST',
@@ -570,7 +587,6 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
     if (response.ok) {
       const responseData = (await response.json()) as { id: string };
       console.log(`Neue Discord Bestenliste gesendet mit ID: ${responseData.id}`);
-      console.log('Du möchtest vielleicht LEADERBOARD_MESSAGE_ID aktualisieren zu:', responseData.id);
       return true;
     } else {
       console.error('Discord Nachricht senden fehlgeschlagen:', response.status, await response.text());

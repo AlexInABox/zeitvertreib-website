@@ -223,7 +223,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -616,6 +616,7 @@ export interface SprayDeleteRequest {
 
 /** GET /spray request params*/
 export interface SprayGetRequest {
+  userids?: string[];
   full_res?: boolean;
   text_toy?: boolean;
 }
@@ -623,6 +624,7 @@ export interface SprayGetRequest {
 /** GET /spray response */
 export interface SprayGetResponseItem {
   sprays: {
+    userid: string;
     id: number;
     name: string;
     full_res?: Base64URLString;
