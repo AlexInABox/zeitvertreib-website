@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
@@ -34,19 +33,15 @@ public static class EventHandlers
             new SSDropdownSetting(
                 Plugin.Instance.Config!.SpraySelectionSettingId,
                 "Select Spray",
-                ["No sprays available"],
-                0)
+                ["No sprays available"])
         ];
 
-        ServerSpecificSettingBase[] existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
-
-        ServerSpecificSettingBase[] combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
-        existing.CopyTo(combined, 0);
-        extra.CopyTo(combined, existing.Length);
-
-        ServerSpecificSettingsSync.DefinedSettings = combined;
-        ServerSpecificSettingsSync.UpdateDefinedSettings();
-
+        if (ServerSpecificSettingsSync.DefinedSettings == null)
+            ServerSpecificSettingsSync.DefinedSettings = extra;
+        else
+            ServerSpecificSettingsSync.DefinedSettings =
+                ServerSpecificSettingsSync.DefinedSettings.Concat(extra).ToArray();
+        ServerSpecificSettingsSync.SendToAll();
 
         // Auto-refresh sprays
         _autoRefreshSprays = Timing.RunCoroutine(AutoRefreshSprays());
@@ -64,7 +59,7 @@ public static class EventHandlers
         while (true)
         {
             _ = Utils.SetSpraysForAllUsersFromBackend();
-            
+
             // Update SSSS dropdown options for all players
             yield return Timing.WaitForSeconds(0.5f);
             UpdateSprayDropdownOptions();
@@ -76,30 +71,24 @@ public static class EventHandlers
     private static void UpdateSprayDropdownOptions()
     {
         foreach (Player player in Player.ReadyList.Where(p => p.IsPlayer))
-        {
             try
             {
-                if (!Utils.UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) ||
-                    sprays.Count == 0)
-                    continue;
-    
-                SSDropdownSetting dropdown = ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(player.ReferenceHub, Plugin.Instance.Config!.SpraySelectionSettingId);
-                
-                
-                        // Update the dropdown options with spray names
-                        string[] sprayNames = sprays.Select(s => s.name).ToArray();
-                        dropdown.Options = sprayNames;
-                        
-                        // Update the setting
-                        ServerSpecificSettingsSync.SendToPlayer(player.ReferenceHub);
-                        break;
-                        
+                string[] sprayNames = ["Keine Sprays verfügbar!"];
+
+                if (Utils.UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) &&
+                    sprays.Count > 0)
+                    sprayNames = sprays.Select(s => s.name).ToArray();
+
+                SSDropdownSetting currentDropdown = ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(
+                    player.ReferenceHub,
+                    Plugin.Instance.Config!.SpraySelectionSettingId);
+
+                currentDropdown.SendDropdownUpdate(sprayNames, true, hub => hub.PlayerId == player.PlayerId);
             }
             catch (Exception ex)
             {
-                Logger.Error($"Error updating spray dropdown for {player.Nickname}: {ex}");
+                Logger.Error($"Error updating spray dropdown for {player.Nickname}:  {ex}");
             }
-        }
     }
 
     private static void OnSSSReceived(ReferenceHub hub, ServerSpecificSettingBase ev)
@@ -125,7 +114,8 @@ public static class EventHandlers
             if (player.IsOnSprayCooldown()) return;
 
             // Get available sprays for this player
-            if (!Utils.UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) || sprays.Count == 0)
+            if (!Utils.UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) ||
+                sprays.Count == 0)
             {
                 player.SendHint(Plugin.Instance.Translation.NoSprayFound, 10f);
                 return;
@@ -135,11 +125,9 @@ public static class EventHandlers
             SSDropdownSetting dropdown =
                 ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(player.ReferenceHub,
                     Plugin.Instance.Config!.SpraySelectionSettingId);
-                
+
             // Get the selected spray id
-            int selectedIndex = dropdown.SyncSelectionIndexValidated;
-            if (selectedIndex < 0 || selectedIndex >= sprays.Count)
-                selectedIndex = 0; // Default to first (lowest id)
+            int selectedIndex = dropdown.SyncSelectionIndexRaw;
 
             int sprayId = sprays[selectedIndex].id;
 
@@ -158,7 +146,8 @@ public static class EventHandlers
             }
 
             // Get optimized spray data
-            if (!Utils.UserOptimizedSprayData.TryGetValue(player.UserId, out Dictionary<int, string[]> optimizedSprays) ||
+            if (!Utils.UserOptimizedSprayData.TryGetValue(player.UserId,
+                    out Dictionary<int, string[]> optimizedSprays) ||
                 !optimizedSprays.TryGetValue(sprayId, out string[] optimizedSpray))
             {
                 player.SendHint(Plugin.Instance.Translation.NoSprayFound, 10f);
@@ -202,7 +191,8 @@ public static class EventHandlers
             }
 
             // Let's actually spawn the thing
-            Timing.RunCoroutine(SpawnSpray(position, rotation, scale, spray, optimizedSpray, parentToUse, player.PlayerId));
+            Timing.RunCoroutine(SpawnSpray(position, rotation, scale, spray, optimizedSpray, parentToUse,
+                player.PlayerId));
             PlaySoundEffect(hit.point + hit.normal * 0.01f);
 
             Utils.Cooldowns[player.PlayerId] = (int)(Time.time + Plugin.Instance.Config!.CooldownDuration);

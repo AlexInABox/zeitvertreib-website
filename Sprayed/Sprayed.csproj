@@ -1,9 +1,9 @@
 ﻿<Project>
-<Import Project="..\Base.csproj"/>
-<ItemGroup>
-    <Reference Include="Mirror" HintPath="$(EXILED_REFERENCES)\Mirror.dll" Private="false" Publicize="true"/>
-    <Reference Include="AudioPlayerApi" HintPath="$(EXILED_REFERENCES)\AudioPlayerApi.dll" Private="false"/>
-    <Reference Include="TextMeshPro" HintPath="$(EXILED_REFERENCES)\Unity.TextMeshPro.dll" Private="false"/>
-    <Reference Include="UnityEngine.UI" HintPath="$(EXILED_REFERENCES)\UnityEngine.UI.dll" Private="false"/>
-</ItemGroup>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <Reference Include="Mirror" HintPath="$(EXILED_REFERENCES)\Mirror.dll" Private="false" Publicize="true"/>
+        <Reference Include="AudioPlayerApi" HintPath="$(EXILED_REFERENCES)\AudioPlayerApi.dll" Private="false"/>
+        <Reference Include="TextMeshPro" HintPath="$(EXILED_REFERENCES)\Unity.TextMeshPro.dll" Private="false"/>
+        <Reference Include="UnityEngine.UI" HintPath="$(EXILED_REFERENCES)\UnityEngine.UI.dll" Private="false"/>
+    </ItemGroup>
 </Project>

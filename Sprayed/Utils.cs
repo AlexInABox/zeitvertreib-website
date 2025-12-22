@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using LabApi.Features.Wrappers;
+using Newtonsoft.Json;
 using UnityEngine;
 using Zeitvertreib.Types;
 using Logger = LabApi.Features.Console.Logger;
@@ -34,14 +34,14 @@ public static class Utils
 
     // Tracking
     public static readonly Dictionary<int, int> Cooldowns = new();
-    
+
     // Store spray data per userid: List of (sprayId, sprayName) tuples
     public static readonly ConcurrentDictionary<string, List<(int id, string name)>> UserSprayIds = new();
-    
+
     // Store full spray data: Dictionary<userid, Dictionary<sprayId, sprayLines>>
     public static readonly ConcurrentDictionary<string, Dictionary<int, string[]>> UserSprayData = new();
     public static readonly ConcurrentDictionary<string, Dictionary<int, string[]>> UserOptimizedSprayData = new();
-    
+
     public static readonly Dictionary<int, List<TextToy>> ActiveSprays = new();
 
     // Networking
@@ -75,40 +75,70 @@ public static class Utils
             string responseText = await response.Content.ReadAsStringAsync();
             SprayGetResponseItem sprayResponse = JsonConvert.DeserializeObject<SprayGetResponseItem>(responseText)!;
 
-            if (sprayResponse?.Sprays == null || sprayResponse.Sprays.Capacity == 0)
-            {
-                Logger.Debug("No sprays returned from backend", config.Debug);
-                return;
-            }
-
-            // Group sprays by userid and check for changes
+            // Group sprays by userid
             Dictionary<string, List<(int id, string name)>> newSprayIds = new();
+
+            if (sprayResponse?.Sprays != null && sprayResponse.Sprays.Capacity > 0)
+                foreach (Spray spray in sprayResponse.Sprays)
+                {
+                    if (!newSprayIds.ContainsKey(spray.Userid))
+                        newSprayIds[spray.Userid] = [];
+
+                    newSprayIds[spray.Userid].Add(((int)spray.Id, spray.Name));
+                }
+            else
+                Logger.Debug("No sprays returned from backend", config.Debug);
+
+            // Check for changes after building the complete list
             List<string> changedUserids = new();
-
-            foreach (Spray spray in sprayResponse.Sprays)
-            {
-                if (!newSprayIds.ContainsKey(spray.Userid))
-                    newSprayIds[spray.Userid] = [];
-
-                newSprayIds[spray.Userid].Add(((int)spray.Id, spray.Name));
-
-                // Check if this Userid's spray list changed
-                bool changed = !UserSprayIds.TryGetValue(spray.Userid, out List<(int id, string name)> existing) ||
-                               !existing.SequenceEqual(newSprayIds[spray.Userid]);
-
-                if (changed && !changedUserids.Contains(spray.Userid))
-                    changedUserids.Add(spray.Userid);
-            }
-
-            // Update spray IDs for all users
             foreach (KeyValuePair<string, List<(int id, string name)>> kvp in newSprayIds)
             {
                 // Sort by id and keep lowest as default
                 List<(int id, string name)> sorted = kvp.Value.OrderBy(x => x.id).ToList();
+
+                // Check if this user's spray list changed
+                bool changed = !UserSprayIds.TryGetValue(kvp.Key, out List<(int id, string name)> existing) ||
+                               !existing.SequenceEqual(sorted);
+
+                if (changed)
+                    changedUserids.Add(kvp.Key);
+
                 UserSprayIds[kvp.Key] = sorted;
-                Logger.Debug($"Updated spray IDs for {kvp.Key}: {string.Join(", ", sorted.Select(x => $"{x.name}({x.id})"))}",
+                Logger.Debug(
+                    $"Updated spray IDs for {kvp.Key}: {string.Join(", ", sorted.Select(x => $"{x.name}({x.id})"))}",
                     config.Debug);
             }
+
+            // Clear spray data for users who now have no sprays
+            // Collect all users that were previously tracked
+            HashSet<string> previouslyTrackedUsers = new(UserSprayIds.Keys);
+            previouslyTrackedUsers.UnionWith(UserSprayData.Keys);
+            previouslyTrackedUsers.UnionWith(UserOptimizedSprayData.Keys);
+
+            Logger.Debug($"Previously tracked users: {string.Join(", ", previouslyTrackedUsers)}", config.Debug);
+            Logger.Debug($"Users with sprays in response: {string.Join(", ", newSprayIds.Keys)}", config.Debug);
+
+            // Remove users that are no longer in the response
+            List<string> useridsWithSprays = newSprayIds.Keys.ToList();
+            List<string> usersToClean = previouslyTrackedUsers.Where(u => !useridsWithSprays.Contains(u)).ToList();
+
+            Logger.Debug($"Users to clean: {string.Join(", ", usersToClean)}", config.Debug);
+
+            foreach (string userid in usersToClean)
+            {
+                bool removedFromIds = UserSprayIds.TryRemove(userid, out _);
+                bool removedFromData = UserSprayData.TryRemove(userid, out _);
+                bool removedFromOptimized = UserOptimizedSprayData.TryRemove(userid, out _);
+                Logger.Debug(
+                    $"Cleared spray data for {userid} - IDs: {removedFromIds}, Data: {removedFromData}, Optimized: {removedFromOptimized}",
+                    config.Debug);
+            }
+
+            Logger.Debug($"After cleanup - UserSprayIds keys: {string.Join(", ", UserSprayIds.Keys)}", config.Debug);
+            Logger.Debug($"After cleanup - UserSprayData keys: {string.Join(", ", UserSprayData.Keys)}", config.Debug);
+            Logger.Debug(
+                $"After cleanup - UserOptimizedSprayData keys: {string.Join(", ", UserOptimizedSprayData.Keys)}",
+                config.Debug);
 
             if (changedUserids.Count == 0) return;
 
@@ -129,7 +159,8 @@ public static class Utils
             }
 
             string fullResponseText = await fullResponse.Content.ReadAsStringAsync();
-            SprayGetResponseItem fullSprayResponse = JsonConvert.DeserializeObject<SprayGetResponseItem>(fullResponseText)!;
+            SprayGetResponseItem fullSprayResponse =
+                JsonConvert.DeserializeObject<SprayGetResponseItem>(fullResponseText)!;
 
             if (fullSprayResponse?.Sprays == null) return;
 
@@ -138,8 +169,8 @@ public static class Utils
             {
                 if (!UserSprayData.ContainsKey(spray.Userid))
                 {
-                    UserSprayData[spray.Userid] = new();
-                    UserOptimizedSprayData[spray.Userid] = new();
+                    UserSprayData[spray.Userid] = new Dictionary<int, string[]>();
+                    UserOptimizedSprayData[spray.Userid] = new Dictionary<int, string[]>();
                 }
 
                 if (spray.TextToy != null)
