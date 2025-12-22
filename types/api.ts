@@ -223,7 +223,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank { }
+export interface GetUserFakerankResponse extends UserFakerank {}
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {

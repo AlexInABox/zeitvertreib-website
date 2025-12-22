@@ -513,7 +513,6 @@ function createDiscordMessage(
   };
 }
 
-
 async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Promise<boolean> {
   try {
     const webhookUrl = env.LEADERBOARD_WEBHOOK;

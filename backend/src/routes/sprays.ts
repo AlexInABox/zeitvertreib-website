@@ -452,10 +452,7 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
     }
 
     // Fetch sprays from database
-    let allSprays = await db
-      .select()
-      .from(sprays)
-      .where(inArray(sprays.userid, useridsToFetch));
+    let allSprays = await db.select().from(sprays).where(inArray(sprays.userid, useridsToFetch));
 
     // Build response
     const folder = getSprayFolder(origin);
