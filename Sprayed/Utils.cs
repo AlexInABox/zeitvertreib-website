@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 using LabApi.Features.Wrappers;
 using UnityEngine;
+using Zeitvertreib.Types;
 using Logger = LabApi.Features.Console.Logger;
+using Player = LabApi.Features.Wrappers.Player;
 
 namespace Sprayed;
 
@@ -31,113 +34,128 @@ public static class Utils
 
     // Tracking
     public static readonly Dictionary<int, int> Cooldowns = new();
-    public static readonly ConcurrentDictionary<string, string[]> Spray = new();
-    public static readonly ConcurrentDictionary<string, string[]> OptimizedSpray = new();
+    
+    // Store spray data per userid: List of (sprayId, sprayName) tuples
+    public static readonly ConcurrentDictionary<string, List<(int id, string name)>> UserSprayIds = new();
+    
+    // Store full spray data: Dictionary<userid, Dictionary<sprayId, sprayLines>>
+    public static readonly ConcurrentDictionary<string, Dictionary<int, string[]>> UserSprayData = new();
+    public static readonly ConcurrentDictionary<string, Dictionary<int, string[]>> UserOptimizedSprayData = new();
+    
     public static readonly Dictionary<int, List<TextToy>> ActiveSprays = new();
-
-    // Helper dictionaries
-    private static readonly Dictionary<string, string> SprayHashes = new();
 
     // Networking
     private static readonly HttpClient HttpClient = new();
 
-    // Multi-user fetch (optimized, no caching)
+    // Multi-user fetch - fetch spray IDs and names for all players
     public static async Task SetSpraysForAllUsersFromBackend()
     {
         Config config = Plugin.Instance.Config!;
         Player[] players = Player.ReadyList.Where(p => !p.IsDummy && !p.IsHost).ToArray();
         if (players.Length == 0) return;
 
-        string hashQuery = string.Join("&", players.Select(p => $"userid={Uri.EscapeDataString(p.UserId)}"));
-        string hashEndpoint = $"{config.BackendURL}/hash?{hashQuery}&_ts={DateTime.UtcNow.Ticks}";
-
-        Logger.Debug($"Fetching hashes from endpoint: {hashEndpoint}", config.Debug);
-
         try
         {
-            // Build request with no-cache headers
-            using HttpRequestMessage hashRequest = new(HttpMethod.Get, hashEndpoint);
-            hashRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.BackendAPIToken);
-            hashRequest.Headers.CacheControl = new CacheControlHeaderValue
-                { NoCache = true, NoStore = true, MustRevalidate = true };
-            hashRequest.Headers.Pragma.ParseAdd("no-cache");
+            // Fetch spray metadata (ids and names only, no full_res or text_toy)
+            string useridsQuery = string.Join("&", players.Select(p => $"userids={Uri.EscapeDataString(p.UserId)}"));
+            string sprayEndpoint = $"{config.BackendURL}/spray?{useridsQuery}";
 
-            HttpResponseMessage hashResponse = await HttpClient.SendAsync(hashRequest);
-            if (!hashResponse.IsSuccessStatusCode)
+            Logger.Debug($"Fetching spray metadata from: {sprayEndpoint}", config.Debug);
+
+            using HttpRequestMessage request = new(HttpMethod.Get, sprayEndpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.BackendAPIToken);
+
+            HttpResponseMessage response = await HttpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
             {
-                Logger.Debug($"Failed to fetch hashes. Status: {hashResponse.StatusCode}", config.Debug);
+                Logger.Debug($"Failed to fetch sprays. Status: {response.StatusCode}", config.Debug);
                 return;
             }
 
-            string hashResponseText = await hashResponse.Content.ReadAsStringAsync();
-            Dictionary<string, string> fetchedHashes = hashResponseText
-                .Split([';'], StringSplitOptions.RemoveEmptyEntries)
-                .Select(entry => entry.Split([','], 2))
-                .Where(parts => parts.Length == 2)
-                .ToDictionary(parts => parts[0], parts => parts[1]);
+            string responseText = await response.Content.ReadAsStringAsync();
+            SprayGetResponseItem sprayResponse = JsonConvert.DeserializeObject<SprayGetResponseItem>(responseText)!;
 
-            Logger.Debug($"Fetched hashes from endpoint: {hashResponseText}", config.Debug);
-
-            KeyValuePair<string, string>[] changedUsers = fetchedHashes
-                .Where(kv => !SprayHashes.TryGetValue(kv.Key, out string existingHash) || existingHash != kv.Value)
-                .ToArray();
-
-            if (changedUsers.Length == 0) return;
-
-            foreach (KeyValuePair<string, string> kv in changedUsers)
-                SprayHashes[kv.Key] = kv.Value;
-
-            // Fetch sprays for changed users
-            string sprayQuery = string.Join("&", changedUsers.Select(kv => $"userid={Uri.EscapeDataString(kv.Key)}"));
-            string sprayEndpoint = $"{config.BackendURL}/spray?{sprayQuery}&_ts={DateTime.UtcNow.Ticks}";
-
-            Logger.Debug($"Fetching sprays from endpoint: {sprayEndpoint}", config.Debug);
-
-            using HttpRequestMessage sprayRequest = new(HttpMethod.Get, sprayEndpoint);
-            sprayRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.BackendAPIToken);
-            sprayRequest.Headers.CacheControl = new CacheControlHeaderValue
-                { NoCache = true, NoStore = true, MustRevalidate = true };
-            sprayRequest.Headers.Pragma.ParseAdd("no-cache");
-
-            HttpResponseMessage sprayResponse = await HttpClient.SendAsync(sprayRequest);
-            if (!sprayResponse.IsSuccessStatusCode)
+            if (sprayResponse?.Sprays == null || sprayResponse.Sprays.Capacity == 0)
             {
-                Logger.Debug($"Failed to fetch sprays. Status: {sprayResponse.StatusCode}", config.Debug);
+                Logger.Debug("No sprays returned from backend", config.Debug);
                 return;
             }
 
-            string sprayResponseText = await sprayResponse.Content.ReadAsStringAsync();
-            Dictionary<string, string> fetchedSprays = sprayResponseText
-                .Split([';'], StringSplitOptions.RemoveEmptyEntries)
-                .Select(entry => entry.Split([','], 2))
-                .Where(parts => parts.Length == 2)
-                .ToDictionary(parts => parts[0], parts => parts[1]);
+            // Group sprays by userid and check for changes
+            Dictionary<string, List<(int id, string name)>> newSprayIds = new();
+            List<string> changedUserids = new();
 
-            foreach (KeyValuePair<string, string> fetchedSpray in fetchedSprays)
+            foreach (Spray spray in sprayResponse.Sprays)
             {
-                if (!Player.TryGet(fetchedSpray.Key, out Player player)) continue;
+                if (!newSprayIds.ContainsKey(spray.Userid))
+                    newSprayIds[spray.Userid] = [];
 
-                if (fetchedSpray.Value == "" || fetchedSpray.Value == string.Empty)
+                newSprayIds[spray.Userid].Add(((int)spray.Id, spray.Name));
+
+                // Check if this Userid's spray list changed
+                bool changed = !UserSprayIds.TryGetValue(spray.Userid, out List<(int id, string name)> existing) ||
+                               !existing.SequenceEqual(newSprayIds[spray.Userid]);
+
+                if (changed && !changedUserids.Contains(spray.Userid))
+                    changedUserids.Add(spray.Userid);
+            }
+
+            // Update spray IDs for all users
+            foreach (KeyValuePair<string, List<(int id, string name)>> kvp in newSprayIds)
+            {
+                // Sort by id and keep lowest as default
+                List<(int id, string name)> sorted = kvp.Value.OrderBy(x => x.id).ToList();
+                UserSprayIds[kvp.Key] = sorted;
+                Logger.Debug($"Updated spray IDs for {kvp.Key}: {string.Join(", ", sorted.Select(x => $"{x.name}({x.id})"))}",
+                    config.Debug);
+            }
+
+            if (changedUserids.Count == 0) return;
+
+            // Fetch full spray data for changed users (text_toy only, no full_res)
+            string changedQuery = string.Join("&", changedUserids.Select(u => $"userids={Uri.EscapeDataString(u)}"));
+            string fullSprayEndpoint = $"{config.BackendURL}/spray?{changedQuery}&text_toy=true";
+
+            Logger.Debug($"Fetching full spray data from: {fullSprayEndpoint}", config.Debug);
+
+            using HttpRequestMessage fullRequest = new(HttpMethod.Get, fullSprayEndpoint);
+            fullRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.BackendAPIToken);
+
+            HttpResponseMessage fullResponse = await HttpClient.SendAsync(fullRequest);
+            if (!fullResponse.IsSuccessStatusCode)
+            {
+                Logger.Debug($"Failed to fetch full sprays. Status: {fullResponse.StatusCode}", config.Debug);
+                return;
+            }
+
+            string fullResponseText = await fullResponse.Content.ReadAsStringAsync();
+            SprayGetResponseItem fullSprayResponse = JsonConvert.DeserializeObject<SprayGetResponseItem>(fullResponseText)!;
+
+            if (fullSprayResponse?.Sprays == null) return;
+
+            // Store spray data by userid and spray id
+            foreach (Spray spray in fullSprayResponse.Sprays)
+            {
+                if (!UserSprayData.ContainsKey(spray.Userid))
                 {
-                    Spray[player.UserId] = [];
-                    OptimizedSpray[player.UserId] = [];
-                    player.ClearExistingSpray();
-                    player.SendHint("<color=red>Dein Spray wurde gelöscht!</color>", 10f);
-                    Logger.Debug($"Cleared spray for {player.Nickname}", config.Debug);
-                    continue;
+                    UserSprayData[spray.Userid] = new();
+                    UserOptimizedSprayData[spray.Userid] = new();
                 }
 
-                string[] newSpray = ConvertSprayTextToSpray(fetchedSpray.Value);
-                string[] optimizedSpray = ConvertSprayToOptimizedSpray(newSpray);
+                if (spray.TextToy != null)
+                {
+                    string[] sprayLines = ConvertSprayTextToSpray(spray.TextToy);
+                    UserSprayData[spray.Userid][(int)spray.Id] = sprayLines;
+                    UserOptimizedSprayData[spray.Userid][(int)spray.Id] = ConvertSprayToOptimizedSpray(sprayLines);
+                }
 
-                Spray[player.UserId] = newSpray;
-                OptimizedSpray[player.UserId] = optimizedSpray;
-
-                player.ClearExistingSpray();
-                player.SendHint(Plugin.Instance.Translation.SpraysRefreshed, 10f);
-
-                Logger.Debug($"Spray set for {player.Nickname}", config.Debug);
+                Logger.Debug(
+                    $"Stored spray data for {spray.Userid} - spray {spray.Id} ({spray.Name})",
+                    config.Debug);
             }
+
+            if (changedUserids.Count > 0 && Player.TryGet(changedUserids[0], out Player player))
+                player.SendHint(Plugin.Instance.Translation.SpraysRefreshed, 10f);
         }
         catch (Exception ex)
         {

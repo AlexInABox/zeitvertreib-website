@@ -16,5 +16,10 @@ public class Config
 
     public string BackendURL { get; set; } = "https://example.com/";
     public string BackendAPIToken { get; set; } = "your_api_token_here";
+
+    [Description("Server-specific setting ID for the keybind to place a spray.")]
     public int KeybindId { get; set; } = 206;
+
+    [Description("Server-specific setting ID for the spray selection dropdown.")]
+    public int SpraySelectionSettingId { get; set; } = 207;
 }
