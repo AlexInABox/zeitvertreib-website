@@ -1,77 +1,100 @@
 name: Build C# Plugin (Reusable)
 
 on:
-    workflow_call:
-        inputs:
-            plugin:
-                required: true
-                type: string
-                description: "Path to .csproj file (e.g., Reporter/Reporter.csproj)"
+  workflow_call:
+    inputs:
+      plugin:
+        required: true
+        type: string
+        description: "Path to .csproj file (e.g., Reporter/Reporter.csproj)"
 
 jobs:
-    build:
-        name: 🔨 Build ${{ inputs.plugin }}
-        runs-on: windows-latest
-        timeout-minutes: 20
-        env:
-            REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
-            EXILED_REFERENCES: ${{ github.workspace }}/References
-            AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
-            SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
+  build:
+    name: 🔨 Build ${{ inputs.plugin }}
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
+      EXILED_REFERENCES: ${{ github.workspace }}/References
+      AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
+      SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-            - name: Setup Node
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 20
-                  cache: "npm"
-                  cache-dependency-path: types/package-lock.json
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: types/package-lock.json
 
-            - name: Build shared types
-              working-directory: types
-              run: |
-                  npm install
-                  npm run build
+      - name: Build shared types
+        working-directory: types
+        run: |
+          npm install
+          npm run build
 
-            - name: Restore NuGet packages
-              run: nuget restore ${{ inputs.plugin }}
+      - name: Restore NuGet packages
+        run: nuget restore ${{ inputs.plugin }}
 
-            - name: Download dependencies
-              shell: pwsh
-              run: |
-                  Invoke-WebRequest -Uri $env:REFERENCES_URL -OutFile "$env:GITHUB_WORKSPACE/Dev.zip"
-                  Expand-Archive -Path "$env:GITHUB_WORKSPACE/Dev.zip" -DestinationPath $env:EXILED_REFERENCES
-
-                  Invoke-WebRequest -Uri $env:AUDIO_PLAYER_API_URL -OutFile "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip"
-                  Expand-Archive -Path "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip" -DestinationPath "$env:GITHUB_WORKSPACE/AudioPlayerApi"
-
-                  Get-ChildItem "$env:GITHUB_WORKSPACE/AudioPlayerApi/dependencies" -Filter *.dll | ForEach-Object {
-                    $target = Join-Path $env:EXILED_REFERENCES $_.Name
-                    if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
+      - name: Download dependencies
+        shell: pwsh
+        run: |
+          function Invoke-WebRequestWithRetry {
+              param(
+                  [string]$Uri,
+                  [string]$OutFile,
+                  [int]$MaxRetries = 3,
+                  [int]$RetryDelaySeconds = 5
+              )
+              
+              for ($i = 0; $i -lt $MaxRetries; $i++) {
+                  try {
+                      Invoke-WebRequest -Uri $Uri -OutFile $OutFile -ErrorAction Stop
+                      return
+                  } catch {
+                      if ($i -lt $MaxRetries - 1) {
+                          Write-Host "Download failed, retrying in $RetryDelaySeconds seconds... (Attempt $($i + 1)/$MaxRetries)"
+                          Start-Sleep -Seconds $RetryDelaySeconds
+                      } else {
+                          throw
+                      }
                   }
+              }
+          }
 
-                  # Download SnakeAPI.dll directly into EXILED_REFERENCES
-                  Invoke-WebRequest -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll") -ErrorAction Stop
+          Invoke-WebRequestWithRetry -Uri $env:REFERENCES_URL -OutFile "$env:GITHUB_WORKSPACE/Dev.zip"
+          Expand-Archive -Path "$env:GITHUB_WORKSPACE/Dev.zip" -DestinationPath $env:EXILED_REFERENCES
 
-            - name: Setup MSBuild
-              uses: microsoft/setup-msbuild@v2
+          Invoke-WebRequestWithRetry -Uri $env:AUDIO_PLAYER_API_URL -OutFile "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip"
+          Expand-Archive -Path "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip" -DestinationPath "$env:GITHUB_WORKSPACE/AudioPlayerApi"
 
-            - name: Build plugin
-              run: msbuild ${{ inputs.plugin }} -t:Rebuild -property:Configuration=Release
+          Get-ChildItem "$env:GITHUB_WORKSPACE/AudioPlayerApi/dependencies" -Filter *.dll | ForEach-Object {
+            $target = Join-Path $env:EXILED_REFERENCES $_.Name
+            if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
+          }
 
-            - name: Get plugin name
-              id: plugin-name
-              shell: pwsh
-              run: |
-                  $pluginPath = "${{ inputs.plugin }}"
-                  $pluginName = [System.IO.Path]::GetFileNameWithoutExtension($pluginPath)
-                  echo "name=$pluginName" >> $env:GITHUB_OUTPUT
+          # Download SnakeAPI.dll directly into EXILED_REFERENCES
+          Invoke-WebRequestWithRetry -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll")
 
-            - name: Upload DLL as artifact
-              uses: actions/upload-artifact@v6
-              with:
-                  name: ${{ steps.plugin-name.outputs.name }}-dll
-                  path: ${{ steps.plugin-name.outputs.name }}/bin/Release/**/${{ steps.plugin-name.outputs.name }}.dll
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build plugin
+        run: msbuild ${{ inputs.plugin }} -t:Rebuild -property:Configuration=Release
+
+      - name: Get plugin name
+        id: plugin-name
+        shell: pwsh
+        run: |
+          $pluginPath = "${{ inputs.plugin }}"
+          $pluginName = [System.IO.Path]::GetFileNameWithoutExtension($pluginPath)
+          echo "name=$pluginName" >> $env:GITHUB_OUTPUT
+
+      - name: Upload DLL as artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.plugin-name.outputs.name }}-dll
+          path: ${{ steps.plugin-name.outputs.name }}/bin/Release/**/${{ steps.plugin-name.outputs.name }}.dll
