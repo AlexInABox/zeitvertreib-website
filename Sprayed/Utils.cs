@@ -11,6 +11,10 @@ using UnityEngine;
 using Zeitvertreib.Types;
 using Logger = LabApi.Features.Console.Logger;
 using Player = LabApi.Features.Wrappers.Player;
+using HintServiceMeow.Core.Enum;
+using HintServiceMeow.Core.Models.Hints;
+using HintServiceMeow.Core.Utilities;
+using UserSettings.ServerSpecific;
 
 namespace Sprayed;
 
@@ -229,5 +233,47 @@ public static class Utils
         string message = Plugin.Instance.Translation.AbilityOnCooldown.Replace("{remaining}", $"{remaining}");
         player.SendHint(message);
         return true;
+    }
+    
+    public static void RegisterHud(this Player player)
+    {
+        PlayerDisplay playerDisplay = PlayerDisplay.Get(player);
+        
+        Hint sprayListHint = new()
+        {
+            Alignment = HintAlignment.Left,
+            AutoText = _ =>
+            {
+                string hint = string.Empty;
+                if (!UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) ||
+                    sprays.Count == 0)
+                    return hint;
+
+                bool hudDisabled = ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(
+                    player.ReferenceHub,
+                    Plugin.Instance.Config!.SprayHudToogleSettingId).SyncIsB;
+
+                if (hudDisabled) return hint;
+                
+                int selectedSprayId = ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(
+                    player.ReferenceHub,
+                    Plugin.Instance.Config!.SpraySelectionSettingId).SyncSelectionIndexRaw;
+                hint += "<size=20><b><color=#F4F1BB>=== Sprays ===</color></b></size>\n";
+                for (int i = 0; i < sprays.Count; i++)
+                {
+                    (int id, string name) = sprays[i];
+                    if (i == selectedSprayId)
+                        hint += $"<size=18><color=#00FF00>> {name}</color></size>\n";
+                    else
+                        hint += $"<size=18>{name}</size>\n";
+                }
+                return hint;
+            },
+            YCoordinateAlign = HintVerticalAlign.Bottom,
+            YCoordinate = 950,
+            XCoordinate = (int)(-540f * player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 50,
+            SyncSpeed = HintSyncSpeed.Slowest
+        };
+        playerDisplay.AddHint(sprayListHint);
     }
 }

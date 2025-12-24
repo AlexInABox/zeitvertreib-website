@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
@@ -16,7 +18,7 @@ public static class EventHandlers
 
     public static void RegisterEvents()
     {
-        //PlayerEvents.Joined += OnJoined;
+        PlayerEvents.Joined += OnJoined;
 
         AudioClipStorage.LoadClip(Plugin.Instance.Config!.SpraySoundEffectPath, "spray_sound_effect");
 
@@ -32,8 +34,15 @@ public static class EventHandlers
                 Plugin.Instance.Translation.KeybindSettingHintDescription),
             new SSDropdownSetting(
                 Plugin.Instance.Config!.SpraySelectionSettingId,
-                "Select Spray",
-                ["No sprays available"])
+                "Spray auswählen:",
+                ["Kein Spray verfügbar!"]),
+            new SSTwoButtonsSetting(
+                Plugin.Instance.Config!.SprayHudToogleSettingId,
+                "Sprayed HUD?",
+                "Zeigen",
+                "Verbergen",
+                false,
+                "Diese Einstellung versteckt oder zeigt das Sprayed HUD, welches dir konstant all deine Sprays und Cooldowns anzeigt! (ist eigentlich voll nützlich)"), 
         ];
 
         if (ServerSpecificSettingsSync.DefinedSettings == null)
@@ -49,9 +58,17 @@ public static class EventHandlers
 
     public static void UnregisterEvents()
     {
-        //PlayerEvents.Joined -= OnJoined;
+        PlayerEvents.Joined -= OnJoined;
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSSReceived;
         Timing.KillCoroutines(_autoRefreshSprays);
+    }
+    
+    private static void OnJoined(PlayerJoinedEventArgs ev)
+    {
+        if (ev.Player.IsPlayer)
+        {
+            ev.Player.RegisterHud();
+        }
     }
 
     private static IEnumerator<float> AutoRefreshSprays()
@@ -73,7 +90,7 @@ public static class EventHandlers
         foreach (Player player in Player.ReadyList.Where(p => p.IsPlayer))
             try
             {
-                string[] sprayNames = ["Keine Sprays verfügbar!"];
+                string[] sprayNames = ["Kein Spray verfügbar!"];
 
                 if (Utils.UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) &&
                     sprays.Count > 0)
