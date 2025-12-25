@@ -185,8 +185,6 @@ export async function handleGenerateLoginSecret(request: Request, env: Env): Pro
   }
 
   try {
-
-
     let steamId: string;
 
     if (request.method === 'GET') {

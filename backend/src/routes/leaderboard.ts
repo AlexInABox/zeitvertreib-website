@@ -56,7 +56,6 @@ interface DiscordMessage {
   }[];
 }
 
-
 async function getSteamUsername(steamId: string, env: Env, ctx: ExecutionContext): Promise<string> {
   let steamUser = await fetchSteamUserData(steamId, env, ctx);
 
@@ -495,7 +494,7 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bot ${botToken}`,
+            Authorization: `Bot ${botToken}`,
             'Content-Type': 'application/json',
           },
         },
@@ -515,7 +514,7 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
               {
                 method: 'PATCH',
                 headers: {
-                  'Authorization': `Bot ${botToken}`,
+                  Authorization: `Bot ${botToken}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(message),
@@ -544,7 +543,7 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bot ${botToken}`,
+          Authorization: `Bot ${botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(message),
@@ -566,7 +565,11 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
   }
 }
 
-export async function updateLeaderboard(db: ReturnType<typeof drizzle>, env: Env, ctx: ExecutionContext): Promise<boolean> {
+export async function updateLeaderboard(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<boolean> {
   try {
     console.log('Starte Bestenliste Update...');
 
