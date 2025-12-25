@@ -57,7 +57,6 @@ export async function createSession(steamId: string, steamUser: SteamUser, env: 
   const now = Date.now();
   steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
-
   const sessionData: SessionData = {
     steamId,
     steamUser,
