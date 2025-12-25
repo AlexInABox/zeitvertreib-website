@@ -23,7 +23,7 @@ export async function handleSteamLogin(request: Request, _env: Env): Promise<Res
   return createResponse(generateSteamLoginUrl(request), 302);
 }
 
-export async function handleSteamCallback(request: Request, env: Env): Promise<Response> {
+export async function handleSteamCallback(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   const params = Object.fromEntries(url.searchParams.entries());
   const origin = request.headers.get('Origin');
@@ -44,7 +44,7 @@ export async function handleSteamCallback(request: Request, env: Env): Promise<R
     return createResponse({ error: 'Steam API key not configured' }, 500, origin);
   }
 
-  const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+  const steamUser = await fetchSteamUserData(steamId, env, ctx);
   if (!steamUser) {
     return createResponse({ error: 'Could not fetch user data' }, 500, origin);
   }
@@ -95,7 +95,7 @@ export async function handleSteamCallback(request: Request, env: Env): Promise<R
   return response;
 }
 
-export async function handleGetUser(request: Request, env: Env): Promise<Response> {
+export async function handleGetUser(request: Request, env: Env, ctx: ExecutionContext,): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   const origin = request.headers.get('Origin');
@@ -106,7 +106,7 @@ export async function handleGetUser(request: Request, env: Env): Promise<Respons
   }
 
   // Get Steam user data
-  const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+  const steamUser = await fetchSteamUserData(steamId, env, ctx);
   if (!steamUser) {
     return createResponse({ error: 'Failed to fetch Steam user data' }, 500, origin);
   }
@@ -238,7 +238,7 @@ export async function handleGenerateLoginSecret(request: Request, env: Env): Pro
   }
 }
 
-export async function handleLoginWithSecret(request: Request, env: Env): Promise<Response> {
+export async function handleLoginWithSecret(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   const origin = request.headers.get('Origin');
@@ -268,7 +268,7 @@ export async function handleLoginWithSecret(request: Request, env: Env): Promise
     console.log('[AUTH] Login with secret - stored steamId:', steamId);
     console.log('[AUTH] Login with secret - numeric steamId for API:', numericSteamId);
 
-    const steamUser = await fetchSteamUserData(numericSteamId, env.STEAM_API_KEY, env);
+    const steamUser = await fetchSteamUserData(numericSteamId, env, ctx);
     if (!steamUser) {
       return createResponse({ error: 'Could not fetch user data' }, 500, origin);
     }

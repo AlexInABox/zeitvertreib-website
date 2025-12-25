@@ -136,3 +136,10 @@ export const deletedSprays = sqliteTable('deleted_sprays', {
   deletedByDiscordId: text('deleted_by_discord_id').notNull(),
   reason: text('reason').notNull(),
 });
+
+export const steamCache = sqliteTable('steam_cache', {
+  steamId: text('steam_id').primaryKey().notNull(),
+  username: text('username').notNull(),
+  avatarUrl: text('avatar_url').notNull(),
+  lastUpdated: integer('last_updated').notNull().default(0),
+});

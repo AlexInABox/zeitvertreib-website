@@ -25,7 +25,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -34,7 +34,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
       this.currentUser = user;
       this.userLoggedIn = !!user;
-      this.avatarIcon = user?.avatarfull || '';
+      this.avatarIcon = user?.avatarUrl || '';
     });
 
     // Subscribe to user data changes (including fakerank admin status)

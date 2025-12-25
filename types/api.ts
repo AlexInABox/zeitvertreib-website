@@ -9,12 +9,9 @@
 // ============================================================================
 
 export interface SteamUser {
-  steamid: string;
-  personaname: string;
-  profileurl: string;
-  avatar: string;
-  avatarmedium: string;
-  avatarfull: string;
+  steamId: string;
+  username: string;
+  avatarUrl: string;
 }
 
 export interface SessionData {
@@ -223,7 +220,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {

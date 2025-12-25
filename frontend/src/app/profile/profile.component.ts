@@ -20,7 +20,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
@@ -39,11 +39,5 @@ export class ProfileComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.performLogout();
     this.router.navigate(['/']);
-  }
-
-  openSteamProfile() {
-    if (this.currentUser?.profileurl) {
-      window.open(this.currentUser.profileurl, '_blank');
-    }
   }
 }
