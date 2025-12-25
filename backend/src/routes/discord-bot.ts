@@ -213,16 +213,10 @@ export async function handleDiscordBotInteractions(
 
                 // Check if challenger account is still linked
                 if (!challengerBalance) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
-                      embeds: [
-                        {
-                          title: '🔗 Challenger-Account nicht verknüpft!',
-                          description: 'Der Ersteller der Challenge hat keinen verknüpften Zeitvertreib-Account mehr.',
-                          color: 0xff6b6b,
-                        },
-                      ],
-                      components: [],
+                      content: '❌ Der Challenge-Ersteller hat keinen verknüpften Zeitvertreib-Account mehr!',
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
@@ -230,7 +224,7 @@ export async function handleDiscordBotInteractions(
 
                 // Check if participant account is linked
                 if (!participantBalance) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       embeds: [
                         {
@@ -246,27 +240,27 @@ export async function handleDiscordBotInteractions(
                           ],
                         },
                       ],
-                      components: [],
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
                 }
 
                 if ((challengerBalance.experience || 0) < amount) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
-                      content: '❌ Challenger hat nicht genügend ZVC!',
-                      components: [],
+                      content: '❌ Der Challenge-Ersteller hat nicht genügend ZVC!',
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
                 }
 
                 if ((participantBalance.experience || 0) < amount) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Du hast nicht genügend ZVC für diesen Münzwurf!',
-                      components: [],
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
@@ -1067,24 +1061,24 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: sha256Hash
                       ? [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 3, // Green
-                                label: 'Unblock Hash',
-                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
-                              },
-                              {
-                                type: 2,
-                                style: 4, // Red
-                                label: 'Ban User',
-                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
-                              },
-                            ],
-                          },
-                        ]
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 3, // Green
+                              label: 'Unblock Hash',
+                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                            },
+                            {
+                              type: 2,
+                              style: 4, // Red
+                              label: 'Ban User',
+                              custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                            },
+                          ],
+                        },
+                      ]
                       : [],
                   },
                 });
