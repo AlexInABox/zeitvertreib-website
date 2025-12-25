@@ -22,5 +22,6 @@ public class Config
 
     [Description("Server-specific setting ID for the spray selection dropdown.")]
     public int SpraySelectionSettingId { get; set; } = 207;
+
     public int SprayHudToogleSettingId { get; set; } = 208;
 }

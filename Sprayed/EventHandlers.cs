@@ -42,7 +42,7 @@ public static class EventHandlers
                 "Zeigen",
                 "Verbergen",
                 false,
-                "Diese Einstellung versteckt oder zeigt das Sprayed HUD, welches dir konstant all deine Sprays und Cooldowns anzeigt! (ist eigentlich voll nützlich)"), 
+                "Diese Einstellung versteckt oder zeigt das Sprayed HUD, welches dir konstant all deine Sprays und Cooldowns anzeigt! (ist eigentlich voll nützlich)")
         ];
 
         if (ServerSpecificSettingsSync.DefinedSettings == null)
@@ -62,13 +62,10 @@ public static class EventHandlers
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSSReceived;
         Timing.KillCoroutines(_autoRefreshSprays);
     }
-    
+
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
-        if (ev.Player.IsPlayer)
-        {
-            ev.Player.RegisterHud();
-        }
+        if (ev.Player.IsPlayer) ev.Player.RegisterHud();
     }
 
     private static IEnumerator<float> AutoRefreshSprays()
@@ -133,10 +130,7 @@ public static class EventHandlers
             // Get available sprays for this player
             if (!Utils.UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) ||
                 sprays.Count == 0)
-            {
-                player.SendHint(Plugin.Instance.Translation.NoSprayFound, 10f);
                 return;
-            }
 
             // Query the SSSS dropdown to get the selected spray index
             SSDropdownSetting dropdown =
@@ -151,25 +145,15 @@ public static class EventHandlers
             // Get the spray data
             if (!Utils.UserSprayData.TryGetValue(player.UserId, out Dictionary<int, string[]> playerSprays) ||
                 !playerSprays.TryGetValue(sprayId, out string[] spray))
-            {
-                player.SendHint(Plugin.Instance.Translation.NoSprayFound, 10f);
                 return;
-            }
 
-            if (spray == null || spray.IsEmpty())
-            {
-                player.SendHint(Plugin.Instance.Translation.NoSprayFound, 10f);
-                return;
-            }
+            if (spray == null || spray.IsEmpty()) return;
 
             // Get optimized spray data
             if (!Utils.UserOptimizedSprayData.TryGetValue(player.UserId,
                     out Dictionary<int, string[]> optimizedSprays) ||
                 !optimizedSprays.TryGetValue(sprayId, out string[] optimizedSpray))
-            {
-                player.SendHint(Plugin.Instance.Translation.NoSprayFound, 10f);
                 return;
-            }
 
             // Raycast from player camera
             Vector3 origin = player.Camera.position;
@@ -177,8 +161,8 @@ public static class EventHandlers
             if (!Physics.Raycast(origin, direction, out RaycastHit hit, 2.8f, Utils.LayerMask)) return;
             if (Player.TryGet(hit.transform.gameObject, out _)) return;
 
-            // Woah okay we hit something, let's get started by clearing the previous spray first!
-            player.ClearExistingSpray();
+            // Woah okay we hit something, let's get started by clearing the previous spray of this type first!
+            player.ClearExistingSpray(sprayId);
 
             // Determine networked parent
             Transform parentToUse = null;
@@ -209,12 +193,11 @@ public static class EventHandlers
 
             // Let's actually spawn the thing
             Timing.RunCoroutine(SpawnSpray(position, rotation, scale, spray, optimizedSpray, parentToUse,
-                player.PlayerId));
+                player.PlayerId, sprayId));
             PlaySoundEffect(hit.point + hit.normal * 0.01f);
 
             Utils.Cooldowns[player.PlayerId] = (int)(Time.time + Plugin.Instance.Config!.CooldownDuration);
             player.SendHitMarker();
-            player.SendHint(Plugin.Instance.Translation.AbilityUsed);
         }
         catch (Exception e)
         {
@@ -224,7 +207,7 @@ public static class EventHandlers
 
     private static IEnumerator<float> SpawnSpray(Vector3 basePos, Quaternion rotation, Vector3 scale, string[] spray,
         string[] optimizedSpray,
-        Transform parent, int playerId)
+        Transform parent, int playerId, int sprayId)
     {
         // Calculate total height of the spray
         float totalHeight = (spray.Length - 1) * Utils.LineSpacing;
@@ -243,10 +226,13 @@ public static class EventHandlers
             animationPos -= rotation * Vector3.up * Utils.LineSpacing;
         }
 
-        Utils.ActiveSprays[playerId] = [];
+        if (!Utils.ActiveSprays.ContainsKey(playerId))
+            Utils.ActiveSprays[playerId] = new Dictionary<int, List<TextToy>>();
+
+        Utils.ActiveSprays[playerId][sprayId] = [];
         foreach (string _ in optimizedSpray)
         {
-            Utils.ActiveSprays[playerId].Add(CreateText(optimizedPos, scale, rotation, "", parent));
+            Utils.ActiveSprays[playerId][sprayId].Add(CreateText(optimizedPos, scale, rotation, "", parent));
 
             // Move down for chunk
             optimizedPos -= rotation * Vector3.up * Utils.OptimizedLineSpacing;
@@ -258,9 +244,9 @@ public static class EventHandlers
             yield return Timing.WaitForOneFrame;
         }
 
-        for (int i = 0; i < Utils.ActiveSprays[playerId].Count; i++)
+        for (int i = 0; i < Utils.ActiveSprays[playerId][sprayId].Count; i++)
         {
-            TextToy textToy = Utils.ActiveSprays[playerId][i];
+            TextToy textToy = Utils.ActiveSprays[playerId][sprayId][i];
             textToy.TextFormat = optimizedSpray[i];
         }
 

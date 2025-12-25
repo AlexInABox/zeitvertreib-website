@@ -5,16 +5,16 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using LabApi.Features.Wrappers;
-using Newtonsoft.Json;
-using UnityEngine;
-using Zeitvertreib.Types;
-using Logger = LabApi.Features.Console.Logger;
-using Player = LabApi.Features.Wrappers.Player;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
+using LabApi.Features.Wrappers;
+using Newtonsoft.Json;
+using UnityEngine;
 using UserSettings.ServerSpecific;
+using Zeitvertreib.Types;
+using Logger = LabApi.Features.Console.Logger;
+using Player = LabApi.Features.Wrappers.Player;
 
 namespace Sprayed;
 
@@ -46,7 +46,8 @@ public static class Utils
     public static readonly ConcurrentDictionary<string, Dictionary<int, string[]>> UserSprayData = new();
     public static readonly ConcurrentDictionary<string, Dictionary<int, string[]>> UserOptimizedSprayData = new();
 
-    public static readonly Dictionary<int, List<TextToy>> ActiveSprays = new();
+    // Dictionary<playerId, Dictionary<sprayId, List<TextToy>>>
+    public static readonly Dictionary<int, Dictionary<int, List<TextToy>>> ActiveSprays = new();
 
     // Networking
     private static readonly HttpClient HttpClient = new();
@@ -189,8 +190,10 @@ public static class Utils
                     config.Debug);
             }
 
-            if (changedUserids.Count > 0 && Player.TryGet(changedUserids[0], out Player player))
-                player.SendHint(Plugin.Instance.Translation.SpraysRefreshed, 10f);
+            // Clear existing sprays for users whose spray data changed
+            foreach (string userid in changedUserids)
+                if (Player.TryGet(userid, out Player player))
+                    player.ClearAllExistingSpray();
         }
         catch (Exception ex)
         {
@@ -216,29 +219,46 @@ public static class Utils
         return optimized;
     }
 
-    public static void ClearExistingSpray(this Player player)
+    public static void ClearExistingSpray(this Player player, int sprayId)
     {
-        if (!ActiveSprays.TryGetValue(player.PlayerId, out List<TextToy> textToys)) return;
+        if (!ActiveSprays.TryGetValue(player.PlayerId, out Dictionary<int, List<TextToy>> sprays)) return;
+        if (!sprays.TryGetValue(sprayId, out List<TextToy> textToys)) return;
+
         foreach (TextToy textToy in textToys.Where(textToy => !textToy.IsDestroyed))
             textToy.Destroy();
+
+        sprays.Remove(sprayId);
+        if (sprays.Count == 0)
+            ActiveSprays.Remove(player.PlayerId);
+    }
+
+    private static void ClearAllExistingSpray(this Player player)
+    {
+        if (!ActiveSprays.TryGetValue(player.PlayerId, out Dictionary<int, List<TextToy>> sprays)) return;
+
+        // Create a copy of keys to avoid modifying collection while iterating
+        foreach (int spraysKey in sprays.Keys.ToList())
+        {
+            List<TextToy> textToys = sprays[spraysKey];
+            foreach (TextToy textToy in textToys.Where(textToy => !textToy.IsDestroyed))
+                textToy.Destroy();
+
+            sprays.Remove(spraysKey);
+        }
+
         ActiveSprays.Remove(player.PlayerId);
     }
 
     public static bool IsOnSprayCooldown(this Player player)
     {
         if (!Cooldowns.TryGetValue(player.PlayerId, out int cooldownEnd)) return false;
-        if (cooldownEnd <= Time.time) return false;
-
-        float remaining = Mathf.Round((cooldownEnd - Time.time) * 10f) / 10f;
-        string message = Plugin.Instance.Translation.AbilityOnCooldown.Replace("{remaining}", $"{remaining}");
-        player.SendHint(message);
-        return true;
+        return !(cooldownEnd <= Time.time);
     }
-    
+
     public static void RegisterHud(this Player player)
     {
         PlayerDisplay playerDisplay = PlayerDisplay.Get(player);
-        
+
         Hint sprayListHint = new()
         {
             Alignment = HintAlignment.Left,
@@ -254,25 +274,42 @@ public static class Utils
                     Plugin.Instance.Config!.SprayHudToogleSettingId).SyncIsB;
 
                 if (hudDisabled) return hint;
-                
+
                 int selectedSprayId = ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(
                     player.ReferenceHub,
                     Plugin.Instance.Config!.SpraySelectionSettingId).SyncSelectionIndexRaw;
+
+                int cooldownSeconds = 0;
+                if (Cooldowns.TryGetValue(player.PlayerId, out int cooldownEnd))
+                    if (cooldownEnd > Time.time)
+                        cooldownSeconds = Mathf.CeilToInt(cooldownEnd - Time.time);
+
+
                 hint += "<size=20><b><color=#F4F1BB>=== Sprays ===</color></b></size>\n";
                 for (int i = 0; i < sprays.Count; i++)
                 {
                     (int id, string name) = sprays[i];
                     if (i == selectedSprayId)
-                        hint += $"<size=18><color=#00FF00>> {name}</color></size>\n";
+                    {
+                        if (cooldownSeconds > 0)
+                            hint +=
+                                $"<size=18><color=#ff8e00>> {name} <b>({cooldownSeconds}s)</b></color></size>\n";
+                        else
+                            hint += $"<size=18><color=#00FF00>> {name}</color></size>\n";
+                    }
+
                     else
+                    {
                         hint += $"<size=18>{name}</size>\n";
+                    }
                 }
+
                 return hint;
             },
             YCoordinateAlign = HintVerticalAlign.Bottom,
-            YCoordinate = 950,
+            YCoordinate = 960,
             XCoordinate = (int)(-540f * player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 50,
-            SyncSpeed = HintSyncSpeed.Slowest
+            SyncSpeed = HintSyncSpeed.Normal
         };
         playerDisplay.AddHint(sprayListHint);
     }

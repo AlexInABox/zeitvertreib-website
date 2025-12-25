@@ -15,7 +15,7 @@ public class Plugin : Plugin<Config>
         "A painful Zeitvertreib plugin to mimic CS:GO's spray mechanic in SCP:SL using the texttoy.";
 
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(2, 0, 0);
+    public override Version Version { get; } = new(2, 1, 1);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
     public Translation Translation { get; private set; }
 
