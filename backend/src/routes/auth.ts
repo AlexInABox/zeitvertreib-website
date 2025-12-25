@@ -171,20 +171,21 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
 
 export async function handleGenerateLoginSecret(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
-
   const origin = request.headers.get('Origin');
 
-  try {
-    // Validate API key authentication
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return createResponse({ error: 'API key required' }, 401, origin);
-    }
+  // Validate API key authentication
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return createResponse({ error: 'API key required' }, 401, origin);
+  }
 
-    const apiKey = authHeader.substring(7);
-    if (apiKey !== env.LOGIN_SECRET_API_KEY) {
-      return createResponse({ error: 'Invalid API key' }, 403, origin);
-    }
+  const apiKey = authHeader.substring(7);
+  if (apiKey !== env.LOGIN_SECRET_API_KEY) {
+    return createResponse({ error: 'Invalid API key' }, 403, origin);
+  }
+
+  try {
+
 
     let steamId: string;
 
