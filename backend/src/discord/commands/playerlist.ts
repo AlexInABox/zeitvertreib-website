@@ -28,18 +28,28 @@ export class PlayerlistCommand extends BaseCommand {
         throw new Error(`Failed to fetch playerlist: ${response.status} ${response.statusText}`);
       }
 
-      const playerlistData: Playerlist = await response.json();
+      const data = (await response.json()) as { timestamp: number; players: Playerlist };
 
-      if (!Array.isArray(playerlistData)) {
+      if (!data.timestamp || !Array.isArray(data.players)) {
         throw new Error('Durable Object returned invalid data format');
       }
 
-      const embed = new EmbedBuilder().setTitle('👥 Aktuelle Spielerliste').setColor(0x00ff00).setTimestamp();
+      // Check if playerlist is stale (older than 1 minute)
+      const ageInMs = Date.now() - data.timestamp;
+      const ONE_MINUTE_IN_MS = 60 * 1000;
+      const isStale = ageInMs > ONE_MINUTE_IN_MS;
 
-      if (playerlistData.length === 0) {
+      const embed = new EmbedBuilder()
+        .setTitle('👥 Aktuelle Spielerliste')
+        .setColor(isStale ? 0xff9900 : 0x00ff00)
+        .setTimestamp();
+
+      if (isStale) {
+        embed.setDescription('⚠️ Spielerliste ist veraltet (älter als 1 Minute)');
+      } else if (data.players.length === 0) {
         embed.setDescription('Keine Spieler online');
       } else {
-        const playerFields = playerlistData.map((player: Player) => ({
+        const playerFields = data.players.map((player: Player) => ({
           name: (player.Name || 'Unknown') + ' ‎  ‎  ‎ ',
           value: `-# Rolle: ${player.Team || 'Unknown'}`,
           inline: true,
@@ -56,7 +66,7 @@ export class PlayerlistCommand extends BaseCommand {
       }
 
       embed.setFooter({
-        text: `Spielerzahl: ${playerlistData.length}`,
+        text: `Spielerzahl: ${data.players.length}`,
       });
 
       await helpers.reply({ embeds: [embed.toJSON()] });
@@ -84,7 +94,7 @@ export class PlayerlistCommand extends BaseCommand {
   }
 }
 
-interface Playerlist extends Array<Player> {}
+interface Playerlist extends Array<Player> { }
 
 interface Player {
   Name: string;
