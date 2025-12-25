@@ -55,6 +55,8 @@ export async function createSession(steamId: string, steamUser: SteamUser, env: 
   const sessionId = crypto.randomUUID();
   const duration = 7 * 24 * 60 * 60 * 1000 * 4 * 3; // 3 months
   const now = Date.now();
+  steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+
 
   const sessionData: SessionData = {
     steamId,
