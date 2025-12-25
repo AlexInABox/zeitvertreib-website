@@ -7,7 +7,7 @@ export const DONATOR_ROLE_IDs = ['1356624307928825927', '1429741303842734080'];
 export const TEAM_MEMBER_ROLE_IDs = ['997161653542068225'];
 
 // Channel IDs
-export const SUPPORT_CHANNEL_ID = '889505316994166825';
+export const SUPPORT_CHANNEL_ID = '1453163357220638763';
 
 // Ticket detection phrases
 export const TICKET_PHRASES = [

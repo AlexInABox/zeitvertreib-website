@@ -715,402 +715,224 @@
         </div>
       </div>
 
-      <!-- Custom Spray Card -->
+      <!-- Custom Sprays -->
       <div class="grid-item spray-card-container">
-        <div class="stats-card p-6 rounded-2xl auto-height">
-          <!-- Help Popup (replaces entire card content when shown) -->
-          <div *ngIf="showSprayHelp" class="help-popup h-full">
-            <div class="help-content h-full">
-              <div class="help-title">Custom Spray - Dein persönliches Zeichen! 🎨</div>
-              <div class="help-text">
-                Mit einem Custom Spray kannst du dein eigenes Bild als persönliches Zeichen im Spiel verwenden.
-              </div>
-              <div class="help-text">
-                <strong>Wie funktioniert es?</strong><br />
-                • Lade ein beliebiges Bild oder GIF hoch<br />
-                • PNG/JPG bis 10MB, GIFs bis 2MB (max. 20 Frames)<br />
-                • Das Bild wird automatisch optimiert und ins Spiel übertragen<br />
-                • Nutze es, um Wände oder Oberflächen zu markieren
-              </div>
-              <div class="help-text">
-                <strong>Tipp:</strong> Einfache Designs und klare Formen funktionieren am besten! GIFs werden animiert
-                dargestellt.
-              </div>
-              <button (click)="showSprayHelp = false" class="help-close-btn">Verstanden! ✨</button>
+        <div class="stats-card p-6 rounded-2xl">
+          <div class="spray-header" *ngIf="!isSprayBanned">
+            <h3 class="spray-title">🎨 Custom Sprays</h3>
+            <p class="spray-subtitle">Bis zu {{ isDonator ? '3' : '2' }} Sprays hochladen</p>
+          </div>
+
+          <!-- Spray Ban Warning -->
+          <div *ngIf="isSprayBanned" class="spray-ban-warning">
+            <div class="spray-ban-icon">🔨</div>
+            <div class="spray-ban-content">
+              <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
+              <p class="spray-ban-reason"><strong>Grund:</strong> {{ sprayBanReason }}</p>
+              <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ sprayBannedBy }}</p>
+              <p class="spray-ban-contact">
+                Öffne ein Ticket auf unserem
+                <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"><strong>Discord-Server</strong></a
+                >.
+              </p>
             </div>
           </div>
 
-          <!-- Regular Card Content -->
-          <div *ngIf="!showSprayHelp">
-            <h3 class="text-xl font-bold text-white flex items-center justify-between cardHeader">
-              <div class="flex items-center gap-2">🎨 <span>Custom Spray</span></div>
-              <button (click)="showSprayHelp = true" class="help-button" title="Hilfe anzeigen">?</button>
-            </h3>
-
-            <!-- Banned State -->
-            <div *ngIf="isSprayBanned" class="fakerank-not-allowed">
-              <div class="not-allowed-icon">🚫</div>
-              <div class="not-allowed-message">
-                <p class="not-allowed-title">Spray-Uploads gesperrt!</p>
-                <p class="not-allowed-text">
-                  Du wurdest von Spray-Uploads ausgeschlossen.
-                  <span *ngIf="sprayBanStatus && sprayBanStatus.banReason">
-                    <br /><strong>Grund:</strong>
-                    {{ sprayBanStatus.banReason }}
-                  </span>
-                </p>
-                <p class="not-allowed-link" *ngIf="sprayBanStatus && sprayBanStatus.permanent">
-                  <strong>Diese Sperre ist permanent.</strong>
-                </p>
-                <p class="not-allowed-link" *ngIf="sprayBanStatus && !sprayBanStatus.permanent">
-                  Kontaktiere die Moderation unter
-                  <a href="https://dsc.gg/zeit" style="text-decoration: none"><strong>dsc.gg/zeit</strong></a>
-                  für weitere Informationen.
-                </p>
+          <div class="spray-grid" *ngIf="!isSprayBanned">
+            <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
+              <!-- Locked Slot -->
+              <div *ngIf="i === 2 && !isDonator" class="spray-locked">
+                <p class="spray-locked-title">🔒 Extra Slot</p>
+                <p class="spray-locked-text">Exklusiv für Unterstützer!</p>
+                <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link"> Freischalten </a>
               </div>
-            </div>
 
-            <!-- Normal Spray Functionality (only if not banned) -->
-            <div *ngIf="!isSprayBanned">
-              <!-- Current Spray Display -->
-              <div *ngIf="hasSpray" class="current-spray mb-4 text-center">
-                <div class="spray-preview-container mx-auto relative">
-                  <div class="spray-preview">
-                    <img [src]="currentSprayImage" alt="Current Spray" class="spray-image" />
-                  </div>
-                  <button
-                    (click)="removeSpray()"
-                    class="remove-spray-button"
-                    [disabled]="sprayUploadLoading"
-                    title="Spray löschen"
-                  >
-                    ×
+              <!-- Uploaded Spray -->
+              <div *ngIf="(i < 2 || isDonator) && slot.id && !slot.selectedFile" class="spray-uploaded">
+                <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
+                <div class="spray-info">
+                  <span class="spray-name">{{ slot.name }}</span>
+                  <button (click)="deleteSprayForSlot(i)" class="spray-delete-btn" [disabled]="slot.isUploading">
+                    <span *ngIf="!slot.isUploading">🗑️</span>
+                    <span *ngIf="slot.isUploading" class="spray-spinner"></span>
                   </button>
                 </div>
               </div>
 
-              <!-- No Spray State -->
-              <div *ngIf="!hasSpray && !selectedFile" class="text-center py-4">
-                <div class="text-4xl mb-2">🎨</div>
-                <p class="text-gray-300 text-sm">Kein Spray hochgeladen</p>
+              <!-- Preview & Upload (opens modal for better UX) -->
+              <div
+                *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
+                class="spray-preview"
+              >
+                <div class="spray-preview-compact">
+                  <img [src]="slot.preview" alt="Preview" class="spray-image" />
+                </div>
               </div>
 
-              <!-- Upload Section with Drag & Drop -->
-              <div class="spray-upload">
-                <div
-                  class="upload-area"
-                  [class.has-file]="selectedFile && !sprayUploadLoading"
-                  [class.loading]="sprayUploadLoading"
-                  [class.drag-over]="isDragOver"
-                  (dragover)="onDragOver($event)"
-                  (dragleave)="onDragLeave($event)"
-                  (drop)="onDrop($event)"
-                >
+              <!-- Uploading State -->
+              <div *ngIf="slot.isUploading && !slot.id" class="spray-uploading-state">
+                <div class="spray-spinner-large"></div>
+                <div class="spray-uploading-text">Wird hochgeladen...</div>
+              </div>
+
+              <!-- Empty Slot -->
+              <div *ngIf="(i < 2 || isDonator) && !slot.id && !slot.selectedFile" class="spray-empty">
+                <input
+                  type="file"
+                  [id]="'spray' + i"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  (change)="onSprayFileSelected($event, i)"
+                  class="spray-file-input"
+                />
+                <label [for]="'spray' + i" class="spray-upload-zone">
+                  <div class="spray-upload-icon">📁</div>
+                  <div class="spray-upload-text">Bild wählen</div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="sprayError" class="spray-message spray-message-error">{{ sprayError }}</div>
+          <div *ngIf="spraySuccess" class="spray-message spray-message-success">{{ spraySuccess }}</div>
+        </div>
+      </div>
+
+      <div class="preview-overlay" *ngIf="previewModalOpen" (click)="closePreviewModal(true)">
+        <div
+          class="preview-modal redesign"
+          (click)="$event.stopPropagation()"
+          [style.--accent-color]="previewModalAccentColor"
+        >
+          <div class="modal-header">
+            <div class="header-content">
+              <span class="header-icon">🎨</span>
+              <h3 class="preview-title">Spray konfigurieren</h3>
+            </div>
+            <button class="modal-close-btn" (click)="closePreviewModal(true)">✕</button>
+          </div>
+
+          <div class="modal-body redesign-body custom-scrollbar">
+            <!-- Left Column: Image (1/3) -->
+            <div class="preview-left">
+              <div class="preview-image-container">
+                <img [src]="previewModalUrl" alt="Spray Preview" class="preview-large-image" />
+              </div>
+            </div>
+
+            <!-- Right Column: Controls (2/3) -->
+            <div class="preview-right">
+              <div class="preview-input-group">
+                <label for="sprayName">Name deines Sprays (max. 20 Zeichen, nur A-Z, 0-9, _, Leerzeichen)</label>
+                <input
+                  id="sprayName"
+                  type="text"
+                  class="spray-name-input-large"
+                  [(ngModel)]="previewModalName"
+                  placeholder="z.B. Mein cooles Spray"
+                  maxlength="20"
+                  [class.invalid-input]="previewModalName && !isNameValid(previewModalName)"
+                />
+                <div *ngIf="previewModalName && !isNameValid(previewModalName)" class="input-error-hint">
+                  Nur Buchstaben, Zahlen, Unterstriche und Leerzeichen erlaubt.
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <div class="checkbox-item">
                   <input
-                    type="file"
-                    id="sprayFileInput"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    (change)="onFileSelected($event)"
-                    class="file-input"
+                    type="checkbox"
+                    id="privacyCheck"
+                    [(ngModel)]="acceptedPrivacy"
+                    (change)="acceptedPrivacy ? (showPrivacyText = false) : null"
                   />
-                  <label for="sprayFileInput" class="upload-label">
-                    <div class="upload-content">
-                      <div
-                        *ngIf="!sprayUploadLoading && !selectedFile && !backgroundRemovalProcessing"
-                        class="text-center"
-                      >
-                        <div class="text-2xl mb-2">📁</div>
-                        <p class="font-medium">Klicken oder hierher ziehen</p>
-                        <p class="text-sm opacity-75">PNG, JPG, WEBP</p>
-                        <p class="text-xs opacity-60 mt-1" *ngIf="uploadLimits">
-                          {{ uploadLimits.message }}
-                        </p>
-                        <p class="text-xs opacity-60 mt-1" *ngIf="!uploadLimits">Max: 5MB (Bilder)</p>
-                      </div>
-
-                      <!-- Original File Preview -->
-                      <div
-                        *ngIf="
-                          selectedFile && selectedFilePreview && !sprayUploadLoading && !backgroundRemovalProcessing
-                        "
-                        class="text-center"
-                      >
-                        <div class="file-preview-container mb-2">
-                          <div class="preview-wrapper" [class.bg-removed]="processedImagePreview">
-                            <img
-                              [src]="processedImagePreview || selectedFilePreview"
-                              alt="Selected Image Preview"
-                              class="file-preview-image"
-                            />
-                            <!-- Subtle glow effect for background removed images -->
-                            <div *ngIf="processedImagePreview" class="bg-removed-glow"></div>
-                          </div>
-                        </div>
-                        <p class="font-medium">{{ selectedFileName }}</p>
-                        <div class="preview-status">
-                          <p class="text-sm opacity-75">
-                            {{ processedImagePreview ? 'Bereit zum Upload' : 'Bereit zum Upload' }}
-                          </p>
-                          <!-- Clean status indicator below the image -->
-                          <div *ngIf="processedImagePreview" class="bg-removed-status">
-                            <span class="status-icon">✨</span>
-                            <span class="status-text">Hintergrund entfernt</span>
-                          </div>
-                        </div>
-                        <p
-                          *ngIf="removeBackground && !processedImagePreview"
-                          class="text-xs mt-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        >
-                          🪄 Hintergrund wird entfernt
-                        </p>
-                      </div>
-
-                      <div *ngIf="backgroundRemovalProcessing" class="text-center">
-                        <div class="loading-spinner mx-auto mb-2"></div>
-                        <p class="font-medium">Entferne Hintergrund...</p>
-                        <p class="text-sm opacity-75">Dies kann einen Moment dauern</p>
-                      </div>
-                      <div *ngIf="sprayUploadLoading" class="text-center">
-                        <div class="loading-spinner mx-auto mb-2"></div>
-                        <p class="font-medium">Wird hochgeladen...</p>
-                      </div>
-                    </div>
+                  <label for="privacyCheck">
+                    Ich akzeptiere die
+                    <span class="text-link" (click)="showPrivacyText = !showPrivacyText; $event.preventDefault()">
+                      Datenschutzhinweise
+                    </span>
                   </label>
                 </div>
-
-                <div *ngIf="selectedFile && !sprayUploadLoading" class="upload-actions mt-3">
-                  <button
-                    (click)="uploadSpray()"
-                    class="upload-button"
-                    [disabled]="backgroundRemovalProcessing"
-                    [class.disabled]="backgroundRemovalProcessing"
-                  >
-                    {{ backgroundRemovalProcessing ? 'Wird verarbeitet...' : 'Hochladen' }}
-                  </button>
-                  <button (click)="clearAllPreviews()" class="cancel-button">Abbrechen</button>
+                <div *ngIf="showPrivacyText" class="info-box-inline">
+                  <div class="info-content">
+                    <ul>
+                      <li>
+                        <strong>Öffentliche Verfügbarkeit:</strong> Dein Bild wird öffentlich zugänglich und kann an
+                        unseren Discord-Server (USA) übertragen werden.
+                      </li>
+                      <li>
+                        <strong>Datenlöschung:</strong> Eine Löschung garantiert keine vollständige Entfernung aus
+                        Backups, Caches oder Drittsystemen.
+                      </li>
+                      <li>
+                        <strong>Moderation:</strong> Bilder werden automatisiert mittels OpenAI (omni-moderation-latest)
+                        geprüft.
+                      </li>
+                      <li>
+                        <strong>Maßnahmen:</strong> Wir behalten uns vor, Bilder jederzeit zu löschen und Accounts bei
+                        Verstößen zu sperren.
+                      </li>
+                      <li>
+                        <strong>Einverständnis:</strong> Mit dem Upload erklärst du dich mit diesen Bedingungen
+                        einverstanden.
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Background Removal Toggle -->
-              <div class="background-removal-toggle mt-4">
-                <div class="toggle-container">
-                  <div class="toggle-header">
-                    <div class="toggle-info">
-                      <div class="toggle-icon">🪄</div>
-                      <div class="toggle-content">
-                        <h4 class="toggle-title">Automatische Hintergrundentfernung</h4>
-                        <p class="toggle-description">
-                          Entfernt automatisch den Hintergrund mit KI - über unseren Server!
-                        </p>
-                      </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="rulesCheck"
+                    [(ngModel)]="acceptedRules"
+                    (change)="acceptedRules ? (showRulesText = false) : null"
+                  />
+                  <label for="rulesCheck">
+                    Ich bestätige, dass ich die
+                    <span class="text-link" (click)="showRulesText = !showRulesText; $event.preventDefault()">
+                      Inhaltsregeln
+                    </span>
+                    respektiere
+                  </label>
+                </div>
+                <div *ngIf="showRulesText" class="info-box-inline">
+                  <div class="info-content">
+                    <div class="rule-section">
+                      <h5>I. Unzulässige Inhalte</h5>
+                      <p>Keine Pornographie, Erotik, Nacktheit oder politische Inhalte jeglicher Art.</p>
                     </div>
-                    <div class="toggle-switch-container">
-                      <label class="toggle-switch">
-                        <input
-                          type="checkbox"
-                          [(ngModel)]="removeBackground"
-                          [disabled]="sprayUploadLoading || backgroundRemovalProcessing"
-                          (change)="onBackgroundRemovalToggle()"
-                        />
-                        <span class="toggle-slider"></span>
-                      </label>
+                    <div class="rule-section">
+                      <h5>II. Flaggen</h5>
+                      <p>Nur UN-anerkannte Staatsflaggen oder neutrale Eigenentwürfe erlaubt.</p>
+                    </div>
+                    <div class="rule-section">
+                      <h5>III. Verhalten</h5>
+                      <p>Kein Hass, keine Diskriminierung oder Beleidigungen.</p>
+                    </div>
+                    <div class="rule-section">
+                      <h5>IV. Personen</h5>
+                      <p>Abbildungen von Kindern oder Jugendlichen (auch wirkend) sind strikt untersagt.</p>
+                    </div>
+                    <div class="rule-section">
+                      <h5>V. Konsequenzen</h5>
+                      <p>Verstöße führen zur sofortigen Accountsperrung ohne Vorwarnung.</p>
                     </div>
                   </div>
-
-                  <!-- Status indicator -->
-                  <div class="toggle-status" [class.active]="removeBackground">
-                    <span class="status-indicator"></span>
-                    <span class="status-text">
-                      {{
-                        removeBackground
-                          ? 'Aktiviert - Hintergrund wird mit KI entfernt'
-                          : 'Deaktiviert - Originalbild wird verwendet'
-                      }}
-                    </span>
-                  </div>
                 </div>
               </div>
 
-              <!-- Privacy Policy Notice -->
-              <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
-                <!-- Compact Default State -->
-                <div *ngIf="!showPrivacyDetails" class="flex items-center gap-3 p-4 md:p-5">
-                  <div class="text-yellow-400 text-xl leading-none">⚠️</div>
-                  <div class="text-sm text-yellow-100 leading-relaxed">
-                    <strong>Datenschutzhinweis:</strong>
-                    <span
-                      class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
-                      (click)="showPrivacyDetails = true"
-                      >Details anzeigen
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Expanded Privacy Details -->
-                <div *ngIf="showPrivacyDetails" id="privacy-details" class="privacy-expanded p-4 md:p-5">
-                  <div class="flex items-start gap-3 mb-3">
-                    <div class="text-yellow-400 text-xl leading-none">⚠️</div>
-                    <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
-                      Datenschutzhinweis - Wichtige Informationen
-                    </h4>
-
-                    <span
-                      class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
-                      (click)="showPrivacyDetails = false"
-                      title="Schließen"
-                      role="button"
-                      aria-label="Datenschutzhinweis schließen"
-                      aria-expanded="true"
-                      aria-controls="privacy-details"
-                    >
-                      ✕
-                    </span>
-                  </div>
-
-                  <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
-                    <li class="leading-relaxed">
-                      <span class="font-semibold">Öffentliche Verfügbarkeit und Datenübertragung:</span>
-                      Ihr hochgeladenes Bild wird öffentlich zugänglich und kann an unseren Discord-Server übertragen
-                      werden, welcher auf US-amerikanischen Servern außerhalb unserer direkten Kontrolle gehostet wird.
-                      Diese Übertragung erfolgt zur technischen Bereitstellung des Services.
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold">Datenlöschung und Persistenz:</span>
-                      Eine Löschung des Bildes durch Sie garantiert nicht die vollständige und endgültige Entfernung von
-                      unseren Systemen, Discord-Servern oder beteiligten Drittsystemen. Kopien können in Backups, Caches
-                      oder anderen technischen Systemen verbleiben.
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold">Automatisierte Inhaltsmoderation:</span>
-                      Alle hochgeladenen Bilder werden automatisiert mittels OpenAI-Moderation (Modell
-                      „omni-moderation-latest“) geprüft. Dabei können Ihre Bilddaten an OpenAI übermittelt werden. Die
-                      Verarbeitung erfolgt zur Erkennung und Vermeidung unzulässiger Inhalte.
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold">Moderationsmaßnahmen und Account-Sperrung:</span>
-                      Wir behalten uns vor, hochgeladene Bilder jederzeit und ohne Vorankündigung zu löschen. Bei
-                      Verstößen gegen diese Hinweise, gegen gesetzliche Vorgaben oder bei missbräuchlicher Nutzung kann
-                      Ihr Account ohne vorherige Warnung gesperrt werden.
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold">Internationale Datenübertragung:</span>
-                      Durch die Nutzung von Discord-Servern und die Einbindung des OpenAI-Moderationsdienstes kann eine
-                      Übertragung Ihrer Daten in die USA und ggf. weitere Drittländer erfolgen, in denen ein anderes
-                      Datenschutzniveau als in Deutschland/EU gilt.
-                    </li>
-
-                    <li class="leading-relaxed font-semibold p-2 rounded">
-                      <span class="font-semibold">Einverständniserklärung:</span>
-                      Durch das Hochladen eines Bildes erklären Sie sich mit den oben genannten Bedingungen
-                      einverstanden und bestätigen, dass Sie die rechtlichen Konsequenzen verstanden haben.
-                    </li>
-                  </ul>
-                </div>
+              <div class="upload-action">
+                <button
+                  class="btn-upload-confirm-large"
+                  (click)="confirmUploadFromModal()"
+                  [disabled]="
+                    previewModalUploading || !isNameValid(previewModalName) || !acceptedPrivacy || !acceptedRules
+                  "
+                >
+                  <span *ngIf="!previewModalUploading">🚀 Jetzt hochladen</span>
+                  <span *ngIf="previewModalUploading" class="spinner-small"></span>
+                </button>
               </div>
-
-              <!-- Rules Widget -->
-              <div class="privacy-warning mt-4 bg-yellow-900/30 border border-yellow-500/50 rounded-lg">
-                <!-- Compact Default State -->
-                <div *ngIf="!showRulesDetails" class="flex items-center gap-3 p-4 md:p-5">
-                  <div class="text-yellow-400 text-xl leading-none">📋</div>
-                  <div class="text-sm text-yellow-100 leading-relaxed">
-                    <strong>Regeln für Inhalte:</strong>
-                    <span
-                      class="text-yellow-300 underline decoration-yellow-400/70 hover:text-yellow-200 cursor-pointer ml-1"
-                      (click)="showRulesDetails = true"
-                      >Details anzeigen
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Expanded Rules Details -->
-                <div *ngIf="showRulesDetails" id="rules-details" class="privacy-expanded p-4 md:p-5">
-                  <div class="flex items-start gap-3 mb-3">
-                    <div class="text-yellow-400 text-xl leading-none">📋</div>
-                    <h4 class="text-sm md:text-base font-semibold text-yellow-100 flex-1 cardHeader">
-                      Inhaltsregeln - Was ist nicht erlaubt
-                    </h4>
-
-                    <span
-                      class="privacy-close-btn text-yellow-300 hover:text-yellow-200 text-xs md:text-sm cursor-pointer"
-                      (click)="showRulesDetails = false"
-                      title="Schließen"
-                      role="button"
-                      aria-label="Regeln schließen"
-                      aria-expanded="true"
-                      aria-controls="rules-details"
-                    >
-                      ✕
-                    </span>
-                  </div>
-
-                  <ul class="privacy-list text-sm text-yellow-100 space-y-3 pl-1">
-                    <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200">I. Unzulässige Inhalte:</span>
-                      <ul class="pl-4 space-y-2 list-disc">
-                        <li>Pornographische, erotische oder sexuelle Inhalte sowie Darstellungen von Nacktheit.</li>
-                        <li>Politische Inhalte jeglicher Art, unabhängig von der Ausrichtung.</li>
-                        <li>
-                          Ausschnitte oder Teilansichten aus verbotenem Material, auch wenn diese keine explizite
-                          Darstellung enthalten.
-                        </li>
-                      </ul>
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200">II. Flaggen:</span>
-                      <ul class="pl-4 space-y-2 list-disc">
-                        <li>
-                          Zulässig sind ausschließlich Flaggen existierender Staaten, die von den Vereinten Nationen
-                          anerkannt sind.
-                        </li>
-                        <li>
-                          Eigene, selbst entworfene Flaggen sind erlaubt, sofern sie keinen Bezug zu bestehenden
-                          Nationen aufweisen.
-                        </li>
-                      </ul>
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200">III. Kommunikation und Verhalten:</span>
-                      <ul class="pl-4 space-y-2 list-disc">
-                        <li>
-                          Hasserfüllte Aussagen, diskriminierende Äußerungen oder Beleidigungen sind nicht gestattet.
-                        </li>
-                      </ul>
-                    </li>
-
-                    <li class="leading-relaxed">
-                      <span class="font-semibold block text-yellow-200">IV. Abbildungen von Personen:</span>
-                      <ul class="pl-4 space-y-2 list-disc">
-                        <li>Darstellungen von Kindern oder Jugendlichen sind strikt untersagt.</li>
-                        <li>
-                          Dies gilt auch für Personen, die minderjährig wirken, selbst wenn sie tatsächlich volljährig
-                          sind.
-                        </li>
-                      </ul>
-                    </li>
-
-                    <li class="leading-relaxed font-semibold p-2 rounded bg-yellow-800/30">
-                      <span class="font-semibold">V. Konsequenzen bei Verstößen:</span>
-                      Bei Zuwiderhandlungen wird der betreffende Account ohne vorherige Ankündigung gesperrt.
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <!-- Messages -->
-              <div *ngIf="sprayUploadError" class="error-message mt-3">
-                {{ sprayUploadError }}
-              </div>
-              <div *ngIf="sprayUploadSuccess" class="success-message mt-3">Spray erfolgreich hochgeladen!</div>
-              <div *ngIf="sprayDeleteSuccess" class="success-message mt-3">Spray erfolgreich gelöscht!</div>
             </div>
-            <!-- End of non-banned functionality -->
           </div>
         </div>
       </div>

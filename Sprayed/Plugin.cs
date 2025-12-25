@@ -4,18 +4,18 @@ using LabApi.Features.Console;
 using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 
-namespace Tracked;
+namespace Sprayed;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>
 {
-    public override string Name { get; } = "Tracked";
+    public override string Name { get; } = "Sprayed";
 
     public override string Description { get; } =
-        "A terrible plugin for the SCP:SL server \"Zeitvertreib\" that tracks player statistics and writes them to a Cloudflare D1 database.";
+        "A painful Zeitvertreib plugin to mimic CS:GO's spray mechanic in SCP:SL using the texttoy.";
 
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(1, 16, 0);
+    public override Version Version { get; } = new(2, 1, 1);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
     public Translation Translation { get; private set; }
 

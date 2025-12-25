@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
@@ -9,13 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
-
-interface BackgroundRemovalResponse {
-  success: boolean;
-  processedImageUrl?: string;
-  message?: string;
-  error?: string;
-}
+import type { SprayGetResponseItem, SprayPostRequest, SprayDeleteRequest } from '@zeitvertreib/types';
 
 interface PlayerEntry {
   displayname?: string;
@@ -43,21 +38,13 @@ interface Statistics {
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
 
-interface UploadLimits {
-  maxOriginalSize: number;
-  maxThumbnailSize: number;
-  maxOriginalSizeMB: number;
-  maxThumbnailSizeKB: number;
-  supportedFormats: string[];
-  message: string;
-}
-
-interface SprayBanStatus {
-  isBanned: boolean;
-  banReason?: string;
-  bannedAt?: number;
-  bannedBy?: string;
-  permanent?: boolean;
+interface SpraySlot {
+  id: number | null;
+  name: string;
+  imageUrl: string | null;
+  isUploading: boolean;
+  selectedFile: File | null;
+  preview: string | null;
 }
 
 interface Redeemable {
@@ -152,23 +139,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
   errorMessage = '';
   randomColors: string[] = [];
 
-  // Spray-related properties
-  sprayUploadLoading = false;
-  sprayUploadError = '';
-  sprayUploadSuccess = false;
-  sprayDeleteSuccess = false;
-  currentSprayImage: string | null = null;
-  selectedFile: File | null = null;
-  selectedFilePreview: string | null = null; // Preview of original selected file
+  // Spray-related properties - 2 slots for normal users, 3 for donators
+  spraySlots: SpraySlot[] = [
+    { id: null, name: '', imageUrl: null, isUploading: false, selectedFile: null, preview: null },
+    { id: null, name: '', imageUrl: null, isUploading: false, selectedFile: null, preview: null },
+    { id: null, name: '', imageUrl: null, isUploading: false, selectedFile: null, preview: null },
+  ];
   showSprayHelp = false;
-  showPrivacyDetails = false;
-  showRulesDetails = false;
-  isDragOver = false;
-  uploadLimits: UploadLimits | null = null;
-  sprayBanStatus: SprayBanStatus | null = null;
-  removeBackground = false; // Toggle for automatic background removal
-  backgroundRemovalProcessing = false; // Track if background removal is in progress
-  processedImagePreview: string | null = null; // Preview of processed image
+  sprayError = '';
+  spraySuccess = '';
+  isDonator = false;
+  // Spray ban information
+  isSprayBanned = false;
+  sprayBanReason: string | null = null;
+  sprayBannedBy: string | null = null;
+  // Preview modal state
+  previewModalOpen = false;
+  previewModalSlotIndex: number | null = null;
+  previewModalName = '';
+  previewModalUrl: string | null = null;
+  previewModalUploading = false;
+  previewModalAccentColor = '#3b82f6';
+  acceptedPrivacy = false;
+  acceptedRules = false;
+  showPrivacyText = false;
+  showRulesText = false;
 
   // Fakerank-related properties
   currentFakerank: string | null = null;
@@ -315,12 +310,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     auras: ['blue'] as string[], // User owns blue aura
   };
 
+  private http = inject(HttpClient);
+
   constructor(public authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
-    this.loadCurrentSpray();
-    this.loadUploadLimits();
-    this.loadSprayBanStatus();
+    this.loadSprays();
     this.loadFakerank();
     this.loadRedeemables();
     this.loadSlotMachineInfo();
@@ -340,6 +335,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Check if user is a donator
+    this.isDonator = this.authService.isDonator();
+
+    // Check spray ban status
+    this.isSprayBanned = this.authService.isSprayBanned();
+    this.sprayBanReason = this.authService.getSprayBanReason();
+    this.sprayBannedBy = this.authService.getSprayBannedBy();
+
     // Start the access timer when component initializes
     this.startAccessTimer();
 
@@ -347,23 +350,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.initializeSlotMachine();
     }, 100);
-  }
-
-  // Handle toggle change to trigger background removal
-  async onBackgroundRemovalToggle(): Promise<void> {
-    if (this.removeBackground && this.selectedFile && !this.backgroundRemovalProcessing) {
-      // Process image for preview when toggle is turned on
-      try {
-        await this.processImageWithBackgroundRemoval(this.selectedFile);
-      } catch (error) {
-        console.error('Preview processing failed:', error);
-        // Reset toggle if processing fails
-        this.removeBackground = false;
-      }
-    } else if (!this.removeBackground) {
-      // Clear processed preview when toggle is turned off
-      this.clearProcessedPreview();
-    }
   }
 
   // Check if current user is a fakerank admin
@@ -499,66 +485,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Load the current spray image
-  private loadCurrentSpray(): void {
-    // Add cache-busting parameter to avoid browser caching issues
-    const timestamp = new Date().getTime();
-    this.authService.authenticatedGetBlob(`${environment.apiUrl}/spray/image?t=${timestamp}`).subscribe({
-      next: (response: Blob) => {
-        // Clean up previous object URL to prevent memory leaks
-        if (this.currentSprayImage) {
-          URL.revokeObjectURL(this.currentSprayImage);
-        }
-        // Convert blob to object URL for display
-        this.currentSprayImage = URL.createObjectURL(response);
-      },
-      error: (error) => {
-        // No spray found is fine, just don't set an image
-        if (error.status !== 404) {
-          console.error('Error loading spray:', error);
-        }
-        // Clean up previous object URL
-        if (this.currentSprayImage) {
-          URL.revokeObjectURL(this.currentSprayImage);
-        }
-        this.currentSprayImage = null;
-      },
-    });
-  }
+  // Load all sprays for the user (max 3)
+  private loadSprays(): void {
+    this.authService
+      .authenticatedGet<{
+        sprays: Array<{ id: number; name: string; full_res: string }>;
+      }>(`${environment.apiUrl}/spray?full_res=true`)
+      .subscribe({
+        next: (response) => {
+          const sprays = response.sprays || [];
+          // Only process first 3 sprays
+          const sprayData = sprays.slice(0, 3);
 
-  // Load upload limits for images
-  private loadUploadLimits(): void {
-    this.authService.authenticatedGet<UploadLimits>(`${environment.apiUrl}/spray/upload-limits`).subscribe({
-      next: (response) => {
-        this.uploadLimits = response;
-      },
-      error: (error) => {
-        console.error('Error loading upload limits:', error);
-        // Provide fallback limits if API call fails
-        this.uploadLimits = {
-          maxOriginalSize: 5 * 1024 * 1024, // 5MB
-          maxThumbnailSize: 10 * 1024, // 10KB
-          maxOriginalSizeMB: 5,
-          maxThumbnailSizeKB: 10,
-          supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
-          message: 'Maximale Bildgröße: 5MB',
-        };
-      },
-    });
-  }
+          // Reset all slots
+          this.spraySlots.forEach((slot) => {
+            if (slot.imageUrl) {
+              URL.revokeObjectURL(slot.imageUrl);
+            }
+            slot.id = null;
+            slot.name = '';
+            slot.imageUrl = null;
+            slot.isUploading = false;
+            slot.selectedFile = null;
+            slot.preview = null;
+          });
 
-  // Load spray ban status for current user
-  private loadSprayBanStatus(): void {
-    this.authService.authenticatedGet<SprayBanStatus>(`${environment.apiUrl}/spray/ban-status`).subscribe({
-      next: (response) => {
-        this.sprayBanStatus = response;
-      },
-      error: (error) => {
-        console.error('Error loading spray ban status:', error);
-        // If we can't load ban status, assume not banned for safety
-        this.sprayBanStatus = { isBanned: false };
-      },
-    });
+          // Load spray data into slots
+          sprayData.forEach((spray, index) => {
+            if (index < 3 && spray.full_res) {
+              this.spraySlots[index].id = spray.id;
+              this.spraySlots[index].name = spray.name;
+              this.spraySlots[index].imageUrl = spray.full_res;
+            }
+          });
+        },
+        error: (error) => {
+          if (error.status !== 404) {
+            console.error('Error loading sprays:', error);
+          }
+        },
+      });
   }
 
   // Load available zeitvertreib coin redeemables
@@ -619,347 +585,301 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.generateRandomColors();
   }
 
-  // Spray functionality methods
-  onFileSelected(event: Event): void {
+  // ===== SPRAY FUNCTIONALITY =====
+
+  // Handle file selection for a specific slot
+  onSprayFileSelected(event: Event, slotIndex: number): void {
     const target = event.target as HTMLInputElement;
-    if (target?.files?.[0]) {
-      const file = target.files[0];
+    if (!target?.files?.[0]) return;
 
-      // Validate file type - no GIFs allowed
-      if (!file.type.startsWith('image/') || file.type === 'image/gif') {
-        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
-        target.value = ''; // Clear the input
-        return;
-      }
+    const file = target.files[0];
 
-      // Check if file type is supported
-      if (this.uploadLimits?.supportedFormats && !this.uploadLimits.supportedFormats.includes(file.type)) {
-        this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
-        target.value = ''; // Clear the input
-        return;
-      }
-
-      this.setSelectedFile(file);
+    // Validate file type
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+      this.sprayError = 'Nur Bilddateien erlaubt (PNG, JPG, WEBP - keine GIFs)';
+      target.value = '';
+      return;
     }
-  }
 
-  // Helper method to set selected file and create preview
-  private setSelectedFile(file: File): void {
+    const slot = this.spraySlots[slotIndex];
+    if (!slot) return;
+
     // Clean up previous preview
-    if (this.selectedFilePreview) {
-      URL.revokeObjectURL(this.selectedFilePreview);
+    if (slot.preview) {
+      URL.revokeObjectURL(slot.preview);
     }
 
-    this.selectedFile = file;
-    this.selectedFilePreview = URL.createObjectURL(file);
-    this.sprayUploadError = '';
-    this.sprayUploadSuccess = false;
-    this.sprayDeleteSuccess = false;
+    slot.selectedFile = file;
+    slot.preview = URL.createObjectURL(file);
+    slot.name = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+    this.sprayError = '';
+    this.spraySuccess = '';
 
-    // Clear any existing processed preview since we have a new file
-    this.clearProcessedPreview();
+    // Extract prominent color for modal styling
+    this.extractProminentColor(file);
+
+    // Open preview modal for better editing on small previews
+    this.openPreviewModal(slotIndex);
   }
 
-  // Drag and drop methods
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = true;
-  }
+  private extractProminentColor(file: File): void {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-  }
+      // Downsample for performance
+      canvas.width = 40;
+      canvas.height = 40;
+      ctx.drawImage(img, 0, 0, 40, 40);
 
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
+      const imageData = ctx.getImageData(0, 0, 40, 40).data;
+      let maxSat = -1;
+      let bestColor = [59, 130, 246]; // Default blue
 
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file && file.type.startsWith('image/') && file.type !== 'image/gif') {
-        // Check if file type is supported
-        if (this.uploadLimits?.supportedFormats && !this.uploadLimits.supportedFormats.includes(file.type)) {
-          this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
-          return;
+      for (let i = 0; i < imageData.length; i += 4) {
+        const r = imageData[i];
+        const g = imageData[i + 1];
+        const b = imageData[i + 2];
+        const a = imageData[i + 3];
+
+        if (a > 200) {
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const sat = max === 0 ? 0 : (max - min) / max;
+
+          // Prefer colors that are not too dark and not too light
+          const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+          if (sat > maxSat && brightness > 40 && brightness < 220) {
+            maxSat = sat;
+            bestColor = [r, g, b];
+          }
         }
-        this.setSelectedFile(file);
+      }
+
+      this.previewModalAccentColor = `rgb(${bestColor[0]}, ${bestColor[1]}, ${bestColor[2]})`;
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  openPreviewModal(slotIndex: number): void {
+    const slot = this.spraySlots[slotIndex];
+    if (!slot || !slot.selectedFile) return;
+    this.previewModalSlotIndex = slotIndex;
+    this.previewModalUrl = slot.preview;
+    this.previewModalName = slot.name || '';
+    this.previewModalOpen = true;
+    this.acceptedPrivacy = false;
+    this.acceptedRules = false;
+    this.showPrivacyText = false;
+    this.showRulesText = false;
+    this.toggleBodyScroll(true);
+  }
+
+  closePreviewModal(cancel = false): void {
+    if (cancel && this.previewModalSlotIndex !== null) {
+      this.cancelSpraySelection(this.previewModalSlotIndex);
+    }
+    this.previewModalOpen = false;
+    this.previewModalSlotIndex = null;
+    this.previewModalUrl = null;
+    this.previewModalName = '';
+    this.toggleBodyScroll(false);
+  }
+
+  public isNameValid(name: string): boolean {
+    if (!name) return false;
+    const nameRegex = /^[a-zA-Z0-9_ ]+$/;
+    return name.length > 0 && name.length <= 20 && nameRegex.test(name);
+  }
+
+  private toggleBodyScroll(block: boolean): void {
+    if (typeof document !== 'undefined') {
+      if (block) {
+        document.body.classList.add('modal-open');
       } else {
-        this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+        document.body.classList.remove('modal-open');
       }
     }
   }
 
-  async uploadSpray(): Promise<void> {
-    if (!this.selectedFile) {
-      this.sprayUploadError = 'Bitte wähle eine Datei aus';
+  async confirmUploadFromModal(): Promise<void> {
+    if (this.previewModalSlotIndex === null) return;
+    const slot = this.spraySlots[this.previewModalSlotIndex];
+    if (!slot) return;
+    // apply name
+    slot.name = this.previewModalName || slot.name;
+    // Close modal and start upload (uploadSprayForSlot handles validations)
+    this.previewModalOpen = false;
+    this.previewModalUploading = true;
+    await this.uploadSprayForSlot(this.previewModalSlotIndex);
+    this.previewModalUploading = false;
+  }
+
+  // Upload spray for a specific slot
+  async uploadSprayForSlot(slotIndex: number): Promise<void> {
+    const slot = this.spraySlots[slotIndex];
+    if (!slot || !slot.selectedFile) {
+      this.sprayError = 'Bitte wähle eine Datei aus';
       return;
     }
 
-    // Validate file type - only images, no GIFs
-    if (!this.selectedFile.type.startsWith('image/') || this.selectedFile.type === 'image/gif') {
-      this.sprayUploadError = 'Bitte wähle eine Bilddatei aus (PNG, JPG, WEBP - keine GIFs)';
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
+    if (slot.selectedFile.size > maxSize) {
+      this.sprayError = 'Datei ist zu groß. Maximum sind 10MB';
       return;
     }
 
-    // Validate supported formats
-    if (this.uploadLimits?.supportedFormats && !this.uploadLimits.supportedFormats.includes(this.selectedFile.type)) {
-      this.sprayUploadError = 'Dateiformate unterstützt: PNG, JPG, WEBP';
+    // Validate name length
+    if (slot.name && slot.name.length > 20) {
+      this.sprayError = 'Der Name darf maximal 20 Zeichen lang sein';
       return;
     }
 
-    // Validate file size using dynamic limits
-    const maxSize = this.uploadLimits?.maxOriginalSize || 5 * 1024 * 1024; // Fallback to 5MB
-    if (this.selectedFile.size > maxSize) {
-      const maxSizeMB = this.uploadLimits?.maxOriginalSizeMB || 5;
-      this.sprayUploadError = `Datei ist zu groß. Maximum sind ${maxSizeMB}MB`;
+    // Validate name characters
+    const nameRegex = /^[a-zA-Z0-9_ ]+$/;
+    if (slot.name && !nameRegex.test(slot.name)) {
+      this.sprayError = 'Der Name darf nur Buchstaben, Zahlen, Unterstriche und Leerzeichen enthalten';
       return;
     }
 
-    this.sprayUploadLoading = true;
-    this.sprayUploadError = '';
-    this.sprayDeleteSuccess = false;
+    slot.isUploading = true;
+    this.sprayError = '';
+    this.spraySuccess = '';
 
     try {
-      // Process image with background removal if enabled
-      const fileToProcess = await this.processImageWithBackgroundRemoval(this.selectedFile);
+      // Process image to create pixel data and base64
+      const { pixelData, base64Data } = await this.processImageForSpray(slot.selectedFile);
 
-      // Process the image (no more GIF processing since GIFs are not supported)
-      const processedData = await this.processImageForUpload(fileToProcess);
+      // Create request payload
+      const requestBody: SprayPostRequest = {
+        name: slot.name || 'Unnamed Spray',
+        full_res: base64Data,
+        text_toy: pixelData,
+      };
 
-      if (!this.selectedFile) {
-        throw new Error('Keine Datei ausgewählt');
+      // Upload to backend
+      await this.authService
+        .authenticatedPost<{ success: boolean; id: number }>(`${environment.apiUrl}/spray`, requestBody)
+        .toPromise();
+
+      // Clean up and reload
+      if (slot.preview) {
+        URL.revokeObjectURL(slot.preview);
       }
+      slot.selectedFile = null;
+      slot.preview = null;
+      slot.isUploading = false;
 
-      const formData = new FormData();
-      formData.append('smallImage', processedData.smallImage); // Thumbnail for storage
-      formData.append('originalImage', fileToProcess); // Use processed file (with or without background removal)
-      formData.append('isGif', 'false'); // No more GIF support
-      formData.append('removeBackground', this.removeBackground.toString()); // Background removal toggle
-
-      // Only handle regular image data
-      if ('pixelData' in processedData) {
-        formData.append('pixelData', processedData.pixelData); // Single string for images
-      }
-
-      await this.authService.authenticatedPost(`${environment.apiUrl}/spray/upload`, formData).toPromise();
-
-      this.sprayUploadLoading = false;
-      this.sprayUploadSuccess = true;
-      this.sprayUploadError = '';
-      this.selectedFile = null;
-      this.removeBackground = false; // Reset toggle after successful upload
-
-      // Clean up all preview URLs
-      if (this.selectedFilePreview) {
-        URL.revokeObjectURL(this.selectedFilePreview);
-        this.selectedFilePreview = null;
-      }
-      if (this.processedImagePreview) {
-        URL.revokeObjectURL(this.processedImagePreview);
-        this.processedImagePreview = null;
-      }
-
-      // Reset file input
-      const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-
-      // Reload spray image
-      this.loadCurrentSpray();
+      this.spraySuccess = 'Spray erfolgreich hochgeladen!';
+      this.loadSprays();
     } catch (error: any) {
       console.error('Spray upload error:', error);
-      this.sprayUploadLoading = false;
-      this.sprayUploadError = error?.error?.error || error?.message || 'Fehler beim Hochladen des Sprays';
-      this.sprayUploadSuccess = false;
+      slot.isUploading = false;
+      this.sprayError = error?.error?.error || error?.message || 'Fehler beim Hochladen';
     }
   }
 
-  // Method to remove current spray
-  removeSpray(): void {
-    if (!this.hasSpray) {
-      return;
-    }
+  // Delete spray for a specific slot
+  async deleteSprayForSlot(slotIndex: number): Promise<void> {
+    const slot = this.spraySlots[slotIndex];
+    if (!slot || !slot.id) return;
 
-    this.sprayUploadLoading = true;
-    this.sprayUploadError = '';
-    this.sprayUploadSuccess = false;
-    this.sprayDeleteSuccess = false;
+    slot.isUploading = true;
+    this.sprayError = '';
+    this.spraySuccess = '';
 
-    this.authService.authenticatedDelete(`${environment.apiUrl}/spray/delete`).subscribe({
-      next: (_response: any) => {
-        this.sprayUploadLoading = false;
-        this.sprayDeleteSuccess = true;
-        this.sprayUploadSuccess = false;
-        this.sprayUploadError = '';
-
-        // Clear the cached image URL to avoid browser caching issues
-        if (this.currentSprayImage) {
-          URL.revokeObjectURL(this.currentSprayImage);
-        }
-        this.currentSprayImage = null;
-
-        // Clear any selected file as well
-        this.selectedFile = null;
-        const fileInput = document.getElementById('sprayFileInputMini') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-      },
-      error: (error: any) => {
-        console.error('Spray deletion error:', error);
-        this.sprayUploadLoading = false;
-        this.sprayUploadError = error.error?.error || 'Fehler beim Löschen des Sprays';
-        this.sprayUploadSuccess = false;
-        this.sprayDeleteSuccess = false;
-      },
-    });
-  }
-
-  get hasSpray(): boolean {
-    return !!this.currentSprayImage;
-  }
-
-  get selectedFileName(): string {
-    return this.selectedFile?.name || '';
-  }
-
-  get isSprayBanned(): boolean {
-    return this.sprayBanStatus?.isBanned === true;
-  }
-
-  // Clear processed image preview
-  clearProcessedPreview(): void {
-    if (this.processedImagePreview) {
-      URL.revokeObjectURL(this.processedImagePreview);
-      this.processedImagePreview = null;
-    }
-  }
-
-  // Clear all previews and selected file
-  clearAllPreviews(): void {
-    if (this.selectedFilePreview) {
-      URL.revokeObjectURL(this.selectedFilePreview);
-      this.selectedFilePreview = null;
-    }
-    this.clearProcessedPreview();
-    this.selectedFile = null;
-    this.removeBackground = false;
-
-    // Reset file input
-    const fileInput = document.getElementById('sprayFileInput') as HTMLInputElement;
-    if (fileInput) fileInput.value = '';
-  }
-
-  ngOnDestroy(): void {
-    // Stop the access timer
-    this.stopAccessTimer();
-
-    // Clean up object URLs to prevent memory leaks
-    if (this.currentSprayImage) {
-      URL.revokeObjectURL(this.currentSprayImage);
-    }
-
-    // Clean up file previews
-    if (this.selectedFilePreview) {
-      URL.revokeObjectURL(this.selectedFilePreview);
-    }
-    if (this.processedImagePreview) {
-      URL.revokeObjectURL(this.processedImagePreview);
-    }
-
-    // Clean up event listener
-    if (this.documentClickHandler) {
-      document.removeEventListener('click', this.documentClickHandler);
-    }
-  }
-
-  // Process image with background removal if enabled
-  private async processImageWithBackgroundRemoval(file: File): Promise<File> {
-    if (!this.removeBackground) {
-      return file; // Return original file if background removal is disabled
-    }
+    const requestBody: SprayDeleteRequest = {
+      id: slot.id,
+    };
 
     try {
-      this.backgroundRemovalProcessing = true;
+      // Use HTTP client directly with DELETE method and body
+      await this.http
+        .delete<{ success: boolean }>(`${environment.apiUrl}/spray`, {
+          body: requestBody,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        })
+        .toPromise();
 
-      // Send image to backend for background removal
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = (await this.authService
-        .authenticatedPost(`${environment.apiUrl}/spray/remove-background`, formData)
-        .toPromise()) as BackgroundRemovalResponse;
-
-      if (!response?.success || !response?.processedImageUrl) {
-        throw new Error('Backend did not return processed image URL');
-      }
-
-      // Fetch the processed image from the URL
-      const imageResponse = await fetch(response.processedImageUrl);
-      if (!imageResponse.ok) {
-        throw new Error('Failed to fetch processed image');
-      }
-
-      const imageBlob = await imageResponse.blob();
-
-      // Create preview URL for display
-      if (this.processedImagePreview) {
-        URL.revokeObjectURL(this.processedImagePreview);
-      }
-      this.processedImagePreview = URL.createObjectURL(imageBlob);
-
-      // Convert blob to file
-      const processedFile = new File([imageBlob], file.name, {
-        type: 'image/png', // Background removal always outputs PNG for transparency
-        lastModified: Date.now(),
-      });
-
-      this.backgroundRemovalProcessing = false;
-      return processedFile;
-    } catch (error) {
-      this.backgroundRemovalProcessing = false;
-      console.error('Background removal failed:', error);
-      this.sprayUploadError =
-        'Hintergrundentfernung fehlgeschlagen: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler');
-      return file; // Fall back to original file
+      slot.isUploading = false;
+      this.spraySuccess = 'Spray erfolgreich gelöscht!';
+      this.loadSprays();
+    } catch (error: any) {
+      console.error('Spray deletion error:', error);
+      slot.isUploading = false;
+      this.sprayError = error?.error?.error || 'Fehler beim Löschen';
     }
   }
 
-  // Process image to create 50x50 thumbnail and high-quality pixel data
-  private async processImageForUpload(file: File): Promise<{ smallImage: Blob; pixelData: string }> {
+  // Cancel file selection for a slot
+  cancelSpraySelection(slotIndex: number): void {
+    const slot = this.spraySlots[slotIndex];
+    if (!slot) return;
+
+    if (slot.preview) {
+      URL.revokeObjectURL(slot.preview);
+    }
+    slot.selectedFile = null;
+    slot.preview = null;
+  }
+
+  // Process image to create pixel data and base64
+  private async processImageForSpray(file: File): Promise<{ pixelData: string; base64Data: string }> {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         try {
+          // Create compressed WebP version under 50KB
+          const compressedCanvas = document.createElement('canvas');
+          const compressedCtx = compressedCanvas.getContext('2d');
+          if (!compressedCtx) throw new Error('Could not get canvas context');
+
+          compressedCanvas.width = img.width;
+          compressedCanvas.height = img.height;
+          compressedCtx.drawImage(img, 0, 0);
+
+          // Compress to WebP with lossy quality, aiming for < 50KB
+          let quality = 0.8;
+          let base64Data = '';
+          let compressed = false;
+
+          while (quality >= 0.1 && !compressed) {
+            base64Data = await new Promise<string>((resolveCompress) => {
+              compressedCanvas.toBlob(
+                (blob) => {
+                  if (blob && blob.size < 50 * 1024) {
+                    compressed = true;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    resolveCompress(reader.result as string);
+                  };
+                  reader.readAsDataURL(blob!);
+                },
+                'image/webp',
+                quality,
+              );
+            });
+            quality -= 0.1;
+          }
+
+          // Create pixel art from original
           const pixelArtQuality = 100;
-
-          // Create 50x50 thumbnail (for storage/display)
-          const thumbnailCanvas = document.createElement('canvas');
-          const thumbnailCtx = thumbnailCanvas.getContext('2d');
-          if (!thumbnailCtx) throw new Error('Konnte 2D-Kontext für Thumbnail-Canvas nicht erhalten');
-
-          thumbnailCanvas.width = 50;
-          thumbnailCanvas.height = 50;
-
-          // Scale thumbnail so the longest side becomes 50px
-          const { width: thumbWidth, height: thumbHeight } = this.scaleToLongestSide(img.width, img.height, 50);
-          const thumbOffsetX = (50 - thumbWidth) / 2;
-          const thumbOffsetY = (50 - thumbHeight) / 2;
-
-          thumbnailCtx.clearRect(0, 0, 50, 50);
-          thumbnailCtx.drawImage(img, thumbOffsetX, thumbOffsetY, thumbWidth, thumbHeight);
-
-          // Create high-quality canvas for pixel art generation
           const pixelCanvas = document.createElement('canvas');
           const pixelCtx = pixelCanvas.getContext('2d');
-          if (!pixelCtx) throw new Error('Konnte 2D-Kontext für Pixel-Canvas nicht erhalten');
+          if (!pixelCtx) throw new Error('Could not get canvas context');
 
           pixelCanvas.width = pixelArtQuality;
           pixelCanvas.height = pixelArtQuality;
 
-          // Scale for pixel art so the longest side becomes pixelArtQuality
+          // Scale image to fit canvas
           const { width: pixelWidth, height: pixelHeight } = this.scaleToLongestSide(
             img.width,
             img.height,
@@ -971,36 +891,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
           pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
           pixelCtx.drawImage(img, pixelOffsetX, pixelOffsetY, pixelWidth, pixelHeight);
 
-          // Extract pixel data from high-quality canvas to create pixel art string
+          // Extract pixel data for text toy
           const pixelData = this.createPixelArtFromCanvas(pixelCtx, pixelArtQuality, pixelArtQuality);
 
-          // Convert thumbnail canvas to blob for storage
-          thumbnailCanvas.toBlob(
-            (smallBlob) => {
-              if (!smallBlob) {
-                reject(new Error('Konnte Thumbnail-Blob nicht erstellen'));
-                return;
-              }
-
-              resolve({ smallImage: smallBlob, pixelData });
-            },
-            'image/png',
-            1.0,
-          ); // Use PNG to preserve transparency
+          resolve({ pixelData, base64Data });
         } catch (error) {
           reject(error);
         }
       };
 
-      img.onerror = () => reject(new Error('Konnte Bild nicht laden'));
+      img.onerror = () => reject(new Error('Could not load image'));
       img.src = URL.createObjectURL(file);
     });
   }
 
-  // Create pixel art string from canvas data (like the C# version)
+  // Create pixel art string from canvas data
   private createPixelArtFromCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): string {
     const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data; // RGBA array
+    const data = imageData.data;
     let result = '';
 
     for (let y = 0; y < height; y++) {
@@ -1009,35 +917,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
       let consecutiveCount = 0;
 
       for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4; // 4 bytes per pixel (RGBA)
+        const index = (y * width + x) * 4;
         const r = data[index];
         const g = data[index + 1];
         const b = data[index + 2];
         const alpha = data[index + 3];
 
-        // Ensure all values are defined
         if (r === undefined || g === undefined || b === undefined || alpha === undefined) {
           continue;
         }
 
-        // Handle transparency like the C# code (alpha < 25 becomes transparent block)
+        // Handle transparency
         if (alpha < 25) {
           if (consecutiveCount > 0 && currentColor) {
             line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
             consecutiveCount = 0;
           }
-          line += '<color=#00000000>█</color>'; // Transparent unicode block
+          line += '<color=#00000000>█</color>';
           currentColor = '';
           continue;
         }
 
-        // Convert to hex color
         const pixelColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 
         if (pixelColor === currentColor) {
           consecutiveCount++;
         } else {
-          // Flush previous color group
           if (consecutiveCount > 0 && currentColor) {
             line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
           }
@@ -1046,12 +951,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
 
-      // Flush remaining pixels for this line
       if (consecutiveCount > 0 && currentColor) {
         line += `<color=${currentColor}>${'█'.repeat(consecutiveCount)}</color>`;
       }
 
-      // Always add the line and a newline, like the C# version
       result += line + '\n';
     }
 
@@ -1066,26 +969,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ): { width: number; height: number } {
     const longestSide = Math.max(srcWidth, srcHeight);
     const scaleFactor = targetSize / longestSide;
-
     return {
       width: Math.floor(srcWidth * scaleFactor),
       height: Math.floor(srcHeight * scaleFactor),
     };
   }
 
-  // Calculate dimensions that fit within max width/height while keeping aspect ratio
-  // private calculateAspectRatioFit(
-  //   srcWidth: number,
-  //   srcHeight: number,
-  //   maxWidth: number,
-  //   maxHeight: number,
-  // ): { width: number; height: number } {
-  //   const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
-  //   return {
-  //     width: Math.floor(srcWidth * ratio),
-  //     height: Math.floor(srcHeight * ratio),
-  //   };
-  // }
+  ngOnDestroy(): void {
+    // Stop the access timer
+    this.stopAccessTimer();
+
+    // Clean up spray slot URLs
+    this.spraySlots.forEach((slot) => {
+      if (slot.imageUrl) {
+        URL.revokeObjectURL(slot.imageUrl);
+      }
+      if (slot.preview) {
+        URL.revokeObjectURL(slot.preview);
+      }
+    });
+
+    // Clean up event listener
+    if (this.documentClickHandler) {
+      document.removeEventListener('click', this.documentClickHandler);
+    }
+  }
+
+  // ===== FAKERANK METHODS =====
 
   // Fakerank methods
   loadFakerank(): void {

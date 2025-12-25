@@ -28,7 +28,7 @@ VALUES (
   'unknown',
   'unknown',
   2840140800,
-  2840140800,
+  0,
   2840140800
 )
 ON CONFLICT(discordId) DO UPDATE SET
@@ -37,3 +37,21 @@ ON CONFLICT(discordId) DO UPDATE SET
   booster_since = excluded.booster_since,
   donator_since = excluded.donator_since,
   team_since = excluded.team_since;
+
+
+INSERT INTO spray_bans (
+  userid,
+  banned_at,
+  reason,
+  banned_by_discord_id
+)
+VALUES (
+  '76561198354414854@steam',
+  2840140800,
+  'Wiederholtes hochladen unangemessener Sprays.',
+  '428870593358594048'
+)
+ON CONFLICT(userid) DO UPDATE SET
+  banned_at = excluded.banned_at,
+  reason = excluded.reason,
+  banned_by_discord_id = excluded.banned_by_discord_id;

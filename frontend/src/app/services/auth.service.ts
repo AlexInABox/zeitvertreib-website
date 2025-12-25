@@ -13,6 +13,9 @@ export interface UserData {
   isModerator: boolean;
   isDonator: boolean;
   isBooster: boolean;
+  isSprayBanned: boolean;
+  sprayBanReason: string | null;
+  sprayBannedBy: string | null;
 }
 
 @Injectable({
@@ -214,6 +217,30 @@ export class AuthService {
 
     const currentTimestamp = Math.floor(Date.now() / 1000);
     return currentTimestamp < fakerankOverrideUntil;
+  }
+
+  // Check if user is a donator
+  isDonator(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isDonator ?? false;
+  }
+
+  // Check if user is spray banned
+  isSprayBanned(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isSprayBanned ?? false;
+  }
+
+  // Get spray ban reason
+  getSprayBanReason(): string | null {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.sprayBanReason ?? null;
+  }
+
+  // Get username of moderator who banned the user
+  getSprayBannedBy(): string | null {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.sprayBannedBy ?? null;
   }
 
   // Get remaining fakerank override time in seconds

@@ -595,3 +595,39 @@ export interface PlayerlistPostRequestItem {
 export interface PlayerlistPostRequest {
   players: PlayerlistPostRequestItem[];
 }
+
+// ============================================================================
+// Spray Types
+// ============================================================================
+
+type Base64URLString = string;
+
+/** POST /spray request */
+export interface SprayPostRequest {
+  name: string;
+  full_res: Base64URLString;
+  text_toy: string;
+}
+
+/** DELETE /spray request */
+export interface SprayDeleteRequest {
+  id: number;
+}
+
+/** GET /spray request params*/
+export interface SprayGetRequest {
+  userids?: string[];
+  full_res?: boolean;
+  text_toy?: boolean;
+}
+
+/** GET /spray response */
+export interface SprayGetResponseItem {
+  sprays: {
+    userid: string;
+    id: number;
+    name: string;
+    full_res?: Base64URLString;
+    text_toy?: string;
+  }[];
+}

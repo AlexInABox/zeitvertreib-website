@@ -7,11 +7,12 @@ import { REST } from '@discordjs/rest';
 import { Routes, InteractionType } from 'discord-api-types/v10';
 import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
+import { AwsClient } from 'aws4fetch';
 import { createResponse } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
-import { playerdata } from '../db/schema.js';
+import { playerdata, sprays, sprayBans, deletedSprays } from '../db/schema.js';
 
 interface VerificationResult {
   isValid: boolean;
@@ -397,7 +398,714 @@ export async function handleDiscordBotInteractions(
       }
     }
 
+    // Handle spray ban button - show modal
+    if (customId.startsWith('spray_ban:')) {
+      const parts = customId.split(':');
+      const sha256Hash = parts[1] || '';
+      const userId = parts[2] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `spray_ban_modal:${sha256Hash}:${userId}`,
+            title: 'Ban User from Sprays',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'ban_reason',
+                    label: 'Reason for ban',
+                    style: 2,
+                    min_length: 1,
+                    max_length: 500,
+                    placeholder: 'Enter the reason for banning this user...',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle spray unban button - show modal
+    if (customId.startsWith('spray_unban:')) {
+      const parts = customId.split(':');
+      const userId = parts[1] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `spray_unban_modal:${userId}`,
+            title: 'Unban User from Sprays',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'unban_reason',
+                    label: 'Reason for unban',
+                    style: 2,
+                    min_length: 1,
+                    max_length: 500,
+                    placeholder: 'Enter the reason for unbanning this user...',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle spray delete/undelete button
+    if (customId.startsWith('spray_delete:') || customId.startsWith('spray_undelete:')) {
+      const parts = customId.split(':');
+      console.log(`🔍 Spray delete/undelete interaction, parts:`, parts);
+
+      if (parts.length < 3) {
+        console.error(`❌ Invalid custom_id format, expected at least 3 parts, got ${parts.length}:`, customId);
+        return createResponse({ error: 'Invalid spray moderation data - missing parts' }, 400, origin);
+      }
+
+      const action = parts[0]; // 'spray_delete' or 'spray_undelete'
+      const sha256Hash = parts[1] || '';
+      const userId = parts[2] || '';
+
+      const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+      if (!moderatorId) {
+        console.error(`❌ Missing moderatorId:`, { moderatorId });
+        return createResponse({ error: 'Invalid spray moderation data' }, 400, origin);
+      }
+
+      if (!sha256Hash) {
+        console.error(`❌ Missing sha256Hash in custom_id:`, customId);
+        return createResponse({ error: 'Invalid spray moderation data - missing hash' }, 400, origin);
+      }
+
+      // For spray_delete, show modal to require deletion reason
+      if (action === 'spray_delete') {
+        return createResponse(
+          {
+            type: InteractionResponseType.MODAL,
+            data: {
+              title: 'Delete Spray',
+              custom_id: `spray_delete_modal:${sha256Hash}:${userId}`,
+              components: [
+                {
+                  type: 1,
+                  components: [
+                    {
+                      type: 4,
+                      custom_id: 'delete_reason',
+                      label: 'Reason for deletion',
+                      style: 2, // Paragraph
+                      required: true,
+                      max_length: 500,
+                      placeholder: 'Why are you deleting this spray?',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          200,
+          origin,
+        );
+      }
+
+      // For spray_undelete, show modal to require restoration reason
+      if (action === 'spray_undelete') {
+        return createResponse(
+          {
+            type: InteractionResponseType.MODAL,
+            data: {
+              title: 'Unblock Spray Hash',
+              custom_id: `spray_undelete_modal:${sha256Hash}:${userId}`,
+              components: [
+                {
+                  type: 1,
+                  components: [
+                    {
+                      type: 4,
+                      custom_id: 'restore_reason',
+                      label: 'Reason for unblocking',
+                      style: 2, // Paragraph
+                      required: true,
+                      max_length: 500,
+                      placeholder: 'Why are you unblocking this hash?',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
     return createResponse({ error: 'Unknown component interaction' }, 400, origin);
+  }
+
+  // Handle modal submissions
+  if (interaction.type === InteractionType.ModalSubmit) {
+    const customId = interaction.data.custom_id;
+    console.log('📥 ModalSubmit received, custom_id=', customId);
+    try {
+      console.log('📥 Modal data:', JSON.stringify(interaction.data));
+    } catch (e) {
+      console.log('📥 Modal data (non-serializable)');
+    }
+
+    // Handle spray delete modal submission
+    if (customId.startsWith('spray_delete_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const sha256Hash = parts[1] || '';
+        const userId = parts[2] || '';
+
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+        console.log('🗑️ spray_delete_modal submit parsed:', { userId, sha256Hash, moderatorId });
+
+        // Extract reason from modal submission
+        let deleteReason = 'No reason provided';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          deleteReason = components[0]?.components?.[0]?.value || 'No reason provided';
+        }
+
+        if (!moderatorId) {
+          console.error('❌ Missing moderator id on modal submit');
+          return createResponse({ error: 'Invalid spray moderation data' }, 400, origin);
+        }
+        if (!sha256Hash) {
+          console.error('❌ Missing sha256 hash on modal submit');
+          return createResponse({ error: 'Missing hash' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Delete spray(s) matching the hash (hard delete) and remove their S3 files
+                const sprayRows = await db.select().from(sprays).where(eq(sprays.sha256, sha256Hash));
+                const aws = new AwsClient({
+                  accessKeyId: env.MINIO_ACCESS_KEY,
+                  secretAccessKey: env.MINIO_SECRET_KEY,
+                  service: 's3',
+                  region: 'us-east-1',
+                });
+                const BUCKET = 'test';
+                const SPRAY_FOLDER = 'sprays';
+
+                if (sprayRows.length === 0) {
+                  console.log(`ℹ️ No spray rows found for hash ${sha256Hash}, skipping S3 deletions`);
+                } else {
+                  for (const row of sprayRows) {
+                    const idToDelete = row.id;
+                    const basePath = `${SPRAY_FOLDER}/${idToDelete}`;
+                    const txtPath = `${basePath}.txt`;
+                    const base64Path = `${basePath}.base64`;
+
+                    // Delete .txt file
+                    try {
+                      const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
+                      const txtRequest = await aws.sign(txtUrl, { method: 'DELETE' });
+                      const txtResponse = await fetch(txtRequest);
+                      if (!txtResponse.ok) {
+                        console.warn(`Failed to delete .txt file for spray ${idToDelete}:`, await txtResponse.text());
+                      }
+                    } catch (e) {
+                      console.warn(`Failed to delete .txt for spray ${idToDelete}:`, e);
+                    }
+
+                    // Delete .base64 file
+                    try {
+                      const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
+                      const base64Request = await aws.sign(base64Url, { method: 'DELETE' });
+                      const base64Response = await fetch(base64Request);
+                      if (!base64Response.ok) {
+                        console.warn(
+                          `Failed to delete .base64 file for spray ${idToDelete}:`,
+                          await base64Response.text(),
+                        );
+                      }
+                    } catch (e) {
+                      console.warn(`Failed to delete .base64 for spray ${idToDelete}:`, e);
+                    }
+                  }
+
+                  // Delete rows from sprays table for this hash
+                  await db.delete(sprays).where(eq(sprays.sha256, sha256Hash));
+                }
+
+                // Add hash to deletedSprays blocklist to prevent future uploads
+                await db
+                  .insert(deletedSprays)
+                  .values({
+                    sha256: sha256Hash,
+                    uploadedByUserid: userId,
+                    deletedByDiscordId: moderatorId,
+                    reason: deleteReason,
+                  })
+                  .onConflictDoUpdate({
+                    target: deletedSprays.sha256,
+                    set: {
+                      deletedByDiscordId: moderatorId,
+                      reason: deleteReason,
+                    },
+                  });
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '🗑️ Spray deleted!';
+                updatedEmbed.color = 0xef4444; // Red
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedDeleteReason = deleteReason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Deleted** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedDeleteReason}`;
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    attachements: [],
+                    components: [
+                      {
+                        type: 1,
+                        components: [
+                          {
+                            type: 2,
+                            style: 3, // Green
+                            label: 'Unblock Hash',
+                            custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                          },
+                          {
+                            type: 2,
+                            style: 4, // Red
+                            label: 'Ban User',
+                            custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                });
+              } catch (error) {
+                console.error('Spray deletion error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle spray undelete modal submission
+    if (customId.startsWith('spray_undelete_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const sha256Hash = parts[1] || '';
+        const userId = parts[2] || '';
+
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Extract reason from modal submission
+        let restoreReason = 'No reason provided';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          restoreReason = components[0]?.components?.[0]?.value || 'No reason provided';
+        }
+
+        if (!moderatorId) {
+          return createResponse({ error: 'Invalid spray moderation data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Remove hash from deletedSprays blocklist to allow future uploads
+                await db.delete(deletedSprays).where(eq(deletedSprays.sha256, sha256Hash));
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '✅ Hash unblocked!';
+                updatedEmbed.color = 0x10b981; // Green
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedRestoreReason = restoreReason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Unblocked** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedRestoreReason}`;
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: [
+                      {
+                        type: 1,
+                        components: [
+                          {
+                            type: 2,
+                            style: 4, // Red
+                            label: 'Delete Spray',
+                            custom_id: `spray_delete:${sha256Hash}:${userId}`,
+                          },
+                          {
+                            type: 2,
+                            style: 4, // Red
+                            label: 'Ban User',
+                            custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                });
+              } catch (error) {
+                console.error('Spray restoration error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle spray ban modal submission
+    if (customId.startsWith('spray_ban_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const sha256Hash = parts[1] || '';
+        const userId = parts[2] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+        // Extract reason from modal submission
+        const modalData = interaction.data as any;
+        const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
+
+        if (!moderatorId || !userId) {
+          return createResponse({ error: 'Invalid spray ban data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Delete any sprays matching the hash (hard delete)
+                const sprayRows = await db.select().from(sprays).where(eq(sprays.sha256, sha256Hash));
+
+                const aws = new AwsClient({
+                  accessKeyId: env.MINIO_ACCESS_KEY,
+                  secretAccessKey: env.MINIO_SECRET_KEY,
+                  service: 's3',
+                  region: 'us-east-1',
+                });
+                const BUCKET = 'test';
+                const SPRAY_FOLDER = 'sprays';
+
+                for (const row of sprayRows) {
+                  const idToDelete = row.id;
+                  const basePath = `${SPRAY_FOLDER}/${idToDelete}`;
+                  const txtPath = `${basePath}.txt`;
+                  const base64Path = `${basePath}.base64`;
+                  try {
+                    const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
+                    const txtRequest = await aws.sign(txtUrl, { method: 'DELETE' });
+                    await fetch(txtRequest);
+                  } catch (e) {
+                    console.warn('Failed deleting txt', e);
+                  }
+                  try {
+                    const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
+                    const base64Request = await aws.sign(base64Url, { method: 'DELETE' });
+                    await fetch(base64Request);
+                  } catch (e) {
+                    console.warn('Failed deleting base64', e);
+                  }
+                }
+
+                if (sprayRows.length > 0) {
+                  await db.delete(sprays).where(eq(sprays.sha256, sha256Hash));
+                }
+
+                // Add hash to deletedSprays blocklist
+                await db
+                  .insert(deletedSprays)
+                  .values({
+                    sha256: sha256Hash,
+                    uploadedByUserid: userId,
+                    deletedByDiscordId: moderatorId,
+                    reason: reason,
+                  })
+                  .onConflictDoUpdate({
+                    target: deletedSprays.sha256,
+                    set: {
+                      deletedByDiscordId: moderatorId,
+                      reason: reason,
+                    },
+                  });
+
+                // Add user to ban table with provided reason
+                const currentTimestamp = Math.floor(Date.now() / 1000);
+                await db
+                  .insert(sprayBans)
+                  .values({
+                    userid: userId,
+                    bannedAt: currentTimestamp,
+                    reason: reason,
+                    bannedByDiscordId: moderatorId,
+                  })
+                  .onConflictDoNothing();
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '🔨 User banned from sprays!';
+                updatedEmbed.color = 0x7c2d12; // Dark red
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedReason = reason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Banned** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: [
+                      {
+                        type: 1,
+                        components: [
+                          {
+                            type: 2,
+                            style: 2,
+                            label: 'Unban User',
+                            custom_id: `spray_unban:${userId}`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                });
+              } catch (error) {
+                console.error('Spray ban error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle spray unban modal submission
+    if (customId.startsWith('spray_unban_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 2) {
+        const userId = parts[1] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+        // Extract reason from modal submission
+        const modalData = interaction.data as any;
+        const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
+
+        if (!moderatorId || !userId) {
+          return createResponse({ error: 'Invalid spray unban data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Remove from ban table
+                await db.delete(sprayBans).where(eq(sprayBans.userid, userId));
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '✅ User unbanned from sprays!';
+                updatedEmbed.color = 0x10b981; // Green
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedReason = reason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Unbanned** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
+
+                // Get sha256 hash from the original embed to enable unblock button
+                const originalDescription = updatedEmbed.description || '';
+                const sha256Match = originalDescription.match(/SHA256: `([a-f0-9]+)`/);
+                const sha256Hash = sha256Match ? sha256Match[1] : '';
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: sha256Hash
+                      ? [
+                          {
+                            type: 1,
+                            components: [
+                              {
+                                type: 2,
+                                style: 3, // Green
+                                label: 'Unblock Hash',
+                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                              },
+                              {
+                                type: 2,
+                                style: 4, // Red
+                                label: 'Ban User',
+                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                              },
+                            ],
+                          },
+                        ]
+                      : [],
+                  },
+                });
+              } catch (error) {
+                console.error('Spray unban error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    return createResponse({ error: 'Unknown modal submission' }, 400, origin);
   }
 
   return createResponse({ error: 'Unknown interaction type' }, 400, origin);
