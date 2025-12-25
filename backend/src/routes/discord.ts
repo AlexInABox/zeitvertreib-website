@@ -17,7 +17,7 @@ export async function handleDiscordLogin(request: Request, env: Env) {
 }
 
 // Handle OAuth callback
-export async function handleDiscordCallback(request: Request, env: Env) {
+export async function handleDiscordCallback(request: Request, env: Env, ctx: ExecutionContext) {
   const origin = request.headers.get('Origin');
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
@@ -98,7 +98,7 @@ export async function handleDiscordCallback(request: Request, env: Env) {
       });
 
     // Fetch Steam data and create session
-    const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+    const steamUser = await fetchSteamUserData(steamId, env, ctx);
     if (!steamUser) {
       return createResponse({ error: 'Could not fetch Steam user data' }, 500, origin);
     }

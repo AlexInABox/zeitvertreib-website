@@ -243,7 +243,7 @@ export default {
 
     // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
-      ctx.waitUntil(updateLeaderboard(db, env));
+      ctx.waitUntil(updateLeaderboard(db, env, ctx));
     }
 
     // Flush advent calendar table on January 2nd at 03:00 UTC

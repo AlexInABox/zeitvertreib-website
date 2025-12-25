@@ -151,6 +151,7 @@ function validateApiKey(request: Request, env: Env): boolean {
 /**
  * GET /playerlist
  * Fetches the current playerlist from Durable Object storage
+ * Returns empty array if playerlist is older than 1 minute
  * Public endpoint - no authentication required
  */
 export async function handleGetPlayerlist(request: Request, env: Env): Promise<Response> {
@@ -178,9 +179,18 @@ export async function handleGetPlayerlist(request: Request, env: Env): Promise<R
       );
     }
 
-    const playerlistData = (await response.json()) as PlayerlistPostRequestItem[];
+    const data = (await response.json()) as { timestamp: number; players: PlayerlistPostRequestItem[] };
 
-    return createResponse(playerlistData, 200, origin);
+    // Check if playerlist is stale (older than 1 minute)
+    const ageInMs = Date.now() - data.timestamp;
+    const ONE_MINUTE_IN_MS = 60 * 1000;
+
+    if (ageInMs > ONE_MINUTE_IN_MS) {
+      console.log(`[Playerlist] Playerlist is stale (${Math.floor(ageInMs / 1000)}s old), returning empty array`);
+      return createResponse([], 200, origin);
+    }
+
+    return createResponse(data.players, 200, origin);
   } catch (error) {
     console.error('Error fetching playerlist:', error);
     return createResponse({ error: 'Internal server error while fetching playerlist' }, 500, origin);
@@ -213,14 +223,20 @@ export async function handleUpdatePlayerlist(request: Request, env: Env): Promis
     const id = env.PLAYERLIST_STORAGE.idFromName('playerlist');
     const stub = env.PLAYERLIST_STORAGE.get(id);
 
-    // Update playerlist in Durable Object with enriched data
+    // Create payload with timestamp and enriched playerlist
+    const payload = {
+      timestamp: Date.now(),
+      players: enrichedPlayerlist,
+    };
+
+    // Update playerlist in Durable Object with enriched data and timestamp
     const response = await stub.fetch(
       new Request('https://playerlist-storage.worker/playerlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(enrichedPlayerlist),
+        body: JSON.stringify(payload),
       }),
     );
 

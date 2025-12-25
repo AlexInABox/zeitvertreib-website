@@ -40,10 +40,4 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.authService.performLogout();
     this.router.navigate(['/']);
   }
-
-  openSteamProfile() {
-    if (this.currentUser?.profileurl) {
-      window.open(this.currentUser.profileurl, '_blank');
-    }
-  }
 }

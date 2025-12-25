@@ -13,7 +13,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import type { StatsPostRequest } from '@zeitvertreib/types';
 
-export async function handleGetStats(request: Request, env: Env): Promise<Response> {
+export async function handleGetStats(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   const origin = request.headers.get('Origin');
@@ -25,13 +25,21 @@ export async function handleGetStats(request: Request, env: Env): Promise<Respon
 
   try {
     // Get Steam user data
-    const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+    const steamUser = await fetchSteamUserData(steamId, env, ctx);
     if (!steamUser) {
       return createResponse({ error: 'Failed to fetch Steam user data' }, 500, origin);
     }
 
     const playerData = await getPlayerData(steamId, db, env);
-    const stats = await mapPlayerDataToStats(playerData, steamUser.personaname, steamUser.avatarfull, steamId, db, env);
+    const stats = await mapPlayerDataToStats(
+      playerData,
+      steamUser.username,
+      steamUser.avatarUrl,
+      steamId,
+      db,
+      env,
+      ctx,
+    );
 
     return createResponse({ stats }, 200, origin);
   } catch (error) {

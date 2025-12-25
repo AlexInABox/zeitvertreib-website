@@ -3,8 +3,9 @@ import type { SessionData, SteamUser, Statistics, PlayerData } from '@zeitvertre
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets, discordInfo } from './db/schema.js';
+import { playerdata, kills, loginSecrets, discordInfo, steamCache } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
+import { Context } from 'vm';
 
 // Response helpers
 export function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -54,6 +55,7 @@ export async function createSession(steamId: string, steamUser: SteamUser, env: 
   const sessionId = crypto.randomUUID();
   const duration = 7 * 24 * 60 * 60 * 1000 * 4 * 3; // 3 months
   const now = Date.now();
+  steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
   const sessionData: SessionData = {
     steamId,
@@ -130,120 +132,87 @@ export function extractSteamId(identity?: string): string | null {
   return identity?.replace('https://steamcommunity.com/openid/id/', '') || null;
 }
 
-/**
- * Fetches Steam user data with intelligent caching strategy.
- *
- * Caching strategy:
- * - If no cache exists: fetch from Steam and cache the result
- * - If cache exists and is less than 1 hour old: use cached data
- * - If cache exists but is older than 1 hour: try to fetch fresh data from Steam
- *   - If Steam returns new data: update cache and return fresh data
- *   - If Steam returns an error: use stale cache regardless of age
- * - Cache is NEVER cleared, always provides fallback data
- *
- * @param steamId - The Steam ID to fetch data for
- * @param apiKey - Steam API key
- * @param env - Cloudflare environment with KV access
- * @returns Steam user data or null if not found
- */
-export async function fetchSteamUserData(steamId: string, apiKey: string, env: Env): Promise<SteamUser | null> {
-  const cacheKey = `steam_user:${steamId}`;
-  let cachedData: { userData: SteamUser; cachedAt: number } | null = null;
+export async function fetchSteamUserData(steamId: string, env: Env, ctx: ExecutionContext): Promise<SteamUser | null> {
+  steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
-  // Try to get cached data first
-  try {
-    const cached = await env.SESSIONS.get(cacheKey);
-    if (cached) {
-      cachedData = JSON.parse(cached) as {
-        userData: SteamUser;
-        cachedAt: number;
-      };
-      const cacheAge = Date.now() - cachedData.cachedAt;
-      const maxFreshAge = 60 * 60 * 1000; // 1 hour
+  const staleThreshold = 24 * 60 * 60; // 24 hours in seconds
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  let steamUser: SteamUser | null = null;
 
-      // If cache is fresh (less than 1 hour), use it immediately
-      if (cacheAge < maxFreshAge) {
-        console.log(`Using fresh cached Steam user data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`);
-        console.log('Chache data: ' + cachedData);
-        return cachedData.userData;
-      }
+  // Check cache first
+  let cached = await db.select().from(steamCache).where(eq(steamCache.steamId, steamId)).get();
+  const now = Math.floor(Date.now() / 1000);
 
-      console.log(
-        `Cache is stale for Steam user ${steamId} (age: ${Math.round(cacheAge / 1000)}s), attempting to refresh...`,
-      );
-    } else {
-      console.log(`No cache found for Steam user ${steamId}, fetching fresh data...`);
-    }
-  } catch (cacheError) {
-    console.warn('Failed to read from cache:', cacheError);
+  if (!cached) {
+    await refreshSteamCache(steamId, env);
+    cached = await db.select().from(steamCache).where(eq(steamCache.steamId, steamId)).get();
   }
 
-  // If we reach here, either no cache exists OR cache is older than 1 hour
-  // Try to fetch fresh data from Steam
-  try {
-    const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`;
-    console.log('Fetching Steam user data from:', url.replace(apiKey, '***'));
+  if (cached) {
+    steamUser = {
+      steamId: steamId,
+      username: cached.username,
+      avatarUrl: cached.avatarUrl,
+    };
 
-    const response = await proxyFetch(url, {}, env);
-    console.log('Steam API response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Steam API error response:', errorText);
-      throw new Error(`Steam API returned ${response.status}: ${errorText}`);
+    if (now - cached.lastUpdated >= staleThreshold) {
+      ctx.waitUntil(refreshSteamCache(steamId, env));
     }
-
-    const responseText = await response.text();
-    console.log('Steam API response body:', responseText.substring(0, 200));
-
-    let data;
-    try {
-      data = JSON.parse(responseText) as { response: { players: SteamUser[] } };
-    } catch (parseError) {
-      console.error('Failed to parse Steam API response as JSON:', parseError);
-      throw new Error(`Steam API returned invalid JSON: ${responseText.substring(0, 100)}`);
-    }
-
-    const userData = data.response?.players?.[0] || null;
-
-    // Cache the successful response (never expires, but we track freshness)
-    if (userData) {
-      try {
-        const cacheData = {
-          userData,
-          cachedAt: Date.now(),
-        };
-
-        // Store without expiration - we manage freshness manually
-        await env.SESSIONS.put(cacheKey, JSON.stringify(cacheData));
-        console.log(`Updated cache with fresh Steam user data for ${steamId}`);
-      } catch (cacheError) {
-        console.warn('Failed to update cache with fresh data:', cacheError);
-      }
-    }
-
-    return userData;
-  } catch (error) {
-    console.error('Error fetching fresh Steam user data:', error);
-
-    // Steam API failed - use stale cache if available, regardless of age
-    if (cachedData) {
-      const cacheAge = Date.now() - cachedData.cachedAt;
-      console.log(`Steam API failed, using stale cached data for ${steamId} (age: ${Math.round(cacheAge / 1000)}s)`);
-      return cachedData.userData;
-    }
-
-    // No cache available and Steam API failed
-    console.log(`No cached data available for ${steamId} and Steam API failed`);
-    return null;
   }
+
+  return steamUser;
 }
 
-export async function refreshSteamUserData(steamId: string, apiKey: string, env: Env): Promise<SteamUser | null> {
-  // Force a refresh attempt by fetching data (cache will be used as fallback if Steam fails)
-  // We don't clear cache anymore, just attempt to get fresh data
-  console.log(`Attempting to refresh Steam user data for ${steamId}...`);
-  return fetchSteamUserData(steamId, apiKey, env);
+async function refreshSteamCache(steamId: string, env: Env): Promise<void> {
+  steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+
+  const url =
+    `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/` +
+    `?key=${env.STEAM_API_KEY}&steamids=${steamId}`;
+
+  const res = await proxyFetch(url, {}, env);
+  if (!res.ok) {
+    console.error(`Failed to refresh Steam cache for ${steamId}: ${res.status} ${res.statusText}`);
+    return;
+  }
+
+  const data: any = await res.json();
+  const player = data?.response?.players?.[0];
+
+  if (!player || !steamId.includes(player.steamid)) {
+    console.error(`Steam ID mismatch when refreshing cache for ${steamId}`);
+    console.error('Data received:', data);
+    return;
+  }
+
+  const username = player.personaname;
+  const avatarUrl = player.avatarfull;
+
+  if (!username || !avatarUrl) {
+    console.error(`Invalid data when refreshing Steam cache for ${steamId}`);
+    console.error('Data received:', data);
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  await db
+    .insert(steamCache)
+    .values({
+      steamId,
+      username,
+      avatarUrl,
+      lastUpdated: now,
+    })
+    .onConflictDoUpdate({
+      target: steamCache.steamId,
+      set: {
+        username,
+        avatarUrl,
+        lastUpdated: now,
+      },
+    });
 }
 
 // Database helpers
@@ -323,6 +292,7 @@ export async function getPlayerLastKillers(
   steamId: string,
   db: ReturnType<typeof drizzle>,
   env: Env,
+  ctx: ExecutionContext,
 ): Promise<Array<{ displayname: string; avatarmedium: string }>> {
   try {
     const playerId = `${steamId}@steam`;
@@ -344,11 +314,10 @@ export async function getPlayerLastKillers(
 
     const killersData = await Promise.all(
       uniqueAttackers.map(async (attacker) => {
-        const steamId = attacker.replace('@steam', '');
-        const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+        const steamUser = await fetchSteamUserData(attacker, env, ctx);
         return {
-          displayname: steamUser?.personaname || 'Unknown Player',
-          avatarmedium: steamUser?.avatarmedium || '',
+          displayname: steamUser?.username || 'Unknown Player',
+          avatarmedium: steamUser?.avatarUrl || '',
         };
       }),
     );
@@ -376,6 +345,7 @@ export async function getPlayerLastKills(
   steamId: string,
   db: ReturnType<typeof drizzle>,
   env: Env,
+  ctx: ExecutionContext,
 ): Promise<Array<{ displayname: string; avatarmedium: string }>> {
   try {
     const playerId = `${steamId}@steam`;
@@ -397,11 +367,10 @@ export async function getPlayerLastKills(
 
     const targetsData = await Promise.all(
       uniqueTargets.map(async (target) => {
-        const steamId = target.replace('@steam', '');
-        const steamUser = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+        const steamUser = await fetchSteamUserData(target, env, ctx);
         return {
-          displayname: steamUser?.personaname || 'Unknown Player',
-          avatarmedium: steamUser?.avatarmedium || '',
+          displayname: steamUser?.username || 'Unknown Player',
+          avatarmedium: steamUser?.avatarUrl || '',
         };
       }),
     );
@@ -432,11 +401,12 @@ export async function mapPlayerDataToStats(
   steamId: string,
   db: ReturnType<typeof drizzle>,
   env: Env,
+  ctx: ExecutionContext,
 ): Promise<Statistics> {
   // Get kills and deaths directly from playerdata, but still get last killers/kills from kills table
   const [lastKillers, lastKills] = await Promise.all([
-    getPlayerLastKillers(steamId, db, env),
-    getPlayerLastKills(steamId, db, env),
+    getPlayerLastKillers(steamId, db, env, ctx),
+    getPlayerLastKills(steamId, db, env, ctx),
   ]);
 
   // const currentTimestamp = Math.floor(Date.now() / 1000);

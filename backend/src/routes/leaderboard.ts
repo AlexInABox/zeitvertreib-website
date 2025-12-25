@@ -2,6 +2,7 @@ import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { desc, ne } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
+import { fetchSteamUserData } from '../utils.js';
 
 interface LeaderboardEntry {
   name: string;
@@ -55,52 +56,20 @@ interface DiscordMessage {
   }[];
 }
 
-// Cache Steam usernames for 24 hours (86400 seconds)
-const STEAM_USERNAME_CACHE_TTL = 86400;
+async function getSteamUsername(steamId: string, env: Env, ctx: ExecutionContext): Promise<string> {
+  let steamUser = await fetchSteamUserData(steamId, env, ctx);
 
-async function getSteamUsername(steamId: string, env: Env): Promise<string> {
-  try {
-    // First, check our KV cache
-    const cacheKey = `steam_username_${steamId}`;
-    const cachedName = await env.SESSIONS.get(cacheKey);
-
-    if (cachedName) {
-      return cachedName;
-    }
-
-    // If not in cache, fetch from Steam API
-    const steamApiUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${env.STEAM_API_KEY}&steamids=${steamId}`;
-
-    const response = await proxyFetch(steamApiUrl, {}, env);
-    if (!response.ok) {
-      console.error(`Steam API Anfrage fehlgeschlagen: ${response.status}`);
-      return 'Unbekannt';
-    }
-
-    const data: SteamApiResponse = await response.json();
-
-    if (!data.response?.players || data.response.players.length === 0) {
-      console.error(`Keine Spielerdaten gefunden für Steam ID: ${steamId}`);
-      return 'Unbekannt';
-    }
-
-    const playerName = data.response.players[0]?.personaname || 'Unknown';
-
-    // Cache the username for 24 hours
-    await env.SESSIONS.put(cacheKey, playerName, {
-      expirationTtl: STEAM_USERNAME_CACHE_TTL,
-    });
-
-    return playerName;
-  } catch (error) {
-    console.error(`Fehler beim Abrufen des Steam Benutzernamens für ${steamId}:`, error);
-    return 'Unbekannt';
+  if (steamUser) {
+    return steamUser.username;
+  } else {
+    return 'Unbekannter Spieler';
   }
 }
 
 async function getLeaderboardData(
   db: ReturnType<typeof drizzle>,
   env: Env,
+  ctx: ExecutionContext,
 ): Promise<{
   snake: LeaderboardEntry[];
   kills: LeaderboardEntry[];
@@ -123,7 +92,7 @@ async function getLeaderboardData(
   ): Promise<LeaderboardEntry[]> => {
     const entries = await Promise.all(
       data.map(async (item, index) => ({
-        name: await getSteamUsername(item.id, env),
+        name: await getSteamUsername(item.id, env, ctx),
         value: ((item as any)[valueKey] as number) || 0,
         rank: index + 1,
         discordId: item.discordId,
@@ -515,20 +484,17 @@ function createDiscordMessage(
 
 async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Promise<boolean> {
   try {
-    const webhookUrl = env.LEADERBOARD_WEBHOOK;
+    const channelId = env.LEADERBOARD_CHANNEL_ID;
+    const botToken = env.DISCORD_TOKEN;
 
-    if (!webhookUrl) {
-      console.error('LEADERBOARD_WEBHOOK Umgebungsvariable nicht gesetzt');
-      return false;
-    }
-
-    // First, try to get the latest message in the channel
+    // Fetch the latest message in the channel
     try {
       const messagesResponse = await proxyFetch(
-        `${webhookUrl}?limit=1`,
+        `https://discord.com/api/v10/channels/${channelId}/messages?limit=1`,
         {
           method: 'GET',
           headers: {
+            Authorization: `Bot ${botToken}`,
             'Content-Type': 'application/json',
           },
         },
@@ -536,7 +502,7 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
       );
 
       if (messagesResponse.ok) {
-        const messages = (await messagesResponse.json()) as Array<{ id: string }> | null;
+        const messages = (await messagesResponse.json()) as Array<{ id: string }>;
 
         if (messages && messages.length > 0) {
           const latestMessageId = messages[0]?.id;
@@ -544,10 +510,11 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
           // Try to edit the latest message
           try {
             const editResponse = await proxyFetch(
-              `${webhookUrl}/messages/${latestMessageId}`,
+              `https://discord.com/api/v10/channels/${channelId}/messages/${latestMessageId}`,
               {
                 method: 'PATCH',
                 headers: {
+                  Authorization: `Bot ${botToken}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(message),
@@ -572,10 +539,11 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
 
     // If editing failed, send a new message
     const response = await proxyFetch(
-      `${webhookUrl}?wait=true`,
+      `https://discord.com/api/v10/channels/${channelId}/messages`,
       {
         method: 'POST',
         headers: {
+          Authorization: `Bot ${botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(message),
@@ -597,12 +565,16 @@ async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Pr
   }
 }
 
-export async function updateLeaderboard(db: ReturnType<typeof drizzle>, env: Env): Promise<boolean> {
+export async function updateLeaderboard(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<boolean> {
   try {
     console.log('Starte Bestenliste Update...');
 
     // Get leaderboard data
-    const leaderboardData = await getLeaderboardData(db, env);
+    const leaderboardData = await getLeaderboardData(db, env, ctx);
 
     // Create Discord message
     const discordMessage = createDiscordMessage(leaderboardData, env);
@@ -624,10 +596,10 @@ export async function updateLeaderboard(db: ReturnType<typeof drizzle>, env: Env
 }
 
 // HTTP endpoint to manually trigger leaderboard update
-export async function handleLeaderboardUpdate(_request: Request, env: Env): Promise<Response> {
+export async function handleLeaderboardUpdate(_request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   try {
-    const success = await updateLeaderboard(db, env);
+    const success = await updateLeaderboard(db, env, ctx);
 
     return new Response(
       JSON.stringify({

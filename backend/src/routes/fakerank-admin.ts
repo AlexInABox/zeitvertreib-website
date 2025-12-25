@@ -11,7 +11,7 @@ declare global {
 }
 
 // GET user fakerank by steamid
-export async function handleGetUserFakerank(request: Request, env: Env): Promise<Response> {
+export async function handleGetUserFakerank(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -43,7 +43,7 @@ export async function handleGetUserFakerank(request: Request, env: Env): Promise
     // Get Steam user data for avatar and username
     let steamUserData = null;
     try {
-      steamUserData = await fetchSteamUserData(steamId, env.STEAM_API_KEY, env);
+      steamUserData = await fetchSteamUserData(steamId, env, ctx);
     } catch (error) {
       console.warn('Could not fetch Steam user data:', error);
     }
@@ -55,8 +55,8 @@ export async function handleGetUserFakerank(request: Request, env: Env): Promise
     return createResponse(
       {
         steamId,
-        username: steamUserData?.personaname || `Player ${steamId.slice(-4)}`,
-        avatarFull: steamUserData?.avatarfull || steamUserData?.avatarmedium || null,
+        username: steamUserData?.username || `Player ${steamId.slice(-4)}`,
+        avatarFull: steamUserData?.avatarUrl || null,
         fakerank: playerData.fakerank || null,
         fakerank_color: playerData.fakerank_color || 'default',
         fakerank_until: fakerankUntil,
