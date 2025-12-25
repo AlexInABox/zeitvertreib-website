@@ -20,7 +20,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {

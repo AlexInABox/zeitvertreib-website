@@ -95,7 +95,7 @@ export async function handleSteamCallback(request: Request, env: Env, ctx: Execu
   return response;
 }
 
-export async function handleGetUser(request: Request, env: Env, ctx: ExecutionContext,): Promise<Response> {
+export async function handleGetUser(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   const origin = request.headers.get('Origin');
