@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
@@ -107,6 +108,8 @@ public static class EventHandlers
         List<Player> spectators = Player.ReadyList.Where(p => p.Role == RoleTypeId.Spectator).ToList();
         Player randomSpectator = null;
         if (spectators.Count > 0) randomSpectator = spectators[Rnd.Next(spectators.Count)];
+        if (afkPlayer.Role is RoleTypeId.Scp0492)
+            randomSpectator = null; // Spare players from becoming a zombie for once :3
 
         if (randomSpectator != null)
         {
@@ -134,6 +137,8 @@ public static class EventHandlers
                 randomSpectator.AddAmmo(ammo.Key, ammo.Value);
             randomSpectator.CurrentItem = afkPlayer.CurrentItem;
             afkPlayer.ClearInventory();
+
+            afkPlayer.DisableEffect<SpawnProtected>();
 
             randomSpectator.ClearBroadcasts();
             randomSpectator.SendBroadcast(
