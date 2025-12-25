@@ -39,7 +39,7 @@ export class PlayerlistStorage {
 
   private async getPlayerlist(): Promise<Response> {
     const playerlist = await this.state.storage.get('playerlist');
-    const timestamp = await this.state.storage.get('lastUpdated') as number | null;
+    const timestamp = (await this.state.storage.get('lastUpdated')) as number | null;
 
     if (!playerlist) {
       return new Response(JSON.stringify({ timestamp: 0, players: [] }), {
