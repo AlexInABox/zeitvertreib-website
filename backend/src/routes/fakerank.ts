@@ -166,7 +166,7 @@ export async function getFakerank(request: Request, env: Env): Promise<Response>
           userid: fr.userid,
           id: fr.id,
           text: fr.text,
-          color: fr.color,
+          color: fr.color as FakerankColor,
         })),
       };
 
@@ -187,7 +187,7 @@ export async function getFakerank(request: Request, env: Env): Promise<Response>
         userid: fr.userid,
         id: fr.id,
         text: fr.text,
-        color: fr.color,
+        color: fr.color as FakerankColor,
       })),
     };
 
