@@ -1,6 +1,5 @@
 import { sqliteTable, check, text, integer, index, real, numeric } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
-import { normalize } from 'path';
 
 export const playerdata = sqliteTable('playerdata', {
   id: text('id').primaryKey(),
