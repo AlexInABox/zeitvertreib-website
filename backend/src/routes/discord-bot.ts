@@ -1133,24 +1133,24 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: sha256Hash
                       ? [
-                        {
-                          type: 1,
-                          components: [
-                            {
-                              type: 2,
-                              style: 3, // Green
-                              label: 'Unblock Hash',
-                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
-                            },
-                            {
-                              type: 2,
-                              style: 4, // Red
-                              label: 'Ban User',
-                              custom_id: `spray_ban:${sha256Hash}:${userId}`,
-                            },
-                          ],
-                        },
-                      ]
+                          {
+                            type: 1,
+                            components: [
+                              {
+                                type: 2,
+                                style: 3, // Green
+                                label: 'Unblock Hash',
+                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                              },
+                              {
+                                type: 2,
+                                style: 4, // Red
+                                label: 'Ban User',
+                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                              },
+                            ],
+                          },
+                        ]
                       : [],
                   },
                 });
@@ -1231,7 +1231,6 @@ export async function handleDiscordBotInteractions(
                     experience: increment(playerdata.experience, zvcReward),
                   })
                   .where(eq(playerdata.discordId, submitterId));
-
 
                 // Get moderator info
                 let moderatorName = 'Unknown Moderator';
