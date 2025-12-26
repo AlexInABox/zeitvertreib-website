@@ -60,6 +60,12 @@ export interface GetUserResponse {
   isModerator: boolean;
   isDonator: boolean;
   isBooster: boolean;
+  isSprayBanned: boolean;
+  sprayBanReason: string | null;
+  sprayBannedBy: string | null;
+  isFakerankBanned: boolean;
+  fakerankBanReason: string | null;
+  fakerankBannedBy: string | null;
 }
 
 /** POST /auth/logout response */
@@ -185,24 +191,32 @@ export type FakerankColor =
   | 'army_green'
   | 'pumpkin';
 
+/** GET /fakerank request params*/
+/** When theres no userids array present, use the userid from the session token! */
+export interface FakerankGetRequest {
+  userids?: string[];
+}
+
 /** GET /fakerank response */
-export interface GetFakerankResponse {
-  fakerank: string | null;
-  fakerank_color: FakerankColor;
-  fakerank_until: number;
+/** Regardless of the amount of requested fakeranks, always return an array */
+export interface FakerankGetResponse {
+  fakeranks: {
+    userid: string;
+    id: number;
+    text: string;
+    color: FakerankColor;
+  }[];
 }
 
-/** POST /fakerank request */
-export interface UpdateFakerankRequest {
-  fakerank: string;
-  fakerank_color?: FakerankColor;
+/** POST /fakerank request body */
+export interface FakerankPostRequest {
+  text: string;
+  color: FakerankColor;
 }
 
-/** POST /fakerank response */
-export interface UpdateFakerankResponse {
-  success: boolean;
-  fakerank: string;
-  fakerank_color: FakerankColor;
+/** DELETE /fakerank request body */
+export interface FakerankDeleteRequest {
+  id: number;
 }
 
 // ============================================================================

@@ -155,3 +155,54 @@ export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
     .default('pending'),
   amount: numeric('amount').notNull(),
 });
+
+export const fakeranks = sqliteTable('fakeranks', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userid: text('userid').notNull(),
+  text: text('text').notNull(),
+  normalizedText: text('normalized_text').notNull(),
+  color: text('color', {
+    enum: [
+      'pink',
+      'red',
+      'brown',
+      'silver',
+      'default',
+      'light_green',
+      'crimson',
+      'cyan',
+      'aqua',
+      'deep_pink',
+      'tomato',
+      'yellow',
+      'magenta',
+      'blue_green',
+      'orange',
+      'lime',
+      'green',
+      'emerald',
+      'carmine',
+      'nickel',
+      'mint',
+      'army_green',
+      'pumpkin',
+    ],
+  })
+    .default('default')
+    .notNull(),
+  uploadedAt: integer('uploaded_at').notNull().default(0),
+});
+
+export const fakerankBans = sqliteTable('fakerank_bans', {
+  userid: text('userid').primaryKey(),
+  bannedAt: integer('banned_at').notNull().default(0),
+  reason: text('reason').notNull(),
+  bannedByDiscordId: text('banned_by_discord_id').notNull(),
+});
+
+export const deletedFakeranks = sqliteTable('deleted_fakeranks', {
+  normalizedText: text('normalized_text').notNull().primaryKey(),
+  uploadedByUserid: text('uploaded_by_userid').notNull(),
+  deletedByDiscordId: text('deleted_by_discord_id').notNull(),
+  reason: text('reason').notNull(),
+});

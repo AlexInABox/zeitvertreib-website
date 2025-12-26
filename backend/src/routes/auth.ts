@@ -15,7 +15,7 @@ import {
   isBooster,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { sprayBans } from '../db/schema.js';
+import { fakerankBans, sprayBans } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { proxyFetch } from '../proxy.js';
 
@@ -122,9 +122,16 @@ export async function handleGetUser(request: Request, env: Env, ctx: ExecutionCo
   // Check if user is spray banned
   const steamIdWithSuffix = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
   const sprayBanResult = await db.select().from(sprayBans).where(eq(sprayBans.userid, steamIdWithSuffix)).limit(1);
+  const fakerankBanResult = await db
+    .select()
+    .from(fakerankBans)
+    .where(eq(fakerankBans.userid, steamIdWithSuffix))
+    .limit(1);
 
   const sprayBanInfo = sprayBanResult[0];
-  let bannedByUsername = null;
+  const fakerankBanInfo = fakerankBanResult[0];
+  let sprayBannedByUsername = null;
+  let fakerankBannedByUsername = null;
 
   if (sprayBanInfo) {
     // Fetch moderator's Discord username
@@ -140,7 +147,28 @@ export async function handleGetUser(request: Request, env: Env, ctx: ExecutionCo
       );
       if (moderatorResponse.ok) {
         const moderatorData: any = await moderatorResponse.json();
-        bannedByUsername = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+        sprayBannedByUsername = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+      }
+    } catch (error) {
+      console.error('Failed to fetch moderator username:', error);
+    }
+  }
+
+  if (fakerankBanInfo) {
+    // Fetch moderator's Discord username
+    try {
+      const moderatorResponse = await proxyFetch(
+        `https://discord.com/api/v10/users/${fakerankBanInfo.bannedByDiscordId}`,
+        {
+          headers: {
+            Authorization: `Bot ${env.DISCORD_TOKEN}`,
+          },
+        },
+        env,
+      );
+      if (moderatorResponse.ok) {
+        const moderatorData: any = await moderatorResponse.json();
+        fakerankBannedByUsername = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
       }
     } catch (error) {
       console.error('Failed to fetch moderator username:', error);
@@ -156,7 +184,10 @@ export async function handleGetUser(request: Request, env: Env, ctx: ExecutionCo
       isBooster: isBoosterUser,
       isSprayBanned: !!sprayBanInfo,
       sprayBanReason: sprayBanInfo?.reason || null,
-      sprayBannedBy: bannedByUsername,
+      sprayBannedBy: sprayBannedByUsername,
+      isFakerankBanned: !!fakerankBanInfo,
+      fakerankBanReason: fakerankBanInfo?.reason || null,
+      fakerankBannedBy: fakerankBannedByUsername,
     },
     200,
     origin,

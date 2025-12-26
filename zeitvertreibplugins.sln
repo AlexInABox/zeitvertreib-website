@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reporter", "Reporter\Report
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sprayed", "Sprayed\Sprayed.csproj", "{C89B9396-DBE7-4A7B-8990-8EDBB005F446}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeRank", "FakeRank\FakeRank.csproj", "{EECA65F6-93D4-48B5-806E-4FE1F352C9D9}"
+EndProject
 
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,5 +35,7 @@ Global
 		{D0701339-06A3-4373-84F2-29894B8DBC95}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C89B9396-DBE7-4A7B-8990-8EDBB005F446}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C89B9396-DBE7-4A7B-8990-8EDBB005F446}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EECA65F6-93D4-48B5-806E-4FE1F352C9D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EECA65F6-93D4-48B5-806E-4FE1F352C9D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

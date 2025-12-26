@@ -22,6 +22,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
     emoji: '✨',
     price: 300,
+    availabilityStatus: 'expired',
   },
   {
     id: 'custom_spray_2x',

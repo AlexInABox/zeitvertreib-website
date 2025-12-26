@@ -5,25 +5,17 @@ import { environment } from '../../environments/environment';
 import type { SteamUser, PlayerData, GetUserResponse } from '@zeitvertreib/types';
 
 // Re-export types for backwards compatibility
-export type { SteamUser, PlayerData } from '@zeitvertreib/types';
+export type { SteamUser, PlayerData, GetUserResponse } from '@zeitvertreib/types';
 
-export interface UserData {
-  user: SteamUser;
-  playerData: PlayerData | null;
-  isModerator: boolean;
-  isDonator: boolean;
-  isBooster: boolean;
-  isSprayBanned: boolean;
-  sprayBanReason: string | null;
-  sprayBannedBy: string | null;
-}
+// UserData is now an alias for GetUserResponse for backwards compatibility
+export type UserData = GetUserResponse;
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<SteamUser | null>(null);
-  private currentUserDataSubject = new BehaviorSubject<UserData | null>(null);
+  private currentUserDataSubject = new BehaviorSubject<GetUserResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   public currentUserData$ = this.currentUserDataSubject.asObservable();
   private sessionToken: string | null = null;
@@ -98,7 +90,7 @@ export class AuthService {
 
   checkAuthStatus(): void {
     this.http
-      .get<UserData>(`${environment.apiUrl}/auth/me`, {
+      .get<GetUserResponse>(`${environment.apiUrl}/auth/me`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -126,7 +118,7 @@ export class AuthService {
     }
 
     this.http
-      .get<UserData>(`${environment.apiUrl}/auth/me`, {
+      .get<GetUserResponse>(`${environment.apiUrl}/auth/me`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -178,7 +170,7 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  getCurrentUserData(): UserData | null {
+  getCurrentUserData(): GetUserResponse | null {
     return this.currentUserDataSubject.value;
   }
 
@@ -241,6 +233,21 @@ export class AuthService {
   getSprayBannedBy(): string | null {
     const userData = this.currentUserDataSubject.value;
     return userData?.sprayBannedBy ?? null;
+  }
+
+  isFakerankBanned(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isFakerankBanned ?? false;
+  }
+
+  getFakerankBanReason(): string | null {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.fakerankBanReason ?? null;
+  }
+
+  getFakerankBannedBy(): string | null {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.fakerankBannedBy ?? null;
   }
 
   // Get remaining fakerank override time in seconds
