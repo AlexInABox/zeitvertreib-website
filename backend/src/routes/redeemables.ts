@@ -22,6 +22,7 @@ const ZEITVERTREIB_REDEEMABLES: Redeemable[] = [
     description: 'Zugang zum Fakerank-System für zwei Wochen. Danach verfällt der Rang.',
     emoji: '✨',
     price: 300,
+    availabilityStatus: 'expired',
   },
   {
     id: 'custom_spray_2x',
@@ -297,10 +298,10 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     )
       .bind(code)
       .first()) as {
-      code: string;
-      credits: number;
-      remaining_uses: number;
-    } | null;
+        code: string;
+        credits: number;
+        remaining_uses: number;
+      } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
