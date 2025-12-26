@@ -8,7 +8,7 @@ import { Routes, InteractionType } from 'discord-api-types/v10';
 import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
 import { AwsClient } from 'aws4fetch';
-import { createResponse } from '../utils.js';
+import { createResponse, increment } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
@@ -1133,24 +1133,24 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: sha256Hash
                       ? [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 3, // Green
-                                label: 'Unblock Hash',
-                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
-                              },
-                              {
-                                type: 2,
-                                style: 4, // Red
-                                label: 'Ban User',
-                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
-                              },
-                            ],
-                          },
-                        ]
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 3, // Green
+                              label: 'Unblock Hash',
+                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                            },
+                            {
+                              type: 2,
+                              style: 4, // Red
+                              label: 'Ban User',
+                              custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                            },
+                          ],
+                        },
+                      ]
                       : [],
                   },
                 });
@@ -1225,25 +1225,13 @@ export async function handleDiscordBotInteractions(
                   })
                   .where(eq(paysafeCardSubmissions.id, parseInt(submissionId)));
 
-                // Get the player data for the submitter and add ZVC
-                const playerResult = await db
-                  .select({
-                    id: playerdata.id,
-                    experience: playerdata.experience,
+                await db
+                  .update(playerdata)
+                  .set({
+                    experience: increment(playerdata.experience, zvcReward),
                   })
-                  .from(playerdata)
-                  .where(eq(playerdata.discordId, submitterId))
-                  .get();
+                  .where(eq(playerdata.discordId, submitterId));
 
-                if (playerResult) {
-                  const currentExperience = playerResult.experience || 0;
-                  await db
-                    .update(playerdata)
-                    .set({
-                      experience: currentExperience + zvcReward,
-                    })
-                    .where(eq(playerdata.id, playerResult.id));
-                }
 
                 // Get moderator info
                 let moderatorName = 'Unknown Moderator';
