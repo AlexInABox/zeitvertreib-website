@@ -1130,16 +1130,15 @@
 
           <!-- Ban Warning -->
           <div *ngIf="isFakerankBanned" class="spray-ban-warning">
-            <div class="ban-icon">⛔</div>
-            <div class="ban-content">
-              <p class="ban-title">Du wurdest von Fakeranks gesperrt</p>
-              <p class="ban-reason">
-                <strong>Grund:</strong>
-                {{ fakerankBanReason || 'Kein Grund angegeben' }}
-              </p>
-              <p class="ban-moderator" *ngIf="fakerankBannedBy">
-                <strong>Von:</strong>
-                {{ fakerankBannedBy }}
+            <div class="spray-ban-icon">⛔</div>
+            <div class="spray-ban-content">
+              <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
+              <p class="spray-ban-reason"><strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}</p>
+              <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
+              <p class="spray-ban-contact">
+                Öffne ein Ticket auf unserem
+                <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"><strong>Discord-Server</strong></a
+                >.
               </p>
             </div>
           </div>
