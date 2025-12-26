@@ -162,7 +162,7 @@ export async function handleRedeemItem(request: Request, env: Env): Promise<Resp
       }
     }
 
-    const playerId = `${validation.steamId}@steam`;
+    const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
     // Get current player data to check ZV Coins balance
     const playerData = await db
@@ -298,10 +298,10 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     )
       .bind(code)
       .first()) as {
-      code: string;
-      credits: number;
-      remaining_uses: number;
-    } | null;
+        code: string;
+        credits: number;
+        remaining_uses: number;
+      } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
@@ -316,7 +316,7 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
       );
     }
 
-    const playerId = `${validation.steamId}@steam`;
+    const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
     // Get current player data including redeemed codes
     const playerData = (await env.ZEITVERTREIB_DATA.prepare(

@@ -120,7 +120,7 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     );
   }
 
-  const playerId = `${validation.steamId}@steam`;
+  const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
   // Parse request body for bet amount
   let betAmount: number;
@@ -238,8 +238,7 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     }
 
     console.log(
-      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${
-        selectedEntry.multiplier
+      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${selectedEntry.multiplier
       }x (${payout} ZVC). Balance: ${currentBalance} → ${newBalance}`,
     );
 

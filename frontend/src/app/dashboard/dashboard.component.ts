@@ -519,10 +519,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           // Load spray data into slots
           sprayData.forEach((spray, index) => {
-            if (index < 3 && spray.full_res) {
+            if (index < 3 && spray.id) {
               this.spraySlots[index].id = spray.id;
               this.spraySlots[index].name = spray.name;
-              this.spraySlots[index].imageUrl = spray.full_res;
+              // Only set imageUrl if full_res is available
+              if (spray.full_res) {
+                this.spraySlots[index].imageUrl = spray.full_res;
+              }
             }
           });
         },
