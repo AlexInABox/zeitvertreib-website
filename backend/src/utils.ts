@@ -222,7 +222,7 @@ export async function getPlayerData(
   _env: Env,
 ): Promise<PlayerData | null> {
   try {
-    const playerId = `${steamId}@steam`;
+    const playerId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
     console.log('Fetching player data for ID:', playerId);
 
     const result = await db.select().from(playerdata).where(eq(playerdata.id, playerId)).get();
