@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 export class DomainWarningComponent implements OnInit, OnDestroy {
   showWarning = false;
   allowDismiss = false;
-  secondsLeft = 3;
+  secondsLeft = 10;
   private readonly STORAGE_KEY = 'domain-warning-dismissed';
   private readonly PRODUCTION_DOMAIN = 'zeitvertreib.vip';
   private intervalId: number | null = null;
