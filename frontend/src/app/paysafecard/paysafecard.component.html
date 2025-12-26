@@ -1,0 +1,218 @@
+<div class="paysafe-page">
+  <!-- Animated particles -->
+  <div class="particle-fall" aria-hidden="true">
+    <div
+      class="particle"
+      *ngFor="let particle of particles"
+      [style.left.%]="particle.left"
+      [style.animation-delay.s]="particle.delay"
+      [style.font-size.px]="particle.size"
+    >
+      💳
+    </div>
+  </div>
+
+  <div class="paysafe-shell">
+    <!-- Header Card -->
+    <div class="paysafe-card">
+      <div class="paysafe-card-header">
+        <div class="header-left">
+          <h1 class="title">💳 Paysafecard Spende</h1>
+          <p class="subtitle">Unterstütze Zeitvertreib mit einer Paysafecard-Spende</p>
+        </div>
+      </div>
+
+      <div class="paysafe-card-body hero-body">
+        <div class="badge-row">
+          <span class="chip chip-primary">💜 Direkte Unterstützung</span>
+          <span class="chip chip-secondary">🔒 Sicher & Anonym</span>
+        </div>
+
+        <div class="info-section">
+          <h3 class="section-title">Wie funktioniert's?</h3>
+          <div class="steps-grid">
+            <div class="step-card">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h4>Paysafecard kaufen</h4>
+                <p>Kaufe eine Paysafecard an einer Verkaufsstelle oder online</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h4>Code einreichen</h4>
+                <p>Gib deinen 16-stelligen PIN-Code im Formular unten ein</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h4>Bearbeitung</h4>
+                <p>Wir überprüfen deinen Code und benachrichtigen dich über Discord</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Form -->
+        <div class="submit-section">
+          <h3 class="section-title">Paysafecard einreichen</h3>
+
+          <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-error">
+            {{ errorMessage }}
+          </div>
+
+          <div class="form-group">
+            <label for="cardCode" class="form-label">16-stelliger PIN-Code</label>
+            <input
+              type="text"
+              id="cardCode"
+              [(ngModel)]="cardCode"
+              placeholder="0000 0000 0000 0000"
+              class="form-input"
+              [disabled]="isSubmitting"
+              (keyup.enter)="submitCard()"
+              maxlength="19"
+            />
+            <p class="form-hint">Dein Code wird sicher übermittelt und nur von John Zeitvertreib gesehen</p>
+          </div>
+
+          <button
+            class="submit-btn"
+            (click)="submitCard()"
+            [disabled]="!cardCode.trim() || isSubmitting"
+            [class.btn-loading]="isSubmitting"
+          >
+            <span *ngIf="!isSubmitting">💳 Paysafecard einreichen</span>
+            <span *ngIf="isSubmitting">⏳ Wird eingereicht...</span>
+          </button>
+
+          <div class="security-note">
+            <span class="security-icon">🎁</span>
+            <p><strong>Belohnung:</strong> Für jede 1€ Spende erhältst du automatisch 100 ZVC nach der Genehmigung!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submissions History -->
+    <div class="paysafe-card">
+      <div class="paysafe-card-header">
+        <div class="header-left">
+          <h2 class="title-sm">📋 Meine Einreichungen</h2>
+          <p class="subtitle">Übersicht über deine eingereichten Paysafecards</p>
+        </div>
+      </div>
+
+      <div class="paysafe-card-body">
+        <div *ngIf="isLoadingSubmissions" class="loading-state">
+          <div class="loading-spinner"></div>
+          <p class="muted">Lade Einreichungen...</p>
+        </div>
+
+        <div *ngIf="!isLoadingSubmissions && hasError" class="error-state">
+          <p class="eyebrow">Hoppla</p>
+          <p class="muted">{{ errorMessage }}</p>
+          <button class="pill-btn" (click)="loadSubmissions()">Erneut versuchen</button>
+        </div>
+
+        <div *ngIf="!isLoadingSubmissions && !hasError && submissions.length === 0" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>Noch keine Einreichungen</h3>
+          <p class="muted">Reiche deine erste Paysafecard ein, um Zeitvertreib zu unterstützen!</p>
+        </div>
+
+        <div *ngIf="!isLoadingSubmissions && !hasError && submissions.length > 0" class="submissions-list">
+          <div *ngFor="let submission of submissions" class="submission-item">
+            <div class="submission-header">
+              <span class="submission-id">#{{ submission.id }}</span>
+              <span class="submission-status" [class]="getStatusClass(submission.status)">
+                {{ getStatusLabel(submission.status) }}
+              </span>
+            </div>
+
+            <div class="submission-details">
+              <div class="detail-row">
+                <span class="detail-label">🎫 Code:</span>
+                <span class="detail-value code-value">{{ submission.cardCodeTruncated }}</span>
+              </div>
+
+              <div class="detail-row">
+                <span class="detail-label">📅 Eingereicht:</span>
+                <span class="detail-value">{{ formatDate(submission.submittedAt) }}</span>
+              </div>
+
+              <div class="detail-row" *ngIf="submission.status !== 'pending'">
+                <span class="detail-label">✓ Bearbeitet:</span>
+                <span class="detail-value">{{ formatDate(submission.processedAt) }}</span>
+              </div>
+
+              <div class="detail-row" *ngIf="submission.amount > 0">
+                <span class="detail-label">💰 Betrag:</span>
+                <span class="detail-value amount-value">€{{ submission.amount.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="paysafe-card">
+      <div class="paysafe-card-header">
+        <div class="header-left">
+          <h2 class="title-sm">❓ Häufige Fragen</h2>
+        </div>
+      </div>
+
+      <div class="paysafe-card-body">
+        <div class="faq-list">
+          <div class="faq-item">
+            <h4 class="faq-question">🔒 Ist meine Paysafecard sicher?</h4>
+            <p class="faq-answer">
+              Ja! Dein Code wird verschlüsselt übertragen und nur vom Besitzer (John Zeitvertreib) persönlich in einer
+              privaten, diskreten Discord-DM eingesehen.
+            </p>
+          </div>
+
+          <div class="faq-item">
+            <h4 class="faq-question">💝 Welche Belohnung bekomme ich?</h4>
+            <p class="faq-answer">
+              Als Dankeschön erhältst du <strong>100 ZVC pro 1€</strong> Spende! Diese werden automatisch deinem Account
+              hinzugefügt, sobald deine Einreichung von John Zeitvertreib genehmigt wurde.
+            </p>
+          </div>
+
+          <div class="faq-item">
+            <h4 class="faq-question">⏱️ Wie lange dauert die Bearbeitung?</h4>
+            <p class="faq-answer">
+              Normalerweise innerhalb von 24 Stunden. Du erhältst eine Discord-Nachricht vom Zeitvertreib Bot, sobald
+              deine Einreichung bearbeitet wurde.
+            </p>
+          </div>
+
+          <div class="faq-item">
+            <h4 class="faq-question">💬 Was passiert nach der Genehmigung?</h4>
+            <p class="faq-answer">
+              Du erhältst eine Bestätigung per Discord-DM vom Zeitvertreib Bot und die ZVC-Belohnung wird automatisch
+              auf deinen Account gutgeschrieben.
+            </p>
+          </div>
+
+          <div class="faq-item">
+            <h4 class="faq-question">🎮 Wofür kann ich ZVC verwenden?</h4>
+            <p class="faq-answer">
+              Mit deinen ZVC kannst du exklusive In-Game-Belohnungen freischalten und spezielle Items erwerben, um dein
+              Spielerlebnis auf Zeitvertreib zu verbessern! Und das Beste: Glücksspiel!!!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -628,3 +628,26 @@ export interface SprayGetResponseItem {
     text_toy?: string;
   }[];
 }
+
+// ============================================================================
+// Paysafe Card Submission Types
+// ============================================================================
+
+export type PaysafeCardSubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+/** POST /paysafe request */
+export interface PaysafeCardPostRequest {
+  cardCode: string;
+}
+
+/** GET /paysafe response */
+export interface PaysafeCardGetResponse {
+  submissions: {
+    id: number;
+    cardCodeTruncated: string;
+    submittedAt: number;
+    processedAt: number;
+    status: PaysafeCardSubmissionStatus;
+    amount: number;
+  }[];
+}

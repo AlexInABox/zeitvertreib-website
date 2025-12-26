@@ -143,3 +143,15 @@ export const steamCache = sqliteTable('steam_cache', {
   avatarUrl: text('avatar_url').notNull(),
   lastUpdated: integer('last_updated').notNull().default(0),
 });
+
+export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  discordId: text('discord_id').notNull(),
+  cardCode: text('card_code').notNull().unique(),
+  submittedAt: integer('submitted_at').notNull().default(0),
+  processedAt: integer('processed_at').notNull().default(0),
+  status: text('status', { enum: ['pending', 'approved', 'rejected'] })
+    .notNull()
+    .default('pending'),
+  amount: numeric('amount').notNull(),
+});

@@ -223,20 +223,15 @@ export async function handleUpdatePlayerlist(request: Request, env: Env): Promis
     const id = env.PLAYERLIST_STORAGE.idFromName('playerlist');
     const stub = env.PLAYERLIST_STORAGE.get(id);
 
-    // Create payload with timestamp and enriched playerlist
-    const payload = {
-      timestamp: Date.now(),
-      players: enrichedPlayerlist,
-    };
-
-    // Update playerlist in Durable Object with enriched data and timestamp
+    // Update playerlist in Durable Object with enriched data
+    // Note: The Durable Object expects just the array, not wrapped in an object
     const response = await stub.fetch(
       new Request('https://playerlist-storage.worker/playerlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(enrichedPlayerlist),
       }),
     );
 

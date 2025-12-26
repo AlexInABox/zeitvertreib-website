@@ -57,6 +57,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         url: 'https://ko-fi.com/zeitvertreib',
         target: '_blank',
       },
+      {
+        label: 'Paysafecard',
+        icon: PrimeIcons.CREDIT_CARD,
+        route: '/paysafecard',
+      },
 
       {
         label: 'Dashboard',

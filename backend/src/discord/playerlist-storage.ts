@@ -39,16 +39,23 @@ export class PlayerlistStorage {
 
   private async getPlayerlist(): Promise<Response> {
     const playerlist = await this.state.storage.get('playerlist');
+    const timestamp = (await this.state.storage.get('lastUpdated')) as number | null;
 
     if (!playerlist) {
-      return new Response(JSON.stringify([]), {
+      return new Response(JSON.stringify({ timestamp: 0, players: [] }), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify(playerlist), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        timestamp: timestamp || 0,
+        players: playerlist,
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   private async updatePlayerlist(request: Request): Promise<Response> {
@@ -75,8 +82,9 @@ export class PlayerlistStorage {
     }
 
     // Store the playerlist with timestamp
+    const timestamp = Date.now();
     await this.state.storage.put('playerlist', playerlistData);
-    await this.state.storage.put('lastUpdated', new Date().toISOString());
+    await this.state.storage.put('lastUpdated', timestamp);
 
     console.log(`Stored playerlist with ${playerlistData.length} players`);
 
@@ -84,7 +92,7 @@ export class PlayerlistStorage {
       JSON.stringify({
         success: true,
         message: `Stored ${playerlistData.length} players`,
-        timestamp: new Date().toISOString(),
+        timestamp: timestamp,
       }),
       {
         headers: { 'Content-Type': 'application/json' },

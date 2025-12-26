@@ -8,11 +8,11 @@ import { Routes, InteractionType } from 'discord-api-types/v10';
 import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
 import { AwsClient } from 'aws4fetch';
-import { createResponse } from '../utils.js';
+import { createResponse, increment } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
-import { playerdata, sprays, sprayBans, deletedSprays } from '../db/schema.js';
+import { playerdata, sprays, sprayBans, deletedSprays, paysafeCardSubmissions } from '../db/schema.js';
 
 interface VerificationResult {
   isValid: boolean;
@@ -213,16 +213,10 @@ export async function handleDiscordBotInteractions(
 
                 // Check if challenger account is still linked
                 if (!challengerBalance) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
-                      embeds: [
-                        {
-                          title: '🔗 Challenger-Account nicht verknüpft!',
-                          description: 'Der Ersteller der Challenge hat keinen verknüpften Zeitvertreib-Account mehr.',
-                          color: 0xff6b6b,
-                        },
-                      ],
-                      components: [],
+                      content: '❌ Der Challenge-Ersteller hat keinen verknüpften Zeitvertreib-Account mehr!',
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
@@ -230,7 +224,7 @@ export async function handleDiscordBotInteractions(
 
                 // Check if participant account is linked
                 if (!participantBalance) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       embeds: [
                         {
@@ -246,27 +240,27 @@ export async function handleDiscordBotInteractions(
                           ],
                         },
                       ],
-                      components: [],
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
                 }
 
                 if ((challengerBalance.experience || 0) < amount) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
-                      content: '❌ Challenger hat nicht genügend ZVC!',
-                      components: [],
+                      content: '❌ Der Challenge-Ersteller hat nicht genügend ZVC!',
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
                 }
 
                 if ((participantBalance.experience || 0) < amount) {
-                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                  await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Du hast nicht genügend ZVC für diesen Münzwurf!',
-                      components: [],
+                      flags: 64, // Ephemeral
                     },
                   });
                   return;
@@ -556,6 +550,78 @@ export async function handleDiscordBotInteractions(
           origin,
         );
       }
+    }
+
+    // Handle paysafe approve button - show modal for amount input
+    if (customId.startsWith('paysafe_approve:')) {
+      const parts = customId.split(':');
+      const submissionId = parts[1] || '';
+      const submitterId = parts[2] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `paysafe_approve_modal:${submissionId}:${submitterId}`,
+            title: 'Approve Paysafecard',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'amount',
+                    label: 'Amount (EUR)',
+                    style: 1, // Short text
+                    min_length: 1,
+                    max_length: 10,
+                    placeholder: 'e.g., 25',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle paysafe reject button - show modal for rejection reason
+    if (customId.startsWith('paysafe_reject:')) {
+      const parts = customId.split(':');
+      const submissionId = parts[1] || '';
+      const submitterId = parts[2] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `paysafe_reject_modal:${submissionId}:${submitterId}`,
+            title: 'Reject Paysafecard',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'reason',
+                    label: 'Reason for rejection',
+                    style: 2, // Paragraph
+                    min_length: 1,
+                    max_length: 500,
+                    placeholder: 'Why are you rejecting this submission?',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
     }
 
     return createResponse({ error: 'Unknown component interaction' }, 400, origin);
@@ -1090,6 +1156,353 @@ export async function handleDiscordBotInteractions(
                 });
               } catch (error) {
                 console.error('Spray unban error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle paysafe approve modal submission
+    if (customId.startsWith('paysafe_approve_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const submissionId = parts[1] || '';
+        const submitterId = parts[2] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Extract amount from modal submission
+        let amount = '0';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          amount = components[0]?.components?.[0]?.value || '0';
+        }
+
+        // Validate amount is a number
+        const amountNum = parseFloat(amount);
+        if (isNaN(amountNum) || amountNum <= 0) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Invalid amount! Please enter a valid positive number.',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Calculate ZVC reward (100 ZVC per 1€)
+                const zvcReward = Math.floor(amountNum * 100);
+
+                // Update submission status and add ZVC reward to user
+                const now = Math.floor(Date.now() / 1000);
+                await db
+                  .update(paysafeCardSubmissions)
+                  .set({
+                    status: 'approved',
+                    amount: amount,
+                    processedAt: now,
+                  })
+                  .where(eq(paysafeCardSubmissions.id, parseInt(submissionId)));
+
+                await db
+                  .update(playerdata)
+                  .set({
+                    experience: increment(playerdata.experience, zvcReward),
+                  })
+                  .where(eq(playerdata.discordId, submitterId));
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Update Discord message
+                if (interaction.channel?.id && interaction.message?.id) {
+                  const currentMessage: any = await rest.get(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                  );
+
+                  const updatedEmbed = currentMessage.embeds[0];
+                  updatedEmbed.title = '✅ Paysafecard Approved!';
+                  updatedEmbed.color = 0x10b981; // Green
+                  updatedEmbed.fields.push({
+                    name: '💰 Amount',
+                    value: `€${amountNum.toFixed(2)}`,
+                    inline: true,
+                  });
+                  updatedEmbed.fields.push({
+                    name: '✅ Approved By',
+                    value: `<@${moderatorId}> (${moderatorName})`,
+                    inline: true,
+                  });
+                  updatedEmbed.fields.push({
+                    name: '📅 Processed At',
+                    value: `<t:${now}:F>`,
+                    inline: true,
+                  });
+
+                  await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                    body: {
+                      embeds: [updatedEmbed],
+                      components: [], // Remove buttons
+                    },
+                  });
+                }
+
+                // Send DM to submitter
+                try {
+                  const createDmResponse = await proxyFetch(
+                    'https://discord.com/api/v10/users/@me/channels',
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bot ${env.DISCORD_TOKEN}`,
+                      },
+                      body: JSON.stringify({
+                        recipient_id: submitterId,
+                      }),
+                    },
+                    env,
+                  );
+
+                  if (createDmResponse.ok) {
+                    const dmChannel = (await createDmResponse.json()) as any;
+                    await proxyFetch(
+                      `https://discord.com/api/v10/channels/${dmChannel.id}/messages`,
+                      {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bot ${env.DISCORD_TOKEN}`,
+                        },
+                        body: JSON.stringify({
+                          embeds: [
+                            {
+                              title: '✅ Paysafecard Approved!',
+                              description:
+                                'Deine Paysafecard-Einreichung wurde genehmigt!\n\n**Vielen Dank für deine Unterstützung von Zeitvertreib!** 💜\n\n🎁 **Belohnung:** +**1.000 ZVC** pro 10€',
+                              color: 0x10b981,
+                              fields: [
+                                {
+                                  name: '🆔 Submission ID',
+                                  value: `#${submissionId}`,
+                                  inline: true,
+                                },
+                                {
+                                  name: '💰 Amount',
+                                  value: `€${amountNum.toFixed(2)}`,
+                                  inline: true,
+                                },
+                                {
+                                  name: '🎁 ZVC Reward',
+                                  value: `+${zvcReward} ZVC`,
+                                  inline: true,
+                                },
+                                {
+                                  name: '📅 Processed At',
+                                  value: `<t:${now}:F>`,
+                                  inline: false,
+                                },
+                              ],
+                              footer: {
+                                text: 'John Zeitvertreib (Owner)',
+                              },
+                              timestamp: new Date(now * 1000).toISOString(),
+                            },
+                          ],
+                        }),
+                      },
+                      env,
+                    );
+                  }
+                } catch (error) {
+                  console.error('Failed to send approval DM to submitter:', error);
+                }
+              } catch (error) {
+                console.error('Paysafe approve error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle paysafe reject modal submission
+    if (customId.startsWith('paysafe_reject_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const submissionId = parts[1] || '';
+        const submitterId = parts[2] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Extract reason from modal submission
+        let reason = 'No reason provided';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          reason = components[0]?.components?.[0]?.value || 'No reason provided';
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Update submission status
+                const now = Math.floor(Date.now() / 1000);
+                await db
+                  .update(paysafeCardSubmissions)
+                  .set({
+                    status: 'rejected',
+                    processedAt: now,
+                  })
+                  .where(eq(paysafeCardSubmissions.id, parseInt(submissionId)));
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Update Discord message
+                if (interaction.channel?.id && interaction.message?.id) {
+                  const currentMessage: any = await rest.get(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                  );
+
+                  const updatedEmbed = currentMessage.embeds[0];
+                  updatedEmbed.title = '❌ Paysafecard Rejected';
+                  updatedEmbed.color = 0xef4444; // Red
+                  updatedEmbed.fields.push({
+                    name: '❌ Rejected By',
+                    value: `<@${moderatorId}> (${moderatorName})`,
+                    inline: true,
+                  });
+                  updatedEmbed.fields.push({
+                    name: '📅 Processed At',
+                    value: `<t:${now}:F>`,
+                    inline: true,
+                  });
+                  updatedEmbed.fields.push({
+                    name: '📝 Reason',
+                    value: reason,
+                    inline: false,
+                  });
+
+                  await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                    body: {
+                      embeds: [updatedEmbed],
+                      components: [], // Remove buttons
+                    },
+                  });
+                }
+
+                // Send DM to submitter
+                try {
+                  const createDmResponse = await proxyFetch(
+                    'https://discord.com/api/v10/users/@me/channels',
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bot ${env.DISCORD_TOKEN}`,
+                      },
+                      body: JSON.stringify({
+                        recipient_id: submitterId,
+                      }),
+                    },
+                    env,
+                  );
+
+                  if (createDmResponse.ok) {
+                    const dmChannel = (await createDmResponse.json()) as any;
+                    await proxyFetch(
+                      `https://discord.com/api/v10/channels/${dmChannel.id}/messages`,
+                      {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bot ${env.DISCORD_TOKEN}`,
+                        },
+                        body: JSON.stringify({
+                          embeds: [
+                            {
+                              title: '❌ Paysafecard Rejected',
+                              description: 'Deine Paysafecard-Einreichung wurde abgelehnt.',
+                              color: 0xef4444,
+                              fields: [
+                                {
+                                  name: '🆔 Submission ID',
+                                  value: `#${submissionId}`,
+                                  inline: true,
+                                },
+                                {
+                                  name: '📝 Reason',
+                                  value: reason,
+                                  inline: false,
+                                },
+                                {
+                                  name: '📅 Processed At',
+                                  value: `<t:${now}:F>`,
+                                  inline: false,
+                                },
+                              ],
+                              footer: {
+                                text: 'Zeitvertreib Team',
+                              },
+                              timestamp: new Date(now * 1000).toISOString(),
+                            },
+                          ],
+                        }),
+                      },
+                      env,
+                    );
+                  }
+                } catch (error) {
+                  console.error('Failed to send rejection DM to submitter:', error);
+                }
+              } catch (error) {
+                console.error('Paysafe reject error:', error);
               }
             })(),
           );
