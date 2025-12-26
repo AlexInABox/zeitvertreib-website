@@ -298,10 +298,10 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     )
       .bind(code)
       .first()) as {
-        code: string;
-        credits: number;
-        remaining_uses: number;
-      } | null;
+      code: string;
+      credits: number;
+      remaining_uses: number;
+    } | null;
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
