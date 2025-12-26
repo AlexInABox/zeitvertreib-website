@@ -298,10 +298,11 @@ export class AuthService {
     });
   }
 
-  authenticatedDelete<T>(url: string): Observable<T> {
+  authenticatedDelete<T>(url: string, body?: any): Observable<T> {
     return this.http.delete<T>(url, {
       headers: this.getAuthHeaders(),
       withCredentials: true,
+      body: body,
     });
   }
 

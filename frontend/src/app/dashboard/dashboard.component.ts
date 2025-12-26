@@ -796,15 +796,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
 
     try {
-      // Use HTTP client directly with DELETE method and body
-      await this.http
-        .delete<{ success: boolean }>(`${environment.apiUrl}/spray`, {
-          body: requestBody,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        })
+      // Use authenticated delete with body
+      await this.authService
+        .authenticatedDelete<{ success: boolean }>(`${environment.apiUrl}/spray`, requestBody)
         .toPromise();
 
       slot.isUploading = false;
