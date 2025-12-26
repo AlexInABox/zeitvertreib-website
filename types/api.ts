@@ -220,7 +220,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -626,5 +626,28 @@ export interface SprayGetResponseItem {
     name: string;
     full_res?: Base64URLString;
     text_toy?: string;
+  }[];
+}
+
+// ============================================================================
+// Paysafe Card Submission Types
+// ============================================================================
+
+export type PaysafeCardSubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+/** POST /paysafe request */
+export interface PaysafeCardPostRequest {
+  cardCode: string;
+}
+
+/** GET /paysafe response */
+export interface PaysafeCardGetResponse {
+  submissions: {
+    id: number;
+    cardCodeTruncated: string;
+    submittedAt: number;
+    processedAt: number;
+    status: PaysafeCardSubmissionStatus;
+    amount: number;
   }[];
 }

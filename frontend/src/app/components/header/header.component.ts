@@ -25,7 +25,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -56,6 +56,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         icon: PrimeIcons.HEART,
         url: 'https://ko-fi.com/zeitvertreib',
         target: '_blank',
+      },
+      {
+        label: 'Paysafecard',
+        icon: PrimeIcons.CREDIT_CARD,
+        route: '/paysafecard',
       },
 
       {

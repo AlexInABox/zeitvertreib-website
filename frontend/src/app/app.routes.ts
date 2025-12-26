@@ -14,6 +14,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'paysafecard',
+    loadComponent: () => import('./paysafecard/paysafecard.component').then((m) => m.PaysafecardComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'fakerank',
     loadComponent: () => import('./fakerank-admin/fakerank-admin.component').then((m) => m.FakerankAdminComponent),
     canActivate: [fakerankAdminGuard],

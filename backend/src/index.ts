@@ -51,6 +51,7 @@ import {
   handleGetFileHash,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
+import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -154,6 +155,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Ko-fi webhook
   'POST:/kofi/webhook': handleKofiWebhook,
+
+  // Paysafe routes
+  'POST:/paysafe': handlePostPaysafe,
+  'GET:/paysafe': handleGetPaysafe,
 };
 
 export default {
