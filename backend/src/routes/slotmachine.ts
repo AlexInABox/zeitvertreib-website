@@ -150,7 +150,7 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     );
   }
 
-  const playerId = `${validation.steamId}@steam`;
+  const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
   // Calculate payout based on the slot results
   function calculatePayout(

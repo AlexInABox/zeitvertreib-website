@@ -481,6 +481,37 @@ export class CaseDetailComponent implements OnInit {
     return md5.digest('hex');
   }
 
+  private async calculateBufferHash(buffer: ArrayBuffer, onProgress?: (progress: number) => void): Promise<string> {
+    const data = new Uint8Array(buffer);
+    const chunkSize = 2097152; // 2MB chunks
+    const chunks = Math.ceil(data.length / chunkSize);
+    const md5 = await createMD5();
+    md5.init();
+
+    for (let currentChunk = 0; currentChunk < chunks; currentChunk++) {
+      const start = currentChunk * chunkSize;
+      const end = Math.min(start + chunkSize, data.length);
+      md5.update(data.slice(start, end));
+
+      // Report progress
+      if (onProgress) {
+        const progress = Math.round(((currentChunk + 1) / chunks) * 100);
+        onProgress(progress);
+      }
+    }
+
+    return md5.digest('hex');
+  }
+
+  private hexToBase64(hex: string): string {
+    const bytes = new Uint8Array(hex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
   private async verifyUpload(filename: string, expectedHash: string, maxRetries = 3): Promise<boolean> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
@@ -540,19 +571,29 @@ export class CaseDetailComponent implements OnInit {
 
     this.isUploading = true;
     this.uploadProgress = 0;
-    this.uploadStatusMessage = 'Datei wird gehashed...';
+    this.uploadStatusMessage = 'Datei wird geladen...';
     this.uploadETA = '';
     this.uploadStartTime = Date.now();
 
     try {
-      // Calculate local file hash with progress tracking
+      // Read the entire file into memory ONCE to ensure consistency
+      this.uploadStatusMessage = 'Datei wird in Speicher geladen...';
+      const fileBuffer = await this.selectedFile.arrayBuffer();
+      const fileData = new Uint8Array(fileBuffer);
+      const contentType = this.selectedFile.type || 'application/octet-stream';
+
+      // Calculate hash from the buffer (not from file) with progress tracking
       const hashStartTime = Date.now();
-      const localHash = await this.calculateFileHash(this.selectedFile, (progress) => {
+      this.uploadStatusMessage = 'Datei wird gehashed...';
+      const localHash = await this.calculateBufferHash(fileBuffer, (progress) => {
         this.uploadProgress = progress;
         this.uploadETA = this.calculateETA(hashStartTime, progress);
         this.uploadStatusMessage = `Datei wird gehashed... (${progress}%)`;
       });
       console.log('Local file hash:', localHash);
+
+      // Convert hash to base64 for Content-MD5 header
+      const contentMD5 = this.hexToBase64(localHash);
 
       // Get file extension
       const fileExtension = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
@@ -579,33 +620,35 @@ export class CaseDetailComponent implements OnInit {
       this.uploadStatusMessage = 'Datei wird hochgeladen...';
       this.uploadStartTime = Date.now();
 
-      // Upload file to S3 using the presigned URL with progress tracking
+      // Upload using fetch with explicit Content-Length and Content-MD5 for integrity
+      // This is more reliable than HttpClient for binary uploads to S3
       await new Promise<void>((resolve, reject) => {
-        this.http
-          .put(uploadUrlResponse.url, this.selectedFile, {
-            headers: new HttpHeaders({
-              'Content-Type': this.selectedFile!.type || 'application/octet-stream',
-            }),
-            reportProgress: true,
-            observe: 'events',
-          })
-          .subscribe({
-            next: (event) => {
-              if (event.type === 1) {
-                // HttpEventType.UploadProgress
-                // Calculate upload percentage
-                if (event.total) {
-                  this.uploadProgress = Math.round((event.loaded / event.total) * 100);
-                  this.uploadETA = this.calculateETA(this.uploadStartTime, this.uploadProgress);
-                  this.uploadStatusMessage = `Datei wird hochgeladen... (${this.uploadProgress}%)`;
-                }
-              } else if (event.type === 4) {
-                // HttpEventType.Response
-                resolve();
-              }
-            },
-            error: (error) => reject(error),
-          });
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrlResponse.url, true);
+        xhr.setRequestHeader('Content-Type', contentType);
+        xhr.setRequestHeader('Content-MD5', contentMD5);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+            this.uploadETA = this.calculateETA(this.uploadStartTime, this.uploadProgress);
+            this.uploadStatusMessage = `Datei wird hochgeladen... (${this.uploadProgress}%)`;
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+
+        // Send the exact buffer we hashed
+        xhr.send(fileData);
       });
 
       // Verify upload by comparing hashes
@@ -850,23 +893,22 @@ export class CaseDetailComponent implements OnInit {
         position += chunk.length;
       }
 
-      // Create a File object from the video data with proper extension
-      const videoBlob = new Blob([videoData], { type: mimeType });
-      const videoFile = new File([videoBlob], filename, { type: mimeType });
-
-      // Step 3: Hash the downloaded video
+      // Step 3: Hash the downloaded video from the buffer directly
       this.medalStatusMessage = 'Video wird gehashed...';
       this.medalDownloadProgress = 100;
       this.medalUploadProgress = 0;
       this.medalETA = '';
 
       const hashStartTime = Date.now();
-      const localHash = await this.calculateFileHash(videoFile, (progress) => {
+      const localHash = await this.calculateBufferHash(videoData.buffer, (progress) => {
         this.medalUploadProgress = progress;
         this.medalETA = this.calculateETA(hashStartTime, progress);
         this.medalStatusMessage = `Video wird gehashed... (${progress}%)`;
       });
       console.log('Local Medal video hash:', localHash);
+
+      // Convert hash to base64 for Content-MD5 header
+      const contentMD5 = this.hexToBase64(localHash);
 
       // Step 4: Upload to case storage with progress tracking
       this.medalStatusMessage = 'Video wird hochgeladen...';
@@ -886,32 +928,34 @@ export class CaseDetailComponent implements OnInit {
         throw new Error('Fehler beim Abrufen der Upload-URL');
       }
 
-      // Upload file to S3 using the presigned URL with progress tracking
+      // Upload using XMLHttpRequest with explicit Content-MD5 for integrity
       await new Promise<void>((resolve, reject) => {
-        this.http
-          .put(uploadUrlResponse.url, videoFile, {
-            headers: new HttpHeaders({
-              'Content-Type': mimeType,
-            }),
-            reportProgress: true,
-            observe: 'events',
-          })
-          .subscribe({
-            next: (event) => {
-              if (event.type === 1) {
-                // HttpEventType.UploadProgress
-                if (event.total) {
-                  this.medalUploadProgress = Math.round((event.loaded / event.total) * 100);
-                  this.medalETA = this.calculateETA(this.medalStartTime, this.medalUploadProgress);
-                  this.medalStatusMessage = `Video wird hochgeladen... (${this.medalUploadProgress}%)`;
-                }
-              } else if (event.type === 4) {
-                // HttpEventType.Response
-                resolve();
-              }
-            },
-            error: (error) => reject(error),
-          });
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrlResponse.url, true);
+        xhr.setRequestHeader('Content-Type', mimeType);
+        xhr.setRequestHeader('Content-MD5', contentMD5);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            this.medalUploadProgress = Math.round((event.loaded / event.total) * 100);
+            this.medalETA = this.calculateETA(this.medalStartTime, this.medalUploadProgress);
+            this.medalStatusMessage = `Video wird hochgeladen... (${this.medalUploadProgress}%)`;
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+
+        // Send the exact buffer we hashed
+        xhr.send(videoData);
       });
 
       // Verify upload by comparing hashes

@@ -120,7 +120,7 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     );
   }
 
-  const playerId = `${validation.steamId}@steam`;
+  const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
   // Parse request body for bet amount
   let betAmount: number;

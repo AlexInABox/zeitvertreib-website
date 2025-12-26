@@ -5482,6 +5482,8 @@
 .spray-image {
   width: 100%;
   flex: 1;
+  min-height: 0; /* Allow flex item to shrink below content size */
+  max-height: calc(100% - 50px); /* Reserve space for spray-info */
   object-fit: contain;
   background: repeating-conic-gradient(rgba(255, 255, 255, 0.03) 0% 25%, rgba(0, 0, 0, 0.03) 0% 50%) 50% / 16px 16px;
 }
@@ -5493,6 +5495,8 @@
   padding: 0.5rem 0.75rem;
   background: rgba(255, 255, 255, 0.05);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0; /* Prevent spray-info from being squeezed */
+  min-height: 50px; /* Ensure minimum height for button visibility */
 }
 
 .spray-name {

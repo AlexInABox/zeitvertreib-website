@@ -748,11 +748,24 @@
               </div>
 
               <!-- Uploaded Spray -->
-              <div *ngIf="(i < 2 || isDonator) && slot.id && !slot.selectedFile" class="spray-uploaded">
+              <div
+                *ngIf="shouldShowSpraySlot(i)"
+                class="spray-uploaded"
+                [attr.data-slot-index]="i"
+                [attr.data-spray-id]="slot.id"
+                [attr.data-is-donator]="isDonator"
+              >
                 <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
                 <div class="spray-info">
                   <span class="spray-name">{{ slot.name }}</span>
-                  <button (click)="deleteSprayForSlot(i)" class="spray-delete-btn" [disabled]="slot.isUploading">
+                  <button
+                    (click)="deleteSprayForSlot(i)"
+                    class="spray-delete-btn"
+                    [disabled]="slot.isUploading"
+                    [attr.data-slot]="i"
+                    [attr.data-id]="slot.id"
+                    [attr.data-donator]="isDonator"
+                  >
                     <span *ngIf="!slot.isUploading">🗑️</span>
                     <span *ngIf="slot.isUploading" class="spray-spinner"></span>
                   </button>

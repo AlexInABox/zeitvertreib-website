@@ -327,7 +327,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(public authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
-    this.loadSprays();
+    // Moved loadSprays() to ngOnInit to fix race condition with isDonator
     this.loadFakerank();
     this.loadRedeemables();
     this.loadSlotMachineInfo();
@@ -349,6 +349,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Check if user is a donator
     this.isDonator = this.authService.isDonator();
 
+    // Load sprays AFTER isDonator is set to avoid race condition
+    this.loadSprays();
+
     // Check spray ban status
     this.isSprayBanned = this.authService.isSprayBanned();
     this.sprayBanReason = this.authService.getSprayBanReason();
@@ -368,6 +371,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Check if current user is a fakerank admin
   isFakerankAdmin(): boolean {
     return this.authService.isFakerankAdmin();
+  }
+
+  // Helper for spray slot visibility
+  shouldShowSpraySlot(slotIndex: number): boolean {
+    const slot = this.spraySlots[slotIndex];
+    return (slotIndex < 2 || this.isDonator) && !!slot.id && !slot.selectedFile;
   }
 
   // Safe getter methods for template usage
@@ -519,10 +528,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           // Load spray data into slots
           sprayData.forEach((spray, index) => {
-            if (index < 3 && spray.full_res) {
+            if (index < 3 && spray.id) {
               this.spraySlots[index].id = spray.id;
               this.spraySlots[index].name = spray.name;
-              this.spraySlots[index].imageUrl = spray.full_res;
+              // Only set imageUrl if full_res is available
+              if (spray.full_res) {
+                this.spraySlots[index].imageUrl = spray.full_res;
+              }
             }
           });
         },
@@ -793,15 +805,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
 
     try {
-      // Use HTTP client directly with DELETE method and body
-      await this.http
-        .delete<{ success: boolean }>(`${environment.apiUrl}/spray`, {
-          body: requestBody,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        })
+      // Use authenticated delete with body
+      await this.authService
+        .authenticatedDelete<{ success: boolean }>(`${environment.apiUrl}/spray`, requestBody)
         .toPromise();
 
       slot.isUploading = false;
