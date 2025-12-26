@@ -150,6 +150,8 @@ export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
   cardCode: text('card_code').notNull().unique(),
   submittedAt: integer('submitted_at').notNull().default(0),
   processedAt: integer('processed_at').notNull().default(0),
-  status: text('status', { enum: ['pending', 'approved', 'rejected'] }).notNull().default('pending'),
+  status: text('status', { enum: ['pending', 'approved', 'rejected'] })
+    .notNull()
+    .default('pending'),
   amount: numeric('amount').notNull(),
 });
