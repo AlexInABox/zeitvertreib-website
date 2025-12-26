@@ -937,248 +937,266 @@
         </div>
       </div>
 
+      <!-- Fakerank Modal -->
+      <div class="preview-overlay" *ngIf="fakerankModalOpen" (click)="closeFakerankModal(true)">
+        <div
+          class="preview-modal redesign"
+          (click)="$event.stopPropagation()"
+          [style.--accent-color]="fakerankAccentColor"
+        >
+          <div class="modal-header">
+            <div class="header-content">
+              <span class="header-icon">✨</span>
+              <h3 class="preview-title">Fakerank konfigurieren</h3>
+            </div>
+            <button class="modal-close-btn" (click)="closeFakerankModal(true)">✕</button>
+          </div>
+
+          <div class="modal-body redesign-body custom-scrollbar">
+            <!-- Left Column: Preview (1/3) -->
+            <div class="preview-left">
+              <div
+                class="preview-image-container"
+                style="
+                  aspect-ratio: auto;
+                  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+                "
+              >
+                <div style="text-align: center; padding: 2rem">
+                  <div style="font-size: 3rem; margin-bottom: 1rem">✨</div>
+                  <div
+                    style="
+                      font-size: 1.75rem;
+                      font-weight: 900;
+                      color: white;
+                      word-break: break-word;
+                      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+                    "
+                    [style.color]="getColorHex(fakerankModalColor)"
+                  >
+                    {{ fakerankModalText || 'Dein Spitzname' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Controls (2/3) -->
+            <div class="preview-right">
+              <div class="preview-input-group">
+                <label for="fakerankText">Dein Spitzname (max. 50 Zeichen)</label>
+                <input
+                  id="fakerankText"
+                  type="text"
+                  class="spray-name-input-large"
+                  [(ngModel)]="fakerankModalText"
+                  placeholder="z.B. Pizza Liebhaber, Sniper Pro..."
+                  maxlength="50"
+                />
+                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.25rem">
+                  {{ fakerankModalText.length }}/50 Zeichen
+                </div>
+              </div>
+
+              <!-- Color Picker -->
+              <div class="preview-input-group">
+                <label>Farbe wählen</label>
+                <div class="color-grid">
+                  <button
+                    *ngFor="let color of fakerankColors"
+                    (click)="selectFakerankColor(color.key)"
+                    class="color-option-btn"
+                    [class.selected]="fakerankModalColor === color.key"
+                    [style.background-color]="color.hex"
+                    [title]="color.name"
+                  ></button>
+                </div>
+                <div
+                  style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); text-align: center; margin-top: 0.5rem"
+                >
+                  {{ getColorName(fakerankModalColor) }}
+                </div>
+              </div>
+
+              <!-- Privacy & Rules Checkboxes -->
+              <div class="checkbox-group">
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="fakerankPrivacyCheck"
+                    [(ngModel)]="acceptedFakerankPrivacy"
+                    (change)="acceptedFakerankPrivacy ? (showFakerankPrivacyText = false) : null"
+                  />
+                  <label for="fakerankPrivacyCheck">
+                    Ich akzeptiere die
+                    <span
+                      class="text-link"
+                      (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()"
+                    >
+                      Datenschutzhinweise
+                    </span>
+                  </label>
+                </div>
+                <div *ngIf="showFakerankPrivacyText" class="info-box-inline">
+                  <div class="info-content">
+                    <ul>
+                      <li>
+                        <strong>Öffentliche Verfügbarkeit:</strong> Dein Fakerank wird öffentlich sichtbar und kann an
+                        unseren Discord-Server (USA) übertragen werden.
+                      </li>
+                      <li>
+                        <strong>Datenlöschung:</strong> Eine Löschung garantiert keine vollständige Entfernung aus
+                        Backups, Caches oder Drittsystemen.
+                      </li>
+                      <li>
+                        <strong>Maßnahmen:</strong> Wir behalten uns vor, Fakeranks jederzeit zu löschen und Accounts
+                        bei Verstößen zu sperren.
+                      </li>
+                      <li>
+                        <strong>Einverständnis:</strong> Mit dem Speichern erklärst du dich mit diesen Bedingungen
+                        einverstanden.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="fakerankRulesCheck"
+                    [(ngModel)]="acceptedFakerankRules"
+                    (change)="acceptedFakerankRules ? (showFakerankRulesText = false) : null"
+                  />
+                  <label for="fakerankRulesCheck">
+                    Ich bestätige, dass ich die
+                    <span
+                      class="text-link"
+                      (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()"
+                    >
+                      Inhaltsregeln
+                    </span>
+                    respektiere
+                  </label>
+                </div>
+                <div *ngIf="showFakerankRulesText" class="info-box-inline">
+                  <div class="info-content">
+                    <div class="rule-section">
+                      <h5>I. Unzulässige Inhalte</h5>
+                      <p>Keine Beleidigungen, Hassrede, Diskriminierung oder anstößige Inhalte.</p>
+                    </div>
+                    <div class="rule-section">
+                      <h5>II. Politische Inhalte</h5>
+                      <p>Keine politischen Aussagen, Propaganda oder kontroverse Statements.</p>
+                    </div>
+                    <div class="rule-section">
+                      <h5>III. Verhalten</h5>
+                      <p>Respektvoller Umgang - keine persönlichen Angriffe oder Provokationen.</p>
+                    </div>
+                    <div class="rule-section">
+                      <h5>IV. Konsequenzen</h5>
+                      <p>Verstöße führen zur sofortigen Accountsperrung ohne Vorwarnung.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error Message -->
+              <div *ngIf="fakerankError" class="input-error-hint mt-3">{{ fakerankError }}</div>
+
+              <div class="upload-action mt-4">
+                <button
+                  class="btn-upload-confirm-large"
+                  (click)="saveFakerankFromModal()"
+                  [disabled]="
+                    fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules
+                  "
+                >
+                  <span *ngIf="!fakerankLoading">💾 Speichern</span>
+                  <span *ngIf="fakerankLoading" class="spinner-small"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Fakerank Card -->
       <div class="grid-item fakerank-container">
         <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
-          <!-- Help Popup (replaces entire card content when shown) -->
-          <div *ngIf="showFakerankHelp" class="help-popup h-full">
-            <div class="help-content h-full">
-              <div class="help-title">Fakerank - Dein persönlicher Spitzname! ✨</div>
-              <div class="help-text">
-                Ein Fakerank ist einfach ein cooler Spitzname, den du dir selbst geben kannst! Es hat nichts mit deinem
-                echten Rang im Spiel zu tun - es ist nur zur Dekoration und macht dein Profil persönlicher.
-              </div>
-              <div class="help-text">
-                <strong>Wann kannst du es nutzen?</strong><br />
-                Jederzeit! Sei kreativ - ob "Pizza Liebhaber", "Sniper Pro" oder "Chaos König" - es ist dein
-                persönlicher Touch.
-              </div>
-              <div class="help-text">
-                <strong>Tipp:</strong> Wähle etwas, das deine Persönlichkeit oder deinen Spielstil widerspiegelt. Andere
-                Spieler werden es sehen können!
-              </div>
-              <button (click)="showFakerankHelp = false" class="help-close-btn">Verstanden! ✨</button>
+          <!-- Card Header -->
+          <div class="spray-header">
+            <h3 class="spray-title">✨ Fakerank</h3>
+            <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
+          </div>
+
+          <!-- Ban Warning -->
+          <div *ngIf="isFakerankBanned" class="spray-ban-warning">
+            <div class="ban-icon">⛔</div>
+            <div class="ban-content">
+              <p class="ban-title">Du wurdest von Fakeranks gesperrt</p>
+              <p class="ban-reason">
+                <strong>Grund:</strong>
+                {{ fakerankBanReason || 'Kein Grund angegeben' }}
+              </p>
+              <p class="ban-moderator" *ngIf="fakerankBannedBy">
+                <strong>Von:</strong>
+                {{ fakerankBannedBy }}
+              </p>
             </div>
           </div>
 
-          <!-- Regular Card Content -->
-          <div *ngIf="!showFakerankHelp">
-            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 justify-between cardHeader">
-              <div class="flex items-center gap-2">
-                ✨ <span>Fakerank</span>
-                <!-- Timer Badge -->
-                <span *ngIf="fakerankTimeRemaining > 0" class="fakerank-timer-badge">
-                  {{ formatTimeRemaining(fakerankTimeRemaining) }}
-                </span>
-                <!-- Admin Badge -->
-                <span *ngIf="authService.isFakerankAdmin()" class="fakerank-admin-badge"> Admin </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button (click)="showFakerankHelp = true" class="help-button" title="Was ist ein Fakerank?">?</button>
-              </div>
-            </h3>
-
-            <!-- Display Mode -->
-            <div *ngIf="!isEditingFakerank" class="fakerank-display">
-              <!-- Check if user can edit fakeranks -->
-              <div *ngIf="fakerankAllowed">
-                <!-- Show override info if user has override (but can still edit) -->
-                <div *ngIf="hasFakerankOverride && !isFakerankReadOnly" class="override-info-banner">
-                  <div class="override-banner-icon">🛡️</div>
-                  <div class="override-banner-text">
-                    <span class="override-banner-title">Admin-Override aktiv</span>
-                    <span class="override-banner-subtitle" *ngIf="fakerankOverrideTimeRemaining > 0">
-                      Du kannst trotzdem bearbeiten · Verbleibt:
-                      {{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}
+          <!-- Main Content (if not banned) -->
+          <div *ngIf="!isFakerankBanned">
+            <!-- Current Fakerank Display -->
+            <div class="fakerank-slot">
+              <!-- Has Fakerank -->
+              <div *ngIf="currentFakerank" class="fakerank-display-card">
+                <div class="fakerank-content">
+                  <div class="fakerank-text">
+                    <span class="fakerank-label">Dein FakeRank:</span>
+                    <span class="fakerank-value" [style.color]="getColorHex(currentFakerankColor)">
+                      {{ currentFakerank }}
                     </span>
-                  </div>
-                </div>
-
-                <div class="nickname-container mb-4">
-                  <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
-                    <div *ngIf="currentFakerank" class="nickname-display">
-                      <div class="nickname-icon">✨</div>
-                      <div class="nickname-text">
-                        <span class="nickname-label">Dein Spitzname:</span>
-                        <span class="nickname-value" [style.color]="getColorHex(currentFakerankColor)">{{
-                          currentFakerank
-                        }}</span>
-                        <div class="nickname-color-info">
-                          <span
-                            class="color-indicator"
-                            [style.background-color]="getColorHex(currentFakerankColor)"
-                          ></span>
-                          {{ getColorName(currentFakerankColor) }}
-                        </div>
-                      </div>
-                    </div>
-                    <div *ngIf="!currentFakerank" class="nickname-empty-state">
-                      <div class="nickname-icon">💭</div>
-                      <div class="nickname-text">
-                        <span class="nickname-label">Noch kein Spitzname</span>
-                        <span class="nickname-subtitle">Gib dir einen coolen Namen!</span>
-                      </div>
+                    <div class="fakerank-color-badge">
+                      <span class="color-dot" [style.background-color]="getColorHex(currentFakerankColor)"></span>
+                      {{ getColorName(currentFakerankColor) }}
                     </div>
                   </div>
                 </div>
-                <div class="fakerank-actions">
+                <div class="fakerank-actions-inline">
                   <button
-                    (click)="startEditingFakerank()"
-                    class="fakerank-btn fakerank-btn-primary"
+                    (click)="openFakerankModal()"
+                    class="fakerank-action-btn fakerank-edit-btn"
                     [disabled]="fakerankLoading"
+                    title="Fakerank bearbeiten"
                   >
-                    {{ currentFakerank ? '✏️ Ändern' : '➕ Erstellen' }}
+                    ✏️ Bearbeiten
                   </button>
                   <button
-                    *ngIf="currentFakerank"
                     (click)="deleteFakerank()"
-                    class="fakerank-btn fakerank-btn-danger"
+                    class="fakerank-action-btn fakerank-delete-btn"
                     [disabled]="fakerankLoading"
+                    title="Fakerank löschen"
                   >
                     🗑️ Löschen
                   </button>
                 </div>
               </div>
 
-              <!-- Override fakerank (read-only, set by admin) -->
-              <div *ngIf="isFakerankReadOnly" class="fakerank-override">
-                <div class="nickname-container mb-4">
-                  <div class="nickname-preview" [class.nickname-empty]="!currentFakerank">
-                    <div *ngIf="currentFakerank" class="nickname-display override-display">
-                      <div class="nickname-icon">🔒</div>
-                      <div class="nickname-text">
-                        <span class="nickname-label">Admin-Spitzname:</span>
-                        <span class="nickname-value" [style.color]="getColorHex(currentFakerankColor)">{{
-                          currentFakerank
-                        }}</span>
-                      </div>
-                      <div class="override-badge">
-                        <span class="override-text">Override</span>
-                        <span class="override-timer" *ngIf="fakerankOverrideTimeRemaining > 0">
-                          {{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}
-                        </span>
-                      </div>
-                    </div>
-                    <div *ngIf="!currentFakerank" class="nickname-empty-display">
-                      <div class="nickname-icon">🔒</div>
-                      <span class="nickname-placeholder">Admin kann dir einen Spitzname zuweisen</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="override-info">
-                  <div class="override-icon">🛡️</div>
-                  <div class="override-message">
-                    <p class="override-title">Admin-Override aktiv</p>
-                    <p class="override-text">
-                      Dein Spitzname wurde von einem Admin gesetzt und kann nicht bearbeitet werden.
-                      <span *ngIf="fakerankOverrideTimeRemaining > 0">
-                        Verbleibt:
-                        <strong>{{ formatTimeRemaining(fakerankOverrideTimeRemaining) }}</strong>
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Not allowed message -->
-              <div *ngIf="!fakerankAllowed" class="fakerank-not-allowed">
-                <div class="not-allowed-icon">🔒</div>
-                <div class="not-allowed-message">
-                  <p class="not-allowed-title">Noch nicht freigeschaltet!</p>
-                  <p class="not-allowed-text">
-                    Du bist noch nicht für diese Zeitvertreib-Funktion freigeschaltet! Du kannst entweder den
-                    Discord-Server
-                    <strong>boosten</strong>, über
-                    <strong style="white-space: nowrap">ko-fi.com</strong>
-                    spenden oder durch sehr aktives Spielen auf dem SCP-Server
-                    <strong>VIP</strong> werden.
-                  </p>
-                  <p class="not-allowed-link">
-                    Tritt dem Discord unter
-                    <a href="https://dsc.gg/zeit" style="text-decoration: none"><strong>dsc.gg/zeit</strong></a>
-                    bei für weitere Informationen.
-                  </p>
+              <!-- Empty Slot (styled like transparent milky sprays slot) -->
+              <div *ngIf="!currentFakerank" class="fakerank-empty-slot">
+                <div class="fakerank-empty-content">
+                  <div class="fakerank-empty-icon">✨</div>
+                  <p class="fakerank-empty-text">Erstelle deinen persönlichen Rang!</p>
+                  <button (click)="openFakerankModal()" class="fakerank-create-btn" [disabled]="fakerankLoading">
+                    ✨ Erstellen
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Edit Mode -->
-            <div *ngIf="isEditingFakerank && fakerankAllowed" class="fakerank-edit">
-              <div class="nickname-editor mb-4">
-                <label class="editor-label"> ✨ Dein neuer Spitzname </label>
-                <div class="fakerank-input-container">
-                  <input
-                    type="text"
-                    [(ngModel)]="fakerankValue"
-                    placeholder="z.B. Pizza Liebhaber, Sniper Pro, Chaos König..."
-                    maxlength="50"
-                    class="nickname-input"
-                    [disabled]="fakerankLoading"
-                    [style.color]="getColorHex(tempFakerankColor)"
-                    (keydown)="onKeyDown($event)"
-                    (keyup.enter)="saveFakerank()"
-                    (keyup.escape)="cancelEditingFakerank()"
-                  />
-                  <div class="fakerank-char-count">{{ fakerankValue.length }}/50</div>
-                </div>
-
-                <!-- Color Picker Section -->
-                <div class="color-picker-section mt-3">
-                  <label class="editor-label">🎨 Farbe wählen</label>
-                  <div class="color-picker-container">
-                    <button (click)="toggleColorPicker()" class="color-selector-button" [disabled]="fakerankLoading">
-                      <span class="color-indicator" [style.background-color]="getColorHex(tempFakerankColor)"></span>
-                      {{ getColorName(tempFakerankColor) }}
-                      <span class="dropdown-arrow">{{ showColorPicker ? '▲' : '▼' }}</span>
-                    </button>
-
-                    <div *ngIf="showColorPicker" class="color-picker-dropdown">
-                      <div class="color-options">
-                        <button
-                          *ngFor="let color of fakerankColors"
-                          (click)="selectColor(color.key)"
-                          class="color-option"
-                          [class.selected]="tempFakerankColor === color.key"
-                        >
-                          <span class="color-indicator" [style.background-color]="color.hex"></span>
-                          <span class="color-name">{{ color.name }}</span>
-                          <span *ngIf="tempFakerankColor === color.key" class="selected-check">✓</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="editor-hint">💡 Sei kreativ! Dies ist nur ein Spitzname zur Dekoration.</div>
-              </div>
-              <div class="fakerank-actions">
-                <button
-                  (click)="saveFakerank()"
-                  class="fakerank-btn fakerank-btn-success"
-                  [disabled]="fakerankLoading || fakerankValue.trim().length === 0"
-                >
-                  {{ fakerankLoading ? '💾 Speichern...' : '💾 Speichern' }}
-                </button>
-                <button
-                  (click)="cancelEditingFakerank()"
-                  class="fakerank-btn fakerank-btn-secondary"
-                  [disabled]="fakerankLoading"
-                >
-                  ❌ Abbrechen
-                </button>
-              </div>
-            </div>
-
-            <!-- Success Message -->
-            <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">
-              🎉 Spitzname erfolgreich gespeichert!
-            </div>
-
-            <!-- Error Message -->
-            <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">
-              {{ fakerankError }}
-            </div>
+            <!-- Messages -->
+            <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
+            <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
           </div>
         </div>
       </div>

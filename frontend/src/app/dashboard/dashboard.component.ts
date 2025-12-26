@@ -10,7 +10,15 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
-import type { SprayGetResponseItem, SprayPostRequest, SprayDeleteRequest } from '@zeitvertreib/types';
+import type {
+  SprayGetResponseItem,
+  SprayPostRequest,
+  SprayDeleteRequest,
+  FakerankGetResponse,
+  FakerankPostRequest,
+  FakerankDeleteRequest,
+  FakerankColor,
+} from '@zeitvertreib/types';
 
 interface PlayerEntry {
   displayname?: string;
@@ -166,50 +174,55 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showRulesText = false;
 
   // Fakerank-related properties
+  currentFakerankId: number | null = null;
   currentFakerank: string | null = null;
-  currentFakerankColor: string = 'default';
-  tempFakerankColor: string = 'default'; // Temporary color for editing
-  isEditingFakerank = false;
-  fakerankValue = '';
+  currentFakerankColor: FakerankColor = 'default';
+  fakerankModalOpen = false;
+  fakerankModalText = '';
+  fakerankModalColor: FakerankColor = 'default';
   fakerankLoading = false;
   fakerankError = '';
-  fakerankSuccess = false;
-  showFakerankHelp = false;
-  fakerankAllowed = false;
-  fakerankTimeRemaining = 0;
-  fakerankOverrideTimeRemaining = 0;
-  hasFakerankOverride = false;
-  isFakerankReadOnly = false;
-  private fakerankTimerInterval: any;
+  fakerankSuccess = '';
+  fakerankAccentColor = 'rgb(59, 130, 246)';
+  acceptedFakerankPrivacy = false;
+  acceptedFakerankRules = false;
+  showFakerankPrivacyText = false;
+  showFakerankRulesText = false;
+
+  // Fakerank ban information
+  isFakerankBanned = false;
+  fakerankBanReason: string | null = null;
+  fakerankBannedBy: string | null = null;
   showColorPicker = false;
   private documentClickHandler?: (event: Event) => void;
 
-  // Available fakerank colors
-  fakerankColors = [
-    { key: 'default', name: 'Default (Weiß)', hex: '#FFFFFF' },
-    { key: 'pink', name: 'Pink', hex: '#FF96DE' },
+  // Available fakerank colors (in-game accurate colors)
+  fakerankColors: { key: FakerankColor; name: string; hex: string }[] = [
+    { key: 'default', name: 'Weiß', hex: '#FFFFFF' },
+    { key: 'pink', name: 'Rosa', hex: '#FF96DE' },
     { key: 'red', name: 'Rot', hex: '#C50000' },
     { key: 'brown', name: 'Braun', hex: '#944710' },
     { key: 'silver', name: 'Silber', hex: '#A0A0A0' },
     { key: 'light_green', name: 'Hellgrün', hex: '#32CD32' },
-    { key: 'crimson', name: 'Karmesinrot', hex: '#DC143C' },
+    { key: 'crimson', name: 'Blutrot', hex: '#DC143C' },
     { key: 'cyan', name: 'Cyan', hex: '#00B7EB' },
-    { key: 'aqua', name: 'Aqua', hex: '#00FFFF' },
-    { key: 'deep_pink', name: 'Tiefes Pink', hex: '#FF1493' },
-    { key: 'tomato', name: 'Tomate', hex: '#FF6448' },
+    { key: 'aqua', name: 'Aquamarin', hex: '#00FFFF' },
+    { key: 'deep_pink', name: 'Dunkelrosa', hex: '#FF1493' },
+    { key: 'tomato', name: 'Tomatenrot', hex: '#FF6448' },
     { key: 'yellow', name: 'Gelb', hex: '#FAFF86' },
     { key: 'magenta', name: 'Magenta', hex: '#FF0090' },
     { key: 'blue_green', name: 'Blaugrün', hex: '#4DFFB8' },
     { key: 'orange', name: 'Orange', hex: '#FF9966' },
-    { key: 'lime', name: 'Limette', hex: '#BFFF00' },
+    { key: 'lime', name: 'Limettengrün', hex: '#BFFF00' },
     { key: 'green', name: 'Grün', hex: '#228B22' },
     { key: 'emerald', name: 'Smaragd', hex: '#50C878' },
-    { key: 'carmine', name: 'Karmin', hex: '#960018' },
+    { key: 'carmine', name: 'Karminrot', hex: '#960018' },
     { key: 'nickel', name: 'Nickel', hex: '#727472' },
-    { key: 'mint', name: 'Minze', hex: '#98FB98' },
+    { key: 'mint', name: 'Mintgrün', hex: '#98FB98' },
     { key: 'army_green', name: 'Armeegrün', hex: '#4B5320' },
-    { key: 'pumpkin', name: 'Kürbis', hex: '#EE7600' },
+    { key: 'pumpkin', name: 'Kürbisorange', hex: '#EE7600' },
   ];
+
 
   // Cosmetic-related properties
   activeTab: 'hats' | 'pets' | 'auras' = 'hats';
@@ -328,7 +341,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const target = event.target as HTMLElement;
       if (!target.closest('.color-picker-container')) {
         this.showColorPicker = false;
-        this.updateOverflowClass();
       }
     };
     document.addEventListener('click', this.documentClickHandler);
@@ -343,8 +355,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sprayBanReason = this.authService.getSprayBanReason();
     this.sprayBannedBy = this.authService.getSprayBannedBy();
 
-    // Start the access timer when component initializes
-    this.startAccessTimer();
+    // Check fakerank ban status
+    this.isFakerankBanned = this.authService.isFakerankBanned();
+    this.fakerankBanReason = this.authService.getFakerankBanReason();
+    this.fakerankBannedBy = this.authService.getFakerankBannedBy();
 
     // Initialize slot machine with question marks
     setTimeout(() => {
@@ -467,12 +481,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             ...this.userStatistics, // Keep defaults for missing properties
             ...response.stats,
           };
-          // Update fakerankAllowed from timestamp-based calculation
-          this.fakerankAllowed = this.authService.canEditFakerank();
-          this.hasFakerankOverride = this.authService.hasFakerankOverride();
-          this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
-          // Update timers after loading stats
-          this.updateAccessTimers();
         }
         this.isLoading = false;
       },
@@ -567,17 +575,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Then refresh other data
     this.loadUserStats();
     this.loadRedeemables();
-    this.updateAccessTimers();
-
-    // Update fakerank allowed status
-    this.fakerankAllowed = this.authService.canEditFakerank();
-    this.hasFakerankOverride = this.authService.hasFakerankOverride();
-    this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
-
-    // Also refresh any other data that might have changed
-    if (this.fakerankTimerInterval) {
-      this.startAccessTimer(); // Restart timer to update immediately
-    }
   }
 
   // Public method to regenerate colors only
@@ -976,9 +973,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Stop the access timer
-    this.stopAccessTimer();
-
     // Clean up spray slot URLs
     this.spraySlots.forEach((slot) => {
       if (slot.imageUrl) {
@@ -997,22 +991,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ===== FAKERANK METHODS =====
 
-  // Fakerank methods
+  // Load fakerank(s) for the user
   loadFakerank(): void {
     this.authService
-      .authenticatedGet<{
-        fakerank: string | null;
-        fakerank_color: string;
-        fakerank_until: number;
-      }>(`${environment.apiUrl}/fakerank`)
+      .authenticatedGet<FakerankGetResponse>(`${environment.apiUrl}/fakerank`)
       .subscribe({
         next: (response) => {
-          this.currentFakerank = response?.fakerank || null;
-          this.currentFakerankColor = response?.fakerank_color || 'default';
-          this.fakerankValue = this.currentFakerank || '';
-          this.fakerankAllowed = this.authService.canEditFakerank();
-          this.hasFakerankOverride = this.authService.hasFakerankOverride();
-          this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
+          const fakeranks = response?.fakeranks || [];
+          if (fakeranks.length > 0) {
+            const fakerank = fakeranks[0];
+            this.currentFakerankId = fakerank.id;
+            this.currentFakerank = fakerank.text;
+            this.currentFakerankColor = fakerank.color;
+          } else {
+            this.currentFakerankId = null;
+            this.currentFakerank = null;
+            this.currentFakerankColor = 'default';
+          }
         },
         error: (error) => {
           console.error('Error loading fakerank:', error);
@@ -1021,142 +1016,114 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  startEditingFakerank(): void {
-    this.isEditingFakerank = true;
-    this.fakerankValue = this.currentFakerank || '';
-    this.tempFakerankColor = this.currentFakerankColor; // Store current color as temp
+  // Open modal to edit/create fakerank
+  openFakerankModal(): void {
+    this.fakerankModalText = this.currentFakerank || '';
+    this.fakerankModalColor = this.currentFakerankColor;
+    this.fakerankModalOpen = true;
     this.fakerankError = '';
-    this.fakerankSuccess = false;
-    this.showColorPicker = false;
-    this.updateOverflowClass();
+    this.fakerankSuccess = '';
+    this.acceptedFakerankPrivacy = false;
+    this.acceptedFakerankRules = false;
+    this.showFakerankPrivacyText = false;
+    this.showFakerankRulesText = false;
+    this.toggleBodyScroll(true);
   }
 
-  cancelEditingFakerank(): void {
-    this.isEditingFakerank = false;
-    this.fakerankValue = this.currentFakerank || '';
-    this.tempFakerankColor = this.currentFakerankColor; // Reset temp color to current
-    this.fakerankError = '';
-    this.fakerankSuccess = false;
-    this.showColorPicker = false;
-    this.updateOverflowClass();
+  closeFakerankModal(cancel = false): void {
+    this.fakerankModalOpen = false;
+    this.toggleBodyScroll(false);
   }
 
-  // Prevent parentheses and commas from being typed
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === '(' || event.key === ')' || event.key === ',') {
-      event.preventDefault();
-    }
+  // Select color for fakerank
+  selectFakerankColor(colorKey: FakerankColor): void {
+    this.fakerankModalColor = colorKey;
   }
 
-  saveFakerank(): void {
+  // Validate and save fakerank
+  async saveFakerankFromModal(): Promise<void> {
     if (this.fakerankLoading) return;
 
-    // Validate fakerank content - ban parentheses and commas
-    if (this.fakerankValue.includes('(') || this.fakerankValue.includes(')') || this.fakerankValue.includes(',')) {
-      this.fakerankError = 'Fakerank darf keine Klammern () oder Kommas enthalten';
+    const text = this.fakerankModalText.trim();
+    if (!text) {
+      this.fakerankError = 'Bitte gib einen Text ein';
+      return;
+    }
+
+    if (text.length > 50) {
+      this.fakerankError = 'Der Text darf maximal 50 Zeichen lang sein';
+      return;
+    }
+
+    if (!this.acceptedFakerankPrivacy || !this.acceptedFakerankRules) {
+      this.fakerankError = 'Bitte akzeptiere die Datenschutzhinweise und Inhaltsregeln';
       return;
     }
 
     this.fakerankLoading = true;
     this.fakerankError = '';
-    this.fakerankSuccess = false;
+    this.fakerankSuccess = '';
 
-    const payload = {
-      fakerank: this.fakerankValue.trim(),
-      fakerank_color: this.tempFakerankColor,
+    const payload: FakerankPostRequest = {
+      text: text,
+      color: this.fakerankModalColor,
     };
 
-    this.authService
-      .authenticatedPost<{
-        success: boolean;
-        message: string;
-        fakerank: string;
-        fakerank_color: string;
-        override_cleared?: boolean;
-      }>(`${environment.apiUrl}/fakerank`, payload)
-      .subscribe({
-        next: (response) => {
-          if (response?.success) {
-            this.currentFakerank = response.fakerank;
-            this.currentFakerankColor = response.fakerank_color;
-            this.fakerankSuccess = true;
-            this.isEditingFakerank = false;
-            this.showColorPicker = false;
-            this.updateOverflowClass();
+    try {
+      await this.authService
+        .authenticatedPost<{
+          success: boolean;
+          message: string;
+          fakerank: { id: number; text: string; color: FakerankColor };
+        }>(`${environment.apiUrl}/fakerank`, payload)
+        .toPromise();
 
-            // Show different message if override was cleared
-            if (response.override_cleared) {
-              console.log('Admin override was cleared due to user edit');
-              // Update the user's permission state to reflect that override is gone
-              this.authService.refreshUserData();
-            }
+      this.fakerankSuccess = 'Fakerank erfolgreich gespeichert!';
+      this.fakerankLoading = false;
+      this.fakerankModalOpen = false;
+      this.toggleBodyScroll(false);
+      this.loadFakerank();
 
-            setTimeout(() => (this.fakerankSuccess = false), 3000);
-          }
-          this.fakerankLoading = false;
-        },
-        error: (error) => {
-          console.error('Error saving fakerank:', error);
-          this.fakerankError = error?.error?.error || 'Fehler beim Speichern des Fakeranks';
-          this.fakerankLoading = false;
-        },
-      });
+      setTimeout(() => (this.fakerankSuccess = ''), 3000);
+    } catch (error: any) {
+      console.error('Fakerank save error:', error);
+      this.fakerankLoading = false;
+      this.fakerankError = error?.error?.error || error?.message || 'Fehler beim Speichern';
+    }
   }
 
-  deleteFakerank(): void {
-    if (this.fakerankLoading) return;
+  // Delete fakerank
+  async deleteFakerank(): Promise<void> {
+    if (!this.currentFakerankId || this.fakerankLoading) return;
 
     this.fakerankLoading = true;
     this.fakerankError = '';
-    this.fakerankSuccess = false;
+    this.fakerankSuccess = '';
 
-    this.authService
-      .authenticatedDelete<{
-        success: boolean;
-      }>(`${environment.apiUrl}/fakerank`)
-      .subscribe({
-        next: (response) => {
-          if (response?.success) {
-            this.currentFakerank = null;
-            this.currentFakerankColor = 'default';
-            this.fakerankValue = '';
-            this.fakerankSuccess = true;
-            this.isEditingFakerank = false;
-            this.showColorPicker = false;
-            this.updateOverflowClass();
-            setTimeout(() => (this.fakerankSuccess = false), 3000);
-          }
-          this.fakerankLoading = false;
-        },
-        error: (error) => {
-          console.error('Error deleting fakerank:', error);
-          this.fakerankError = error?.error?.error || 'Fehler beim Löschen des Fakeranks';
-          this.fakerankLoading = false;
-        },
-      });
-  }
+    const requestBody: FakerankDeleteRequest = {
+      id: this.currentFakerankId,
+    };
 
-  // Color picker methods
-  toggleColorPicker(): void {
-    this.showColorPicker = !this.showColorPicker;
-    this.updateOverflowClass();
-  }
+    try {
+      await this.http
+        .delete<{ success: boolean }>(`${environment.apiUrl}/fakerank`, {
+          body: requestBody,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        })
+        .toPromise();
 
-  selectColor(colorKey: string): void {
-    this.tempFakerankColor = colorKey; // Update temp color during editing
-    this.showColorPicker = false;
-    this.updateOverflowClass();
-  }
+      this.fakerankLoading = false;
+      this.fakerankSuccess = 'Fakerank erfolgreich gelöscht!';
+      this.loadFakerank();
 
-  private updateOverflowClass(): void {
-    // Add/remove overflow class for the fakerank card
-    const fakerankCard = document.getElementById('fakerank-card');
-    if (fakerankCard) {
-      if (this.showColorPicker) {
-        fakerankCard.classList.add('fakerank-card-overflow');
-      } else {
-        fakerankCard.classList.remove('fakerank-card-overflow');
-      }
+      setTimeout(() => (this.fakerankSuccess = ''), 3000);
+    } catch (error: any) {
+      console.error('Fakerank deletion error:', error);
+      this.fakerankLoading = false;
+      this.fakerankError = error?.error?.error || 'Fehler beim Löschen';
     }
   }
 
@@ -1487,39 +1454,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return `${minutes}m`;
     } else {
       return `${minutes}m ${secs}s`;
-    }
-  }
-
-  // Update access timers
-  private updateAccessTimers(): void {
-    this.fakerankTimeRemaining = this.authService.getFakerankTimeRemaining();
-    this.fakerankOverrideTimeRemaining = this.authService.getFakerankOverrideTimeRemaining();
-    this.fakerankAllowed = this.authService.canEditFakerank();
-    this.hasFakerankOverride = this.authService.hasFakerankOverride();
-    this.isFakerankReadOnly = this.authService.isFakerankReadOnly();
-  }
-
-  // Start the countdown timer
-  private startAccessTimer(): void {
-    // Clear any existing timer
-    if (this.fakerankTimerInterval) {
-      clearInterval(this.fakerankTimerInterval);
-    }
-
-    // Update immediately
-    this.updateAccessTimers();
-
-    // Update every second
-    this.fakerankTimerInterval = setInterval(() => {
-      this.updateAccessTimers();
-    }, 1000);
-  }
-
-  // Stop the countdown timer
-  private stopAccessTimer(): void {
-    if (this.fakerankTimerInterval) {
-      clearInterval(this.fakerankTimerInterval);
-      this.fakerankTimerInterval = null;
     }
   }
 

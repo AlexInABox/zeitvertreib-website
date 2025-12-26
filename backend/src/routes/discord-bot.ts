@@ -12,7 +12,7 @@ import { createResponse, increment } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
-import { playerdata, sprays, sprayBans, deletedSprays, paysafeCardSubmissions } from '../db/schema.js';
+import { playerdata, sprays, sprayBans, deletedSprays, paysafeCardSubmissions, fakeranks, fakerankBans, deletedFakeranks } from '../db/schema.js';
 
 interface VerificationResult {
   isValid: boolean;
@@ -452,6 +452,147 @@ export async function handleDiscordBotInteractions(
                     max_length: 500,
                     placeholder: 'Enter the reason for unbanning this user...',
                     required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle fakerank ban button - show modal
+    if (customId.startsWith('fakerank_ban:')) {
+      const parts = customId.split(':');
+      const normalizedText = parts[1] || '';
+      const userId = parts[2] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `fakerank_ban_modal:${normalizedText}:${userId}`,
+            title: 'Ban User from Fakeranks',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'ban_reason',
+                    label: 'Reason for ban',
+                    style: 2,
+                    min_length: 1,
+                    max_length: 500,
+                    placeholder: 'Enter the reason for banning this user...',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle fakerank unban button - show modal
+    if (customId.startsWith('fakerank_unban:')) {
+      const parts = customId.split(':');
+      const userId = parts[1] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `fakerank_unban_modal:${userId}`,
+            title: 'Unban User from Fakeranks',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'unban_reason',
+                    label: 'Reason for unban',
+                    style: 2,
+                    min_length: 1,
+                    max_length: 500,
+                    placeholder: 'Enter the reason for unbanning this user...',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle fakerank delete button - show modal
+    if (customId.startsWith('fakerank_delete:')) {
+      const parts = customId.split(':');
+      const normalizedText = parts[1] || '';
+      const userId = parts[2] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            title: 'Delete Fakerank',
+            custom_id: `fakerank_delete_modal:${normalizedText}:${userId}`,
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'delete_reason',
+                    label: 'Reason for deletion',
+                    style: 2,
+                    required: true,
+                    max_length: 500,
+                    placeholder: 'Why are you deleting this fakerank?',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
+    // Handle fakerank undelete button - show modal
+    if (customId.startsWith('fakerank_undelete:')) {
+      const parts = customId.split(':');
+      const normalizedText = parts[1] || '';
+      const userId = parts[2] || '';
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            title: 'Unblock Fakerank Text',
+            custom_id: `fakerank_undelete_modal:${normalizedText}:${userId}`,
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'restore_reason',
+                    label: 'Reason for unblocking',
+                    style: 2,
+                    required: true,
+                    max_length: 500,
+                    placeholder: 'Why are you unblocking this text?',
                   },
                 ],
               },
@@ -1156,6 +1297,474 @@ export async function handleDiscordBotInteractions(
                 });
               } catch (error) {
                 console.error('Spray unban error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle fakerank delete modal submission
+    if (customId.startsWith('fakerank_delete_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const normalizedText = parts[1] || '';
+        const userId = parts[2] || '';
+
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+        console.log('🗑️ fakerank_delete_modal submit parsed:', { userId, normalizedText, moderatorId });
+
+        // Extract reason from modal submission
+        let deleteReason = 'No reason provided';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          deleteReason = components[0]?.components?.[0]?.value || 'No reason provided';
+        }
+
+        if (!moderatorId) {
+          console.error('❌ Missing moderator id on modal submit');
+          return createResponse({ error: 'Invalid fakerank moderation data' }, 400, origin);
+        }
+        if (!normalizedText) {
+          console.error('❌ Missing normalized text on modal submit');
+          return createResponse({ error: 'Missing normalized text' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Delete fakerank(s) matching the normalized text (hard delete)
+                const fakerankRows = await db
+                  .select()
+                  .from(fakeranks)
+                  .where(eq(fakeranks.normalizedText, normalizedText));
+
+                if (fakerankRows.length === 0) {
+                  console.log(`ℹ️ No fakerank rows found for normalized text ${normalizedText}`);
+                } else {
+                  // Delete rows from fakeranks table for this normalized text
+                  await db.delete(fakeranks).where(eq(fakeranks.normalizedText, normalizedText));
+                }
+
+                // Add normalized text to deletedFakeranks blocklist to prevent future uploads
+                await db
+                  .insert(deletedFakeranks)
+                  .values({
+                    normalizedText: normalizedText,
+                    uploadedByUserid: userId,
+                    deletedByDiscordId: moderatorId,
+                    reason: deleteReason,
+                  })
+                  .onConflictDoUpdate({
+                    target: deletedFakeranks.normalizedText,
+                    set: {
+                      deletedByDiscordId: moderatorId,
+                      reason: deleteReason,
+                    },
+                  });
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '🗑️ Fakerank deleted!';
+                updatedEmbed.color = 0xf97316; // Orange
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedReason = deleteReason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Deleted** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: [
+                      {
+                        type: 1,
+                        components: [
+                          {
+                            type: 2,
+                            style: 3, // Green
+                            label: 'Unblock Text',
+                            custom_id: `fakerank_undelete:${normalizedText}:${userId}`,
+                          },
+                          {
+                            type: 2,
+                            style: 4,
+                            label: 'Ban User',
+                            custom_id: `fakerank_ban:${normalizedText}:${userId}`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                });
+              } catch (error) {
+                console.error('Fakerank deletion error:', error);
+              }
+            })(),
+          );
+        }
+
+        // Acknowledge the interaction
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle fakerank undelete modal submission
+    if (customId.startsWith('fakerank_undelete_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const normalizedText = parts[1] || '';
+        const userId = parts[2] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Extract reason from modal submission
+        let restoreReason = 'No reason provided';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          restoreReason = components[0]?.components?.[0]?.value || 'No reason provided';
+        }
+
+        if (!moderatorId || !normalizedText) {
+          return createResponse({ error: 'Invalid fakerank undelete data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Remove from deletedFakeranks blocklist
+                await db.delete(deletedFakeranks).where(eq(deletedFakeranks.normalizedText, normalizedText));
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '♻️ Fakerank text unblocked!';
+                updatedEmbed.color = 0x10b981; // Green
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedReason = restoreReason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Unblocked** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: [
+                      {
+                        type: 1,
+                        components: [
+                          {
+                            type: 2,
+                            style: 4,
+                            label: 'Delete Fakerank',
+                            custom_id: `fakerank_delete:${normalizedText}:${userId}`,
+                          },
+                          {
+                            type: 2,
+                            style: 4,
+                            label: 'Ban User',
+                            custom_id: `fakerank_ban:${normalizedText}:${userId}`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                });
+              } catch (error) {
+                console.error('Fakerank undelete error:', error);
+              }
+            })(),
+          );
+        }
+
+        // Acknowledge the interaction
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle fakerank ban modal submission
+    if (customId.startsWith('fakerank_ban_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const normalizedText = parts[1] || '';
+        const userId = parts[2] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+        // Extract reason from modal submission
+        const modalData = interaction.data as any;
+        const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
+
+        if (!moderatorId || !userId) {
+          return createResponse({ error: 'Invalid fakerank ban data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Delete any fakeranks matching the normalized text (hard delete)
+                const fakerankRows = await db
+                  .select()
+                  .from(fakeranks)
+                  .where(eq(fakeranks.normalizedText, normalizedText));
+
+                if (fakerankRows.length > 0) {
+                  await db.delete(fakeranks).where(eq(fakeranks.normalizedText, normalizedText));
+                }
+
+                // Add normalized text to deletedFakeranks blocklist
+                await db
+                  .insert(deletedFakeranks)
+                  .values({
+                    normalizedText: normalizedText,
+                    uploadedByUserid: userId,
+                    deletedByDiscordId: moderatorId,
+                    reason: reason,
+                  })
+                  .onConflictDoUpdate({
+                    target: deletedFakeranks.normalizedText,
+                    set: {
+                      deletedByDiscordId: moderatorId,
+                      reason: reason,
+                    },
+                  });
+
+                // Add user to ban table with provided reason
+                const currentTimestamp = Math.floor(Date.now() / 1000);
+                await db
+                  .insert(fakerankBans)
+                  .values({
+                    userid: userId,
+                    bannedAt: currentTimestamp,
+                    reason: reason,
+                    bannedByDiscordId: moderatorId,
+                  })
+                  .onConflictDoNothing();
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '🔨 User banned from fakeranks!';
+                updatedEmbed.color = 0x7c2d12; // Dark red
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedReason = reason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Banned** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: [
+                      {
+                        type: 1,
+                        components: [
+                          {
+                            type: 2,
+                            style: 2,
+                            label: 'Unban User',
+                            custom_id: `fakerank_unban:${userId}`,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                });
+              } catch (error) {
+                console.error('Fakerank ban error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle fakerank unban modal submission
+    if (customId.startsWith('fakerank_unban_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 2) {
+        const userId = parts[1] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+        // Extract reason from modal submission
+        const modalData = interaction.data as any;
+        const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
+
+        if (!moderatorId || !userId) {
+          return createResponse({ error: 'Invalid fakerank unban data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorData: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorData.global_name || moderatorData.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Remove from ban table
+                await db.delete(fakerankBans).where(eq(fakerankBans.userid, userId));
+
+                // Update Discord message
+                if (!interaction.channel?.id || !interaction.message?.id) {
+                  console.error('Missing channel or message ID');
+                  return;
+                }
+
+                const currentMessage: any = await rest.get(
+                  Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                );
+
+                const updatedEmbed = currentMessage.embeds[0];
+                updatedEmbed.title = '✅ User unbanned from fakeranks!';
+                updatedEmbed.color = 0x10b981; // Green
+                const epochTimestamp = Math.floor(Date.now() / 1000);
+                const formattedReason = reason
+                  .split('\n')
+                  .map((line: string) => '> ' + line)
+                  .join('\n');
+                updatedEmbed.description += `\n–––––––––––\n**Unbanned** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}`;
+
+                // Get normalized text from the original embed to enable unblock button
+                const originalDescription = updatedEmbed.description || '';
+                const normalizedMatch = originalDescription.match(/Normalized: `([^`]+)`/);
+                const normalizedText = normalizedMatch ? normalizedMatch[1] : '';
+
+                await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                  body: {
+                    embeds: [updatedEmbed],
+                    components: normalizedText
+                      ? [
+                          {
+                            type: 1,
+                            components: [
+                              {
+                                type: 2,
+                                style: 3, // Green
+                                label: 'Unblock Text',
+                                custom_id: `fakerank_undelete:${normalizedText}:${userId}`,
+                              },
+                              {
+                                type: 2,
+                                style: 4, // Red
+                                label: 'Ban User',
+                                custom_id: `fakerank_ban:${normalizedText}:${userId}`,
+                              },
+                            ],
+                          },
+                        ]
+                      : [],
+                  },
+                });
+              } catch (error) {
+                console.error('Fakerank unban error:', error);
               }
             })(),
           );
