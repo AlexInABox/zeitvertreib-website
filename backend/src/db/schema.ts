@@ -188,7 +188,9 @@ export const fakeranks = sqliteTable('fakeranks', {
       'army_green',
       'pumpkin',
     ],
-  }).default('default').notNull(),
+  })
+    .default('default')
+    .notNull(),
   uploadedAt: integer('uploaded_at').notNull().default(0),
 });
 

@@ -3,7 +3,13 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, inArray } from 'drizzle-orm';
 import { fakeranks, fakerankBans, deletedFakeranks, playerdata } from '../db/schema.js';
 import { proxyFetch } from '../proxy.js';
-import type { FakerankGetRequest, FakerankGetResponse, FakerankColor, FakerankPostRequest, FakerankDeleteRequest } from '@zeitvertreib/types';
+import type {
+  FakerankGetRequest,
+  FakerankGetResponse,
+  FakerankColor,
+  FakerankPostRequest,
+  FakerankDeleteRequest,
+} from '@zeitvertreib/types';
 
 // TODO: Consider implementing a Levenshtein distance check to catch slight variations of banned words. Or a vectorization approach since we store this in a database anyway.
 
@@ -12,7 +18,7 @@ const MODERATION_CHANNEL_ID = '1401609093633933324';
 /**
  * Normalizes fakerank text by converting to lowercase and removing spaces
  * This helps catch variations like "fuck u" and "fUcKu" as the same text
- * 
+ *
  * "Größe, naïve!"
  * -> "größenaïve"
  */
@@ -153,10 +159,7 @@ export async function getFakerank(request: Request, env: Env): Promise<Response>
       }
 
       // Query all fakeranks for the provided userids
-      const fakerankResults = await db
-        .select()
-        .from(fakeranks)
-        .where(inArray(fakeranks.userid, userids));
+      const fakerankResults = await db.select().from(fakeranks).where(inArray(fakeranks.userid, userids));
 
       const response: FakerankGetResponse = {
         fakeranks: fakerankResults.map((fr) => ({
@@ -231,10 +234,7 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
     const normalizedText = normalizeFakerankText(body.text);
 
     // Check if normalized text is in deletedFakeranks
-    const deleted = await db
-      .select()
-      .from(deletedFakeranks)
-      .where(eq(deletedFakeranks.normalizedText, normalizedText));
+    const deleted = await db.select().from(deletedFakeranks).where(eq(deletedFakeranks.normalizedText, normalizedText));
 
     if (deleted.length > 0) {
       return createResponse({ error: 'Dieser Fakerank wurde von der Moderation gesperrt' }, 403, origin);
@@ -262,8 +262,8 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
 
     // Send Discord moderation notification (non-blocking)
     ctx.waitUntil(
-      sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch((error) =>
-        console.error('❌ Failed to send Discord notification:', error),
+      sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch(
+        (error) => console.error('❌ Failed to send Discord notification:', error),
       ),
     );
 

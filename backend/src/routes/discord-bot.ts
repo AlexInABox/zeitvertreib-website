@@ -12,7 +12,16 @@ import { createResponse, increment } from '../utils.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
-import { playerdata, sprays, sprayBans, deletedSprays, paysafeCardSubmissions, fakeranks, fakerankBans, deletedFakeranks } from '../db/schema.js';
+import {
+  playerdata,
+  sprays,
+  sprayBans,
+  deletedSprays,
+  paysafeCardSubmissions,
+  fakeranks,
+  fakerankBans,
+  deletedFakeranks,
+} from '../db/schema.js';
 
 interface VerificationResult {
   isValid: boolean;

@@ -223,7 +223,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { key: 'pumpkin', name: 'Kürbisorange', hex: '#EE7600' },
   ];
 
-
   // Cosmetic-related properties
   activeTab: 'hats' | 'pets' | 'auras' = 'hats';
   selectedHat: string = 'none';
@@ -993,27 +992,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Load fakerank(s) for the user
   loadFakerank(): void {
-    this.authService
-      .authenticatedGet<FakerankGetResponse>(`${environment.apiUrl}/fakerank`)
-      .subscribe({
-        next: (response) => {
-          const fakeranks = response?.fakeranks || [];
-          if (fakeranks.length > 0) {
-            const fakerank = fakeranks[0];
-            this.currentFakerankId = fakerank.id;
-            this.currentFakerank = fakerank.text;
-            this.currentFakerankColor = fakerank.color;
-          } else {
-            this.currentFakerankId = null;
-            this.currentFakerank = null;
-            this.currentFakerankColor = 'default';
-          }
-        },
-        error: (error) => {
-          console.error('Error loading fakerank:', error);
-          this.fakerankError = 'Fehler beim Laden des Fakeranks';
-        },
-      });
+    this.authService.authenticatedGet<FakerankGetResponse>(`${environment.apiUrl}/fakerank`).subscribe({
+      next: (response) => {
+        const fakeranks = response?.fakeranks || [];
+        if (fakeranks.length > 0) {
+          const fakerank = fakeranks[0];
+          this.currentFakerankId = fakerank.id;
+          this.currentFakerank = fakerank.text;
+          this.currentFakerankColor = fakerank.color;
+        } else {
+          this.currentFakerankId = null;
+          this.currentFakerank = null;
+          this.currentFakerankColor = 'default';
+        }
+      },
+      error: (error) => {
+        console.error('Error loading fakerank:', error);
+        this.fakerankError = 'Fehler beim Laden des Fakeranks';
+      },
+    });
   }
 
   // Open modal to edit/create fakerank
