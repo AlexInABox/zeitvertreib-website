@@ -1,0 +1,5 @@
+﻿<Project>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+    </ItemGroup>
+</Project>
