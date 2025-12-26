@@ -327,7 +327,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(public authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
-    this.loadSprays();
+    // Moved loadSprays() to ngOnInit to fix race condition with isDonator
     this.loadFakerank();
     this.loadRedeemables();
     this.loadSlotMachineInfo();
@@ -349,6 +349,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Check if user is a donator
     this.isDonator = this.authService.isDonator();
 
+    // Load sprays AFTER isDonator is set to avoid race condition
+    this.loadSprays();
+
     // Check spray ban status
     this.isSprayBanned = this.authService.isSprayBanned();
     this.sprayBanReason = this.authService.getSprayBanReason();
@@ -368,6 +371,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Check if current user is a fakerank admin
   isFakerankAdmin(): boolean {
     return this.authService.isFakerankAdmin();
+  }
+
+  // Helper for spray slot visibility
+  shouldShowSpraySlot(slotIndex: number): boolean {
+    const slot = this.spraySlots[slotIndex];
+    return (slotIndex < 2 || this.isDonator) && !!slot.id && !slot.selectedFile;
   }
 
   // Safe getter methods for template usage
