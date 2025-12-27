@@ -485,7 +485,10 @@ export async function collectZvcForFakeranksAndValidateColors(
               .where(eq(playerdata.id, fakerank.userid));
 
             // Update the uploadedAt timestamp to current time
-            await db.update(fakeranks).set({ uploadedAt: currentTime }).where(eq(fakeranks.id, fakerank.id));
+            await db
+              .update(fakeranks)
+              .set({ uploadedAt: currentTime - 3600 }) // Slightly backdate since this might run just before the 7-day mark
+              .where(eq(fakeranks.id, fakerank.id));
 
             collectedCount++;
             console.log(`✅ Collected 100 ZVC from ${fakerank.userid} for fakerank renewal (ID: ${fakerank.id})`);
