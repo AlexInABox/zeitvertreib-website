@@ -1,4 +1,4 @@
-import { validateSession, createResponse } from '../utils.js';
+import { validateSession, createResponse, isTeam, isVip, isDonator, isBooster } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, inArray } from 'drizzle-orm';
 import { fakeranks, fakerankBans, deletedFakeranks, playerdata } from '../db/schema.js';
@@ -9,11 +9,72 @@ import type {
   FakerankColor,
   FakerankPostRequest,
   FakerankDeleteRequest,
+  FakerankColorsResponse,
 } from '@zeitvertreib/types';
 
 // TODO: Consider implementing a Levenshtein distance check to catch slight variations of banned words. Or a vectorization approach since we store this in a database anyway.
 
 const MODERATION_CHANNEL_ID = '1401609093633933324';
+
+// Color assignments by rank (each group has access to colors of lower groups)
+const TEAM_COLORS: FakerankColor[] = ['aqua', 'red', 'magenta', 'crimson'];
+const VIP_COLORS: FakerankColor[] = ['carmine', 'tomato', 'light_green', 'deep_pink', 'green',];
+const DONATOR_COLORS: FakerankColor[] = ['emerald', 'lime', 'blue_green', 'silver', 'pumpkin',];
+const BOOSTER_COLORS: FakerankColor[] = ['orange', 'cyan', 'pink'];
+const OTHER_COLORS: FakerankColor[] = ['brown', 'nickel', 'mint', 'yellow', 'army_green', 'default'];
+
+/**
+ * Determines which colors a user is allowed to use based on their role
+ * Role hierarchy: Team > VIP > Donator > Booster > Everyone
+ * Each higher role has access to all lower role colors
+ */
+async function getAllowedColorsForUser(steamId: string, env: Env): Promise<FakerankColor[]> {
+  const isTeamUser = await isTeam(steamId, env);
+  const isVipUser = await isVip(steamId, env);
+  const isDonatorUser = await isDonator(steamId, env);
+  const isBoosterUser = await isBooster(steamId, env);
+
+  // Team members can use all colors
+  if (isTeamUser) {
+    return [
+      ...TEAM_COLORS,
+      ...VIP_COLORS,
+      ...DONATOR_COLORS,
+      ...BOOSTER_COLORS,
+      ...OTHER_COLORS,
+    ];
+  }
+
+  // VIP members can use all except team colors
+  if (isVipUser) {
+    return [
+      ...VIP_COLORS,
+      ...DONATOR_COLORS,
+      ...BOOSTER_COLORS,
+      ...OTHER_COLORS,
+    ];
+  }
+
+  // Donators can use all except team and VIP colors
+  if (isDonatorUser) {
+    return [
+      ...DONATOR_COLORS,
+      ...BOOSTER_COLORS,
+      ...OTHER_COLORS,
+    ];
+  }
+
+  // Boosters can use all except team, VIP, and donator colors
+  if (isBoosterUser) {
+    return [
+      ...BOOSTER_COLORS,
+      ...OTHER_COLORS,
+    ];
+  }
+
+  // Everyone else can only use other colors
+  return OTHER_COLORS;
+}
 
 /**
  * Normalizes fakerank text by converting to lowercase and removing spaces
@@ -230,6 +291,16 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
       return createResponse({ error: 'Du wurdest vom Setzen von Fakeranks gesperrt' }, 403, origin);
     }
 
+    // Check if user's role allows them to use the requested color
+    const allowedColors = await getAllowedColorsForUser(steamId, env);
+    if (!allowedColors.includes(body.color)) {
+      return createResponse(
+        { error: 'Du darfst diese Farbe nicht verwenden. Deine aktuelle Rolle erlaubt dir nur bestimmte Farben.' },
+        403,
+        origin,
+      );
+    }
+
     // Normalize the text
     const normalizedText = normalizeFakerankText(body.text);
 
@@ -283,6 +354,26 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
   } catch (error) {
     console.error('Error updating fakerank:', error);
     return createResponse({ error: 'Fakerank konnte nicht gesetzt werden' }, 500, origin);
+  }
+}
+
+// GET: Retrieve available colors by rank
+export async function getFakerankColors(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const response: FakerankColorsResponse = {
+      teamColors: TEAM_COLORS,
+      vipColors: VIP_COLORS,
+      donatorColors: DONATOR_COLORS,
+      boosterColors: BOOSTER_COLORS,
+      otherColors: OTHER_COLORS,
+    };
+
+    return createResponse(response, 200, origin);
+  } catch (error) {
+    console.error('Error fetching fakerank colors:', error);
+    return createResponse({ error: 'Failed to fetch fakerank colors' }, 500, origin);
   }
 }
 

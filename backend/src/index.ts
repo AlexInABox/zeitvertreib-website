@@ -12,7 +12,7 @@ import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
 import { handlePostSpray, handleGetSpray, handleDeleteSpray } from './routes/sprays.js';
-import { getFakerank, updateFakerank, deleteFakerank } from './routes/fakerank.js';
+import { getFakerank, updateFakerank, deleteFakerank, getFakerankColors } from './routes/fakerank.js';
 import {
   handleGetUserFakerank,
   handleSetUserFakerank,
@@ -95,6 +95,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'POST:/fakerank': updateFakerank,
   'PATCH:/fakerank': updateFakerank,
   'DELETE:/fakerank': deleteFakerank,
+  'GET:/fakerank/colors': getFakerankColors,
 
   // Fakerank admin routes
   'GET:/fakerank-admin/user': handleGetUserFakerank,

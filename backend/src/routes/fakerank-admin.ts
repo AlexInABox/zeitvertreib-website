@@ -1,4 +1,4 @@
-import { validateSession, createResponse, getPlayerData, fetchSteamUserData, isModerator } from '../utils.js';
+import { validateSession, createResponse, getPlayerData, fetchSteamUserData, isTeam } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { playerdata } from '../db/schema.js';
@@ -22,7 +22,7 @@ export async function handleGetUserFakerank(request: Request, env: Env, ctx: Exe
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -83,7 +83,7 @@ export async function handleSetUserFakerank(request: Request, env: Env): Promise
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -178,7 +178,7 @@ export async function handleGetBlacklist(request: Request, env: Env): Promise<Re
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -223,7 +223,7 @@ export async function handleAddToBlacklist(request: Request, env: Env): Promise<
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -291,7 +291,7 @@ export async function handleRemoveFromBlacklist(request: Request, env: Env): Pro
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -360,7 +360,7 @@ export async function handleGetWhitelist(request: Request, env: Env): Promise<Re
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -405,7 +405,7 @@ export async function handleAddToWhitelist(request: Request, env: Env): Promise<
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }
@@ -473,7 +473,7 @@ export async function handleRemoveFromWhitelist(request: Request, env: Env): Pro
       return createResponse({ error: 'Invalid or expired session' }, 401, origin);
     }
 
-    const isModeratorUser = await isModerator(sessionValidation.steamId, env);
+    const isModeratorUser = await isTeam(sessionValidation.steamId, env);
     if (!isModeratorUser) {
       return createResponse({ error: 'Insufficient privileges - moderator access required' }, 403, origin);
     }

@@ -542,7 +542,7 @@ export function checkApiKey(request: Request, apiKey: string): boolean {
   return token === apiKey;
 }
 
-export async function isModerator(steamId: string, env: Env): Promise<boolean> {
+export async function isTeam(steamId: string, env: Env): Promise<boolean> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   let id = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 

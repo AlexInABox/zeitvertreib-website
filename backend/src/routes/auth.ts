@@ -10,7 +10,7 @@ import {
   getPlayerData,
   generateLoginSecret,
   validateLoginSecret,
-  isModerator,
+  isTeam,
   isDonator,
   isBooster,
   isVip,
@@ -116,7 +116,7 @@ export async function handleGetUser(request: Request, env: Env, ctx: ExecutionCo
   const playerData = await getPlayerData(steamId, db, env);
 
   // Get privilege status
-  const isModeratorUser = await isModerator(steamId, env);
+  const isModeratorUser = await isTeam(steamId, env);
   const isDonatorUser = await isDonator(steamId, env);
   const isVipUser = await isVip(steamId, env);
   const isBoosterUser = await isBooster(steamId, env);

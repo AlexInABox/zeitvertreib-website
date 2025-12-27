@@ -1010,19 +1010,103 @@
                 </div>
               </div>
 
-              <!-- Color Picker -->
+              <!-- Color Picker - Grouped by Role -->
               <div class="preview-input-group">
                 <label>Farbe wählen</label>
-                <div class="color-grid">
-                  <button
-                    *ngFor="let color of fakerankColors"
-                    (click)="selectFakerankColor(color.key)"
-                    class="color-option-btn"
-                    [class.selected]="fakerankModalColor === color.key"
-                    [style.background-color]="color.hex"
-                    [title]="color.name"
-                  ></button>
+
+                <!-- Color Groups Container -->
+                <div class="color-groups-container">
+                  <!-- Team Colors -->
+                  <div *ngIf="fakerankColorsByRole.teamColors.length > 0" class="color-group">
+                    <div class="color-group-label">👥 Teammitglieder</div>
+                    <div class="color-grid">
+                      <button
+                        *ngFor="let colorKey of fakerankColorsByRole.teamColors"
+                        (click)="selectFakerankColor(colorKey)"
+                        class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey"
+                        [class.disabled]="!isColorAllowed(colorKey)"
+                        [style.background-color]="getColorHex(colorKey)"
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
+                        [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"
+                      ></button>
+                    </div>
+                  </div>
+
+                  <!-- VIP Colors -->
+                  <div *ngIf="fakerankColorsByRole.vipColors.length > 0" class="color-group">
+                    <div class="color-group-label">💎 VIP's</div>
+                    <div class="color-grid">
+                      <button
+                        *ngFor="let colorKey of fakerankColorsByRole.vipColors"
+                        (click)="selectFakerankColor(colorKey)"
+                        class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey"
+                        [class.disabled]="!isColorAllowed(colorKey)"
+                        [style.background-color]="getColorHex(colorKey)"
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
+                        [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"
+                      ></button>
+                    </div>
+                  </div>
+
+                  <!-- Donator Colors -->
+                  <div *ngIf="fakerankColorsByRole.donatorColors.length > 0" class="color-group">
+                    <div class="color-group-label">🎁 Spendenlegenden</div>
+                    <div class="color-grid">
+                      <button
+                        *ngFor="let colorKey of fakerankColorsByRole.donatorColors"
+                        (click)="selectFakerankColor(colorKey)"
+                        class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey"
+                        [class.disabled]="!isColorAllowed(colorKey)"
+                        [style.background-color]="getColorHex(colorKey)"
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
+                        [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"
+                      ></button>
+                    </div>
+                  </div>
+
+                  <!-- Booster Colors -->
+                  <div *ngIf="fakerankColorsByRole.boosterColors.length > 0" class="color-group">
+                    <div class="color-group-label">⚡ Booster</div>
+                    <div class="color-grid">
+                      <button
+                        *ngFor="let colorKey of fakerankColorsByRole.boosterColors"
+                        (click)="selectFakerankColor(colorKey)"
+                        class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey"
+                        [class.disabled]="!isColorAllowed(colorKey)"
+                        [style.background-color]="getColorHex(colorKey)"
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
+                        [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"
+                      ></button>
+                    </div>
+                  </div>
+
+                  <!-- Other Colors -->
+                  <div *ngIf="fakerankColorsByRole.otherColors.length > 0" class="color-group">
+                    <div class="color-group-label">🌈 Alle anderen Spieler</div>
+                    <div class="color-grid">
+                      <button
+                        *ngFor="let colorKey of fakerankColorsByRole.otherColors"
+                        (click)="selectFakerankColor(colorKey)"
+                        class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey"
+                        [class.disabled]="!isColorAllowed(colorKey)"
+                        [style.background-color]="getColorHex(colorKey)"
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
+                        [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"
+                      ></button>
+                    </div>
+                  </div>
                 </div>
+
                 <div
                   style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); text-align: center; margin-top: 0.5rem"
                 >

@@ -220,6 +220,15 @@ export interface FakerankDeleteRequest {
   id: number;
 }
 
+/** GET /fakerank/colors request response */
+export interface FakerankColorsResponse {
+  teamColors: FakerankColor[];
+  vipColors: FakerankColor[];
+  donatorColors: FakerankColor[];
+  boosterColors: FakerankColor[];
+  otherColors: FakerankColor[];
+}
+
 // ============================================================================
 // Fakerank Admin Types
 // ============================================================================
@@ -235,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {

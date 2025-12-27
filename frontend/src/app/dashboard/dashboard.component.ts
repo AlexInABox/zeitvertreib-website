@@ -18,6 +18,7 @@ import type {
   FakerankPostRequest,
   FakerankDeleteRequest,
   FakerankColor,
+  FakerankColorsResponse,
 } from '@zeitvertreib/types';
 
 interface PlayerEntry {
@@ -188,6 +189,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   acceptedFakerankRules = false;
   showFakerankPrivacyText = false;
   showFakerankRulesText = false;
+
+  // Fakerank colors by role
+  fakerankColorsByRole: {
+    teamColors: FakerankColor[];
+    vipColors: FakerankColor[];
+    donatorColors: FakerankColor[];
+    boosterColors: FakerankColor[];
+    otherColors: FakerankColor[];
+  } = {
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
+  allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
   isFakerankBanned = false;
@@ -361,6 +378,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isFakerankBanned = this.authService.isFakerankBanned();
     this.fakerankBanReason = this.authService.getFakerankBanReason();
     this.fakerankBannedBy = this.authService.getFakerankBannedBy();
+
+    // Load fakerank colors by role
+    this.loadFakerankColorsByRole();
 
     // Initialize slot machine with question marks
     setTimeout(() => {
@@ -1017,6 +1037,64 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.fakerankError = 'Fehler beim Laden des Fakeranks';
       },
     });
+  }
+
+  // Load fakerank colors by role from API
+  private loadFakerankColorsByRole(): void {
+    this.authService.authenticatedGet<FakerankColorsResponse>(`${environment.apiUrl}/fakerank/colors`).subscribe({
+      next: (response) => {
+        this.fakerankColorsByRole = response;
+        this.updateAllowedFakerankColors();
+      },
+      error: (error) => {
+        console.error('Error loading fakerank colors:', error);
+        // Fallback to empty allowed colors if fetch fails
+        this.allowedFakerankColors = [];
+      },
+    });
+  }
+
+  // Determine which colors are allowed based on user's role
+  private updateAllowedFakerankColors(): void {
+    const isTeamMember = this.authService.isTeam();
+    const isVip = this.authService.isVip();
+    const isDonator = this.authService.isDonator();
+    const isBooster = this.authService.isBooster();
+
+    if (isTeamMember) {
+      this.allowedFakerankColors = [
+        ...this.fakerankColorsByRole.teamColors,
+        ...this.fakerankColorsByRole.vipColors,
+        ...this.fakerankColorsByRole.donatorColors,
+        ...this.fakerankColorsByRole.boosterColors,
+        ...this.fakerankColorsByRole.otherColors,
+      ];
+    } else if (isVip) {
+      this.allowedFakerankColors = [
+        ...this.fakerankColorsByRole.vipColors,
+        ...this.fakerankColorsByRole.donatorColors,
+        ...this.fakerankColorsByRole.boosterColors,
+        ...this.fakerankColorsByRole.otherColors,
+      ];
+    } else if (isDonator) {
+      this.allowedFakerankColors = [
+        ...this.fakerankColorsByRole.donatorColors,
+        ...this.fakerankColorsByRole.boosterColors,
+        ...this.fakerankColorsByRole.otherColors,
+      ];
+    } else if (isBooster) {
+      this.allowedFakerankColors = [
+        ...this.fakerankColorsByRole.boosterColors,
+        ...this.fakerankColorsByRole.otherColors,
+      ];
+    } else {
+      this.allowedFakerankColors = this.fakerankColorsByRole.otherColors;
+    }
+  }
+
+  // Check if a color is allowed for the current user
+  isColorAllowed(colorKey: FakerankColor): boolean {
+    return this.allowedFakerankColors.includes(colorKey);
   }
 
   // Open modal to edit/create fakerank
