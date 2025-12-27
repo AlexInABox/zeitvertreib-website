@@ -3799,16 +3799,13 @@
   border: 1.5px solid rgba(255, 255, 255, 0.12);
 }
 
-.slot-spin-btn:hover {
-  background: rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.3);
-  color: #f3e8ff;
-  transform: translateY(-1px);
+.slot-spin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.4);
 }
 
-.slot-spin-btn:active {
+.slot-spin-btn:active:not(:disabled) {
   transform: translateY(0);
-  background: rgba(139, 92, 246, 0.08);
 }
 
 .slot-spin-btn.spinning {
@@ -3867,7 +3864,6 @@
 /* Auto-Spin Button */
 .slot-autospin-btn {
   flex: 1;
-  max-width: 160px;
   min-width: 0;
   background: rgba(255, 255, 255, 0.06);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
@@ -3883,9 +3879,8 @@
   transform: translateY(-1px);
 }
 
-.slot-autospin-btn:active {
+.slot-autospin-btn:active:not(:disabled) {
   transform: translateY(0);
-  background: rgba(255, 255, 255, 0.05);
 }
 
 .slot-autospin-btn.active {
