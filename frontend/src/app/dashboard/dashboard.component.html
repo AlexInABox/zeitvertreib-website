@@ -1223,6 +1223,7 @@
           <div class="spray-header">
             <h3 class="spray-title">✨ Fakerank</h3>
             <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
+            <span class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
           </div>
 
           <!-- Ban Warning -->
@@ -1286,6 +1287,15 @@
                   <button (click)="openFakerankModal()" class="fakerank-create-btn" [disabled]="fakerankLoading">
                     ✨ Erstellen
                   </button>
+                </div>
+              </div>
+              <!-- Cost Disclaimer -->
+              <div class="fakerank-cost-disclaimer">
+                <div class="cost-disclaimer-icon">💰</div>
+                <div class="cost-disclaimer-text">
+                  <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
+                  <strong>100 ZVC</strong>. Die Gebühr wird wöchentlich erneuert, solange dein Fakerank nicht von dir
+                  oder einem Teammitglied gelöscht wurde.
                 </div>
               </div>
             </div>

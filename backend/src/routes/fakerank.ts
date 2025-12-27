@@ -1,4 +1,4 @@
-import { validateSession, createResponse, isTeam, isVip, isDonator, isBooster } from '../utils.js';
+import { validateSession, createResponse, isTeam, isVip, isDonator, isBooster, increment } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, inArray } from 'drizzle-orm';
 import { fakeranks, fakerankBans, deletedFakeranks, playerdata } from '../db/schema.js';
@@ -22,6 +22,8 @@ const VIP_COLORS: FakerankColor[] = ['carmine', 'tomato', 'light_green', 'deep_p
 const DONATOR_COLORS: FakerankColor[] = ['emerald', 'lime', 'blue_green', 'silver', 'pumpkin'];
 const BOOSTER_COLORS: FakerankColor[] = ['orange', 'cyan', 'pink'];
 const OTHER_COLORS: FakerankColor[] = ['brown', 'nickel', 'mint', 'yellow', 'army_green', 'default'];
+
+const FAKERANK_COST = 100;
 
 /**
  * Determines which colors a user is allowed to use based on their role
@@ -293,6 +295,25 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
       return createResponse({ error: 'Dieser Fakerank wurde von der Moderation gesperrt' }, 403, origin);
     }
 
+    // Check if user has at least 100 ZVC
+    const userBalanceResult = await db
+      .select({ experience: playerdata.experience })
+      .from(playerdata)
+      .where(eq(playerdata.id, userid))
+      .limit(1);
+
+    const currentBalance = userBalanceResult[0]?.experience || 0;
+
+    if (currentBalance < FAKERANK_COST) {
+      return createResponse(
+        {
+          error: `Du hast nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${FAKERANK_COST} ZVC.`,
+        },
+        403,
+        origin,
+      );
+    }
+
     // Delete existing fakerank if user already has one
     await db.delete(fakeranks).where(eq(fakeranks.userid, userid));
 
@@ -307,6 +328,12 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
         uploadedAt: Math.floor(Date.now() / 1000),
       })
       .returning();
+
+    // Deduct 100 ZVC from user's balance
+    await db
+      .update(playerdata)
+      .set({ experience: increment(playerdata.experience, -FAKERANK_COST) })
+      .where(eq(playerdata.id, userid));
 
     const newFakerank = result[0];
     if (!newFakerank) {
@@ -410,5 +437,96 @@ export async function deleteFakerank(request: Request, env: Env): Promise<Respon
   } catch (error) {
     console.error('Error deleting fakerank:', error);
     return createResponse({ error: 'Fakerank konnte nicht gelöscht werden' }, 500, origin);
+  }
+}
+
+export async function collectZvcForFakeranksAndValidateColors(db: ReturnType<typeof drizzle>, env: Env, ctx: ExecutionContext): Promise<void> {
+  try {
+    // Get all fakeranks
+    const allFakeranks = await db.select().from(fakeranks);
+
+    if (allFakeranks.length === 0) {
+      console.log('✅ No fakeranks to process');
+      return;
+    }
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
+    let collectedCount = 0;
+    let deletedCount = 0;
+    let colorUpdatedCount = 0;
+
+    // Process each fakerank
+    for (const fakerank of allFakeranks) {
+      try {
+        const timeSinceUpload = currentTime - fakerank.uploadedAt;
+        const needsRenewal = timeSinceUpload > SEVEN_DAYS_IN_SECONDS;
+
+        // Handle ZVC collection if renewal is needed
+        if (needsRenewal) {
+          // Get user's current balance
+          const userBalance = await db
+            .select({ experience: playerdata.experience })
+            .from(playerdata)
+            .where(eq(playerdata.id, fakerank.userid))
+            .limit(1);
+
+          const currentBalance = userBalance[0]?.experience || 0;
+
+          if (currentBalance >= FAKERANK_COST) {
+            // Deduct the cost and update the uploadedAt timestamp
+            await db
+              .update(playerdata)
+              .set({ experience: increment(playerdata.experience, -FAKERANK_COST) })
+              .where(eq(playerdata.id, fakerank.userid));
+
+            // Update the uploadedAt timestamp to current time
+            await db
+              .update(fakeranks)
+              .set({ uploadedAt: currentTime })
+              .where(eq(fakeranks.id, fakerank.id));
+
+            collectedCount++;
+            console.log(
+              `✅ Collected 100 ZVC from ${fakerank.userid} for fakerank renewal (ID: ${fakerank.id})`,
+            );
+          } else {
+            // Not enough ZVC - delete the fakerank
+            await db.delete(fakeranks).where(eq(fakeranks.id, fakerank.id));
+            deletedCount++;
+            console.log(
+              `🗑️ Deleted fakerank for ${fakerank.userid} (ID: ${fakerank.id}) due to insufficient ZVC (had ${currentBalance}, needed ${FAKERANK_COST})`,
+            );
+          }
+        }
+
+        // Validate fakerank color access
+        const allowedColors = await getAllowedColorsForUser(fakerank.userid, env);
+
+        const currentColor = fakerank.color as FakerankColor;
+        if (!allowedColors.includes(currentColor)) {
+          // User no longer has access to this color - change to default
+          await db
+            .update(fakeranks)
+            .set({ color: 'default' })
+            .where(eq(fakeranks.id, fakerank.id));
+
+          colorUpdatedCount++;
+          console.log(
+            `🎨 Updated fakerank color for ${fakerank.userid} from '${currentColor}' to 'default' (ID: ${fakerank.id})`,
+          );
+        }
+      } catch (error) {
+        console.error(`❌ Error processing fakerank ${fakerank.id}:`, error);
+        // Continue with next fakerank instead of throwing
+      }
+    }
+
+    console.log(
+      `✅ Fakerank maintenance complete: ${collectedCount} renewed, ${deletedCount} deleted, ${colorUpdatedCount} colors updated`,
+    );
+  } catch (error) {
+    console.error('❌ Error in collectZvcForFakeranksAndValidateColors:', error);
+    // Don't throw - this is a background task
   }
 }

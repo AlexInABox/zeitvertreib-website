@@ -8,43 +8,43 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-06-04",
   "observability": {
-    "enabled": true,
+    "enabled": true
   },
   "durable_objects": {
     "bindings": [
       {
         "name": "PLAYERLIST_STORAGE",
-        "class_name": "PlayerlistStorage",
-      },
-    ],
+        "class_name": "PlayerlistStorage"
+      }
+    ]
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_classes": ["PlayerlistStorage"],
-    },
+      "new_classes": ["PlayerlistStorage"]
+    }
   ],
   "kv_namespaces": [
     {
       "binding": "SESSIONS",
-      "id": "d0dc321532ca43349d87f88483a78105",
+      "id": "d0dc321532ca43349d87f88483a78105"
     },
     {
       "binding": "ZEITVERTREIB_SESSIONS",
-      "id": "f151e8f642a8447d915c129d7de5f078",
-    },
+      "id": "f151e8f642a8447d915c129d7de5f078"
+    }
   ],
   "d1_databases": [
     {
       "binding": "ZEITVERTREIB_DATA",
       "database_name": "zeitvertreib-data",
       "database_id": "a5642ecc-9382-4256-924d-8353a825c26b",
-      "migrations_dir": "drizzle/migrations",
-    },
+      "migrations_dir": "drizzle/migrations"
+    }
   ],
   "vars": {
     "FRONTEND_URL": "http://localhost:4200",
-    "BACKEND_URL": "http://localhost:8787/api",
+    "BACKEND_URL": "http://localhost:8787/api"
   },
   "workers_dev": false,
   "env": {
@@ -53,95 +53,95 @@
       "routes": [
         {
           "pattern": "zeitvertreib.vip/api/*",
-          "zone_name": "zeitvertreib.vip",
-        },
+          "zone_name": "zeitvertreib.vip"
+        }
       ],
       "durable_objects": {
         "bindings": [
           {
             "name": "PLAYERLIST_STORAGE",
-            "class_name": "PlayerlistStorage",
-          },
-        ],
+            "class_name": "PlayerlistStorage"
+          }
+        ]
       },
       "migrations": [
         {
           "tag": "v1",
-          "new_classes": ["PlayerlistStorage"],
-        },
+          "new_classes": ["PlayerlistStorage"]
+        }
       ],
       "kv_namespaces": [
         {
           "binding": "SESSIONS",
-          "id": "d0dc321532ca43349d87f88483a78105",
+          "id": "d0dc321532ca43349d87f88483a78105"
         },
         {
           "binding": "ZEITVERTREIB_SESSIONS",
-          "id": "f151e8f642a8447d915c129d7de5f078",
-        },
+          "id": "f151e8f642a8447d915c129d7de5f078"
+        }
       ],
       "d1_databases": [
         {
           "binding": "ZEITVERTREIB_DATA",
           "database_name": "zeitvertreib-data",
           "database_id": "a5642ecc-9382-4256-924d-8353a825c26b",
-          "migrations_dir": "drizzle/migrations",
-        },
+          "migrations_dir": "drizzle/migrations"
+        }
       ],
       "vars": {
         "FRONTEND_URL": "https://zeitvertreib.vip",
-        "BACKEND_URL": "https://zeitvertreib.vip/api",
+        "BACKEND_URL": "https://zeitvertreib.vip/api"
       },
       "triggers": {
-        "crons": ["*/15 * * * *", "0 3 2 1 *"],
-      },
+        "crons": ["*/15 * * * *", "0 3 2 1 *", "0 0 * * *"]
+      }
     },
     "dev": {
       "name": "zeitvertreib-backend-dev",
       "routes": [
         {
           "pattern": "dev.zeitvertreib.vip/api/*",
-          "zone_name": "zeitvertreib.vip",
-        },
+          "zone_name": "zeitvertreib.vip"
+        }
       ],
       "durable_objects": {
         "bindings": [
           {
             "name": "PLAYERLIST_STORAGE",
-            "class_name": "PlayerlistStorage",
-          },
-        ],
+            "class_name": "PlayerlistStorage"
+          }
+        ]
       },
       "migrations": [
         {
           "tag": "v1",
-          "new_classes": ["PlayerlistStorage"],
-        },
+          "new_classes": ["PlayerlistStorage"]
+        }
       ],
       "kv_namespaces": [
         {
           "binding": "SESSIONS",
-          "id": "d0dc321532ca43349d87f88483a78105",
+          "id": "d0dc321532ca43349d87f88483a78105"
         },
         {
           "binding": "ZEITVERTREIB_SESSIONS",
-          "id": "f151e8f642a8447d915c129d7de5f078",
-        },
+          "id": "f151e8f642a8447d915c129d7de5f078"
+        }
       ],
       "d1_databases": [
         {
           "binding": "ZEITVERTREIB_DATA",
           "database_name": "zeitvertreib-data",
           "database_id": "a5642ecc-9382-4256-924d-8353a825c26b",
-          "migrations_dir": "drizzle/migrations",
-        },
+          "migrations_dir": "drizzle/migrations"
+        }
       ],
       "vars": {
         "FRONTEND_URL": "https://dev.zeitvertreib.vip",
-        "BACKEND_URL": "https://dev.zeitvertreib.vip/api",
-      },
-    },
-  },
+        "BACKEND_URL": "https://dev.zeitvertreib.vip/api"
+      }
+    }
+  }
 
   /**
    * Smart Placement

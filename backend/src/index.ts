@@ -12,7 +12,7 @@ import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
 import { handlePostSpray, handleGetSpray, handleDeleteSpray } from './routes/sprays.js';
-import { getFakerank, updateFakerank, deleteFakerank, getFakerankColors } from './routes/fakerank.js';
+import { getFakerank, updateFakerank, deleteFakerank, getFakerankColors, collectZvcForFakeranksAndValidateColors } from './routes/fakerank.js';
 import {
   handleGetUserFakerank,
   handleSetUserFakerank,
@@ -242,6 +242,11 @@ export default {
     // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
       ctx.waitUntil(updateLeaderboard(db, env, ctx));
+    }
+
+    // Collect fakerank zvc fees every day at midnight UTC
+    if (controller.cron === '0 0 * * *') {
+      ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
     }
 
     // Flush advent calendar table on January 2nd at 03:00 UTC
