@@ -592,3 +592,20 @@ export async function isBooster(steamId: string, env: Env): Promise<boolean> {
 
   return discordInfoResult.boosterSince > 0;
 }
+
+export async function isVip(steamId: string, env: Env): Promise<boolean> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  let id = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+
+  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, id)).get();
+  if (!playerdataResult || !playerdataResult.discordId) return false;
+
+  const discordInfoResult = await db
+    .select()
+    .from(discordInfo)
+    .where(eq(discordInfo.discordId, playerdataResult.discordId))
+    .get();
+  if (!discordInfoResult) return false;
+
+  return discordInfoResult.vipSince > 0;
+}

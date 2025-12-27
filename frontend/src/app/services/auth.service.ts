@@ -217,6 +217,24 @@ export class AuthService {
     return userData?.isDonator ?? false;
   }
 
+  // Check if user is a VIP
+  isVip(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isVip ?? false;
+  }
+
+  // Check if user is a Discord server booster
+  isBooster(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isBooster ?? false;
+  }
+
+  //Check if user is a team member
+  isTeam(): boolean {
+    const userData = this.currentUserDataSubject.value;
+    return userData?.isModerator ?? false;
+  }
+
   // Check if user is spray banned
   isSprayBanned(): boolean {
     const userData = this.currentUserDataSubject.value;

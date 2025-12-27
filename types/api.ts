@@ -59,6 +59,7 @@ export interface GetUserResponse {
   playerData: PlayerData | null;
   isModerator: boolean;
   isDonator: boolean;
+  isVip: boolean;
   isBooster: boolean;
   isSprayBanned: boolean;
   sprayBanReason: string | null;
@@ -234,7 +235,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {

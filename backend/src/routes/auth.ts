@@ -13,6 +13,7 @@ import {
   isModerator,
   isDonator,
   isBooster,
+  isVip,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { fakerankBans, sprayBans } from '../db/schema.js';
@@ -117,6 +118,7 @@ export async function handleGetUser(request: Request, env: Env, ctx: ExecutionCo
   // Get privilege status
   const isModeratorUser = await isModerator(steamId, env);
   const isDonatorUser = await isDonator(steamId, env);
+  const isVipUser = await isVip(steamId, env);
   const isBoosterUser = await isBooster(steamId, env);
 
   // Check if user is spray banned
@@ -181,6 +183,7 @@ export async function handleGetUser(request: Request, env: Env, ctx: ExecutionCo
       playerData: playerData,
       isModerator: isModeratorUser,
       isDonator: isDonatorUser,
+      isVip: isVipUser,
       isBooster: isBoosterUser,
       isSprayBanned: !!sprayBanInfo,
       sprayBanReason: sprayBanInfo?.reason || null,
