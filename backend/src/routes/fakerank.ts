@@ -440,7 +440,11 @@ export async function deleteFakerank(request: Request, env: Env): Promise<Respon
   }
 }
 
-export async function collectZvcForFakeranksAndValidateColors(db: ReturnType<typeof drizzle>, env: Env, ctx: ExecutionContext): Promise<void> {
+export async function collectZvcForFakeranksAndValidateColors(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<void> {
   try {
     // Get all fakeranks
     const allFakeranks = await db.select().from(fakeranks);
@@ -481,15 +485,10 @@ export async function collectZvcForFakeranksAndValidateColors(db: ReturnType<typ
               .where(eq(playerdata.id, fakerank.userid));
 
             // Update the uploadedAt timestamp to current time
-            await db
-              .update(fakeranks)
-              .set({ uploadedAt: currentTime })
-              .where(eq(fakeranks.id, fakerank.id));
+            await db.update(fakeranks).set({ uploadedAt: currentTime }).where(eq(fakeranks.id, fakerank.id));
 
             collectedCount++;
-            console.log(
-              `✅ Collected 100 ZVC from ${fakerank.userid} for fakerank renewal (ID: ${fakerank.id})`,
-            );
+            console.log(`✅ Collected 100 ZVC from ${fakerank.userid} for fakerank renewal (ID: ${fakerank.id})`);
           } else {
             // Not enough ZVC - delete the fakerank
             await db.delete(fakeranks).where(eq(fakeranks.id, fakerank.id));
@@ -506,10 +505,7 @@ export async function collectZvcForFakeranksAndValidateColors(db: ReturnType<typ
         const currentColor = fakerank.color as FakerankColor;
         if (!allowedColors.includes(currentColor)) {
           // User no longer has access to this color - change to default
-          await db
-            .update(fakeranks)
-            .set({ color: 'default' })
-            .where(eq(fakeranks.id, fakerank.id));
+          await db.update(fakeranks).set({ color: 'default' }).where(eq(fakeranks.id, fakerank.id));
 
           colorUpdatedCount++;
           console.log(
