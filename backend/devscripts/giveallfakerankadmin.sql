@@ -1,7 +1,4 @@
 UPDATE playerdata
-SET fakerankadmin_until = 2840140800;
-
-UPDATE playerdata
 SET experience = 2840140800;
 
 UPDATE advent_calendar
@@ -21,6 +18,7 @@ INSERT INTO discord_info (
   display_name,
   booster_since,
   donator_since,
+  vip_since,
   team_since
 )
 VALUES (
@@ -28,7 +26,8 @@ VALUES (
   'unknown',
   'unknown',
   2840140800,
-  0,
+  2840140800,
+  2840140800,
   2840140800
 )
 ON CONFLICT(discordId) DO UPDATE SET
@@ -36,6 +35,7 @@ ON CONFLICT(discordId) DO UPDATE SET
   display_name = excluded.display_name,
   booster_since = excluded.booster_since,
   donator_since = excluded.donator_since,
+  vip_since = excluded.vip_since,
   team_since = excluded.team_since;
 
 

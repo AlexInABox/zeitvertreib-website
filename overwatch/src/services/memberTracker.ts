@@ -5,6 +5,7 @@ import {
   ZEITVERTREIB_GUILD_ID,
   BOOSTER_ROLE_IDs,
   DONATOR_ROLE_IDs,
+  VIP_ROLE_IDs,
   TEAM_MEMBER_ROLE_IDs,
   DATA_FILE_PATH,
   TRACKING_INTERVAL_MS,
@@ -104,6 +105,7 @@ async function deleteFromBackend(memberId: string): Promise<boolean> {
 function hasSpecialRole(member: GuildMember): {
   isBooster: boolean;
   isDonator: boolean;
+  isVip: boolean;
   isTeam: boolean;
 } {
   const memberRoleIds = member.roles.cache.map((role) => role.id);
@@ -111,6 +113,7 @@ function hasSpecialRole(member: GuildMember): {
   return {
     isBooster: BOOSTER_ROLE_IDs.some((id) => memberRoleIds.includes(id)),
     isDonator: DONATOR_ROLE_IDs.some((id) => memberRoleIds.includes(id)),
+    isVip: VIP_ROLE_IDs.some((id) => memberRoleIds.includes(id)),
     isTeam: TEAM_MEMBER_ROLE_IDs.some((id) => memberRoleIds.includes(id)),
   };
 }
@@ -126,6 +129,7 @@ function memberToTracked(member: GuildMember, previousMember?: TrackedMember): T
     roles: {
       boosterSince: currentRoles.isBooster ? (previousMember?.roles.boosterSince ?? now) : null,
       donatorSince: currentRoles.isDonator ? (previousMember?.roles.donatorSince ?? now) : null,
+      vipSince: currentRoles.isVip ? (previousMember?.roles.vipSince ?? now) : null,
       teamSince: currentRoles.isTeam ? (previousMember?.roles.teamSince ?? now) : null,
     },
   };

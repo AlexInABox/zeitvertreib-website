@@ -10,6 +10,7 @@ export interface TrackedMember {
   roles: {
     boosterSince: number | null;
     donatorSince: number | null;
+    vipSince: number | null;
     teamSince: number | null;
   };
 }

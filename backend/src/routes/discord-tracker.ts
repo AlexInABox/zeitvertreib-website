@@ -30,6 +30,7 @@ export async function handleDiscordTrackerUpdate(request: Request, env: Env): Pr
     // Non-null values are timestamps in milliseconds
     const boosterSince = member.roles.boosterSince ?? 0;
     const donatorSince = member.roles.donatorSince ?? 0;
+    const vipSince = member.roles.vipSince ?? 0;
     const teamSince = member.roles.teamSince ?? 0;
 
     // Upsert the member data
@@ -41,6 +42,7 @@ export async function handleDiscordTrackerUpdate(request: Request, env: Env): Pr
         displayName: member.displayName,
         boosterSince,
         donatorSince,
+        vipSince,
         teamSince,
       })
       .onConflictDoUpdate({
@@ -50,6 +52,7 @@ export async function handleDiscordTrackerUpdate(request: Request, env: Env): Pr
           displayName: member.displayName,
           boosterSince,
           donatorSince,
+          vipSince,
           teamSince,
         },
       });

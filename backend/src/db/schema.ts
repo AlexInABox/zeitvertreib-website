@@ -64,6 +64,7 @@ export const discordInfo = sqliteTable('discord_info', {
   displayName: text('display_name').notNull(),
   boosterSince: integer('booster_since').notNull().default(0),
   donatorSince: integer('donator_since').notNull().default(0),
+  vipSince: integer('vip_since').notNull().default(0),
   teamSince: integer('team_since').notNull().default(0),
 });
 

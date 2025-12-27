@@ -59,6 +59,7 @@ export interface GetUserResponse {
   playerData: PlayerData | null;
   isModerator: boolean;
   isDonator: boolean;
+  isVip: boolean;
   isBooster: boolean;
   isSprayBanned: boolean;
   sprayBanReason: string | null;
@@ -217,6 +218,15 @@ export interface FakerankPostRequest {
 /** DELETE /fakerank request body */
 export interface FakerankDeleteRequest {
   id: number;
+}
+
+/** GET /fakerank/colors request response */
+export interface FakerankColorsResponse {
+  teamColors: FakerankColor[];
+  vipColors: FakerankColor[];
+  donatorColors: FakerankColor[];
+  boosterColors: FakerankColor[];
+  otherColors: FakerankColor[];
 }
 
 // ============================================================================
