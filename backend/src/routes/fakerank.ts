@@ -18,8 +18,8 @@ const MODERATION_CHANNEL_ID = '1401609093633933324';
 
 // Color assignments by rank (each group has access to colors of lower groups)
 const TEAM_COLORS: FakerankColor[] = ['aqua', 'red', 'magenta', 'crimson'];
-const VIP_COLORS: FakerankColor[] = ['carmine', 'tomato', 'light_green', 'deep_pink', 'green',];
-const DONATOR_COLORS: FakerankColor[] = ['emerald', 'lime', 'blue_green', 'silver', 'pumpkin',];
+const VIP_COLORS: FakerankColor[] = ['carmine', 'tomato', 'light_green', 'deep_pink', 'green'];
+const DONATOR_COLORS: FakerankColor[] = ['emerald', 'lime', 'blue_green', 'silver', 'pumpkin'];
 const BOOSTER_COLORS: FakerankColor[] = ['orange', 'cyan', 'pink'];
 const OTHER_COLORS: FakerankColor[] = ['brown', 'nickel', 'mint', 'yellow', 'army_green', 'default'];
 
@@ -36,40 +36,22 @@ async function getAllowedColorsForUser(steamId: string, env: Env): Promise<Faker
 
   // Team members can use all colors
   if (isTeamUser) {
-    return [
-      ...TEAM_COLORS,
-      ...VIP_COLORS,
-      ...DONATOR_COLORS,
-      ...BOOSTER_COLORS,
-      ...OTHER_COLORS,
-    ];
+    return [...TEAM_COLORS, ...VIP_COLORS, ...DONATOR_COLORS, ...BOOSTER_COLORS, ...OTHER_COLORS];
   }
 
   // VIP members can use all except team colors
   if (isVipUser) {
-    return [
-      ...VIP_COLORS,
-      ...DONATOR_COLORS,
-      ...BOOSTER_COLORS,
-      ...OTHER_COLORS,
-    ];
+    return [...VIP_COLORS, ...DONATOR_COLORS, ...BOOSTER_COLORS, ...OTHER_COLORS];
   }
 
   // Donators can use all except team and VIP colors
   if (isDonatorUser) {
-    return [
-      ...DONATOR_COLORS,
-      ...BOOSTER_COLORS,
-      ...OTHER_COLORS,
-    ];
+    return [...DONATOR_COLORS, ...BOOSTER_COLORS, ...OTHER_COLORS];
   }
 
   // Boosters can use all except team, VIP, and donator colors
   if (isBoosterUser) {
-    return [
-      ...BOOSTER_COLORS,
-      ...OTHER_COLORS,
-    ];
+    return [...BOOSTER_COLORS, ...OTHER_COLORS];
   }
 
   // Everyone else can only use other colors
