@@ -2542,7 +2542,12 @@ export async function handleDiscordBotInteractions(
                 // Get Discord user info
                 let discordUserInfo: any = {};
                 try {
-                  discordUserInfo = await rest.get(Routes.user(userId));
+                  // Use discordId from database, not the userId (which is a Steam ID)
+                  if (reportedUserInfo.discordId) {
+                    discordUserInfo = await rest.get(Routes.user(reportedUserInfo.discordId));
+                  } else {
+                    console.log('No Discord ID found for user, skipping Discord info fetch');
+                  }
                 } catch (error) {
                   console.error('Failed to fetch Discord user info:', error);
                 }
@@ -2578,10 +2583,6 @@ export async function handleDiscordBotInteractions(
                   method: 'PUT',
                   headers: {
                     'Content-Type': contentType,
-                    'x-amz-object-lock-mode': 'GOVERNANCE',
-                    'x-amz-object-lock-retain-until-date': new Date(
-                      Date.now() + 365 * 24 * 60 * 60 * 1000,
-                    ).toISOString(), // 1 year retention
                   },
                   body: imageData,
                 });
@@ -2600,10 +2601,6 @@ export async function handleDiscordBotInteractions(
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',
-                    'x-amz-object-lock-mode': 'GOVERNANCE',
-                    'x-amz-object-lock-retain-until-date': new Date(
-                      Date.now() + 365 * 24 * 60 * 60 * 1000,
-                    ).toISOString(), // 1 year retention
                   },
                   body: metadataJson,
                 });
@@ -2654,7 +2651,7 @@ export async function handleDiscordBotInteractions(
                     .split('\n')
                     .map((line: string) => '> ' + line)
                     .join('\n');
-                  updatedEmbed.description += `\n–––––––––––\n**⚠️ CSAM REPORTED** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}\n\n📁 S3 Path: \`${s3ImageKey}\`\n🔒 Legal Hold: Active (1 year)`;
+                  updatedEmbed.description += `\n–––––––––––\n**⚠️ CSAM REPORTED** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}\n\n📁 S3 Path: \`${s3ImageKey}\``;
 
                   await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
                     body: {
