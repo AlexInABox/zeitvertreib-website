@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { handleReady } from './events/ready';
 import { handleMessageCreate } from './events/messageCreate';
 import { handleMessageUpdate } from './events/messageUpdate';
+import { handleOptOutButton } from './services/stickyMessage';
 
 const client = new Client({
   intents: [
@@ -19,5 +20,12 @@ const client = new Client({
 client.once(Events.ClientReady, handleReady);
 client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.MessageUpdate, handleMessageUpdate);
+
+// Handle button interactions
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isButton()) {
+    await handleOptOutButton(interaction);
+  }
+});
 
 client.login(process.env.BOT_TOKEN);

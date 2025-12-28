@@ -114,6 +114,12 @@ async function sendSprayModerationNotification(
               label: 'Ban User',
               custom_id: `spray_ban:${sha256Hash}:${userid}`,
             },
+            {
+              type: 2,
+              style: 4,
+              label: 'CSAM REPORT',
+              custom_id: `csam_report:${sha256Hash}:${userid}`,
+            },
           ],
         },
       ],

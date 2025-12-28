@@ -28,6 +28,14 @@ interface VerificationResult {
   interaction?: APIInteraction;
 }
 
+// Role ID for Kontrollmündig
+const MODERATOR_ROLE_ID = '1454877745984180266';
+
+function hasModeratorRole(interaction: APIInteraction): boolean {
+  const memberRoles = (interaction.member?.roles as string[]) || [];
+  return memberRoles.includes(MODERATOR_ROLE_ID);
+}
+
 async function verifyDiscordRequest(request: Request, env: Env): Promise<VerificationResult> {
   const signature = request.headers.get('x-signature-ed25519');
   const timestamp = request.headers.get('x-signature-timestamp');
@@ -407,6 +415,21 @@ export async function handleDiscordBotInteractions(
       const sha256Hash = parts[1] || '';
       const userId = parts[2] || '';
 
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
+
       return createResponse(
         {
           type: InteractionResponseType.MODAL,
@@ -441,6 +464,21 @@ export async function handleDiscordBotInteractions(
     if (customId.startsWith('spray_unban:')) {
       const parts = customId.split(':');
       const userId = parts[1] || '';
+
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
 
       return createResponse(
         {
@@ -478,6 +516,21 @@ export async function handleDiscordBotInteractions(
       const normalizedText = parts[1] || '';
       const userId = parts[2] || '';
 
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
+
       return createResponse(
         {
           type: InteractionResponseType.MODAL,
@@ -512,6 +565,21 @@ export async function handleDiscordBotInteractions(
     if (customId.startsWith('fakerank_unban:')) {
       const parts = customId.split(':');
       const userId = parts[1] || '';
+
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
 
       return createResponse(
         {
@@ -548,6 +616,21 @@ export async function handleDiscordBotInteractions(
       const parts = customId.split(':');
       const normalizedText = parts[1] || '';
       const userId = parts[2] || '';
+
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
 
       return createResponse(
         {
@@ -621,6 +704,21 @@ export async function handleDiscordBotInteractions(
       if (parts.length < 3) {
         console.error(`❌ Invalid custom_id format, expected at least 3 parts, got ${parts.length}:`, customId);
         return createResponse({ error: 'Invalid spray moderation data - missing parts' }, 400, origin);
+      }
+
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
       }
 
       const action = parts[0]; // 'spray_delete' or 'spray_undelete'
@@ -774,6 +872,57 @@ export async function handleDiscordBotInteractions(
       );
     }
 
+    // Handle CSAM report button - show modal for report reason
+    if (customId.startsWith('csam_report:')) {
+      const parts = customId.split(':');
+      const sha256Hash = parts[1] || '';
+      const userId = parts[2] || '';
+
+      // Verify moderator role
+      if (!hasModeratorRole(interaction)) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
+
+      return createResponse(
+        {
+          type: InteractionResponseType.MODAL,
+          data: {
+            custom_id: `csam_report_modal:${sha256Hash}:${userId}`,
+            title: '⚠️ CSAM Report',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 4,
+                    custom_id: 'report_reason',
+                    label: 'Report Details',
+                    style: 2, // Paragraph
+                    min_length: 1,
+                    max_length: 500,
+                    placeholder: 'Describe the issue and any relevant context...',
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        200,
+        origin,
+      );
+    }
+
     return createResponse({ error: 'Unknown component interaction' }, 400, origin);
   }
 
@@ -795,6 +944,22 @@ export async function handleDiscordBotInteractions(
         const userId = parts[2] || '';
 
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         console.log('🗑️ spray_delete_modal submit parsed:', { userId, sha256Hash, moderatorId });
 
         // Extract reason from modal submission
@@ -971,6 +1136,21 @@ export async function handleDiscordBotInteractions(
 
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
 
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         // Extract reason from modal submission
         let restoreReason = 'No reason provided';
         if ('components' in interaction.data && interaction.data.components) {
@@ -1042,6 +1222,12 @@ export async function handleDiscordBotInteractions(
                             label: 'Ban User',
                             custom_id: `spray_ban:${sha256Hash}:${userId}`,
                           },
+                          {
+                            type: 2,
+                            style: 4,
+                            label: 'CSAM REPORT',
+                            custom_id: `csam_report:${sha256Hash}:${userId}`,
+                          },
                         ],
                       },
                     ],
@@ -1071,6 +1257,22 @@ export async function handleDiscordBotInteractions(
         const sha256Hash = parts[1] || '';
         const userId = parts[2] || '';
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         // Extract reason from modal submission
         const modalData = interaction.data as any;
         const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
@@ -1196,6 +1398,12 @@ export async function handleDiscordBotInteractions(
                             label: 'Unban User',
                             custom_id: `spray_unban:${userId}`,
                           },
+                          {
+                            type: 2,
+                            style: 4,
+                            label: 'CSAM REPORT',
+                            custom_id: `csam_report:${sha256Hash}:${userId}`,
+                          },
                         ],
                       },
                     ],
@@ -1224,6 +1432,22 @@ export async function handleDiscordBotInteractions(
       if (parts.length >= 2) {
         const userId = parts[1] || '';
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         // Extract reason from modal submission
         const modalData = interaction.data as any;
         const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
@@ -1298,6 +1522,12 @@ export async function handleDiscordBotInteractions(
                                 label: 'Ban User',
                                 custom_id: `spray_ban:${sha256Hash}:${userId}`,
                               },
+                              {
+                                type: 2,
+                                style: 4,
+                                label: 'CSAM REPORT',
+                                custom_id: `csam_report:${sha256Hash}:${userId}`,
+                              },
                             ],
                           },
                         ]
@@ -1329,6 +1559,22 @@ export async function handleDiscordBotInteractions(
         const userId = parts[2] || '';
 
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         console.log('🗑️ fakerank_delete_modal submit parsed:', { userId, normalizedText, moderatorId });
 
         // Extract reason from modal submission
@@ -1465,6 +1711,21 @@ export async function handleDiscordBotInteractions(
         const userId = parts[2] || '';
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
 
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         // Extract reason from modal submission
         let restoreReason = 'No reason provided';
         if ('components' in interaction.data && interaction.data.components) {
@@ -1566,6 +1827,22 @@ export async function handleDiscordBotInteractions(
         const normalizedText = parts[1] || '';
         const userId = parts[2] || '';
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         // Extract reason from modal submission
         const modalData = interaction.data as any;
         const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
@@ -1692,6 +1969,22 @@ export async function handleDiscordBotInteractions(
       if (parts.length >= 2) {
         const userId = parts[1] || '';
         const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
         // Extract reason from modal submission
         const modalData = interaction.data as any;
         const reason = modalData.components?.[0]?.components?.[0]?.value || 'No reason provided';
@@ -2121,6 +2414,296 @@ export async function handleDiscordBotInteractions(
                 }
               } catch (error) {
                 console.error('Paysafe reject error:', error);
+              }
+            })(),
+          );
+        }
+
+        return createResponse(
+          {
+            type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
+    // Handle CSAM report modal submission
+    if (customId.startsWith('csam_report_modal:')) {
+      const parts = customId.split(':');
+      if (parts.length >= 3) {
+        const sha256Hash = parts[1] || '';
+        const userId = parts[2] || '';
+        const moderatorId = interaction.member?.user?.id || interaction.user?.id;
+
+        // Verify moderator role
+        if (!hasModeratorRole(interaction)) {
+          return createResponse(
+            {
+              type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+              data: {
+                content: '❌ Du hast keine Berechtigung für diese Aktion! Erforderliche Rolle: Kontrollmündig',
+                flags: 64, // Ephemeral
+              },
+            },
+            200,
+            origin,
+          );
+        }
+
+        // Extract reason from modal submission
+        let reportReason = 'No reason provided';
+        if ('components' in interaction.data && interaction.data.components) {
+          const components = interaction.data.components as any;
+          reportReason = components[0]?.components?.[0]?.value || 'No reason provided';
+        }
+
+        if (!moderatorId || !sha256Hash) {
+          return createResponse({ error: 'Invalid CSAM report data' }, 400, origin);
+        }
+
+        const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
+        (rest as any).fetch = (url: string, init: any) => proxyFetch(url, init, env);
+
+        if (ctx) {
+          ctx.waitUntil(
+            (async () => {
+              try {
+                const db = drizzle(env.ZEITVERTREIB_DATA);
+
+                // Get moderator info
+                let moderatorName = 'Unknown Moderator';
+                try {
+                  const moderatorUser: any = await rest.get(Routes.user(moderatorId));
+                  moderatorName = moderatorUser.global_name || moderatorUser.username || 'Unknown Moderator';
+                } catch (error) {
+                  console.error('Failed to fetch moderator info:', error);
+                }
+
+                // Get the image URL from the Discord message
+                if (!interaction.message?.attachments || interaction.message.attachments.length === 0) {
+                  console.error('No attachments found in message');
+                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                    body: {
+                      content: '❌ No image attachment found in this message!',
+                    },
+                  });
+                  return;
+                }
+
+                const attachment = interaction.message.attachments[0];
+                if (!attachment) {
+                  console.error('Attachment is undefined');
+                  return;
+                }
+                const imageUrl = attachment.url;
+                const originalFilename = attachment.filename;
+                const contentType = attachment.content_type || 'image/png';
+
+                // Download the image using proxyFetch
+                console.log('📥 Downloading image from Discord:', imageUrl);
+                const imageResponse = await proxyFetch(imageUrl, {}, env);
+                if (!imageResponse.ok) {
+                  console.error('Failed to download image:', imageResponse.status);
+                  throw new Error('Failed to download image from Discord');
+                }
+
+                const imageBuffer = await imageResponse.arrayBuffer();
+                const imageData = new Uint8Array(imageBuffer);
+
+                // Setup S3 client
+                const aws = new AwsClient({
+                  accessKeyId: env.MINIO_ACCESS_KEY,
+                  secretAccessKey: env.MINIO_SECRET_KEY,
+                  service: 's3',
+                  region: 'us-east-1',
+                });
+                const BUCKET = 'test';
+                const CSAM_FOLDER = 'CSAM_REPORT';
+
+                // Create timestamp-based filename
+                const timestamp = Date.now();
+                const fileExtension = originalFilename.split('.').pop() || 'png';
+                const s3ImageKey = `${CSAM_FOLDER}/${sha256Hash}_${timestamp}.${fileExtension}`;
+                const s3MetadataKey = `${CSAM_FOLDER}/${sha256Hash}_${timestamp}_metadata.json`;
+
+                // Get user information
+                let reportedUserInfo: any = {};
+                try {
+                  const userInfoResult = await db.select().from(playerdata).where(eq(playerdata.id, userId)).limit(1);
+                  if (userInfoResult.length > 0) {
+                    reportedUserInfo = userInfoResult[0];
+                  }
+                } catch (error) {
+                  console.error('Failed to fetch user info from database:', error);
+                }
+
+                // Get Discord user info
+                let discordUserInfo: any = {};
+                try {
+                  // Use discordId from database, not the userId (which is a Steam ID)
+                  if (reportedUserInfo.discordId) {
+                    discordUserInfo = await rest.get(Routes.user(reportedUserInfo.discordId));
+                  } else {
+                    console.log('No Discord ID found for user, skipping Discord info fetch');
+                  }
+                } catch (error) {
+                  console.error('Failed to fetch Discord user info:', error);
+                }
+
+                // Create metadata object
+                const metadata = {
+                  reportTimestamp: new Date().toISOString(),
+                  reportedByModeratorId: moderatorId,
+                  reportedByModeratorName: moderatorName,
+                  reportReason: reportReason,
+                  sha256Hash: sha256Hash,
+                  reportedUserId: userId,
+                  reportedUserDiscordInfo: {
+                    username: discordUserInfo.username || 'Unknown',
+                    globalName: discordUserInfo.global_name || null,
+                    discriminator: discordUserInfo.discriminator || null,
+                    id: discordUserInfo.id || userId,
+                    avatar: discordUserInfo.avatar || null,
+                  },
+                  reportedUserGameInfo: reportedUserInfo,
+                  originalFilename: originalFilename,
+                  discordMessageId: interaction.message.id,
+                  discordChannelId: interaction.channel?.id || 'Unknown',
+                  discordGuildId: interaction.guild_id || 'Unknown',
+                  imageUrl: imageUrl,
+                  s3ImageKey: s3ImageKey,
+                };
+
+                // Upload image to S3
+                console.log('📤 Uploading image to S3:', s3ImageKey);
+                const imageUploadUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${encodeURIComponent(s3ImageKey)}`;
+                const signedImageRequest = await aws.sign(imageUploadUrl, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': contentType,
+                  },
+                  body: imageData,
+                });
+
+                const imageUploadResponse = await fetch(signedImageRequest);
+                if (!imageUploadResponse.ok) {
+                  console.error('Failed to upload image to S3:', await imageUploadResponse.text());
+                  throw new Error('Failed to upload image to S3');
+                }
+
+                // Upload metadata to S3
+                console.log('📤 Uploading metadata to S3:', s3MetadataKey);
+                const metadataJson = JSON.stringify(metadata, null, 2);
+                const metadataUploadUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${encodeURIComponent(s3MetadataKey)}`;
+                const signedMetadataRequest = await aws.sign(metadataUploadUrl, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: metadataJson,
+                });
+
+                const metadataUploadResponse = await fetch(signedMetadataRequest);
+                if (!metadataUploadResponse.ok) {
+                  console.error('Failed to upload metadata to S3:', await metadataUploadResponse.text());
+                  throw new Error('Failed to upload metadata to S3');
+                }
+
+                // Delete spray(s) from database
+                const sprayRows = await db.select().from(sprays).where(eq(sprays.sha256, sha256Hash));
+                if (sprayRows.length > 0) {
+                  await db.delete(sprays).where(eq(sprays.sha256, sha256Hash));
+                  console.log(`🗑️ Deleted ${sprayRows.length} spray(s) from database`);
+                }
+
+                // Add hash to deletedSprays blocklist
+                await db
+                  .insert(deletedSprays)
+                  .values({
+                    sha256: sha256Hash,
+                    uploadedByUserid: userId,
+                    deletedByDiscordId: moderatorId,
+                    reason: `CSAM REPORT: ${reportReason}`,
+                  })
+                  .onConflictDoUpdate({
+                    target: deletedSprays.sha256,
+                    set: {
+                      deletedByDiscordId: moderatorId,
+                      reason: `CSAM REPORT: ${reportReason}`,
+                    },
+                  });
+
+                console.log('✅ CSAM report completed, notifying designated user...');
+
+                // Update Discord message
+                if (interaction.channel?.id && interaction.message?.id) {
+                  const currentMessage: any = await rest.get(
+                    Routes.channelMessage(interaction.channel.id, interaction.message.id),
+                  );
+
+                  const updatedEmbed = currentMessage.embeds[0];
+                  updatedEmbed.title = '🚨 CSAM REPORTED';
+                  updatedEmbed.color = 0x000000; // Black
+                  const epochTimestamp = Math.floor(Date.now() / 1000);
+                  const formattedReason = reportReason
+                    .split('\n')
+                    .map((line: string) => '> ' + line)
+                    .join('\n');
+                  updatedEmbed.description += `\n–––––––––––\n**⚠️ CSAM REPORTED** by: <@${moderatorId}> (${moderatorName}) - <t:${epochTimestamp}:s>\n${formattedReason}\n\n📁 S3 Path: \`${s3ImageKey}\``;
+
+                  await rest.patch(Routes.channelMessage(interaction.channel.id, interaction.message.id), {
+                    body: {
+                      embeds: [updatedEmbed],
+                      components: [
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 3,
+                              label: 'Unblock Hash',
+                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  });
+                }
+
+                // Ping designated user 5 times (immediately, no delays to avoid timeout)
+                const DESIGNATED_USER_ID = '428870593358594048';
+                if (interaction.channel?.id) {
+                  for (let i = 0; i < 5; i++) {
+                    try {
+                      await rest.post(Routes.channelMessages(interaction.channel.id), {
+                        body: {
+                          content: `<@${DESIGNATED_USER_ID}> 🚨 CSAM Report #${i + 1}/5`,
+                          message_reference: {
+                            message_id: interaction.message.id,
+                          },
+                        },
+                      });
+                    } catch (error) {
+                      console.error(`Failed to send ping ${i + 1}:`, error);
+                    }
+                  }
+                }
+
+                console.log('✅ CSAM report fully processed');
+              } catch (error) {
+                console.error('CSAM report error:', error);
+                try {
+                  await rest.patch(Routes.webhookMessage(env.DISCORD_APPLICATION_ID, interaction.token), {
+                    body: {
+                      content: '❌ An error occurred while processing the CSAM report!',
+                    },
+                  });
+                } catch (e) {
+                  console.error('Failed to send error message:', e);
+                }
               }
             })(),
           );

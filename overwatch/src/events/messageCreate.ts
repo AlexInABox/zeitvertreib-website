@@ -1,8 +1,12 @@
 import { Message } from 'discord.js';
 import { TICKET_PHRASES, SUPPORT_CHANNEL_ID } from '../config/constants';
 import { moderateMessage } from '../handlers/moderation';
+import { updateStickyMessage } from '../services/stickyMessage';
 
 export async function handleMessageCreate(message: Message): Promise<void> {
+  // Update sticky message in moderation channel
+  await updateStickyMessage(message);
+
   // Delete stats command responses
   if (message.interaction && message.interaction.commandName.includes('stats get') && message.deletable) {
     message.delete();
