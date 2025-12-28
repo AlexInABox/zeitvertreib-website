@@ -210,9 +210,10 @@ async function trackMembers(client: Client): Promise<void> {
     if (prevMember) {
       const boosterChanged = (prevMember.roles.boosterSince !== null) !== (currMember.roles.boosterSince !== null);
       const donatorChanged = (prevMember.roles.donatorSince !== null) !== (currMember.roles.donatorSince !== null);
+      const vipChanged = (prevMember.roles.vipSince !== null) !== (currMember.roles.vipSince !== null);
       const teamChanged = (prevMember.roles.teamSince !== null) !== (currMember.roles.teamSince !== null);
 
-      if (boosterChanged || donatorChanged || teamChanged) {
+      if (boosterChanged || donatorChanged || vipChanged || teamChanged) {
         console.log(
           `🔄 ROLE CHANGE: ${currMember.displayName} (@${currMember.username}) - Was: ${formatRoles(prevMember.roles)} -> Now: ${formatRoles(currMember.roles)}`,
         );
@@ -237,6 +238,7 @@ async function trackMembers(client: Client): Promise<void> {
       prevMember &&
       ((prevMember.roles.boosterSince !== null) !== (currMember.roles.boosterSince !== null) ||
         (prevMember.roles.donatorSince !== null) !== (currMember.roles.donatorSince !== null) ||
+        (prevMember.roles.vipSince !== null) !== (currMember.roles.vipSince !== null) ||
         (prevMember.roles.teamSince !== null) !== (currMember.roles.teamSince !== null));
 
     if (wasNewMember) {
