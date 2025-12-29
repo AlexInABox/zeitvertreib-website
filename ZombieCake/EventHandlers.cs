@@ -52,7 +52,11 @@ public static class EventHandlers
                 
                 Logger.Info("Player is looking at: " + hit.transform.name);
                 Logger.Info(hit.transform.parent.name);
-                
+
+                if (hit.transform.name.Contains("Cake"))
+                {
+                    player.EnableEffect<Scp559Effect>();
+                }
             }
 
             yield return Timing.WaitForSeconds(1f);
