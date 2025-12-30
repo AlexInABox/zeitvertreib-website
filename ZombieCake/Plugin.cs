@@ -10,13 +10,13 @@ namespace Sprayed;
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>
 {
-    public override string Name { get; } = "Sprayed";
+    public override string Name { get; } = "ZombieCake";
 
     public override string Description { get; } =
-        "A painful Zeitvertreib plugin to mimic CS:GO's spray mechanic in SCP:SL using the texttoy.";
+        "A plugin that allows SCP-049-2 to also be able to consume the christmas event cake!";
 
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(2, 1, 1);
+    public override Version Version { get; } = new(1, 0, 1);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
     public Translation Translation { get; private set; }
 

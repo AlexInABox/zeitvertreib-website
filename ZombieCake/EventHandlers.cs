@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using Christmas.Scp2536;
+using CustomPlayerEffects;
 using MEC;
 using PlayerRoles;
 using UnityEngine;
@@ -15,8 +14,6 @@ public static class EventHandlers
 {
     private static CoroutineHandle _cakeDetectionLoop;
 
-    private static readonly HttpClient Http = new();
-
     public static void RegisterEvents()
     {
         _cakeDetectionLoop = Timing.RunCoroutine(MainLoop());
@@ -26,37 +23,34 @@ public static class EventHandlers
     {
         Timing.KillCoroutines(_cakeDetectionLoop);
     }
-    
-    private const int IgnoredLayers = (1 << 1) | // TransparentFX
-                                      (1 << 8) | // Player
-                                      (1 << 13) | // Hitbox
-                                      (1 << 16) | // InvisibleCollider
-                                      (1 << 17) | // Ragdoll
-                                      (1 << 18) | // CCTV
-                                      (1 << 27) | // Door
-                                      (1 << 28) | // Skybox
-                                      (1 << 29); // Fence
-    
+
     private static IEnumerator<float> MainLoop()
     {
         while (true)
         {
-            foreach (Player player in Player.ReadyList.TakeWhile(player => player.Role == RoleTypeId.Scp0492 ))
+            foreach (Player player in Player.ReadyList.TakeWhile(player => player.Role == RoleTypeId.Scp0492))
             {
                 // Draw a raycast from the players eyes to see if they are looking at a cake
                 Vector3 origin = player.Camera.position;
                 Vector3 direction = player.Camera.forward;
                 origin += direction * 0.5f; // Move the origin a bit forward to avoid hitting the player itself
-                if (!Physics.Raycast(origin, direction, out RaycastHit hit, 2.8f, IgnoredLayers)) continue;
+                if (!Physics.Raycast(origin, direction, out RaycastHit hit, 2.8f, Physics.AllLayers)) continue;
                 if (Player.TryGet(hit.transform.gameObject, out _)) continue;
-                
-                Logger.Info("Player is looking at: " + hit.transform.name);
-                Logger.Info(hit.transform.parent.name);
 
-                if (hit.transform.name.Contains("Cake"))
-                {
-                    player.EnableEffect<Scp559Effect>();
-                }
+                if (hit.transform.parent.name != "cake") continue;
+
+                if (player.TryGetEffect("Scp559Effect", out _)) continue;
+                
+                player.SendHitMarker();
+                Timing.CallDelayed(0.5f, () => player.SendHitMarker());
+                Timing.CallDelayed(1f, () => player.SendHitMarker());
+                Timing.CallDelayed(1.25f, () => player.SendHitMarker());
+                Timing.CallDelayed(1.35f, () => player.SendHitMarker());
+                
+                player.EnableEffect<Scp559Effect>();
+                player.EnableEffect<MovementBoost>(10);
+
+                Logger.Debug("Granted cake effects to " + player.Nickname);
             }
 
             yield return Timing.WaitForSeconds(1f);

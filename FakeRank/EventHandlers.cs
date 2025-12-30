@@ -7,11 +7,10 @@ using System.Text;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Console;
-using LabApi.Features.Wrappers;
 using MEC;
+using Newtonsoft.Json;
 using Zeitvertreib.Types;
 using Player = LabApi.Features.Wrappers.Player;
-using Newtonsoft.Json;
 
 namespace FakeRank;
 
@@ -176,7 +175,7 @@ public static class EventHandlers
             Logger.Error("Error while fetching FakeRanks from backend");
         }
     }
-    
+
     private static string ToSnakeCase(this string input)
     {
         StringBuilder sb = new(input.Length + 5);
