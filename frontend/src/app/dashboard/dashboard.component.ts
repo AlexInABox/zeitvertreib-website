@@ -198,12 +198,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -808,6 +808,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       console.error('Spray upload error:', error);
       slot.isUploading = false;
       this.sprayError = error?.error?.error || error?.message || 'Fehler beim Hochladen';
+
+      // Reset slot on upload failure
+      if (slot.preview) {
+        URL.revokeObjectURL(slot.preview);
+      }
+      slot.selectedFile = null;
+      slot.preview = null;
     }
   }
 
