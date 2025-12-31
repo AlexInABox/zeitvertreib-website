@@ -175,7 +175,10 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
 
     if (banCheck.length > 0) {
       return createResponse(
-        { error: 'Du bist vom Hochladen von Sprays gesperrt. Kontaktiere das Team, wenn du glaubst, dass dies ein Fehler ist.' },
+        {
+          error:
+            'Du bist vom Hochladen von Sprays gesperrt. Kontaktiere das Team, wenn du glaubst, dass dies ein Fehler ist.',
+        },
         403,
         origin,
       );
@@ -481,7 +484,11 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
     if (hasValidApiKey) {
       // API key authenticated: allow querying multiple userids
       if (requestedUserids.length === 0) {
-        return createResponse({ error: 'userids-Parameter erforderlich bei Verwendung eines API-Schlüssels' }, 400, origin);
+        return createResponse(
+          { error: 'userids-Parameter erforderlich bei Verwendung eines API-Schlüssels' },
+          400,
+          origin,
+        );
       }
       useridsToFetch = requestedUserids.map((id) => (id.endsWith('@steam') ? id : `${id}@steam`));
     } else {
