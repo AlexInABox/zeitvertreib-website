@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Sprayed;
+namespace ZombieCake;
 
 public class Translation
 {

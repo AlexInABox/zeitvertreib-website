@@ -25,7 +25,7 @@ public static class EventHandlers
     }
 
     private static IEnumerator<float> MainLoop()
-    {
+    { 
         while (true)
         {
             foreach (Player player in Player.ReadyList.TakeWhile(player => player.Role == RoleTypeId.Scp0492))
@@ -37,7 +37,8 @@ public static class EventHandlers
                 if (!Physics.Raycast(origin, direction, out RaycastHit hit, 2.8f, Physics.AllLayers)) continue;
                 if (Player.TryGet(hit.transform.gameObject, out _)) continue;
 
-                if (hit.transform.parent.name != "cake") continue;
+                Logger.Info(hit.transform.name);
+                if (!hit.transform.name.Contains("Cake")) continue;
 
                 if (player.TryGetEffect("Scp559Effect", out _)) continue;
                 
