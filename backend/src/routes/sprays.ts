@@ -164,7 +164,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     // Authenticate
     const sessionValidation = await validateSession(request, env);
     if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentication required' }, 401, origin);
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
     }
 
     let userid = sessionValidation.steamId;
@@ -175,7 +175,10 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
 
     if (banCheck.length > 0) {
       return createResponse(
-        { error: 'You are banned from uploading sprays. Contact staff if you believe this is an error.' },
+        {
+          error:
+            'Du bist vom Hochladen von Sprays gesperrt. Kontaktiere das Team, wenn du glaubst, dass dies ein Fehler ist.',
+        },
         403,
         origin,
       );
@@ -186,7 +189,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     try {
       body = (await request.json()) as SprayPostRequest;
     } catch {
-      return createResponse({ error: 'Invalid JSON body' }, 400, origin);
+      return createResponse({ error: 'Ungültiger JSON-Body' }, 400, origin);
     }
 
     const name = body.name;
@@ -194,20 +197,59 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     const text_toy = body.text_toy;
 
     if (!name || !full_res || !text_toy) {
-      return createResponse({ error: 'Missing required fields: name, full_res, text_toy' }, 400, origin);
+      return createResponse({ error: 'Fehlende erforderliche Felder: name, full_res, text_toy' }, 400, origin);
     }
 
     if (name.length > 20) {
-      return createResponse({ error: 'Spray name must be 20 characters or less' }, 400, origin);
+      return createResponse({ error: 'Spray-Name muss 20 Zeichen oder weniger sein' }, 400, origin);
     }
 
     const nameRegex = /^[a-zA-Z0-9_ ]+$/;
     if (!nameRegex.test(name)) {
       return createResponse(
-        { error: 'Spray name can only contain letters, numbers, underscores, and spaces' },
+        { error: 'Spray-Name darf nur Buchstaben, Zahlen, Unterstriche und Leerzeichen enthalten' },
         400,
         origin,
       );
+    }
+
+    // Check NSFW content using Replicate API
+    try {
+      const replicateResponse = await fetch(
+        'https://api.replicate.com/v1/models/falcons-ai/nsfw_image_detection/predictions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.REPLICATE_API_TOKEN}`,
+            'Content-Type': 'application/json',
+            Prefer: 'wait',
+          },
+          body: JSON.stringify({
+            input: {
+              image: full_res,
+            },
+          }),
+        },
+      );
+
+      if (!replicateResponse.ok) {
+        console.error('Replicate API error:', await replicateResponse.text());
+        return createResponse({ error: 'Fehler bei der Bildüberprüfung' }, 500, origin);
+      }
+
+      const replicateResult: any = await replicateResponse.json();
+      const output = replicateResult.output;
+
+      if (output === 'nsfw') {
+        return createResponse(
+          { error: 'Dieses Bild enthält unangemessene Inhalte und kann nicht hochgeladen werden.' },
+          403,
+          origin,
+        );
+      }
+    } catch (error) {
+      console.error('Error checking NSFW content:', error);
+      return createResponse({ error: 'Fehler bei der Bildüberprüfung' }, 500, origin);
     }
 
     // Check spray limit
@@ -219,7 +261,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     if (existingSprays.length >= maxSprays) {
       return createResponse(
         {
-          error: `Spray limit reached. ${userIsDonator ? 'Donators' : 'Users'} can have up to ${maxSprays} sprays.`,
+          error: `Spray-Limit erreicht. ${userIsDonator ? 'Donatoren' : 'Nutzer'} können bis zu ${maxSprays} Sprays haben.`,
         },
         400,
         origin,
@@ -239,7 +281,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     const blockedSpray = await db.select().from(deletedSprays).where(eq(deletedSprays.sha256, sha256)).limit(1);
     if (blockedSpray.length > 0) {
       return createResponse(
-        { error: 'This spray has been blocked by moderators and cannot be uploaded.' },
+        { error: 'Dieses Spray wurde von Moderatoren blockiert und kann nicht hochgeladen werden.' },
         403,
         origin,
       );
@@ -259,7 +301,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
 
     const sprayId = result[0]?.id;
     if (!sprayId) {
-      return createResponse({ error: 'Failed to create spray record' }, 500, origin);
+      return createResponse({ error: 'Fehler beim Erstellen des Spray-Eintrags' }, 500, origin);
     }
 
     // Upload to S3 (use environment-specific folder)
@@ -280,7 +322,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     const txtResponse = await fetch(txtRequest);
     if (!txtResponse.ok) {
       console.error('Failed to upload .txt file:', await txtResponse.text());
-      return createResponse({ error: 'Failed to upload text_toy to storage' }, 500, origin);
+      return createResponse({ error: 'Fehler beim Hochladen der text_toy-Datei' }, 500, origin);
     }
 
     // Upload .base64 file
@@ -295,7 +337,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     const base64Response = await fetch(base64Request);
     if (!base64Response.ok) {
       console.error('Failed to upload .base64 file:', await base64Response.text());
-      return createResponse({ error: 'Failed to upload full_res to storage' }, 500, origin);
+      return createResponse({ error: 'Fehler beim Hochladen der full_res-Datei' }, 500, origin);
     }
 
     // Send Discord moderation notification (non-blocking)
@@ -309,7 +351,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       {
         success: true,
         id: sprayId,
-        message: 'Spray uploaded successfully',
+        message: 'Spray erfolgreich hochgeladen',
       },
       200,
       origin,
@@ -318,7 +360,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     console.error('Error in handlePostSpray:', error);
     return createResponse(
       {
-        error: 'Failed to upload spray',
+        error: 'Fehler beim Hochladen des Sprays',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,
@@ -339,7 +381,7 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
     // Authenticate
     const sessionValidation = await validateSession(request, env);
     if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentication required' }, 401, origin);
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
     }
 
     let userid = sessionValidation.steamId;
@@ -350,12 +392,12 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
     try {
       body = (await request.json()) as SprayDeleteRequest;
     } catch {
-      return createResponse({ error: 'Invalid JSON body' }, 400, origin);
+      return createResponse({ error: 'Ungültiger JSON-Body' }, 400, origin);
     }
 
     const id = body.id;
     if (!id) {
-      return createResponse({ error: 'Missing required field: id' }, 400, origin);
+      return createResponse({ error: 'Fehlendes erforderliches Feld: id' }, 400, origin);
     }
 
     // Verify ownership
@@ -366,7 +408,7 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
       .limit(1);
 
     if (existingSpray.length === 0) {
-      return createResponse({ error: 'Spray not found or access denied' }, 404, origin);
+      return createResponse({ error: 'Spray nicht gefunden oder Zugriff verweigert' }, 404, origin);
     }
 
     // Delete from S3 (use environment-specific folder)
@@ -397,7 +439,7 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
     return createResponse(
       {
         success: true,
-        message: 'Spray deleted successfully',
+        message: 'Spray erfolgreich gelöscht',
       },
       200,
       origin,
@@ -406,7 +448,7 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
     console.error('Error in handleDeleteSpray:', error);
     return createResponse(
       {
-        error: 'Failed to delete spray',
+        error: 'Fehler beim Löschen des Sprays',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,
@@ -442,14 +484,18 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
     if (hasValidApiKey) {
       // API key authenticated: allow querying multiple userids
       if (requestedUserids.length === 0) {
-        return createResponse({ error: 'userids parameter required when using API key' }, 400, origin);
+        return createResponse(
+          { error: 'userids-Parameter erforderlich bei Verwendung eines API-Schlüssels' },
+          400,
+          origin,
+        );
       }
       useridsToFetch = requestedUserids.map((id) => (id.endsWith('@steam') ? id : `${id}@steam`));
     } else {
       // Session authenticated: only allow querying own sprays
       const sessionValidation = await validateSession(request, env);
       if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-        return createResponse({ error: 'Authentication required' }, 401, origin);
+        return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
       }
 
       let userid = sessionValidation.steamId;
@@ -516,7 +562,7 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
     console.error('Error in handleGetSpray:', error);
     return createResponse(
       {
-        error: 'Failed to retrieve sprays',
+        error: 'Fehler beim Abrufen der Sprays',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,
