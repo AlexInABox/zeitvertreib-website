@@ -4,18 +4,17 @@ using LabApi.Features.Console;
 using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 
-namespace ZombieCake;
+namespace MultiIntercom;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>
 {
-    public override string Name { get; } = "ZombieCake";
+    public override string Name { get; } = "MultiIntercom";
 
-    public override string Description { get; } =
-        "A plugin that allows SCP-049-2 to also be able to consume the christmas event cake!";
+    public override string Description { get; } = "MultiIntercom";
 
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(1, 0, 1);
+    public override Version Version { get; } = new(1, 0, 4);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
     public Translation Translation { get; private set; }
 
