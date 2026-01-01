@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -651,6 +651,12 @@ export interface SprayGetResponseItem {
     full_res?: Base64URLString;
     text_toy?: string;
   }[];
+}
+
+/** GET /spray/rules response */
+export interface SprayRulesGetResponse {
+  rules_en: string[];
+  rules_de: string[];
 }
 
 // ============================================================================

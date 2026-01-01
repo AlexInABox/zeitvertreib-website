@@ -11,7 +11,7 @@ import {
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
-import { handlePostSpray, handleGetSpray, handleDeleteSpray } from './routes/sprays.js';
+import { handlePostSpray, handleGetSpray, handleDeleteSpray, handleGetSprayRules } from './routes/sprays.js';
 import {
   getFakerank,
   updateFakerank,
@@ -95,6 +95,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'POST:/spray': handlePostSpray,
   'GET:/spray': handleGetSpray,
   'DELETE:/spray': handleDeleteSpray,
+  'GET:/spray/rules': handleGetSprayRules,
 
   // Fakerank routes
   'GET:/fakerank': getFakerank,

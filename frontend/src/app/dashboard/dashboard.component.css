@@ -5952,8 +5952,21 @@
   padding-left: 1.25rem;
 }
 
+.info-box-inline ol {
+  margin: 0;
+  padding-left: 1.75rem;
+  list-style-type: decimal;
+}
+
 .info-box-inline li {
   margin-bottom: 0.5rem;
+}
+
+.info-box-inline ol li {
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
 }
 
 .rule-section h5 {

@@ -14,6 +14,7 @@ import type {
   SprayGetResponseItem,
   SprayPostRequest,
   SprayDeleteRequest,
+  SprayRulesGetResponse,
   FakerankGetResponse,
   FakerankPostRequest,
   FakerankDeleteRequest,
@@ -173,6 +174,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   acceptedRules = false;
   showPrivacyText = false;
   showRulesText = false;
+  sprayRules: SprayRulesGetResponse | null = null;
+  sprayRulesLoading = false;
 
   // Fakerank-related properties
   currentFakerankId: number | null = null;
@@ -198,12 +201,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -347,6 +350,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Moved loadSprays() to ngOnInit to fix race condition with isDonator
     this.loadFakerank();
     this.loadRedeemables();
+    this.loadSprayRules();
     this.loadSlotMachineInfo();
     this.loadLuckyWheelInfo();
     this.loadWinLog();
@@ -589,6 +593,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.redeemablesLoading = false;
         },
       });
+  }
+
+  // Load spray rules from backend
+  public loadSprayRules(): void {
+    this.sprayRulesLoading = true;
+
+    this.http.get<SprayRulesGetResponse>(`${environment.apiUrl}/spray/rules`).subscribe({
+      next: (response) => {
+        this.sprayRules = response;
+        this.sprayRulesLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading spray rules:', error);
+        this.sprayRulesLoading = false;
+      },
+    });
   }
 
   // Öffentliche Methode zum Aktualisieren der Statistiken (kann vom Template aufgerufen werden)

@@ -1008,25 +1008,18 @@
                 </div>
                 <div *ngIf="showRulesText" class="info-box-inline">
                   <div class="info-content">
-                    <div class="rule-section">
-                      <h5>I. Unzulässige Inhalte</h5>
-                      <p>Keine Pornographie, Erotik, Nacktheit oder politische Inhalte jeglicher Art.</p>
+                    <div *ngIf="sprayRulesLoading" class="rule-section">
+                      <p>Regeln werden geladen...</p>
                     </div>
-                    <div class="rule-section">
-                      <h5>II. Flaggen</h5>
-                      <p>Nur UN-anerkannte Staatsflaggen oder neutrale Eigenentwürfe erlaubt.</p>
+                    <div *ngIf="!sprayRulesLoading && sprayRules">
+                      <ol>
+                        <li *ngFor="let rule of sprayRules.rules_de">
+                          {{ rule }}
+                        </li>
+                      </ol>
                     </div>
-                    <div class="rule-section">
-                      <h5>III. Verhalten</h5>
-                      <p>Kein Hass, keine Diskriminierung oder Beleidigungen.</p>
-                    </div>
-                    <div class="rule-section">
-                      <h5>IV. Personen</h5>
-                      <p>Abbildungen von Kindern oder Jugendlichen (auch wirkend) sind strikt untersagt.</p>
-                    </div>
-                    <div class="rule-section">
-                      <h5>V. Konsequenzen</h5>
-                      <p>Verstöße führen zur sofortigen Accountsperrung ohne Vorwarnung.</p>
+                    <div *ngIf="!sprayRulesLoading && !sprayRules" class="rule-section">
+                      <p>Fehler beim Laden der Regeln</p>
                     </div>
                   </div>
                 </div>
