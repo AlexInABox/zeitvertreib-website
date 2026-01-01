@@ -4,7 +4,12 @@ import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import { proxyFetch } from '../proxy.js';
-import type { SprayPostRequest, SprayDeleteRequest, SprayGetResponseItem, SprayRulesGetResponse } from '@zeitvertreib/types';
+import type {
+  SprayPostRequest,
+  SprayDeleteRequest,
+  SprayGetResponseItem,
+  SprayRulesGetResponse,
+} from '@zeitvertreib/types';
 
 const BUCKET = 'test';
 const SPRAY_FOLDER = 'sprays';
@@ -596,11 +601,7 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
 /**
  * Handle GET /spray/rules - Returns spray rules in multiple languages
  */
-export async function handleGetSprayRules(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
+export async function handleGetSprayRules(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('origin');
 
   const response: SprayRulesGetResponse = {
