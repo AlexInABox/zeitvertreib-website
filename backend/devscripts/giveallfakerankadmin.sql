@@ -39,6 +39,7 @@ ON CONFLICT(discordId) DO UPDATE SET
   team_since = excluded.team_since;
 
 
+/*
 INSERT INTO spray_bans (
   userid,
   banned_at,
@@ -55,3 +56,4 @@ ON CONFLICT(userid) DO UPDATE SET
   banned_at = excluded.banned_at,
   reason = excluded.reason,
   banned_by_discord_id = excluded.banned_by_discord_id;
+*/

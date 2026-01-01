@@ -4,12 +4,25 @@ import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import { proxyFetch } from '../proxy.js';
-import type { SprayPostRequest, SprayDeleteRequest, SprayGetResponseItem } from '@zeitvertreib/types';
+import type {
+  SprayPostRequest,
+  SprayDeleteRequest,
+  SprayGetResponseItem,
+  SprayRulesGetResponse,
+} from '@zeitvertreib/types';
 
 const BUCKET = 'test';
 const SPRAY_FOLDER = 'sprays';
 const SPRAY_FOLDER_LOCALHOST = 'sprays_localhost';
 const MODERATION_CHANNEL_ID = '1401609093633933324';
+
+const SPRAY_RULES = [
+  'No flags or political symbols of any kind',
+  'No political content or messaging',
+  'No NSFW, sexual, or romantic content',
+  'No extremism, hate speech, or discrimination',
+  'No depictions of children',
+];
 
 const aws = (env: Env): AwsClient =>
   new AwsClient({
@@ -213,34 +226,48 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       );
     }
 
-    // Check NSFW content using Replicate API
+    // Check content safety using OpenAI Vision API
     try {
-      const replicateResponse = await fetch(
-        'https://api.replicate.com/v1/models/falcons-ai/nsfw_image_detection/predictions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${env.REPLICATE_API_TOKEN}`,
-            'Content-Type': 'application/json',
-            Prefer: 'wait',
-          },
-          body: JSON.stringify({
-            input: {
-              image: full_res,
-            },
-          }),
-        },
-      );
+      const rulesText = SPRAY_RULES.map((rule, index) => `${index + 1}. ${rule}`).join('\n');
 
-      if (!replicateResponse.ok) {
-        console.error('Replicate API error:', await replicateResponse.text());
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-5',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `You are a content moderation assistant. Be relaxed and chill in your judgment. Only reject content that violates these strict rules:\n\n${rulesText}\n\nBe lenient with dark humor and memes - even if they reference violence or edgy topics, they're fine as long as they don't violate the rules above. Focus only on: flags, politics, NSFW/sexual content, extremism/hate speech, and children.\n\nRespond with ONLY one word: either "ALLOWED" if the image complies, or "FORBIDDEN" if it violates a rule.`,
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: full_res,
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!openaiResponse.ok) {
+        console.error('OpenAI API error:', await openaiResponse.text());
         return createResponse({ error: 'Fehler bei der Bildüberprüfung' }, 500, origin);
       }
 
-      const replicateResult: any = await replicateResponse.json();
-      const output = replicateResult.output;
-
-      if (output === 'nsfw') {
+      const openaiResult: any = await openaiResponse.json();
+      const decision = openaiResult.choices?.[0]?.message?.content?.trim().toUpperCase() || '';
+      console.log(`OpenAI content safety response for user ${userid}:`, openaiResult);
+      console.log(`Content safety decision for user ${userid}: ${decision}`);
+      if (decision.includes('FORBIDDEN')) {
         return createResponse(
           { error: 'Dieses Bild enthält unangemessene Inhalte und kann nicht hochgeladen werden.' },
           403,
@@ -248,7 +275,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
         );
       }
     } catch (error) {
-      console.error('Error checking NSFW content:', error);
+      console.error('Error checking content safety:', error);
       return createResponse({ error: 'Fehler bei der Bildüberprüfung' }, 500, origin);
     }
 
@@ -569,4 +596,24 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
       origin,
     );
   }
+}
+
+/**
+ * Handle GET /spray/rules - Returns spray rules in multiple languages
+ */
+export async function handleGetSprayRules(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const origin = request.headers.get('origin');
+
+  const response: SprayRulesGetResponse = {
+    rules_en: SPRAY_RULES,
+    rules_de: [
+      'Keine Flaggen oder politischen Symbole jeglicher Art',
+      'Keine politischen Inhalte oder Botschaften',
+      'Keine NSFW-, Sexual- oder Liebesinhalte',
+      'Kein Extremismus, Hassrede oder Diskriminierung',
+      'Keine Darstellungen von Kindern',
+    ],
+  };
+
+  return createResponse(response, 200, origin);
 }

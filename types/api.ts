@@ -653,6 +653,12 @@ export interface SprayGetResponseItem {
   }[];
 }
 
+/** GET /spray/rules response */
+export interface SprayRulesGetResponse {
+  rules_en: string[];
+  rules_de: string[];
+}
+
 // ============================================================================
 // Paysafe Card Submission Types
 // ============================================================================
