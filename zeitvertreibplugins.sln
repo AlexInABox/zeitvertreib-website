@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZombieCake", "ZombieCake\Zo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiIntercom", "MultiIntercom\MultiIntercom.csproj", "{E7686429-750D-428A-B3C7-5DF68EAE4A0D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Push", "Push\Push.csproj", "{1A68E0A3-667D-417B-A241-6A85D6DBBD5E}"
+EndProject
 
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,5 +47,7 @@ Global
 		{453D33BA-66C9-4090-91B0-73AFC162BF39}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E7686429-750D-428A-B3C7-5DF68EAE4A0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7686429-750D-428A-B3C7-5DF68EAE4A0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A68E0A3-667D-417B-A241-6A85D6DBBD5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A68E0A3-667D-417B-A241-6A85D6DBBD5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
