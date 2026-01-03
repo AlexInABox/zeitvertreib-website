@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
@@ -53,12 +54,12 @@ public static class EventHandlers
                 "Wenn du \"Schwach\" einstellst, wird deine Schubskraft um 50 % reduziert, UND andere Personen schubsen dich ebenfalls nur noch halb so weit! Diese Einstellung wird erst ab der NÄCHSTEN RUNDE wirksam.")
         ];
 
-        ServerSpecificSettingBase[] existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
-        ServerSpecificSettingBase[] combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
-        existing.CopyTo(combined, 0);
-        extra.CopyTo(combined, existing.Length);
-        ServerSpecificSettingsSync.DefinedSettings = combined;
-        ServerSpecificSettingsSync.UpdateDefinedSettings();
+        if (ServerSpecificSettingsSync.DefinedSettings == null)
+            ServerSpecificSettingsSync.DefinedSettings = extra;
+        else
+            ServerSpecificSettingsSync.DefinedSettings =
+                ServerSpecificSettingsSync.DefinedSettings.Concat(extra).ToArray();
+        ServerSpecificSettingsSync.SendToAll();
 
         PlayerEvents.Joined += OnJoined;
     }
