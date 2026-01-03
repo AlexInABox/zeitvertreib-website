@@ -269,7 +269,7 @@ public static class EventHandlers
     private static void PlaySoundEffect(Vector3 pos)
     {
         AudioPlayer audioPlayer = AudioPlayer.CreateOrGet("sprayed_audioplayer" + pos.GetHashCode());
-        audioPlayer.AddSpeaker("sprayed_speaker" + pos.GetHashCode(), pos, 10F, true, 5F, 1000F);
+        audioPlayer.AddSpeaker("sprayed_speaker" + pos.GetHashCode(), pos, 8F, true, 3F, 25F);
         audioPlayer.DestroyWhenAllClipsPlayed = true;
         audioPlayer.AddClip("spray_sound_effect", Plugin.Instance.Config!.Volume);
 
