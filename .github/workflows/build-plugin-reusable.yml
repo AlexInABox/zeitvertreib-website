@@ -18,6 +18,7 @@ jobs:
       EXILED_REFERENCES: ${{ github.workspace }}/References
       AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
       SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
+      UCR_DLL_URL: https://github.com/UncomplicatedCustomServer/UncomplicatedCustomRoles/releases/download/v9.2.0/UncomplicatedCustomRoles-LabAPI.dll
 
     steps:
       - name: Checkout code
@@ -78,6 +79,9 @@ jobs:
 
           # Download SnakeAPI.dll directly into EXILED_REFERENCES
           Invoke-WebRequestWithRetry -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll")
+
+          # Download UCR DLL directly into EXILED_REFERENCES
+          Invoke-WebRequestWithRetry -Uri $env:UCR_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "UncomplicatedCustomRoles-LabAPI.dll")
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
