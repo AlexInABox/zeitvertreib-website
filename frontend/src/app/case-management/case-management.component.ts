@@ -43,9 +43,7 @@ export class CaseManagementComponent implements OnInit {
   errorMessage = '';
 
   // Public lookup state
-  isAuthenticated = false;
-  isFakerankAdmin = false;
-  authInitialized = false;
+  isTeam = false;
   lookupCaseId = '';
   lookupError = '';
   isLookingUp = false;
@@ -83,27 +81,11 @@ export class CaseManagementComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Check authentication status
-    // Note: We start with isLoading=true and only set it to false after we know the auth state
-    this.authService.currentUser$.subscribe((user) => {
-      // Skip the initial null value from BehaviorSubject on first emission
-      if (!this.authInitialized) {
-        this.authInitialized = true;
-        // If we have no token, this is the real state (not loading)
-        if (!this.authService.getSessionToken()) {
-          this.isLoading = false;
-          return;
-        }
-        // Otherwise, wait for the auth check to complete
-        return;
-      }
+    // Subscribe to user data changes
+    this.authService.currentUserData$.subscribe((userData) => {
+      this.isTeam = this.authService.isTeam();
 
-      // Auth check has completed, now we can update the UI
-      this.isAuthenticated = !!user;
-      this.isFakerankAdmin = this.authService.isFakerankAdmin();
-
-      // Only load cases if user is authenticated and has fakerank admin
-      if (this.isAuthenticated && this.isFakerankAdmin) {
+      if (this.isTeam) {
         this.loadCaseFolders();
       } else {
         this.isLoading = false;

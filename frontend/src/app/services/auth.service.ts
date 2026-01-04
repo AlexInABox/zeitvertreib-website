@@ -193,24 +193,6 @@ export class AuthService {
     return Math.max(0, fakerankUntil - currentTimestamp);
   }
 
-  // Check if user has fakerank access
-  hasFakerankAccess(): boolean {
-    return this.getFakerankTimeRemaining() > 0;
-  }
-
-  // Check if user has an override fakerank (read-only)
-  hasFakerankOverride(): boolean {
-    const userData = this.currentUserDataSubject.value;
-    const fakerankOverrideUntil = userData?.playerData?.fakerankoverride_until;
-
-    if (!fakerankOverrideUntil || fakerankOverrideUntil === 0) {
-      return false;
-    }
-
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    return currentTimestamp < fakerankOverrideUntil;
-  }
-
   // Check if user is a donator
   isDonator(): boolean {
     const userData = this.currentUserDataSubject.value;
@@ -279,26 +261,6 @@ export class AuthService {
 
     const currentTimestamp = Math.floor(Date.now() / 1000);
     return Math.max(0, fakerankOverrideUntil - currentTimestamp);
-  }
-
-  // Check if user can edit their fakerank
-  // Can edit if: has regular access OR has only override access (but not both)
-  // If user has regular access, they can always edit (even with override)
-  canEditFakerank(): boolean {
-    const hasRegularAccess = this.hasFakerankAccess();
-    const hasOverrideAccess = this.hasFakerankOverride();
-
-    // Can edit if has regular access OR has override access (or both)
-    return hasRegularAccess || hasOverrideAccess;
-  }
-
-  // Check if the fakerank is readonly (override only, no regular access)
-  isFakerankReadOnly(): boolean {
-    const hasRegularAccess = this.hasFakerankAccess();
-    const hasOverrideAccess = this.hasFakerankOverride();
-
-    // Read-only if has override but no regular access
-    return hasOverrideAccess && !hasRegularAccess;
   }
 
   // Helper method for making authenticated API calls

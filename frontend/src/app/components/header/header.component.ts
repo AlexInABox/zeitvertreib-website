@@ -69,11 +69,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         route: '/dashboard',
       },
       {
-        label: 'Adventskalender',
-        icon: PrimeIcons.GIFT,
-        route: '/advent',
-      },
-      {
         label: 'Cases',
         icon: PrimeIcons.FOLDER,
         route: '/cases',
@@ -85,13 +80,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-    // Add fakerank admin dashboard if user has privileges
-    if (this.isFakerankAdmin) {
+
+    // Check visibility window: show adventcalendar from Nov 15 through December (German timezone)
+    const nowGerman = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+    const currentMonth = nowGerman.getMonth() + 1; // 0-indexed
+    const currentDay = nowGerman.getDate();
+    
+    const visible = currentMonth === 12 || (currentMonth === 11 && currentDay >= 15);
+    if (visible){
       this.items.push({
-        label: 'Fakerank Admin',
-        icon: PrimeIcons.SHIELD,
-        route: '/fakerank',
-      });
+        label: 'Adventskalender',
+        icon: PrimeIcons.GIFT,
+        route: '/advent',
+      },);
     }
   }
 

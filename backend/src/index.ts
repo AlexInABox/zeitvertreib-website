@@ -19,16 +19,6 @@ import {
   getFakerankColors,
   collectZvcForFakeranksAndValidateColors,
 } from './routes/fakerank.js';
-import {
-  handleGetUserFakerank,
-  handleSetUserFakerank,
-  handleGetBlacklist,
-  handleAddToBlacklist,
-  handleRemoveFromBlacklist,
-  handleGetWhitelist,
-  handleAddToWhitelist,
-  handleRemoveFromWhitelist,
-} from './routes/fakerank-admin.js';
 import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './routes/redeemables.js';
 import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
 import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
@@ -103,16 +93,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'PATCH:/fakerank': updateFakerank,
   'DELETE:/fakerank': deleteFakerank,
   'GET:/fakerank/colors': getFakerankColors,
-
-  // Fakerank admin routes
-  'GET:/fakerank-admin/user': handleGetUserFakerank,
-  'POST:/fakerank-admin/user': handleSetUserFakerank,
-  'GET:/fakerank-admin/blacklist': handleGetBlacklist,
-  'POST:/fakerank-admin/blacklist': handleAddToBlacklist,
-  'DELETE:/fakerank-admin/blacklist': handleRemoveFromBlacklist,
-  'GET:/fakerank-admin/whitelist': handleGetWhitelist,
-  'POST:/fakerank-admin/whitelist': handleAddToWhitelist,
-  'DELETE:/fakerank-admin/whitelist': handleRemoveFromWhitelist,
 
   // Redeemables routes
   'GET:/redeemables': handleGetRedeemables,
