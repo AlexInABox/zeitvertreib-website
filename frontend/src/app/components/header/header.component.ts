@@ -80,19 +80,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-
     // Check visibility window: show adventcalendar from Nov 15 through December (German timezone)
     const nowGerman = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
     const currentMonth = nowGerman.getMonth() + 1; // 0-indexed
     const currentDay = nowGerman.getDate();
-    
+
     const visible = currentMonth === 12 || (currentMonth === 11 && currentDay >= 15);
-    if (visible){
+    if (visible) {
       this.items.push({
         label: 'Adventskalender',
         icon: PrimeIcons.GIFT,
         route: '/advent',
-      },);
+      });
     }
   }
 
