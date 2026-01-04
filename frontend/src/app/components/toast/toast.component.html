@@ -1,0 +1,14 @@
+<div class="toast-container">
+  @for (toast of notificationService.toasts(); track toast.id) {
+    <div class="toast" [ngClass]="'toast-' + toast.severity">
+      <div class="toast-icon">{{ getIconEmoji(toast.severity) }}</div>
+      <div class="toast-content">
+        <div class="toast-summary">{{ toast.summary }}</div>
+        @if (toast.detail) {
+          <div class="toast-detail">{{ toast.detail }}</div>
+        }
+      </div>
+      <button class="toast-close" (click)="removeToast(toast.id)">×</button>
+    </div>
+  }
+</div>

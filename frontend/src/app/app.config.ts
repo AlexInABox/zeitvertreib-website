@@ -1,12 +1,13 @@
 import { provideRouter } from '@angular/router';
 
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { definePreset } from '@primeng/themes';
 import { routes } from './app.routes';
+import { ErrorInterceptor } from './interceptors/error.interceptor';
 
 const MyPreset = definePreset(Aura, {
   primitive: {
@@ -5236,6 +5237,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimationsAsync(),
     provideHttpClient(),
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
     providePrimeNG({
       theme: {
         preset: MyPreset,
