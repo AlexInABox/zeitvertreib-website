@@ -15,6 +15,7 @@
         <Reference Include="UnityEngine.CoreModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.CoreModule.dll" Private="false"/>
         <Reference Include="UnityEngine.PhysicsModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="false"/>
         <Reference Include="CommandSystem.Core" HintPath="$(EXILED_REFERENCES)\CommandSystem.Core.dll" Private="false"/>
+        <Reference Include="UncomplicatedCustomRoles" HintPath="$(EXILED_REFERENCES)\UncomplicatedCustomRoles-LabAPI.dll" Private="false"/>
     </ItemGroup>
 
     <ItemGroup>
