@@ -26,7 +26,6 @@ export const routes: Routes = [
   {
     path: 'cases',
     loadComponent: () => import('./case-management/case-management.component').then((m) => m.CaseManagementComponent),
-    // No guard - shows lookup for non-authenticated, full list for fakerank admins
   },
   {
     path: 'cases/:id',
