@@ -15,7 +15,7 @@ interface DonationLeaderboardEntry {
 export async function updateDonationsLeaderboard(
   db: ReturnType<typeof drizzle<typeof schema>>,
   env: Env,
-  ctx: ExecutionContext
+  ctx: ExecutionContext,
 ): Promise<void> {
   try {
     console.log('Starting donations leaderboard update...');
@@ -91,7 +91,7 @@ export async function updateDonationsLeaderboard(
           'Content-Type': 'application/json',
         },
       },
-      env
+      env,
     );
 
     if (!messagesResponse.ok) {
@@ -103,10 +103,7 @@ export async function updateDonationsLeaderboard(
 
     // Find a message from the bot with the leaderboard title
     const existingMessage = messages.find((msg: any) => {
-      return (
-        msg.author.id === env.DISCORD_APPLICATION_ID &&
-        msg.embeds?.[0]?.title === 'Spendenlegenden'
-      );
+      return msg.author.id === env.DISCORD_APPLICATION_ID && msg.embeds?.[0]?.title === 'Spendenlegenden';
     });
 
     if (existingMessage) {
@@ -124,7 +121,7 @@ export async function updateDonationsLeaderboard(
             embeds: [embed],
           }),
         },
-        env
+        env,
       );
 
       if (!updateResponse.ok) {
@@ -148,7 +145,7 @@ export async function updateDonationsLeaderboard(
             embeds: [embed],
           }),
         },
-        env
+        env,
       );
 
       if (!createResponse.ok) {
