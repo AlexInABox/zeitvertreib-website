@@ -207,3 +207,10 @@ export const deletedFakeranks = sqliteTable('deleted_fakeranks', {
   deletedByDiscordId: text('deleted_by_discord_id').notNull(),
   reason: text('reason').notNull(),
 });
+
+export const donations = sqliteTable('donations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  discordId: text('discord_id').notNull(),
+  amount: numeric('amount').notNull(),
+  donatedAt: integer('donated_at').notNull().default(0),
+});

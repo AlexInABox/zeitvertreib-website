@@ -1,5 +1,5 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, getPlayerData } from '../utils.js';
+import { createResponse, validateSession, isTeam } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 
 const BUCKET = 'test';
@@ -41,29 +41,6 @@ const aws = (env: Env): AwsClient =>
     service: 's3',
     region: 'us-east-1',
   });
-
-// Helper function to check if user has required permissions
-async function hasPermission(request: Request, db: ReturnType<typeof drizzle>, env: Env): Promise<boolean> {
-  const { status, steamId } = await validateSession(request, env);
-
-  if (status !== 'valid' || !steamId) {
-    return false;
-  }
-
-  // Get player data to check admin status
-  const playerData = await getPlayerData(steamId, db, env);
-
-  // Check if user has fakerank admin access based on unix timestamp
-  const currentTimestamp = Math.floor(Date.now() / 1000);
-  const fakerankAdminUntil = playerData?.fakerankadmin_until || 0;
-
-  // If fakerankadmin_until is 0 or current time is past the expiration, no access
-  if (fakerankAdminUntil === 0 || currentTimestamp > fakerankAdminUntil) {
-    return false;
-  }
-
-  return true;
-}
 
 /// GET /cases/upload?case={caseId}&extension={ext}
 export async function handleCaseFileUpload(request: Request, env: Env): Promise<Response> {
@@ -157,9 +134,13 @@ export async function handleListCases(request: Request, env: Env): Promise<Respo
   const origin = request.headers.get('Origin');
 
   try {
-    // Validate admin privileges
-    const authorized = await hasPermission(request, db, env);
-    if (!authorized) {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+    let userid = sessionValidation.steamId;
+
+    if (!(await isTeam(userid, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
@@ -363,9 +344,13 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
   const origin = request.headers.get('Origin');
 
   try {
-    // Validate admin privileges
-    const authorized = await hasPermission(request, db, env);
-    if (!authorized) {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+    let userid = sessionValidation.steamId;
+
+    if (!(await isTeam(userid, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
@@ -441,9 +426,13 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
   const origin = request.headers.get('Origin');
 
   try {
-    // Validate admin privileges
-    const authorized = await hasPermission(request, db, env);
-    if (!authorized) {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+    let userid = sessionValidation.steamId;
+
+    if (!(await isTeam(userid, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
@@ -760,9 +749,13 @@ export async function handleDeleteCaseFile(request: Request, env: Env): Promise<
   const origin = request.headers.get('Origin');
 
   try {
-    // Validate admin privileges
-    const authorized = await hasPermission(request, db, env);
-    if (!authorized) {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+    let userid = sessionValidation.steamId;
+
+    if (!(await isTeam(userid, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 

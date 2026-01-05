@@ -43,8 +43,7 @@ export class CaseManagementComponent implements OnInit {
   errorMessage = '';
 
   // Public lookup state
-  isAuthenticated = false;
-  isFakerankAdmin = false;
+  isTeam = false;
   lookupCaseId = '';
   lookupError = '';
   isLookingUp = false;
@@ -82,13 +81,11 @@ export class CaseManagementComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Check authentication status
-    this.authService.currentUser$.subscribe((user) => {
-      this.isAuthenticated = !!user;
-      this.isFakerankAdmin = this.authService.isFakerankAdmin();
+    // Subscribe to user data changes
+    this.authService.currentUserData$.subscribe((userData) => {
+      this.isTeam = this.authService.isTeam();
 
-      // Only load cases if user is authenticated and has fakerank admin
-      if (this.isAuthenticated && this.isFakerankAdmin) {
+      if (this.isTeam) {
         this.loadCaseFolders();
       } else {
         this.isLoading = false;

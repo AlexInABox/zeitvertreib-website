@@ -1,10 +1,7 @@
 <div class="case-management-container">
   <div class="content-wrapper">
-    <!-- Public Case Lookup (when not authenticated or not fakerank admin) -->
-    <div
-      *ngIf="(!isLoading && !isAuthenticated) || (!isLoading && isAuthenticated && !isFakerankAdmin)"
-      class="public-lookup-container"
-    >
+    <!-- Public Case Lookup (when not team member) -->
+    <div *ngIf="!isLoading && !isTeam" class="public-lookup-container">
       <div class="lookup-card">
         <div class="lookup-header">
           <i class="pi pi-search lookup-icon"></i>
@@ -71,7 +68,7 @@
     </div>
 
     <!-- Main Content -->
-    <div *ngIf="!isLoading && !hasError && isAuthenticated && isFakerankAdmin" class="main-content">
+    <div *ngIf="!isLoading && !hasError && isTeam" class="main-content">
       <!-- Header Section -->
       <div class="header-section">
         <div class="header-content">
