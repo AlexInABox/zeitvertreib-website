@@ -42,6 +42,7 @@ import {
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
+import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -229,6 +230,7 @@ export default {
     // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
       ctx.waitUntil(updateLeaderboard(db, env, ctx));
+      ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
     }
 
     // Collect fakerank zvc fees every day at midnight UTC
