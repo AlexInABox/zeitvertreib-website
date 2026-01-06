@@ -72,7 +72,7 @@ public static class EventHandlers
     {
         while (true)
         {
-            _ = Utils.SetSpraysForAllUsersFromBackend();
+            Utils.SetSpraysForAllUsersFromBackendAsync();
 
             // Update SSSS dropdown options for all players
             yield return Timing.WaitForSeconds(0.5f);
