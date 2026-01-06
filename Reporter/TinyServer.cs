@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Zeitvertreib.Types;
 using Logger = LabApi.Features.Console.Logger;
@@ -12,6 +13,7 @@ public class TinyServer
 {
     private const string WebhookUrl = "https://zeitvertreib.vip/api/playerlist";
     private static readonly HttpClient HttpClient = new();
+    private static volatile bool _isUploading;
 
     private TinyServer()
     {
@@ -19,8 +21,32 @@ public class TinyServer
 
     public static TinyServer Instance { get; } = new();
 
-    public async void UploadPlayerListToBackend(List<TinyPlayer> playerList)
+    public void UploadPlayerListToBackend(List<TinyPlayer> playerList)
     {
+        if (_isUploading)
+        {
+            Logger.Debug("Playerlist upload already in progress, skipping", Plugin.Instance.Config!.Debug);
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await UploadPlayerListInternal(playerList);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Background playerlist upload failed: {ex}");
+            }
+        });
+    }
+
+    private static async Task UploadPlayerListInternal(List<TinyPlayer> playerList)
+    {
+        if (_isUploading) return;
+        _isUploading = true;
+
         try
         {
             // Build the request payload using the PlayerlistPostRequest type
@@ -59,6 +85,10 @@ public class TinyServer
         catch (Exception ex)
         {
             Logger.Error($"Error sending playerlist to webhook: {ex.Message}");
+        }
+        finally
+        {
+            _isUploading = false;
         }
     }
 }
