@@ -596,11 +596,14 @@ public static class EventHandlers
             Logger.Debug($"Uploading to endpoint: {Config.EndpointUrl}/stats", Plugin.Instance.Config!.Debug);
             Logger.Debug($"Payload: {json}", Plugin.Instance.Config!.Debug);
 
-            using HttpClient client = new();
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + Config.Apikey);
-
             StringContent content = new(json, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.PostAsync(Config.EndpointUrl + "/stats", content);
+            HttpRequestMessage request = new(HttpMethod.Post, Config.EndpointUrl + "/stats")
+            {
+                Content = content
+            };
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Config.Apikey);
+
+            HttpResponseMessage response = await Utils.HttpClient.SendAsync(request);
 
             string responseText = await response.Content.ReadAsStringAsync();
             Logger.Info($"Uploaded all player stats and kills to database. Response: {responseText}");

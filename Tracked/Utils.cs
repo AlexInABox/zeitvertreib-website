@@ -16,7 +16,7 @@ public static class Utils
 {
     private static readonly Config Config = Plugin.Instance.Config!;
     public static readonly ConcurrentDictionary<string, int> RemoteZvcCount = new();
-    private static readonly HttpClient HttpClient = new();
+    public static readonly HttpClient HttpClient = new();
     private static volatile bool _isFetchingAll;
 
     public static IEnumerator<float> FetchAllZvcCoroutine()
@@ -32,11 +32,19 @@ public static class Utils
 
     private static void FetchAllZvcAsync()
     {
+        // Collect user IDs on main thread before background work
+        List<string> userIds = Player.ReadyList
+            .Where(p => p.IsPlayer)
+            .Select(p => p.UserId)
+            .ToList();
+
+        if (userIds.Count == 0) return;
+
         _ = Task.Run(async () =>
         {
             try
             {
-                await FetchAllZvcInternal();
+                await FetchAllZvcInternal(userIds);
             }
             catch (Exception ex)
             {
@@ -45,16 +53,13 @@ public static class Utils
         });
     }
 
-    private static async Task FetchAllZvcInternal()
+    private static async Task FetchAllZvcInternal(List<string> userIds)
     {
         if (_isFetchingAll) return;
         _isFetchingAll = true;
 
         try
         {
-            List<string> userIds = Player.ReadyList.Where(p => p.IsPlayer).Select(p => p.UserId).ToList();
-            if (userIds.Count == 0) return;
-
             // Build query string: ?userId=a&userId=b&userId=c
             string qs = string.Join("&",
                 userIds.Select(id => $"userId={Uri.EscapeDataString(id)}"));
