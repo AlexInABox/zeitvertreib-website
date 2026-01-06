@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using Exiled.API.Interfaces;
 using Exiled.Loader;
 using HintServiceMeow.Core.Enum;
@@ -137,7 +138,7 @@ public static class EventHandlers
         FakeRankAllowed[ev.Player.UserId] = ev.Player.HasPermissions("fakerank");
         FakeRankAdmin[ev.Player.UserId] = ev.Player.HasPermissions("fakerank.admin");
 
-        _ = Utils.FetchZvcForUser(ev.Player.UserId);
+        Utils.FetchZvcForUserAsync(ev.Player.UserId);
 
         Hint zvcHint = new()
         {
@@ -459,7 +460,66 @@ public static class EventHandlers
         UploadAllStatsToDatabase(totalPlayerPointsTemp);
     }
 
-    private static async void UploadAllStatsToDatabase(Dictionary<string, int> totalPlayerPoints)
+    private static void UploadAllStatsToDatabase(Dictionary<string, int> totalPlayerPoints)
+    {
+        // Copy data before spawning background thread to avoid race conditions
+        Dictionary<string, int> timePlayedCopy = new(PlayerTimePlayedThisRound);
+        Dictionary<string, int> roundsPlayedCopy = new(PlayerRoundsPlayedThisRound);
+        Dictionary<string, int> medkitsCopy = new(PlayerMedkitsUsedThisRound);
+        Dictionary<string, int> colasCopy = new(PlayerColasUsedThisRound);
+        Dictionary<string, int> adrenalineCopy = new(PlayerAdrenalineUsedThisRound);
+        Dictionary<string, int> pocketEscapesCopy = new(PlayerPocketEscapesThisRound);
+        Dictionary<string, int> pointsCopy = new(totalPlayerPoints);
+        Dictionary<string, int> snakeScoresCopy = new(PlayerSnakeScoresThisRound);
+        Dictionary<string, bool> fakeRankAllowedCopy = new(FakeRankAllowed);
+        Dictionary<string, bool> fakeRankAdminCopy = new(FakeRankAdmin);
+        Dictionary<string, string> usernamesCopy = new(PlayerUsernames);
+        List<StatsKill> killsCopy = new(KillsThisRound);
+
+        // Clear dictionaries immediately on main thread
+        PlayerStartingTimestamps.Clear();
+        PlayerTimePlayedThisRound.Clear();
+        PlayerRoundsPlayedThisRound.Clear();
+        PlayerMedkitsUsedThisRound.Clear();
+        PlayerColasUsedThisRound.Clear();
+        PlayerAdrenalineUsedThisRound.Clear();
+        PlayerPocketEscapesThisRound.Clear();
+        PlayerPointsThisRound.Clear();
+        PlayerSnakeScoresThisRound.Clear();
+        FakeRankAllowed.Clear();
+        FakeRankAdmin.Clear();
+        PlayerUsernames.Clear();
+        KillsThisRound.Clear();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await UploadAllStatsToDatabaseInternal(
+                    timePlayedCopy, roundsPlayedCopy, medkitsCopy, colasCopy,
+                    adrenalineCopy, pocketEscapesCopy, pointsCopy, snakeScoresCopy,
+                    fakeRankAllowedCopy, fakeRankAdminCopy, usernamesCopy, killsCopy);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Background stats upload failed: {ex.Message}");
+            }
+        });
+    }
+
+    private static async Task UploadAllStatsToDatabaseInternal(
+        Dictionary<string, int> timePlayedData,
+        Dictionary<string, int> roundsPlayedData,
+        Dictionary<string, int> medkitsData,
+        Dictionary<string, int> colasData,
+        Dictionary<string, int> adrenalineData,
+        Dictionary<string, int> pocketEscapesData,
+        Dictionary<string, int> totalPlayerPoints,
+        Dictionary<string, int> snakeScoresData,
+        Dictionary<string, bool> fakeRankAllowedData,
+        Dictionary<string, bool> fakeRankAdminData,
+        Dictionary<string, string> usernamesData,
+        List<StatsKill> killsData)
     {
         try
         {
@@ -468,17 +528,17 @@ public static class EventHandlers
 
             // Get all unique player IDs from all dictionaries
             HashSet<string> allPlayerIds = [];
-            allPlayerIds.UnionWith(PlayerTimePlayedThisRound.Keys);
-            allPlayerIds.UnionWith(PlayerRoundsPlayedThisRound.Keys);
-            allPlayerIds.UnionWith(PlayerMedkitsUsedThisRound.Keys);
-            allPlayerIds.UnionWith(PlayerColasUsedThisRound.Keys);
-            allPlayerIds.UnionWith(PlayerAdrenalineUsedThisRound.Keys);
-            allPlayerIds.UnionWith(PlayerPocketEscapesThisRound.Keys);
+            allPlayerIds.UnionWith(timePlayedData.Keys);
+            allPlayerIds.UnionWith(roundsPlayedData.Keys);
+            allPlayerIds.UnionWith(medkitsData.Keys);
+            allPlayerIds.UnionWith(colasData.Keys);
+            allPlayerIds.UnionWith(adrenalineData.Keys);
+            allPlayerIds.UnionWith(pocketEscapesData.Keys);
             allPlayerIds.UnionWith(totalPlayerPoints.Keys);
-            allPlayerIds.UnionWith(PlayerSnakeScoresThisRound.Keys);
-            allPlayerIds.UnionWith(FakeRankAllowed.Keys);
-            allPlayerIds.UnionWith(FakeRankAdmin.Keys);
-            allPlayerIds.UnionWith(PlayerUsernames.Keys);
+            allPlayerIds.UnionWith(snakeScoresData.Keys);
+            allPlayerIds.UnionWith(fakeRankAllowedData.Keys);
+            allPlayerIds.UnionWith(fakeRankAdminData.Keys);
+            allPlayerIds.UnionWith(usernamesData.Keys);
 
             // Build stats for each player
             foreach (string userId in allPlayerIds)
@@ -488,37 +548,37 @@ public static class EventHandlers
                     Userid = userId
                 };
 
-                if (PlayerTimePlayedThisRound.TryGetValue(userId, out int timePlayed))
+                if (timePlayedData.TryGetValue(userId, out int timePlayed))
                     stats.TimePlayed = timePlayed;
 
-                if (PlayerRoundsPlayedThisRound.TryGetValue(userId, out int roundsPlayed))
+                if (roundsPlayedData.TryGetValue(userId, out int roundsPlayed))
                     stats.RoundsPlayed = roundsPlayed;
 
-                if (PlayerMedkitsUsedThisRound.TryGetValue(userId, out int medkits))
+                if (medkitsData.TryGetValue(userId, out int medkits))
                     stats.Medkits = medkits;
 
-                if (PlayerColasUsedThisRound.TryGetValue(userId, out int colas))
+                if (colasData.TryGetValue(userId, out int colas))
                     stats.Colas = colas;
 
-                if (PlayerAdrenalineUsedThisRound.TryGetValue(userId, out int adrenaline))
+                if (adrenalineData.TryGetValue(userId, out int adrenaline))
                     stats.Adrenaline = adrenaline;
 
-                if (PlayerPocketEscapesThisRound.TryGetValue(userId, out int pocketEscapes))
+                if (pocketEscapesData.TryGetValue(userId, out int pocketEscapes))
                     stats.PocketEscapes = pocketEscapes;
 
                 if (totalPlayerPoints.TryGetValue(userId, out int points))
                     stats.Zvc = points;
 
-                if (PlayerSnakeScoresThisRound.TryGetValue(userId, out int snakeScore))
+                if (snakeScoresData.TryGetValue(userId, out int snakeScore))
                     stats.SnakeScore = snakeScore;
 
-                if (FakeRankAllowed.TryGetValue(userId, out bool fakeRankAllowed))
+                if (fakeRankAllowedData.TryGetValue(userId, out bool fakeRankAllowed))
                     stats.FakeRankAllowed = fakeRankAllowed;
 
-                if (FakeRankAdmin.TryGetValue(userId, out bool fakeRankAdmin))
+                if (fakeRankAdminData.TryGetValue(userId, out bool fakeRankAdmin))
                     stats.FakeRankAdmin = fakeRankAdmin;
 
-                if (PlayerUsernames.TryGetValue(userId, out string username))
+                if (usernamesData.TryGetValue(userId, out string username))
                     stats.Username = username;
 
                 playerStatsList.Add(stats);
@@ -528,7 +588,7 @@ public static class EventHandlers
             StatsPostRequest payload = new()
             {
                 Players = playerStatsList,
-                Kills = KillsThisRound
+                Kills = killsData
             };
 
             string json = JsonConvert.SerializeObject(payload, Formatting.Indented);
@@ -536,11 +596,14 @@ public static class EventHandlers
             Logger.Debug($"Uploading to endpoint: {Config.EndpointUrl}/stats", Plugin.Instance.Config!.Debug);
             Logger.Debug($"Payload: {json}", Plugin.Instance.Config!.Debug);
 
-            using HttpClient client = new();
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + Config.Apikey);
-
             StringContent content = new(json, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.PostAsync(Config.EndpointUrl + "/stats", content);
+            HttpRequestMessage request = new(HttpMethod.Post, Config.EndpointUrl + "/stats")
+            {
+                Content = content
+            };
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Config.Apikey);
+
+            HttpResponseMessage response = await Utils.HttpClient.SendAsync(request);
 
             string responseText = await response.Content.ReadAsStringAsync();
             Logger.Info($"Uploaded all player stats and kills to database. Response: {responseText}");
@@ -548,23 +611,6 @@ public static class EventHandlers
         catch (Exception ex)
         {
             Logger.Error($"Failed to upload player stats to database: {ex}");
-        }
-        finally
-        {
-            // Clear all dictionaries
-            PlayerStartingTimestamps.Clear();
-            PlayerTimePlayedThisRound.Clear();
-            PlayerRoundsPlayedThisRound.Clear();
-            PlayerMedkitsUsedThisRound.Clear();
-            PlayerColasUsedThisRound.Clear();
-            PlayerAdrenalineUsedThisRound.Clear();
-            PlayerPocketEscapesThisRound.Clear();
-            PlayerPointsThisRound.Clear();
-            PlayerSnakeScoresThisRound.Clear();
-            FakeRankAllowed.Clear();
-            FakeRankAdmin.Clear();
-            PlayerUsernames.Clear();
-            KillsThisRound.Clear();
         }
     }
 
