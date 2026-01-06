@@ -72,11 +72,33 @@ public static class EventHandlers
 
             JArray releases = JArray.Parse(json);
 
-            JObject latestRelease = (JObject)releases
-                .OrderByDescending(r => int.Parse(((string)r["tag_name"]!).Substring(6)))
-                .First();
+            // Filter and parse releases with valid tag_name format (e.g., "build-123")
+            JObject? latestRelease = releases
+                .OfType<JObject>()
+                .Select(r =>
+                {
+                    string? tagName = (string?)r["tag_name"];
+                    if (tagName == null || tagName.Length <= 6 || !tagName.StartsWith("build-"))
+                        return (Release: r, Build: (int?)null);
+                    
+                    if (int.TryParse(tagName.Substring(6), out int build))
+                        return (Release: r, Build: (int?)build);
+                    
+                    return (Release: r, Build: (int?)null);
+                })
+                .Where(x => x.Build.HasValue)
+                .OrderByDescending(x => x.Build!.Value)
+                .Select(x => x.Release)
+                .FirstOrDefault();
 
-            int newestBuild = int.Parse(((string)latestRelease["tag_name"]!).Substring(6));
+            if (latestRelease == null)
+            {
+                Logger.Debug("No valid releases found with parseable tag_name");
+                return;
+            }
+
+            string latestTagName = (string)latestRelease["tag_name"]!;
+            int newestBuild = int.Parse(latestTagName.Substring(6));
 
             if (newestBuild > Plugin.Instance.Config!.CurrentlyInstalledBuild)
             {

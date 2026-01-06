@@ -9,6 +9,7 @@ using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using LabApi.Features.Wrappers;
+using MEC;
 using Newtonsoft.Json;
 using UnityEngine;
 using UserSettings.ServerSpecific;
@@ -114,7 +115,7 @@ public static class Utils
                 // Group sprays by userid
                 Dictionary<string, List<(int id, string name)>> newSprayIds = new();
 
-                if (sprayResponse?.Sprays != null && sprayResponse.Sprays.Capacity > 0)
+                if (sprayResponse?.Sprays != null && sprayResponse.Sprays.Count > 0)
                     foreach (Spray spray in sprayResponse.Sprays)
                     {
                         if (!newSprayIds.ContainsKey(spray.Userid))
@@ -224,10 +225,10 @@ public static class Utils
                         config.Debug);
                 }
 
-                // Clear existing sprays for users whose spray data changed
+                // Clear existing sprays for users whose spray data changed (dispatch to main thread for Unity API)
                 foreach (string userid in changedUserids)
                     if (Player.TryGet(userid, out Player player))
-                        player.ClearAllExistingSpray();
+                        Timing.CallDelayed(0f, () => player.ClearAllExistingSpray());
             }
             catch (Exception ex)
             {
