@@ -16,26 +16,45 @@ public static class Utils
 {
     private static readonly Config Config = Plugin.Instance.Config!;
     public static readonly ConcurrentDictionary<string, int> RemoteZvcCount = new();
-
+    private static readonly HttpClient HttpClient = new();
+    private static volatile bool _isFetchingAll;
 
     public static IEnumerator<float> FetchAllZvcCoroutine()
     {
         while (true)
         {
-            if (!Round.IsRoundEnded)
-                _ = FetchAllZvc();
+            if (!Round.IsRoundEnded && !_isFetchingAll)
+                FetchAllZvcAsync();
             yield return Timing.WaitForSeconds(15f);
         }
         // ReSharper disable once IteratorNeverReturns
     }
 
-    private static async Task FetchAllZvc()
+    private static void FetchAllZvcAsync()
     {
-        List<string> userIds = Player.ReadyList.Where(p => p.IsPlayer).Select(p => p.UserId).ToList();
-        if (userIds.Count == 0) return;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await FetchAllZvcInternal();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Background ZVC fetch failed: {ex.Message}");
+            }
+        });
+    }
+
+    private static async Task FetchAllZvcInternal()
+    {
+        if (_isFetchingAll) return;
+        _isFetchingAll = true;
 
         try
         {
+            List<string> userIds = Player.ReadyList.Where(p => p.IsPlayer).Select(p => p.UserId).ToList();
+            if (userIds.Count == 0) return;
+
             // Build query string: ?userId=a&userId=b&userId=c
             string qs = string.Join("&",
                 userIds.Select(id => $"userId={Uri.EscapeDataString(id)}"));
@@ -43,9 +62,7 @@ public static class Utils
             Logger.Debug($"{Config.EndpointUrl}/zvc?{qs}",
                 Plugin.Instance.Config!.Debug);
 
-            using HttpClient client = new();
-
-            HttpResponseMessage response = await client
+            HttpResponseMessage response = await HttpClient
                 .GetAsync($"{Config.EndpointUrl}/zvc?{qs}")
                 .ConfigureAwait(false);
 
@@ -66,17 +83,35 @@ public static class Utils
         {
             Logger.Error($"Failed to fetch ZVC list: {ex}");
         }
+        finally
+        {
+            _isFetchingAll = false;
+        }
     }
 
-    public static async Task FetchZvcForUser(string userId)
+    public static void FetchZvcForUserAsync(string userId)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await FetchZvcForUserInternal(userId);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Background ZVC fetch for user {userId} failed: {ex.Message}");
+                RemoteZvcCount[userId] = 0;
+            }
+        });
+    }
+
+    private static async Task FetchZvcForUserInternal(string userId)
     {
         try
         {
             string qs = $"userId={Uri.EscapeDataString(userId)}";
 
-            using HttpClient client = new();
-
-            HttpResponseMessage response = await client
+            HttpResponseMessage response = await HttpClient
                 .GetAsync($"{Config.EndpointUrl}/zvc?{qs}")
                 .ConfigureAwait(false);
 
