@@ -173,8 +173,6 @@ public static class EventHandlers
         try
         {
             Config cfg = Plugin.Instance.Config!;
-            Http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", cfg.BackendAPIToken);
 
             // Get all non-dummy users
             string[] userIds = Player.ReadyList.Where(p => p.IsPlayer).Select(p => p.UserId).ToArray();
@@ -188,7 +186,11 @@ public static class EventHandlers
 
             string useridsJson = JsonConvert.SerializeObject(request.Userids);
             string query = $"userids={Uri.EscapeDataString(useridsJson)}";
-            HttpResponseMessage res = await Http.GetAsync($"{cfg.BackendURL}/fakerank?{query}");
+
+            // Use per-request headers for thread safety
+            using HttpRequestMessage req = new(HttpMethod.Get, $"{cfg.BackendURL}/fakerank?{query}");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", cfg.BackendAPIToken);
+            HttpResponseMessage res = await Http.SendAsync(req);
 
             if (!res.IsSuccessStatusCode) return;
 

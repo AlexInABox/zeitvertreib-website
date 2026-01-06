@@ -23,12 +23,6 @@ public class TinyServer
 
     public void UploadPlayerListToBackend(List<TinyPlayer> playerList)
     {
-        if (_isUploading)
-        {
-            Logger.Debug("Playerlist upload already in progress, skipping", Plugin.Instance.Config!.Debug);
-            return;
-        }
-
         _ = Task.Run(async () =>
         {
             try
