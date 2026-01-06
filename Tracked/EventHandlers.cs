@@ -170,6 +170,7 @@ public static class EventHandlers
             AutoText = _ =>
             {
                 string hint = "<size=25><b>";
+                hint += "TPS: " + Server.Tps + "/" + Server.MaxTps + "\n";
                 if (KillsThisRound.FindAll(k => k.Attacker == ev.Player.UserId).Count > 0)
                     hint += $"Kills: {KillsThisRound.FindAll(k => k.Attacker == ev.Player.UserId).Count}\n";
 
@@ -180,7 +181,7 @@ public static class EventHandlers
             YCoordinateAlign = HintVerticalAlign.Top,
             YCoordinate = 30,
             XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f),
-            SyncSpeed = HintSyncSpeed.Normal
+            SyncSpeed = HintSyncSpeed.Fast
         };
         playerDisplay.AddHint(killFeed);
     }
