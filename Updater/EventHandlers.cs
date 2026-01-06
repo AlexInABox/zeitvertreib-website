@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
 using MEC;
@@ -15,9 +16,18 @@ namespace Updater;
 public static class EventHandlers
 {
     private static CoroutineHandle _coroutineHandle;
+    private static readonly HttpClient Client = new();
+    private static volatile bool _isChecking;
 
     public static void RegisterEvents()
     {
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("zvupdater");
+
+        // Add GitHub token if available
+        if (!string.IsNullOrEmpty(Plugin.Instance.Config!.GitHubToken))
+            Client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("token", Plugin.Instance.Config.GitHubToken);
+
         _coroutineHandle = Timing.RunCoroutine(MainLoop());
     }
 
@@ -28,82 +38,91 @@ public static class EventHandlers
 
     private static IEnumerator<float> MainLoop()
     {
-        using HttpClient client = new();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("zvupdater");
-
-        // Add GitHub token if available
-        if (!string.IsNullOrEmpty(Plugin.Instance.Config!.GitHubToken))
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("token", Plugin.Instance.Config.GitHubToken);
-
         while (true)
         {
             yield return Timing.WaitForSeconds(60f);
 
-            try
+            if (_isChecking)
+                continue;
+
+            // Run update check on background thread
+            _ = Task.Run(async () =>
             {
-                string json = client
-                    .GetStringAsync("https://api.github.com/repos/AlexInABox/zeitvertreib-website/releases")
-                    .GetAwaiter()
-                    .GetResult();
-
-                JArray releases = JArray.Parse(json);
-
-                JObject latestRelease = (JObject)releases
-                    .OrderByDescending(r => int.Parse(((string)r["tag_name"]!).Substring(6)))
-                    .First();
-
-                int newestBuild = int.Parse(((string)latestRelease["tag_name"]!).Substring(6));
-
-                if (newestBuild > Plugin.Instance.Config!.CurrentlyInstalledBuild)
+                try
                 {
-                    const string pluginDir = "/home/container/.config/SCP Secret Laboratory/LabAPI/plugins/global";
+                    await CheckForUpdatesAsync();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error("Failed to check for updates: " + e.Message);
+                }
+            });
+        }
+    }
 
-                    foreach (JToken? jToken in latestRelease["assets"]!)
-                    {
-                        JObject? asset = (JObject)jToken;
-                        string? name = (string?)asset["name"];
-                        string? downloadUrl = (string?)asset["browser_download_url"];
+    private static async Task CheckForUpdatesAsync()
+    {
+        if (_isChecking) return;
+        _isChecking = true;
 
-                        if (name == null || downloadUrl == null || !name.EndsWith(".dll"))
-                            continue;
+        try
+        {
+            string json = await Client
+                .GetStringAsync("https://api.github.com/repos/AlexInABox/zeitvertreib-website/releases");
 
-                        byte[] data = client
-                            .GetByteArrayAsync(downloadUrl)
-                            .GetAwaiter()
-                            .GetResult();
+            JArray releases = JArray.Parse(json);
 
-                        File.WriteAllBytes(Path.Combine(pluginDir, name), data);
+            JObject latestRelease = (JObject)releases
+                .OrderByDescending(r => int.Parse(((string)r["tag_name"]!).Substring(6)))
+                .First();
 
-                        Logger.Info($"Downloaded updated plugin: {name}");
-                    }
+            int newestBuild = int.Parse(((string)latestRelease["tag_name"]!).Substring(6));
 
-                    ServerStatic.StopNextRound = ServerStatic.NextRoundAction.Restart;
-                    Plugin.Instance.Config!.CurrentlyInstalledBuild = newestBuild;
-                    Plugin.Instance.SaveConfig();
+            if (newestBuild > Plugin.Instance.Config!.CurrentlyInstalledBuild)
+            {
+                const string pluginDir = "/home/container/.config/SCP Secret Laboratory/LabAPI/plugins/global";
 
-                    if (Player.ReadyList.Count(p => p.IsPlayer) == 0)
-                    {
-                        Logger.Info("No players online, restarting server immediately.");
-                        Server.Restart();
+                foreach (JToken? jToken in latestRelease["assets"]!)
+                {
+                    JObject? asset = (JObject)jToken;
+                    string? name = (string?)asset["name"];
+                    string? downloadUrl = (string?)asset["browser_download_url"];
+
+                    if (name == null || downloadUrl == null || !name.EndsWith(".dll"))
                         continue;
-                    }
 
-                    foreach (Player player in Player.ReadyList.Where(p => p.IsPlayer))
-                    {
-                        player.ClearBroadcasts();
-                        player.SendBroadcast(
-                            "<size=40><color=#FFAA00><b>⚠ Zeitvertreib Update empfangen ⚠</b></color></size>\n" +
-                            "<size=30><color=#FFFFFF>Der Server wird <b>nach der Runde</b> automatisch neugestartet.</color></size>",
-                            30
-                        );
-                    }
+                    byte[] data = await Client.GetByteArrayAsync(downloadUrl);
+
+                    File.WriteAllBytes(Path.Combine(pluginDir, name), data);
+
+                    Logger.Info($"Downloaded updated plugin: {name}");
+                }
+
+                ServerStatic.StopNextRound = ServerStatic.NextRoundAction.Restart;
+                Plugin.Instance.Config!.CurrentlyInstalledBuild = newestBuild;
+                Plugin.Instance.SaveConfig();
+
+                if (Player.ReadyList.Count(p => p.IsPlayer) == 0)
+                {
+                    Logger.Info("No players online, restarting server immediately.");
+                    Server.Restart();
+                    return;
+                }
+
+                foreach (Player player in Player.ReadyList.Where(p => p.IsPlayer))
+                {
+                    player.ClearBroadcasts();
+                    player.SendBroadcast(
+                        "<size=40><color=#FFAA00><b>⚠ Zeitvertreib Update empfangen ⚠</b></color></size>\n" +
+                        "<size=30><color=#FFFFFF>Der Server wird <b>nach der Runde</b> automatisch neugestartet.</color></size>",
+                        30
+                    );
                 }
             }
-            catch (Exception e)
-            {
-                Logger.Error("Failed to check for updates: " + e.Message);
-            }
+        }
+        finally
+        {
+            _isChecking = false;
         }
     }
 }
