@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Console;
@@ -21,6 +22,8 @@ public static class EventHandlers
     private static CoroutineHandle _coroutineFetchLoop;
 
     private static readonly HttpClient Http = new();
+    private static volatile bool _isFetchingSingle;
+    private static volatile bool _isFetchingAll;
 
     public static void RegisterEvents()
     {
@@ -81,7 +84,8 @@ public static class EventHandlers
     {
         while (true)
         {
-            GetAllFakeRanksFromBackend();
+            if (!_isFetchingAll)
+                GetAllFakeRanksFromBackend();
             yield return Timing.WaitForSeconds(10f);
         }
     }
@@ -94,12 +98,32 @@ public static class EventHandlers
         GetFakeRankFromBackend(ev.Player.UserId);
     }
 
-    private static async void GetFakeRankFromBackend(string userId)
+    private static void GetFakeRankFromBackend(string userId)
     {
-        (string Name, string Color) rank = (string.Empty, string.Empty);
+        if (_isFetchingSingle) return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await GetFakeRankFromBackendInternal(userId);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Background fakerank fetch failed for {userId}: {ex.Message}");
+            }
+        });
+    }
+
+    private static async Task GetFakeRankFromBackendInternal(string userId)
+    {
+        if (_isFetchingSingle) return;
+        _isFetchingSingle = true;
 
         try
         {
+            (string Name, string Color) rank = (string.Empty, string.Empty);
+
             Config cfg = Plugin.Instance.Config!;
             using HttpClient client = new();
             client.DefaultRequestHeaders.Authorization =
@@ -113,17 +137,39 @@ public static class EventHandlers
                 if (parts.Length == 2)
                     rank = (parts[0].Trim(), parts[1].Trim());
             }
+
+            FakeRanks[userId] = rank;
         }
         catch
         {
             Logger.Error("Error while fetching FakeRank from backend for user " + userId);
         }
-
-        FakeRanks[userId] = rank;
+        finally
+        {
+            _isFetchingSingle = false;
+        }
     }
 
-    private static async void GetAllFakeRanksFromBackend()
+    private static void GetAllFakeRanksFromBackend()
     {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await GetAllFakeRanksFromBackendInternal();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Background fakeranks fetch failed: {ex.Message}");
+            }
+        });
+    }
+
+    private static async Task GetAllFakeRanksFromBackendInternal()
+    {
+        if (_isFetchingAll) return;
+        _isFetchingAll = true;
+
         try
         {
             Config cfg = Plugin.Instance.Config!;
@@ -173,6 +219,10 @@ public static class EventHandlers
         catch
         {
             Logger.Error("Error while fetching FakeRanks from backend");
+        }
+        finally
+        {
+            _isFetchingAll = false;
         }
     }
 
