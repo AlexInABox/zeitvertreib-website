@@ -49,9 +49,7 @@ export async function handleDeleteSessions(request: Request, env: Env): Promise<
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   // Only delete sessions that belong to the current user
-  await db
-    .delete(sessions)
-    .where(and(inArray(sessions.id, body.id), eq(sessions.userid, validation.steamId)));
+  await db.delete(sessions).where(and(inArray(sessions.id, body.id), eq(sessions.userid, validation.steamId)));
 
   return createResponse({ success: true }, 200, origin);
 }
