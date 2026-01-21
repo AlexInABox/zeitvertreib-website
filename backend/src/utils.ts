@@ -55,7 +55,12 @@ export async function validateSession(
   return { status: 'valid', steamId: session.userid };
 }
 
-export async function createSession(steamId: string, _steamUser: SteamUser, env: Env, request?: Request): Promise<string> {
+export async function createSession(
+  steamId: string,
+  _steamUser: SteamUser,
+  env: Env,
+  request?: Request,
+): Promise<string> {
   const sessionId = crypto.randomUUID();
   const duration = 7 * 24 * 60 * 60 * 1000 * 4 * 3; // 3 months
   const now = Date.now();
