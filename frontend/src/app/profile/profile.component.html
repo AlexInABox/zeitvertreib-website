@@ -1,39 +1,124 @@
-<div class="container mx-auto p-6 max-w-4xl min-h-screen">
-  <div *ngIf="currentUser" class="space-y-6">
-    <!-- Profile Header -->
-    <p-card header="Profil" styleClass="mb-4">
-      <div class="flex items-center space-x-4">
-        <p-avatar [image]="currentUser.avatarUrl" size="xlarge" shape="circle" class="profile-avatar"> </p-avatar>
-        <div>
-          <h2 class="text-2xl font-bold mb-2 text-gray-900">
-            {{ currentUser.username }}
-          </h2>
-          <p class="text-gray-600 mb-2">Steam ID: {{ currentUser.steamId }}</p>
-          <div class="flex space-x-2">
-            <p-button label="Abmelden" icon="pi pi-sign-out" severity="danger" (onClick)="logout()"> </p-button>
+<div class="profile-page">
+  <!-- Loading State -->
+  <div *ngIf="!currentUser" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Lade Profildaten...</p>
+  </div>
+
+  <div *ngIf="currentUser" class="profile-wrapper">
+    <!-- Profile Card -->
+    <div class="card profile-card">
+      <div class="card-header">
+        <span class="card-icon">👤</span>
+        <div class="card-title-group">
+          <h2>Profil</h2>
+          <span class="card-subtitle">Deine Account-Informationen</span>
+        </div>
+      </div>
+      <div class="profile-content">
+        <img [src]="currentUser.avatarUrl" [alt]="currentUser.username" class="avatar" />
+        <div class="profile-info">
+          <span class="username">{{ currentUser.username }}</span>
+          <span class="steamid">{{ currentUser.steamId }}</span>
+        </div>
+        <button class="btn btn-danger" (click)="logout()">
+          <span>🚪</span> Abmelden
+        </button>
+      </div>
+    </div>
+
+    <!-- Sessions Card -->
+    <div class="card sessions-card">
+      <div class="card-header">
+        <span class="card-icon">🔐</span>
+        <div class="card-title-group">
+          <h2>Aktive Sitzungen</h2>
+          <span class="card-subtitle">Verwalte deine aktiven Geräte</span>
+        </div>
+        <span *ngIf="sessions.length > 0" class="badge">{{ sessions.length }}</span>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loadingSessions" class="card-loading">
+        <div class="loading-spinner small"></div>
+        <span>Lade Sitzungen...</span>
+      </div>
+
+      <!-- Sessions Content -->
+      <div *ngIf="!loadingSessions && sessions.length > 0" class="sessions-content">
+        <button class="ip-toggle" (click)="toggleIps()">
+          {{ showIps ? '🙈 IPs verbergen' : '👁️ IPs anzeigen' }}
+        </button>
+
+        <div class="sessions-list">
+          <div
+            *ngFor="let session of sessions"
+            class="session-row"
+            [class.current]="isCurrentSession(session.id)"
+            [class.stale]="!isCurrentSession(session.id) && isStale(session.lastLoginAt)"
+          >
+            <span class="session-icon">{{ getDeviceIcon(session.userAgent) }}</span>
+            <div class="session-details">
+              <div class="session-main">
+                <span class="session-browser">{{ getBrowserName(session.userAgent) }}</span>
+                <span *ngIf="isCurrentSession(session.id)" class="tag tag-current">Aktuell</span>
+                <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)" class="tag tag-stale">Inaktiv</span>
+              </div>
+              <span class="session-ip">{{ getIpDisplay(session.ipAddress) }}</span>
+              <div class="session-time">
+                <span [class.text-warning]="isStale(session.lastLoginAt)">{{ getRelativeTime(session.lastLoginAt) }}</span>
+                <span class="dot">·</span>
+                <span>{{ formatDate(session.createdAt) }}</span>
+              </div>
+            </div>
+            <button
+              *ngIf="!isCurrentSession(session.id)"
+              class="btn-icon-only btn-revoke"
+              (click)="revokeSession(session.id)"
+              [disabled]="revokingSession === session.id"
+              title="Sitzung beenden"
+            >
+              <span *ngIf="revokingSession !== session.id">🗑️</span>
+              <span *ngIf="revokingSession === session.id" class="loading-spinner tiny"></span>
+            </button>
           </div>
         </div>
       </div>
-    </p-card>
 
-    <!-- Profile Details -->
-    <p-card header="Profil Details" styleClass="mb-4 profile-details-card">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Profilname</label>
-          <p class="text-gray-900">{{ currentUser.username }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Steam ID</label>
-          <p class="text-gray-900 font-mono">{{ currentUser.steamId }}</p>
+      <!-- Empty -->
+      <div *ngIf="!loadingSessions && sessions.length === 0" class="card-empty">
+        <span>🔒</span>
+        <span>Keine aktiven Sitzungen</span>
+      </div>
+    </div>
+
+    <!-- Data Management Card -->
+    <div class="card data-card">
+      <div class="card-header">
+        <span class="card-icon">📊</span>
+        <div class="card-title-group">
+          <h2>Datenverwaltung</h2>
+          <span class="card-subtitle">Kontrolliere deine persönlichen Daten</span>
         </div>
       </div>
-    </p-card>
-  </div>
-
-  <!-- Loading/Not logged in state -->
-  <div *ngIf="!currentUser" class="text-center py-12">
-    <i class="pi pi-spin pi-spinner text-4xl text-gray-400 mb-4"></i>
-    <p class="text-gray-600">Lade Profildaten...</p>
+      <div class="data-buttons">
+        <button class="data-btn" disabled>
+          <span class="data-btn-icon">📥</span>
+          <div class="data-btn-text">
+            <span class="data-btn-title">Daten exportieren</span>
+            <span class="data-btn-desc">Lade alle deine Daten herunter</span>
+          </div>
+          <span class="tag tag-soon">Demnächst</span>
+        </button>
+        <button class="data-btn data-btn-danger" disabled>
+          <span class="data-btn-icon">🗑️</span>
+          <div class="data-btn-text">
+            <span class="data-btn-title">Account löschen</span>
+            <span class="data-btn-desc">Lösche alle deine Daten permanent</span>
+          </div>
+          <span class="tag tag-soon">Demnächst</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
