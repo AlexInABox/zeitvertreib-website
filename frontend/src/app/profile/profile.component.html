@@ -21,9 +21,7 @@
           <span class="username">{{ currentUser.username }}</span>
           <span class="steamid">{{ currentUser.steamId }}</span>
         </div>
-        <button class="btn btn-danger" (click)="logout()">
-          <span>🚪</span> Abmelden
-        </button>
+        <button class="btn btn-danger" (click)="logout()"><span>🚪</span> Abmelden</button>
       </div>
     </div>
 
@@ -62,11 +60,15 @@
               <div class="session-main">
                 <span class="session-browser">{{ getBrowserName(session.userAgent) }}</span>
                 <span *ngIf="isCurrentSession(session.id)" class="tag tag-current">Aktuell</span>
-                <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)" class="tag tag-stale">Inaktiv</span>
+                <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)" class="tag tag-stale"
+                  >Inaktiv</span
+                >
               </div>
               <span class="session-ip">{{ getIpDisplay(session.ipAddress) }}</span>
               <div class="session-time">
-                <span [class.text-warning]="isStale(session.lastLoginAt)">{{ getRelativeTime(session.lastLoginAt) }}</span>
+                <span [class.text-warning]="isStale(session.lastLoginAt)">{{
+                  getRelativeTime(session.lastLoginAt)
+                }}</span>
                 <span class="dot">·</span>
                 <span>{{ formatDate(session.createdAt) }}</span>
               </div>
