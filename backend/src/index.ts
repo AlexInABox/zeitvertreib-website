@@ -43,6 +43,7 @@ import {
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
 import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.js';
+import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -140,6 +141,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Paysafe routes
   'POST:/paysafe': handlePostPaysafe,
   'GET:/paysafe': handleGetPaysafe,
+
+  // Sessions routes
+  'GET:/sessions': handleGetSessions,
+  'DELETE:/sessions': handleDeleteSessions,
 };
 
 export default {

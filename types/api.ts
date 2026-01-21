@@ -681,3 +681,25 @@ export interface PaysafeCardGetResponse {
     amount: number;
   }[];
 }
+
+
+// ============================================================================
+// Sessions Info Types
+// ============================================================================
+
+/** GET /sessions response */
+export interface SessionsInfoGetResponse {
+  sessions: {
+    id: string;
+    createdAt: number;
+    lastLoginAt: number;
+    expiresAt: number;
+    userAgent: string;
+    ipAddress: string;
+  }[];
+}
+
+/** DELETE /sessions request */
+export interface SessionsInfoDeleteRequest {
+  id: string[];
+}
