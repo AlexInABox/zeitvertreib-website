@@ -214,3 +214,13 @@ export const donations = sqliteTable('donations', {
   amount: numeric('amount').notNull(),
   donatedAt: integer('donated_at').notNull().default(0),
 });
+
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userid: text('userid').notNull(),
+  userAgent: text('user_agent').notNull(),
+  ipAddress: text('ip_address').notNull(),
+  createdAt: integer('created_at').notNull().default(0),
+  lastLoginAt: integer('last_login_at').notNull().default(0),
+  expiresAt: integer('expires_at').notNull(),
+});

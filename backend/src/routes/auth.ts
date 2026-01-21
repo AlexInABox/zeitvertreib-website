@@ -51,7 +51,7 @@ export async function handleSteamCallback(request: Request, env: Env, ctx: Execu
   }
 
   // Create session and redirect
-  const sessionId = await createSession(steamId, steamUser, env);
+  const sessionId = await createSession(steamId, steamUser, env, request);
 
   const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
 
@@ -307,7 +307,7 @@ export async function handleLoginWithSecret(request: Request, env: Env, ctx: Exe
     }
 
     // Create session using the numeric Steam ID (consistent with normal login)
-    const sessionId = await createSession(numericSteamId, steamUser, env);
+    const sessionId = await createSession(numericSteamId, steamUser, env, request);
 
     // Determine if we're in development or production
     const frontendUrl = env.FRONTEND_URL || 'http://localhost:4200';
