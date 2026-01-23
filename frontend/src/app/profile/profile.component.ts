@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, SteamUser } from '../services/auth.service';
 import { SessionsService, SessionInfo } from '../services/sessions.service';
 import { TakeoutService } from '../services/takeout.service';
+import { DeletionService } from '../services/deletion.service';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -31,14 +32,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
   takeoutError = '';
   takeoutSuccess = false;
 
+  // Deletion state
+  deletionEnabledAt = 0;
+  loadingDeletion = true;
+  showDeletionModal = false;
+  deletionLoading = false;
+
   private readonly THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
   constructor(
     private authService: AuthService,
     private sessionsService: SessionsService,
     private takeoutService: TakeoutService,
+    private deletionService: DeletionService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.currentSessionToken = this.authService.getSessionToken();
@@ -49,6 +57,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       } else {
         this.loadSessions();
         this.loadTakeoutStatus();
+        this.loadDeletionStatus();
       }
     });
   }
@@ -235,5 +244,69 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
       },
     });
+  }
+
+  // Deletion methods
+  loadDeletionStatus() {
+    this.loadingDeletion = true;
+    this.deletionService.getDeletionStatus().subscribe({
+      next: (response) => {
+        this.deletionEnabledAt = response.enabledAt;
+        this.loadingDeletion = false;
+      },
+      error: () => {
+        this.deletionEnabledAt = 0;
+        this.loadingDeletion = false;
+      },
+    });
+  }
+
+  isDeletionEnabled(): boolean {
+    return this.deletionEnabledAt > 0;
+  }
+
+  openDeletionModal() {
+    this.showDeletionModal = true;
+  }
+
+  closeDeletionModal() {
+    this.showDeletionModal = false;
+  }
+
+  confirmEnableDeletion() {
+    if (this.deletionLoading) return;
+
+    this.deletionLoading = true;
+
+    this.deletionService.setDeletion(Date.now()).subscribe({
+      next: (response) => {
+        this.deletionEnabledAt = response.enabledAt;
+        this.deletionLoading = false;
+        this.closeDeletionModal();
+      },
+      error: () => {
+        this.deletionLoading = false;
+      },
+    });
+  }
+
+  disableDeletion() {
+    if (this.deletionLoading) return;
+
+    this.deletionLoading = true;
+
+    this.deletionService.setDeletion(0).subscribe({
+      next: () => {
+        this.deletionEnabledAt = 0;
+        this.deletionLoading = false;
+      },
+      error: () => {
+        this.deletionLoading = false;
+      },
+    });
+  }
+
+  getUserId(): string {
+    return this.currentUser?.steamId || 'FEHLER. KEINE USER ID. KONTAKTIERE DEN SUPPORT.';
   }
 }

@@ -229,3 +229,8 @@ export const lastTakeoutRequests = sqliteTable('last_takeout_requests', {
   userid: text('userid').primaryKey(),
   lastRequestedAt: integer('last_requested_at').notNull(),
 });
+
+export const deletionEnabledUsers = sqliteTable('deletion_enabled_users', {
+  userid: text('userid').primaryKey(),
+  enabledAt: integer('enabled_at').notNull(),
+});

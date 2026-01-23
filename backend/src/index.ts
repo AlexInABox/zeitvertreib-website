@@ -45,6 +45,7 @@ import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
 import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.js';
 import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
+import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -150,6 +151,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Takeout routes
   'GET:/takeout': handleGetTakeout,
   'POST:/takeout': handlePostTakeout,
+
+  // Deletion routes
+  'GET:/deletion': handleGetDeletion,
+  'POST:/deletion': handlePostDeletion,
 };
 
 export default {
