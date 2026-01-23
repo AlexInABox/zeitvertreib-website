@@ -101,19 +101,11 @@
 
                   <div class="zvcoins-code-input-section">
                     <div class="zvcoins-code-input-group">
-                      <input
-                        type="text"
-                        [(ngModel)]="redeemCode"
-                        placeholder="Gib deinen Code hier ein..."
-                        class="zvcoins-code-input"
-                        (keyup.enter)="redeemCodeAction()"
-                        [disabled]="codeRedemptionLoading"
-                      />
-                      <button
-                        class="zvcoins-code-btn"
-                        (click)="redeemCodeAction()"
-                        [disabled]="!redeemCode || codeRedemptionLoading"
-                      >
+                      <input type="text" [(ngModel)]="redeemCode" placeholder="Gib deinen Code hier ein..."
+                        class="zvcoins-code-input" (keyup.enter)="redeemCodeAction()"
+                        [disabled]="codeRedemptionLoading" />
+                      <button class="zvcoins-code-btn" (click)="redeemCodeAction()"
+                        [disabled]="!redeemCode || codeRedemptionLoading">
                         <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
                         <span *ngIf="codeRedemptionLoading">⏳ Wird eingelöst...</span>
                       </button>
@@ -135,10 +127,15 @@
 
                   <!-- Transaction Tax Disclaimer -->
                   <div class="zvcoins-transfer-disclaimer">
-                    <div class="transfer-disclaimer-icon">⚠️</div>
+                    <div class="transfer-disclaimer-icon">{{ isWeekendInBerlin() ? '🎉' : '⚠️' }}</div>
                     <div class="transfer-disclaimer-text">
-                      <strong>Transaktionsgebühr:</strong> Auf jede Transaktion wird eine 10% Steuer erhoben.
-                      <strong>Mindestbetrag:</strong> 100 ZVC.
+                      <ng-container *ngIf="isWeekendInBerlin(); else normalTax">
+                        <strong>🎊 Wochenend-Aktion!</strong> Keine Transaktionsgebühr!
+                      </ng-container>
+                      <ng-template #normalTax>
+                        <strong>Transaktionsgebühr:</strong> Auf jede Transaktion wird eine 5% Steuer erhoben.
+                        <span style="color: #4ade80;"><br>Am Wochenende (Sa & So) ist die Steuer 0%!<br></span>
+                      </ng-template>
                     </div>
                   </div>
 
@@ -149,7 +146,7 @@
                       <span class="cost-value">{{ transferAmount }} ZVC</span>
                     </div>
                     <div class="transfer-cost-item">
-                      <span class="cost-label">Steuer (10%):</span>
+                      <span class="cost-label">Steuer ({{ isWeekendInBerlin() ? '0% 🎉' : '5%' }}):</span>
                       <span class="cost-value">{{ getTransferTax(transferAmount) }} ZVC</span>
                     </div>
                     <div class="transfer-cost-item transfer-cost-total">
@@ -160,24 +157,11 @@
 
                   <div class="zvcoins-transfer-input-section">
                     <div class="zvcoins-transfer-input-group">
-                      <input
-                        type="text"
-                        [(ngModel)]="transferRecipient"
-                        placeholder="Steam ID oder Benutzername"
-                        class="zvcoins-transfer-input zvcoins-transfer-recipient"
-                        [disabled]="transferLoading"
-                      />
-                      <input
-                        type="text"
-                        [(ngModel)]="transferAmount"
-                        placeholder="Betrag"
-                        class="zvcoins-transfer-input zvcoins-transfer-amount"
-                        [disabled]="transferLoading"
-                      />
-                      <button
-                        class="zvcoins-transfer-btn"
-                        (click)="transferZVC()"
-                        [disabled]="
+                      <input type="text" [(ngModel)]="transferRecipient" placeholder="Steam ID oder Benutzername"
+                        class="zvcoins-transfer-input zvcoins-transfer-recipient" [disabled]="transferLoading" />
+                      <input type="text" [(ngModel)]="transferAmount" placeholder="Betrag"
+                        class="zvcoins-transfer-input zvcoins-transfer-amount" [disabled]="transferLoading" />
+                      <button class="zvcoins-transfer-btn" (click)="transferZVC()" [disabled]="
                           !transferRecipient ||
                           !transferAmount ||
                           transferAmount <= 0 ||
@@ -185,8 +169,7 @@
                           transferAmount > 50000 ||
                           getTransferTotalCost(transferAmount) > (userStatistics.experience || 0) ||
                           transferLoading
-                        "
-                      >
+                        ">
                         <span *ngIf="!transferLoading">💸 Senden</span>
                         <span *ngIf="transferLoading">⏳ Wird gesendet...</span>
                       </button>
@@ -196,20 +179,12 @@
               </div>
 
               <!-- Message displays outside the card for better visibility -->
-              <div
-                *ngIf="codeRedemptionMessage"
-                class="zvcoins-message mt-3"
-                [class.success]="codeRedemptionSuccess"
-                [class.error]="!codeRedemptionSuccess"
-              >
+              <div *ngIf="codeRedemptionMessage" class="zvcoins-message mt-3" [class.success]="codeRedemptionSuccess"
+                [class.error]="!codeRedemptionSuccess">
                 {{ codeRedemptionMessage }}
               </div>
-              <div
-                *ngIf="transferMessage"
-                class="zvcoins-message mt-3"
-                [class.success]="transferSuccess"
-                [class.error]="!transferSuccess"
-              >
+              <div *ngIf="transferMessage" class="zvcoins-message mt-3" [class.success]="transferSuccess"
+                [class.error]="!transferSuccess">
                 {{ transferMessage }}
               </div>
             </div>
@@ -240,12 +215,9 @@
                   <!-- Inline Compact Payout Info -->
                   <div *ngIf="slotMachineInfo" class="slot-payout-compact">
                     <div class="payout-compact-grid">
-                      <div
-                        *ngFor="let entry of slotMachineInfo.payoutTable"
-                        class="payout-compact-entry"
+                      <div *ngFor="let entry of slotMachineInfo.payoutTable" class="payout-compact-entry"
                         [class.jackpot-entry]="entry.tier === 'jackpot'"
-                        [class.big-win-entry]="entry.tier === 'big_win'"
-                      >
+                        [class.big-win-entry]="entry.tier === 'big_win'">
                         <span class="payout-compact-symbol">{{ entry.symbol }}</span>
                         <span class="payout-compact-condition">{{ entry.condition }}</span>
                         <span class="payout-compact-amount">+{{ entry.payout }}</span>
@@ -253,28 +225,18 @@
                     </div>
                   </div>
 
-                  <div
-                    class="slot-machine-controls wheel-bet-controls"
-                    style="display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch"
-                  >
-                    <button
-                      (click)="testSlotMachine()"
-                      class="wheel-spin-btn slot-spin-btn"
-                      [disabled]="isSpinning || !canAffordSlotMachine()"
-                      [class.spinning]="isSpinning"
-                      [class.disabled]="!canAffordSlotMachine()"
-                    >
+                  <div class="slot-machine-controls wheel-bet-controls"
+                    style="display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch">
+                    <button (click)="testSlotMachine()" class="wheel-spin-btn slot-spin-btn"
+                      [disabled]="isSpinning || !canAffordSlotMachine()" [class.spinning]="isSpinning"
+                      [class.disabled]="!canAffordSlotMachine()">
                       <span class="btn-text" *ngIf="!isSpinning">Drehen!</span>
                       <span class="btn-text" *ngIf="isSpinning">Dreht...</span>
                       <span class="btn-cost">🪙 {{ slotMachineInfo?.cost || 10 }} ZVC</span>
                     </button>
 
-                    <button
-                      (click)="toggleAutoSpin()"
-                      class="wheel-autospin-btn slot-autospin-btn"
-                      [class.active]="autoSpinEnabled"
-                      [disabled]="!canAffordSlotMachine()"
-                    >
+                    <button (click)="toggleAutoSpin()" class="wheel-autospin-btn slot-autospin-btn"
+                      [class.active]="autoSpinEnabled" [disabled]="!canAffordSlotMachine()">
                       <span *ngIf="!autoSpinEnabled">🔄 Auto</span>
                       <span *ngIf="autoSpinEnabled">⏹️ Stoppen</span>
                     </button>
@@ -301,14 +263,11 @@
                       </div>
                     </div>
                     <div class="win-log-list">
-                      <div
-                        *ngFor="let entry of getFilteredWinLog(); trackBy: trackByWinLogId"
-                        class="win-log-entry"
+                      <div *ngFor="let entry of getFilteredWinLog(); trackBy: trackByWinLogId" class="win-log-entry"
                         [class.win-log-jackpot]="entry.winType === 'jackpot'"
                         [class.win-log-big-win]="entry.winType === 'big_win'"
                         [class.win-log-win]="entry.winType === 'small_win' || entry.winType === 'mini_win'"
-                        [class.win-log-loss]="entry.winType === 'loss'"
-                      >
+                        [class.win-log-loss]="entry.winType === 'loss'">
                         <div class="win-log-symbols">
                           <span class="win-symbol">{{ entry.symbols[0] }}</span>
                           <span class="win-symbol">{{ entry.symbols[1] }}</span>
@@ -346,10 +305,8 @@
                   <div *ngIf="luckyWheelError && !luckyWheelInfo" class="text-center py-8">
                     <div class="text-red-400 mb-4">⚠️</div>
                     <p class="text-red-400">{{ luckyWheelError }}</p>
-                    <button
-                      (click)="loadLuckyWheelInfo()"
-                      class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
+                    <button (click)="loadLuckyWheelInfo()"
+                      class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                       Erneut versuchen
                     </button>
                   </div>
@@ -358,17 +315,11 @@
                   <div *ngIf="luckyWheelInfo">
                     <!-- Lucky Wheel SVG -->
                     <div class="wheel-container">
-                      <svg
-                        class="lucky-wheel-svg"
-                        [class.spinning]="isWheelSpinning"
-                        [style.transform]="'rotate(' + wheelRotation + 'deg)'"
-                        viewBox="0 0 200 200"
-                      >
+                      <svg class="lucky-wheel-svg" [class.spinning]="isWheelSpinning"
+                        [style.transform]="'rotate(' + wheelRotation + 'deg)'" viewBox="0 0 200 200">
                         <!-- Wheel segments -->
                         <g *ngFor="let segment of getWheelSegments(); let i = index">
-                          <path
-                            class="wheel-segment"
-                            [attr.d]="
+                          <path class="wheel-segment" [attr.d]="
                               'M 100 100 L ' +
                               (100 + 100 * Math.cos((((i * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
                               ' ' +
@@ -378,12 +329,8 @@
                               ' ' +
                               (100 + 100 * Math.sin(((((i + 1) * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
                               ' Z'
-                            "
-                            [attr.fill]="segment.color"
-                            stroke="rgba(0,0,0,0.3)"
-                            stroke-width="1"
-                            [class.wheel-segment-active]="winningSegmentIndex === i && showWheelResult"
-                          />
+                            " [attr.fill]="segment.color" stroke="rgba(0,0,0,0.3)" stroke-width="1"
+                            [class.wheel-segment-active]="winningSegmentIndex === i && showWheelResult" />
                         </g>
 
                         <!-- Logo image in center -->
@@ -392,34 +339,16 @@
                             <circle cx="100" cy="100" r="22" />
                           </clipPath>
                         </defs>
-                        <image
-                          *ngIf="!(lastWheelMultiplier !== null && showWheelResult)"
-                          href="assets/logos/logo_full_color_1to1.png"
-                          x="78"
-                          y="78"
-                          width="44"
-                          height="44"
-                          clip-path="url(#circleClip)"
-                        />
+                        <image *ngIf="!(lastWheelMultiplier !== null && showWheelResult)"
+                          href="assets/logos/logo_full_color_1to1.png" x="78" y="78" width="44" height="44"
+                          clip-path="url(#circleClip)" />
 
                         <!-- Result display circle -->
-                        <circle
-                          *ngIf="lastWheelMultiplier !== null && showWheelResult"
-                          cx="100"
-                          cy="100"
-                          r="22"
-                          fill="rgba(0,0,0,0.9)"
-                        />
-                        <text
-                          *ngIf="lastWheelMultiplier !== null && showWheelResult"
-                          x="100"
-                          y="100"
-                          text-anchor="middle"
-                          dominant-baseline="middle"
-                          fill="white"
-                          font-size="14"
-                          font-weight="bold"
-                        >
+                        <circle *ngIf="lastWheelMultiplier !== null && showWheelResult" cx="100" cy="100" r="22"
+                          fill="rgba(0,0,0,0.9)" />
+                        <text *ngIf="lastWheelMultiplier !== null && showWheelResult" x="100" y="100"
+                          text-anchor="middle" dominant-baseline="middle" fill="white" font-size="14"
+                          font-weight="bold">
                           {{ lastWheelMultiplier + 'x' }}
                         </text>
                       </svg>
@@ -430,11 +359,8 @@
 
                     <!-- Multiplier Legend (compact colored badges) -->
                     <div class="wheel-multiplier-legend">
-                      <div
-                        *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index"
-                        class="legend-badge"
-                        [style.background-color]="getMultiplierColor(entry.multiplier)"
-                      >
+                      <div *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index" class="legend-badge"
+                        [style.background-color]="getMultiplierColor(entry.multiplier)">
                         {{ entry.multiplier }}x
                       </div>
                     </div>
@@ -442,60 +368,37 @@
                     <!-- Bet Controls -->
                     <div class="wheel-bet-controls">
                       <div class="wheel-bet-display">
-                        <button
-                          (click)="adjustLuckyWheelBet(-10)"
-                          class="wheel-bet-btn"
-                          [disabled]="luckyWheelLoading || luckyWheelBet <= luckyWheelInfo.minBet"
-                        >
+                        <button (click)="adjustLuckyWheelBet(-10)" class="wheel-bet-btn"
+                          [disabled]="luckyWheelLoading || luckyWheelBet <= luckyWheelInfo.minBet">
                           −
                         </button>
                         <div class="wheel-bet-amount">
                           <label class="bet-label" for="wheelBetInput">Einsatz</label>
                           <div class="bet-input-wrapper">
-                            <input
-                              id="wheelBetInput"
-                              class="bet-input"
-                              type="text"
-                              inputmode="numeric"
-                              pattern="[0-9]*"
-                              [value]="luckyWheelBetInput"
-                              (input)="onLuckyWheelBetInput($event)"
-                              (keydown)="onLuckyWheelBetKeydown($event)"
-                              (blur)="commitLuckyWheelBetInput()"
+                            <input id="wheelBetInput" class="bet-input" type="text" inputmode="numeric" pattern="[0-9]*"
+                              [value]="luckyWheelBetInput" (input)="onLuckyWheelBetInput($event)"
+                              (keydown)="onLuckyWheelBetKeydown($event)" (blur)="commitLuckyWheelBetInput()"
                               (keydown.enter)="commitLuckyWheelBetInput(); $event.preventDefault()"
-                              [disabled]="luckyWheelLoading"
-                              [attr.min]="luckyWheelInfo.minBet"
-                              [attr.max]="luckyWheelInfo.maxBet"
-                            />
+                              [disabled]="luckyWheelLoading" [attr.min]="luckyWheelInfo.minBet"
+                              [attr.max]="luckyWheelInfo.maxBet" />
                             <span class="bet-unit">ZVC</span>
                           </div>
                         </div>
-                        <button
-                          (click)="adjustLuckyWheelBet(10)"
-                          class="wheel-bet-btn"
-                          [disabled]="luckyWheelLoading || luckyWheelBet >= luckyWheelInfo.maxBet"
-                        >
+                        <button (click)="adjustLuckyWheelBet(10)" class="wheel-bet-btn"
+                          [disabled]="luckyWheelLoading || luckyWheelBet >= luckyWheelInfo.maxBet">
                           +
                         </button>
                       </div>
 
-                      <button
-                        (click)="spinLuckyWheel()"
-                        class="wheel-spin-btn"
-                        [class.spinning]="isWheelSpinning"
-                        [disabled]="!canAffordLuckyWheel() || luckyWheelLoading"
-                      >
+                      <button (click)="spinLuckyWheel()" class="wheel-spin-btn" [class.spinning]="isWheelSpinning"
+                        [disabled]="!canAffordLuckyWheel() || luckyWheelLoading">
                         <span class="btn-icon">🎡</span>
                         <span class="btn-text">{{ isWheelSpinning ? 'Dreht...' : 'Drehen!' }}</span>
                       </button>
 
-                      <button
-                        (click)="toggleAutoWheelSpin()"
-                        class="wheel-autospin-btn"
-                        [class.active]="autoWheelSpinEnabled"
-                        [disabled]="!luckyWheelInfo"
-                        title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}"
-                      >
+                      <button (click)="toggleAutoWheelSpin()" class="wheel-autospin-btn"
+                        [class.active]="autoWheelSpinEnabled" [disabled]="!luckyWheelInfo"
+                        title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}">
                         <span *ngIf="!autoWheelSpinEnabled">🔄 Auto</span>
                         <span *ngIf="autoWheelSpinEnabled">⏹️ Stopp</span>
                       </button>
@@ -519,16 +422,13 @@
                         </div>
                       </div>
                       <div class="win-log-list">
-                        <div
-                          *ngFor="let entry of getFilteredWheelSpinLog(); trackBy: trackByWheelSpinId"
-                          class="win-log-entry"
-                          [class.win-log-win]="entry.payout > 0"
-                          [class.win-log-loss]="entry.payout === 0"
-                        >
+                        <div *ngFor="let entry of getFilteredWheelSpinLog(); trackBy: trackByWheelSpinId"
+                          class="win-log-entry" [class.win-log-win]="entry.payout > 0"
+                          [class.win-log-loss]="entry.payout === 0">
                           <div class="win-log-symbols">
-                            <span class="legend-badge" [style.background-color]="getMultiplierColor(entry.multiplier)"
-                              >{{ entry.multiplier }}x</span
-                            >
+                            <span class="legend-badge"
+                              [style.background-color]="getMultiplierColor(entry.multiplier)">{{ entry.multiplier
+                              }}x</span>
                           </div>
                           <div class="win-log-info">
                             <span class="win-log-type" [style.color]="getWheelSpinTypeInfo(entry).color">
@@ -563,29 +463,21 @@
               <div *ngIf="redeemablesError && !redeemablesLoading" class="text-center py-8">
                 <div class="text-red-400 mb-4">⚠️</div>
                 <p class="text-red-400">{{ redeemablesError }}</p>
-                <button
-                  (click)="loadRedeemables()"
-                  class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
+                <button (click)="loadRedeemables()"
+                  class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                   Erneut versuchen
                 </button>
               </div>
 
               <!-- Redeemables Grid -->
               <div *ngIf="!redeemablesLoading && !redeemablesError" class="zvcoins-rewards-grid">
-                <div
-                  *ngFor="let redeemable of redeemables"
-                  class="zvcoins-reward-card"
+                <div *ngFor="let redeemable of redeemables" class="zvcoins-reward-card"
                   [class.zvcoins-affordable]="canAfford(redeemable.price) && isAvailable(redeemable)"
                   [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
-                  [class.zvcoins-expired]="isExpired(redeemable)"
-                  [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                >
+                  [class.zvcoins-expired]="isExpired(redeemable)" [class.zvcoins-sold-out]="isSoldOut(redeemable)">
                   <!-- Limited Time Badge -->
-                  <div
-                    *ngIf="isLimitedTime(redeemable) && !isExpired(redeemable) && !isSoldOut(redeemable)"
-                    class="zvcoins-limited-badge"
-                  >
+                  <div *ngIf="isLimitedTime(redeemable) && !isExpired(redeemable) && !isSoldOut(redeemable)"
+                    class="zvcoins-limited-badge">
                     ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
                   </div>
 
@@ -615,23 +507,18 @@
                   <div class="zvcoins-reward-progress">
                     <div class="zvcoins-progress-container">
                       <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="getProgressPercentage(userStatistics.experience || 0, redeemable.price)"
-                        ></div>
+                        <div class="zvcoins-progress-bar-fill"
+                          [style.width.%]="getProgressPercentage(userStatistics.experience || 0, redeemable.price)">
+                        </div>
                       </div>
                       <span class="zvcoins-progress-text">
                         {{ getProgressPercentage(userStatistics.experience || 0, redeemable.price) | number: '1.0-0' }}%
                       </span>
                     </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="!canRedeem(redeemable)"
+                    <button class="zvcoins-redeem-btn" [disabled]="!canRedeem(redeemable)"
                       [class.zvcoins-redeem-available]="canRedeem(redeemable)"
-                      [class.zvcoins-expired]="isExpired(redeemable)"
-                      [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                      (click)="redeemItem(redeemable)"
-                    >
+                      [class.zvcoins-expired]="isExpired(redeemable)" [class.zvcoins-sold-out]="isSoldOut(redeemable)"
+                      (click)="redeemItem(redeemable)">
                       {{ getAvailabilityText(redeemable) }}
                     </button>
                   </div>
@@ -656,13 +543,8 @@
           <div class="player-card">
             <!-- Avatar Header -->
             <div class="player-avatar-container" *ngIf="userStatistics.avatarFull">
-              <img
-                class="player-avatar"
-                [src]="getAvatarUrl(userStatistics.avatarFull)"
-                [alt]="userStatistics.username || 'Player Avatar'"
-                loading="lazy"
-                (error)="onImageError($event)"
-              />
+              <img class="player-avatar" [src]="getAvatarUrl(userStatistics.avatarFull)"
+                [alt]="userStatistics.username || 'Player Avatar'" loading="lazy" (error)="onImageError($event)" />
             </div>
 
             <!-- Player Info -->
@@ -736,9 +618,8 @@
                 <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ sprayBannedBy }}</p>
                 <p class="spray-ban-contact">
                   Öffne ein Ticket auf unserem
-                  <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"
-                    ><strong>Discord-Server</strong></a
-                  >.
+                  <a href="https://dsc.gg/zeit" target="_blank"
+                    class="spray-ban-link"><strong>Discord-Server</strong></a>.
                 </p>
               </div>
             </div>
@@ -753,24 +634,13 @@
                 </div>
 
                 <!-- Uploaded Spray -->
-                <div
-                  *ngIf="shouldShowSpraySlot(i)"
-                  class="spray-uploaded"
-                  [attr.data-slot-index]="i"
-                  [attr.data-spray-id]="slot.id"
-                  [attr.data-is-donator]="isDonator"
-                >
+                <div *ngIf="shouldShowSpraySlot(i)" class="spray-uploaded" [attr.data-slot-index]="i"
+                  [attr.data-spray-id]="slot.id" [attr.data-is-donator]="isDonator">
                   <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
                   <div class="spray-info">
                     <span class="spray-name">{{ slot.name }}</span>
-                    <button
-                      (click)="deleteSprayForSlot(i)"
-                      class="spray-delete-btn"
-                      [disabled]="slot.isUploading"
-                      [attr.data-slot]="i"
-                      [attr.data-id]="slot.id"
-                      [attr.data-donator]="isDonator"
-                    >
+                    <button (click)="deleteSprayForSlot(i)" class="spray-delete-btn" [disabled]="slot.isUploading"
+                      [attr.data-slot]="i" [attr.data-id]="slot.id" [attr.data-donator]="isDonator">
                       <span *ngIf="!slot.isUploading">🗑️</span>
                       <span *ngIf="slot.isUploading" class="spray-spinner"></span>
                     </button>
@@ -778,10 +648,8 @@
                 </div>
 
                 <!-- Preview & Upload (opens modal for better UX) -->
-                <div
-                  *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
-                  class="spray-preview"
-                >
+                <div *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
+                  class="spray-preview">
                   <div class="spray-preview-compact">
                     <img [src]="slot.preview" alt="Preview" class="spray-image" />
                   </div>
@@ -795,13 +663,8 @@
 
                 <!-- Empty Slot -->
                 <div *ngIf="(i < 2 || isDonator) && !slot.id && !slot.selectedFile" class="spray-empty">
-                  <input
-                    type="file"
-                    [id]="'spray' + i"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    (change)="onSprayFileSelected($event, i)"
-                    class="spray-file-input"
-                  />
+                  <input type="file" [id]="'spray' + i" accept="image/png,image/jpeg,image/jpg,image/webp"
+                    (change)="onSprayFileSelected($event, i)" class="spray-file-input" />
                   <label [for]="'spray' + i" class="spray-upload-zone">
                     <div class="spray-upload-icon">📁</div>
                     <div class="spray-upload-text">Bild wählen</div>
@@ -835,9 +698,8 @@
                 <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
                 <p class="spray-ban-contact">
                   Öffne ein Ticket auf unserem
-                  <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"
-                    ><strong>Discord-Server</strong></a
-                  >.
+                  <a href="https://dsc.gg/zeit" target="_blank"
+                    class="spray-ban-link"><strong>Discord-Server</strong></a>.
                 </p>
               </div>
             </div>
@@ -861,20 +723,12 @@
                     </div>
                   </div>
                   <div class="fakerank-actions-inline">
-                    <button
-                      (click)="openFakerankModal()"
-                      class="fakerank-action-btn fakerank-edit-btn"
-                      [disabled]="fakerankLoading"
-                      title="Fakerank bearbeiten"
-                    >
+                    <button (click)="openFakerankModal()" class="fakerank-action-btn fakerank-edit-btn"
+                      [disabled]="fakerankLoading" title="Fakerank bearbeiten">
                       ✏️ Bearbeiten
                     </button>
-                    <button
-                      (click)="deleteFakerank()"
-                      class="fakerank-action-btn fakerank-delete-btn"
-                      [disabled]="fakerankLoading"
-                      title="Fakerank löschen"
-                    >
+                    <button (click)="deleteFakerank()" class="fakerank-action-btn fakerank-delete-btn"
+                      [disabled]="fakerankLoading" title="Fakerank löschen">
                       🗑️ Löschen
                     </button>
                   </div>
@@ -910,11 +764,8 @@
       </div>
 
       <div class="preview-overlay" *ngIf="previewModalOpen" (click)="closePreviewModal(true)">
-        <div
-          class="preview-modal redesign"
-          (click)="$event.stopPropagation()"
-          [style.--accent-color]="previewModalAccentColor"
-        >
+        <div class="preview-modal redesign" (click)="$event.stopPropagation()"
+          [style.--accent-color]="previewModalAccentColor">
           <div class="modal-header">
             <div class="header-content">
               <span class="header-icon">🎨</span>
@@ -935,15 +786,9 @@
             <div class="preview-right">
               <div class="preview-input-group">
                 <label for="sprayName">Name deines Sprays (max. 20 Zeichen, nur A-Z, 0-9, _, Leerzeichen)</label>
-                <input
-                  id="sprayName"
-                  type="text"
-                  class="spray-name-input-large"
-                  [(ngModel)]="previewModalName"
-                  placeholder="z.B. Mein cooles Spray"
-                  maxlength="20"
-                  [class.invalid-input]="previewModalName && !isNameValid(previewModalName)"
-                />
+                <input id="sprayName" type="text" class="spray-name-input-large" [(ngModel)]="previewModalName"
+                  placeholder="z.B. Mein cooles Spray" maxlength="20"
+                  [class.invalid-input]="previewModalName && !isNameValid(previewModalName)" />
                 <div *ngIf="previewModalName && !isNameValid(previewModalName)" class="input-error-hint">
                   Nur Buchstaben, Zahlen, Unterstriche und Leerzeichen erlaubt.
                 </div>
@@ -951,12 +796,8 @@
 
               <div class="checkbox-group">
                 <div class="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id="privacyCheck"
-                    [(ngModel)]="acceptedPrivacy"
-                    (change)="acceptedPrivacy ? (showPrivacyText = false) : null"
-                  />
+                  <input type="checkbox" id="privacyCheck" [(ngModel)]="acceptedPrivacy"
+                    (change)="acceptedPrivacy ? (showPrivacyText = false) : null" />
                   <label for="privacyCheck">
                     Ich akzeptiere die
                     <span class="text-link" (click)="showPrivacyText = !showPrivacyText; $event.preventDefault()">
@@ -992,12 +833,8 @@
                 </div>
 
                 <div class="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id="rulesCheck"
-                    [(ngModel)]="acceptedRules"
-                    (change)="acceptedRules ? (showRulesText = false) : null"
-                  />
+                  <input type="checkbox" id="rulesCheck" [(ngModel)]="acceptedRules"
+                    (change)="acceptedRules ? (showRulesText = false) : null" />
                   <label for="rulesCheck">
                     Ich bestätige, dass ich die
                     <span class="text-link" (click)="showRulesText = !showRulesText; $event.preventDefault()">
@@ -1026,13 +863,9 @@
               </div>
 
               <div class="upload-action">
-                <button
-                  class="btn-upload-confirm-large"
-                  (click)="confirmUploadFromModal()"
-                  [disabled]="
+                <button class="btn-upload-confirm-large" (click)="confirmUploadFromModal()" [disabled]="
                     previewModalUploading || !isNameValid(previewModalName) || !acceptedPrivacy || !acceptedRules
-                  "
-                >
+                  ">
                   <span *ngIf="!previewModalUploading">🚀 Jetzt hochladen</span>
                   <span *ngIf="previewModalUploading" class="spinner-small"></span>
                 </button>
@@ -1044,11 +877,8 @@
 
       <!-- Fakerank Modal -->
       <div class="preview-overlay" *ngIf="fakerankModalOpen" (click)="closeFakerankModal(true)">
-        <div
-          class="preview-modal redesign"
-          (click)="$event.stopPropagation()"
-          [style.--accent-color]="fakerankAccentColor"
-        >
+        <div class="preview-modal redesign" (click)="$event.stopPropagation()"
+          [style.--accent-color]="fakerankAccentColor">
           <div class="modal-header">
             <div class="header-content">
               <span class="header-icon">✨</span>
@@ -1060,25 +890,19 @@
           <div class="modal-body redesign-body custom-scrollbar">
             <!-- Left Column: Preview (1/3) -->
             <div class="preview-left">
-              <div
-                class="preview-image-container"
-                style="
+              <div class="preview-image-container" style="
                   aspect-ratio: auto;
                   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
-                "
-              >
+                ">
                 <div style="text-align: center; padding: 2rem">
                   <div style="font-size: 3rem; margin-bottom: 1rem">✨</div>
-                  <div
-                    style="
+                  <div style="
                       font-size: 1.75rem;
                       font-weight: 900;
                       color: white;
                       word-break: break-word;
                       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-                    "
-                    [style.color]="getColorHex(fakerankModalColor)"
-                  >
+                    " [style.color]="getColorHex(fakerankModalColor)">
                     {{ fakerankModalText || 'Dein Rangname' }}
                   </div>
                 </div>
@@ -1089,14 +913,8 @@
             <div class="preview-right">
               <div class="preview-input-group">
                 <label for="fakerankText">Dein Rangname (max. 50 Zeichen)</label>
-                <input
-                  id="fakerankText"
-                  type="text"
-                  class="spray-name-input-large"
-                  [(ngModel)]="fakerankModalText"
-                  placeholder="z.B. Pizza Liebhaber, Sniper Pro..."
-                  maxlength="50"
-                />
+                <input id="fakerankText" type="text" class="spray-name-input-large" [(ngModel)]="fakerankModalText"
+                  placeholder="z.B. Pizza Liebhaber, Sniper Pro..." maxlength="50" />
                 <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.25rem">
                   {{ fakerankModalText.length }}/50 Zeichen
                 </div>
@@ -1112,17 +930,12 @@
                   <div *ngIf="fakerankColorsByRole.teamColors.length > 0" class="color-group">
                     <div class="color-group-label">👥 Teammitglieder</div>
                     <div class="color-grid">
-                      <button
-                        *ngFor="let colorKey of fakerankColorsByRole.teamColors"
-                        (click)="selectFakerankColor(colorKey)"
-                        class="color-option-btn"
-                        [class.selected]="fakerankModalColor === colorKey"
-                        [class.disabled]="!isColorAllowed(colorKey)"
+                      <button *ngFor="let colorKey of fakerankColorsByRole.teamColors"
+                        (click)="selectFakerankColor(colorKey)" class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey" [class.disabled]="!isColorAllowed(colorKey)"
                         [style.background-color]="getColorHex(colorKey)"
-                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
-                        [title]="getColorName(colorKey)"
-                        [disabled]="!isColorAllowed(colorKey)"
-                      ></button>
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'" [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"></button>
                     </div>
                   </div>
 
@@ -1130,17 +943,12 @@
                   <div *ngIf="fakerankColorsByRole.vipColors.length > 0" class="color-group">
                     <div class="color-group-label">💎 VIP's</div>
                     <div class="color-grid">
-                      <button
-                        *ngFor="let colorKey of fakerankColorsByRole.vipColors"
-                        (click)="selectFakerankColor(colorKey)"
-                        class="color-option-btn"
-                        [class.selected]="fakerankModalColor === colorKey"
-                        [class.disabled]="!isColorAllowed(colorKey)"
+                      <button *ngFor="let colorKey of fakerankColorsByRole.vipColors"
+                        (click)="selectFakerankColor(colorKey)" class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey" [class.disabled]="!isColorAllowed(colorKey)"
                         [style.background-color]="getColorHex(colorKey)"
-                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
-                        [title]="getColorName(colorKey)"
-                        [disabled]="!isColorAllowed(colorKey)"
-                      ></button>
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'" [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"></button>
                     </div>
                   </div>
 
@@ -1148,17 +956,12 @@
                   <div *ngIf="fakerankColorsByRole.donatorColors.length > 0" class="color-group">
                     <div class="color-group-label">🎁 Spendenlegenden</div>
                     <div class="color-grid">
-                      <button
-                        *ngFor="let colorKey of fakerankColorsByRole.donatorColors"
-                        (click)="selectFakerankColor(colorKey)"
-                        class="color-option-btn"
-                        [class.selected]="fakerankModalColor === colorKey"
-                        [class.disabled]="!isColorAllowed(colorKey)"
+                      <button *ngFor="let colorKey of fakerankColorsByRole.donatorColors"
+                        (click)="selectFakerankColor(colorKey)" class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey" [class.disabled]="!isColorAllowed(colorKey)"
                         [style.background-color]="getColorHex(colorKey)"
-                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
-                        [title]="getColorName(colorKey)"
-                        [disabled]="!isColorAllowed(colorKey)"
-                      ></button>
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'" [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"></button>
                     </div>
                   </div>
 
@@ -1166,17 +969,12 @@
                   <div *ngIf="fakerankColorsByRole.boosterColors.length > 0" class="color-group">
                     <div class="color-group-label">⚡ Booster</div>
                     <div class="color-grid">
-                      <button
-                        *ngFor="let colorKey of fakerankColorsByRole.boosterColors"
-                        (click)="selectFakerankColor(colorKey)"
-                        class="color-option-btn"
-                        [class.selected]="fakerankModalColor === colorKey"
-                        [class.disabled]="!isColorAllowed(colorKey)"
+                      <button *ngFor="let colorKey of fakerankColorsByRole.boosterColors"
+                        (click)="selectFakerankColor(colorKey)" class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey" [class.disabled]="!isColorAllowed(colorKey)"
                         [style.background-color]="getColorHex(colorKey)"
-                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
-                        [title]="getColorName(colorKey)"
-                        [disabled]="!isColorAllowed(colorKey)"
-                      ></button>
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'" [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"></button>
                     </div>
                   </div>
 
@@ -1184,24 +982,18 @@
                   <div *ngIf="fakerankColorsByRole.otherColors.length > 0" class="color-group">
                     <div class="color-group-label">🌈 Alle anderen Spieler</div>
                     <div class="color-grid">
-                      <button
-                        *ngFor="let colorKey of fakerankColorsByRole.otherColors"
-                        (click)="selectFakerankColor(colorKey)"
-                        class="color-option-btn"
-                        [class.selected]="fakerankModalColor === colorKey"
-                        [class.disabled]="!isColorAllowed(colorKey)"
+                      <button *ngFor="let colorKey of fakerankColorsByRole.otherColors"
+                        (click)="selectFakerankColor(colorKey)" class="color-option-btn"
+                        [class.selected]="fakerankModalColor === colorKey" [class.disabled]="!isColorAllowed(colorKey)"
                         [style.background-color]="getColorHex(colorKey)"
-                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'"
-                        [title]="getColorName(colorKey)"
-                        [disabled]="!isColorAllowed(colorKey)"
-                      ></button>
+                        [style.opacity]="isColorAllowed(colorKey) ? '1' : '0.3'" [title]="getColorName(colorKey)"
+                        [disabled]="!isColorAllowed(colorKey)"></button>
                     </div>
                   </div>
                 </div>
 
                 <div
-                  style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); text-align: center; margin-top: 0.5rem"
-                >
+                  style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); text-align: center; margin-top: 0.5rem">
                   {{ getColorName(fakerankModalColor) }}
                 </div>
               </div>
@@ -1209,18 +1001,12 @@
               <!-- Privacy & Rules Checkboxes -->
               <div class="checkbox-group">
                 <div class="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id="fakerankPrivacyCheck"
-                    [(ngModel)]="acceptedFakerankPrivacy"
-                    (change)="acceptedFakerankPrivacy ? (showFakerankPrivacyText = false) : null"
-                  />
+                  <input type="checkbox" id="fakerankPrivacyCheck" [(ngModel)]="acceptedFakerankPrivacy"
+                    (change)="acceptedFakerankPrivacy ? (showFakerankPrivacyText = false) : null" />
                   <label for="fakerankPrivacyCheck">
                     Ich akzeptiere die
-                    <span
-                      class="text-link"
-                      (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()"
-                    >
+                    <span class="text-link"
+                      (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()">
                       Datenschutzhinweise
                     </span>
                   </label>
@@ -1249,18 +1035,12 @@
                 </div>
 
                 <div class="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id="fakerankRulesCheck"
-                    [(ngModel)]="acceptedFakerankRules"
-                    (change)="acceptedFakerankRules ? (showFakerankRulesText = false) : null"
-                  />
+                  <input type="checkbox" id="fakerankRulesCheck" [(ngModel)]="acceptedFakerankRules"
+                    (change)="acceptedFakerankRules ? (showFakerankRulesText = false) : null" />
                   <label for="fakerankRulesCheck">
                     Ich bestätige, dass ich die
-                    <span
-                      class="text-link"
-                      (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()"
-                    >
+                    <span class="text-link"
+                      (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()">
                       Inhaltsregeln
                     </span>
                     respektiere
@@ -1292,13 +1072,9 @@
               <div *ngIf="fakerankError" class="input-error-hint mt-3">{{ fakerankError }}</div>
 
               <div class="upload-action mt-4">
-                <button
-                  class="btn-upload-confirm-large"
-                  (click)="saveFakerankFromModal()"
-                  [disabled]="
+                <button class="btn-upload-confirm-large" (click)="saveFakerankFromModal()" [disabled]="
                     fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules
-                  "
-                >
+                  ">
                   <span *ngIf="!fakerankLoading">💾 Speichern</span>
                   <span *ngIf="fakerankLoading" class="spinner-small"></span>
                 </button>

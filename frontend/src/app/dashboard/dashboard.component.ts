@@ -201,12 +201,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -319,12 +319,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     multiplier: number;
   }> | null = null;
 
-  // Helper method to calculate transfer tax
+  // Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
+  isWeekendInBerlin(): boolean {
+    const berlinTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
+    const berlinDate = new Date(berlinTime);
+    const dayOfWeek = berlinDate.getDay();
+    // Sunday = 0, Saturday = 6
+    return dayOfWeek === 0 || dayOfWeek === 6;
+  }
+
+  // Helper method to calculate transfer tax (0% on weekends in Berlin)
   getTransferTax(amount: number | null): number {
     if (!amount) return 0;
     const numAmount = Number(amount);
     if (isNaN(numAmount) || numAmount <= 0) return 0;
-    return Math.floor(numAmount * 0.1); // 10% tax
+    // No tax on weekends in Berlin
+    if (this.isWeekendInBerlin()) return 0;
+    return Math.floor(numAmount * 0.05); // 5% tax
   }
 
   // Helper method to calculate total transfer cost
@@ -1363,9 +1374,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Validate transfer amount
+    // Validate transfer amount (use weekend-aware tax calculation)
     const currentBalance = this.userStatistics.experience || 0;
-    const taxAmount = Math.floor(amount * 0.1); // 10% tax
+    const taxAmount = this.getTransferTax(amount);
     const totalCost = amount + taxAmount;
 
     if (totalCost > currentBalance) {
