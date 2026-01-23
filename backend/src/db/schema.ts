@@ -214,3 +214,23 @@ export const donations = sqliteTable('donations', {
   amount: numeric('amount').notNull(),
   donatedAt: integer('donated_at').notNull().default(0),
 });
+
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userid: text('userid').notNull(),
+  userAgent: text('user_agent').notNull(),
+  ipAddress: text('ip_address').notNull(),
+  createdAt: integer('created_at').notNull().default(0),
+  lastLoginAt: integer('last_login_at').notNull().default(0),
+  expiresAt: integer('expires_at').notNull(),
+});
+
+export const lastTakeoutRequests = sqliteTable('last_takeout_requests', {
+  userid: text('userid').primaryKey(),
+  lastRequestedAt: integer('last_requested_at').notNull(),
+});
+
+export const deletionEnabledUsers = sqliteTable('deletion_enabled_users', {
+  userid: text('userid').primaryKey(),
+  enabledAt: integer('enabled_at').notNull(),
+});

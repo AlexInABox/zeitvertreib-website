@@ -26,6 +26,7 @@
     "discord-api-types": "^0.38.31",
     "discord-interactions": "^4.4.0",
     "drizzle-orm": "^0.45.0",
+    "emailjs": "^5.0.0",
     "glin-profanity": "^2.3.8",
     "openai": "^6.2.0",
     "washyourmouthoutwithsoap": "^1.0.2"

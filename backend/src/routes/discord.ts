@@ -103,7 +103,7 @@ export async function handleDiscordCallback(request: Request, env: Env, ctx: Exe
       return createResponse({ error: 'Could not fetch Steam user data' }, 500, origin);
     }
 
-    const sessionId = await createSession(steamId, steamUser, env);
+    const sessionId = await createSession(steamId, steamUser, env, request);
     const isLocal = env.FRONTEND_URL.includes('localhost');
     const redirectUrl = new URL(`${env.FRONTEND_URL}/auth/callback`);
 

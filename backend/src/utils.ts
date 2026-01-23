@@ -1,9 +1,9 @@
 // Consolidated utilities
-import type { SessionData, SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
+import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, count, lt, sql } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets, discordInfo, steamCache } from './db/schema.js';
+import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
+import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
@@ -38,34 +38,46 @@ export async function validateSession(
 
   if (!sessionId) return { status: 'invalid' };
 
-  const raw = await env.ZEITVERTREIB_SESSIONS.get(sessionId);
-  if (!raw) return { status: 'invalid' };
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).get();
 
-  const session: SessionData = JSON.parse(raw);
+  if (!session) return { status: 'invalid' };
 
-  if (Date.now() > session.expiresAt) {
-    await env.ZEITVERTREIB_SESSIONS.delete(sessionId);
+  const now = Date.now();
+  if (now > session.expiresAt) {
+    await db.delete(sessions).where(eq(sessions.id, sessionId));
     return { status: 'expired' };
   }
 
-  return { status: 'valid', steamId: session.steamId };
+  // Update lastLoginAt
+  await db.update(sessions).set({ lastLoginAt: now }).where(eq(sessions.id, sessionId));
+
+  return { status: 'valid', steamId: session.userid };
 }
 
-export async function createSession(steamId: string, steamUser: SteamUser, env: Env): Promise<string> {
+export async function createSession(
+  steamId: string,
+  _steamUser: SteamUser,
+  env: Env,
+  request?: Request,
+): Promise<string> {
   const sessionId = crypto.randomUUID();
   const duration = 7 * 24 * 60 * 60 * 1000 * 4 * 3; // 3 months
   const now = Date.now();
-  steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+  const userid = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
-  const sessionData: SessionData = {
-    steamId,
-    steamUser,
+  const userAgent = request?.headers.get('User-Agent') ?? 'Unknown';
+  const ipAddress = request?.headers.get('CF-Connecting-IP') ?? request?.headers.get('X-Forwarded-For') ?? 'Unknown';
+
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  await db.insert(sessions).values({
+    id: sessionId,
+    userid,
+    userAgent,
+    ipAddress,
     createdAt: now,
+    lastLoginAt: now,
     expiresAt: now + duration,
-  };
-
-  await env.ZEITVERTREIB_SESSIONS.put(sessionId, JSON.stringify(sessionData), {
-    expirationTtl: Math.floor(duration / 1000),
   });
 
   return sessionId;
@@ -78,7 +90,8 @@ export async function deleteSession(request: Request, env: Env): Promise<void> {
     null;
 
   if (sessionId) {
-    await env.ZEITVERTREIB_SESSIONS.delete(sessionId);
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+    await db.delete(sessions).where(eq(sessions.id, sessionId));
   }
 }
 

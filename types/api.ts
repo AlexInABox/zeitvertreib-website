@@ -681,3 +681,52 @@ export interface PaysafeCardGetResponse {
     amount: number;
   }[];
 }
+
+// ============================================================================
+// Sessions Info Types
+// ============================================================================
+
+/** GET /sessions response */
+export interface SessionsInfoGetResponse {
+  sessions: {
+    id: string;
+    createdAt: number;
+    lastLoginAt: number;
+    expiresAt: number;
+    userAgent: string;
+    ipAddress: string;
+  }[];
+}
+
+/** DELETE /sessions request */
+export interface SessionsInfoDeleteRequest {
+  id: string[];
+}
+
+// ============================================================================
+// Takeout Types
+// ============================================================================
+
+/** GET /takeout response */
+export interface TakeoutGetResponse {
+  lastRequestedAt: number;
+}
+
+/** POST /takeout request */
+export interface TakeoutPostRequest {
+  email: string;
+}
+
+// ============================================================================
+// Deletion Types
+// ============================================================================
+
+/** GET /deletion response */
+export interface DeletionGetResponse {
+  enabledAt: number;
+}
+
+/** POST /deletion request */
+export interface DeletionPostRequest {
+  enabledAt: number; // 0 to disable, any other value to enable
+}
