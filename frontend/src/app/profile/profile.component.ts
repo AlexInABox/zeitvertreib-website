@@ -46,7 +46,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private takeoutService: TakeoutService,
     private deletionService: DeletionService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.currentSessionToken = this.authService.getSessionToken();
@@ -89,7 +89,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.sessionsService.deleteSessions([sessionId]).subscribe({
       next: () => {
         this.sessions = this.sessions.filter((s) => s.id !== sessionId);
+        const isCurrent = this.isCurrentSession(sessionId);
         this.revokingSession = null;
+        if (isCurrent) {
+          this.authService.performLogout();
+          this.router.navigate(['/login']);
+        }
       },
       error: () => {
         this.revokingSession = null;
@@ -200,7 +205,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (this.lastTakeoutAt === 0) return 0;
     const nextDate = this.lastTakeoutAt + this.THIRTY_DAYS_MS;
     const diff = nextDate - Date.now();
-    return Math.ceil(diff / (24 * 60 * 60 * 1000));
+    const days = Math.ceil(diff / (24 * 60 * 60 * 1000));
+    return Math.max(0, days);
   }
 
   openTakeoutModal() {
