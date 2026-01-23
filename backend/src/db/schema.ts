@@ -224,3 +224,8 @@ export const sessions = sqliteTable('sessions', {
   lastLoginAt: integer('last_login_at').notNull().default(0),
   expiresAt: integer('expires_at').notNull(),
 });
+
+export const lastTakeoutRequests = sqliteTable('last_takeout_requests', {
+  userid: text('userid').primaryKey(),
+  lastRequestedAt: integer('last_requested_at').notNull(),
+});

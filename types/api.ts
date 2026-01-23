@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -701,4 +701,19 @@ export interface SessionsInfoGetResponse {
 /** DELETE /sessions request */
 export interface SessionsInfoDeleteRequest {
   id: string[];
+}
+
+
+// ============================================================================
+// Takeout Types
+// ============================================================================
+
+/** GET /takeout response */
+export interface TakeoutGetResponse {
+  lastRequestedAt: number;
+}
+
+/** POST /takeout request */
+export interface TakeoutPostRequest {
+  email: string;
 }
