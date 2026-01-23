@@ -46,7 +46,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private takeoutService: TakeoutService,
     private deletionService: DeletionService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.currentSessionToken = this.authService.getSessionToken();
