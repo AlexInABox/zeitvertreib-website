@@ -49,27 +49,37 @@
         </button>
 
         <div class="sessions-list">
-          <div *ngFor="let session of sessions" class="session-row" [class.current]="isCurrentSession(session.id)"
-            [class.stale]="!isCurrentSession(session.id) && isStale(session.lastLoginAt)">
+          <div
+            *ngFor="let session of sessions"
+            class="session-row"
+            [class.current]="isCurrentSession(session.id)"
+            [class.stale]="!isCurrentSession(session.id) && isStale(session.lastLoginAt)"
+          >
             <span class="session-icon">{{ getDeviceIcon(session.userAgent) }}</span>
             <div class="session-details">
               <div class="session-main">
                 <span class="session-browser">{{ getBrowserName(session.userAgent) }}</span>
                 <span *ngIf="isCurrentSession(session.id)" class="tag tag-current">Aktuell</span>
-                <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)"
-                  class="tag tag-stale">Inaktiv</span>
+                <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)" class="tag tag-stale"
+                  >Inaktiv</span
+                >
               </div>
               <span class="session-ip">{{ getIpDisplay(session.ipAddress) }}</span>
               <div class="session-time">
                 <span [class.text-warning]="isStale(session.lastLoginAt)">{{
                   getRelativeTime(session.lastLoginAt)
-                  }}</span>
+                }}</span>
                 <span class="dot">·</span>
                 <span>{{ formatDate(session.createdAt) }}</span>
               </div>
             </div>
-            <button *ngIf="!isCurrentSession(session.id)" class="btn-icon-only btn-revoke"
-              (click)="revokeSession(session.id)" [disabled]="revokingSession === session.id" title="Sitzung beenden">
+            <button
+              *ngIf="!isCurrentSession(session.id)"
+              class="btn-icon-only btn-revoke"
+              (click)="revokeSession(session.id)"
+              [disabled]="revokingSession === session.id"
+              title="Sitzung beenden"
+            >
               <span *ngIf="revokingSession !== session.id">🗑️</span>
               <span *ngIf="revokingSession === session.id" class="loading-spinner tiny"></span>
             </button>
@@ -109,8 +119,11 @@
         </button>
 
         <!-- Deletion Toggle -->
-        <div class="toggle-container toggle-danger" [class.disabled]="deletionLoading"
-          (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())">
+        <div
+          class="toggle-container toggle-danger"
+          [class.disabled]="deletionLoading"
+          (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())"
+        >
           <div class="toggle-content">
             <span class="toggle-icon">🗑️</span>
             <div class="toggle-text">
@@ -122,7 +135,7 @@
             </div>
           </div>
           <div class="toggle-switch" [class.disabled]="deletionLoading">
-            <input type="checkbox" [checked]="isDeletionEnabled()" [disabled]="deletionLoading" tabindex="-1">
+            <input type="checkbox" [checked]="isDeletionEnabled()" [disabled]="deletionLoading" tabindex="-1" />
             <span class="toggle-slider"></span>
           </div>
         </div>
@@ -133,15 +146,19 @@
           <p class="deletion-instructions-text">
             Behalte diesen Toggle aktiviert und sende eine E-Mail an
             <a
-              href="mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20{{ getUserId() }}">support&#64;zeitvertreib.vip</a>
+              href="mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20{{
+                getUserId()
+              }}"
+              >support&#64;zeitvertreib.vip</a
+            >
             mit deiner User-ID:
           </p>
           <div class="userid-box">
             <code>{{ getUserId() }}</code>
           </div>
           <p class="deletion-instructions-hint">
-            Unser Team prüft deine Anfrage innerhalb von 30 Tagen. Wenn dein Toggle hier aktiviert ist,
-            werden alle deine Daten unwiderruflich gelöscht. Du erhältst eine Bestätigung per E-Mail.
+            Unser Team prüft deine Anfrage innerhalb von 30 Tagen. Wenn dein Toggle hier aktiviert ist, werden alle
+            deine Daten unwiderruflich gelöscht. Du erhältst eine Bestätigung per E-Mail.
           </p>
         </div>
       </div>
@@ -169,8 +186,14 @@
         </p>
         <div class="form-group">
           <label for="takeout-email">E-Mail-Adresse</label>
-          <input type="email" id="takeout-email" [(ngModel)]="takeoutEmail" placeholder="deine@email.de"
-            [disabled]="takeoutLoading" (keyup.enter)="submitTakeout()" />
+          <input
+            type="email"
+            id="takeout-email"
+            [(ngModel)]="takeoutEmail"
+            placeholder="deine@email.de"
+            [disabled]="takeoutLoading"
+            (keyup.enter)="submitTakeout()"
+          />
         </div>
         <div class="takeout-error" *ngIf="takeoutError">
           {{ takeoutError }}
@@ -203,9 +226,7 @@
           <strong>jederzeit unwiderruflich gelöscht</strong> werden, sobald du eine Löschanfrage per E-Mail sendest.
         </p>
       </div>
-      <p class="modal-description">
-        Dies beinhaltet:
-      </p>
+      <p class="modal-description">Dies beinhaltet:</p>
       <ul class="deletion-list">
         <li>Alle Spielstatistiken und Fortschritte</li>
         <li>Deine ZVCoins und Transaktionshistorie</li>
@@ -213,14 +234,10 @@
         <li>Discord-Verknüpfungen und Sitzungsdaten</li>
         <li>Sämtliche anderen gespeicherten Daten</li>
       </ul>
-      <p class="modal-hint-danger">
-        ⚠️ Diese Aktion kann nicht rückgängig gemacht werden!
-      </p>
+      <p class="modal-hint-danger">⚠️ Diese Aktion kann nicht rückgängig gemacht werden!</p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeDeletionModal()" [disabled]="deletionLoading">
-        Abbrechen
-      </button>
+      <button class="btn btn-secondary" (click)="closeDeletionModal()" [disabled]="deletionLoading">Abbrechen</button>
       <button class="btn btn-danger" (click)="confirmEnableDeletion()" [disabled]="deletionLoading">
         <span *ngIf="!deletionLoading">Ja, zur Löschung markieren</span>
         <span *ngIf="deletionLoading">Wird aktiviert...</span>

@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank { }
+export interface GetUserFakerankResponse extends UserFakerank {}
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -730,4 +730,3 @@ export interface DeletionGetResponse {
 export interface DeletionPostRequest {
   enabledAt: number; // 0 to disable, any other value to enable
 }
-
