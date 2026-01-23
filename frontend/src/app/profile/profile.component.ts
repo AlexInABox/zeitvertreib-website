@@ -1,13 +1,15 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService, SteamUser } from '../services/auth.service';
 import { SessionsService, SessionInfo } from '../services/sessions.service';
+import { TakeoutService } from '../services/takeout.service';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
 })
@@ -20,11 +22,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private authSubscription?: Subscription;
   private currentSessionToken: string | null = null;
 
+  // Takeout state
+  lastTakeoutAt = 0;
+  loadingTakeout = true;
+  showTakeoutModal = false;
+  takeoutEmail = '';
+  takeoutLoading = false;
+  takeoutError = '';
+  takeoutSuccess = false;
+
+  private readonly THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
   constructor(
     private authService: AuthService,
     private sessionsService: SessionsService,
+    private takeoutService: TakeoutService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.currentSessionToken = this.authService.getSessionToken();
@@ -34,6 +48,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       } else {
         this.loadSessions();
+        this.loadTakeoutStatus();
       }
     });
   }
@@ -144,5 +159,81 @@ export class ProfileComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.performLogout();
     this.router.navigate(['/']);
+  }
+
+  // Takeout methods
+  loadTakeoutStatus() {
+    this.loadingTakeout = true;
+    this.takeoutService.getTakeoutStatus().subscribe({
+      next: (response) => {
+        this.lastTakeoutAt = response.lastRequestedAt;
+        this.loadingTakeout = false;
+      },
+      error: () => {
+        this.lastTakeoutAt = 0;
+        this.loadingTakeout = false;
+      },
+    });
+  }
+
+  isTakeoutDisabled(): boolean {
+    if (this.loadingTakeout) return true;
+    if (this.lastTakeoutAt === 0) return false;
+    return Date.now() - this.lastTakeoutAt < this.THIRTY_DAYS_MS;
+  }
+
+  getNextTakeoutDate(): Date | null {
+    if (this.lastTakeoutAt === 0) return null;
+    return new Date(this.lastTakeoutAt + this.THIRTY_DAYS_MS);
+  }
+
+  getDaysUntilNextTakeout(): number {
+    if (this.lastTakeoutAt === 0) return 0;
+    const nextDate = this.lastTakeoutAt + this.THIRTY_DAYS_MS;
+    const diff = nextDate - Date.now();
+    return Math.ceil(diff / (24 * 60 * 60 * 1000));
+  }
+
+  openTakeoutModal() {
+    this.showTakeoutModal = true;
+    this.takeoutEmail = '';
+    this.takeoutError = '';
+    this.takeoutSuccess = false;
+  }
+
+  closeTakeoutModal() {
+    this.showTakeoutModal = false;
+    this.takeoutEmail = '';
+    this.takeoutError = '';
+  }
+
+  submitTakeout() {
+    if (!this.takeoutEmail || this.takeoutLoading) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.takeoutEmail)) {
+      this.takeoutError = 'Bitte gib eine gültige E-Mail-Adresse ein';
+      return;
+    }
+
+    this.takeoutLoading = true;
+    this.takeoutError = '';
+
+    this.takeoutService.requestTakeout(this.takeoutEmail).subscribe({
+      next: () => {
+        this.takeoutSuccess = true;
+        this.takeoutLoading = false;
+        this.lastTakeoutAt = Date.now();
+        setTimeout(() => this.closeTakeoutModal(), 3000);
+      },
+      error: (error) => {
+        this.takeoutLoading = false;
+        if (error.status === 429) {
+          this.takeoutError = 'Du kannst nur alle 30 Tage einen Export anfordern';
+        } else {
+          this.takeoutError = 'Fehler beim Senden der Anfrage. Bitte versuche es später erneut.';
+        }
+      },
+    });
   }
 }
