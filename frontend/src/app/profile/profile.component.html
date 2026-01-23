@@ -109,9 +109,8 @@
         </button>
 
         <!-- Deletion Toggle -->
-        <div class="toggle-container toggle-danger" 
-             [class.disabled]="deletionLoading"
-             (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())">
+        <div class="toggle-container toggle-danger" [class.disabled]="deletionLoading"
+          (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())">
           <div class="toggle-content">
             <span class="toggle-icon">🗑️</span>
             <div class="toggle-text">
