@@ -135,10 +135,15 @@
 
                   <!-- Transaction Tax Disclaimer -->
                   <div class="zvcoins-transfer-disclaimer">
-                    <div class="transfer-disclaimer-icon">⚠️</div>
+                    <div class="transfer-disclaimer-icon">{{ isWeekendInBerlin() ? '🎉' : '⚠️' }}</div>
                     <div class="transfer-disclaimer-text">
-                      <strong>Transaktionsgebühr:</strong> Auf jede Transaktion wird eine 10% Steuer erhoben.
-                      <strong>Mindestbetrag:</strong> 100 ZVC.
+                      <ng-container *ngIf="isWeekendInBerlin(); else normalTax">
+                        <strong>🎊 Wochenend-Aktion!</strong> Keine Transaktionsgebühr!
+                      </ng-container>
+                      <ng-template #normalTax>
+                        <strong>Transaktionsgebühr:</strong> Auf jede Transaktion wird eine 5% Steuer erhoben.
+                        <span style="color: #4ade80"><br />Am Wochenende (Sa & So) ist die Steuer 0%!<br /></span>
+                      </ng-template>
                     </div>
                   </div>
 
@@ -149,7 +154,7 @@
                       <span class="cost-value">{{ transferAmount }} ZVC</span>
                     </div>
                     <div class="transfer-cost-item">
-                      <span class="cost-label">Steuer (10%):</span>
+                      <span class="cost-label">Steuer ({{ isWeekendInBerlin() ? '0% 🎉' : '5%' }}):</span>
                       <span class="cost-value">{{ getTransferTax(transferAmount) }} ZVC</span>
                     </div>
                     <div class="transfer-cost-item transfer-cost-total">

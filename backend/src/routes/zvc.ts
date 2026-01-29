@@ -5,6 +5,17 @@ import { createResponse, validateSession } from '../utils.js';
 import type { ZvcGetResponse } from '@zeitvertreib/types';
 
 /**
+ * Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
+ */
+function isWeekendInBerlin(): boolean {
+  const berlinTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
+  const berlinDate = new Date(berlinTime);
+  const dayOfWeek = berlinDate.getDay();
+  // Sunday = 0, Saturday = 6
+  return dayOfWeek === 0 || dayOfWeek === 6;
+}
+
+/**
  * GET /zvc
  * Public endpoint to retrieve ZVC balances for multiple users
  * Query params: userId (can be repeated)
@@ -50,7 +61,7 @@ export async function handleGetZeitvertreibCoins(request: Request, env: Env): Pr
 
 /**
  * POST /transfer-zvc
- * Transfer ZV Coins (experience) from one user to another with 10% tax
+ * Transfer ZV Coins (experience) from one user to another with 5% tax (0% on weekends)
  */
 export async function handleTransferZVC(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -104,12 +115,13 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
       return createResponse({ error: 'Du kannst nicht an dich selbst senden' }, 400, origin);
     }
 
-    // Calculate tax (10%)
-    const taxRate = 0.1;
+    // Calculate tax (5% normally, 0% on weekends in Berlin)
+    const isWeekend = isWeekendInBerlin();
+    const taxRate = isWeekend ? 0 : 0.05;
     const taxAmount = Math.floor(amount * taxRate);
     const totalCost = amount + taxAmount; // Total amount to deduct from sender
 
-    // Check if sender has enough ZVC (needs 110% of transfer amount)
+    // Check if sender has enough ZVC (needs 105% of transfer amount on weekdays)
     const senderResult = await db
       .select({ experience: schema.playerdata.experience })
       .from(schema.playerdata)

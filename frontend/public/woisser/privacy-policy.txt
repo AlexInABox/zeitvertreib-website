@@ -1,0 +1,54 @@
+Datenschutzerklärung für die App "Wo isser?"
+
+1. Verantwortlicher
+Verantwortlich für die Verarbeitung personenbezogener Daten im Rahmen der Nutzung der App "Wo isser?" ist:
+
+Name: Alexander Betke (alexinabox)
+Website/GitHub: alexinabox.de / github.com/alexinabox
+E-Mail: webmaster@zeitvertreib.vip
+
+2. Erhobene Daten
+Im Rahmen der Nutzung der App können folgende Daten erfasst werden:
+
+- Standortdaten: Dein aktueller Standort wird verwendet, um die Karte auf dich zu zentrieren und öffentliche Verkehrsmittel in deiner Nähe anzuzeigen.
+- Geräte-IP-Adresse: Wird temporär zur Sicherung des Dienstes und für Rate-Limiting verarbeitet.
+- Lokale Einstellungen: App-Einstellungen (z. B. Kartentyp, Aura-Farbe) werden ausschließlich lokal auf deinem Gerät gespeichert.
+
+3. Zweck der Datenerhebung
+Die erfassten Daten werden ausschließlich verwendet, um:
+
+- Die Kartenansicht auf deinen aktuellen Standort zu zentrieren.
+- Öffentliche Verkehrsmittel in deiner Umgebung anzuzeigen.
+- Die App-Funktionalität bereitzustellen und zu verbessern.
+- Missbrauch des Dienstes durch Rate-Limiting zu verhindern.
+
+4. Rechtsgrundlage
+Die Verarbeitung der Standortdaten erfolgt auf Grundlage deiner Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO. Die Standortfreigabe wird beim ersten Start der App abgefragt und kann jederzeit in den Geräteeinstellungen widerrufen werden.
+
+5. Speicherung und Löschung
+- Standortdaten: Werden nicht auf Servern gespeichert, sondern ausschließlich lokal auf deinem Gerät verarbeitet.
+- Lokale Einstellungen: Werden nur auf deinem Gerät gespeichert und können durch Deinstallation der App oder das Löschen der App-Daten entfernt werden.
+- Server-Logs: IP-Adressen werden temporär und maximal 24 Stunden zu Sicherheitszwecken protokolliert.
+
+6. Drittanbieter-Dienste
+Die App nutzt folgende Drittanbieter-Dienste:
+
+- VBB Transport REST API (transport.rest): Für Echtzeit-Fahrzeugdaten des öffentlichen Nahverkehrs in Berlin-Brandenburg.
+- Apple Maps: Für die Kartendarstellung (je nach Gerät).
+
+Für diese Dienste gelten die jeweiligen Datenschutzbestimmungen der Anbieter.
+
+7. Weitergabe von Daten
+Eine Weitergabe personenbezogener Daten an Dritte findet nicht statt. Standortdaten werden nur serverseitig verarbeitet, soweit dies für die Fahrzeugabfrage innerhalb des sichtbaren Kartenausschnitts erforderlich ist, nicht anhand deines exakten Standorts.
+
+8. Rechte der Nutzer
+Nutzer haben jederzeit das Recht auf:
+
+- Auskunft über die verarbeiteten Daten.
+- Widerruf der Standortfreigabe über die Geräteeinstellungen.
+- Löschung der lokalen Daten durch Deinstallation der App.
+
+9. Kontakt
+Fragen zur Datenschutzerklärung oder zur Ausübung deiner Rechte können per E-Mail an webmaster@zeitvertreib.vip gestellt werden.
+
+Stand: Januar 2026
