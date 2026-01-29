@@ -1,2 +1,5 @@
 /bot/*.txt
   Content-Type: text/plain; charset=utf-8
+
+/woisser/*.txt
+  Content-Type: text/plain; charset=utf-8
