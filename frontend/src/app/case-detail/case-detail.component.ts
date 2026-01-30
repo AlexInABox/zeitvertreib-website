@@ -6,7 +6,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../services/auth.service';
 import { createMD5 } from 'hash-wasm';
 
@@ -34,7 +34,7 @@ interface CaseMetadata {
 
 @Component({
   selector: 'app-case-detail',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, InputTextarea],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule],
   templateUrl: './case-detail.component.html',
   styleUrl: './case-detail.component.css',
 })
@@ -100,7 +100,7 @@ export class CaseDetailComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {

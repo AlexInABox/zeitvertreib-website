@@ -4,12 +4,12 @@ import { provideHttpClient, withInterceptors, HTTP_INTERCEPTORS } from '@angular
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import Aura from '@primeng/themes/aura';
-import { definePreset } from '@primeng/themes';
+import Aura from '@primeuix/themes/aura';
+import { definePreset } from '@primeuix/themes';
 import { routes } from './app.routes';
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 
-const MyPreset = definePreset(Aura, {
+const MyPreset = definePreset(Aura as any, {
   primitive: {
     borderRadius: {
       none: '0',
@@ -5231,7 +5231,7 @@ const MyPreset = definePreset(Aura, {
       },
     },
   },
-});
+} as any);
 
 export const appConfig: ApplicationConfig = {
   providers: [
