@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -730,3 +730,28 @@ export interface DeletionGetResponse {
 export interface DeletionPostRequest {
   enabledAt: number; // 0 to disable, any other value to enable
 }
+
+
+// ============================================================================
+// Birthday Types
+// ============================================================================
+
+/** GET /birthday response */
+export interface BirthdayGetResponse {
+  birthday: {
+    day: number;
+    month: number;
+    year?: number; // may be undefined if user doesn't want to share year
+    setAt: number;
+  } | null;
+}
+
+/** POST /birthday request */
+export interface BirthdayPostRequest {
+  day: number;
+  month: number;
+  year?: number; // optional, user may choose not to share year
+}
+
+/** DELETE /birthday request */
+export interface BirthdayDeleteRequest { }

@@ -46,6 +46,7 @@ import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.
 import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
 import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
+import { handleGetBirthday, handlePostBirthday, handleDeleteBirthday } from './routes/birthday.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -155,6 +156,11 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Deletion routes
   'GET:/deletion': handleGetDeletion,
   'POST:/deletion': handlePostDeletion,
+
+  // Birthday routes
+  'GET:/birthday': handleGetBirthday,
+  'POST:/birthday': handlePostBirthday,
+  'DELETE:/birthday': handleDeleteBirthday,
 };
 
 export default {

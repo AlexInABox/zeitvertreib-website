@@ -234,3 +234,11 @@ export const deletionEnabledUsers = sqliteTable('deletion_enabled_users', {
   userid: text('userid').primaryKey(),
   enabledAt: integer('enabled_at').notNull(),
 });
+
+export const birthdays = sqliteTable('birthdays', {
+  userid: text('userid').primaryKey(),
+  day: integer('day').notNull(),
+  month: integer('month').notNull(),
+  year: integer('year'), // can be null if user doesn't want to share year
+  setAt: integer('set_at').notNull(),
+});
