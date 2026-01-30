@@ -240,5 +240,9 @@ export const birthdays = sqliteTable('birthdays', {
   day: integer('day').notNull(),
   month: integer('month').notNull(),
   year: integer('year'), // can be null if user doesn't want to share year
-  setAt: integer('set_at').notNull(),
+});
+
+export const birthdayUpdates = sqliteTable('birthday_updates', {
+  userid: text('userid').primaryKey(),
+  lastUpdated: integer('last_updated').notNull(),
 });

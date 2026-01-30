@@ -2,7 +2,7 @@ import type { BirthdayGetResponse, BirthdayPostRequest, BirthdayDeleteRequest } 
 import { validateSession, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { birthdays } from '../db/schema.js';
+import { birthdays, birthdayUpdates } from '../db/schema.js';
 
 function isValidDate(day: number, month: number, year: number): boolean {
   const currentYear = new Date().getFullYear();
@@ -27,9 +27,15 @@ export async function handleGetBirthday(request: Request, env: Env): Promise<Res
 
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const birthdayRecord = await db.select().from(birthdays).where(eq(birthdays.userid, validation.steamId)).get();
+  const birthdayLastUpdatedRecord = await db
+    .select()
+    .from(birthdayUpdates)
+    .where(eq(birthdayUpdates.userid, validation.steamId))
+    .get();
 
   let response: BirthdayGetResponse = {
     birthday: null,
+    lastUpdated: birthdayLastUpdatedRecord ? birthdayLastUpdatedRecord.lastUpdated : null,
   };
 
   if (birthdayRecord) {
@@ -38,8 +44,8 @@ export async function handleGetBirthday(request: Request, env: Env): Promise<Res
         day: birthdayRecord.day,
         month: birthdayRecord.month,
         ...(birthdayRecord.year != null && { year: birthdayRecord.year }),
-        setAt: birthdayRecord.setAt,
       },
+      lastUpdated: birthdayLastUpdatedRecord ? birthdayLastUpdatedRecord.lastUpdated : null,
     };
   }
 
@@ -63,6 +69,18 @@ export async function handlePostBirthday(request: Request, env: Env): Promise<Re
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const now = Date.now();
 
+  // Check if birthday was updated in the last 30 days
+  const birthdayLastUpdatedRecord = await db
+    .select()
+    .from(birthdayUpdates)
+    .where(eq(birthdayUpdates.userid, validation.steamId))
+    .get();
+
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  if (birthdayLastUpdatedRecord && now - birthdayLastUpdatedRecord.lastUpdated < THIRTY_DAYS_MS) {
+    return createResponse({ error: 'Birthday can only be updated once every 30 days' }, 429, origin);
+  }
+
   await db
     .insert(birthdays)
     .values({
@@ -70,7 +88,6 @@ export async function handlePostBirthday(request: Request, env: Env): Promise<Re
       day: body.day,
       month: body.month,
       year: body.year ?? null,
-      setAt: now,
     })
     .onConflictDoUpdate({
       target: birthdays.userid,
@@ -78,7 +95,19 @@ export async function handlePostBirthday(request: Request, env: Env): Promise<Re
         day: body.day,
         month: body.month,
         year: body.year ?? null,
-        setAt: now,
+      },
+    });
+
+  await db
+    .insert(birthdayUpdates)
+    .values({
+      userid: validation.steamId,
+      lastUpdated: now,
+    })
+    .onConflictDoUpdate({
+      target: birthdayUpdates.userid,
+      set: {
+        lastUpdated: now,
       },
     });
 
