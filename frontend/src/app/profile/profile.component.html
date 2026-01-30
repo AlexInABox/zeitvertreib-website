@@ -25,6 +25,143 @@
       </div>
     </div>
 
+    <!-- Birthday Card -->
+    <div class="card birthday-card">
+      <div class="card-header">
+        <span class="card-icon">🎂</span>
+        <div class="card-title-group">
+          <h2>Geburtstag</h2>
+          <span class="card-subtitle">Erhalte an deinem Geburtstag besondere Belohnungen</span>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loadingBirthday" class="card-loading">
+        <div class="loading-spinner small"></div>
+        <span>Lade Geburtstag...</span>
+      </div>
+
+      <!-- Birthday Display (not editing) -->
+      <div *ngIf="!loadingBirthday && !isEditingBirthday" class="birthday-body">
+        <div class="birthday-content">
+          <div *ngIf="hasBirthday()" class="birthday-display">
+            <span class="birthday-label">{{ getBirthdayDisplay() }}</span>
+          </div>
+          <span *ngIf="!hasBirthday() && !isBirthdayEditDisabled()" class="muted">Noch kein Geburtstag gesetzt</span>
+
+          <div class="birthday-actions">
+            <button
+              class="btn btn-secondary btn-small"
+              (click)="startEditBirthday()"
+              [disabled]="!hasBirthday() && isBirthdayEditDisabled()"
+            >
+              {{ hasBirthday() ? '✏️ Bearbeiten' : '➕ Hinzufügen' }}
+            </button>
+          </div>
+
+          <!-- Cooldown message when birthday exists -->
+          <div *ngIf="hasBirthday() && isBirthdayEditDisabled()" class="birthday-cooldown-notice">
+            ⏳ Noch {{ getDaysUntilBirthdayEdit() }} Tag{{ getDaysUntilBirthdayEdit() !== 1 ? 'e' : '' }} bis zur
+            nächsten Aktualisierung. Du kannst aber noch löschen.
+          </div>
+
+          <!-- Cooldown message when birthday deleted -->
+          <div *ngIf="!hasBirthday() && isBirthdayEditDisabled()" class="birthday-deleted-cooldown-notice">
+            ⏳ Du kannst einen neuen Geburtstag in {{ getDaysUntilBirthdayEdit() }} Tag{{
+              getDaysUntilBirthdayEdit() !== 1 ? 'en' : ''
+            }}
+            hinzufügen
+          </div>
+        </div>
+      </div>
+
+      <!-- Birthday Edit Form -->
+      <div *ngIf="!loadingBirthday && isEditingBirthday" class="birthday-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="birthday-day">Tag</label>
+            <input
+              type="number"
+              id="birthday-day"
+              [(ngModel)]="editDay"
+              placeholder="01"
+              min="1"
+              max="31"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            />
+          </div>
+          <div class="form-group">
+            <label for="birthday-month">Monat</label>
+            <input
+              type="number"
+              id="birthday-month"
+              [(ngModel)]="editMonth"
+              placeholder="01"
+              min="1"
+              max="12"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            />
+          </div>
+          <div class="form-group">
+            <label for="birthday-year">Jahr <span class="optional">(optional)</span></label>
+            <input
+              type="number"
+              id="birthday-year"
+              [(ngModel)]="editYear"
+              placeholder="1990"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            />
+          </div>
+        </div>
+
+        <div *ngIf="!isBirthdayEditDisabled()" class="privacy-notice">
+          ⚠️ Dein Geburtstag ist <strong>öffentlich sichtbar</strong> und ist NICHT privat. Durch Klick auf "Speichern"
+          stimmst du zu, dass diese Information für alle einsehbar wird.
+        </div>
+
+        <div *ngIf="isBirthdayEditDisabled()" class="birthday-cooldown-edit-notice">
+          ⏳ Du kannst deinen Geburtstag momentan nicht aktualisieren ({{ getDaysUntilBirthdayEdit() }} Tag{{
+            getDaysUntilBirthdayEdit() !== 1 ? 'e' : ''
+          }}
+          verbleibend). Du kannst ihn aber trotzdem löschen.
+        </div>
+
+        <div class="form-error" *ngIf="birthdayError">{{ birthdayError }}</div>
+
+        <div class="birthday-form-actions">
+          <button
+            *ngIf="hasBirthday() && !showDeleteConfirm"
+            class="btn btn-danger btn-small"
+            (click)="showDeleteBirthdayConfirm()"
+            [disabled]="birthdayLoading"
+          >
+            🗑️ Löschen
+          </button>
+          <div *ngIf="showDeleteConfirm" class="birthday-delete-confirm">
+            <span class="delete-confirm-text">Wirklich löschen?</span>
+            <button class="btn btn-danger btn-small" (click)="deleteBirthday()" [disabled]="birthdayLoading">Ja</button>
+            <button class="btn btn-secondary btn-small" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">
+              Nein
+            </button>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn btn-secondary btn-small" (click)="cancelEditBirthday()" [disabled]="birthdayLoading">
+            Abbrechen
+          </button>
+          <button
+            class="btn btn-primary btn-small"
+            (click)="saveBirthday()"
+            [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+          >
+            <span *ngIf="!birthdayLoading">{{
+              isBirthdayEditDisabled() ? 'Aktualisierung gesperrt' : 'Speichern'
+            }}</span>
+            <span *ngIf="birthdayLoading">Speichert...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Sessions Card -->
     <div class="card sessions-card">
       <div class="card-header">

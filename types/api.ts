@@ -730,3 +730,27 @@ export interface DeletionGetResponse {
 export interface DeletionPostRequest {
   enabledAt: number; // 0 to disable, any other value to enable
 }
+
+// ============================================================================
+// Birthday Types
+// ============================================================================
+
+/** GET /birthday response */
+export interface BirthdayGetResponse {
+  birthday: {
+    day: number;
+    month: number;
+    year?: number; // may be undefined if user doesn't want to share year
+  } | null;
+  lastUpdated: number | null;
+}
+
+/** POST /birthday request */
+export interface BirthdayPostRequest {
+  day: number;
+  month: number;
+  year?: number; // optional, user may choose not to share year
+}
+
+/** DELETE /birthday request */
+export interface BirthdayDeleteRequest {}

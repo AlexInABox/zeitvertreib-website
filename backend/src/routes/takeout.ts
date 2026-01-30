@@ -18,6 +18,7 @@ import {
   donations,
   sessions,
   steamCache,
+  birthdays,
 } from '../db/schema.js';
 import { SMTPClient, Message } from 'emailjs';
 
@@ -142,6 +143,7 @@ interface TakeoutDataResult {
   donations: Record<string, unknown>[];
   sessions: Record<string, unknown>[];
   steamCache: Record<string, unknown> | null;
+  birthdays: Record<string, unknown> | null;
 }
 
 async function collectUserData(
@@ -199,6 +201,9 @@ async function collectUserData(
   // Steam cache
   const steamCacheResult = await db.select().from(steamCache).where(eq(steamCache.steamId, userid)).get();
 
+  // Birthday data
+  const birthdaysResult = await db.select().from(birthdays).where(eq(birthdays.userid, userid)).get();
+
   return {
     playerdata: playerdataResult ?? null,
     discordInfo: discordInfoResult ?? null,
@@ -225,6 +230,7 @@ async function collectUserData(
       id: `${s.id.slice(0, 8)}...`,
     })),
     steamCache: steamCacheResult ?? null,
+    birthdays: birthdaysResult ?? null,
   };
 }
 

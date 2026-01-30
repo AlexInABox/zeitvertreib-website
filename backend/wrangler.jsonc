@@ -104,7 +104,12 @@
         "BACKEND_URL": "https://zeitvertreib.vip/api",
       },
       "triggers": {
-        "crons": ["*/15 * * * *", "0 3 2 1 *", "0 0 * * *"],
+        "crons": [
+          "*/15 * * * *", // Added for leaderboard flush
+          "0 3 2 1 *", // Added for yearly advent calendar reset
+          "0 0 * * *", // Added for daily tax calculation
+          "0 6 * * *", // Added for daily birthday check
+        ],
       },
     },
     "dev": {

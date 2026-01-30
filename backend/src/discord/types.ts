@@ -14,6 +14,7 @@ declare global {
             content?: string;
             embeds?: any[];
             components?: any[];
+            flags?: number;
           },
     ) => Promise<void>;
   }

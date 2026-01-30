@@ -9,26 +9,26 @@
     "db:devscript": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --file ./devscripts/giveallfakerankadmin.sql"
   },
   "devDependencies": {
-    "@tsconfig/strictest": "^2.0.6",
-    "@types/node": "^24.7.0",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/node": "^25.1.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "typescript": "^5.9.3",
-    "wrangler": "^4.42.0"
+    "wrangler": "^4.61.1"
   },
   "dependencies": {
     "@2toad/profanity": "^3.2.0",
-    "@discordjs/builders": "^1.13.0",
+    "@discordjs/builders": "^1.13.1",
     "@discordjs/rest": "^2.6.0",
     "@zeitvertreib/types": "file:../types",
     "aws4fetch": "^1.0.20",
-    "better-sqlite3": "^12.4.1",
-    "discord-api-types": "^0.38.31",
+    "better-sqlite3": "^12.6.2",
+    "discord-api-types": "^0.38.38",
     "discord-interactions": "^4.4.0",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "emailjs": "^5.0.0",
-    "glin-profanity": "^2.3.8",
-    "openai": "^6.2.0",
+    "glin-profanity": "^3.1.5",
+    "openai": "^6.17.0",
     "washyourmouthoutwithsoap": "^1.0.2"
   }
 }
