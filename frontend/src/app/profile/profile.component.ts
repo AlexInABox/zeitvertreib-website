@@ -62,7 +62,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private deletionService: DeletionService,
     private birthdayService: BirthdayService,
     private router: Router,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.currentSessionToken = this.authService.getSessionToken();
@@ -391,8 +391,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   getMonthName(month: number): string {
     const months = [
-      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember',
     ];
     return months[month - 1] || '';
   }
