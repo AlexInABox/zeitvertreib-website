@@ -11,10 +11,11 @@ declare global {
       content:
         | string
         | {
-            content?: string;
-            embeds?: any[];
-            components?: any[];
-          },
+          content?: string;
+          embeds?: any[];
+          components?: any[];
+          flags?: number;
+        },
     ) => Promise<void>;
   }
 
@@ -38,4 +39,4 @@ declare global {
   }
 }
 
-export {};
+export { };
