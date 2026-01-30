@@ -47,6 +47,7 @@ import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
 import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
 import { handleGetBirthday, handlePostBirthday, handleDeleteBirthday } from './routes/birthday.js';
+import { checkForBirthdays } from './routes/cron/birthday.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -268,6 +269,12 @@ export default {
       } catch (error) {
         console.error('Failed to flush advent calendar:', error);
       }
+    }
+
+    // Check for birthdays every day at 06:00 UTC
+    if (controller.cron === '0 6 * * *') {
+      console.log('Running daily birthday check...');
+      ctx.waitUntil(checkForBirthdays(db, env, ctx));
     }
   },
 } satisfies ExportedHandler<Env>;
