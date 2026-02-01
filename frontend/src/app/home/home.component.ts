@@ -191,7 +191,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private setupImageObserver(): void {
     const imageElements = document.querySelectorAll('.masonry-media');
-    
+
     this.intersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -205,7 +205,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
         });
       },
-      { rootMargin: '200px' } //Alex: adjust based on how soon images should load
+      { rootMargin: '200px' }, //Alex: adjust based on how soon images should load
     );
 
     imageElements.forEach((img) => {
