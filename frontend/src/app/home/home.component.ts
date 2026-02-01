@@ -54,6 +54,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   lightboxOpen = false;
   currentImageIndex = 0;
   showGalleryBadge = true;
+  private imageCache: Map<string, boolean> = new Map();
+  private intersectionObserver: IntersectionObserver | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -70,6 +72,20 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     // Setup scroll listener to hide badge when gallery is visible
     window.addEventListener('scroll', this.handleScroll.bind(this));
+
+    // Preload all thumbnail images on component init (eagerly, to avoid Firefox lazy-load issues)
+    setTimeout(() => {
+      this.images.forEach((image) => {
+        if (!image.endsWith('.mp4')) {
+          this.preloadImage(image, 'tiny');
+        }
+      });
+    }, 100);
+
+    // Setup Intersection Observer for images that render in DOM
+    setTimeout(() => {
+      this.setupImageObserver();
+    }, 500);
   }
 
   ngOnDestroy() {
@@ -77,6 +93,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       clearInterval(this.intervalId);
     }
     window.removeEventListener('scroll', this.handleScroll.bind(this));
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
   }
 
   fetchPlayerlist() {
@@ -117,6 +136,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentImageIndex = index;
     this.lightboxOpen = true;
     document.body.style.overflow = 'hidden';
+    // Preload full-size images and adjacent ones for smooth navigation
+    this.preloadImage(this.images[index], 'full');
+    this.preloadImage(this.images[(index + 1) % this.images.length], 'full');
+    this.preloadImage(this.images[(index - 1 + this.images.length) % this.images.length], 'full');
   }
 
   closeLightbox() {
@@ -127,11 +150,67 @@ export class HomeComponent implements OnInit, OnDestroy {
   nextImage(event: Event) {
     event.stopPropagation();
     this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length;
+    // Preload next images for smooth transitions
+    const nextIdx = (this.currentImageIndex + 1) % this.images.length;
+    const nextNextIdx = (this.currentImageIndex + 2) % this.images.length;
+    this.preloadImage(this.images[nextIdx], 'full');
+    this.preloadImage(this.images[nextNextIdx], 'full');
   }
 
   previousImage(event: Event) {
     event.stopPropagation();
     this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+    // Preload previous images for smooth transitions
+    const prevIdx = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+    const prevPrevIdx = (this.currentImageIndex - 2 + this.images.length) % this.images.length;
+    this.preloadImage(this.images[prevIdx], 'full');
+    this.preloadImage(this.images[prevPrevIdx], 'full');
+  }
+
+  private preloadImage(filename: string, folder: 'tiny' | 'full'): void {
+    // Skip videos
+    if (filename.endsWith('.mp4')) {
+      return;
+    }
+
+    const cacheKey = `${folder}/${filename}`;
+    // Don't preload if already cached
+    if (this.imageCache.has(cacheKey)) {
+      return;
+    }
+
+    const img = new Image();
+    img.onerror = () => {
+      console.warn(`Failed to preload image: ${cacheKey}`);
+    };
+    img.onload = () => {
+      this.imageCache.set(cacheKey, true);
+    };
+    img.src = `/assets/showcase/${folder}/${filename}`;
+  }
+
+  private setupImageObserver(): void {
+    const imageElements = document.querySelectorAll('.masonry-media');
+    
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement | HTMLVideoElement;
+            const src = img.getAttribute('data-src');
+            if (src && !img.src) {
+              img.src = src;
+              img.removeAttribute('data-src');
+            }
+          }
+        });
+      },
+      { rootMargin: '200px' } //Alex: adjust based on how soon images should load
+    );
+
+    imageElements.forEach((img) => {
+      this.intersectionObserver!.observe(img);
+    });
   }
 
   scrollToGallery(event: Event) {
