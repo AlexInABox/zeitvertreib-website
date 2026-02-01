@@ -73,7 +73,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Setup scroll listener to hide badge when gallery is visible
     window.addEventListener('scroll', this.handleScroll.bind(this));
 
-    // Preload all thumbnail images on component init (eagerly, to avoid Firefox lazy-load issues)
+    //Firefox Fix(?)
     setTimeout(() => {
       this.images.forEach((image) => {
         if (!image.endsWith('.mp4')) {
@@ -82,7 +82,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
     }, 100);
 
-    // Setup Intersection Observer for images that render in DOM
     setTimeout(() => {
       this.setupImageObserver();
     }, 500);
@@ -136,7 +135,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentImageIndex = index;
     this.lightboxOpen = true;
     document.body.style.overflow = 'hidden';
-    // Preload full-size images and adjacent ones for smooth navigation
     this.preloadImage(this.images[index], 'full');
     this.preloadImage(this.images[(index + 1) % this.images.length], 'full');
     this.preloadImage(this.images[(index - 1 + this.images.length) % this.images.length], 'full');
@@ -150,7 +148,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   nextImage(event: Event) {
     event.stopPropagation();
     this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length;
-    // Preload next images for smooth transitions
     const nextIdx = (this.currentImageIndex + 1) % this.images.length;
     const nextNextIdx = (this.currentImageIndex + 2) % this.images.length;
     this.preloadImage(this.images[nextIdx], 'full');
@@ -160,7 +157,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   previousImage(event: Event) {
     event.stopPropagation();
     this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
-    // Preload previous images for smooth transitions
     const prevIdx = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
     const prevPrevIdx = (this.currentImageIndex - 2 + this.images.length) % this.images.length;
     this.preloadImage(this.images[prevIdx], 'full');
@@ -168,7 +164,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private preloadImage(filename: string, folder: 'tiny' | 'full'): void {
-    // Skip videos
     if (filename.endsWith('.mp4')) {
       return;
     }
@@ -191,7 +186,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private setupImageObserver(): void {
     const imageElements = document.querySelectorAll('.masonry-media');
-
+    
     this.intersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -205,7 +200,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
         });
       },
-      { rootMargin: '200px' }, //Alex: adjust based on how soon images should load
+      { rootMargin: '200px' } //Alex: adjust based on how soon images should load
     );
 
     imageElements.forEach((img) => {
