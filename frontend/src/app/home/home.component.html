@@ -207,15 +207,14 @@
         loop
         muted
         playsinline
-        loading="lazy"
         class="masonry-media"
       ></video>
       <img
         *ngIf="!item.endsWith('.mp4')"
-        [src]="'/assets/showcase/tiny/' + item"
+        [attr.data-src]="'/assets/showcase/tiny/' + item"
         [alt]="'Screenshot ' + item"
-        loading="lazy"
         class="masonry-media"
+        style="display: block"
       />
     </div>
   </div>
