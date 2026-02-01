@@ -202,17 +202,19 @@
     <div *ngFor="let item of images; let i = index" class="masonry-item" (click)="openLightbox(i)">
       <video
         *ngIf="item.endsWith('.mp4')"
-        [src]="'/assets/showcase/full/' + item"
+        [src]="'/assets/showcase/tiny/' + item"
         autoplay
         loop
         muted
         playsinline
+        loading="lazy"
         class="masonry-media"
       ></video>
       <img
         *ngIf="!item.endsWith('.mp4')"
-        [src]="'/assets/showcase/full/' + item"
+        [src]="'/assets/showcase/tiny/' + item"
         [alt]="'Screenshot ' + item"
+        loading="lazy"
         class="masonry-media"
       />
     </div>
