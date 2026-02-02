@@ -286,7 +286,8 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     }
 
     console.log(
-      `🎰 Slot machine: ${validation.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout
+      `🎰 Slot machine: ${validation.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${
+        result.payout
       } ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );
 
