@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -261,17 +261,13 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
 
     // Send webhook notification for significant wins only (jackpot, big_win, small_win)
     if (result.type === 'jackpot' || result.type === 'big_win' || result.type === 'small_win') {
-      // Get Steam username from cache
+      // Get Steam username from database cache
       let steamNickname = validation.steamId!;
-      try {
-        const userCacheKey = `steam_user:${validation.steamId}`;
-        const cachedUserData = await env.SESSIONS.get(userCacheKey);
-        if (cachedUserData) {
-          const userData = JSON.parse(cachedUserData);
-          steamNickname = userData?.userData?.personaname || steamNickname;
+      if (ctx) {
+        const steamUser = await fetchSteamUserData(validation.steamId!, env, ctx);
+        if (steamUser) {
+          steamNickname = steamUser.username;
         }
-      } catch (error) {
-        console.error('Error fetching cached Steam user data:', error);
       }
 
       // Send to Discord webhook (non-blocking) using ctx.waitUntil
@@ -290,8 +286,7 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     }
 
     console.log(
-      `🎰 Slot machine: ${validation.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${
-        result.payout
+      `🎰 Slot machine: ${validation.steamId} ${result.type} with ${slot1}${slot2}${slot3}. Payout: ${result.payout
       } ZVC. Balance: ${currentBalance} → ${newBalance}`,
     );
 
