@@ -57,12 +57,5 @@ const users = await env.ZEITVERTREIB_DATA.prepare('SELECT * FROM users WHERE id 
 ### Route Registration
 - Backend routes **must always be registered in `src/routes/index.ts`** to ensure proper inclusion in the Cloudflare Worker build.
 
-### Takeout Endpoint (/takeout)
-- **CRITICAL GDPR COMPLIANCE**: The `/takeout` endpoint must query **ALL tables defined in `backend/src/db/schema.ts`** to ensure complete data export.
-- When modifying the schema or takeout logic, **verify that every table is queried** in the `collectUserData()` function.
-- Data masking: Sensitive fields like card codes (show only last 4 digits) and session IDs (show only first 8 chars) must be masked before inclusion.
-- Email delivery: Always catch errors and **remove the "lock" row** in `lastTakeoutRequests` if email sending fails.
-- 30-day throttling: Enforce atomically at the start of POST processing using INSERT OR REPLACE.
-
 ### dist/ Directories
 - The `dist/` directories in each package are build outputs and **must not be committed to version control** or manually edited.
