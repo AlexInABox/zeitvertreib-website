@@ -3200,71 +3200,72 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Record when the spin started to ensure result shows only after full animation
     const spinStartTime = Date.now();
 
-    this.authService
-      .authenticatedPost<RoulettePlayResponse>(`${environment.apiUrl}/roulette`, requestBody)
-      .subscribe({
-        next: (response) => {
-          this.rouletteSpinResult = response.spinResult;
-          this.rouletteSpinColor = response.color;
-          this.rouletteWon = response.won;
-          this.roulettePayout = response.payout;
+    this.authService.authenticatedPost<RoulettePlayResponse>(`${environment.apiUrl}/roulette`, requestBody).subscribe({
+      next: (response) => {
+        this.rouletteSpinResult = response.spinResult;
+        this.rouletteSpinColor = response.color;
+        this.rouletteWon = response.won;
+        this.roulettePayout = response.payout;
 
-          // Calculate rotation to land on the winning number
-          // Each section is 360/37 ≈ 9.73 degrees
-          // We need to rotate so the winning number's center aligns with the pointer at top
-          const wheelSequence = [0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17, 25, 2, 21, 4, 19, 15, 32];
-          const position = wheelSequence.indexOf(response.spinResult);
-          const sectionSize = 360 / 37;
-          const targetAngle = (position * sectionSize) + (sectionSize / 2);
-          // Rotate backwards (negative) to bring the target to the pointer, add full spins
-          const fullSpins = 5 * 360; // 5 full rotations
-          this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + fullSpins + (360 - targetAngle);
+        // Calculate rotation to land on the winning number
+        // Each section is 360/37 ≈ 9.73 degrees
+        // We need to rotate so the winning number's center aligns with the pointer at top
+        const wheelSequence = [
+          0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34,
+          17, 25, 2, 21, 4, 19, 15, 32,
+        ];
+        const position = wheelSequence.indexOf(response.spinResult);
+        const sectionSize = 360 / 37;
+        const targetAngle = position * sectionSize + sectionSize / 2;
+        // Rotate backwards (negative) to bring the target to the pointer, add full spins
+        const fullSpins = 5 * 360; // 5 full rotations
+        this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + fullSpins + (360 - targetAngle);
 
-          // Ensure result is not shown until 5 seconds have elapsed since spin started
-          const elapsedTime = Date.now() - spinStartTime;
-          const remainingDelay = Math.max(0, 5000 - elapsedTime);
+        // Ensure result is not shown until 5 seconds have elapsed since spin started
+        const elapsedTime = Date.now() - spinStartTime;
+        const remainingDelay = Math.max(0, 5000 - elapsedTime);
 
-          this.rouletteResultTimeoutId = setTimeout(() => {
-            this.isRouletteSpinning = false;
-            this.showRouletteResult = true;
+        this.rouletteResultTimeoutId = setTimeout(() => {
+          this.isRouletteSpinning = false;
+          this.showRouletteResult = true;
 
-            if (response.payout > 0) {
-              this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
-            }
+          if (response.payout > 0) {
+            this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
+          }
 
-            this.rouletteMessage = response.message;
-            this.addRouletteSpinToLog(
-              response.spinResult,
-              this.rouletteBetType,
-              this.rouletteBetValue,
-              response.won,
-              response.payout,
-              bet,
-              response.message,
-            );
+          this.rouletteMessage = response.message;
+          this.addRouletteSpinToLog(
+            response.spinResult,
+            this.rouletteBetType,
+            this.rouletteBetValue,
+            response.won,
+            response.payout,
+            bet,
+            response.message,
+          );
 
-            this.rouletteClearResultTimeoutId = setTimeout(() => {
-              this.showRouletteResult = false;
-              this.rouletteMessage = '';
-              this.rouletteSpinResult = null;
-              this.rouletteSpinColor = null;
-              this.rouletteLoading = false;
-            }, 3000);
-          }, remainingDelay);
-        },
-          error: (error) => {
-            this.isRouletteSpinning = false;
+          this.rouletteClearResultTimeoutId = setTimeout(() => {
+            this.showRouletteResult = false;
+            this.rouletteMessage = '';
+            this.rouletteSpinResult = null;
+            this.rouletteSpinColor = null;
             this.rouletteLoading = false;
+          }, 3000);
+        }, remainingDelay);
+      },
+      error: (error) => {
+        this.isRouletteSpinning = false;
+        this.rouletteLoading = false;
 
-            this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+        this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
 
-            this.rouletteError = error?.error?.error || 'Fehler beim Drehen des Roulettes';
+        this.rouletteError = error?.error?.error || 'Fehler beim Drehen des Roulettes';
 
-            setTimeout(() => {
-              this.rouletteError = '';
-            }, 3000);
-          },
-        });
+        setTimeout(() => {
+          this.rouletteError = '';
+        }, 3000);
+      },
+    });
   }
 
   private loadRouletteSpinLog(): void {
@@ -3325,11 +3326,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.rouletteSpinLog.filter((entry) => entry.won);
   }
 
-  trackByRouletteSpinId(index: number, entry: typeof this.rouletteSpinLog[0]): number {
+  trackByRouletteSpinId(index: number, entry: (typeof this.rouletteSpinLog)[0]): number {
     return entry.id;
   }
 
-  getRouletteSpinTypeInfo(entry: typeof this.rouletteSpinLog[0]): { emoji: string; label: string; color: string } {
+  getRouletteSpinTypeInfo(entry: (typeof this.rouletteSpinLog)[0]): { emoji: string; label: string; color: string } {
     if (entry.won) {
       return {
         emoji: '🎉',
@@ -3352,28 +3353,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getRouletteNumberPosition(number: number): { [key: string]: string } {
     // Real European roulette wheel number sequence (clockwise from 0)
-    const wheelSequence = [0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17, 25, 2, 21, 4, 19, 15, 32];
+    const wheelSequence = [
+      0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17,
+      25, 2, 21, 4, 19, 15, 32,
+    ];
     const position = wheelSequence.indexOf(number);
-    
+
     if (position === -1) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
-    
+
     // Each position gets equal space (360 / 37 degrees)
     const sectionSize = 360 / 37;
-    const angle = (position * sectionSize) + (sectionSize / 2);
+    const angle = position * sectionSize + sectionSize / 2;
     const radians = ((angle - 90) * Math.PI) / 180;
-    
+
     // Position on the outer edge
     const radiusPercent = 44;
     const x = radiusPercent * Math.cos(radians);
     const y = radiusPercent * Math.sin(radians);
-    
+
     // Rotate number to face inward toward the center
     const rotationAngle = angle;
-    
+
     return {
       left: `calc(50% + ${x}%)`,
       top: `calc(50% + ${y}%)`,
-      transform: `translate(-50%, -50%) rotate(${rotationAngle}deg)`
+      transform: `translate(-50%, -50%) rotate(${rotationAngle}deg)`,
     };
   }
 

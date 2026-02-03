@@ -156,12 +156,12 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
   if (validation.status !== 'valid' || !validation.steamId) {
     return createResponse(
       { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
-        401,
-        origin,
-      );
-    }
+      401,
+      origin,
+    );
+  }
 
-    const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
+  const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
   let betAmount: number;
   let betType: BetType;
@@ -247,13 +247,15 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     //RNG 0-36
     const randomBuffer = new Uint32Array(1);
     crypto.getRandomValues(randomBuffer);
-    const spinResult = (randomBuffer[0]! % 37); // 0-36
+    const spinResult = randomBuffer[0]! % 37; // 0-36
 
     //check win
     const betOutcome = checkBetOutcome(betType, betValue, spinResult);
 
     // Debug logging
-    console.log(`Roulette debug: spinResult=${spinResult}, betType=${betType}, betValue=${betValue}, won=${betOutcome.won}, color=${spinResult === 0 ? 'green' : isRed(spinResult) ? 'red' : 'black'}`);
+    console.log(
+      `Roulette debug: spinResult=${spinResult}, betType=${betType}, betValue=${betValue}, won=${betOutcome.won}, color=${spinResult === 0 ? 'green' : isRed(spinResult) ? 'red' : 'black'}`,
+    );
 
     //payout calculation
     const payout = betOutcome.won ? betAmount * betOutcome.multiplier : 0;

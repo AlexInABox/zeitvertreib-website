@@ -5248,7 +5248,9 @@
     #1f2937 340.55deg 350.28deg,
     #ef4444 350.28deg 360deg
   );
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
 }
 
