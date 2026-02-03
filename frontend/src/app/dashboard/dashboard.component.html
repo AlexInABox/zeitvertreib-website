@@ -767,43 +767,85 @@
                   <div *ngIf="chickenCrossInfo">
                     <!-- Game Board Visualization -->
                     <div class="chicken-game-board">
-                      <div class="chicken-road" #chickenRoad [attr.data-has-game]="hasActiveChickenCrossGame() || chickenCrossDeadGame">
+                      <div
+                        class="chicken-road"
+                        #chickenRoad
+                        [attr.data-has-game]="hasActiveChickenCrossGame() || chickenCrossDeadGame"
+                      >
                         <!-- Starting position (home) -->
-                        <div class="chicken-lane chicken-home" 
+                        <div
+                          class="chicken-lane chicken-home"
                           [class.chicken-current]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0"
-                          [class.chicken-dead-home]="chickenCrossDeadGame && !hasActiveChickenCrossGame()">
-                          <span class="chicken-lane-marker" [class.chicken-emoji]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0">
+                          [class.chicken-dead-home]="chickenCrossDeadGame && !hasActiveChickenCrossGame()"
+                        >
+                          <span
+                            class="chicken-lane-marker"
+                            [class.chicken-emoji]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0"
+                          >
                             {{ hasActiveChickenCrossGame() && chickenCrossGame!.step === 0 ? '🐔' : '🏠' }}
                           </span>
                           <span class="chicken-lane-label">Start</span>
                         </div>
-                        
+
                         <!-- Active game: passed steps + next 4 steps -->
                         <ng-container *ngIf="hasActiveChickenCrossGame()">
                           <!-- Passed steps (1 to current step) -->
-                          <div 
+                          <div
                             *ngFor="let step of [].constructor(chickenCrossGame!.step); let i = index"
                             class="chicken-lane"
                             [class.chicken-passed]="i + 1 < chickenCrossGame!.step"
-                            [class.chicken-current]="i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'"
-                            [class.chicken-suspense]="chickenCrossIsAnimating && i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'"
-                            [class.chicken-dead]="chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step"
-                            [class.chicken-success]="!chickenCrossIsAnimating && i + 1 === chickenCrossGame!.step && chickenCrossGame!.state === 'ACTIVE'"
+                            [class.chicken-current]="
+                              i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'
+                            "
+                            [class.chicken-suspense]="
+                              chickenCrossIsAnimating &&
+                              i + 1 === chickenCrossGame!.step &&
+                              chickenCrossGame!.state !== 'LOST'
+                            "
+                            [class.chicken-dead]="
+                              chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step
+                            "
+                            [class.chicken-success]="
+                              !chickenCrossIsAnimating &&
+                              i + 1 === chickenCrossGame!.step &&
+                              chickenCrossGame!.state === 'ACTIVE'
+                            "
                           >
-                            <span class="chicken-lane-marker" 
-                              [class.chicken-emoji]="i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST' && !chickenCrossIsAnimating"
-                              [class.chicken-suspense-emoji]="chickenCrossIsAnimating && i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'">
-                              {{ chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step ? '💀' : (i + 1 === chickenCrossGame!.step ? '🐔' : '✅') }}
+                            <span
+                              class="chicken-lane-marker"
+                              [class.chicken-emoji]="
+                                i + 1 === chickenCrossGame!.step &&
+                                chickenCrossGame!.state !== 'LOST' &&
+                                !chickenCrossIsAnimating
+                              "
+                              [class.chicken-suspense-emoji]="
+                                chickenCrossIsAnimating &&
+                                i + 1 === chickenCrossGame!.step &&
+                                chickenCrossGame!.state !== 'LOST'
+                              "
+                            >
+                              {{
+                                chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step
+                                  ? '💀'
+                                  : i + 1 === chickenCrossGame!.step
+                                    ? '🐔'
+                                    : '✅'
+                              }}
                             </span>
-                            <span class="chicken-lane-multiplier">{{ getChickenMultiplierForStep(chickenCrossGame!.seed, i + 1) }}x</span>
+                            <span class="chicken-lane-multiplier"
+                              >{{ getChickenMultiplierForStep(chickenCrossGame!.seed, i + 1) }}x</span
+                            >
                             <!-- Explosion particles inside the dead lane -->
-                            <div *ngIf="chickenCrossLostAnimation && i + 1 === chickenCrossGame!.step" class="chicken-explosion-inline">
-                              <div class="explosion-particle-inline" *ngFor="let p of [1,2,3,4,5,6,7,8]"></div>
+                            <div
+                              *ngIf="chickenCrossLostAnimation && i + 1 === chickenCrossGame!.step"
+                              class="chicken-explosion-inline"
+                            >
+                              <div class="explosion-particle-inline" *ngFor="let p of [1, 2, 3, 4, 5, 6, 7, 8]"></div>
                             </div>
                           </div>
-                          
+
                           <!-- Next 4 steps with multipliers -->
-                          <div 
+                          <div
                             *ngFor="let nextStep of getNextChickenSteps(); let i = index"
                             class="chicken-lane chicken-future"
                             [class.chicken-next-immediate]="i === 0"
@@ -812,24 +854,28 @@
                             <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
                           </div>
                         </ng-container>
-                        
+
                         <!-- Dead game display (show the lost state while bet controls appear) -->
                         <ng-container *ngIf="!hasActiveChickenCrossGame() && chickenCrossDeadGame">
-                          <div 
+                          <div
                             *ngFor="let step of [].constructor(chickenCrossDeadGame.step); let i = index"
                             class="chicken-lane"
                             [class.chicken-passed]="i + 1 < chickenCrossDeadGame.step"
                             [class.chicken-dead]="i + 1 === chickenCrossDeadGame.step"
                           >
-                            <span class="chicken-lane-marker" 
-                              [class.chicken-dead-emoji]="i + 1 === chickenCrossDeadGame.step">
+                            <span
+                              class="chicken-lane-marker"
+                              [class.chicken-dead-emoji]="i + 1 === chickenCrossDeadGame.step"
+                            >
                               {{ i + 1 === chickenCrossDeadGame.step ? '💀' : '✅' }}
                             </span>
-                            <span class="chicken-lane-multiplier">{{ getChickenMultiplierForStep(chickenCrossDeadGame.seed, i + 1) }}x</span>
+                            <span class="chicken-lane-multiplier"
+                              >{{ getChickenMultiplierForStep(chickenCrossDeadGame.seed, i + 1) }}x</span
+                            >
                           </div>
-                          
+
                           <!-- Show the next 4 steps that could have been -->
-                          <div 
+                          <div
                             *ngFor="let nextStep of getDeadChickenNextSteps(); let i = index"
                             class="chicken-lane chicken-future"
                             [class.chicken-next-immediate]="i === 0"
@@ -838,7 +884,7 @@
                             <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
                           </div>
                         </ng-container>
-                        
+
                         <!-- No active game and no dead game: show start position + preview steps -->
                         <ng-container *ngIf="!hasActiveChickenCrossGame() && !chickenCrossDeadGame">
                           <div class="chicken-lane chicken-preview">

@@ -209,12 +209,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-      teamColors: [],
-      vipColors: [],
-      donatorColors: [],
-      boosterColors: [],
-      otherColors: [],
-    };
+    teamColors: [],
+    vipColors: [],
+    donatorColors: [],
+    boosterColors: [],
+    otherColors: [],
+  };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -2640,7 +2640,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (road && currentLane) {
         const roadRect = road.getBoundingClientRect();
         const laneRect = currentLane.getBoundingClientRect();
-        const scrollLeft = currentLane.offsetLeft - (roadRect.width / 2) + (laneRect.width / 2);
+        const scrollLeft = currentLane.offsetLeft - roadRect.width / 2 + laneRect.width / 2;
         road.scrollTo({ left: scrollLeft, behavior: 'smooth' });
       }
     }, 50);
@@ -2656,36 +2656,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadChickenCrossActive(): void {
-    this.authService.authenticatedGet<ChickenCrossActiveResponse>(`${environment.apiUrl}/chickencross/active`).subscribe({
-      next: (response) => {
-        if (response.activeGameSeed) {
-          this.loadChickenCrossGame(response.activeGameSeed);
-        } else {
+    this.authService
+      .authenticatedGet<ChickenCrossActiveResponse>(`${environment.apiUrl}/chickencross/active`)
+      .subscribe({
+        next: (response) => {
+          if (response.activeGameSeed) {
+            this.loadChickenCrossGame(response.activeGameSeed);
+          } else {
+            this.resetChickenRoadScroll();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading active chicken cross game:', error);
           this.resetChickenRoadScroll();
-        }
-      },
-      error: (error) => {
-        console.error('Error loading active chicken cross game:', error);
-        this.resetChickenRoadScroll();
-      },
-    });
+        },
+      });
   }
 
   loadChickenCrossGame(seed: number): void {
-    this.authService.authenticatedGet<ChickenCrossGetResponse>(`${environment.apiUrl}/chickencross?seed=${seed}`).subscribe({
-      next: (response) => {
-        if (response.state === 'ACTIVE') {
-          this.chickenCrossGame = response;
-          this.scrollChickenRoadToCenter();
-        }
-      },
-      error: (error) => {
-        console.error('Error loading chicken cross game:', error);
-      },
-    });
+    this.authService
+      .authenticatedGet<ChickenCrossGetResponse>(`${environment.apiUrl}/chickencross?seed=${seed}`)
+      .subscribe({
+        next: (response) => {
+          if (response.state === 'ACTIVE') {
+            this.chickenCrossGame = response;
+            this.scrollChickenRoadToCenter();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading chicken cross game:', error);
+        },
+      });
   }
 
-  getChickenHistoryTypeInfo(entry: (typeof this.chickenCrossHistory)[0]): { emoji: string; color: string; label: string } {
+  getChickenHistoryTypeInfo(entry: (typeof this.chickenCrossHistory)[0]): {
+    emoji: string;
+    color: string;
+    label: string;
+  } {
     if (entry.state === 'CASHED_OUT') {
       if (entry.multiplier >= 5) return { emoji: '🎉', color: '#ec4899', label: 'MEGA!' };
       return { emoji: '✨', color: '#34d399', label: 'GEWINN' };
@@ -2699,7 +2707,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (stored) {
         const parsed = JSON.parse(stored);
         // Clear old history format (with 'steps' instead of 'multiplier')
-        if (Array.isArray(parsed) && parsed.some((entry: any) => entry.steps !== undefined && entry.multiplier === undefined)) {
+        if (
+          Array.isArray(parsed) &&
+          parsed.some((entry: any) => entry.steps !== undefined && entry.multiplier === undefined)
+        ) {
           localStorage.removeItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY);
           this.chickenCrossHistory = [];
         } else {
@@ -2861,31 +2872,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
       bet: bet,
     };
 
-    this.authService.authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody).subscribe({
-      next: (response) => {
-        this.chickenCrossLoading = false;
-        this.chickenCrossGame = {
-          seed: response.seed,
-          initialWager: bet,
-          currentPayout: response.currentPayout,
-          step: 0,
-          state: response.state,
-          lastUpdatedAt: Date.now(),
-        };
-        this.scrollChickenRoadToCenter();
-      },
-      error: (error) => {
-        this.chickenCrossLoading = false;
-        // Refund bet on error
-        this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
-        this.chickenCrossError = error?.error?.error || 'Fehler beim Starten des Spiels.';
-        setTimeout(() => (this.chickenCrossError = ''), 3000);
-      },
-    });
+    this.authService
+      .authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody)
+      .subscribe({
+        next: (response) => {
+          this.chickenCrossLoading = false;
+          this.chickenCrossGame = {
+            seed: response.seed,
+            initialWager: bet,
+            currentPayout: response.currentPayout,
+            step: 0,
+            state: response.state,
+            lastUpdatedAt: Date.now(),
+          };
+          this.scrollChickenRoadToCenter();
+        },
+        error: (error) => {
+          this.chickenCrossLoading = false;
+          // Refund bet on error
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+          this.chickenCrossError = error?.error?.error || 'Fehler beim Starten des Spiels.';
+          setTimeout(() => (this.chickenCrossError = ''), 3000);
+        },
+      });
   }
 
   chickenCrossMove(): void {
-    if (!this.chickenCrossGame || this.chickenCrossIsMoving || this.chickenCrossIsAnimating || this.chickenCrossGame.state !== 'ACTIVE') return;
+    if (
+      !this.chickenCrossGame ||
+      this.chickenCrossIsMoving ||
+      this.chickenCrossIsAnimating ||
+      this.chickenCrossGame.state !== 'ACTIVE'
+    )
+      return;
 
     this.chickenCrossIsMoving = true;
     this.chickenCrossIsAnimating = true;
@@ -2903,61 +2922,63 @@ export class DashboardComponent implements OnInit, OnDestroy {
       seed: this.chickenCrossGame.seed,
     };
 
-    this.authService.authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody).subscribe({
-      next: (response) => {
-        // Add suspense delay
-        setTimeout(() => {
-          this.chickenCrossIsMoving = false;
+    this.authService
+      .authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody)
+      .subscribe({
+        next: (response) => {
+          // Add suspense delay
+          setTimeout(() => {
+            this.chickenCrossIsMoving = false;
 
-          if (response.state === 'LOST') {
-            // Mark as lost - show skull and explosion
-            this.chickenCrossGame = {
-              ...this.chickenCrossGame!,
-              state: 'LOST' as const,
-            };
-            this.chickenCrossLostAnimation = true;
+            if (response.state === 'LOST') {
+              // Mark as lost - show skull and explosion
+              this.chickenCrossGame = {
+                ...this.chickenCrossGame!,
+                state: 'LOST' as const,
+              };
+              this.chickenCrossLostAnimation = true;
 
-            // After explosion animation, transition to dead game state
-            setTimeout(() => {
-              const lostAtStep = this.chickenCrossGame!.step;
-              const lostMultiplier = this.getChickenMultiplierForStep(this.chickenCrossGame!.seed, lostAtStep);
-              this.addChickenCrossToHistory(
-                this.chickenCrossGame!.seed,
-                this.chickenCrossGame!.initialWager,
-                0,
-                lostMultiplier,
-                'LOST',
-              );
+              // After explosion animation, transition to dead game state
+              setTimeout(() => {
+                const lostAtStep = this.chickenCrossGame!.step;
+                const lostMultiplier = this.getChickenMultiplierForStep(this.chickenCrossGame!.seed, lostAtStep);
+                this.addChickenCrossToHistory(
+                  this.chickenCrossGame!.seed,
+                  this.chickenCrossGame!.initialWager,
+                  0,
+                  lostMultiplier,
+                  'LOST',
+                );
 
-              // Store the dead game - same state, just swap references
-              this.chickenCrossDeadGame = { ...this.chickenCrossGame! };
-              this.chickenCrossGame = null;
-              this.chickenCrossLostAnimation = false;
+                // Store the dead game - same state, just swap references
+                this.chickenCrossDeadGame = { ...this.chickenCrossGame! };
+                this.chickenCrossGame = null;
+                this.chickenCrossLostAnimation = false;
+                this.chickenCrossIsAnimating = false;
+              }, 1000);
+            } else {
+              // Success - update payout
+              this.chickenCrossGame = {
+                ...this.chickenCrossGame!,
+                currentPayout: response.currentPayout,
+                state: response.state,
+              };
               this.chickenCrossIsAnimating = false;
-            }, 1000);
-          } else {
-            // Success - update payout
-            this.chickenCrossGame = {
-              ...this.chickenCrossGame!,
-              currentPayout: response.currentPayout,
-              state: response.state,
-            };
-            this.chickenCrossIsAnimating = false;
-          }
-        }, 600); // 600ms suspense delay
-      },
-      error: (error) => {
-        // Roll back the step on error
-        this.chickenCrossGame = {
-          ...this.chickenCrossGame!,
-          step: this.chickenCrossGame!.step - 1,
-        };
-        this.chickenCrossIsMoving = false;
-        this.chickenCrossIsAnimating = false;
-        this.chickenCrossError = error?.error?.error || 'Fehler beim Bewegen.';
-        setTimeout(() => (this.chickenCrossError = ''), 3000);
-      },
-    });
+            }
+          }, 600); // 600ms suspense delay
+        },
+        error: (error) => {
+          // Roll back the step on error
+          this.chickenCrossGame = {
+            ...this.chickenCrossGame!,
+            step: this.chickenCrossGame!.step - 1,
+          };
+          this.chickenCrossIsMoving = false;
+          this.chickenCrossIsAnimating = false;
+          this.chickenCrossError = error?.error?.error || 'Fehler beim Bewegen.';
+          setTimeout(() => (this.chickenCrossError = ''), 3000);
+        },
+      });
   }
 
   chickenCrossCashout(): void {
@@ -2971,35 +2992,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
       seed: this.chickenCrossGame.seed,
     };
 
-    this.authService.authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody).subscribe({
-      next: (response) => {
-        this.chickenCrossLoading = false;
+    this.authService
+      .authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody)
+      .subscribe({
+        next: (response) => {
+          this.chickenCrossLoading = false;
 
-        // Add payout to balance
-        this.userStatistics.experience = (this.userStatistics.experience || 0) + response.currentPayout;
+          // Add payout to balance
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + response.currentPayout;
 
-        const multiplier = response.currentPayout / this.chickenCrossGame!.initialWager;
+          const multiplier = response.currentPayout / this.chickenCrossGame!.initialWager;
 
-        // Only add to history if player actually made at least one move
-        if (this.chickenCrossGame!.step > 0) {
-          this.addChickenCrossToHistory(
-            this.chickenCrossGame!.seed,
-            this.chickenCrossGame!.initialWager,
-            response.currentPayout,
-            multiplier,
-            'CASHED_OUT',
-          );
-        }
+          // Only add to history if player actually made at least one move
+          if (this.chickenCrossGame!.step > 0) {
+            this.addChickenCrossToHistory(
+              this.chickenCrossGame!.seed,
+              this.chickenCrossGame!.initialWager,
+              response.currentPayout,
+              multiplier,
+              'CASHED_OUT',
+            );
+          }
 
-        this.chickenCrossGame = null;
-        this.resetChickenRoadScroll();
-      },
-      error: (error) => {
-        this.chickenCrossLoading = false;
-        this.chickenCrossError = error?.error?.error || 'Fehler beim Auszahlen.';
-        setTimeout(() => (this.chickenCrossError = ''), 3000);
-      },
-    });
+          this.chickenCrossGame = null;
+          this.resetChickenRoadScroll();
+        },
+        error: (error) => {
+          this.chickenCrossLoading = false;
+          this.chickenCrossError = error?.error?.error || 'Fehler beim Auszahlen.';
+          setTimeout(() => (this.chickenCrossError = ''), 3000);
+        },
+      });
   }
 
   getChickenMultiplier(): string {

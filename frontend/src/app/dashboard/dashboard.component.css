@@ -5633,11 +5633,11 @@
   overflow-x: hidden;
   scroll-behavior: smooth;
   scrollbar-width: none;
-    -ms-overflow-style: none;  /* IE and Edge */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 /* Allow scrolling only when there's an active game */
-.chicken-road[data-has-game="true"] {
+.chicken-road[data-has-game='true'] {
   overflow-x: auto;
 }
 
@@ -5703,7 +5703,8 @@
 }
 
 @keyframes suspense-pinch {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(0.92);
   }
   50% {
@@ -5756,7 +5757,8 @@
 }
 
 @keyframes suspense-shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   25% {
@@ -5784,7 +5786,8 @@
 }
 
 @keyframes death-shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg);
   }
   25% {
@@ -5796,7 +5799,8 @@
 }
 
 @keyframes dead-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
   }
   50% {
@@ -5805,7 +5809,8 @@
 }
 
 @keyframes chicken-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -5861,18 +5866,50 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation: explode-inline 1.0s ease-out forwards;
+  animation: explode-inline 1s ease-out forwards;
   box-shadow: 0 0 6px rgba(255, 0, 0, 0.8);
 }
 
-.explosion-particle-inline:nth-child(1) { animation-delay: 0s; --tx: 30px; --ty: -25px; }
-.explosion-particle-inline:nth-child(2) { animation-delay: 0.02s; --tx: 35px; --ty: 5px; }
-.explosion-particle-inline:nth-child(3) { animation-delay: 0.04s; --tx: 25px; --ty: 30px; }
-.explosion-particle-inline:nth-child(4) { animation-delay: 0.06s; --tx: -5px; --ty: -30px; }
-.explosion-particle-inline:nth-child(5) { animation-delay: 0.08s; --tx: -5px; --ty: 30px; }
-.explosion-particle-inline:nth-child(6) { animation-delay: 0.1s; --tx: -30px; --ty: -25px; }
-.explosion-particle-inline:nth-child(7) { animation-delay: 0.12s; --tx: -35px; --ty: 5px; }
-.explosion-particle-inline:nth-child(8) { animation-delay: 0.14s; --tx: -25px; --ty: 30px; }
+.explosion-particle-inline:nth-child(1) {
+  animation-delay: 0s;
+  --tx: 30px;
+  --ty: -25px;
+}
+.explosion-particle-inline:nth-child(2) {
+  animation-delay: 0.02s;
+  --tx: 35px;
+  --ty: 5px;
+}
+.explosion-particle-inline:nth-child(3) {
+  animation-delay: 0.04s;
+  --tx: 25px;
+  --ty: 30px;
+}
+.explosion-particle-inline:nth-child(4) {
+  animation-delay: 0.06s;
+  --tx: -5px;
+  --ty: -30px;
+}
+.explosion-particle-inline:nth-child(5) {
+  animation-delay: 0.08s;
+  --tx: -5px;
+  --ty: 30px;
+}
+.explosion-particle-inline:nth-child(6) {
+  animation-delay: 0.1s;
+  --tx: -30px;
+  --ty: -25px;
+}
+.explosion-particle-inline:nth-child(7) {
+  animation-delay: 0.12s;
+  --tx: -35px;
+  --ty: 5px;
+}
+.explosion-particle-inline:nth-child(8) {
+  animation-delay: 0.14s;
+  --tx: -25px;
+  --ty: 30px;
+}
 
 @keyframes explode-inline {
   0% {
@@ -6009,7 +6046,8 @@
 }
 
 @keyframes chicken-move-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
   }
   50% {
