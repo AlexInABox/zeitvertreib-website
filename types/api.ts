@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -753,4 +753,45 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
+
+
+// ============================================================================
+// Chicken Cross Types
+// ============================================================================
+
+/** GET /chickencross/info response */
+export interface ChickenCrossInfoResponse {
+  minBet: number;
+  maxBet: number;
+}
+
+/** GET /chickencross request params */
+export interface ChickenCrossGetRequest {
+  seed: number;
+}
+
+/** GET /chickencross response */
+export interface ChickenCrossGetResponse {
+  seed: number;
+  initialWager: number;
+  currentPayout: number;
+  step: number;
+  state: 'ACTIVE' | 'LOST' | 'CASHED_OUT';
+  lastUpdatedAt: number;
+}
+
+/** POST /chickencross request */
+// Send intent here to play chicken cross game
+export interface ChickenCrossPostRequest {
+  seed?: number;
+  bet?: number;
+  intent: 'MOVE' | 'CASHOUT';
+}
+
+/** POST /chickencross response */
+export interface ChickenCrossPostResponse {
+  seed: number;
+  state: 'ACTIVE' | 'LOST' | 'CASHED_OUT';
+  currentPayout: number;
+}

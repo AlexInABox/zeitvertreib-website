@@ -246,3 +246,15 @@ export const birthdayUpdates = sqliteTable('birthday_updates', {
   userid: text('userid').primaryKey(),
   lastUpdated: integer('last_updated').notNull(),
 });
+
+export const chickenCrossGames = sqliteTable('chicken_cross_games', {
+  seed: integer('seed').primaryKey().notNull(),
+  userid: text('userid').notNull(),
+  initialWager: integer('initial_wager').notNull(),
+  currentPayout: integer('current_payout').notNull(),
+  step: integer('step').notNull(),
+  state: text('state', {
+    enum: ['ACTIVE', 'LOST', 'CASHED_OUT'],
+  }).default('ACTIVE').notNull(),
+  lastUpdatedAt: integer('last_updated_at').notNull(),
+});
