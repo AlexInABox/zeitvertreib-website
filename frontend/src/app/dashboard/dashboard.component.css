@@ -2829,12 +2829,6 @@
   .zvcoins-balance-area {
     justify-content: center;
   }
-
-  .zvcoins-games-card {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
 }
 
 /* ZVC Transfer Styles */
@@ -3661,14 +3655,19 @@
 
 /* Games Card Container - Similar to combined card */
 .zvcoins-games-card {
-  display: flex;
-  gap: 1.5rem;
+  columns: 410px;
+  column-gap: 1.5rem;
+
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.08));
   border: 2px solid rgba(139, 92, 246, 0.2);
   border-radius: 12px;
   padding: 1.5rem;
   backdrop-filter: blur(10px);
-  align-items: stretch;
+}
+.zvcoins-games-card > * {
+  break-inside: avoid;
+  margin-bottom: 1.5rem;
+  width: 100%;
 }
 
 /* Slot Machine Widget Container */
@@ -5481,7 +5480,7 @@
 .roulette-spin-btn {
   width: 100%;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
   border: none;
   border-radius: 12px;
   color: white;
@@ -5506,7 +5505,7 @@
 }
 
 .roulette-spin-btn.spinning {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
   animation: pulse-roulette-spin 1.5s ease-in-out infinite;
   cursor: wait;
 }
