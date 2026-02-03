@@ -48,7 +48,12 @@ import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
 import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
 import { handleGetBirthday, handlePostBirthday, handleDeleteBirthday } from './routes/birthday.js';
 import { checkForBirthdays } from './routes/cron/birthday.js';
-import { handleChickenCrossInfo, handleChickenCrossGet, handleChickenCrossPost, handleChickenCrossActive } from './routes/chickencross.js';
+import {
+  handleChickenCrossInfo,
+  handleChickenCrossGet,
+  handleChickenCrossPost,
+  handleChickenCrossActive,
+} from './routes/chickencross.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
