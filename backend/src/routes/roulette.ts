@@ -274,16 +274,12 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     // Send webhook notification for big wins (Alex please verify)
     if (betOutcome.won && betType === 'number' && betAmount >= 50) {
       // Get Steam username from cache
-      let steamNickname = playerId;
-      try {
-        const userCacheKey = `steam_user:${playerId}`;
-        const cachedUserData = await env.SESSIONS.get(userCacheKey);
-        if (cachedUserData) {
-          const userData = JSON.parse(cachedUserData);
-          steamNickname = userData?.userData?.personaname || steamNickname;
+      let steamNickname = validation.steamId!;
+      if (ctx) {
+        const steamUser = await fetchSteamUserData(validation.steamId!, env, ctx);
+        if (steamUser) {
+          steamNickname = steamUser.username;
         }
-      } catch (error) {
-        console.error('Error fetching cached Steam user data:', error);
       }
 
       if (ctx) {
