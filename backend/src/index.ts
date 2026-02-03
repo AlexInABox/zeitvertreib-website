@@ -23,6 +23,7 @@ import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './rout
 import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
 import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
 import { handleLuckyWheel, handleLuckyWheelInfo } from './routes/luckywheel.js';
+import { handleRouletteInfo, handleRoulette } from './routes/roulette.js';
 import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
@@ -118,6 +119,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Lucky Wheel routes
   'GET:/luckywheel/info': handleLuckyWheelInfo,
   'POST:/luckywheel': handleLuckyWheel,
+
+  // Roulette routes
+  'GET:/roulette/info': handleRouletteInfo,
+  'POST:/roulette': handleRoulette,
 
   // Swapped (role swap) route
   'POST:/swapped/': handleSwapped,

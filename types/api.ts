@@ -436,6 +436,46 @@ export interface LuckyWheelPlayResponse {
 }
 
 // ============================================================================
+// Roulette Types
+// ============================================================================
+
+export type RouletteBetType = 'red' | 'black' | 'odd' | 'even' | 'number' | '1to18' | '19to36';
+
+export interface RouletteBetOption {
+  description: string;
+  multiplier: number;
+}
+
+/** GET /roulette/info response */
+export interface RouletteInfoResponse {
+  minBet: number;
+  maxBet: number;
+  betTypes: Record<RouletteBetType, RouletteBetOption>;
+  numbers: number[];
+  description: string;
+}
+
+/** POST /roulette request */
+export interface RoulettePlayRequest {
+  bet: number;
+  type: RouletteBetType;
+  value?: string | number;
+}
+
+/** POST /roulette response */
+export interface RoulettePlayResponse {
+  spinResult: number;
+  color: 'red' | 'black' | 'green';
+  betType: RouletteBetType;
+  betAmount: number;
+  won: boolean;
+  payout: number;
+  netChange: number;
+  newBalance: number;
+  message: string;
+}
+
+// ============================================================================
 // Financial Types
 // ============================================================================
 

@@ -25,6 +25,9 @@ import type {
   ChickenCrossPostRequest,
   ChickenCrossPostResponse,
   ChickenCrossActiveResponse,
+  RouletteInfoResponse,
+  RoulettePlayRequest,
+  RoulettePlayResponse,
 } from '@zeitvertreib/types';
 
 interface PlayerEntry {
@@ -346,6 +349,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly CHICKEN_CROSS_LOG_STORAGE_KEY = 'chickenCrossHistory';
   hideChickenLosses = true;
 
+  // Roulette properties
+  rouletteInfo: any | null = null;
+  rouletteBet: number = 100;
+  rouletteBetInput: string = '100';
+  rouletteLoading = false;
+  rouletteError = '';
+  rouletteMessage = '';
+  isRouletteSpinning = false;
+  rouletteSpinResult: number | null = null;
+  rouletteSpinColor: 'red' | 'black' | 'green' | null = null;
+  rouletteBetType: any = 'red';
+  rouletteBetValue: string | number = '';
+  showRouletteResult = false;
+  rouletteWon = false;
+  roulettePayout: number | null = null;
+  rouletteRotation = 0;
+  private rouletteResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private rouletteClearResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  rouletteSpinLog: Array<{
+    id: number;
+    timestamp: number;
+    betType: string;
+    betValue?: string | number;
+    spinResult: number;
+    won: boolean;
+    payout: number;
+    betAmount: number;
+    message: string;
+  }> = [];
+  private readonly ROULETTE_LOG_STORAGE_KEY = 'rouletteSpinLog';
+  hideRouletteLosses = true;
+
   // Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
   isWeekendInBerlin(): boolean {
     const berlinTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
@@ -393,6 +428,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadLuckyWheelInfo();
     this.loadChickenCrossInfo();
     this.loadChickenCrossActive();
+    this.loadRouletteInfo();
     this.loadWinLog();
     this.loadLuckyWheelSpinLog();
     this.loadChickenCrossHistory();
@@ -2993,5 +3029,361 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.chickenCrossGame) return '1.00';
     const multiplier = this.chickenCrossGame.currentPayout / this.chickenCrossGame.initialWager;
     return multiplier.toFixed(2);
+  }
+
+  // ===== ROULETTE METHODS =====
+
+  loadRouletteInfo(): void {
+    this.rouletteError = '';
+    this.authService.authenticatedGet<RouletteInfoResponse>(`${environment.apiUrl}/roulette/info`).subscribe({
+      next: (response) => {
+        this.rouletteInfo = response;
+        this.rouletteError = '';
+        const defaultBet = typeof response.minBet === 'number' ? response.minBet : this.rouletteBet;
+        this.rouletteBet = this.clampRouletteBet(defaultBet || 0);
+        this.syncRouletteBetInput();
+        this.loadRouletteSpinLog();
+      },
+      error: (error) => {
+        console.error('Error loading roulette info:', error);
+        this.rouletteError = 'Fehler beim Laden des Roulettes. Bitte versuche es erneut.';
+      },
+    });
+  }
+
+  canAffordRoulette(): boolean {
+    const bet = this.getPendingRouletteBet();
+    return (this.userStatistics.experience || 0) >= bet;
+  }
+
+  adjustRouletteBet(amount: number): void {
+    if (!this.rouletteInfo) return;
+
+    this.commitRouletteBetInput();
+
+    const newBet = (this.rouletteBet || this.rouletteInfo.minBet) + amount;
+
+    this.rouletteBet = this.clampRouletteBet(newBet);
+    this.syncRouletteBetInput();
+  }
+
+  onRouletteBetInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let sanitized = input.value.replace(/[^0-9]/g, '');
+
+    sanitized = sanitized.replace(/^0+/, '') || '0';
+
+    if (this.rouletteInfo) {
+      const numValue = parseInt(sanitized, 10);
+      if (!isNaN(numValue) && numValue > this.rouletteInfo.maxBet) {
+        sanitized = this.rouletteInfo.maxBet.toString();
+      }
+    }
+
+    this.rouletteBetInput = sanitized;
+    input.value = sanitized;
+  }
+
+  onRouletteBetKeydown(event: KeyboardEvent): void {
+    const controlKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+
+    if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
+      return;
+    }
+
+    if (controlKeys.includes(event.key)) {
+      return;
+    }
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  commitRouletteBetInput(): void {
+    if (!this.rouletteInfo) {
+      const parsed = parseInt(this.rouletteBetInput, 10);
+      if (Number.isNaN(parsed)) {
+        this.rouletteBet = Math.max(0, this.rouletteBet || 0);
+      } else {
+        this.rouletteBet = Math.max(0, Math.round(parsed));
+      }
+      this.rouletteBetInput = (this.rouletteBet || 0).toString();
+      return;
+    }
+
+    const parsed = parseInt(this.rouletteBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      this.rouletteBet = this.rouletteInfo.minBet;
+    } else {
+      this.rouletteBet = this.clampRouletteBet(parsed);
+    }
+    this.syncRouletteBetInput();
+  }
+
+  private syncRouletteBetInput(): void {
+    const fallback = this.rouletteInfo?.minBet ?? 0;
+    const bet = this.rouletteBet ?? fallback;
+    this.rouletteBetInput = Math.max(0, bet).toString();
+  }
+
+  private clampRouletteBet(value: number): number {
+    const rounded = Math.round(value);
+    if (!this.rouletteInfo) {
+      return Math.max(0, rounded);
+    }
+    return Math.max(this.rouletteInfo.minBet, Math.min(this.rouletteInfo.maxBet, rounded));
+  }
+
+  private getPendingRouletteBet(): number {
+    if (!this.rouletteInfo) {
+      const parsed = parseInt(this.rouletteBetInput, 10);
+      return Number.isNaN(parsed) ? Math.max(0, this.rouletteBet || 0) : Math.max(0, Math.round(parsed));
+    }
+
+    const parsed = parseInt(this.rouletteBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      return this.clampRouletteBet(this.rouletteBet || this.rouletteInfo.minBet);
+    }
+    return this.clampRouletteBet(parsed);
+  }
+
+  spinRoulette(): void {
+    if (!this.rouletteInfo || this.isRouletteSpinning) return;
+
+    // Clear any previous timeouts
+    if (this.rouletteResultTimeoutId !== null) {
+      clearTimeout(this.rouletteResultTimeoutId);
+      this.rouletteResultTimeoutId = null;
+    }
+    if (this.rouletteClearResultTimeoutId !== null) {
+      clearTimeout(this.rouletteClearResultTimeoutId);
+      this.rouletteClearResultTimeoutId = null;
+    }
+
+    this.commitRouletteBetInput();
+    const bet = this.rouletteBet || 0;
+
+    if (bet < this.rouletteInfo.minBet || bet > this.rouletteInfo.maxBet) {
+      this.rouletteError = `Einsatz muss zwischen ${this.rouletteInfo.minBet} und ${this.rouletteInfo.maxBet} ZVC liegen.`;
+      setTimeout(() => {
+        this.rouletteError = '';
+      }, 3000);
+      return;
+    }
+
+    if (!this.canAffordRoulette()) {
+      this.rouletteError = `Nicht genügend ZVC! Du brauchst mindestens ${bet} ZVC.`;
+      setTimeout(() => {
+        this.rouletteError = '';
+      }, 3000);
+      return;
+    }
+
+    this.isRouletteSpinning = true;
+    this.rouletteLoading = true;
+    this.rouletteError = '';
+    this.rouletteMessage = '';
+    this.showRouletteResult = false;
+
+    const requestBody: RoulettePlayRequest = {
+      bet,
+      type: this.rouletteBetType,
+    };
+
+    if (this.rouletteBetType === 'number') {
+      requestBody.value = this.rouletteBetValue;
+    }
+
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - bet;
+
+    // Record when the spin started to ensure result shows only after full animation
+    const spinStartTime = Date.now();
+
+    this.authService.authenticatedPost<RoulettePlayResponse>(`${environment.apiUrl}/roulette`, requestBody).subscribe({
+      next: (response) => {
+        this.rouletteSpinResult = response.spinResult;
+        this.rouletteSpinColor = response.color;
+        this.rouletteWon = response.won;
+        this.roulettePayout = response.payout;
+
+        // Calculate rotation to land on the winning number
+        // Each section is 360/37 ≈ 9.73 degrees
+        // We need to rotate so the winning number's center aligns with the pointer at top
+        const wheelSequence = [
+          0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34,
+          17, 25, 2, 21, 4, 19, 15, 32,
+        ];
+        const position = wheelSequence.indexOf(response.spinResult);
+        const sectionSize = 360 / 37;
+        const targetAngle = position * sectionSize + sectionSize / 2;
+        // Rotate backwards (negative) to bring the target to the pointer, add full spins
+        const fullSpins = 5 * 360; // 5 full rotations
+        this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + fullSpins + (360 - targetAngle);
+
+        // Ensure result is not shown until 5 seconds have elapsed since spin started
+        const elapsedTime = Date.now() - spinStartTime;
+        const remainingDelay = Math.max(0, 5000 - elapsedTime);
+
+        this.rouletteResultTimeoutId = setTimeout(() => {
+          this.isRouletteSpinning = false;
+          this.showRouletteResult = true;
+
+          if (response.payout > 0) {
+            this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
+          }
+
+          this.rouletteMessage = response.message;
+          this.addRouletteSpinToLog(
+            response.spinResult,
+            this.rouletteBetType,
+            this.rouletteBetValue,
+            response.won,
+            response.payout,
+            bet,
+            response.message,
+          );
+
+          this.rouletteClearResultTimeoutId = setTimeout(() => {
+            this.showRouletteResult = false;
+            this.rouletteMessage = '';
+            this.rouletteSpinResult = null;
+            this.rouletteSpinColor = null;
+            this.rouletteLoading = false;
+          }, 3000);
+        }, remainingDelay);
+      },
+      error: (error) => {
+        this.isRouletteSpinning = false;
+        this.rouletteLoading = false;
+
+        this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+
+        this.rouletteError = error?.error?.error || 'Fehler beim Drehen des Roulettes';
+
+        setTimeout(() => {
+          this.rouletteError = '';
+        }, 3000);
+      },
+    });
+  }
+
+  private loadRouletteSpinLog(): void {
+    const stored = localStorage.getItem(this.ROULETTE_LOG_STORAGE_KEY);
+    try {
+      if (stored) {
+        this.rouletteSpinLog = JSON.parse(stored);
+      } else {
+        this.rouletteSpinLog = [];
+      }
+    } catch {
+      this.rouletteSpinLog = [];
+    }
+  }
+
+  private saveRouletteSpinLog(): void {
+    try {
+      localStorage.setItem(this.ROULETTE_LOG_STORAGE_KEY, JSON.stringify(this.rouletteSpinLog));
+    } catch {
+      console.error('Failed to save roulette spin log');
+    }
+  }
+
+  private addRouletteSpinToLog(
+    spinResult: number,
+    betType: string,
+    betValue: string | number,
+    won: boolean,
+    payout: number,
+    betAmount: number,
+    message: string,
+  ): void {
+    const newEntry = {
+      id: Date.now(),
+      timestamp: Date.now(),
+      betType,
+      ...(betType === 'number' && { betValue }),
+      spinResult,
+      won,
+      payout,
+      betAmount,
+      message,
+    };
+
+    this.rouletteSpinLog.unshift(newEntry);
+
+    if (this.rouletteSpinLog.length > 100) {
+      this.rouletteSpinLog = this.rouletteSpinLog.slice(0, 100);
+    }
+
+    this.saveRouletteSpinLog();
+  }
+
+  getFilteredRouletteSpinLog(): typeof this.rouletteSpinLog {
+    if (!this.hideRouletteLosses) {
+      return this.rouletteSpinLog;
+    }
+    return this.rouletteSpinLog.filter((entry) => entry.won);
+  }
+
+  trackByRouletteSpinId(index: number, entry: (typeof this.rouletteSpinLog)[0]): number {
+    return entry.id;
+  }
+
+  getRouletteSpinTypeInfo(entry: (typeof this.rouletteSpinLog)[0]): { emoji: string; label: string; color: string } {
+    if (entry.won) {
+      return {
+        emoji: '🎉',
+        label: 'Gewinn',
+        color: '#10b981',
+      };
+    }
+    return {
+      emoji: '❌',
+      label: 'Verlust',
+      color: '#ef4444',
+    };
+  }
+
+  getRouletteNumberColor(number: number): 'red' | 'black' | 'green' {
+    if (number === 0) return 'green';
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    return redNumbers.includes(number) ? 'red' : 'black';
+  }
+
+  getRouletteNumberPosition(number: number): { [key: string]: string } {
+    // Real European roulette wheel number sequence (clockwise from 0)
+    const wheelSequence = [
+      0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17,
+      25, 2, 21, 4, 19, 15, 32,
+    ];
+    const position = wheelSequence.indexOf(number);
+
+    if (position === -1) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+
+    // Each position gets equal space (360 / 37 degrees)
+    const sectionSize = 360 / 37;
+    const angle = position * sectionSize + sectionSize / 2;
+    const radians = ((angle - 90) * Math.PI) / 180;
+
+    // Position on the outer edge
+    const radiusPercent = 44;
+    const x = radiusPercent * Math.cos(radians);
+    const y = radiusPercent * Math.sin(radians);
+
+    // Rotate number to face inward toward the center
+    const rotationAngle = angle;
+
+    return {
+      left: `calc(50% + ${x}%)`,
+      top: `calc(50% + ${y}%)`,
+      transform: `translate(-50%, -50%) rotate(${rotationAngle}deg)`,
+    };
+  }
+
+  getRouletteNumberBgColor(number: number): string {
+    if (number === 0) return '#10b981'; // Green
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    return redNumbers.includes(number) ? '#ef4444' : '#1f2937';
   }
 }

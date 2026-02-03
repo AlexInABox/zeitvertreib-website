@@ -552,6 +552,224 @@
                   </div>
                 </div>
 
+                <!-- Roulette Widget -->
+                <div class="roulette-widget">
+                  <div class="roulette-header">
+                    <h4 class="zvcoins-section-title">🎰 Roulette</h4>
+                  </div>
+
+                  <!-- Loading State -->
+                  <div *ngIf="!rouletteInfo && !rouletteError" class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-lg text-white">Lade Roulette...</p>
+                  </div>
+
+                  <!-- Error State -->
+                  <div *ngIf="rouletteError && !rouletteInfo" class="text-center py-8">
+                    <div class="text-red-400 mb-4">⚠️</div>
+                    <p class="text-red-400">{{ rouletteError }}</p>
+                    <button
+                      (click)="loadRouletteInfo()"
+                      class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      Erneut versuchen
+                    </button>
+                  </div>
+
+                  <!-- Roulette Content -->
+                  <div *ngIf="rouletteInfo">
+                    <!-- Roulette Wheel Visualization -->
+                    <div class="roulette-wheel-container">
+                      <!-- Pointer at top (outside the rotating wheel) -->
+                      <div class="roulette-pointer"></div>
+                      <div
+                        class="roulette-wheel"
+                        [class.spinning]="isRouletteSpinning"
+                        [attr.data-result]="rouletteSpinResult"
+                        [style.transform]="'rotate(' + rouletteRotation + 'deg)'"
+                      >
+                        <!-- Roulette logo center -->
+                        <div class="roulette-logo">
+                          <img src="/assets/logos/logo_full_color_1to1.png" alt="Zeitvertreib Logo" />
+                        </div>
+                        <!-- Roulette numbers 0-36 arranged in a circle -->
+                        <div class="roulette-numbers">
+                          <div
+                            *ngFor="let num of rouletteInfo.numbers"
+                            class="roulette-number"
+                            [ngClass]="'number-' + num"
+                            [ngStyle]="getRouletteNumberPosition(num)"
+                            [style.background-color]="getRouletteNumberBgColor(num)"
+                          >
+                            {{ num }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Result Display -->
+                    <div
+                      *ngIf="showRouletteResult && rouletteSpinResult !== null"
+                      class="roulette-result"
+                      [class.won]="rouletteWon"
+                    >
+                      <div
+                        class="result-number"
+                        [style.color]="
+                          rouletteSpinColor === 'red'
+                            ? '#ef4444'
+                            : rouletteSpinColor === 'black'
+                              ? '#1f2937'
+                              : '#10b981'
+                        "
+                      >
+                        {{ rouletteSpinResult }}
+                      </div>
+                      <div class="result-color">
+                        {{
+                          rouletteSpinColor === 'red'
+                            ? '🔴 Rot'
+                            : rouletteSpinColor === 'black'
+                              ? '⚫ Schwarz'
+                              : '🟢 Grün'
+                        }}
+                      </div>
+                      <div class="result-message">{{ rouletteMessage }}</div>
+                    </div>
+
+                    <!-- Bet Type Selection -->
+                    <div class="roulette-bet-type-section">
+                      <label class="bet-type-label">Wettart</label>
+                      <select [(ngModel)]="rouletteBetType" class="bet-type-select" [disabled]="isRouletteSpinning">
+                        <option value="red">🔴 Rot — Gewinn: 2x deinen Einsatz</option>
+                        <option value="black">⚫ Schwarz — Gewinn: 2x deinen Einsatz</option>
+                        <option value="odd">Ungerade — Gewinn: 2x deinen Einsatz</option>
+                        <option value="even">Gerade — Gewinn: 2x deinen Einsatz</option>
+                        <option value="1to18">1-18 — Gewinn: 2x deinen Einsatz</option>
+                        <option value="19to36">19-36 — Gewinn: 2x deinen Einsatz</option>
+                        <option value="number">Spezifische Nummer — Gewinn: 36x deinen Einsatz</option>
+                      </select>
+
+                      <!-- Number input for specific number bet -->
+                      <div *ngIf="rouletteBetType === 'number'" class="number-input-section">
+                        <input
+                          type="number"
+                          [(ngModel)]="rouletteBetValue"
+                          min="0"
+                          max="36"
+                          placeholder="0-36"
+                          class="number-input"
+                          [disabled]="isRouletteSpinning"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Bet Controls -->
+                    <div class="roulette-bet-controls">
+                      <div class="roulette-bet-display">
+                        <button
+                          (click)="adjustRouletteBet(-10)"
+                          class="roulette-bet-btn"
+                          [disabled]="isRouletteSpinning || rouletteBet <= rouletteInfo.minBet"
+                        >
+                          −
+                        </button>
+                        <div class="roulette-bet-amount">
+                          <label class="bet-label" for="rouletteBetInput">Einsatz</label>
+                          <div class="bet-input-wrapper">
+                            <input
+                              id="rouletteBetInput"
+                              class="bet-input"
+                              type="text"
+                              inputmode="numeric"
+                              pattern="[0-9]*"
+                              [value]="rouletteBetInput"
+                              (input)="onRouletteBetInput($event)"
+                              (keydown)="onRouletteBetKeydown($event)"
+                              (blur)="commitRouletteBetInput()"
+                              (keydown.enter)="commitRouletteBetInput(); $event.preventDefault()"
+                              [disabled]="isRouletteSpinning"
+                              [attr.min]="rouletteInfo.minBet"
+                              [attr.max]="rouletteInfo.maxBet"
+                            />
+                            <span class="bet-unit">ZVC</span>
+                          </div>
+                        </div>
+                        <button
+                          (click)="adjustRouletteBet(10)"
+                          class="roulette-bet-btn"
+                          [disabled]="isRouletteSpinning || rouletteBet >= rouletteInfo.maxBet"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        (click)="spinRoulette()"
+                        class="roulette-spin-btn"
+                        [class.spinning]="isRouletteSpinning"
+                        [disabled]="!canAffordRoulette() || isRouletteSpinning"
+                      >
+                        <span class="btn-icon">🎰</span>
+                        <span class="btn-text">{{ isRouletteSpinning ? 'Dreht...' : 'Drehen!' }}</span>
+                      </button>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div *ngIf="rouletteError && rouletteInfo" class="roulette-error">
+                      {{ rouletteError }}
+                    </div>
+
+                    <!-- Roulette Spin Log -->
+                    <div *ngIf="rouletteSpinLog.length > 0" class="slot-win-log roulette-spin-log">
+                      <div class="win-log-header">
+                        <span class="win-log-title">📜 Letzte Spins</span>
+                        <div class="win-log-header-controls">
+                          <label class="win-log-toggle" title="Verluste ausblenden">
+                            <input type="checkbox" [(ngModel)]="hideRouletteLosses" class="toggle-checkbox" />
+                            <span class="toggle-slider"></span>
+                          </label>
+                          <span class="win-log-count">{{ getFilteredRouletteSpinLog().length }}</span>
+                        </div>
+                      </div>
+                      <div class="win-log-list">
+                        <div
+                          *ngFor="let entry of getFilteredRouletteSpinLog(); trackBy: trackByRouletteSpinId"
+                          class="win-log-entry"
+                          [class.win-log-win]="entry.won"
+                          [class.win-log-loss]="!entry.won"
+                        >
+                          <div class="win-log-symbols">
+                            <span
+                              class="roulette-number-badge"
+                              [style.background-color]="
+                                getRouletteNumberColor(entry.spinResult) === 'red'
+                                  ? '#ef4444'
+                                  : getRouletteNumberColor(entry.spinResult) === 'black'
+                                    ? '#1f2937'
+                                    : '#10b981'
+                              "
+                            >
+                              {{ entry.spinResult }}
+                            </span>
+                          </div>
+                          <div class="win-log-info">
+                            <span class="win-log-type" [style.color]="getRouletteSpinTypeInfo(entry).color">
+                              {{ getRouletteSpinTypeInfo(entry).emoji }}
+                              {{ getRouletteSpinTypeInfo(entry).label }}
+                            </span>
+                            <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
+                          </div>
+                          <div class="win-log-payout" [class.negative]="!entry.won">
+                            <span class="payout-amount"> {{ entry.won ? '+' : '' }}{{ entry.payout }} </span>
+                            <span class="roulette-log-bet">-{{ entry.betAmount }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Chicken Cross Widget -->
                 <div class="chicken-cross-widget">
                   <div class="chicken-cross-header">

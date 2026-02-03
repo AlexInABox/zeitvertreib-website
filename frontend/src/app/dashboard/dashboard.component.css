@@ -5162,6 +5162,406 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* ============ ROULETTE WIDGET ============ */
+.roulette-widget {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(59, 130, 246, 0.05));
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.roulette-widget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.roulette-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.roulette-wheel-container {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto 20px;
+  aspect-ratio: 1;
+}
+
+.roulette-wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform-origin: center center;
+  background: conic-gradient(
+    from 0deg,
+    #10b981 0deg 9.73deg,
+    #1f2937 9.73deg 19.46deg,
+    #ef4444 19.46deg 29.19deg,
+    #1f2937 29.19deg 38.92deg,
+    #ef4444 38.92deg 48.65deg,
+    #1f2937 48.65deg 58.38deg,
+    #ef4444 58.38deg 68.11deg,
+    #1f2937 68.11deg 77.84deg,
+    #ef4444 77.84deg 87.57deg,
+    #1f2937 87.57deg 97.3deg,
+    #ef4444 97.3deg 107.03deg,
+    #1f2937 107.03deg 116.76deg,
+    #ef4444 116.76deg 126.49deg,
+    #1f2937 126.49deg 136.22deg,
+    #ef4444 136.22deg 145.95deg,
+    #1f2937 145.95deg 155.68deg,
+    #ef4444 155.68deg 165.41deg,
+    #1f2937 165.41deg 175.14deg,
+    #ef4444 175.14deg 184.87deg,
+    #1f2937 184.87deg 194.6deg,
+    #ef4444 194.6deg 204.33deg,
+    #1f2937 204.33deg 214.06deg,
+    #ef4444 214.06deg 223.79deg,
+    #1f2937 223.79deg 233.52deg,
+    #ef4444 233.52deg 243.25deg,
+    #1f2937 243.25deg 252.98deg,
+    #ef4444 252.98deg 262.71deg,
+    #1f2937 262.71deg 272.44deg,
+    #ef4444 272.44deg 282.17deg,
+    #1f2937 282.17deg 291.9deg,
+    #ef4444 291.9deg 301.63deg,
+    #1f2937 301.63deg 311.36deg,
+    #ef4444 311.36deg 321.09deg,
+    #1f2937 321.09deg 330.82deg,
+    #ef4444 330.82deg 340.55deg,
+    #1f2937 340.55deg 350.28deg,
+    #ef4444 350.28deg 360deg
+  );
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.roulette-wheel.spinning {
+  transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+.roulette-numbers {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+}
+
+.roulette-number {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+  z-index: 3;
+}
+
+.roulette-pointer {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 20px solid white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  z-index: 10;
+  pointer-events: none;
+}
+
+.roulette-logo {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.roulette-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.roulette-result {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  animation: slideIn 0.3s ease;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1.5px solid rgba(59, 130, 246, 0.4);
+}
+
+.roulette-result.won {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+}
+
+.result-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.result-color {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.result-message {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.roulette-bet-type-section {
+  margin-bottom: 16px;
+}
+
+.bet-type-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.bet-type-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.bet-type-select option {
+  background: rgb(17, 24, 39);
+  color: white;
+  padding: 8px;
+}
+
+.bet-type-select:hover:not(:disabled) {
+  background: rgba(31, 41, 55, 0.95);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.bet-type-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.number-input-section {
+  margin-bottom: 12px;
+}
+
+.number-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.number-input:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.number-input:focus {
+  outline: none;
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.number-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.roulette-bet-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 12px;
+}
+
+.roulette-bet-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.roulette-bet-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roulette-bet-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
+.roulette-bet-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.roulette-bet-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.roulette-bet-amount {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 8px 24px;
+  text-align: center;
+  min-width: 140px;
+}
+
+.roulette-spin-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.roulette-spin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.roulette-spin-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.roulette-spin-btn.spinning {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  animation: pulse-roulette-spin 1.5s ease-in-out infinite;
+  cursor: wait;
+}
+
+.roulette-spin-btn:disabled:not(.spinning) {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes pulse-roulette-spin {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.6);
+  }
+}
+
+.roulette-spin-btn .btn-icon {
+  font-size: 1.5rem;
+}
+
+.roulette-error {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  color: #ef4444;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.roulette-spin-log {
+  margin-top: 16px;
+}
+
+.roulette-number-badge {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-block;
+}
+
+.roulette-log-bet {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* Responsive: Stack on smaller screens */
 
 /* ============ CHICKEN CROSS WIDGET ============ */
