@@ -267,8 +267,6 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       .update(playerdata)
       .set({
         experience: increment(playerdata.experience, netChange),
-        luckyWheelSpins: increment(playerdata.luckyWheelSpins, 1),
-        luckyWheelWins: increment(playerdata.luckyWheelWins, betOutcome.won ? betAmount * betOutcome.multiplier : 0),
       })
       .where(eq(playerdata.id, playerId))
       .run();
