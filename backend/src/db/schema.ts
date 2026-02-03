@@ -255,6 +255,8 @@ export const chickenCrossGames = sqliteTable('chicken_cross_games', {
   step: integer('step').notNull(),
   state: text('state', {
     enum: ['ACTIVE', 'LOST', 'CASHED_OUT'],
-  }).default('ACTIVE').notNull(),
+  })
+    .default('ACTIVE')
+    .notNull(),
   lastUpdatedAt: integer('last_updated_at').notNull(),
 });
