@@ -77,9 +77,12 @@ strong,
 }
 
 body {
-  background: linear-gradient(45deg, hsla(273, 97%, 31%, 1) 27%, hsla(319, 73%, 41%, 1) 100%);
+  /* Bunny full-page background with subtle overlay for readability. Uses WebP primary with JPG fallback. */
+  background-image: linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)), url('/assets/bunny.webp'), url('/assets/bunny.jpg');
   background-attachment: fixed;
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   min-height: 100vh;
 }
 
