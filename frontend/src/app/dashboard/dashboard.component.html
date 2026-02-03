@@ -551,6 +551,247 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Chicken Cross Widget -->
+                <div class="chicken-cross-widget">
+                  <div class="chicken-cross-header">
+                    <h4 class="zvcoins-section-title">🐔 Chicken Cross</h4>
+                    <div *ngIf="hasActiveChickenCrossGame()" class="chicken-payout-display">
+                      <span class="payout-label">Auszahlung:</span>
+                      <span class="payout-value">{{ chickenCrossGame!.currentPayout }} ZVC</span>
+                    </div>
+                  </div>
+
+                  <!-- Loading State -->
+                  <div *ngIf="!chickenCrossInfo && !chickenCrossError" class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-lg text-white">Lade Spiel...</p>
+                  </div>
+
+                  <!-- Error State (no info) -->
+                  <div *ngIf="chickenCrossError && !chickenCrossInfo" class="text-center py-8">
+                    <div class="text-red-400 mb-4">⚠️</div>
+                    <p class="text-red-400">{{ chickenCrossError }}</p>
+                    <button
+                      (click)="loadChickenCrossInfo()"
+                      class="mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
+                    >
+                      Erneut versuchen
+                    </button>
+                  </div>
+
+                  <!-- Game Content -->
+                  <div *ngIf="chickenCrossInfo">
+                    <!-- Game Board Visualization -->
+                    <div class="chicken-game-board">
+                      <div class="chicken-road" #chickenRoad [attr.data-has-game]="hasActiveChickenCrossGame() || chickenCrossDeadGame">
+                        <!-- Starting position (home) -->
+                        <div class="chicken-lane chicken-home" 
+                          [class.chicken-current]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0"
+                          [class.chicken-dead-home]="chickenCrossDeadGame && !hasActiveChickenCrossGame()">
+                          <span class="chicken-lane-marker" [class.chicken-emoji]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0">
+                            {{ hasActiveChickenCrossGame() && chickenCrossGame!.step === 0 ? '🐔' : '🏠' }}
+                          </span>
+                          <span class="chicken-lane-label">Start</span>
+                        </div>
+                        
+                        <!-- Active game: passed steps + next 4 steps -->
+                        <ng-container *ngIf="hasActiveChickenCrossGame()">
+                          <!-- Passed steps (1 to current step) -->
+                          <div 
+                            *ngFor="let step of [].constructor(chickenCrossGame!.step); let i = index"
+                            class="chicken-lane"
+                            [class.chicken-passed]="i + 1 < chickenCrossGame!.step"
+                            [class.chicken-current]="i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'"
+                            [class.chicken-suspense]="chickenCrossIsAnimating && i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'"
+                            [class.chicken-dead]="chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step"
+                            [class.chicken-success]="!chickenCrossIsAnimating && i + 1 === chickenCrossGame!.step && chickenCrossGame!.state === 'ACTIVE'"
+                          >
+                            <span class="chicken-lane-marker" 
+                              [class.chicken-emoji]="i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST' && !chickenCrossIsAnimating"
+                              [class.chicken-suspense-emoji]="chickenCrossIsAnimating && i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'">
+                              {{ chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step ? '💀' : (i + 1 === chickenCrossGame!.step ? '🐔' : '✅') }}
+                            </span>
+                            <span class="chicken-lane-multiplier">{{ getChickenMultiplierForStep(chickenCrossGame!.seed, i + 1) }}x</span>
+                            <!-- Explosion particles inside the dead lane -->
+                            <div *ngIf="chickenCrossLostAnimation && i + 1 === chickenCrossGame!.step" class="chicken-explosion-inline">
+                              <div class="explosion-particle-inline" *ngFor="let p of [1,2,3,4,5,6,7,8]"></div>
+                            </div>
+                          </div>
+                          
+                          <!-- Next 4 steps with multipliers -->
+                          <div 
+                            *ngFor="let nextStep of getNextChickenSteps(); let i = index"
+                            class="chicken-lane chicken-future"
+                            [class.chicken-next-immediate]="i === 0"
+                          >
+                            <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
+                            <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
+                          </div>
+                        </ng-container>
+                        
+                        <!-- Dead game display (show the lost state while bet controls appear) -->
+                        <ng-container *ngIf="!hasActiveChickenCrossGame() && chickenCrossDeadGame">
+                          <div 
+                            *ngFor="let step of [].constructor(chickenCrossDeadGame.step); let i = index"
+                            class="chicken-lane"
+                            [class.chicken-passed]="i + 1 < chickenCrossDeadGame.step"
+                            [class.chicken-dead]="i + 1 === chickenCrossDeadGame.step"
+                          >
+                            <span class="chicken-lane-marker" 
+                              [class.chicken-dead-emoji]="i + 1 === chickenCrossDeadGame.step">
+                              {{ i + 1 === chickenCrossDeadGame.step ? '💀' : '✅' }}
+                            </span>
+                            <span class="chicken-lane-multiplier">{{ getChickenMultiplierForStep(chickenCrossDeadGame.seed, i + 1) }}x</span>
+                          </div>
+                          
+                          <!-- Show the next 4 steps that could have been -->
+                          <div 
+                            *ngFor="let nextStep of getDeadChickenNextSteps(); let i = index"
+                            class="chicken-lane chicken-future"
+                            [class.chicken-next-immediate]="i === 0"
+                          >
+                            <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
+                            <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
+                          </div>
+                        </ng-container>
+                        
+                        <!-- No active game and no dead game: show start position + preview steps -->
+                        <ng-container *ngIf="!hasActiveChickenCrossGame() && !chickenCrossDeadGame">
+                          <div class="chicken-lane chicken-preview">
+                            <span class="chicken-lane-marker">❓</span>
+                          </div>
+                          <div class="chicken-lane chicken-preview">
+                            <span class="chicken-lane-marker">❓</span>
+                          </div>
+                          <div class="chicken-lane chicken-preview">
+                            <span class="chicken-lane-marker">❓</span>
+                          </div>
+                          <div class="chicken-lane chicken-preview">
+                            <span class="chicken-lane-marker">❓</span>
+                          </div>
+                          <div class="chicken-lane chicken-preview">
+                            <span class="chicken-lane-marker">❓</span>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </div>
+
+                    <!-- Bet Controls (only shown when no active game) -->
+                    <div *ngIf="!hasActiveChickenCrossGame()" class="wheel-bet-controls chicken-bet-controls">
+                      <div class="wheel-bet-display">
+                        <button
+                          (click)="adjustChickenCrossBet(-10)"
+                          class="wheel-bet-btn"
+                          [disabled]="chickenCrossLoading || chickenCrossBet <= chickenCrossInfo.minBet"
+                        >
+                          −
+                        </button>
+                        <div class="wheel-bet-amount">
+                          <label class="bet-label" for="chickenBetInput">Einsatz</label>
+                          <div class="bet-input-wrapper">
+                            <input
+                              id="chickenBetInput"
+                              class="bet-input"
+                              type="text"
+                              inputmode="numeric"
+                              pattern="[0-9]*"
+                              [value]="chickenCrossBetInput"
+                              (input)="onChickenCrossBetInput($event)"
+                              (keydown)="onChickenCrossBetKeydown($event)"
+                              (blur)="commitChickenCrossBetInput()"
+                              (keydown.enter)="commitChickenCrossBetInput(); $event.preventDefault()"
+                              [disabled]="chickenCrossLoading"
+                              [attr.min]="chickenCrossInfo.minBet"
+                              [attr.max]="chickenCrossInfo.maxBet"
+                            />
+                            <span class="bet-unit">ZVC</span>
+                          </div>
+                        </div>
+                        <button
+                          (click)="adjustChickenCrossBet(10)"
+                          class="wheel-bet-btn"
+                          [disabled]="chickenCrossLoading || chickenCrossBet >= chickenCrossInfo.maxBet"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        (click)="startChickenCrossGame()"
+                        class="chicken-start-btn"
+                        [disabled]="!canAffordChickenCross() || chickenCrossLoading"
+                      >
+                        <span class="btn-icon">🐔</span>
+                        <span class="btn-text">{{ chickenCrossLoading ? 'Startet...' : 'Spiel starten!' }}</span>
+                      </button>
+                    </div>
+
+                    <!-- Game Actions (only shown during active game) -->
+                    <div *ngIf="hasActiveChickenCrossGame()" class="chicken-game-actions">
+                      <button
+                        (click)="chickenCrossMove()"
+                        class="chicken-action-btn chicken-move-btn"
+                        [disabled]="chickenCrossLoading || chickenCrossIsMoving || chickenCrossIsAnimating"
+                        [class.moving]="chickenCrossIsMoving || chickenCrossIsAnimating"
+                      >
+                        <span class="btn-icon">🐔</span>
+                        <span class="btn-text">Weiter!</span>
+                      </button>
+                      <button
+                        (click)="chickenCrossCashout()"
+                        class="chicken-action-btn chicken-cashout-btn"
+                        [disabled]="chickenCrossLoading || chickenCrossIsMoving || chickenCrossIsAnimating"
+                      >
+                        Cashout
+                      </button>
+                    </div>
+
+                    <!-- Error message only -->
+                    <div *ngIf="chickenCrossError && chickenCrossInfo" class="chicken-error">
+                      {{ chickenCrossError }}
+                    </div>
+
+                    <!-- Game History Log -->
+                    <div *ngIf="chickenCrossHistory.length > 0" class="slot-win-log chicken-history-log">
+                      <div class="win-log-header">
+                        <span class="win-log-title">📜 Letzte Spiele</span>
+                        <div class="win-log-header-controls">
+                          <label class="win-log-toggle" title="Verluste ausblenden">
+                            <input type="checkbox" [(ngModel)]="hideChickenLosses" class="toggle-checkbox" />
+                            <span class="toggle-slider"></span>
+                          </label>
+                          <span class="win-log-count">{{ getFilteredChickenHistory().length }}</span>
+                        </div>
+                      </div>
+                      <div class="win-log-list">
+                        <div
+                          *ngFor="let entry of getFilteredChickenHistory(); trackBy: trackByChickenHistoryId"
+                          class="win-log-entry"
+                          [class.win-log-win]="entry.state === 'CASHED_OUT'"
+                          [class.win-log-loss]="entry.state === 'LOST'"
+                        >
+                          <div class="win-log-symbols">
+                            <span class="chicken-history-multiplier">{{ entry.multiplier.toFixed(2) }}x 🐔</span>
+                          </div>
+                          <div class="win-log-info">
+                            <span class="win-log-type" [style.color]="getChickenHistoryTypeInfo(entry).color">
+                              {{ getChickenHistoryTypeInfo(entry).emoji }}
+                              {{ getChickenHistoryTypeInfo(entry).label }}
+                            </span>
+                            <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
+                          </div>
+                          <div class="win-log-payout" [class.negative]="entry.state === 'LOST'">
+                            <span class="payout-amount">
+                              {{ entry.state === 'CASHED_OUT' ? '+' + entry.finalPayout : '0' }}
+                            </span>
+                            <span class="payout-cost">-{{ entry.initialWager }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

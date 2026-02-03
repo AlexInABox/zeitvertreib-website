@@ -20,6 +20,11 @@ import type {
   FakerankDeleteRequest,
   FakerankColor,
   FakerankColorsResponse,
+  ChickenCrossInfoResponse,
+  ChickenCrossGetResponse,
+  ChickenCrossPostRequest,
+  ChickenCrossPostResponse,
+  ChickenCrossActiveResponse,
 } from '@zeitvertreib/types';
 
 interface PlayerEntry {
@@ -201,12 +206,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -319,6 +324,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     multiplier: number;
   }> | null = null;
 
+  // Chicken Cross properties
+  chickenCrossInfo: ChickenCrossInfoResponse | null = null;
+  chickenCrossBet: number = 100;
+  chickenCrossBetInput: string = '100';
+  chickenCrossLoading = false;
+  chickenCrossError = '';
+  chickenCrossGame: ChickenCrossGetResponse | null = null;
+  chickenCrossIsMoving = false;
+  chickenCrossIsAnimating = false; // Track if chicken is animating to next step
+  chickenCrossLostAnimation = false; // Track if loss animation is playing
+  chickenCrossDeadGame: ChickenCrossGetResponse | null = null; // Store the lost game for display
+  chickenCrossHistory: Array<{
+    seed: number;
+    initialWager: number;
+    finalPayout: number;
+    multiplier: number;
+    state: 'LOST' | 'CASHED_OUT';
+    timestamp: number;
+  }> = [];
+  private readonly CHICKEN_CROSS_LOG_STORAGE_KEY = 'chickenCrossHistory';
+  hideChickenLosses = true;
+
   // Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
   isWeekendInBerlin(): boolean {
     const berlinTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
@@ -364,8 +391,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadSprayRules();
     this.loadSlotMachineInfo();
     this.loadLuckyWheelInfo();
+    this.loadChickenCrossInfo();
+    this.loadChickenCrossActive();
     this.loadWinLog();
     this.loadLuckyWheelSpinLog();
+    this.loadChickenCrossHistory();
 
     // Close color picker when clicking outside
     this.documentClickHandler = (event: Event) => {
@@ -2506,5 +2536,439 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const sortedIndex = sortedTable.findIndex((e) => e.multiplier === multiplier);
 
     return this.getColorFromPaletteIndex(sortedIndex, sortedTable.length);
+  }
+
+  // ===== CHICKEN CROSS METHODS =====
+
+  loadChickenCrossInfo(): void {
+    this.authService.authenticatedGet<ChickenCrossInfoResponse>(`${environment.apiUrl}/chickencross/info`).subscribe({
+      next: (response) => {
+        this.chickenCrossInfo = response;
+        this.chickenCrossBet = response.minBet;
+        this.chickenCrossBetInput = response.minBet.toString();
+      },
+      error: (error) => {
+        console.error('Error loading chicken cross info:', error);
+        this.chickenCrossError = 'Fehler beim Laden des Spiels.';
+      },
+    });
+  }
+
+  private chickenSeededRandom(seed: number, step: number): number {
+    const combined = seed * 10000 + step;
+    let x = Math.sin(combined) * 10000;
+    return x - Math.floor(x);
+  }
+
+  getChickenMultiplierForStep(seed: number, step: number): number {
+    const baseMultiplier = Math.pow(1.08, step);
+    const variance = this.chickenSeededRandom(seed, step * 1000);
+    const withVariance = baseMultiplier * (1 + variance * 0.03);
+    return Math.round(withVariance * 100) / 100;
+  }
+
+  getNextChickenSteps(): Array<{ step: number; multiplier: number }> {
+    if (!this.chickenCrossGame) return [];
+    const currentStep = this.chickenCrossGame.step;
+    const seed = this.chickenCrossGame.seed;
+    const steps: Array<{ step: number; multiplier: number }> = [];
+    for (let i = 1; i <= 4; i++) {
+      const nextStep = currentStep + i;
+      steps.push({
+        step: nextStep,
+        multiplier: this.getChickenMultiplierForStep(seed, nextStep),
+      });
+    }
+    return steps;
+  }
+
+  getDeadChickenNextSteps(): Array<{ step: number; multiplier: number }> {
+    if (!this.chickenCrossDeadGame) return [];
+    const currentStep = this.chickenCrossDeadGame.step;
+    const seed = this.chickenCrossDeadGame.seed;
+    const steps: Array<{ step: number; multiplier: number }> = [];
+    for (let i = 1; i <= 4; i++) {
+      const nextStep = currentStep + i;
+      steps.push({
+        step: nextStep,
+        multiplier: this.getChickenMultiplierForStep(seed, nextStep),
+      });
+    }
+    return steps;
+  }
+
+  scrollChickenRoadToCenter(): void {
+    setTimeout(() => {
+      const road = document.querySelector('.chicken-road') as HTMLElement;
+      const currentLane = document.querySelector('.chicken-lane.chicken-current') as HTMLElement;
+      if (road && currentLane) {
+        const roadRect = road.getBoundingClientRect();
+        const laneRect = currentLane.getBoundingClientRect();
+        const scrollLeft = currentLane.offsetLeft - (roadRect.width / 2) + (laneRect.width / 2);
+        road.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    }, 50);
+  }
+
+  resetChickenRoadScroll(): void {
+    setTimeout(() => {
+      const road = document.querySelector('.chicken-road') as HTMLElement;
+      if (road) {
+        road.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    }, 50);
+  }
+
+  loadChickenCrossActive(): void {
+    this.authService.authenticatedGet<ChickenCrossActiveResponse>(`${environment.apiUrl}/chickencross/active`).subscribe({
+      next: (response) => {
+        if (response.activeGameSeed) {
+          this.loadChickenCrossGame(response.activeGameSeed);
+        } else {
+          this.resetChickenRoadScroll();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading active chicken cross game:', error);
+        this.resetChickenRoadScroll();
+      },
+    });
+  }
+
+  loadChickenCrossGame(seed: number): void {
+    this.authService.authenticatedGet<ChickenCrossGetResponse>(`${environment.apiUrl}/chickencross?seed=${seed}`).subscribe({
+      next: (response) => {
+        if (response.state === 'ACTIVE') {
+          this.chickenCrossGame = response;
+          this.scrollChickenRoadToCenter();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading chicken cross game:', error);
+      },
+    });
+  }
+
+  getChickenHistoryTypeInfo(entry: (typeof this.chickenCrossHistory)[0]): { emoji: string; color: string; label: string } {
+    if (entry.state === 'CASHED_OUT') {
+      if (entry.multiplier >= 5) return { emoji: '🎉', color: '#ec4899', label: 'MEGA!' };
+      return { emoji: '✨', color: '#34d399', label: 'GEWINN' };
+    }
+    return { emoji: '💀', color: '#f87171', label: 'VERLOREN' };
+  }
+
+  loadChickenCrossHistory(): void {
+    try {
+      const stored = localStorage.getItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Clear old history format (with 'steps' instead of 'multiplier')
+        if (Array.isArray(parsed) && parsed.some((entry: any) => entry.steps !== undefined && entry.multiplier === undefined)) {
+          localStorage.removeItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY);
+          this.chickenCrossHistory = [];
+        } else {
+          this.chickenCrossHistory = parsed;
+        }
+      }
+    } catch {
+      this.chickenCrossHistory = [];
+    }
+  }
+
+  saveChickenCrossHistory(): void {
+    try {
+      const toStore = this.chickenCrossHistory.slice(0, this.MAX_WIN_LOG_ENTRIES);
+      localStorage.setItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+      console.error('Failed to save chicken cross history');
+    }
+  }
+
+  addChickenCrossToHistory(
+    seed: number,
+    initialWager: number,
+    finalPayout: number,
+    multiplier: number,
+    state: 'LOST' | 'CASHED_OUT',
+  ): void {
+    this.chickenCrossHistory.unshift({
+      seed,
+      initialWager,
+      finalPayout,
+      multiplier,
+      state,
+      timestamp: Date.now(),
+    });
+    if (this.chickenCrossHistory.length > this.MAX_WIN_LOG_ENTRIES) {
+      this.chickenCrossHistory.pop();
+    }
+    this.saveChickenCrossHistory();
+  }
+
+  getFilteredChickenHistory(): typeof this.chickenCrossHistory {
+    if (this.hideChickenLosses) {
+      return this.chickenCrossHistory.filter((entry) => entry.state === 'CASHED_OUT');
+    }
+    return this.chickenCrossHistory;
+  }
+
+  trackByChickenHistoryId(index: number, entry: (typeof this.chickenCrossHistory)[0]): number {
+    return entry.seed;
+  }
+
+  canAffordChickenCross(): boolean {
+    const bet = this.getPendingChickenCrossBet();
+    return (this.userStatistics.experience || 0) >= bet;
+  }
+
+  hasActiveChickenCrossGame(): boolean {
+    return this.chickenCrossGame !== null;
+  }
+
+  onChickenCrossBetInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let sanitized = input.value.replace(/[^0-9]/g, '');
+    sanitized = sanitized.replace(/^0+/, '') || '0';
+
+    if (this.chickenCrossInfo) {
+      const numValue = parseInt(sanitized, 10);
+      if (!isNaN(numValue) && numValue > this.chickenCrossInfo.maxBet) {
+        sanitized = this.chickenCrossInfo.maxBet.toString();
+      }
+    }
+
+    this.chickenCrossBetInput = sanitized;
+    input.value = sanitized;
+  }
+
+  onChickenCrossBetKeydown(event: KeyboardEvent): void {
+    const controlKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
+      return;
+    }
+    if (controlKeys.includes(event.key)) {
+      return;
+    }
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  commitChickenCrossBetInput(): void {
+    if (!this.chickenCrossInfo) {
+      const parsed = parseInt(this.chickenCrossBetInput, 10);
+      this.chickenCrossBet = Number.isNaN(parsed) ? 100 : Math.max(0, Math.round(parsed));
+      this.chickenCrossBetInput = this.chickenCrossBet.toString();
+      return;
+    }
+
+    const parsed = parseInt(this.chickenCrossBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      this.chickenCrossBet = this.chickenCrossInfo.minBet;
+    } else {
+      this.chickenCrossBet = Math.max(
+        this.chickenCrossInfo.minBet,
+        Math.min(this.chickenCrossInfo.maxBet, Math.round(parsed)),
+      );
+    }
+    this.chickenCrossBetInput = this.chickenCrossBet.toString();
+  }
+
+  private getPendingChickenCrossBet(): number {
+    if (!this.chickenCrossInfo) {
+      const parsed = parseInt(this.chickenCrossBetInput, 10);
+      return Number.isNaN(parsed) ? 100 : Math.max(0, Math.round(parsed));
+    }
+
+    const parsed = parseInt(this.chickenCrossBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      return this.chickenCrossInfo.minBet;
+    }
+    return Math.max(this.chickenCrossInfo.minBet, Math.min(this.chickenCrossInfo.maxBet, Math.round(parsed)));
+  }
+
+  adjustChickenCrossBet(amount: number): void {
+    if (!this.chickenCrossInfo) return;
+    this.commitChickenCrossBetInput();
+    const newBet = (this.chickenCrossBet || this.chickenCrossInfo.minBet) + amount;
+    this.chickenCrossBet = Math.max(this.chickenCrossInfo.minBet, Math.min(this.chickenCrossInfo.maxBet, newBet));
+    this.chickenCrossBetInput = this.chickenCrossBet.toString();
+  }
+
+  startChickenCrossGame(): void {
+    if (!this.chickenCrossInfo || this.chickenCrossLoading || this.hasActiveChickenCrossGame()) return;
+
+    this.commitChickenCrossBetInput();
+    const bet = this.chickenCrossBet;
+
+    if (bet < this.chickenCrossInfo.minBet || bet > this.chickenCrossInfo.maxBet) {
+      this.chickenCrossError = `Einsatz muss zwischen ${this.chickenCrossInfo.minBet} und ${this.chickenCrossInfo.maxBet} ZVC liegen.`;
+      setTimeout(() => (this.chickenCrossError = ''), 3000);
+      return;
+    }
+
+    if (!this.canAffordChickenCross()) {
+      this.chickenCrossError = `Nicht genügend ZVC! Du brauchst mindestens ${bet} ZVC.`;
+      setTimeout(() => (this.chickenCrossError = ''), 3000);
+      return;
+    }
+
+    this.chickenCrossLoading = true;
+    this.chickenCrossError = '';
+    this.chickenCrossDeadGame = null; // Clear any previous dead game
+
+    // Deduct bet immediately
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - bet;
+
+    const requestBody: ChickenCrossPostRequest = {
+      intent: 'MOVE',
+      bet: bet,
+    };
+
+    this.authService.authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody).subscribe({
+      next: (response) => {
+        this.chickenCrossLoading = false;
+        this.chickenCrossGame = {
+          seed: response.seed,
+          initialWager: bet,
+          currentPayout: response.currentPayout,
+          step: 0,
+          state: response.state,
+          lastUpdatedAt: Date.now(),
+        };
+        this.scrollChickenRoadToCenter();
+      },
+      error: (error) => {
+        this.chickenCrossLoading = false;
+        // Refund bet on error
+        this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+        this.chickenCrossError = error?.error?.error || 'Fehler beim Starten des Spiels.';
+        setTimeout(() => (this.chickenCrossError = ''), 3000);
+      },
+    });
+  }
+
+  chickenCrossMove(): void {
+    if (!this.chickenCrossGame || this.chickenCrossIsMoving || this.chickenCrossIsAnimating || this.chickenCrossGame.state !== 'ACTIVE') return;
+
+    this.chickenCrossIsMoving = true;
+    this.chickenCrossIsAnimating = true;
+    this.chickenCrossError = '';
+
+    // Move chicken immediately to the next step (suspense state)
+    this.chickenCrossGame = {
+      ...this.chickenCrossGame,
+      step: this.chickenCrossGame.step + 1,
+    };
+    this.scrollChickenRoadToCenter();
+
+    const requestBody: ChickenCrossPostRequest = {
+      intent: 'MOVE',
+      seed: this.chickenCrossGame.seed,
+    };
+
+    this.authService.authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody).subscribe({
+      next: (response) => {
+        // Add suspense delay
+        setTimeout(() => {
+          this.chickenCrossIsMoving = false;
+
+          if (response.state === 'LOST') {
+            // Mark as lost - show skull and explosion
+            this.chickenCrossGame = {
+              ...this.chickenCrossGame!,
+              state: 'LOST' as const,
+            };
+            this.chickenCrossLostAnimation = true;
+
+            // After explosion animation, transition to dead game state
+            setTimeout(() => {
+              const lostAtStep = this.chickenCrossGame!.step;
+              const lostMultiplier = this.getChickenMultiplierForStep(this.chickenCrossGame!.seed, lostAtStep);
+              this.addChickenCrossToHistory(
+                this.chickenCrossGame!.seed,
+                this.chickenCrossGame!.initialWager,
+                0,
+                lostMultiplier,
+                'LOST',
+              );
+
+              // Store the dead game - same state, just swap references
+              this.chickenCrossDeadGame = { ...this.chickenCrossGame! };
+              this.chickenCrossGame = null;
+              this.chickenCrossLostAnimation = false;
+              this.chickenCrossIsAnimating = false;
+            }, 1000);
+          } else {
+            // Success - update payout
+            this.chickenCrossGame = {
+              ...this.chickenCrossGame!,
+              currentPayout: response.currentPayout,
+              state: response.state,
+            };
+            this.chickenCrossIsAnimating = false;
+          }
+        }, 600); // 600ms suspense delay
+      },
+      error: (error) => {
+        // Roll back the step on error
+        this.chickenCrossGame = {
+          ...this.chickenCrossGame!,
+          step: this.chickenCrossGame!.step - 1,
+        };
+        this.chickenCrossIsMoving = false;
+        this.chickenCrossIsAnimating = false;
+        this.chickenCrossError = error?.error?.error || 'Fehler beim Bewegen.';
+        setTimeout(() => (this.chickenCrossError = ''), 3000);
+      },
+    });
+  }
+
+  chickenCrossCashout(): void {
+    if (!this.chickenCrossGame || this.chickenCrossLoading || this.chickenCrossGame.state !== 'ACTIVE') return;
+
+    this.chickenCrossLoading = true;
+    this.chickenCrossError = '';
+
+    const requestBody: ChickenCrossPostRequest = {
+      intent: 'CASHOUT',
+      seed: this.chickenCrossGame.seed,
+    };
+
+    this.authService.authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody).subscribe({
+      next: (response) => {
+        this.chickenCrossLoading = false;
+
+        // Add payout to balance
+        this.userStatistics.experience = (this.userStatistics.experience || 0) + response.currentPayout;
+
+        const multiplier = response.currentPayout / this.chickenCrossGame!.initialWager;
+
+        // Only add to history if player actually made at least one move
+        if (this.chickenCrossGame!.step > 0) {
+          this.addChickenCrossToHistory(
+            this.chickenCrossGame!.seed,
+            this.chickenCrossGame!.initialWager,
+            response.currentPayout,
+            multiplier,
+            'CASHED_OUT',
+          );
+        }
+
+        this.chickenCrossGame = null;
+        this.resetChickenRoadScroll();
+      },
+      error: (error) => {
+        this.chickenCrossLoading = false;
+        this.chickenCrossError = error?.error?.error || 'Fehler beim Auszahlen.';
+        setTimeout(() => (this.chickenCrossError = ''), 3000);
+      },
+    });
+  }
+
+  getChickenMultiplier(): string {
+    if (!this.chickenCrossGame) return '1.00';
+    const multiplier = this.chickenCrossGame.currentPayout / this.chickenCrossGame.initialWager;
+    return multiplier.toFixed(2);
   }
 }

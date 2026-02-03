@@ -7,7 +7,7 @@ import { playerdata } from '../db/schema.js';
 
 // Lucky Wheel configuration - easily modifiable
 const MIN_BET = 1;
-const MAX_BET = 500;
+const MAX_BET = 5000;
 
 // Payout multipliers and their weights
 const LUCKYWHEEL_TABLE = [
@@ -234,8 +234,7 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     }
 
     console.log(
-      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${
-        selectedEntry.multiplier
+      `🎰 Lucky Wheel: ${validation.steamId} bet ${betAmount} ZVC, got ${selectedEntry.multiplier
       }x (${payout} ZVC). Balance: ${currentBalance} → ${newBalance}`,
     );
 
