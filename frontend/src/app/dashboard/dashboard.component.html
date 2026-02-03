@@ -582,10 +582,15 @@
                     <div class="roulette-wheel-container">
                       <!-- Pointer at top (outside the rotating wheel) -->
                       <div class="roulette-pointer"></div>
-                      <div class="roulette-wheel" [class.spinning]="isRouletteSpinning" [attr.data-result]="rouletteSpinResult" [style.transform]="'rotate(' + rouletteRotation + 'deg)'">
+                      <div
+                        class="roulette-wheel"
+                        [class.spinning]="isRouletteSpinning"
+                        [attr.data-result]="rouletteSpinResult"
+                        [style.transform]="'rotate(' + rouletteRotation + 'deg)'"
+                      >
                         <!-- Roulette logo center -->
                         <div class="roulette-logo">
-                          <img src="/assets/logos/logo_full_color_1to1.png" alt="Zeitvertreib Logo">
+                          <img src="/assets/logos/logo_full_color_1to1.png" alt="Zeitvertreib Logo" />
                         </div>
                         <!-- Roulette numbers 0-36 arranged in a circle -->
                         <div class="roulette-numbers">
@@ -603,11 +608,32 @@
                     </div>
 
                     <!-- Result Display -->
-                    <div *ngIf="showRouletteResult && rouletteSpinResult !== null" class="roulette-result" [class.won]="rouletteWon">
-                      <div class="result-number" [style.color]="rouletteSpinColor === 'red' ? '#ef4444' : rouletteSpinColor === 'black' ? '#1f2937' : '#10b981'">
+                    <div
+                      *ngIf="showRouletteResult && rouletteSpinResult !== null"
+                      class="roulette-result"
+                      [class.won]="rouletteWon"
+                    >
+                      <div
+                        class="result-number"
+                        [style.color]="
+                          rouletteSpinColor === 'red'
+                            ? '#ef4444'
+                            : rouletteSpinColor === 'black'
+                              ? '#1f2937'
+                              : '#10b981'
+                        "
+                      >
                         {{ rouletteSpinResult }}
                       </div>
-                      <div class="result-color">{{ rouletteSpinColor === 'red' ? '🔴 Rot' : rouletteSpinColor === 'black' ? '⚫ Schwarz' : '🟢 Grün' }}</div>
+                      <div class="result-color">
+                        {{
+                          rouletteSpinColor === 'red'
+                            ? '🔴 Rot'
+                            : rouletteSpinColor === 'black'
+                              ? '⚫ Schwarz'
+                              : '🟢 Grün'
+                        }}
+                      </div>
                       <div class="result-message">{{ rouletteMessage }}</div>
                     </div>
 
@@ -714,7 +740,16 @@
                           [class.win-log-loss]="!entry.won"
                         >
                           <div class="win-log-symbols">
-                            <span class="roulette-number-badge" [style.background-color]="getRouletteNumberColor(entry.spinResult) === 'red' ? '#ef4444' : getRouletteNumberColor(entry.spinResult) === 'black' ? '#1f2937' : '#10b981'">
+                            <span
+                              class="roulette-number-badge"
+                              [style.background-color]="
+                                getRouletteNumberColor(entry.spinResult) === 'red'
+                                  ? '#ef4444'
+                                  : getRouletteNumberColor(entry.spinResult) === 'black'
+                                    ? '#1f2937'
+                                    : '#10b981'
+                              "
+                            >
                               {{ entry.spinResult }}
                             </span>
                           </div>
