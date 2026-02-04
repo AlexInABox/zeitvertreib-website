@@ -18,12 +18,12 @@ export class AppComponent implements OnInit {
   constructor() {}
 
   //feel free to transfer this to a seperate file and then call that, but I tried it and it broke everything and killed my grandma
- private easterDates: Record<number, { month: number; day: number }> = {
+  private easterDates: Record<number, { month: number; day: number }> = {
     2026: { month: 3, day: 5 },
     2027: { month: 2, day: 28 },
     2028: { month: 3, day: 16 },
     2029: { month: 3, day: 1 },
-    2030: { month: 3, day: 21 }
+    2030: { month: 3, day: 21 },
     //remind me to add more in 4 years
   };
 
@@ -32,17 +32,19 @@ export class AppComponent implements OnInit {
     const easter = this.easterDates[year];
     if (!easter) return false;
 
-    return (
-      date.getMonth() === easter.month &&
-      date.getDate() === easter.day
-    );
+    return date.getMonth() === easter.month && date.getDate() === easter.day;
   }
 
   ngOnInit(): void {
     try {
       const today = new Date();
       const isEasterToday = this.isEaster(today);
-      console.log('[Easter] Today:', `${today.getMonth()}/${today.getDate()}/${today.getFullYear()}`, 'IsEaster:', isEasterToday);
+      console.log(
+        '[Easter] Today:',
+        `${today.getMonth()}/${today.getDate()}/${today.getFullYear()}`,
+        'IsEaster:',
+        isEasterToday,
+      );
       if (isEasterToday) {
         document.body.classList.add('easter');
       } else {
@@ -53,4 +55,3 @@ export class AppComponent implements OnInit {
     }
   }
 }
-

@@ -84,7 +84,7 @@ body {
 }
 /*easterbunny*/
 body.easter {
-  background: linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)), url('/assets/bunny.jpg');
+  background: linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)), url('/assets/bunny.jpg');
   background-attachment: fixed;
   background-size: cover;
 }
