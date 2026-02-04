@@ -207,6 +207,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Prepare ts-patch
+        run: npm run prepare
+
       - name: Prepare environment
         run: cp .env.example .env
 
@@ -384,6 +387,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+      
+      - name: Prepare ts-patch
+        run: npm run prepare
 
       - name: Prepare environment
         run: cp .env.example .env
