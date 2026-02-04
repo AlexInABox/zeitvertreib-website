@@ -82,6 +82,12 @@ body {
   background-size: cover;
   min-height: 100vh;
 }
+/*easterbunny*/
+body.easter {
+  background: linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)), url('/assets/bunny.jpg');
+  background-attachment: fixed;
+  background-size: cover;
+}
 
 /* =============================
    Vanilla utility classes
