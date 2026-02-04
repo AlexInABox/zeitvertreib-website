@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "rm -rf node_modules/ && npm i && rm -rf dist/ && NODE_ENV=production npx drizzle-kit pull && npx tsc",
+    "build": "rm -rf node_modules/ && npm i && rm -rf dist/ && npm run db:init && NODE_ENV=production npx drizzle-kit pull && npx tsc",
     "build:dev": "rm -rf node_modules/ && npm i && rm -rf dist/ && npm run db:init && npx tsc",
     "start": "wrangler dev --ip 127.0.0.1",
     "db:init": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --command 'SELECT 1;' && npx drizzle-kit push",
