@@ -2,11 +2,16 @@ import { validateSession, createResponse, increment, fetchSteamUserData } from '
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import typia from "typia";
+import typia from 'typia';
 
 import { playerdata } from '../db/schema.js';
 
-import { RouletteBetType, RouletteGetInfoResponse, RoulettePostRequest, RoulettePostResponse } from '@zeitvertreib/types';
+import {
+  RouletteBetType,
+  RouletteGetInfoResponse,
+  RoulettePostRequest,
+  RoulettePostResponse,
+} from '@zeitvertreib/types';
 
 const MIN_BET = 10;
 const MAX_BET = 5000;
@@ -17,7 +22,7 @@ interface BetOutcome {
   won: boolean;
   multiplier: number;
 }
-function checkBetOutcome(betType: RouletteBetType, spinResult: number, betValue?: number,): BetOutcome {
+function checkBetOutcome(betType: RouletteBetType, spinResult: number, betValue?: number): BetOutcome {
   switch (betType) {
     case 'red': {
       return { won: RED_NUMBERS.includes(spinResult), multiplier: 2 };
@@ -89,8 +94,7 @@ async function sendRouletteWinToDiscord(
 export async function handleRouletteInfo(request: Request, _env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
-  const response: RouletteGetInfoResponse =
-  {
+  const response: RouletteGetInfoResponse = {
     minBet: MIN_BET,
     maxBet: MAX_BET,
   };
@@ -207,22 +211,16 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
 
       if (ctx) {
         ctx.waitUntil(
-          sendRouletteWinToDiscord(
-            playerId,
-            username,
-            body.bet,
-            body.type,
-            spinResult,
-            payout,
-            env,
-            body.value,
-          ).catch((error) => console.error('Failed to send webhook notification:', error)),
+          sendRouletteWinToDiscord(playerId, username, body.bet, body.type, spinResult, payout, env, body.value).catch(
+            (error) => console.error('Failed to send webhook notification:', error),
+          ),
         );
       }
     }
 
     console.log(
-      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${betOutcome.won ? `won ${payout} ZVC` : 'lost'
+      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${
+        betOutcome.won ? `won ${payout} ZVC` : 'lost'
       }. Balance: ${currentBalance} → ${newBalance}`,
     );
 
@@ -232,11 +230,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       payout: payout,
     };
 
-    return createResponse(
-      response,
-      200,
-      origin,
-    );
+    return createResponse(response, 200, origin);
   } catch (error) {
     console.error('Error in roulette:', error);
     return createResponse({ error: 'Interner Serverfehler' }, 500, origin);
