@@ -25,9 +25,10 @@ import type {
   ChickenCrossPostRequest,
   ChickenCrossPostResponse,
   ChickenCrossActiveResponse,
-  RouletteInfoResponse,
-  RoulettePlayRequest,
-  RoulettePlayResponse,
+  RouletteGetInfoResponse,
+  RoulettePostRequest,
+  RoulettePostResponse,
+  RouletteBetType,
 } from '@zeitvertreib/types';
 
 interface PlayerEntry {
@@ -209,12 +210,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -359,14 +360,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isRouletteSpinning = false;
   rouletteSpinResult: number | null = null;
   rouletteSpinColor: 'red' | 'black' | 'green' | null = null;
-  rouletteBetType: any = 'red';
-  rouletteBetValue: string | number = '';
+  rouletteBetType: RouletteBetType = 'red';
+  rouletteBetValue: number = 0;
   showRouletteResult = false;
   rouletteWon = false;
   roulettePayout: number | null = null;
   rouletteRotation = 0;
   private rouletteResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private rouletteClearResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  // Pre-computed SVG wheel segments
+  rouletteWheelSegments: Array<{ path: string; color: string }> = this.generateRouletteWheelSegments();
+
+  private generateRouletteWheelSegments(): Array<{ path: string; color: string }> {
+    const wheelSequence = [
+      0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17,
+      25, 2, 21, 4, 19, 15, 32,
+    ];
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    const segments: Array<{ path: string; color: string }> = [];
+    const total = 37;
+    const cx = 100;
+    const cy = 100;
+    const r = 100;
+
+    for (let i = 0; i < total; i++) {
+      const num = wheelSequence[i];
+      const startAngleDeg = (i / total) * 360;
+      const endAngleDeg = ((i + 1) / total) * 360;
+
+      const startAngle = (startAngleDeg * Math.PI) / 180 - Math.PI / 2;
+      const endAngle = (endAngleDeg * Math.PI) / 180 - Math.PI / 2;
+
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+
+      const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`;
+
+      let color: string;
+      if (num === 0) {
+        color = '#10b981';
+      } else if (redNumbers.includes(num)) {
+        color = '#ef4444';
+      } else {
+        color = '#1f2937';
+      }
+
+      segments.push({ path, color });
+    }
+
+    return segments;
+  }
+
   rouletteSpinLog: Array<{
     id: number;
     timestamp: number;
@@ -376,7 +423,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     won: boolean;
     payout: number;
     betAmount: number;
-    message: string;
   }> = [];
   private readonly ROULETTE_LOG_STORAGE_KEY = 'rouletteSpinLog';
   hideRouletteLosses = true;
@@ -3035,7 +3081,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadRouletteInfo(): void {
     this.rouletteError = '';
-    this.authService.authenticatedGet<RouletteInfoResponse>(`${environment.apiUrl}/roulette/info`).subscribe({
+    this.authService.authenticatedGet<RouletteGetInfoResponse>(`${environment.apiUrl}/roulette/info`).subscribe({
       next: (response) => {
         this.rouletteInfo = response;
         this.rouletteError = '';
@@ -3054,6 +3100,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   canAffordRoulette(): boolean {
     const bet = this.getPendingRouletteBet();
     return (this.userStatistics.experience || 0) >= bet;
+  }
+
+  onRouletteNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = parseInt(input.value, 10);
+
+    if (isNaN(value)) {
+      this.rouletteBetValue = 0;
+      return;
+    }
+
+    // Clamp value between 0 and 36
+    if (value < 0) {
+      value = 0;
+    } else if (value > 36) {
+      value = 36;
+    }
+
+    this.rouletteBetValue = value;
+    input.value = value.toString();
   }
 
   adjustRouletteBet(amount: number): void {
@@ -3172,6 +3238,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate number bet type
+    if (this.rouletteBetType === 'number') {
+      if (this.rouletteBetValue < 0 || this.rouletteBetValue > 36) {
+        this.rouletteError = 'Nummer muss zwischen 0 und 36 liegen.';
+        setTimeout(() => {
+          this.rouletteError = '';
+        }, 3000);
+        return;
+      }
+    }
+
     if (!this.canAffordRoulette()) {
       this.rouletteError = `Nicht genügend ZVC! Du brauchst mindestens ${bet} ZVC.`;
       setTimeout(() => {
@@ -3186,7 +3263,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.rouletteMessage = '';
     this.showRouletteResult = false;
 
-    const requestBody: RoulettePlayRequest = {
+    const requestBody: RoulettePostRequest = {
       bet,
       type: this.rouletteBetType,
     };
@@ -3200,10 +3277,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Record when the spin started to ensure result shows only after full animation
     const spinStartTime = Date.now();
 
-    this.authService.authenticatedPost<RoulettePlayResponse>(`${environment.apiUrl}/roulette`, requestBody).subscribe({
+    this.authService.authenticatedPost<RoulettePostResponse>(`${environment.apiUrl}/roulette`, requestBody).subscribe({
       next: (response) => {
         this.rouletteSpinResult = response.spinResult;
-        this.rouletteSpinColor = response.color;
         this.rouletteWon = response.won;
         this.roulettePayout = response.payout;
 
@@ -3233,7 +3309,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
           }
 
-          this.rouletteMessage = response.message;
           this.addRouletteSpinToLog(
             response.spinResult,
             this.rouletteBetType,
@@ -3241,7 +3316,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             response.won,
             response.payout,
             bet,
-            response.message,
           );
 
           this.rouletteClearResultTimeoutId = setTimeout(() => {
@@ -3296,7 +3370,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     won: boolean,
     payout: number,
     betAmount: number,
-    message: string,
   ): void {
     const newEntry = {
       id: Date.now(),
@@ -3307,7 +3380,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       won,
       payout,
       betAmount,
-      message,
     };
 
     this.rouletteSpinLog.unshift(newEntry);

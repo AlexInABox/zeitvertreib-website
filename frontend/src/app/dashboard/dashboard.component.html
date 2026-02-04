@@ -370,6 +370,12 @@
                         [attr.data-result]="rouletteSpinResult"
                         [style.transform]="'rotate(' + rouletteRotation + 'deg)'"
                       >
+                        <!-- SVG Wheel Background -->
+                        <svg class="roulette-wheel-svg" viewBox="0 0 200 200">
+                          <g *ngFor="let segment of rouletteWheelSegments; let i = index">
+                            <path [attr.d]="segment.path" [attr.fill]="segment.color" />
+                          </g>
+                        </svg>
                         <!-- Roulette logo center -->
                         <div class="roulette-logo">
                           <img src="/assets/logos/logo_full_color_1to1.png" alt="Zeitvertreib Logo" />
@@ -377,11 +383,15 @@
                         <!-- Roulette numbers 0-36 arranged in a circle -->
                         <div class="roulette-numbers">
                           <div
-                            *ngFor="let num of rouletteInfo.numbers"
+                            *ngFor="
+                              let num of [
+                                0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11,
+                                36, 13, 27, 6, 34, 17, 25, 2, 21, 4, 19, 15, 32,
+                              ];
+                              let i = index
+                            "
                             class="roulette-number"
-                            [ngClass]="'number-' + num"
                             [ngStyle]="getRouletteNumberPosition(num)"
-                            [style.background-color]="getRouletteNumberBgColor(num)"
                           >
                             {{ num }}
                           </div>
@@ -389,54 +399,83 @@
                       </div>
                     </div>
 
-                    <!-- Result Display -->
-                    <div
-                      *ngIf="showRouletteResult && rouletteSpinResult !== null"
-                      class="roulette-result"
-                      [class.won]="rouletteWon"
-                    >
-                      <div
-                        class="result-number"
-                        [style.color]="
-                          rouletteSpinColor === 'red'
-                            ? '#ef4444'
-                            : rouletteSpinColor === 'black'
-                              ? '#1f2937'
-                              : '#10b981'
-                        "
-                      >
-                        {{ rouletteSpinResult }}
-                      </div>
-                      <div class="result-color">
-                        {{
-                          rouletteSpinColor === 'red'
-                            ? '🔴 Rot'
-                            : rouletteSpinColor === 'black'
-                              ? '⚫ Schwarz'
-                              : '🟢 Grün'
-                        }}
-                      </div>
-                      <div class="result-message">{{ rouletteMessage }}</div>
-                    </div>
+                    <!-- Result Display removed - no popup -->
 
                     <!-- Bet Type Selection -->
                     <div class="roulette-bet-type-section">
                       <label class="bet-type-label">Wettart</label>
-                      <select [(ngModel)]="rouletteBetType" class="bet-type-select" [disabled]="isRouletteSpinning">
-                        <option value="red">🔴 Rot — Gewinn: 2x deinen Einsatz</option>
-                        <option value="black">⚫ Schwarz — Gewinn: 2x deinen Einsatz</option>
-                        <option value="odd">Ungerade — Gewinn: 2x deinen Einsatz</option>
-                        <option value="even">Gerade — Gewinn: 2x deinen Einsatz</option>
-                        <option value="1to18">1-18 — Gewinn: 2x deinen Einsatz</option>
-                        <option value="19to36">19-36 — Gewinn: 2x deinen Einsatz</option>
-                        <option value="number">Spezifische Nummer — Gewinn: 36x deinen Einsatz</option>
-                      </select>
+                      <div class="bet-type-grid">
+                        <button
+                          class="bet-type-btn bet-type-btn-primary"
+                          [class.active]="rouletteBetType === 'red'"
+                          (click)="rouletteBetType = 'red'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 2x deinen Einsatz"
+                        >
+                          🔴 Rot
+                        </button>
+                        <button
+                          class="bet-type-btn bet-type-btn-primary"
+                          [class.active]="rouletteBetType === 'black'"
+                          (click)="rouletteBetType = 'black'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 2x deinen Einsatz"
+                        >
+                          ⚫ Schwarz
+                        </button>
+                        <button
+                          class="bet-type-btn"
+                          [class.active]="rouletteBetType === 'odd'"
+                          (click)="rouletteBetType = 'odd'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 2x deinen Einsatz"
+                        >
+                          Ungerade
+                        </button>
+                        <button
+                          class="bet-type-btn"
+                          [class.active]="rouletteBetType === 'even'"
+                          (click)="rouletteBetType = 'even'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 2x deinen Einsatz"
+                        >
+                          Gerade
+                        </button>
+                        <button
+                          class="bet-type-btn"
+                          [class.active]="rouletteBetType === '1to18'"
+                          (click)="rouletteBetType = '1to18'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 2x deinen Einsatz"
+                        >
+                          1-18
+                        </button>
+                        <button
+                          class="bet-type-btn"
+                          [class.active]="rouletteBetType === '19to36'"
+                          (click)="rouletteBetType = '19to36'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 2x deinen Einsatz"
+                        >
+                          19-36
+                        </button>
+                        <button
+                          class="bet-type-btn bet-type-btn-special"
+                          [class.active]="rouletteBetType === 'number'"
+                          (click)="rouletteBetType = 'number'"
+                          [disabled]="isRouletteSpinning"
+                          title="Gewinn: 36x deinen Einsatz"
+                        >
+                          Nummer
+                        </button>
+                      </div>
 
                       <!-- Number input for specific number bet -->
                       <div *ngIf="rouletteBetType === 'number'" class="number-input-section">
                         <input
                           type="number"
                           [(ngModel)]="rouletteBetValue"
+                          (input)="onRouletteNumberInput($event)"
                           min="0"
                           max="36"
                           placeholder="0-36"

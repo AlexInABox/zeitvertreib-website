@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -433,46 +433,6 @@ export interface LuckyWheelPlayResponse {
   netChange: number;
   newBalance: number;
   isWin: boolean;
-}
-
-// ============================================================================
-// Roulette Types
-// ============================================================================
-
-export type RouletteBetType = 'red' | 'black' | 'odd' | 'even' | 'number' | '1to18' | '19to36';
-
-export interface RouletteBetOption {
-  description: string;
-  multiplier: number;
-}
-
-/** GET /roulette/info response */
-export interface RouletteInfoResponse {
-  minBet: number;
-  maxBet: number;
-  betTypes: Record<RouletteBetType, RouletteBetOption>;
-  numbers: number[];
-  description: string;
-}
-
-/** POST /roulette request */
-export interface RoulettePlayRequest {
-  bet: number;
-  type: RouletteBetType;
-  value?: string | number;
-}
-
-/** POST /roulette response */
-export interface RoulettePlayResponse {
-  spinResult: number;
-  color: 'red' | 'black' | 'green';
-  betType: RouletteBetType;
-  betAmount: number;
-  won: boolean;
-  payout: number;
-  netChange: number;
-  newBalance: number;
-  message: string;
 }
 
 // ============================================================================
@@ -793,7 +753,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
 
 // ============================================================================
 // Chicken Cross Types
@@ -838,4 +798,31 @@ export interface ChickenCrossPostResponse {
 //** GET /chickencross/active response */
 export interface ChickenCrossActiveResponse {
   activeGameSeed?: number;
+}
+
+
+// ============================================================================
+// Roulette Types
+// ============================================================================
+
+export type RouletteBetType = 'red' | 'black' | 'odd' | 'even' | 'number' | '1to18' | '19to36';
+
+/** GET /roulette/info response */
+export interface RouletteGetInfoResponse {
+  minBet: number;
+  maxBet: number;
+}
+
+/** POST /roulette request */
+export interface RoulettePostRequest {
+  bet: number;
+  type: RouletteBetType;
+  value?: number;
+}
+
+/** POST /roulette response */
+export interface RoulettePostResponse {
+  spinResult: number;
+  won: boolean;
+  payout: number;
 }

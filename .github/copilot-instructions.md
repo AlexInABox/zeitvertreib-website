@@ -59,3 +59,31 @@ const users = await env.ZEITVERTREIB_DATA.prepare('SELECT * FROM users WHERE id 
 
 ### dist/ Directories
 - The `dist/` directories in each package are build outputs and **must not be committed to version control** or manually edited.
+
+### Use typia for runtime type validation
+```typescript
+import typia from 'typia';
+
+// ✅ CORRECT: Using typia for runtime validation
+if (!typia.is<T>(body)) {
+  return createResponse(
+    {
+      error: 'Ungültige Anfragedaten',
+    },
+    400,
+    origin,
+  );
+}
+
+// ❌ WRONG: Manual validation (forbidden)
+if (typeof body.prop !== 'string' || typeof body.otherProp !== 'number') {
+  return createResponse(
+    {
+      error: 'Ungültige Anfragedaten',
+    },
+    400,
+    origin,
+  );
+}
+```
+`typia` should be used with all imported types from `@zeitvertreib/types` to ensure that incoming request bodies and other data conform to expected structures at runtime.

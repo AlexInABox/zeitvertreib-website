@@ -2,57 +2,44 @@ import { validateSession, createResponse, increment, fetchSteamUserData } from '
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
+import typia from "typia";
 
 import { playerdata } from '../db/schema.js';
 
-const MIN_BET = 1;
-const MAX_BET = 500;
-const ROULETTE_NUMBERS = Array.from({ length: 37 }, (_, i) => i);
+import { RouletteBetType, RouletteGetInfoResponse, RoulettePostRequest, RoulettePostResponse } from '@zeitvertreib/types';
 
-function isRed(number: number): boolean {
-  const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-  return redNumbers.includes(number);
-}
-
-type BetType = 'red' | 'black' | 'odd' | 'even' | 'number' | '1to18' | '19to36';
+const MIN_BET = 10;
+const MAX_BET = 5000;
+const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+const BLACK_NUMBERS = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
 
 interface BetOutcome {
   won: boolean;
   multiplier: number;
 }
-
-function checkBetOutcome(betType: BetType, betValue: string | number, spinResult: number): BetOutcome {
+function checkBetOutcome(betType: RouletteBetType, spinResult: number, betValue?: number,): BetOutcome {
   switch (betType) {
     case 'red': {
-      const won = isRed(spinResult) && spinResult !== 0;
-      return { won, multiplier: 2 };
+      return { won: RED_NUMBERS.includes(spinResult), multiplier: 2 };
     }
     case 'black': {
-      const won = !isRed(spinResult) && spinResult !== 0;
-      return { won, multiplier: 2 };
+      return { won: BLACK_NUMBERS.includes(spinResult), multiplier: 2 };
     }
     case 'odd': {
-      const won = spinResult % 2 === 1;
-      return { won, multiplier: 2 };
+      return { won: spinResult % 2 === 1, multiplier: 2 };
     }
     case 'even': {
-      const won = spinResult % 2 === 0 && spinResult !== 0;
-      return { won, multiplier: 2 };
+      return { won: spinResult % 2 === 0 && spinResult !== 0, multiplier: 2 };
     }
     case '1to18': {
-      const won = spinResult >= 1 && spinResult <= 18;
-      return { won, multiplier: 2 };
+      return { won: spinResult >= 1 && spinResult <= 18, multiplier: 2 };
     }
     case '19to36': {
-      const won = spinResult >= 19 && spinResult <= 36;
-      return { won, multiplier: 2 };
+      return { won: spinResult >= 19 && spinResult <= 36, multiplier: 2 };
     }
     case 'number': {
-      const won = spinResult === Number(betValue);
-      return { won, multiplier: 36 };
+      return { won: spinResult == betValue!, multiplier: 36 };
     }
-    default:
-      return { won: false, multiplier: 0 };
   }
 }
 
@@ -61,41 +48,17 @@ async function sendRouletteWinToDiscord(
   steamId: string,
   username: string,
   betAmount: number,
-  betType: BetType,
-  betValue: string | number,
+  betType: RouletteBetType,
   spinResult: number,
   payout: number,
   env: Env,
+  betValue?: number,
 ): Promise<void> {
   try {
-    const betDescription = betType === 'number' ? `Nummer ${betValue}` : betType;
-
     const embed = {
       title: '🎡 Roulette Gewinn!',
+      description: `${username} hat \`${payout} ZVC\` im Roulette gewonnen!`,
       color: 0x00ff00,
-      fields: [
-        {
-          name: 'Spieler',
-          value: username,
-          inline: true,
-        },
-        {
-          name: 'Einsatz',
-          value: betDescription,
-          inline: true,
-        },
-        {
-          name: 'Ergebnis',
-          value: spinResult === 0 ? '0 (Grün)' : `${spinResult} (${isRed(spinResult) ? 'Rot' : 'Schwarz'})`,
-          inline: true,
-        },
-        {
-          name: 'Gewinn',
-          value: `${payout} ZVC`,
-          inline: true,
-        },
-      ],
-      timestamp: new Date().toISOString(),
     };
 
     const payload = {
@@ -126,28 +89,16 @@ async function sendRouletteWinToDiscord(
 export async function handleRouletteInfo(request: Request, _env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
-  return createResponse(
-    {
-      minBet: MIN_BET,
-      maxBet: MAX_BET,
-      betTypes: {
-        red: { description: 'Rot (2:1)', multiplier: 2 },
-        black: { description: 'Schwarz (2:1)', multiplier: 2 },
-        odd: { description: 'Ungerade (2:1)', multiplier: 2 },
-        even: { description: 'Gerade (2:1)', multiplier: 2 },
-        '1to18': { description: '1-18 (2:1)', multiplier: 2 },
-        '19to36': { description: '19-36 (2:1)', multiplier: 2 },
-        number: { description: 'Spezifische Nummer (36:1)', multiplier: 36 },
-      },
-      numbers: ROULETTE_NUMBERS,
-      description: 'lets go gambling!',
-    },
-    200,
-    origin,
-  );
+  const response: RouletteGetInfoResponse =
+  {
+    minBet: MIN_BET,
+    maxBet: MAX_BET,
+  };
+
+  return createResponse(response, 200, origin);
 }
 
-//post-roulette
+/** POST /roulette */
 export async function handleRoulette(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
@@ -161,59 +112,32 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     );
   }
 
-  const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
+  const playerId = validation.steamId;
 
-  let betAmount: number;
-  let betType: BetType;
-  let betValue: string | number = '';
+  const body: RoulettePostRequest = await request.json();
 
-  try {
-    const body = (await request.json()) as { bet: number; type: BetType; value?: string | number };
-    betAmount = parseInt(String(body.bet));
-    betType = body.type;
-    betValue = body.value || '';
-
-    if (isNaN(betAmount) || betAmount < MIN_BET || betAmount > MAX_BET || !Number.isInteger(betAmount)) {
-      return createResponse(
-        {
-          error: `Ungültiger Einsatz. Muss zwischen ${MIN_BET} und ${MAX_BET} ZVC liegen.`,
-          minBet: MIN_BET,
-          maxBet: MAX_BET,
-        },
-        400,
-        origin,
-      );
-    }
-
-    const validBetTypes = ['red', 'black', 'odd', 'even', 'number', '1to18', '19to36'];
-    if (!validBetTypes.includes(betType)) {
-      return createResponse(
-        {
-          error: 'Ungültige Wettart.',
-          validTypes: validBetTypes,
-        },
-        400,
-        origin,
-      );
-    }
-
-    if (betType === 'number') {
-      const numberValue = parseInt(String(betValue));
-      if (isNaN(numberValue) || numberValue < 0 || numberValue > 36) {
-        return createResponse(
-          {
-            error: 'Ungültige Nummer. Muss zwischen 0 und 36 liegen.',
-          },
-          400,
-          origin,
-        );
-      }
-    }
-  } catch (error) {
+  if (!typia.is<RoulettePostRequest>(body)) {
     return createResponse(
       {
-        error: 'Ungültige Anfrage.',
-        example: { bet: 100, type: 'red' },
+        error: 'Ungültige Anfragedaten',
+      },
+      400,
+      origin,
+    );
+  }
+  if (body.bet < MIN_BET || body.bet > MAX_BET) {
+    return createResponse(
+      {
+        error: `Einsatz muss zwischen ${MIN_BET} und ${MAX_BET} ZVC liegen`,
+      },
+      400,
+      origin,
+    );
+  }
+  if (body.value && (body.value < 0 || body.value > 36)) {
+    return createResponse(
+      {
+        error: 'Ungültiger Zahlenwert für die Wette',
       },
       400,
       origin,
@@ -223,7 +147,6 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
   try {
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    //get balance, I have no idea what claude did here but I wont question it
     const playerRecord = await db
       .select({ experience: playerdata.experience })
       .from(playerdata)
@@ -232,12 +155,10 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
 
     const currentBalance = playerRecord?.experience || 0;
 
-    if (currentBalance < betAmount) {
+    if (currentBalance < body.bet) {
       return createResponse(
         {
-          error: 'Nicht genügend ZVC',
-          required: betAmount,
-          current: currentBalance,
+          error: 'Nicht genügend ZVC in deinem Account!',
         },
         400,
         origin,
@@ -250,16 +171,16 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     const spinResult = randomBuffer[0]! % 37; // 0-36
 
     //check win
-    const betOutcome = checkBetOutcome(betType, betValue, spinResult);
+    const betOutcome = checkBetOutcome(body.type, spinResult, body.value);
 
     // Debug logging
     console.log(
-      `Roulette debug: spinResult=${spinResult}, betType=${betType}, betValue=${betValue}, won=${betOutcome.won}, color=${spinResult === 0 ? 'green' : isRed(spinResult) ? 'red' : 'black'}`,
+      `Roulette debug: spinResult=${spinResult}, betType=${body.type}, betValue=${body.value}, won=${betOutcome.won}, color=${spinResult === 0 ? 'green' : RED_NUMBERS.includes(spinResult) ? 'red' : 'black'}`,
     );
 
     //payout calculation
-    const payout = betOutcome.won ? betAmount * betOutcome.multiplier : 0;
-    const netChange = payout - betAmount;
+    const payout = betOutcome.won ? body.bet * betOutcome.multiplier : 0;
+    const netChange = payout - body.bet;
     const newBalance = currentBalance + netChange;
 
     // Update player balance and stats
@@ -267,18 +188,20 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       .update(playerdata)
       .set({
         experience: increment(playerdata.experience, netChange),
+        rouletteSpins: increment(playerdata.rouletteSpins, 1),
+        rouletteWins: increment(playerdata.rouletteWins, payout - body.bet),
+        rouletteLosses: increment(playerdata.rouletteLosses, body.bet),
       })
       .where(eq(playerdata.id, playerId))
       .run();
 
-    // Send webhook notification for big wins (Alex please verify)
-    if (betOutcome.won && betType === 'number' && betAmount >= 50) {
-      // Get Steam username from cache
-      let steamNickname = validation.steamId!;
+    // Send webhook notification for big wins
+    if (betOutcome.won && body.type === 'number' && body.bet >= 50) {
+      let username = validation.steamId!;
       if (ctx) {
         const steamUser = await fetchSteamUserData(validation.steamId!, env, ctx);
         if (steamUser) {
-          steamNickname = steamUser.username;
+          username = steamUser.username;
         }
       }
 
@@ -286,38 +209,31 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
         ctx.waitUntil(
           sendRouletteWinToDiscord(
             playerId,
-            steamNickname,
-            betAmount,
-            betType,
-            betValue,
+            username,
+            body.bet,
+            body.type,
             spinResult,
             payout,
             env,
+            body.value,
           ).catch((error) => console.error('Failed to send webhook notification:', error)),
         );
       }
     }
 
     console.log(
-      `🎡 Roulette: ${playerId} bet ${betAmount} ZVC on ${betType}${betType === 'number' ? ` (${betValue})` : ''}, spun ${spinResult}, ${
-        betOutcome.won ? `won ${payout} ZVC` : 'lost'
+      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${betOutcome.won ? `won ${payout} ZVC` : 'lost'
       }. Balance: ${currentBalance} → ${newBalance}`,
     );
 
+    const response: RoulettePostResponse = {
+      spinResult: spinResult,
+      won: betOutcome.won,
+      payout: payout,
+    };
+
     return createResponse(
-      {
-        spinResult: spinResult,
-        color: spinResult === 0 ? 'green' : isRed(spinResult) ? 'red' : 'black',
-        betType: betType,
-        betAmount: betAmount,
-        won: betOutcome.won,
-        payout: payout,
-        netChange: netChange,
-        newBalance: newBalance,
-        message: betOutcome.won
-          ? `Glück gehabt! ${payout} ZVC gewonnen!`
-          : `Pech gehabt! Die Kugel ist auf ${spinResult} gelandet.`,
-      },
+      response,
       200,
       origin,
     );
