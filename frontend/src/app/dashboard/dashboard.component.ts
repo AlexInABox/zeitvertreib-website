@@ -351,7 +351,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   hideChickenLosses = true;
 
   // Roulette properties
-  rouletteInfo: any | null = null;
+  rouletteInfo: RouletteGetInfoResponse | null = null;
   rouletteBet: number = 100;
   rouletteBetInput: string = '100';
   rouletteLoading = false;
