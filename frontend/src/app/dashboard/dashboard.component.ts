@@ -210,12 +210,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -1161,6 +1161,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Clean up event listener
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
+    }
+
+    // Clean up roulette timeouts
+    if (this.rouletteResultTimeoutId !== null) {
+      clearTimeout(this.rouletteResultTimeoutId);
+      this.rouletteResultTimeoutId = null;
+    }
+    if (this.rouletteClearResultTimeoutId !== null) {
+      clearTimeout(this.rouletteClearResultTimeoutId);
+      this.rouletteClearResultTimeoutId = null;
     }
   }
 
