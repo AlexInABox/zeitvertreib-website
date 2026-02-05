@@ -221,7 +221,8 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     }
 
     console.log(
-      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${betOutcome.won ? `won ${payout} ZVC` : 'lost'
+      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${
+        betOutcome.won ? `won ${payout} ZVC` : 'lost'
       }. Balance: ${currentBalance} → ${newBalance}`,
     );
 
