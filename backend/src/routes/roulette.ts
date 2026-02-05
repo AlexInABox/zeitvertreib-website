@@ -138,7 +138,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       origin,
     );
   }
-  if (body.value && (body.value < 0 || body.value > 36)) {
+  if (body.value && (body.value < 0 || body.value > 36) || (body.type === 'number' && (body.value === undefined || body.value === null))) {
     return createResponse(
       {
         error: 'Ungültiger Zahlenwert für die Wette',
@@ -219,8 +219,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     }
 
     console.log(
-      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${
-        betOutcome.won ? `won ${payout} ZVC` : 'lost'
+      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${betOutcome.won ? `won ${payout} ZVC` : 'lost'
       }. Balance: ${currentBalance} → ${newBalance}`,
     );
 
