@@ -182,6 +182,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     const img = new Image();
     img.onerror = () => {
       console.warn(`Failed to preload image: ${cacheKey}`);
+      this.imageCache.set(cacheKey, false);
     };
     img.onload = () => {
       this.imageCache.set(cacheKey, true);
