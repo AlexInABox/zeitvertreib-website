@@ -331,7 +331,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
     if (ctx) {
       const player = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
       if (player) {
-        const steamUser = await fetchSteamUserData(steamId.replace('@steam', ''), env, ctx);
+        const steamUser = await fetchSteamUserData(steamId, env, ctx);
         const username = steamUser?.username ?? player.username ?? steamId;
         ctx.waitUntil(
           sendResultToDiscord(steamId, username, game.initialWager, game.currentPayout, game.step, 'CASHED_OUT', env),
