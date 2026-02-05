@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { Menubar } from 'primeng/menubar';
 import { ButtonModule } from 'primeng/button';
@@ -8,10 +8,22 @@ import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { AuthService, SteamUser, UserData } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { BackgroundMusicService } from '../../services/background-music.service';
+import { FormsModule } from '@angular/forms';
+import { SliderModule } from 'primeng/slider';
 
 @Component({
   selector: 'app-header',
-  imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule],
+  imports: [
+    Menubar,
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    AvatarModule,
+    AvatarGroupModule,
+    SliderModule,
+    FormsModule,
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
@@ -24,8 +36,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isFakerankAdmin: boolean = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
+  private bgmPlayingSubscription?: Subscription;
+  private bgmInteractionSubscription?: Subscription;
+  private bgmVolumeSubscription?: Subscription;
+  private bgmMutedSubscription?: Subscription;
+  private bgmTrackSubscription?: Subscription;
+  isPlaying: boolean = false;
+  requiresInteraction: boolean = false;
+  volume: number = 0.25;
+  isMuted: boolean = false;
+  currentTrack: string | null = null;
+  showVolumePanel: boolean = false;
+  ctaShown: boolean = false;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private bgm: BackgroundMusicService,
+  ) {}
 
   ngOnInit() {
     this.updateMenuItems();
@@ -42,6 +69,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.isFakerankAdmin = this.authService.isFakerankAdmin();
       this.updateMenuItems(); // Update menu items when admin status changes
     });
+
+    // Background music state
+    this.bgmPlayingSubscription = this.bgm.isPlaying$.subscribe((v) => (this.isPlaying = v));
+    this.bgmInteractionSubscription = this.bgm.requiresInteraction$.subscribe((v) => (this.requiresInteraction = v));
+    this.bgmVolumeSubscription = this.bgm.volume$.subscribe((v) => (this.volume = v));
+    this.bgmMutedSubscription = this.bgm.isMuted$.subscribe((v) => (this.isMuted = v));
+    this.bgmTrackSubscription = this.bgm.currentTrack$.subscribe((t) => (this.currentTrack = t));
+
+    // CTA shown flag (do not show CTA if user dismissed earlier)
+    try {
+      this.ctaShown = localStorage.getItem('zeit_bgm_cta_shown') === '1';
+    } catch (e) {
+      this.ctaShown = false;
+    }
   }
 
   private updateMenuItems() {
@@ -98,6 +139,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
     this.userDataSubscription?.unsubscribe();
+    this.bgmPlayingSubscription?.unsubscribe();
+    this.bgmInteractionSubscription?.unsubscribe();
+    this.bgmVolumeSubscription?.unsubscribe();
+    this.bgmMutedSubscription?.unsubscribe();
+    this.bgmTrackSubscription?.unsubscribe();
   }
 
   login() {
@@ -107,5 +153,51 @@ export class HeaderComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.performLogout();
     location.reload();
+  }
+
+  toggleMusic() {
+    this.bgm.userToggle();
+  }
+
+  toggleMute() {
+    this.bgm.toggleMute();
+  }
+
+  onVolumeChange(v: number) {
+    this.bgm.setVolume(v);
+  }
+
+  toggleVolumePanel(e: Event) {
+    e.stopPropagation();
+
+    // If interaction to play needed, treat main button as a Play button
+    if (this.requiresInteraction && !this.isPlaying) {
+      this.enableSoundCTA();
+      return;
+    }
+
+    this.showVolumePanel = !this.showVolumePanel;
+  }
+
+  enableSoundCTA() {
+    try {
+      this.bgm.userToggle();
+      localStorage.setItem('zeit_bgm_cta_shown', '1');
+      this.ctaShown = true;
+      this.showVolumePanel = false;
+    } catch (e) {}
+  }
+
+  dismissSoundCTA() {
+    try {
+      localStorage.setItem('zeit_bgm_cta_shown', '1');
+      this.ctaShown = true;
+      this.showVolumePanel = false;
+    } catch (e) {}
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(_e: Event) {
+    if (this.showVolumePanel) this.showVolumePanel = false;
   }
 }
