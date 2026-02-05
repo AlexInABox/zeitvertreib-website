@@ -195,7 +195,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       .set({
         experience: increment(playerdata.experience, netChange),
         rouletteSpins: increment(playerdata.rouletteSpins, 1),
-        rouletteWins: increment(playerdata.rouletteWins, payout - body.bet),
+        rouletteWins: increment(playerdata.rouletteWins, payout),
         rouletteLosses: increment(playerdata.rouletteLosses, body.bet),
       })
       .where(eq(playerdata.id, playerId))
@@ -221,8 +221,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     }
 
     console.log(
-      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${
-        betOutcome.won ? `won ${payout} ZVC` : 'lost'
+      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${betOutcome.won ? `won ${payout} ZVC` : 'lost'
       }. Balance: ${currentBalance} → ${newBalance}`,
     );
 
