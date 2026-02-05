@@ -128,6 +128,13 @@ interface DiscordInviteResponse {
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  // Roulette wheel constants - European roulette sequence (clockwise from 0)
+  static readonly ROULETTE_WHEEL_SEQUENCE = [
+    0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17, 25,
+    2, 21, 4, 19, 15, 32,
+  ];
+  static readonly RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+
   // Expose Math to template
   Math = Math;
 
@@ -210,12 +217,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -373,11 +380,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   rouletteWheelSegments: Array<{ path: string; color: string }> = this.generateRouletteWheelSegments();
 
   private generateRouletteWheelSegments(): Array<{ path: string; color: string }> {
-    const wheelSequence = [
-      0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17,
-      25, 2, 21, 4, 19, 15, 32,
-    ];
-    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     const segments: Array<{ path: string; color: string }> = [];
     const total = 37;
     const cx = 100;
@@ -385,7 +387,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const r = 100;
 
     for (let i = 0; i < total; i++) {
-      const num = wheelSequence[i];
+      const num = DashboardComponent.ROULETTE_WHEEL_SEQUENCE[i];
       const startAngleDeg = (i / total) * 360;
       const endAngleDeg = ((i + 1) / total) * 360;
 
@@ -402,7 +404,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       let color: string;
       if (num === 0) {
         color = '#10b981';
-      } else if (redNumbers.includes(num)) {
+      } else if (DashboardComponent.RED_NUMBERS.includes(num)) {
         color = '#ef4444';
       } else {
         color = '#1f2937';
@@ -3296,11 +3298,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Calculate rotation to land on the winning number
         // Each section is 360/37 ≈ 9.73 degrees
         // We need to rotate so the winning number's center aligns with the pointer at top
-        const wheelSequence = [
-          0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34,
-          17, 25, 2, 21, 4, 19, 15, 32,
-        ];
-        const position = wheelSequence.indexOf(response.spinResult);
+        const position = DashboardComponent.ROULETTE_WHEEL_SEQUENCE.indexOf(response.spinResult);
         const sectionSize = 360 / 37;
         const targetAngle = position * sectionSize + sectionSize / 2;
         // Rotate backwards (negative) to bring the target to the pointer, add full spins
@@ -3429,17 +3427,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getRouletteNumberColor(number: number): 'red' | 'black' | 'green' {
     if (number === 0) return 'green';
-    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    return redNumbers.includes(number) ? 'red' : 'black';
+    return DashboardComponent.RED_NUMBERS.includes(number) ? 'red' : 'black';
   }
 
   getRouletteNumberPosition(number: number): { [key: string]: string } {
     // Real European roulette wheel number sequence (clockwise from 0)
-    const wheelSequence = [
-      0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17,
-      25, 2, 21, 4, 19, 15, 32,
-    ];
-    const position = wheelSequence.indexOf(number);
+    const position = DashboardComponent.ROULETTE_WHEEL_SEQUENCE.indexOf(number);
 
     if (position === -1) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
 
@@ -3465,7 +3458,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getRouletteNumberBgColor(number: number): string {
     if (number === 0) return '#10b981'; // Green
-    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    return redNumbers.includes(number) ? '#ef4444' : '#1f2937';
+    return DashboardComponent.RED_NUMBERS.includes(number) ? '#ef4444' : '#1f2937';
   }
 }

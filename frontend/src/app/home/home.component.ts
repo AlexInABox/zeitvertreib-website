@@ -59,7 +59,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private imageCache: Map<string, boolean> = new Map();
   private intersectionObserver: IntersectionObserver | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];
