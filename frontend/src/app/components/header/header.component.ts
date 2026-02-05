@@ -14,7 +14,16 @@ import { SliderModule } from 'primeng/slider';
 
 @Component({
   selector: 'app-header',
-  imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, SliderModule, FormsModule],
+  imports: [
+    Menubar,
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    AvatarModule,
+    AvatarGroupModule,
+    SliderModule,
+    FormsModule,
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
@@ -40,7 +49,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showVolumePanel: boolean = false;
   ctaShown: boolean = false;
 
-  constructor(private authService: AuthService, private bgm: BackgroundMusicService) {}
+  constructor(
+    private authService: AuthService,
+    private bgm: BackgroundMusicService,
+  ) {}
 
   ngOnInit() {
     this.updateMenuItems();
@@ -157,7 +169,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   toggleVolumePanel(e: Event) {
     e.stopPropagation();
-    
+
     // If interaction to play needed, treat main button as a Play button
     if (this.requiresInteraction && !this.isPlaying) {
       this.enableSoundCTA();

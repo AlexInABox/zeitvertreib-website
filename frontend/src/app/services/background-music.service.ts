@@ -7,7 +7,7 @@ export class BackgroundMusicService {
   private audio: HTMLAudioElement | null = null;
   public isPlaying$ = new BehaviorSubject<boolean>(false);
   public requiresInteraction$ = new BehaviorSubject<boolean>(false);
-  private volume = 0.10;
+  private volume = 0.1;
   public volume$ = new BehaviorSubject<number>(this.volume);
   public isMuted$ = new BehaviorSubject<boolean>(false);
   public currentTrack$ = new BehaviorSubject<string | null>(null);
@@ -33,7 +33,7 @@ export class BackgroundMusicService {
       } catch (e) {
         // ignore storage errors
       }
-        
+
       const res = await fetch('/assets/music/tracks.json', { cache: 'no-cache' });
       if (!res.ok) return;
       const data = await res.json();

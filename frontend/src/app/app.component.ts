@@ -52,12 +52,8 @@ export class AppComponent implements OnInit {
     // Start background music
     try {
       this.backgroundMusic.init();
-
-
     } catch (e) {
       console.warn('Failed to initialize background music', e);
     }
   }
-
-
 }

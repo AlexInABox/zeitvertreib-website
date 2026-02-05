@@ -2,7 +2,9 @@
   width: 30px;
   height: 30px;
   margin-right: 10px;
-  transition: filter .18s ease, opacity .18s ease;
+  transition:
+    filter 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .logo-muted {
@@ -44,18 +46,30 @@
   opacity: 1;
   transform: translateX(-50%) translateY(0) scale(1) !important;
   pointer-events: auto;
-  animation: popDown .18s cubic-bezier(.2,.9,.25,1) forwards;
+  animation: popDown 0.18s cubic-bezier(0.2, 0.9, 0.25, 1) forwards;
 }
 
 @keyframes popDown {
-  from { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(.98); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
-.music-popover .music-popover-inner { display:block; flex:1; width:100%; box-sizing: border-box; padding:6px !important; }
+.music-popover .music-popover-inner {
+  display: block;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px !important;
+}
 
 .music-popover .text-muted {
-  color: rgba(15,23,42,0.65);
+  color: rgba(15, 23, 42, 0.65);
   font-size: 12px;
 }
 
@@ -68,8 +82,8 @@
 }
 
 .music-popover ::ng-deep .p-slider .p-slider-track {
-  background: transparent !important; 
-  width: 8px; 
+  background: transparent !important;
+  width: 8px;
 }
 
 .music-popover ::ng-deep .p-slider .p-slider-range {
@@ -88,10 +102,10 @@
   height: 20px !important;
   border-radius: 50% !important;
   left: 50% !important;
-  transform: translateX(-50%) translateY(50%) !important; 
+  transform: translateX(-50%) translateY(50%) !important;
   margin-bottom: 0 !important;
   margin-left: 0 !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   box-sizing: border-box !important;
   z-index: 10;
 }
@@ -113,17 +127,31 @@
   z-index: 0;
 }
 
-.music-popover .vertical-slider { display:flex; flex-direction:column; align-items:center; gap:6px; }
-.music-popover .controls { display:flex; align-items:center; justify-content:center; margin-top: 24px; }
+.music-popover .vertical-slider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.music-popover .controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+}
 
-.music-percent { display: none !important; }
+.music-percent {
+  display: none !important;
+}
 
-.music-popover .track, .music-popover .compact-track {
+.music-popover .track,
+.music-popover .compact-track {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}.music-popover .p-button-compact,
+}
+.music-popover .p-button-compact,
 .music-popover .p-button-compact .p-button {
   padding: 6px 8px;
   height: 40px;
@@ -134,17 +162,43 @@
   border-radius: 8px;
 }
 
-.music-popover .music-compact { padding: 8px; min-width: unset; width:100%; display:flex; align-items:center; justify-content:center; }
-.music-popover--compact { min-width: unset; max-width: unset; padding: 8px; width: 56px; }
-.music-popover--active { min-width: unset; width: 56px; }
+.music-popover .music-compact {
+  padding: 8px;
+  min-width: unset;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.music-popover--compact {
+  min-width: unset;
+  max-width: unset;
+  padding: 8px;
+  width: 56px;
+}
+.music-popover--active {
+  min-width: unset;
+  width: 56px;
+}
 
-.music-popover .music-percent { font-weight: 600; text-align: center; color: #0f172a; }
+.music-popover .music-percent {
+  font-weight: 600;
+  text-align: center;
+  color: #0f172a;
+}
 
-.music-badge { box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+.music-badge {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
 
 @media (max-width: 640px) {
-  .music-popover { min-width: 140px; max-width: 90vw; }
-  .music-popover .music-percent { display: none; }
+  .music-popover {
+    min-width: 140px;
+    max-width: 90vw;
+  }
+  .music-popover .music-percent {
+    display: none;
+  }
 }
 .music-badge {
   position: absolute;
@@ -154,7 +208,5 @@
   height: 10px;
   border-radius: 50%;
   background: var(--primary-color, #ef4444);
-  box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
-
-
