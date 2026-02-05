@@ -48,7 +48,6 @@ function checkBetOutcome(betType: RouletteBetType, spinResult: number, betValue?
   }
 }
 
-//discord webhook implementation (?) please verify, Alex
 async function sendRouletteWinToDiscord(
   steamId: string,
   username: string,
@@ -222,8 +221,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     }
 
     console.log(
-      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${
-        betOutcome.won ? `won ${payout} ZVC` : 'lost'
+      `🎡 Roulette: ${playerId} bet ${body.bet} ZVC on ${body.type}${body.type === 'number' ? ` (${body.value})` : ''}, spun ${spinResult}, ${betOutcome.won ? `won ${payout} ZVC` : 'lost'
       }. Balance: ${currentBalance} → ${newBalance}`,
     );
 
