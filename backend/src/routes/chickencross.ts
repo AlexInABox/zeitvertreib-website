@@ -40,7 +40,7 @@ function doesSurvive(seed: number, step: number): boolean {
   const multiplier = getMultiplierForStep(seed, step);
   const survivalChance = getSurvivalChance(multiplier);
   const randomValue = crypto.getRandomValues(new Uint32Array(1));
-  const roll = randomValue[0]! / 0xffffffff;
+  const roll = randomValue[0]! / 0x100000000;
   return roll < survivalChance;
 }
 
