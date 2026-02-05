@@ -52,6 +52,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   players: Player[] = [];
   isLoading = true;
   private intervalId: any;
+  private boundScrollHandler: (() => void) | null = null;
   lightboxOpen = false;
   currentImageIndex = 0;
   showGalleryBadge = true;
@@ -72,7 +73,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     }, 10000);
 
     // Setup scroll listener to hide badge when gallery is visible
-    window.addEventListener('scroll', this.handleScroll.bind(this));
+    this.boundScrollHandler = this.handleScroll.bind(this);
+    window.addEventListener('scroll', this.boundScrollHandler);
 
     //Firefox Fix(?)
     setTimeout(() => {
@@ -92,7 +94,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
-    window.removeEventListener('scroll', this.handleScroll.bind(this));
+    if (this.boundScrollHandler) {
+      window.removeEventListener('scroll', this.boundScrollHandler);
+    }
     if (this.intersectionObserver) {
       this.intersectionObserver.disconnect();
     }
