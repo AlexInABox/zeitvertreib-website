@@ -23,6 +23,7 @@ import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './rout
 import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
 import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
 import { handleLuckyWheel, handleLuckyWheelInfo } from './routes/luckywheel.js';
+import { handleRouletteInfo, handleRoulette } from './routes/roulette.js';
 import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
@@ -48,6 +49,12 @@ import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
 import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
 import { handleGetBirthday, handlePostBirthday, handleDeleteBirthday } from './routes/birthday.js';
 import { checkForBirthdays } from './routes/cron/birthday.js';
+import {
+  handleChickenCrossInfo,
+  handleChickenCrossGet,
+  handleChickenCrossPost,
+  handleChickenCrossActive,
+} from './routes/chickencross.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -113,6 +120,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/luckywheel/info': handleLuckyWheelInfo,
   'POST:/luckywheel': handleLuckyWheel,
 
+  // Roulette routes
+  'GET:/roulette/info': handleRouletteInfo,
+  'POST:/roulette': handleRoulette,
+
   // Swapped (role swap) route
   'POST:/swapped/': handleSwapped,
 
@@ -162,6 +173,12 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/birthday': handleGetBirthday,
   'POST:/birthday': handlePostBirthday,
   'DELETE:/birthday': handleDeleteBirthday,
+
+  // Chicken Cross routes
+  'GET:/chickencross/info': handleChickenCrossInfo,
+  'GET:/chickencross/active': handleChickenCrossActive,
+  'GET:/chickencross': handleChickenCrossGet,
+  'POST:/chickencross': handleChickenCrossPost,
 };
 
 export default {

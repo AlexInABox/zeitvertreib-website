@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -7,7 +7,7 @@ import { playerdata } from '../db/schema.js';
 
 // Lucky Wheel configuration - easily modifiable
 const MIN_BET = 1;
-const MAX_BET = 500;
+const MAX_BET = 5000;
 
 // Payout multipliers and their weights
 const LUCKYWHEEL_TABLE = [
@@ -209,17 +209,13 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     // Send webhook notification for the highest multiplier only (if bet >= 100)
     const maxMultiplier = Math.max(...LUCKYWHEEL_TABLE.map((entry) => entry.multiplier));
     if (selectedEntry.multiplier >= maxMultiplier && maxMultiplier > 0 && betAmount >= 100) {
-      // Get Steam username from cache
+      // Get Steam username from database cache
       let steamNickname = validation.steamId!;
-      try {
-        const userCacheKey = `steam_user:${validation.steamId}`;
-        const cachedUserData = await env.SESSIONS.get(userCacheKey);
-        if (cachedUserData) {
-          const userData = JSON.parse(cachedUserData);
-          steamNickname = userData?.userData?.personaname || steamNickname;
+      if (ctx) {
+        const steamUser = await fetchSteamUserData(validation.steamId!, env, ctx);
+        if (steamUser) {
+          steamNickname = steamUser.username;
         }
-      } catch (error) {
-        console.error('Error fetching cached Steam user data:', error);
       }
 
       // Send to Discord webhook (non-blocking) using ctx.waitUntil

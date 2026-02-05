@@ -33,6 +33,12 @@
     "skipLibCheck": true,
     "types": ["./worker-configuration.d.ts"],
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    "plugins": [
+      {
+        "transform": "typia/lib/transform"
+      }
+    ],
+    "strictNullChecks": true
   }
 }

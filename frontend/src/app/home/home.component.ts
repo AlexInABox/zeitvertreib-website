@@ -47,13 +47,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     '21.jpg',
     '22.jpg',
     '23.mp4',
+    '24.jpg',
   ];
   players: Player[] = [];
   isLoading = true;
   private intervalId: any;
+  private boundScrollHandler: (() => void) | null = null;
   lightboxOpen = false;
   currentImageIndex = 0;
   showGalleryBadge = true;
+  private imageCache: Map<string, boolean> = new Map();
+  private intersectionObserver: IntersectionObserver | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -69,14 +73,33 @@ export class HomeComponent implements OnInit, OnDestroy {
     }, 10000);
 
     // Setup scroll listener to hide badge when gallery is visible
-    window.addEventListener('scroll', this.handleScroll.bind(this));
+    this.boundScrollHandler = this.handleScroll.bind(this);
+    window.addEventListener('scroll', this.boundScrollHandler);
+
+    //Firefox Fix(?)
+    setTimeout(() => {
+      this.images.forEach((image) => {
+        if (!image.endsWith('.mp4')) {
+          this.preloadImage(image, 'tiny');
+        }
+      });
+    }, 100);
+
+    setTimeout(() => {
+      this.setupImageObserver();
+    }, 500);
   }
 
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
-    window.removeEventListener('scroll', this.handleScroll.bind(this));
+    if (this.boundScrollHandler) {
+      window.removeEventListener('scroll', this.boundScrollHandler);
+    }
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
   }
 
   fetchPlayerlist() {
@@ -117,6 +140,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.currentImageIndex = index;
     this.lightboxOpen = true;
     document.body.style.overflow = 'hidden';
+    this.preloadImage(this.images[index], 'full');
+    this.preloadImage(this.images[(index + 1) % this.images.length], 'full');
+    this.preloadImage(this.images[(index - 1 + this.images.length) % this.images.length], 'full');
   }
 
   closeLightbox() {
@@ -127,11 +153,65 @@ export class HomeComponent implements OnInit, OnDestroy {
   nextImage(event: Event) {
     event.stopPropagation();
     this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length;
+    const nextIdx = (this.currentImageIndex + 1) % this.images.length;
+    const nextNextIdx = (this.currentImageIndex + 2) % this.images.length;
+    this.preloadImage(this.images[nextIdx], 'full');
+    this.preloadImage(this.images[nextNextIdx], 'full');
   }
 
   previousImage(event: Event) {
     event.stopPropagation();
     this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+    const prevIdx = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
+    const prevPrevIdx = (this.currentImageIndex - 2 + this.images.length) % this.images.length;
+    this.preloadImage(this.images[prevIdx], 'full');
+    this.preloadImage(this.images[prevPrevIdx], 'full');
+  }
+
+  private preloadImage(filename: string, folder: 'tiny' | 'full'): void {
+    if (filename.endsWith('.mp4')) {
+      return;
+    }
+
+    const cacheKey = `${folder}/${filename}`;
+    // Don't preload if already cached
+    if (this.imageCache.has(cacheKey)) {
+      return;
+    }
+
+    const img = new Image();
+    img.onerror = () => {
+      console.warn(`Failed to preload image: ${cacheKey}`);
+      this.imageCache.set(cacheKey, false);
+    };
+    img.onload = () => {
+      this.imageCache.set(cacheKey, true);
+    };
+    img.src = `/assets/showcase/${folder}/${filename}`;
+  }
+
+  private setupImageObserver(): void {
+    const imageElements = document.querySelectorAll('.masonry-media');
+
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement | HTMLVideoElement;
+            const src = img.getAttribute('data-src');
+            if (src && !img.src) {
+              img.src = src;
+              img.removeAttribute('data-src');
+            }
+          }
+        });
+      },
+      { rootMargin: '200px' }, //Alex: adjust based on how soon images should load
+    );
+
+    imageElements.forEach((img) => {
+      this.intersectionObserver!.observe(img);
+    });
   }
 
   scrollToGallery(event: Event) {

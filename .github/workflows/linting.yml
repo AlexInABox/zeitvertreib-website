@@ -11,7 +11,7 @@ jobs:
     name: 🖌️ Prettier Autoformat
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout

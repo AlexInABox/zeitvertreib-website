@@ -20,6 +20,15 @@ import type {
   FakerankDeleteRequest,
   FakerankColor,
   FakerankColorsResponse,
+  ChickenCrossInfoResponse,
+  ChickenCrossGetResponse,
+  ChickenCrossPostRequest,
+  ChickenCrossPostResponse,
+  ChickenCrossActiveResponse,
+  RouletteGetInfoResponse,
+  RoulettePostRequest,
+  RoulettePostResponse,
+  RouletteBetType,
 } from '@zeitvertreib/types';
 
 interface PlayerEntry {
@@ -119,6 +128,13 @@ interface DiscordInviteResponse {
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  // Roulette wheel constants - European roulette sequence (clockwise from 0)
+  static readonly ROULETTE_WHEEL_SEQUENCE = [
+    0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17, 25,
+    2, 21, 4, 19, 15, 32,
+  ];
+  static readonly RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+
   // Expose Math to template
   Math = Math;
 
@@ -319,6 +335,100 @@ export class DashboardComponent implements OnInit, OnDestroy {
     multiplier: number;
   }> | null = null;
 
+  // Chicken Cross properties
+  chickenCrossInfo: ChickenCrossInfoResponse | null = null;
+  chickenCrossBet: number = 100;
+  chickenCrossBetInput: string = '100';
+  chickenCrossLoading = false;
+  chickenCrossError = '';
+  chickenCrossGame: ChickenCrossGetResponse | null = null;
+  chickenCrossIsMoving = false;
+  chickenCrossIsAnimating = false; // Track if chicken is animating to next step
+  chickenCrossLostAnimation = false; // Track if loss animation is playing
+  chickenCrossDeadGame: ChickenCrossGetResponse | null = null; // Store the lost game for display
+  chickenCrossHistory: Array<{
+    seed: number;
+    initialWager: number;
+    finalPayout: number;
+    multiplier: number;
+    state: 'LOST' | 'CASHED_OUT';
+    timestamp: number;
+  }> = [];
+  private readonly CHICKEN_CROSS_LOG_STORAGE_KEY = 'chickenCrossHistory';
+  hideChickenLosses = true;
+
+  // Roulette properties
+  rouletteInfo: RouletteGetInfoResponse | null = null;
+  rouletteBet: number = 100;
+  rouletteBetInput: string = '100';
+  rouletteLoading = false;
+  rouletteError = '';
+  rouletteMessage = '';
+  isRouletteSpinning = false;
+  rouletteSpinResult: number | null = null;
+  rouletteSpinColor: 'red' | 'black' | 'green' | null = null;
+  rouletteBetType: RouletteBetType = 'red';
+  rouletteBetValue: number = 0;
+  showRouletteResult = false;
+  rouletteWon = false;
+  roulettePayout: number | null = null;
+  rouletteRotation = 0;
+  private rouletteResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private rouletteClearResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  // Pre-computed SVG wheel segments
+  rouletteWheelSegments: Array<{ path: string; color: string }> = this.generateRouletteWheelSegments();
+
+  private generateRouletteWheelSegments(): Array<{ path: string; color: string }> {
+    const segments: Array<{ path: string; color: string }> = [];
+    const total = 37;
+    const cx = 100;
+    const cy = 100;
+    const r = 100;
+
+    for (let i = 0; i < total; i++) {
+      const num = DashboardComponent.ROULETTE_WHEEL_SEQUENCE[i];
+      const startAngleDeg = (i / total) * 360;
+      const endAngleDeg = ((i + 1) / total) * 360;
+
+      const startAngle = (startAngleDeg * Math.PI) / 180 - Math.PI / 2;
+      const endAngle = (endAngleDeg * Math.PI) / 180 - Math.PI / 2;
+
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+
+      const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`;
+
+      let color: string;
+      if (num === 0) {
+        color = '#10b981';
+      } else if (DashboardComponent.RED_NUMBERS.includes(num)) {
+        color = '#ef4444';
+      } else {
+        color = '#1f2937';
+      }
+
+      segments.push({ path, color });
+    }
+
+    return segments;
+  }
+
+  rouletteSpinLog: Array<{
+    id: number;
+    timestamp: number;
+    betType: string;
+    betValue?: string | number;
+    spinResult: number;
+    won: boolean;
+    payout: number;
+    betAmount: number;
+  }> = [];
+  private readonly ROULETTE_LOG_STORAGE_KEY = 'rouletteSpinLog';
+  hideRouletteLosses = true;
+
   // Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
   isWeekendInBerlin(): boolean {
     const berlinTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
@@ -364,8 +474,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadSprayRules();
     this.loadSlotMachineInfo();
     this.loadLuckyWheelInfo();
+    this.loadChickenCrossInfo();
+    this.loadChickenCrossActive();
+    this.loadRouletteInfo();
     this.loadWinLog();
     this.loadLuckyWheelSpinLog();
+    this.loadChickenCrossHistory();
 
     // Close color picker when clicking outside
     this.documentClickHandler = (event: Event) => {
@@ -1049,6 +1163,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Clean up event listener
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
+    }
+
+    // Clean up roulette timeouts
+    if (this.rouletteResultTimeoutId !== null) {
+      clearTimeout(this.rouletteResultTimeoutId);
+      this.rouletteResultTimeoutId = null;
+    }
+    if (this.rouletteClearResultTimeoutId !== null) {
+      clearTimeout(this.rouletteClearResultTimeoutId);
+      this.rouletteClearResultTimeoutId = null;
     }
   }
 
@@ -2506,5 +2630,834 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const sortedIndex = sortedTable.findIndex((e) => e.multiplier === multiplier);
 
     return this.getColorFromPaletteIndex(sortedIndex, sortedTable.length);
+  }
+
+  // ===== CHICKEN CROSS METHODS =====
+
+  loadChickenCrossInfo(): void {
+    this.authService.authenticatedGet<ChickenCrossInfoResponse>(`${environment.apiUrl}/chickencross/info`).subscribe({
+      next: (response) => {
+        this.chickenCrossInfo = response;
+        this.chickenCrossBet = response.minBet;
+        this.chickenCrossBetInput = response.minBet.toString();
+      },
+      error: (error) => {
+        console.error('Error loading chicken cross info:', error);
+        this.chickenCrossError = 'Fehler beim Laden des Spiels.';
+      },
+    });
+  }
+
+  private chickenSeededRandom(seed: number, step: number): number {
+    const combined = seed * 10000 + step;
+    let x = Math.sin(combined) * 10000;
+    return x - Math.floor(x);
+  }
+
+  getChickenMultiplierForStep(seed: number, step: number): number {
+    const baseMultiplier = Math.pow(1.08, step);
+    const variance = this.chickenSeededRandom(seed, step * 1000);
+    const withVariance = baseMultiplier * (1 + variance * 0.03);
+    return Math.round(withVariance * 100) / 100;
+  }
+
+  getNextChickenSteps(): Array<{ step: number; multiplier: number }> {
+    if (!this.chickenCrossGame) return [];
+    const currentStep = this.chickenCrossGame.step;
+    const seed = this.chickenCrossGame.seed;
+    const steps: Array<{ step: number; multiplier: number }> = [];
+    for (let i = 1; i <= 4; i++) {
+      const nextStep = currentStep + i;
+      steps.push({
+        step: nextStep,
+        multiplier: this.getChickenMultiplierForStep(seed, nextStep),
+      });
+    }
+    return steps;
+  }
+
+  getDeadChickenNextSteps(): Array<{ step: number; multiplier: number }> {
+    if (!this.chickenCrossDeadGame) return [];
+    const currentStep = this.chickenCrossDeadGame.step;
+    const seed = this.chickenCrossDeadGame.seed;
+    const steps: Array<{ step: number; multiplier: number }> = [];
+    for (let i = 1; i <= 4; i++) {
+      const nextStep = currentStep + i;
+      steps.push({
+        step: nextStep,
+        multiplier: this.getChickenMultiplierForStep(seed, nextStep),
+      });
+    }
+    return steps;
+  }
+
+  scrollChickenRoadToCenter(): void {
+    setTimeout(() => {
+      const road = document.querySelector('.chicken-road') as HTMLElement;
+      const currentLane = document.querySelector('.chicken-lane.chicken-current') as HTMLElement;
+      if (road && currentLane) {
+        const roadRect = road.getBoundingClientRect();
+        const laneRect = currentLane.getBoundingClientRect();
+        const scrollLeft = currentLane.offsetLeft - roadRect.width / 2 + laneRect.width / 2;
+        road.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    }, 50);
+  }
+
+  resetChickenRoadScroll(): void {
+    setTimeout(() => {
+      const road = document.querySelector('.chicken-road') as HTMLElement;
+      if (road) {
+        road.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    }, 50);
+  }
+
+  loadChickenCrossActive(): void {
+    this.authService
+      .authenticatedGet<ChickenCrossActiveResponse>(`${environment.apiUrl}/chickencross/active`)
+      .subscribe({
+        next: (response) => {
+          if (response.activeGameSeed) {
+            this.loadChickenCrossGame(response.activeGameSeed);
+          } else {
+            this.resetChickenRoadScroll();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading active chicken cross game:', error);
+          this.resetChickenRoadScroll();
+        },
+      });
+  }
+
+  loadChickenCrossGame(seed: number): void {
+    this.authService
+      .authenticatedGet<ChickenCrossGetResponse>(`${environment.apiUrl}/chickencross?seed=${seed}`)
+      .subscribe({
+        next: (response) => {
+          if (response.state === 'ACTIVE') {
+            this.chickenCrossGame = response;
+            this.scrollChickenRoadToCenter();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading chicken cross game:', error);
+        },
+      });
+  }
+
+  getChickenHistoryTypeInfo(entry: (typeof this.chickenCrossHistory)[0]): {
+    emoji: string;
+    color: string;
+    label: string;
+  } {
+    if (entry.state === 'CASHED_OUT') {
+      if (entry.multiplier >= 5) return { emoji: '🎉', color: '#ec4899', label: 'MEGA!' };
+      return { emoji: '✨', color: '#34d399', label: 'GEWINN' };
+    }
+    return { emoji: '💀', color: '#f87171', label: 'VERLOREN' };
+  }
+
+  loadChickenCrossHistory(): void {
+    try {
+      const stored = localStorage.getItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Clear old history format (with 'steps' instead of 'multiplier')
+        if (
+          Array.isArray(parsed) &&
+          parsed.some((entry: any) => entry.steps !== undefined && entry.multiplier === undefined)
+        ) {
+          localStorage.removeItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY);
+          this.chickenCrossHistory = [];
+        } else {
+          this.chickenCrossHistory = parsed;
+        }
+      }
+    } catch {
+      this.chickenCrossHistory = [];
+    }
+  }
+
+  saveChickenCrossHistory(): void {
+    try {
+      const toStore = this.chickenCrossHistory.slice(0, this.MAX_WIN_LOG_ENTRIES);
+      localStorage.setItem(this.CHICKEN_CROSS_LOG_STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+      console.error('Failed to save chicken cross history');
+    }
+  }
+
+  addChickenCrossToHistory(
+    seed: number,
+    initialWager: number,
+    finalPayout: number,
+    multiplier: number,
+    state: 'LOST' | 'CASHED_OUT',
+  ): void {
+    this.chickenCrossHistory.unshift({
+      seed,
+      initialWager,
+      finalPayout,
+      multiplier,
+      state,
+      timestamp: Date.now(),
+    });
+    if (this.chickenCrossHistory.length > this.MAX_WIN_LOG_ENTRIES) {
+      this.chickenCrossHistory.pop();
+    }
+    this.saveChickenCrossHistory();
+  }
+
+  getFilteredChickenHistory(): typeof this.chickenCrossHistory {
+    if (this.hideChickenLosses) {
+      return this.chickenCrossHistory.filter((entry) => entry.state === 'CASHED_OUT');
+    }
+    return this.chickenCrossHistory;
+  }
+
+  trackByChickenHistoryId(index: number, entry: (typeof this.chickenCrossHistory)[0]): number {
+    return entry.seed;
+  }
+
+  canAffordChickenCross(): boolean {
+    const bet = this.getPendingChickenCrossBet();
+    return (this.userStatistics.experience || 0) >= bet;
+  }
+
+  hasActiveChickenCrossGame(): boolean {
+    return this.chickenCrossGame !== null;
+  }
+
+  onChickenCrossBetInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let sanitized = input.value.replace(/[^0-9]/g, '');
+    sanitized = sanitized.replace(/^0+/, '') || '0';
+
+    if (this.chickenCrossInfo) {
+      const numValue = parseInt(sanitized, 10);
+      if (!isNaN(numValue) && numValue > this.chickenCrossInfo.maxBet) {
+        sanitized = this.chickenCrossInfo.maxBet.toString();
+      }
+    }
+
+    this.chickenCrossBetInput = sanitized;
+    input.value = sanitized;
+  }
+
+  onChickenCrossBetKeydown(event: KeyboardEvent): void {
+    const controlKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
+      return;
+    }
+    if (controlKeys.includes(event.key)) {
+      return;
+    }
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  commitChickenCrossBetInput(): void {
+    if (!this.chickenCrossInfo) {
+      const parsed = parseInt(this.chickenCrossBetInput, 10);
+      this.chickenCrossBet = Number.isNaN(parsed) ? 100 : Math.max(0, Math.round(parsed));
+      this.chickenCrossBetInput = this.chickenCrossBet.toString();
+      return;
+    }
+
+    const parsed = parseInt(this.chickenCrossBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      this.chickenCrossBet = this.chickenCrossInfo.minBet;
+    } else {
+      this.chickenCrossBet = Math.max(
+        this.chickenCrossInfo.minBet,
+        Math.min(this.chickenCrossInfo.maxBet, Math.round(parsed)),
+      );
+    }
+    this.chickenCrossBetInput = this.chickenCrossBet.toString();
+  }
+
+  private getPendingChickenCrossBet(): number {
+    if (!this.chickenCrossInfo) {
+      const parsed = parseInt(this.chickenCrossBetInput, 10);
+      return Number.isNaN(parsed) ? 100 : Math.max(0, Math.round(parsed));
+    }
+
+    const parsed = parseInt(this.chickenCrossBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      return this.chickenCrossInfo.minBet;
+    }
+    return Math.max(this.chickenCrossInfo.minBet, Math.min(this.chickenCrossInfo.maxBet, Math.round(parsed)));
+  }
+
+  adjustChickenCrossBet(amount: number): void {
+    if (!this.chickenCrossInfo) return;
+    this.commitChickenCrossBetInput();
+    const newBet = (this.chickenCrossBet || this.chickenCrossInfo.minBet) + amount;
+    this.chickenCrossBet = Math.max(this.chickenCrossInfo.minBet, Math.min(this.chickenCrossInfo.maxBet, newBet));
+    this.chickenCrossBetInput = this.chickenCrossBet.toString();
+  }
+
+  startChickenCrossGame(): void {
+    if (!this.chickenCrossInfo || this.chickenCrossLoading || this.hasActiveChickenCrossGame()) return;
+
+    this.commitChickenCrossBetInput();
+    const bet = this.chickenCrossBet;
+
+    if (bet < this.chickenCrossInfo.minBet || bet > this.chickenCrossInfo.maxBet) {
+      this.chickenCrossError = `Einsatz muss zwischen ${this.chickenCrossInfo.minBet} und ${this.chickenCrossInfo.maxBet} ZVC liegen.`;
+      setTimeout(() => (this.chickenCrossError = ''), 3000);
+      return;
+    }
+
+    if (!this.canAffordChickenCross()) {
+      this.chickenCrossError = `Nicht genügend ZVC! Du brauchst mindestens ${bet} ZVC.`;
+      setTimeout(() => (this.chickenCrossError = ''), 3000);
+      return;
+    }
+
+    this.chickenCrossLoading = true;
+    this.chickenCrossError = '';
+    this.chickenCrossDeadGame = null; // Clear any previous dead game
+
+    // Deduct bet immediately
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - bet;
+
+    const requestBody: ChickenCrossPostRequest = {
+      intent: 'MOVE',
+      bet: bet,
+    };
+
+    this.authService
+      .authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody)
+      .subscribe({
+        next: (response) => {
+          this.chickenCrossLoading = false;
+          this.chickenCrossGame = {
+            seed: response.seed,
+            initialWager: bet,
+            currentPayout: response.currentPayout,
+            step: 0,
+            state: response.state,
+            lastUpdatedAt: Date.now(),
+          };
+          this.scrollChickenRoadToCenter();
+        },
+        error: (error) => {
+          this.chickenCrossLoading = false;
+          // Refund bet on error
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+          this.chickenCrossError = error?.error?.error || 'Fehler beim Starten des Spiels.';
+          setTimeout(() => (this.chickenCrossError = ''), 3000);
+        },
+      });
+  }
+
+  chickenCrossMove(): void {
+    if (
+      !this.chickenCrossGame ||
+      this.chickenCrossIsMoving ||
+      this.chickenCrossIsAnimating ||
+      this.chickenCrossGame.state !== 'ACTIVE'
+    )
+      return;
+
+    this.chickenCrossIsMoving = true;
+    this.chickenCrossIsAnimating = true;
+    this.chickenCrossError = '';
+
+    // Move chicken immediately to the next step (suspense state)
+    this.chickenCrossGame = {
+      ...this.chickenCrossGame,
+      step: this.chickenCrossGame.step + 1,
+    };
+    this.scrollChickenRoadToCenter();
+
+    const requestBody: ChickenCrossPostRequest = {
+      intent: 'MOVE',
+      seed: this.chickenCrossGame.seed,
+    };
+
+    this.authService
+      .authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody)
+      .subscribe({
+        next: (response) => {
+          // Add suspense delay
+          setTimeout(() => {
+            this.chickenCrossIsMoving = false;
+
+            if (response.state === 'LOST') {
+              // Mark as lost - show skull and explosion
+              this.chickenCrossGame = {
+                ...this.chickenCrossGame!,
+                state: 'LOST' as const,
+              };
+              this.chickenCrossLostAnimation = true;
+
+              // After explosion animation, transition to dead game state
+              setTimeout(() => {
+                const lostAtStep = this.chickenCrossGame!.step;
+                const lostMultiplier = this.getChickenMultiplierForStep(this.chickenCrossGame!.seed, lostAtStep);
+                this.addChickenCrossToHistory(
+                  this.chickenCrossGame!.seed,
+                  this.chickenCrossGame!.initialWager,
+                  0,
+                  lostMultiplier,
+                  'LOST',
+                );
+
+                // Store the dead game - same state, just swap references
+                this.chickenCrossDeadGame = { ...this.chickenCrossGame! };
+                this.chickenCrossGame = null;
+                this.chickenCrossLostAnimation = false;
+                this.chickenCrossIsAnimating = false;
+              }, 1000);
+            } else {
+              // Success - update payout
+              this.chickenCrossGame = {
+                ...this.chickenCrossGame!,
+                currentPayout: response.currentPayout,
+                state: response.state,
+              };
+              this.chickenCrossIsAnimating = false;
+            }
+          }, 600); // 600ms suspense delay
+        },
+        error: (error) => {
+          // Roll back the step on error
+          this.chickenCrossGame = {
+            ...this.chickenCrossGame!,
+            step: this.chickenCrossGame!.step - 1,
+          };
+          this.chickenCrossIsMoving = false;
+          this.chickenCrossIsAnimating = false;
+          this.chickenCrossError = error?.error?.error || 'Fehler beim Bewegen.';
+          setTimeout(() => (this.chickenCrossError = ''), 3000);
+        },
+      });
+  }
+
+  chickenCrossCashout(): void {
+    if (!this.chickenCrossGame || this.chickenCrossLoading || this.chickenCrossGame.state !== 'ACTIVE') return;
+
+    this.chickenCrossLoading = true;
+    this.chickenCrossError = '';
+
+    const requestBody: ChickenCrossPostRequest = {
+      intent: 'CASHOUT',
+      seed: this.chickenCrossGame.seed,
+    };
+
+    this.authService
+      .authenticatedPost<ChickenCrossPostResponse>(`${environment.apiUrl}/chickencross`, requestBody)
+      .subscribe({
+        next: (response) => {
+          this.chickenCrossLoading = false;
+
+          // Add payout to balance
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + response.currentPayout;
+
+          const multiplier = response.currentPayout / this.chickenCrossGame!.initialWager;
+
+          // Only add to history if player actually made at least one move
+          if (this.chickenCrossGame!.step > 0) {
+            this.addChickenCrossToHistory(
+              this.chickenCrossGame!.seed,
+              this.chickenCrossGame!.initialWager,
+              response.currentPayout,
+              multiplier,
+              'CASHED_OUT',
+            );
+          }
+
+          this.chickenCrossGame = null;
+          this.resetChickenRoadScroll();
+        },
+        error: (error) => {
+          this.chickenCrossLoading = false;
+          this.chickenCrossError = error?.error?.error || 'Fehler beim Auszahlen.';
+          setTimeout(() => (this.chickenCrossError = ''), 3000);
+        },
+      });
+  }
+
+  getChickenMultiplier(): string {
+    if (!this.chickenCrossGame) return '1.00';
+    const multiplier = this.chickenCrossGame.currentPayout / this.chickenCrossGame.initialWager;
+    return multiplier.toFixed(2);
+  }
+
+  // ===== ROULETTE METHODS =====
+
+  loadRouletteInfo(): void {
+    this.rouletteError = '';
+    this.authService.authenticatedGet<RouletteGetInfoResponse>(`${environment.apiUrl}/roulette/info`).subscribe({
+      next: (response) => {
+        this.rouletteInfo = response;
+        this.rouletteError = '';
+        const defaultBet = typeof response.minBet === 'number' ? response.minBet : this.rouletteBet;
+        this.rouletteBet = this.clampRouletteBet(defaultBet || 0);
+        this.syncRouletteBetInput();
+        this.loadRouletteSpinLog();
+      },
+      error: (error) => {
+        console.error('Error loading roulette info:', error);
+        this.rouletteError = 'Fehler beim Laden des Roulettes. Bitte versuche es erneut.';
+      },
+    });
+  }
+
+  canAffordRoulette(): boolean {
+    const bet = this.getPendingRouletteBet();
+    return (this.userStatistics.experience || 0) >= bet;
+  }
+
+  onRouletteNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = parseInt(input.value, 10);
+
+    if (isNaN(value)) {
+      this.rouletteBetValue = 0;
+      return;
+    }
+
+    // Clamp value between 0 and 36
+    if (value < 0) {
+      value = 0;
+    } else if (value > 36) {
+      value = 36;
+    }
+
+    this.rouletteBetValue = value;
+    input.value = value.toString();
+  }
+
+  adjustRouletteBet(amount: number): void {
+    if (!this.rouletteInfo) return;
+
+    this.commitRouletteBetInput();
+
+    const newBet = (this.rouletteBet || this.rouletteInfo.minBet) + amount;
+
+    this.rouletteBet = this.clampRouletteBet(newBet);
+    this.syncRouletteBetInput();
+  }
+
+  onRouletteBetInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let sanitized = input.value.replace(/[^0-9]/g, '');
+
+    sanitized = sanitized.replace(/^0+/, '') || '0';
+
+    if (this.rouletteInfo) {
+      const numValue = parseInt(sanitized, 10);
+      if (!isNaN(numValue) && numValue > this.rouletteInfo.maxBet) {
+        sanitized = this.rouletteInfo.maxBet.toString();
+      }
+    }
+
+    this.rouletteBetInput = sanitized;
+    input.value = sanitized;
+  }
+
+  onRouletteBetKeydown(event: KeyboardEvent): void {
+    const controlKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+
+    if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
+      return;
+    }
+
+    if (controlKeys.includes(event.key)) {
+      return;
+    }
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  commitRouletteBetInput(): void {
+    if (!this.rouletteInfo) {
+      const parsed = parseInt(this.rouletteBetInput, 10);
+      if (Number.isNaN(parsed)) {
+        this.rouletteBet = Math.max(0, this.rouletteBet || 0);
+      } else {
+        this.rouletteBet = Math.max(0, Math.round(parsed));
+      }
+      this.rouletteBetInput = (this.rouletteBet || 0).toString();
+      return;
+    }
+
+    const parsed = parseInt(this.rouletteBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      this.rouletteBet = this.rouletteInfo.minBet;
+    } else {
+      this.rouletteBet = this.clampRouletteBet(parsed);
+    }
+    this.syncRouletteBetInput();
+  }
+
+  private syncRouletteBetInput(): void {
+    const fallback = this.rouletteInfo?.minBet ?? 0;
+    const bet = this.rouletteBet ?? fallback;
+    this.rouletteBetInput = Math.max(0, bet).toString();
+  }
+
+  private clampRouletteBet(value: number): number {
+    const rounded = Math.round(value);
+    if (!this.rouletteInfo) {
+      return Math.max(0, rounded);
+    }
+    return Math.max(this.rouletteInfo.minBet, Math.min(this.rouletteInfo.maxBet, rounded));
+  }
+
+  private getPendingRouletteBet(): number {
+    if (!this.rouletteInfo) {
+      const parsed = parseInt(this.rouletteBetInput, 10);
+      return Number.isNaN(parsed) ? Math.max(0, this.rouletteBet || 0) : Math.max(0, Math.round(parsed));
+    }
+
+    const parsed = parseInt(this.rouletteBetInput, 10);
+    if (Number.isNaN(parsed)) {
+      return this.clampRouletteBet(this.rouletteBet || this.rouletteInfo.minBet);
+    }
+    return this.clampRouletteBet(parsed);
+  }
+
+  spinRoulette(): void {
+    if (!this.rouletteInfo || this.isRouletteSpinning) return;
+
+    // Clear any previous timeouts
+    if (this.rouletteResultTimeoutId !== null) {
+      clearTimeout(this.rouletteResultTimeoutId);
+      this.rouletteResultTimeoutId = null;
+    }
+    if (this.rouletteClearResultTimeoutId !== null) {
+      clearTimeout(this.rouletteClearResultTimeoutId);
+      this.rouletteClearResultTimeoutId = null;
+    }
+
+    this.commitRouletteBetInput();
+    const bet = this.rouletteBet || 0;
+
+    if (bet < this.rouletteInfo.minBet || bet > this.rouletteInfo.maxBet) {
+      this.rouletteError = `Einsatz muss zwischen ${this.rouletteInfo.minBet} und ${this.rouletteInfo.maxBet} ZVC liegen.`;
+      setTimeout(() => {
+        this.rouletteError = '';
+      }, 3000);
+      return;
+    }
+
+    // Validate number bet type
+    if (this.rouletteBetType === 'number') {
+      if (this.rouletteBetValue < 0 || this.rouletteBetValue > 36) {
+        this.rouletteError = 'Nummer muss zwischen 0 und 36 liegen.';
+        setTimeout(() => {
+          this.rouletteError = '';
+        }, 3000);
+        return;
+      }
+    }
+
+    if (!this.canAffordRoulette()) {
+      this.rouletteError = `Nicht genügend ZVC! Du brauchst mindestens ${bet} ZVC.`;
+      setTimeout(() => {
+        this.rouletteError = '';
+      }, 3000);
+      return;
+    }
+
+    this.isRouletteSpinning = true;
+    this.rouletteLoading = true;
+    this.rouletteError = '';
+    this.rouletteMessage = '';
+    this.showRouletteResult = false;
+
+    const requestBody: RoulettePostRequest = {
+      bet,
+      type: this.rouletteBetType,
+    };
+
+    if (this.rouletteBetType === 'number') {
+      requestBody.value = this.rouletteBetValue;
+    }
+
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - bet;
+
+    // Record when the spin started to ensure result shows only after full animation
+    const spinStartTime = Date.now();
+
+    this.authService.authenticatedPost<RoulettePostResponse>(`${environment.apiUrl}/roulette`, requestBody).subscribe({
+      next: (response) => {
+        this.rouletteSpinResult = response.spinResult;
+        this.rouletteWon = response.won;
+        this.roulettePayout = response.payout;
+
+        // Calculate rotation to land on the winning number
+        // Each section is 360/37 ≈ 9.73 degrees
+        // We need to rotate so the winning number's center aligns with the pointer at top
+        const position = DashboardComponent.ROULETTE_WHEEL_SEQUENCE.indexOf(response.spinResult);
+        const sectionSize = 360 / 37;
+        const targetAngle = position * sectionSize + sectionSize / 2;
+        // Rotate backwards (negative) to bring the target to the pointer, add full spins
+        const fullSpins = 5 * 360; // 5 full rotations
+        this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + fullSpins + (360 - targetAngle);
+
+        // Ensure result is not shown until 5 seconds have elapsed since spin started
+        const elapsedTime = Date.now() - spinStartTime;
+        const remainingDelay = Math.max(0, 5000 - elapsedTime);
+
+        this.rouletteResultTimeoutId = setTimeout(() => {
+          this.isRouletteSpinning = false;
+          this.showRouletteResult = true;
+
+          if (response.payout > 0) {
+            this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
+          }
+
+          this.addRouletteSpinToLog(
+            response.spinResult,
+            this.rouletteBetType,
+            this.rouletteBetValue,
+            response.won,
+            response.payout,
+            bet,
+          );
+
+          this.rouletteClearResultTimeoutId = setTimeout(() => {
+            this.showRouletteResult = false;
+            this.rouletteMessage = '';
+            this.rouletteSpinResult = null;
+            this.rouletteSpinColor = null;
+            this.rouletteLoading = false;
+          }, 3000);
+        }, remainingDelay);
+      },
+      error: (error) => {
+        this.isRouletteSpinning = false;
+        this.rouletteLoading = false;
+
+        this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+
+        this.rouletteError = error?.error?.error || 'Fehler beim Drehen des Roulettes';
+
+        setTimeout(() => {
+          this.rouletteError = '';
+        }, 3000);
+      },
+    });
+  }
+
+  private loadRouletteSpinLog(): void {
+    const stored = localStorage.getItem(this.ROULETTE_LOG_STORAGE_KEY);
+    try {
+      if (stored) {
+        this.rouletteSpinLog = JSON.parse(stored);
+      } else {
+        this.rouletteSpinLog = [];
+      }
+    } catch {
+      this.rouletteSpinLog = [];
+    }
+  }
+
+  private saveRouletteSpinLog(): void {
+    try {
+      localStorage.setItem(this.ROULETTE_LOG_STORAGE_KEY, JSON.stringify(this.rouletteSpinLog));
+    } catch {
+      console.error('Failed to save roulette spin log');
+    }
+  }
+
+  private addRouletteSpinToLog(
+    spinResult: number,
+    betType: string,
+    betValue: string | number,
+    won: boolean,
+    payout: number,
+    betAmount: number,
+  ): void {
+    const newEntry = {
+      id: Date.now(),
+      timestamp: Date.now(),
+      betType,
+      ...(betType === 'number' && { betValue }),
+      spinResult,
+      won,
+      payout,
+      betAmount,
+    };
+
+    this.rouletteSpinLog.unshift(newEntry);
+
+    if (this.rouletteSpinLog.length > 100) {
+      this.rouletteSpinLog = this.rouletteSpinLog.slice(0, 100);
+    }
+
+    this.saveRouletteSpinLog();
+  }
+
+  getFilteredRouletteSpinLog(): typeof this.rouletteSpinLog {
+    if (!this.hideRouletteLosses) {
+      return this.rouletteSpinLog;
+    }
+    return this.rouletteSpinLog.filter((entry) => entry.won);
+  }
+
+  trackByRouletteSpinId(index: number, entry: (typeof this.rouletteSpinLog)[0]): number {
+    return entry.id;
+  }
+
+  getRouletteSpinTypeInfo(entry: (typeof this.rouletteSpinLog)[0]): { emoji: string; label: string; color: string } {
+    if (entry.won) {
+      return {
+        emoji: '🎉',
+        label: 'Gewinn',
+        color: '#10b981',
+      };
+    }
+    return {
+      emoji: '❌',
+      label: 'Verlust',
+      color: '#ef4444',
+    };
+  }
+
+  getRouletteNumberColor(number: number): 'red' | 'black' | 'green' {
+    if (number === 0) return 'green';
+    return DashboardComponent.RED_NUMBERS.includes(number) ? 'red' : 'black';
+  }
+
+  getRouletteNumberPosition(number: number): { [key: string]: string } {
+    // Real European roulette wheel number sequence (clockwise from 0)
+    const position = DashboardComponent.ROULETTE_WHEEL_SEQUENCE.indexOf(number);
+
+    if (position === -1) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+
+    // Each position gets equal space (360 / 37 degrees)
+    const sectionSize = 360 / 37;
+    const angle = position * sectionSize + sectionSize / 2;
+    const radians = ((angle - 90) * Math.PI) / 180;
+
+    // Position on the outer edge
+    const radiusPercent = 44;
+    const x = radiusPercent * Math.cos(radians);
+    const y = radiusPercent * Math.sin(radians);
+
+    // Rotate number to face inward toward the center
+    const rotationAngle = angle;
+
+    return {
+      left: `calc(50% + ${x}%)`,
+      top: `calc(50% + ${y}%)`,
+      transform: `translate(-50%, -50%) rotate(${rotationAngle}deg)`,
+    };
+  }
+
+  getRouletteNumberBgColor(number: number): string {
+    if (number === 0) return '#10b981'; // Green
+    return DashboardComponent.RED_NUMBERS.includes(number) ? '#ef4444' : '#1f2937';
   }
 }

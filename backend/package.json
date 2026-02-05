@@ -3,17 +3,23 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "rm -rf node_modules/ && npm i && rm -rf dist/ && NODE_ENV=production npx drizzle-kit pull && npx tsc",
-    "start": "wrangler dev --ip 127.0.0.1",
+    "build": "rm -rf node_modules/ && npm i && rm -rf dist/ && npm run db:init && NODE_ENV=production npx drizzle-kit pull && npx tsc",
+    "build:dev": "rm -rf node_modules/ && npm i && rm -rf dist/ && npm run db:init && npx tsc",
+    "start": "npm run build:dev && npm-run-all --parallel watch:dev wrangler:dev",
+    "wrangler:dev": "wrangler dev --ip 127.0.0.1",
+    "watch:dev": "tsc --watch --project tsconfig.json",
     "db:init": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --command 'SELECT 1;' && npx drizzle-kit push",
-    "db:devscript": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --file ./devscripts/giveallfakerankadmin.sql"
+    "db:devscript": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --file ./devscripts/giveallfakerankadmin.sql",
+    "prepare": "ts-patch install"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^25.1.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
-    "typescript": "^5.9.3",
+    "npm-run-all": "^4.1.5",
+    "ts-patch": "^3.3.0",
+    "typescript": "~5.9.3",
     "wrangler": "^4.61.1"
   },
   "dependencies": {
@@ -29,6 +35,7 @@
     "emailjs": "^5.0.0",
     "glin-profanity": "^3.1.5",
     "openai": "^6.17.0",
+    "typia": "^11.0.3",
     "washyourmouthoutwithsoap": "^1.0.2"
   }
 }

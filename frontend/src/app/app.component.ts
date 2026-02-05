@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
@@ -11,9 +11,41 @@ import { ToastComponent } from './components/toast/toast.component';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'zeitvertreib-website';
   showHeader = true;
 
   constructor() {}
+
+  //feel free to transfer this to a seperate file and then call that, but I tried it and it broke everything and killed my grandma
+  private easterDates: Record<number, { month: number; day: number }> = {
+    2026: { month: 3, day: 5 },
+    2027: { month: 2, day: 28 },
+    2028: { month: 3, day: 16 },
+    2029: { month: 3, day: 1 },
+    2030: { month: 3, day: 21 },
+    //remind me to add more in 4 years
+  };
+
+  private isEaster(date: Date): boolean {
+    const year = date.getFullYear();
+    const easter = this.easterDates[year];
+    if (!easter) return false;
+
+    return date.getMonth() === easter.month && date.getDate() === easter.day;
+  }
+
+  ngOnInit(): void {
+    try {
+      const today = new Date();
+      const isEasterToday = this.isEaster(today);
+      if (isEasterToday) {
+        document.body.classList.add('easter');
+      } else {
+        document.body.classList.remove('easter');
+      }
+    } catch (e) {
+      console.warn('Easter background check failed', e);
+    }
+  }
 }
