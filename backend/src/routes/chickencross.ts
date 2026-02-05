@@ -271,7 +271,9 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
       .set({ experience: increment(playerdata.experience, -bet) })
       .where(eq(playerdata.id, steamId));
 
-    const newSeed = Math.floor(Math.random() * 2147483647);
+    const seedBuffer = new Uint32Array(1);
+    crypto.getRandomValues(seedBuffer);
+    const newSeed = seedBuffer[0]! % 2147483647;
     const step = 0;
     const currentPayout = bet;
     const now = Date.now();
