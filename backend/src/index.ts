@@ -55,6 +55,11 @@ import {
   handleChickenCrossPost,
   handleChickenCrossActive,
 } from './routes/chickencross.js';
+import {
+  handleGetAdvertisement,
+  handleGetAdvertisementToday,
+  handlePostAdvertisement,
+} from './routes/advertisement.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -179,6 +184,11 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/chickencross/active': handleChickenCrossActive,
   'GET:/chickencross': handleChickenCrossGet,
   'POST:/chickencross': handleChickenCrossPost,
+
+  // Advertisement routes
+  'GET:/advertisement': handleGetAdvertisement,
+  'GET:/advertisement/today': handleGetAdvertisementToday,
+  'POST:/advertisement': handlePostAdvertisement,
 };
 
 export default {

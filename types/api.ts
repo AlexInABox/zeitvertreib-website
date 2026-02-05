@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -753,7 +753,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
 
 // ============================================================================
 // Chicken Cross Types
@@ -824,4 +824,49 @@ export interface RoulettePostResponse {
   spinResult: number;
   won: boolean;
   payout: number;
+}
+
+
+// ============================================================================
+// Advertisement Types
+// ============================================================================
+
+export const ADVERTISEMENT_LOCATIONS = ['LOCATION_1', 'LOCATION_2', 'LOCATION_3', 'LOCATION_4', 'LOCATION_5'] as const;
+export type AdvertisementLocations = typeof ADVERTISEMENT_LOCATIONS[number];
+export type AdvertisementStatus = 'APPROVED' | 'PENDING' | 'REJECTED';
+
+/** GET /advertisement request */
+export interface AdvertisementGetRequest {
+  month: number;
+  year: number;
+}
+
+/** GET /advertisement response */
+export interface AdvertisementGetResponse {
+  advertisements: {
+    id: number;
+    userId: string;
+    location: AdvertisementLocations;
+
+    date: string;
+    /** If the user owns the advertisment the status will be displayed */
+    status?: AdvertisementStatus;
+  }[];
+}
+
+/** GET /advertisement/today response */
+export interface AdvertisementTodayGetResponse {
+  advertisement: {
+    id: number;
+    userId: string;
+    location: AdvertisementLocations;
+    text_toy: string;
+  }[];
+}
+
+/** POST /advertisement request */
+export interface AdvertisementPostRequest {
+  location: AdvertisementLocations;
+  dates: string[];
+  full_res: Base64URLString;
 }

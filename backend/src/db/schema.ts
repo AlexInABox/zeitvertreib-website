@@ -263,3 +263,19 @@ export const chickenCrossGames = sqliteTable('chicken_cross_games', {
     .notNull(),
   lastUpdatedAt: integer('last_updated_at').notNull(),
 });
+
+export const advertisementCampaigns = sqliteTable('advertisement_campaigns', {
+  id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
+  userId: text('user_id').notNull(),
+  sha256: text('sha256').notNull(),
+  status: text('status', { enum: ['APPROVED', 'PENDING', 'REJECTED'] }).default('PENDING').notNull(),
+});
+
+export const advertisementDays = sqliteTable('advertisement_days', {
+  day: text('day').primaryKey().notNull(), // YYYY-MM-DD
+  campaignInLocation1: integer('campaign_in_location_1').references(() => advertisementCampaigns.id),
+  campaignInLocation2: integer('campaign_in_location_2').references(() => advertisementCampaigns.id),
+  campaignInLocation3: integer('campaign_in_location_3').references(() => advertisementCampaigns.id),
+  campaignInLocation4: integer('campaign_in_location_4').references(() => advertisementCampaigns.id),
+  campaignInLocation5: integer('campaign_in_location_5').references(() => advertisementCampaigns.id),
+});
