@@ -39,12 +39,6 @@ export class AppComponent implements OnInit {
     try {
       const today = new Date();
       const isEasterToday = this.isEaster(today);
-      console.log(
-        '[Easter] Today:',
-        `${today.getMonth()}/${today.getDate()}/${today.getFullYear()}`,
-        'IsEaster:',
-        isEasterToday,
-      );
       if (isEasterToday) {
         document.body.classList.add('easter');
       } else {
