@@ -67,7 +67,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private themeService: ThemeService,
-  ) { }
+  ) {}
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];

@@ -53,7 +53,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
-  ) { }
+  ) {}
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -194,7 +194,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       localStorage.setItem('zeit_bgm_cta_shown', '1');
       this.ctaShown = true;
       this.showVolumePanel = false;
-    } catch (e) { }
+    } catch (e) {}
   }
 
   dismissSoundCTA() {
@@ -202,7 +202,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       localStorage.setItem('zeit_bgm_cta_shown', '1');
       this.ctaShown = true;
       this.showVolumePanel = false;
-    } catch (e) { }
+    } catch (e) {}
   }
 
   @HostListener('document:click', ['$event'])
