@@ -1,7 +1,14 @@
 <div class="m-3">
   <p-menubar [model]="items">
     <ng-template #start>
-      <img id="logo-svg" src="/assets/logos/{{ inverted }}" alt="Logo" [class.logo-muted]="isMuted" />
+      <img
+        id="logo-svg"
+        src="/assets/logos/{{ logoSrc }}"
+        alt="Logo"
+        [class.logo-muted]="isMuted"
+        (click)="toggleTheme()"
+        title="Darkmode umschalten"
+      />
     </ng-template>
     <ng-template #item let-item>
       <ng-container *ngIf="item.route; else urlRef">

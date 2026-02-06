@@ -39,6 +39,11 @@
   position: relative;
 }
 
+:host-context(.my-app-dark) .login-card {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(71, 85, 105, 0.8);
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
