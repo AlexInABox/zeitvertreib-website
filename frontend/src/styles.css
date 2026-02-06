@@ -135,10 +135,9 @@ html.my-app-dark::after {
 
 html.my-app-dark.easter::after {
   opacity: 1;
-}
-
-.my-app-dark body.easter {
   background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/assets/bunny.jpg');
+  background-attachment: fixed;
+  background-size: cover;
 }
 
 /* =============================
