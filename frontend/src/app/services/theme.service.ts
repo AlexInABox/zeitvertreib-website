@@ -32,7 +32,7 @@ export class ThemeService {
 
   private applyTheme(isDark: boolean) {
     if (typeof document === 'undefined') return;
-    
+
     const html = document.documentElement;
     if (isDark) {
       html.classList.add('my-app-dark');

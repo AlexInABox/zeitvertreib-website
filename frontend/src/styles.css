@@ -87,12 +87,12 @@ body {
   background: none;
   transition: color 0.3s ease;
   will-change: background;
-  z-index: 1; 
+  z-index: 1;
 }
 
 /* Light layer on <html> */
 html::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -106,7 +106,7 @@ html::before {
 
 /* Dark layer on <html> */
 html::after {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
