@@ -26,6 +26,11 @@
   animation: slideUp 0.5s ease-out;
 }
 
+:host-context(.my-app-dark) .no-link-card {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -63,6 +68,10 @@ h1 {
   line-height: 1.3;
 }
 
+:host-context(.my-app-dark) h1 {
+  color: #f8fafc;
+}
+
 .description {
   color: #6b7280;
   font-size: 1rem;
@@ -71,6 +80,10 @@ h1 {
   max-width: 450px;
   margin-left: auto;
   margin-right: auto;
+}
+
+:host-context(.my-app-dark) .description {
+  color: #94a3b8;
 }
 
 .info-box {
@@ -129,6 +142,10 @@ h1 {
   font-weight: 600;
   color: #1f2937;
   display: block;
+}
+
+:host-context(.my-app-dark) .step-text strong {
+  color: #f1f5f9;
 }
 
 .step-text span {

@@ -2,6 +2,7 @@
   width: 30px;
   height: 30px;
   margin-right: 10px;
+  cursor: pointer;
   transition:
     filter 0.18s ease,
     opacity 0.18s ease;
@@ -40,6 +41,12 @@
   transform: translateX(-50%) translateY(-18px) scale(0.98) !important;
   transform-origin: top center;
   pointer-events: none;
+}
+
+:host-context(.my-app-dark) .music-popover {
+  background: #1e293b;
+  color: #f8fafc;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .music-popover.show {

@@ -11,6 +11,7 @@ import { Subscription } from 'rxjs';
 import { BackgroundMusicService } from '../../services/background-music.service';
 import { FormsModule } from '@angular/forms';
 import { SliderModule } from 'primeng/slider';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-header',
@@ -29,7 +30,6 @@ import { SliderModule } from 'primeng/slider';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   items: MenuItem[] | undefined;
-  inverted: string = 'logo_full_1to1.svg';
   userLoggedIn: boolean = false;
   avatarIcon: string = '';
   currentUser: SteamUser | null = null;
@@ -52,7 +52,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private bgm: BackgroundMusicService,
+    public themeService: ThemeService,
   ) {}
+
+  get logoSrc(): string {
+    return this.themeService.isDark() ? 'logo_full_1to1_inverted.png' : 'logo_full_1to1.svg';
+  }
 
   ngOnInit() {
     this.updateMenuItems();
@@ -83,6 +88,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     } catch (e) {
       this.ctaShown = false;
     }
+  }
+
+  toggleTheme() {
+    this.themeService.toggleDarkMode();
   }
 
   private updateMenuItems() {
