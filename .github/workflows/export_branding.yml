@@ -1,0 +1,45 @@
+name: Export Branding SVG Layers
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "frontend/public/assets/logos_new/branding.svg"
+
+jobs:
+  export-branding:
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y inkscape xmlstarlet
+
+      - name: Export SVG layers
+        run: |
+          FILE="frontend/public/assets/logos_new/branding.svg"
+          BASEDIR=$(dirname "$FILE")
+
+          mapfile -t export_ids < <(
+            xmlstarlet sel -t \
+              -m "//*[@inkscape:label[starts-with(., 'EXPORT:')]]" \
+              -v "@id" -n "$FILE"
+          )
+
+          for id in "${export_ids[@]}"; do
+            label=$(xmlstarlet sel -t -m "//*[@id='$id']" -v "@inkscape:label" -n "$FILE")
+            outname="$BASEDIR/${label#EXPORT:}.svg"
+            echo "Exporting layer id='$id', label='$label' -> $outname"
+
+            inkscape "$FILE" --export-id-only --export-id="$id" --export-filename="$outname"
+            inkscape "$outname" --actions="SelectAll;Union;FileSave;FileQuit"
+          done
+
+      - name: Commit & push exported SVGs
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "Auto-export SVG layers from branding.svg"
+          branch: ${{ github.head_ref }}
+          file_pattern: "frontend/public/assets/logos_new/*.svg"
