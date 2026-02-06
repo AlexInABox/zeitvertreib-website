@@ -3664,6 +3664,22 @@
   padding: 1.5rem;
   backdrop-filter: blur(10px);
 }
+
+/* Dark mode overrides: Hide outer layers for the games section as requested */
+.my-app-dark .zvcoins-container > .stats-card,
+.my-app-dark .zvcoins-container > .stats-card:hover,
+.my-app-dark .zvcoins-games-card,
+.my-app-dark .zvcoins-games-card:hover {
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.my-app-dark .zvcoins-container > .stats-card::before {
+  display: none !important;
+}
+
 .zvcoins-games-card > * {
   break-inside: avoid;
   margin-bottom: 1.5rem;
