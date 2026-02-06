@@ -172,17 +172,18 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     }
 
     //"RNG" 0-36
-function biasedSpin(probZero = 0.1): number { // 10% bias for 0
-  const randomBuffer = new Uint32Array(1);
-  crypto.getRandomValues(randomBuffer);
-  const r = randomBuffer[0]! / 2**32;
+    function biasedSpin(probZero = 0.1): number {
+      // 10% bias for 0
+      const randomBuffer = new Uint32Array(1);
+      crypto.getRandomValues(randomBuffer);
+      const r = randomBuffer[0]! / 2 ** 32;
 
-  if (r < probZero) return 0;
+      if (r < probZero) return 0;
 
-  const scaled = (r - probZero) / (1 - probZero);
-  return 1 + Math.floor(scaled * 36);
-}
-const spinResult = biasedSpin();
+      const scaled = (r - probZero) / (1 - probZero);
+      return 1 + Math.floor(scaled * 36);
+    }
+    const spinResult = biasedSpin();
 
     //check win
     const betOutcome = checkBetOutcome(body.type, spinResult, body.value);
