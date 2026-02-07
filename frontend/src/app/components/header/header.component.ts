@@ -56,7 +56,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ) {}
 
   get logoSrc(): string {
-    return this.themeService.isDark() ? 'logo_full_1to1_inverted.png' : 'logo_full_1to1.svg';
+    return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
   }
 
   ngOnInit() {

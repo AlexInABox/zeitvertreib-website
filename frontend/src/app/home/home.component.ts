@@ -7,6 +7,7 @@ import { ImageModule } from 'primeng/image';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
+import { ThemeService } from '../services/theme.service';
 
 interface Player {
   Name: string;
@@ -59,7 +60,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   private imageCache: Map<string, boolean> = new Map();
   private intersectionObserver: IntersectionObserver | null = null;
 
-  constructor(private http: HttpClient) {}
+  get isDark() {
+    return this.themeService.isDark;
+  }
+
+  constructor(
+    private http: HttpClient,
+    private themeService: ThemeService,
+  ) {}
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];
