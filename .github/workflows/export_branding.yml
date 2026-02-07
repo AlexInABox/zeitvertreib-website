@@ -9,6 +9,8 @@ on:
 jobs:
   export-branding:
     runs-on: ubuntu-slim
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
