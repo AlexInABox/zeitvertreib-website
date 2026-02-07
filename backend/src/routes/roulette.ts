@@ -138,8 +138,8 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     );
   }
   if (
-    (body.value && (body.value < 0 || body.value > 36)) ||
-    (body.type === 'number' && (body.value === undefined || body.value === null))
+    (body.value !== undefined && (body.value < 1 || body.value > 36)) ||
+    (body.type === 'number' && (body.value === undefined || body.value === null || body.value === 0))
   ) {
     return createResponse(
       {
