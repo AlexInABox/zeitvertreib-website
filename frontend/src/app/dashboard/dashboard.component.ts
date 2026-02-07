@@ -217,12 +217,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-      teamColors: [],
-      vipColors: [],
-      donatorColors: [],
-      boosterColors: [],
-      otherColors: [],
-    };
+    teamColors: [],
+    vipColors: [],
+    donatorColors: [],
+    boosterColors: [],
+    otherColors: [],
+  };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
