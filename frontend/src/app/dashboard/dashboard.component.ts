@@ -3123,9 +3123,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Clamp value between 0 and 36
-    if (value < 0) {
-      value = 0;
+    // Clamp value between 1 and 36
+    if (value < 1) {
+      value = 1;
     } else if (value > 36) {
       value = 36;
     }
