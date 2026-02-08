@@ -4,6 +4,8 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { DomainWarningComponent } from './components/domain-warning/domain-warning.component';
 import { ToastComponent } from './components/toast/toast.component';
+import { BackgroundMusicService } from './services/background-music.service';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -14,8 +16,11 @@ import { ToastComponent } from './components/toast/toast.component';
 export class AppComponent implements OnInit {
   title = 'zeitvertreib-website';
   showHeader = true;
-
-  constructor() {}
+  showSoundCTA: boolean = false;
+  constructor(
+    private backgroundMusic: BackgroundMusicService,
+    private themeService: ThemeService,
+  ) {}
 
   //feel free to transfer this to a seperate file and then call that, but I tried it and it broke everything and killed my grandma
   private easterDates: Record<number, { month: number; day: number }> = {
@@ -41,11 +46,20 @@ export class AppComponent implements OnInit {
       const isEasterToday = this.isEaster(today);
       if (isEasterToday) {
         document.body.classList.add('easter');
+        document.documentElement.classList.add('easter');
       } else {
         document.body.classList.remove('easter');
+        document.documentElement.classList.remove('easter');
       }
     } catch (e) {
       console.warn('Easter background check failed', e);
+    }
+
+    // Start background music
+    try {
+      this.backgroundMusic.init();
+    } catch (e) {
+      console.warn('Failed to initialize background music', e);
     }
   }
 }

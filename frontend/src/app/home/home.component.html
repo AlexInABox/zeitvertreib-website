@@ -1,5 +1,10 @@
 <div class="image-container">
-  <img class="imageincontainer" src="/assets/logos/logo_full_fitting.png" alt="Zeitvertreib Logo" width="100px" />
+  <img
+    class="imageincontainer"
+    [src]="isDark() ? '/assets/logos/inverted/logo_full_fitting.png' : '/assets/logos/logo_full_fitting.png'"
+    alt="Zeitvertreib Logo"
+    width="100px"
+  />
 </div>
 
 <!-- Gallery Badge Post-it -->

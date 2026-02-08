@@ -14,7 +14,7 @@ import {
 } from '@zeitvertreib/types';
 
 const MIN_BET = 10;
-const MAX_BET = 5000;
+const MAX_BET = 500;
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 const BLACK_NUMBERS = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
 
@@ -138,8 +138,8 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     );
   }
   if (
-    (body.value && (body.value < 0 || body.value > 36)) ||
-    (body.type === 'number' && (body.value === undefined || body.value === null))
+    (body.value !== undefined && (body.value < 1 || body.value > 36)) ||
+    (body.type === 'number' && (body.value === undefined || body.value === null || body.value === 0))
   ) {
     return createResponse(
       {
@@ -171,10 +171,19 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       );
     }
 
-    //RNG 0-36
-    const randomBuffer = new Uint32Array(1);
-    crypto.getRandomValues(randomBuffer);
-    const spinResult = randomBuffer[0]! % 37; // 0-36
+    //"RNG" 0-36
+    function biasedSpin(probZero = 0.1): number {
+      // 10% bias for 0
+      const randomBuffer = new Uint32Array(1);
+      crypto.getRandomValues(randomBuffer);
+      const r = randomBuffer[0]! / 2 ** 32;
+
+      if (r < probZero) return 0;
+
+      const scaled = (r - probZero) / (1 - probZero);
+      return 1 + Math.floor(scaled * 36);
+    }
+    const spinResult = biasedSpin();
 
     //check win
     const betOutcome = checkBetOutcome(body.type, spinResult, body.value);

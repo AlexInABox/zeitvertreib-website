@@ -1,7 +1,14 @@
 <div class="m-3">
   <p-menubar [model]="items">
     <ng-template #start>
-      <img id="logo-svg" src="/assets/logos/{{ inverted }}" alt="Logo" />
+      <img
+        id="logo-svg"
+        src="/assets/logos/{{ logoSrc }}"
+        alt="Logo"
+        [class.logo-muted]="isMuted"
+        (click)="toggleTheme()"
+        title="Darkmode umschalten"
+      />
     </ng-template>
     <ng-template #item let-item>
       <ng-container *ngIf="item.route; else urlRef">
@@ -38,6 +45,101 @@
           <!-- Mobile version with icon only -->
           <p-button icon="pi pi-discord" styleClass="p-button-outlined sm:hidden"> </p-button>
         </a>
+        <div class="relative inline-block mr-2" style="position: relative">
+          <div style="position: relative; display: inline-block">
+            <p-button
+              (click)="toggleVolumePanel($event)"
+              [icon]="isPlaying ? 'pi pi-volume-up' : requiresInteraction ? 'pi pi-play' : 'pi pi-volume-off'"
+              styleClass="p-button-outlined"
+              [attr.title]="isPlaying ? 'Musik aus' : 'Musik an'"
+            ></p-button>
+            <span *ngIf="requiresInteraction && !ctaShown" class="music-badge"></span>
+          </div>
+          <div
+            class="music-popover"
+            [class.music-popover--compact]="!isPlaying && requiresInteraction"
+            [class.music-popover--active]="isPlaying"
+            [class.show]="showVolumePanel"
+            (click)="$event.stopPropagation()"
+            [attr.aria-hidden]="!showVolumePanel"
+            style="position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 16px); z-index: 50"
+          >
+            <div class="music-popover-inner p-3">
+              <!-- Compact view when autoplay blocked and not playing -->
+              <div
+                *ngIf="!isPlaying && requiresInteraction && !ctaShown"
+                class="music-compact flex items-center justify-center"
+              >
+                <p-button
+                  class="p-button-compact"
+                  (click)="enableSoundCTA()"
+                  icon="pi pi-play"
+                  styleClass="p-button-outlined"
+                ></p-button>
+              </div>
+
+              <div
+                *ngIf="!isPlaying && requiresInteraction && ctaShown"
+                class="music-compact flex items-center justify-center"
+              >
+                <p-button
+                  class="p-button-compact"
+                  (click)="toggleMusic()"
+                  [icon]="isMuted ? 'pi pi-volume-off' : 'pi pi-play'"
+                ></p-button>
+              </div>
+
+              <!-- Compact view when paused but autoplay works -->
+              <div *ngIf="!isPlaying && !requiresInteraction" class="music-compact flex items-center justify-center">
+                <p-button
+                  class="p-button-compact"
+                  (click)="toggleMusic()"
+                  [icon]="isMuted ? 'pi pi-volume-off' : 'pi pi-play'"
+                ></p-button>
+              </div>
+
+              <!-- Full view when playing -->
+              <div *ngIf="isPlaying" class="music-full flex flex-col items-center">
+                <!-- Wrapper for visual track and smaller interactive slider -->
+                <div class="vertical-slider relative flex justify-center" style="height: 100px; width: 28px">
+                  <!-- Visual Track Background -->
+                  <div
+                    class="absolute rounded-full"
+                    style="
+                      width: 8px;
+                      height: 100%;
+                      top: 0;
+                      left: 50%;
+                      transform: translateX(-50%);
+                      background: #eef2f7;
+                      z-index: 0;
+                    "
+                  ></div>
+
+                  <!-- Interactive Slider (Shorter so knob stays inside visual track) -->
+                  <p-slider
+                    orientation="vertical"
+                    [style]="{ height: '80px', marginTop: '10px' }"
+                    [(ngModel)]="volume"
+                    [min]="0"
+                    [max]="1"
+                    [step]="0.01"
+                    (ngModelChange)="onVolumeChange($event)"
+                    aria-label="Lautstärke"
+                  ></p-slider>
+                </div>
+
+                <div class="controls">
+                  <p-button
+                    (click)="toggleMute()"
+                    [icon]="isMuted ? 'pi pi-volume-off' : 'pi pi-volume-up'"
+                    styleClass="p-button-outlined p-button-compact"
+                  ></p-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="relative profile-button-container">
           <a
             [routerLink]="userLoggedIn ? '/profile' : '/login'"

@@ -368,7 +368,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   rouletteSpinResult: number | null = null;
   rouletteSpinColor: 'red' | 'black' | 'green' | null = null;
   rouletteBetType: RouletteBetType = 'red';
-  rouletteBetValue: number = 0;
+  rouletteBetValue: number = 1;
   showRouletteResult = false;
   rouletteWon = false;
   roulettePayout: number | null = null;
@@ -3119,13 +3119,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     let value = parseInt(input.value, 10);
 
     if (isNaN(value)) {
-      this.rouletteBetValue = 0;
+      this.rouletteBetValue = 1;
       return;
     }
 
-    // Clamp value between 0 and 36
-    if (value < 0) {
-      value = 0;
+    // Clamp value between 1 and 36
+    if (value < 1) {
+      value = 1;
     } else if (value > 36) {
       value = 36;
     }
@@ -3252,8 +3252,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Validate number bet type
     if (this.rouletteBetType === 'number') {
-      if (this.rouletteBetValue < 0 || this.rouletteBetValue > 36) {
-        this.rouletteError = 'Nummer muss zwischen 0 und 36 liegen.';
+      if (this.rouletteBetValue < 1 || this.rouletteBetValue > 36) {
+        this.rouletteError = 'Nummer muss zwischen 1 und 36 liegen.';
         setTimeout(() => {
           this.rouletteError = '';
         }, 3000);

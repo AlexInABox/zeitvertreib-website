@@ -29,12 +29,17 @@
 }
 
 :root {
+  --surface-a: #ffffff !important;
+  --surface-b: #f8f9fa !important;
+  --text-color: #334155 !important;
+  --primary: #b41b85;
+  --primary-contrast: #ffffff;
+}
+
+.my-app-dark {
   --surface-a: #121212 !important;
   --surface-b: #1e1e1e !important;
   --text-color: #ffffff !important;
-  /* Primary brand (match app.config.ts semantic.primary.500 as close as possible) */
-  --primary: #b41b85;
-  --primary-contrast: #ffffff;
 }
 
 @font-face {
@@ -77,14 +82,60 @@ strong,
 }
 
 body {
-  background: linear-gradient(45deg, hsla(273, 97%, 31%, 1) 27%, hsla(319, 73%, 41%, 1) 100%);
+  position: relative;
+  min-height: 100vh;
+  background: none;
+  transition: color 0.3s ease;
+  will-change: background;
+  z-index: 1;
+}
+
+/* Light layer on <html> */
+html::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(45deg, #57029c 27%, #b51c85 100%);
   background-attachment: fixed;
   background-size: cover;
-  min-height: 100vh;
+  opacity: 1;
+  transition: opacity 0.9s ease;
+  pointer-events: none;
 }
-/*easterbunny*/
-body.easter {
+
+/* Dark layer on <html> */
+html::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(45deg, #0b0f1a 27%, #22061a 100%);
+  background-attachment: fixed;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  pointer-events: none;
+}
+
+/* Easter image replaces the light layer when active */
+html.easter::before {
   background: linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)), url('/assets/bunny.jpg');
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+html.my-app-dark::before {
+  opacity: 0;
+}
+
+html.my-app-dark::after {
+  opacity: 1;
+}
+
+html.my-app-dark.easter::after {
+  opacity: 1;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/assets/bunny.jpg');
   background-attachment: fixed;
   background-size: cover;
 }
@@ -354,12 +405,24 @@ body.easter {
   color: #111827;
 }
 
+.my-app-dark .text-gray-900 {
+  color: #f8fafc;
+}
+
 .text-gray-600 {
   color: #4b5563;
 }
 
+.my-app-dark .text-gray-600 {
+  color: #cbd5e1;
+}
+
 .text-gray-700 {
   color: #374151;
+}
+
+.my-app-dark .text-gray-700 {
+  color: #e2e8f0;
 }
 
 .text-gray-400 {

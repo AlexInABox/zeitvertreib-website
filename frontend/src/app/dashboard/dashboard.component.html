@@ -476,9 +476,9 @@
                           type="number"
                           [(ngModel)]="rouletteBetValue"
                           (input)="onRouletteNumberInput($event)"
-                          min="0"
+                          min="1"
                           max="36"
-                          placeholder="0-36"
+                          placeholder="1-36"
                           class="number-input"
                           [disabled]="isRouletteSpinning"
                         />
