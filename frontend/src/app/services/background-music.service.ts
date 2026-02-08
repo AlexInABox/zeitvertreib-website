@@ -112,6 +112,7 @@ export class BackgroundMusicService {
     if (this.isPlaying$.value) {
       this.audio.pause();
       this.isPlaying$.next(false);
+      this.stopUnmuteAttempts();
     } else {
       // If currently muted because autoplay fallback used muted autoplay, try unmuting first
       if (this.isMuted$.value) {
