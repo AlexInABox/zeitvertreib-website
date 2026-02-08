@@ -17,7 +17,13 @@ export class ThemeService {
     const newVal = !this.isDarkSignal();
     this.isDarkSignal.set(newVal);
     this.applyTheme(newVal);
-    localStorage.setItem('theme', newVal ? 'dark' : 'light');
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('theme', newVal ? 'dark' : 'light');
+      }
+    } catch {
+      // Ignore storage errors to avoid breaking theme toggling
+    }
   }
 
   private getInitialTheme(): boolean {
