@@ -1,3 +1,121 @@
+.song-title-copy-hover {
+  cursor: copy;
+}
+.song-title-copy-hover {
+  position: relative;
+}
+.header-bg-var {
+  --header-bg: var(--p-menubar-background);
+}
+/* No need for dark override, always use --p-menubar-background */
+
+.song-title-container {
+  position: relative;
+  max-width: 220px;
+  overflow: hidden;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+.song-title-container::before,
+.song-title-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 32px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.song-title-container::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 1) 0%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.85) 40%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.5) 70%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0) 100%
+  );
+}
+.song-title-container::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 1) 0%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.85) 40%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.5) 70%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0) 100%
+  );
+}
+
+.scrolling-song-title-wrapper {
+  display: flex;
+  width: max-content;
+  animation: scroll-song-title-loop 14s linear infinite;
+  gap: 48px;
+}
+.scrolling-song-title-wrapper.paused {
+  animation-play-state: paused;
+}
+.scrolling-song-title {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 1rem;
+  color: var(--p-button-outlined-primary-color);
+  padding-left: 4px;
+}
+@keyframes scroll-song-title-loop {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+/* Custom volume button (no PrimeNG, no Tailwind) */
+.music-svg-btn-custom {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border 0.18s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+/* Discord join button styles */
+.discord-btn-icon-only.p-button {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px !important;
+}
+.discord-btn-text.p-button {
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 12px !important;
+}
+
+/* Add padding so the slider handle can't reach the very top/bottom */
+.music-popover-inner {
+  padding: 8px 0;
+}
+@media (orientation: portrait) {
+  .music-popover {
+    display: none !important;
+  }
+}
 #logo-svg {
   width: 30px;
   height: 30px;
@@ -6,10 +124,6 @@
   transition:
     filter 0.18s ease,
     opacity 0.18s ease;
-}
-
-.logo-muted {
-  filter: grayscale(100%) opacity(0.75) !important;
 }
 
 /* Profile button container */
@@ -24,73 +138,96 @@
   max-width: 280px !important;
 }
 
+/* Music button container */
+.music-button-container {
+  position: relative;
+}
+
 /* Music popover*/
 .music-popover {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
   color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-  padding: 6px;
-  width: 56px;
+  backdrop-filter: blur(10px);
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: translateX(-50%) translateY(-18px) scale(0.98) !important;
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  z-index: 50;
+  transform: translateX(-50%) translateY(-12px) scale(0.96);
   transform-origin: top center;
   pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  min-width: 0;
+  padding-bottom: 20px;
+  padding-top: 20px;
 }
 
 :host-context(.my-app-dark) .music-popover {
-  background: #1e293b;
+  background: rgba(30, 41, 59, 0.8);
   color: #f8fafc;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .music-popover.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0) scale(1) !important;
+  transform: translateX(-50%) translateY(0) scale(1);
   pointer-events: auto;
-  animation: popDown 0.18s cubic-bezier(0.2, 0.9, 0.25, 1) forwards;
-}
-
-@keyframes popDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-18px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
+  padding-bottom: 20px;
+  padding-top: 20px;
 }
 
 .music-popover .music-popover-inner {
-  display: block;
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   box-sizing: border-box;
-  padding: 6px !important;
+  padding: 0 !important;
 }
 
-.music-popover .text-muted {
-  color: rgba(15, 23, 42, 0.65);
-  font-size: 12px;
+/* Invisible hover bridge between button and popover */
+.music-hover-bridge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 100%;
+  width: 48px;
+  height: 16px;
+  z-index: 49;
+  background: transparent;
+  pointer-events: auto;
 }
 
-/* slider styles */
-.music-popover ::ng-deep .p-slider.p-slider-vertical {
-  width: 20px;
+/* Music SVG button styling */
+.music-svg-btn {
+  background: none;
+  border: none;
   padding: 0;
-  background: transparent !important;
-  border-radius: 0;
-}
-
-.music-popover ::ng-deep .p-slider .p-slider-track {
-  background: transparent !important;
-  width: 8px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: var(--p-button-outlined-primary-color);
+  border-width: 1px;
+  transition:
+    background 0.15s,
+    border 0.15s,
+    color 0.15s;
 }
 
 .music-popover ::ng-deep .p-slider .p-slider-range {
@@ -121,43 +258,67 @@
   display: none !important;
 }
 
-.music-popover .vertical-slider::before {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 100%;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #eef2f7;
-  border-radius: 8px;
-  z-index: 0;
-}
-
-.music-popover .vertical-slider {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-.music-popover .controls {
+/* Custom Volume Slider */
+.custom-volume-slider {
+  width: 24px;
+  height: 80px;
+  position: relative;
+  cursor: grab;
+  user-select: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 24px;
+  outline: none;
 }
 
-.music-percent {
-  display: none !important;
+.custom-volume-slider:active {
+  cursor: grabbing;
 }
 
-.music-popover .track,
-.music-popover .compact-track {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.volume-slider-track {
+  width: 8px;
+  height: 100%;
+  background: var(--p-slider-track-background, rgba(148, 163, 184, 0.3));
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
 }
+
+.volume-slider-range {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--primary-color, #a855f7);
+  border-radius: 4px;
+  width: 100%;
+  transition: height 0.05s ease-out;
+}
+
+.volume-slider-handle {
+  position: absolute;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid var(--primary-color, #a855f7);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: grab;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  z-index: 10;
+  transition: box-shadow 0.15s ease;
+}
+
+.volume-slider-handle:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.volume-slider-handle:active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .music-popover .p-button-compact,
 .music-popover .p-button-compact .p-button {
   padding: 6px 8px;
@@ -167,46 +328,16 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
+  flex-shrink: 0;
 }
 
-.music-popover .music-compact {
-  padding: 8px;
-  min-width: unset;
-  width: 100%;
+.music-popover .music-full {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-}
-.music-popover--compact {
-  min-width: unset;
-  max-width: unset;
-  padding: 8px;
-  width: 56px;
-}
-.music-popover--active {
-  min-width: unset;
-  width: 56px;
+  gap: 8px;
 }
 
-.music-popover .music-percent {
-  font-weight: 600;
-  text-align: center;
-  color: #0f172a;
-}
-
-.music-badge {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
-}
-
-@media (max-width: 640px) {
-  .music-popover {
-    min-width: 140px;
-    max-width: 90vw;
-  }
-  .music-popover .music-percent {
-    display: none;
-  }
-}
 .music-badge {
   position: absolute;
   top: -4px;

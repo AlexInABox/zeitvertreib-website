@@ -1,4 +1,4 @@
-<div class="m-3">
+<div class="m-3 header-bg-var">
   <p-menubar [model]="items">
     <ng-template #start>
       <img
@@ -38,108 +38,113 @@
     </ng-template>
     <ng-template #end>
       <div class="flex items-center gap-2" style="white-space: nowrap">
-        <a href="https://dsc.gg/zeit" target="_blank">
-          <!-- Desktop version with text -->
-          <p-button label="Discord beitreten" icon="pi pi-discord" styleClass="p-button-outlined hidden sm:inline-flex">
-          </p-button>
-          <!-- Mobile version with icon only -->
-          <p-button icon="pi pi-discord" styleClass="p-button-outlined sm:hidden"> </p-button>
-        </a>
-        <div class="relative inline-block mr-2" style="position: relative">
-          <div style="position: relative; display: inline-block">
-            <p-button
-              (click)="toggleVolumePanel($event)"
-              [icon]="isPlaying ? 'pi pi-volume-up' : requiresInteraction ? 'pi pi-play' : 'pi pi-volume-off'"
-              styleClass="p-button-outlined"
-              [attr.title]="isPlaying ? 'Musik aus' : 'Musik an'"
-            ></p-button>
+        <div *ngIf="isPlaying && currentTrack && !isPortrait" class="song-title-container">
+          <div
+            [class.paused]="scrollPaused"
+            class="scrolling-song-title-wrapper song-title-copy-hover"
+            (mouseenter)="scrollPaused = true"
+            (mouseleave)="scrollPaused = false"
+            (click)="copySongTitle()"
+            title="Songtitel kopieren"
+            tabindex="0"
+            role="button"
+            aria-label="Songtitel kopieren"
+          >
+            <span class="scrolling-song-title">{{ currentTrack }}<span class="pl-12"></span></span>
+            <span class="scrolling-song-title">{{ currentTrack }}<span class="pl-12"></span></span>
+          </div>
+        </div>
+        <div
+          class="relative inline-block music-button-container"
+          (mouseenter)="showVolumePanel = true"
+          (mouseleave)="onPopoverMouseLeave()"
+        >
+          <div class="relative inline-block">
+            <div
+              class="music-svg-btn-custom"
+              style="border: 0.5px solid var(--p-button-outlined-primary-border-color); border-radius: 8px"
+              tabindex="0"
+              role="button"
+              (click)="toggleMute()"
+              [attr.title]="isMuted ? 'Musik an' : 'Musik aus'"
+              aria-label="Musik Lautstärke"
+            >
+              <ng-container *ngIf="isMuted; else volumeUpIcon">
+                <!-- Muted SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 16 16">
+                  <path
+                    fill="var(--p-button-outlined-primary-color)"
+                    fill-rule="evenodd"
+                    d="M1.5 5h2.79l3.86-3.83l.85.35v13l-.85.33L4.29 11H1.5l-.5-.5v-5l.5-.5zm3.35 5.17L8 13.31V2.73L4.85 5.85L4.5 6H2v4h2.5l.35.17zm9.381-4.108l.707.707L13.207 8.5l1.731 1.732l-.707.707L12.5 9.207l-1.732 1.732l-.707-.707L11.793 8.5L10.06 6.77l.707-.707l1.733 1.73l1.731-1.731z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </ng-container>
+              <ng-template #volumeUpIcon>
+                <!-- Volume Up SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+                  <g
+                    fill="none"
+                    stroke="var(--p-button-outlined-primary-color)"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      d="M12.253 19.4L7.99 15.782a1 1 0 0 0-.647-.238H4.75a2 2 0 0 1-2-2v-3.086a2 2 0 0 1 2-2h2.594a1 1 0 0 0 .647-.238l4.262-3.62a1 1 0 0 1 1.647.762V18.64a1 1 0 0 1-1.647.762Z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      d="M16.664 8.542c.48.35.88.854 1.158 1.462c.277.607.424 1.295.424 1.996c0 .7-.147 1.39-.424 1.996c-.278.607-.677 1.112-1.158 1.462M18.7 6.424c.775.565 1.42 1.378 1.867 2.357c.447.978.683 2.089.683 3.219s-.236 2.24-.683 3.22c-.448.978-1.092 1.791-1.867 2.356"
+                    />
+                  </g>
+                </svg>
+              </ng-template>
+            </div>
             <span *ngIf="requiresInteraction && !ctaShown" class="music-badge"></span>
           </div>
+          <!-- Invisible hover bridge to prevent accidental mouseleave -->
+          <div class="music-hover-bridge" aria-hidden="true"></div>
           <div
             class="music-popover"
-            [class.music-popover--compact]="!isPlaying && requiresInteraction"
-            [class.music-popover--active]="isPlaying"
             [class.show]="showVolumePanel"
             (click)="$event.stopPropagation()"
             [attr.aria-hidden]="!showVolumePanel"
-            style="position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 16px); z-index: 50"
           >
-            <div class="music-popover-inner p-3">
-              <!-- Compact view when autoplay blocked and not playing -->
-              <div
-                *ngIf="!isPlaying && requiresInteraction && !ctaShown"
-                class="music-compact flex items-center justify-center"
-              >
-                <p-button
-                  class="p-button-compact"
-                  (click)="enableSoundCTA()"
-                  icon="pi pi-play"
-                  styleClass="p-button-outlined"
-                ></p-button>
-              </div>
-
-              <div
-                *ngIf="!isPlaying && requiresInteraction && ctaShown"
-                class="music-compact flex items-center justify-center"
-              >
-                <p-button
-                  class="p-button-compact"
-                  (click)="toggleMusic()"
-                  [icon]="isMuted ? 'pi pi-volume-off' : 'pi pi-play'"
-                ></p-button>
-              </div>
-
-              <!-- Compact view when paused but autoplay works -->
-              <div *ngIf="!isPlaying && !requiresInteraction" class="music-compact flex items-center justify-center">
-                <p-button
-                  class="p-button-compact"
-                  (click)="toggleMusic()"
-                  [icon]="isMuted ? 'pi pi-volume-off' : 'pi pi-play'"
-                ></p-button>
-              </div>
-
-              <!-- Full view when playing -->
-              <div *ngIf="isPlaying" class="music-full flex flex-col items-center">
-                <!-- Wrapper for visual track and smaller interactive slider -->
-                <div class="vertical-slider relative flex justify-center" style="height: 100px; width: 28px">
-                  <!-- Visual Track Background -->
-                  <div
-                    class="absolute rounded-full"
-                    style="
-                      width: 8px;
-                      height: 100%;
-                      top: 0;
-                      left: 50%;
-                      transform: translateX(-50%);
-                      background: #eef2f7;
-                      z-index: 0;
-                    "
-                  ></div>
-
-                  <!-- Interactive Slider (Shorter so knob stays inside visual track) -->
-                  <p-slider
-                    orientation="vertical"
-                    [style]="{ height: '80px', marginTop: '10px' }"
-                    [(ngModel)]="volume"
-                    [min]="0"
-                    [max]="1"
-                    [step]="0.01"
-                    (ngModelChange)="onVolumeChange($event)"
-                    aria-label="Lautstärke"
-                  ></p-slider>
+            <div class="music-popover-inner">
+              <ng-container *ngIf="!isPortrait">
+                <!-- Custom vertical volume slider -->
+                <div
+                  class="custom-volume-slider"
+                  (pointerdown)="onVolumeSliderPointerDown($event)"
+                  aria-label="Lautstärke"
+                  role="slider"
+                  [attr.aria-valuemin]="0.05"
+                  [attr.aria-valuemax]="0.8"
+                  [attr.aria-valuenow]="volume"
+                >
+                  <div class="volume-slider-track">
+                    <div class="volume-slider-range" [style.height.%]="((volume - 0.05) / (0.8 - 0.05)) * 100"></div>
+                    <div
+                      class="volume-slider-handle"
+                      [style.top.%]="(1 - (volume - 0.05) / (0.8 - 0.05)) * 75"
+                      tabindex="0"
+                    ></div>
+                  </div>
                 </div>
-
-                <div class="controls">
-                  <p-button
-                    (click)="toggleMute()"
-                    [icon]="isMuted ? 'pi pi-volume-off' : 'pi pi-volume-up'"
-                    styleClass="p-button-outlined p-button-compact"
-                  ></p-button>
-                </div>
-              </div>
+              </ng-container>
             </div>
           </div>
         </div>
+        <a href="https://dsc.gg/zeit" target="_blank">
+          <!-- Desktop version with text -->
+          <p-button
+            label="Discord beitreten"
+            icon="pi pi-discord"
+            styleClass="p-button-outlined discord-btn-text hidden sm:inline-flex"
+          ></p-button>
+          <!-- Mobile version with icon only -->
+          <p-button icon="pi pi-discord" styleClass="p-button-outlined discord-btn-icon-only sm:hidden"></p-button>
+        </a>
         <div class="relative profile-button-container">
           <a
             [routerLink]="userLoggedIn ? '/profile' : '/login'"

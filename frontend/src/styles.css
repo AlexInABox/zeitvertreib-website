@@ -1,5 +1,12 @@
-/* Global styles & vanilla utility layer (Tailwind removed) */
 @import 'primeicons/primeicons.css';
+@media (orientation: portrait) {
+  .floatingchat-container-wrap,
+  .floatingchat-container-wrap-mo498,
+  [class*='floatingchat-container'] {
+    display: none !important;
+  }
+}
+/* Global styles & vanilla utility layer (Tailwind removed) */
 
 /* Ko-fi widget positioning and fixes */
 .floatingchat-container-wrap,
@@ -29,17 +36,23 @@
 }
 
 :root {
+  --p-menubar-background-rgb: 255, 255, 255;
   --surface-a: #ffffff !important;
   --surface-b: #f8f9fa !important;
   --text-color: #334155 !important;
   --primary: #b41b85;
   --primary-contrast: #ffffff;
+  --header-bg: #fff;
+  --header-bg-rgb: 255, 255, 255;
 }
 
 .my-app-dark {
+  --p-menubar-background-rgb: 24, 24, 27;
   --surface-a: #121212 !important;
   --surface-b: #1e1e1e !important;
   --text-color: #ffffff !important;
+  --header-bg: #1e293b;
+  --header-bg-rgb: 24, 24, 27;
 }
 
 @font-face {
@@ -199,9 +212,6 @@ html.my-app-dark.easter::after {
 }
 
 /* Gap */
-.gap-2 {
-  gap: 0.5rem;
-}
 
 .gap-3 {
   gap: 0.75rem;
