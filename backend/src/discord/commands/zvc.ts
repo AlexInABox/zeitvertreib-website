@@ -306,16 +306,18 @@ export class ZvcCommand extends BaseCommand {
         return;
       }
 
-      // Perform transfer
-      await db
-        .update(playerdata)
-        .set({ experience: senderBalance - totalCost })
-        .where(eq(playerdata.id, senderSteamId));
 
-      await db
-        .update(playerdata)
-        .set({ experience: recipientBalance + amount })
-        .where(eq(playerdata.id, recipientSteamId));
+      await db.batch([
+        db
+          .update(playerdata)
+          .set({ experience: senderBalance - totalCost })
+          .where(eq(playerdata.id, senderSteamId)),
+        db
+          .update(playerdata)
+          .set({ experience: recipientBalance + amount })
+          .where(eq(playerdata.id, recipientSteamId)),
+      ]);
+
 
       const newSenderBalance = senderBalance - totalCost;
       const newRecipientBalance = recipientBalance + amount;
