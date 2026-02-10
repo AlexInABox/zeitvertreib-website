@@ -1,3 +1,98 @@
+.song-title-copy-hover {
+  cursor: copy;
+}
+.song-title-copy-hover {
+  position: relative;
+}
+.copy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  color: var(--p-button-outlined-primary-color);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  padding: 2px;
+}
+.song-title-copy-hover:hover .copy-icon,
+.song-title-copy-hover:focus .copy-icon {
+  opacity: 1;
+  pointer-events: auto;
+}
+.header-bg-var {
+  --header-bg: var(--p-menubar-background);
+}
+/* No need for dark override, always use --p-menubar-background */
+
+.song-title-container {
+  position: relative;
+  max-width: 220px;
+  overflow: hidden;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+.song-title-container::before,
+.song-title-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 32px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.song-title-container::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 1) 0%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.85) 40%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.5) 70%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0) 100%
+  );
+}
+.song-title-container::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 1) 0%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.85) 40%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.5) 70%,
+    rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0) 100%
+  );
+}
+
+.scrolling-song-title-wrapper {
+  display: flex;
+  width: max-content;
+  animation: scroll-song-title-loop 14s linear infinite;
+  gap: 48px;
+}
+.scrolling-song-title-wrapper.paused {
+  animation-play-state: paused;
+}
+.scrolling-song-title {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 1rem;
+  color: var(--p-button-outlined-primary-color);
+  padding-left: 4px;
+}
+@keyframes scroll-song-title-loop {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
 /* Custom volume button (no PrimeNG, no Tailwind) */
 .music-svg-btn-custom {
   width: 42px;

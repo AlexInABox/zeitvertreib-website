@@ -30,29 +30,40 @@ import { ThemeService } from '../../services/theme.service';
   styleUrl: './header.component.css',
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  scrollPaused = false;
   items: MenuItem[] | undefined;
-  userLoggedIn: boolean = false;
-  avatarIcon: string = '';
+  userLoggedIn = false;
+  avatarIcon = '';
   currentUser: SteamUser | null = null;
-  isFakerankAdmin: boolean = false;
+  isFakerankAdmin = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
   private bgmInteractionSubscription?: Subscription;
   private bgmVolumeSubscription?: Subscription;
   private bgmMutedSubscription?: Subscription;
-  requiresInteraction: boolean = false;
-  volume: number = 0.25;
-  isMuted: boolean = false;
-  showVolumePanel: boolean = false;
-  ctaShown: boolean = false;
-  private draggingVolume: boolean = false;
+  private bgmPlayingSubscription?: Subscription;
+  private bgmTrackSubscription?: Subscription;
+  requiresInteraction = false;
+  volume = 0.25;
+  isMuted = false;
+  showVolumePanel = false;
+  ctaShown = false;
+  private draggingVolume = false;
   private boundPointerUp: any = null;
+  isPlaying = false;
+  currentTrack: string | null = null;
+
+  copySongTitle(): void {
+    if (this.currentTrack) {
+      navigator.clipboard.writeText(this.currentTrack);
+    }
+  }
 
   constructor(
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
-  ) {}
+  ) { }
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -78,6 +89,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.bgmInteractionSubscription = this.bgm.requiresInteraction$.subscribe((v) => (this.requiresInteraction = v));
     this.bgmVolumeSubscription = this.bgm.volume$.subscribe((v) => (this.volume = v));
     this.bgmMutedSubscription = this.bgm.isMuted$.subscribe((v) => (this.isMuted = v));
+    this.bgmPlayingSubscription = this.bgm.isPlaying$.subscribe((v) => (this.isPlaying = v));
+    this.bgmTrackSubscription = this.bgm.currentTrack$.subscribe((v) => (this.currentTrack = v));
 
     // CTA shown flag (do not show CTA if user dismissed earlier)
     try {
@@ -195,5 +208,5 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Removed pointer position check for simplicity
+  //
 }
