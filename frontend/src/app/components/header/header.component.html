@@ -112,17 +112,25 @@
           >
             <div class="music-popover-inner">
               <ng-container *ngIf="!isPortrait">
-                <p-slider
-                  orientation="vertical"
-                  [style]="{ height: '64px', width: '24px' }"
-                  [(ngModel)]="volume"
-                  [min]="0.05"
-                  [max]="0.95"
-                  [step]="0.01"
-                  (ngModelChange)="onVolumeChange($event)"
-                  (pointerdown)="onSliderPointerDown($event)"
+                <!-- Custom vertical volume slider -->
+                <div
+                  class="custom-volume-slider"
+                  (pointerdown)="onVolumeSliderPointerDown($event)"
                   aria-label="Lautstärke"
-                ></p-slider>
+                  role="slider"
+                  [attr.aria-valuemin]="0.05"
+                  [attr.aria-valuemax]="0.8"
+                  [attr.aria-valuenow]="volume"
+                >
+                  <div class="volume-slider-track">
+                    <div class="volume-slider-range" [style.height.%]="((volume - 0.05) / (0.8 - 0.05)) * 100"></div>
+                    <div
+                      class="volume-slider-handle"
+                      [style.top.%]="(1 - (volume - 0.05) / (0.8 - 0.05)) * 75"
+                      tabindex="0"
+                    ></div>
+                  </div>
+                </div>
               </ng-container>
             </div>
           </div>

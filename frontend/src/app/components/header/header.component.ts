@@ -11,7 +11,6 @@ import { AuthService, SteamUser, UserData } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { BackgroundMusicService } from '../../services/background-music.service';
 import { FormsModule } from '@angular/forms';
-import { SliderModule } from 'primeng/slider';
 import { ThemeService } from '../../services/theme.service';
 
 @Component({
@@ -23,14 +22,13 @@ import { ThemeService } from '../../services/theme.service';
     ButtonModule,
     AvatarModule,
     AvatarGroupModule,
-    SliderModule,
     FormsModule,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-  private boundCheckPortrait: () => void = () => {};
+  private boundCheckPortrait: () => void = () => { };
   isPortrait = false;
   scrollPaused = false;
   items: MenuItem[] | undefined;
@@ -52,6 +50,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ctaShown = false;
   private draggingVolume = false;
   private boundPointerUp: any = null;
+  private boundPointerMove: any = null;
+  private sliderElement: HTMLElement | null = null;
   isPlaying = false;
   currentTrack: string | null = null;
 
@@ -67,7 +67,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
-  ) {}
+  ) { }
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -207,20 +207,63 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.bgm.setVolume(v);
   }
 
-  onSliderPointerDown(e: PointerEvent) {
+  onVolumeSliderPointerDown(e: PointerEvent) {
     this.draggingVolume = true;
     this.showVolumePanel = true;
+    this.sliderElement = e.currentTarget as HTMLElement;
+
     if (!this.boundPointerUp) {
       this.boundPointerUp = (ev: PointerEvent) => this.onDocumentPointerUp(ev);
       window.addEventListener('pointerup', this.boundPointerUp);
     }
+
+    if (!this.boundPointerMove) {
+      this.boundPointerMove = (ev: PointerEvent) => this.onDocumentPointerMove(ev);
+      window.addEventListener('pointermove', this.boundPointerMove);
+    }
+
+    // Handle initial click/touch
+    this.updateVolumeFromPointer(e);
+  }
+
+  onVolumeSliderPointerMove(e: PointerEvent) {
+    // This is handled by the document-level listener when dragging
+  }
+
+  private onDocumentPointerMove(e: PointerEvent) {
+    if (this.draggingVolume && this.sliderElement) {
+      this.updateVolumeFromPointer(e);
+    }
+  }
+
+  private updateVolumeFromPointer(e: PointerEvent) {
+    if (!this.sliderElement) return;
+
+    const rect = this.sliderElement.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const height = rect.height;
+
+    // Calculate the value from bottom to top (0% at bottom, 100% at top)
+    let percentage = (height - y) / height;
+    percentage = Math.max(0, Math.min(1, percentage));
+
+    // Convert percentage to volume range [0.05, 0.8]
+    const newVolume = 0.05 + percentage * (0.8 - 0.05);
+    this.volume = Math.round(newVolume / 0.01) * 0.01; // Round to step
+    this.onVolumeChange(this.volume);
   }
 
   private onDocumentPointerUp(e: PointerEvent) {
     this.draggingVolume = false;
+    this.sliderElement = null;
+
     if (this.boundPointerUp) {
       window.removeEventListener('pointerup', this.boundPointerUp);
       this.boundPointerUp = null;
+    }
+    if (this.boundPointerMove) {
+      window.removeEventListener('pointermove', this.boundPointerMove);
+      this.boundPointerMove = null;
     }
     this.showVolumePanel = false;
   }

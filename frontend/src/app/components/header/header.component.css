@@ -258,6 +258,67 @@
   display: none !important;
 }
 
+/* Custom Volume Slider */
+.custom-volume-slider {
+  width: 24px;
+  height: 80px;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.custom-volume-slider:active {
+  cursor: grabbing;
+}
+
+.volume-slider-track {
+  width: 8px;
+  height: 100%;
+  background: var(--p-slider-track-background, rgba(148, 163, 184, 0.3));
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
+}
+
+.volume-slider-range {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--primary-color, #a855f7);
+  border-radius: 4px;
+  width: 100%;
+  transition: height 0.05s ease-out;
+}
+
+.volume-slider-handle {
+  position: absolute;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid var(--primary-color, #a855f7);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: grab;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  z-index: 10;
+  transition: box-shadow 0.15s ease;
+}
+
+.volume-slider-handle:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.volume-slider-handle:active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .music-popover .p-button-compact,
 .music-popover .p-button-compact .p-button {
   padding: 6px 8px;
