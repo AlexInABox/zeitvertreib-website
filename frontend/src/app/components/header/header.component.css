@@ -4,27 +4,6 @@
 .song-title-copy-hover {
   position: relative;
 }
-.copy-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s;
-  color: var(--p-button-outlined-primary-color);
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 4px;
-  padding: 2px;
-}
-.song-title-copy-hover:hover .copy-icon,
-.song-title-copy-hover:focus .copy-icon {
-  opacity: 1;
-  pointer-events: auto;
-}
 .header-bg-var {
   --header-bg: var(--p-menubar-background);
 }
