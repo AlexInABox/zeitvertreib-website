@@ -28,7 +28,7 @@ export class BackgroundMusicService {
             this.volume$.next(this.volume);
           }
         }
-      } catch { }
+      } catch {}
 
       // Restore mute state, default to true (muted) for new users
       let savedMuted = true;
@@ -37,7 +37,7 @@ export class BackgroundMusicService {
         if (mutedVal !== null) {
           savedMuted = mutedVal === 'true';
         }
-      } catch { }
+      } catch {}
       this.muted = savedMuted;
       this.isMuted$.next(savedMuted);
 
@@ -68,7 +68,7 @@ export class BackgroundMusicService {
       try {
         (this.audio as any).playsInline = true;
         this.audio.setAttribute('playsinline', 'true');
-      } catch { }
+      } catch {}
       this.audio.addEventListener('ended', () => {
         this.loadRandomTrack();
         this.playAudio();
@@ -130,7 +130,7 @@ export class BackgroundMusicService {
       this.requiresInteraction$.next(true);
       try {
         localStorage.setItem(this.MUTE_KEY, 'true');
-      } catch { }
+      } catch {}
       return false;
     }
   }
@@ -153,7 +153,7 @@ export class BackgroundMusicService {
 
     try {
       localStorage.setItem(this.MUTE_KEY, String(this.muted));
-    } catch { }
+    } catch {}
   }
 
   setVolume(v: number) {
@@ -161,7 +161,7 @@ export class BackgroundMusicService {
     this.volume$.next(this.volume);
     try {
       localStorage.setItem(this.STORAGE_KEY, String(this.volume));
-    } catch { }
+    } catch {}
     if (this.audio) this.audio.volume = this.volume;
   }
 }
