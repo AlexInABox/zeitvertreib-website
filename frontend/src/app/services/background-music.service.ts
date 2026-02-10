@@ -33,7 +33,7 @@ export class BackgroundMusicService {
             this.volume$.next(this.volume);
           }
         }
-      } catch { }
+      } catch {}
 
       // Restore mute state from localStorage, default to true (muted) for new users
       let savedMuted = true;
@@ -42,7 +42,7 @@ export class BackgroundMusicService {
         if (mutedVal !== null) {
           savedMuted = mutedVal === 'true';
         }
-      } catch { }
+      } catch {}
       this.muted = savedMuted;
       this.isMuted$.next(savedMuted);
 
@@ -70,7 +70,7 @@ export class BackgroundMusicService {
       try {
         (this.audio as any).playsInline = true;
         this.audio.setAttribute('playsinline', 'true');
-      } catch { }
+      } catch {}
       this.audio.addEventListener('ended', () => {
         setTimeout(() => this.tryPlayRandom(), 200);
       });
@@ -197,7 +197,7 @@ export class BackgroundMusicService {
       document.removeEventListener('keydown', this.interactionHandlerBound as any);
       window.removeEventListener('focus', this.interactionHandlerBound as any);
       document.removeEventListener('visibilitychange', this.interactionHandlerBound as any);
-    } catch { }
+    } catch {}
   }
 
   private async tryUnmuteFromInteraction() {
@@ -228,7 +228,7 @@ export class BackgroundMusicService {
     this.isMuted$.next(this.audio.muted);
     try {
       localStorage.setItem(this.MUTE_KEY, String(this.audio.muted));
-    } catch { }
+    } catch {}
   }
 
   setVolume(v: number) {
@@ -236,7 +236,7 @@ export class BackgroundMusicService {
     this.volume$.next(this.volume);
     try {
       localStorage.setItem(this.STORAGE_KEY, String(this.volume));
-    } catch { }
+    } catch {}
     if (this.audio) this.audio.volume = this.volume;
   }
 }
