@@ -22,8 +22,7 @@ function isWeekendInBerlin(): boolean {
 function getNotLinkedEmbed(): any {
   return {
     title: '🔗 Discord-Account nicht verknüpft!',
-    description:
-      'Du musst deinen Discord-Account erst mit Zeitvertreib verknüpfen, um ZVC-Features nutzen zu können.',
+    description: 'Du musst deinen Discord-Account erst mit Zeitvertreib verknüpfen, um ZVC-Features nutzen zu können.',
     color: 0xff6b6b,
     fields: [
       {
@@ -84,7 +83,7 @@ export class ZvcCommand extends BaseCommand {
       name_localizations: { de: 'info' },
       description: 'Zeige deinen ZVC-Kontostand oder den eines anderen Benutzers',
       description_localizations: {
-        'en-US': 'Display your ZVC balance or another user\'s',
+        'en-US': "Display your ZVC balance or another user's",
       },
       options: [
         {
@@ -306,7 +305,6 @@ export class ZvcCommand extends BaseCommand {
         return;
       }
 
-
       await db.batch([
         db
           .update(playerdata)
@@ -317,7 +315,6 @@ export class ZvcCommand extends BaseCommand {
           .set({ experience: recipientBalance + amount })
           .where(eq(playerdata.id, recipientSteamId)),
       ]);
-
 
       const newSenderBalance = senderBalance - totalCost;
       const newRecipientBalance = recipientBalance + amount;
