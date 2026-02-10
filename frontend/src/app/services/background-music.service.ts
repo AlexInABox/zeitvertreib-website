@@ -3,24 +3,22 @@ import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class BackgroundMusicService {
-  private tracks: string[] = [];
+  private tracks: Record<string, { title: string; artist: string; file: string }> = {};
+  private trackKeys: string[] = [];
   private audio: HTMLAudioElement | null = null;
   public isPlaying$ = new BehaviorSubject<boolean>(false);
   public requiresInteraction$ = new BehaviorSubject<boolean>(false);
   private volume = 0.1;
   public volume$ = new BehaviorSubject<number>(this.volume);
-  public isMuted$ = new BehaviorSubject<boolean>(false);
+  private muted = true;
+  public isMuted$ = new BehaviorSubject<boolean>(true);
   public currentTrack$ = new BehaviorSubject<string | null>(null);
   private readonly STORAGE_KEY = 'zeit_bgm_volume';
-
-  private unmuteAttempts = 0;
-  private maxUnmuteAttempts = 6;
-  private unmuteIntervalId: any = null;
-  private interactionHandlerBound = this.tryUnmuteFromInteraction.bind(this);
+  private readonly MUTE_KEY = 'zeit_bgm_muted';
 
   async init() {
     try {
-      // Load saved volume from localStorage if available
+      // Load saved volume
       try {
         const saved = localStorage.getItem(this.STORAGE_KEY);
         if (saved !== null) {
@@ -30,17 +28,31 @@ export class BackgroundMusicService {
             this.volume$.next(this.volume);
           }
         }
-      } catch (e) {
-        // ignore storage errors
-      }
+      } catch {}
+
+      // Restore mute state, default to true (muted) for new users
+      let savedMuted = true;
+      try {
+        const mutedVal = localStorage.getItem(this.MUTE_KEY);
+        if (mutedVal !== null) {
+          savedMuted = mutedVal === 'true';
+        }
+      } catch {}
+      this.muted = savedMuted;
+      this.isMuted$.next(savedMuted);
 
       const res = await fetch('/assets/music/tracks.json', { cache: 'no-cache' });
       if (!res.ok) return;
       const data = await res.json();
-      if (Array.isArray(data.tracks) && data.tracks.length) {
+      if (data.tracks && typeof data.tracks === 'object') {
         this.tracks = data.tracks;
-        // Try to start playback ASAP; browsers may block autoplay. We will try muted autoplay as a fallback and attempt to unmute shortly after.
-        this.tryPlayRandom();
+        this.trackKeys = Object.keys(data.tracks);
+        this.loadRandomTrack();
+
+        // Only autoplay if user previously had music unmuted
+        if (!this.muted) {
+          this.tryAutoplay();
+        }
       }
     } catch (e) {
       console.warn('BackgroundMusic: failed to load tracks', e);
@@ -53,153 +65,95 @@ export class BackgroundMusicService {
       this.audio.loop = false;
       this.audio.volume = this.volume;
       this.audio.preload = 'auto';
-      // Hint to allow inline playback on mobile
       try {
         (this.audio as any).playsInline = true;
         this.audio.setAttribute('playsinline', 'true');
-      } catch (e) {}
+      } catch {}
       this.audio.addEventListener('ended', () => {
-        setTimeout(() => this.tryPlayRandom(), 200);
+        this.loadRandomTrack();
+        this.playAudio();
+      });
+      this.audio.addEventListener('error', () => {
+        console.warn('BackgroundMusic: audio error');
+        this.isPlaying$.next(false);
       });
     }
   }
 
-  private tryPlayRandom() {
-    if (!this.tracks.length) return;
-    this.createAudioIfNeeded();
-    const track = this.tracks[Math.floor(Math.random() * this.tracks.length)];
-    if (!this.audio) return;
-    this.currentTrack$.next(track);
-    // encodeURI so that special characters dont break everything
-    this.audio.src = '/assets/music/' + encodeURIComponent(track);
-
-    // First try normal playback (may be blocked by autoplay policies)
-    const attemptPlay = async (muted = false) => {
-      try {
-        this.audio!.muted = muted;
-        this.isMuted$.next(muted);
-        this.audio!.volume = this.volume;
-        await this.audio!.play();
-        this.isPlaying$.next(true);
-        this.requiresInteraction$.next(false);
-        return true;
-      } catch (err) {
-        return false;
-      }
-    };
-
-    (async () => {
-      const ok = await attemptPlay(false);
-      if (ok) return;
-      // Try muted autoplay as a fallback (most browsers allow this)
-      const mutedOk = await attemptPlay(true);
-      if (!mutedOk) {
-        console.warn('BackgroundMusic: autoplay prevented (even muted)');
-        this.isPlaying$.next(false);
-        this.requiresInteraction$.next(true);
-        return;
-      }
-
-      // If muted autoplay succeeded, attempt to unmute repeatedly and also listen for user interaction
-      this.startUnmuteAttempts();
-    })();
-  }
-
-  userToggle() {
+  private loadRandomTrack() {
+    if (!this.trackKeys.length) return;
     this.createAudioIfNeeded();
     if (!this.audio) return;
-
-    if (this.isPlaying$.value) {
-      this.audio.pause();
-      this.isPlaying$.next(false);
-      this.stopUnmuteAttempts();
-    } else {
-      // If currently muted because autoplay fallback used muted autoplay, try unmuting first
-      if (this.isMuted$.value) {
-        this.audio.muted = false;
-        this.isMuted$.next(false);
-      }
-
-      const playPromise = this.audio.play();
-      playPromise
-        ?.then(() => {
-          this.isPlaying$.next(true);
-          this.requiresInteraction$.next(false);
-        })
-        .catch((err) => {
-          // If play failed, try to play muted as a fallback and mark that user interaction is required to enable sound
-          console.warn('BackgroundMusic: play failed', err);
-          this.isPlaying$.next(false);
-          this.requiresInteraction$.next(true);
-        });
-    }
+    const key = this.trackKeys[Math.floor(Math.random() * this.trackKeys.length)];
+    const track = this.tracks[key];
+    this.currentTrack$.next(track.title + ' — ' + track.artist);
+    this.audio.src = '/assets/music/' + encodeURIComponent(track.file);
   }
 
-  private startUnmuteAttempts() {
-    this.stopUnmuteAttempts();
-    this.unmuteAttempts = 0;
-
-    const attempt = async () => {
-      if (!this.audio) return;
-      try {
-        this.audio.muted = false;
-        await this.audio.play();
-        this.isMuted$.next(false);
-        this.requiresInteraction$.next(false);
-        this.stopUnmuteAttempts();
-      } catch (err) {
-        this.unmuteAttempts++;
-        this.isMuted$.next(true);
-        this.requiresInteraction$.next(true);
-        if (this.unmuteAttempts >= this.maxUnmuteAttempts) {
-          this.stopUnmuteAttempts();
-        }
-      }
-    };
-
-    // Try once after a short delay
-    setTimeout(() => attempt(), 1200);
-    // Then schedule repeated attempts
-    this.unmuteIntervalId = setInterval(() => attempt(), 1500);
-
-    // Add user interaction listeners to attempt immediate unmute
-    document.addEventListener('pointerdown', this.interactionHandlerBound as any, { once: true });
-    document.addEventListener('keydown', this.interactionHandlerBound as any, { once: true });
-    window.addEventListener('focus', this.interactionHandlerBound as any, { once: true });
-    document.addEventListener('visibilitychange', this.interactionHandlerBound as any, { once: true });
-  }
-
-  private stopUnmuteAttempts() {
-    if (this.unmuteIntervalId) {
-      clearInterval(this.unmuteIntervalId);
-      this.unmuteIntervalId = null;
-    }
-    // remove listeners (non-once in some browsers)
-    try {
-      document.removeEventListener('pointerdown', this.interactionHandlerBound as any);
-      document.removeEventListener('keydown', this.interactionHandlerBound as any);
-      window.removeEventListener('focus', this.interactionHandlerBound as any);
-      document.removeEventListener('visibilitychange', this.interactionHandlerBound as any);
-    } catch (e) {}
-  }
-
-  private async tryUnmuteFromInteraction() {
+  private async tryAutoplay() {
     if (!this.audio) return;
+
+    // Wait for audio to be ready
+    await new Promise<void>((resolve) => {
+      if (!this.audio) return resolve();
+      if (this.audio.readyState >= 2) return resolve();
+      const onCanPlay = () => {
+        this.audio?.removeEventListener('canplay', onCanPlay);
+        resolve();
+      };
+      this.audio.addEventListener('canplay', onCanPlay);
+      // Timeout after 5s so we don't wait forever
+      setTimeout(() => {
+        this.audio?.removeEventListener('canplay', onCanPlay);
+        resolve();
+      }, 5000);
+    });
+
+    await this.playAudio();
+  }
+
+  private async playAudio(): Promise<boolean> {
+    if (!this.audio) return false;
     try {
+      this.audio.volume = this.volume;
       this.audio.muted = false;
       await this.audio.play();
+      this.isPlaying$.next(true);
       this.isMuted$.next(false);
       this.requiresInteraction$.next(false);
-      this.stopUnmuteAttempts();
-    } catch (e) {
-      // still blocked; keep attempts running
+      return true;
+    } catch {
+      // Autoplay blocked — set to muted, don't play
+      this.muted = true;
+      this.isMuted$.next(true);
+      this.isPlaying$.next(false);
+      this.requiresInteraction$.next(true);
+      try {
+        localStorage.setItem(this.MUTE_KEY, 'true');
+      } catch {}
+      return false;
     }
   }
 
   toggleMute() {
     if (!this.audio) return;
-    this.audio.muted = !this.audio.muted;
-    this.isMuted$.next(this.audio.muted);
+
+    if (this.isPlaying$.value) {
+      // Currently playing → pause and mute
+      this.audio.pause();
+      this.muted = true;
+      this.isMuted$.next(true);
+      this.isPlaying$.next(false);
+    } else {
+      // Not playing → try to play unmuted
+      this.muted = false;
+      this.isMuted$.next(false);
+      this.playAudio();
+    }
+
+    try {
+      localStorage.setItem(this.MUTE_KEY, String(this.muted));
+    } catch {}
   }
 
   setVolume(v: number) {
@@ -207,7 +161,7 @@ export class BackgroundMusicService {
     this.volume$.next(this.volume);
     try {
       localStorage.setItem(this.STORAGE_KEY, String(this.volume));
-    } catch (e) {}
+    } catch {}
     if (this.audio) this.audio.volume = this.volume;
   }
 }
