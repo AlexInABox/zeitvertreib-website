@@ -324,7 +324,6 @@ export class ZvcCommand extends BaseCommand {
 
       // Get display names
       const recipientUser = interaction.data?.resolved?.users?.[recipientUserId];
-      const recipientDisplayName = recipientUser?.global_name || recipientUser?.username || 'Unknown';
 
       const successEmbed = new EmbedBuilder()
         .setTitle('✅ Überweisung erfolgreich')
@@ -340,17 +339,12 @@ export class ZvcCommand extends BaseCommand {
             inline: true,
           },
           {
-            name: 'Empfänger',
-            value: `<@${recipientUserId}>`,
-            inline: false,
-          },
-          {
-            name: 'Dein neuer Kontostand',
+            name: `<@${senderDiscordId}> (Absender)`,
             value: `**${newSenderBalance.toLocaleString('de-DE')}** ZVC`,
             inline: true,
           },
           {
-            name: 'Sein neuer Kontostand',
+            name: `<@${recipientUserId}> (Empfänger)`,
             value: `**${newRecipientBalance.toLocaleString('de-DE')}** ZVC`,
             inline: true,
           },
