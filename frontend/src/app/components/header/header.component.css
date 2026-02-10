@@ -230,28 +230,6 @@
     color 0.15s;
 }
 
-.music-svg-btn:hover {
-  background: rgba(168, 85, 247, 0.08);
-}
-.music-svg-btn-outlined {
-  border: 1px solid var(--p-button-outlined-primary-border-color);
-  border-radius: 12px;
-}
-
-/* slider styles */
-.music-popover ::ng-deep .p-slider.p-slider-vertical {
-  width: 24px;
-  height: 80px;
-  padding: 0;
-  background: transparent !important;
-  border-radius: 0;
-}
-
-.music-popover ::ng-deep .p-slider .p-slider-track {
-  background: transparent !important;
-  width: 8px;
-}
-
 .music-popover ::ng-deep .p-slider .p-slider-range {
   background: var(--primary-color, #a855f7);
   width: 8px !important;

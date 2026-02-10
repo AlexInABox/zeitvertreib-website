@@ -30,6 +30,7 @@ import { ThemeService } from '../../services/theme.service';
   styleUrl: './header.component.css',
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  private boundCheckPortrait: () => void = () => { };
   isPortrait = false;
   scrollPaused = false;
   items: MenuItem[] | undefined;
@@ -66,7 +67,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
-  ) {}
+  ) { }
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -74,7 +75,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.checkPortrait();
-    window.addEventListener('resize', this.checkPortrait.bind(this));
+    this.boundCheckPortrait = this.checkPortrait.bind(this);
+    window.addEventListener('resize', this.boundCheckPortrait);
     this.updateMenuItems();
 
     // Subscribe to user authentication status
@@ -161,7 +163,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    window.removeEventListener('resize', this.checkPortrait.bind(this));
+    if (this.boundCheckPortrait) {
+      window.removeEventListener('resize', this.boundCheckPortrait);
+    }
     this.authSubscription?.unsubscribe();
     this.authSubscription = undefined;
     this.userDataSubscription?.unsubscribe();

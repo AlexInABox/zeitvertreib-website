@@ -19,6 +19,7 @@ export class BackgroundMusicService {
   private unmuteAttempts = 0;
   private readonly maxUnmuteAttempts = 6;
   private unmuteIntervalId: any = null;
+  private unmuteTimeoutId: any;
   private readonly interactionHandlerBound = this.tryUnmuteFromInteraction.bind(this);
 
   async init() {
@@ -33,7 +34,7 @@ export class BackgroundMusicService {
             this.volume$.next(this.volume);
           }
         }
-      } catch {}
+      } catch { }
 
       // Restore mute state from localStorage, default to true (muted) for new users
       let savedMuted = true;
@@ -42,7 +43,7 @@ export class BackgroundMusicService {
         if (mutedVal !== null) {
           savedMuted = mutedVal === 'true';
         }
-      } catch {}
+      } catch { }
       this.muted = savedMuted;
       this.isMuted$.next(savedMuted);
 
@@ -70,7 +71,7 @@ export class BackgroundMusicService {
       try {
         (this.audio as any).playsInline = true;
         this.audio.setAttribute('playsinline', 'true');
-      } catch {}
+      } catch { }
       this.audio.addEventListener('ended', () => {
         setTimeout(() => this.tryPlayRandom(), 200);
       });
@@ -168,7 +169,6 @@ export class BackgroundMusicService {
     const attempt = async () => {
       if (!this.audio) return;
       try {
-        this.audio.muted = false;
         await this.audio.play();
         this.isMuted$.next(false);
         this.requiresInteraction$.next(false);
@@ -184,7 +184,7 @@ export class BackgroundMusicService {
     };
 
     // First attempt after a short delay (allows time for browser to settle)
-    setTimeout(() => attempt(), 800);
+    this.unmuteTimeoutId = setTimeout(() => attempt(), 800);
     // Then continue with longer intervals for retries
     this.unmuteIntervalId = setInterval(() => attempt(), 2000);
 
@@ -199,12 +199,16 @@ export class BackgroundMusicService {
       clearInterval(this.unmuteIntervalId);
       this.unmuteIntervalId = null;
     }
+    if (this.unmuteTimeoutId) {
+      clearTimeout(this.unmuteTimeoutId);
+      this.unmuteTimeoutId = null;
+    }
     try {
       document.removeEventListener('pointerdown', this.interactionHandlerBound as any);
       document.removeEventListener('keydown', this.interactionHandlerBound as any);
       window.removeEventListener('focus', this.interactionHandlerBound as any);
       document.removeEventListener('visibilitychange', this.interactionHandlerBound as any);
-    } catch {}
+    } catch { }
   }
 
   private async tryUnmuteFromInteraction() {
@@ -235,7 +239,7 @@ export class BackgroundMusicService {
     this.isMuted$.next(this.audio.muted);
     try {
       localStorage.setItem(this.MUTE_KEY, String(this.audio.muted));
-    } catch {}
+    } catch { }
     if (this.audio.muted) {
       this.stopUnmuteAttempts();
       // Clear any timers/flags related to unmute attempts
@@ -248,7 +252,7 @@ export class BackgroundMusicService {
     this.volume$.next(this.volume);
     try {
       localStorage.setItem(this.STORAGE_KEY, String(this.volume));
-    } catch {}
+    } catch { }
     if (this.audio) this.audio.volume = this.volume;
   }
 }
