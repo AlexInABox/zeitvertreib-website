@@ -205,31 +205,11 @@
 
   <div pAnimateOnScroll enterClass="animate-enter fade-in-10 animate-duration-1000" class="masonry-gallery">
     <div *ngFor="let item of images; let i = index" class="masonry-item" (click)="openLightbox(i)">
-      <video
-        *ngIf="item.endsWith('.mp4')"
-        [src]="'/assets/showcase/tiny/' + item"
-        autoplay
-        loop
-        muted
-        playsinline
-        class="masonry-media"
-      ></video>
       <img
-        *ngIf="!item.endsWith('.mp4')"
         [attr.data-src]="'/assets/showcase/tiny/' + item"
         [alt]="'Screenshot ' + item"
         class="masonry-media"
         style="display: block"
-      />
-
-      <!-- GIF fallback for browsers without video codecs -->
-      <img
-        *ngIf="item.endsWith('.mp4')"
-        [src]="'/assets/showcase/tiny/' + item.replace('.mp4', '.gif')"
-        [alt]="'Screenshot ' + item"
-        class="masonry-media"
-        style="display: block"
-        (error)="$event.target.style.display = 'none'"
       />
     </div>
   </div>
