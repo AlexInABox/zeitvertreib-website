@@ -159,10 +159,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
+    this.authSubscription = undefined;
     this.userDataSubscription?.unsubscribe();
+    this.userDataSubscription = undefined;
     this.bgmInteractionSubscription?.unsubscribe();
+    this.bgmInteractionSubscription = undefined;
     this.bgmVolumeSubscription?.unsubscribe();
+    this.bgmVolumeSubscription = undefined;
     this.bgmMutedSubscription?.unsubscribe();
+    this.bgmMutedSubscription = undefined;
+    this.bgmPlayingSubscription?.unsubscribe();
+    this.bgmPlayingSubscription = undefined;
+    this.bgmTrackSubscription?.unsubscribe();
+    this.bgmTrackSubscription = undefined;
     if (this.boundPointerUp) {
       window.removeEventListener('pointerup', this.boundPointerUp);
       this.boundPointerUp = null;

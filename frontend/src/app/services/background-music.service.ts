@@ -90,14 +90,14 @@ export class BackgroundMusicService {
     this.currentTrack$.next(track.title + ' — ' + track.artist);
     this.audio.src = '/assets/music/' + encodeURIComponent(track.file);
 
-    // Helper: attempt to play with given muted state
+    // Helper: attempt to play with given muted state (do not leak workaround to observable)
     const attemptPlay = async (muted = false): Promise<boolean> => {
       try {
         if (!this.audio) return false;
         this.audio.muted = muted;
-        this.isMuted$.next(muted);
         this.audio.volume = this.volume;
         await this.audio.play();
+        this.isMuted$.next(this.muted); // Only reflect user preference after play
         this.isPlaying$.next(true);
         this.requiresInteraction$.next(false);
         return true;
@@ -109,15 +109,17 @@ export class BackgroundMusicService {
     // Strategy: Try unmuted first, but immediately fallback to muted
     // Most modern browsers block unmuted autoplay, but allow muted autoplay
     (async () => {
-      const unmuteOk = await attemptPlay(false);
-      if (unmuteOk) return;
-      const mutedOk = await attemptPlay(true);
-      if (!mutedOk) {
+      const initialAttemptMuted = this.muted;
+      const firstOk = await attemptPlay(initialAttemptMuted);
+      if (firstOk) return;
+      const secondOk = await attemptPlay(!initialAttemptMuted);
+      if (!secondOk) {
         console.warn('BackgroundMusic: autoplay prevented (even muted)');
         this.isPlaying$.next(false);
         this.requiresInteraction$.next(true);
         return;
       }
+      // Only try to auto-unmute if user preference is NOT muted
       if (!this.muted) {
         this.startUnmuteAttempts();
       }
