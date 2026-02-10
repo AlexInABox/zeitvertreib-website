@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+// ...existing imports...
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { Menubar } from 'primeng/menubar';
 import { ButtonModule } from 'primeng/button';
@@ -36,24 +37,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isFakerankAdmin: boolean = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
-  private bgmPlayingSubscription?: Subscription;
   private bgmInteractionSubscription?: Subscription;
   private bgmVolumeSubscription?: Subscription;
   private bgmMutedSubscription?: Subscription;
-  private bgmTrackSubscription?: Subscription;
-  isPlaying: boolean = false;
   requiresInteraction: boolean = false;
   volume: number = 0.25;
   isMuted: boolean = false;
-  currentTrack: string | null = null;
   showVolumePanel: boolean = false;
   ctaShown: boolean = false;
+  private draggingVolume: boolean = false;
+  private boundPointerUp: any = null;
 
   constructor(
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
-  ) {}
+  ) { }
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -76,11 +75,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
 
     // Background music state
-    this.bgmPlayingSubscription = this.bgm.isPlaying$.subscribe((v) => (this.isPlaying = v));
     this.bgmInteractionSubscription = this.bgm.requiresInteraction$.subscribe((v) => (this.requiresInteraction = v));
     this.bgmVolumeSubscription = this.bgm.volume$.subscribe((v) => (this.volume = v));
     this.bgmMutedSubscription = this.bgm.isMuted$.subscribe((v) => (this.isMuted = v));
-    this.bgmTrackSubscription = this.bgm.currentTrack$.subscribe((t) => (this.currentTrack = t));
 
     // CTA shown flag (do not show CTA if user dismissed earlier)
     try {
@@ -148,11 +145,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
     this.userDataSubscription?.unsubscribe();
-    this.bgmPlayingSubscription?.unsubscribe();
     this.bgmInteractionSubscription?.unsubscribe();
     this.bgmVolumeSubscription?.unsubscribe();
     this.bgmMutedSubscription?.unsubscribe();
-    this.bgmTrackSubscription?.unsubscribe();
+    if (this.boundPointerUp) {
+      window.removeEventListener('pointerup', this.boundPointerUp);
+      this.boundPointerUp = null;
+    }
   }
 
   login() {
@@ -164,10 +163,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     location.reload();
   }
 
-  toggleMusic() {
-    this.bgm.userToggle();
-  }
-
   toggleMute() {
     this.bgm.toggleMute();
   }
@@ -176,37 +171,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.bgm.setVolume(v);
   }
 
-  toggleVolumePanel(e: Event) {
-    e.stopPropagation();
-
-    // If interaction to play needed, treat main button as a Play button
-    if (this.requiresInteraction && !this.isPlaying) {
-      this.enableSoundCTA();
-      return;
+  onSliderPointerDown(e: PointerEvent) {
+    this.draggingVolume = true;
+    this.showVolumePanel = true;
+    if (!this.boundPointerUp) {
+      this.boundPointerUp = (ev: PointerEvent) => this.onDocumentPointerUp(ev);
+      window.addEventListener('pointerup', this.boundPointerUp);
     }
-
-    this.showVolumePanel = !this.showVolumePanel;
   }
 
-  enableSoundCTA() {
-    try {
-      this.bgm.userToggle();
-      localStorage.setItem('zeit_bgm_cta_shown', '1');
-      this.ctaShown = true;
+  private onDocumentPointerUp(e: PointerEvent) {
+    this.draggingVolume = false;
+    if (this.boundPointerUp) {
+      window.removeEventListener('pointerup', this.boundPointerUp);
+      this.boundPointerUp = null;
+    }
+    this.showVolumePanel = false;
+  }
+
+  onPopoverMouseLeave() {
+    if (!this.draggingVolume) {
       this.showVolumePanel = false;
-    } catch (e) {}
+    }
   }
 
-  dismissSoundCTA() {
-    try {
-      localStorage.setItem('zeit_bgm_cta_shown', '1');
-      this.ctaShown = true;
-      this.showVolumePanel = false;
-    } catch (e) {}
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(_e: Event) {
-    if (this.showVolumePanel) this.showVolumePanel = false;
-  }
+  // Removed pointer position check for simplicity
 }

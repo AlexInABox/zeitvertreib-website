@@ -47,7 +47,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     '20.jpg',
     '21.jpg',
     '22.jpg',
-    '23.mp4',
+    '23.gif',
     '24.jpg',
   ];
   players: Player[] = [];
@@ -67,7 +67,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private themeService: ThemeService,
-  ) {}
+  ) { }
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];

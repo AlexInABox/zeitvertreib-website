@@ -1,5 +1,12 @@
-/* Global styles & vanilla utility layer (Tailwind removed) */
 @import 'primeicons/primeicons.css';
+@media (orientation: portrait) {
+  .floatingchat-container-wrap,
+  .floatingchat-container-wrap-mo498,
+  [class*='floatingchat-container'] {
+    display: none !important;
+  }
+}
+/* Global styles & vanilla utility layer (Tailwind removed) */
 
 /* Ko-fi widget positioning and fixes */
 .floatingchat-container-wrap,
