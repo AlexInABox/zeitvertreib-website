@@ -214,7 +214,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
         });
       },
-      { rootMargin: '200px' }, //Alex: adjust based on how soon images should load
+      { rootMargin: '000px' }, //Alex: adjust based on how soon images should load
     );
 
     imageElements.forEach((img) => {
