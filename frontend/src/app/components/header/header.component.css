@@ -48,10 +48,6 @@
   .music-popover {
     display: none !important;
   }
-  #kofi-support-widget,
-  .kofi-support-widget {
-    display: none !important;
-  }
 }
 #logo-svg {
   width: 30px;
