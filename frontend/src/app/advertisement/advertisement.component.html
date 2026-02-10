@@ -1,0 +1,216 @@
+<div class="ad-page">
+  <div class="ad-shell">
+    <!-- Header Card -->
+    <div class="ad-card">
+      <div class="ad-card-header">
+        <div class="header-grid">
+          <div class="header-copy">
+            <h1 class="title">📣 Werbeplätze</h1>
+            <p class="subtitle">Buche Werbeflächen auf unserer Seite — klar sichtbar, fair bepreist.</p>
+          </div>
+          <div class="header-meta">
+            <div class="meta-item">
+              <span class="meta-label">Preis</span>
+              <span class="meta-value">50 ZVC / Tag</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Plätze</span>
+              <span class="meta-value">5 verfügbar</span>
+            </div>
+            <div class="meta-item" *ngIf="isLoggedIn">
+              <span class="meta-label">Guthaben</span>
+              <span class="meta-value">{{ userBalance }} ZVC</span>
+            </div>
+            <div class="meta-item" *ngIf="!isLoggedIn">
+              <span class="meta-label">Status</span>
+              <span class="meta-value">Bitte einloggen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Card -->
+    <div class="ad-card">
+      <div class="ad-card-header">
+        <div class="calendar-nav">
+          <button class="nav-btn" (click)="prevMonth()">‹</button>
+          <h2 class="month-label">{{ monthLabel }}</h2>
+          <button class="nav-btn" (click)="nextMonth()">›</button>
+        </div>
+        <div class="calendar-tools">
+          <button class="filter-toggle" (click)="toggleFilterPanel()">
+            {{ isFilterOpen ? 'Filter verbergen' : 'Filter anzeigen' }}
+          </button>
+          <span class="filter-summary">{{ selectedFilters.size }} / {{ allLocations.length }} Plätze</span>
+        </div>
+      </div>
+      <div class="ad-card-body">
+        <div class="filter-panel" *ngIf="isFilterOpen">
+          <div class="filter-row compact">
+            <button
+              class="filter-chip"
+              *ngFor="let loc of allLocations"
+              [class.active]="isFilterActive(loc)"
+              (click)="toggleFilter(loc)"
+            >
+              {{ locationLabels[loc] }}
+            </button>
+            <button class="filter-chip filter-all" (click)="selectAllFilters()">Alle</button>
+          </div>
+        </div>
+        <!-- Loading -->
+        <div class="loading-state" *ngIf="isLoading">
+          <div class="spinner"></div>
+          <p class="muted">Lade Kalender…</p>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar" *ngIf="!isLoading">
+          <!-- Weekday headers -->
+          <div class="weekday-header" *ngFor="let wd of weekDays">{{ wd }}</div>
+
+          <!-- Day cells -->
+          <div
+            class="day-cell"
+            *ngFor="let day of calendarDays"
+            [class.other-month]="!day.isCurrentMonth"
+            [class.today]="day.isToday"
+            [class.booking-mode]="isBookingMode && day.isCurrentMonth"
+            [class.selected]="isDateSelected(day)"
+            [class]="getFillClass(day)"
+            (click)="toggleDateSelection(day)"
+          >
+            <span class="day-number">{{ day.dayNumber }}</span>
+            <div class="fill-bar">
+              <div class="fill-bar-inner" [style.width.%]="getFillPercent(day)"></div>
+            </div>
+            <span class="slot-label" *ngIf="day.isCurrentMonth"> {{ day.freeSlots }}/{{ day.totalSlots }} frei </span>
+            <!-- Owned status indicators -->
+            <div class="owned-indicators" *ngIf="day.ownedStatuses.size > 0">
+              <span
+                class="status-dot"
+                *ngFor="let entry of day.ownedStatuses | keyvalue"
+                [class.status-pending]="entry.value === 'PENDING'"
+                [class.status-approved]="entry.value === 'APPROVED'"
+                [class.status-rejected]="entry.value === 'REJECTED'"
+                [title]="locationLabels[entry.key] + ': ' + entry.value"
+              >
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend" *ngIf="!isLoading">
+          <div class="legend-item"><span class="legend-dot dot-empty"></span> Frei</div>
+          <div class="legend-item"><span class="legend-dot dot-low"></span> Teilweise belegt</div>
+          <div class="legend-item"><span class="legend-dot dot-high"></span> Größtenteils belegt</div>
+          <div class="legend-item"><span class="legend-dot dot-full"></span> Voll belegt</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Panel -->
+    <div class="ad-card booking-card" *ngIf="!isBookingMode && !isLoading">
+      <div class="ad-card-body center-content">
+        <button class="action-btn primary-btn" (click)="enterBookingMode()">🎯 Werbung buchen</button>
+        <p class="muted" *ngIf="!isLoggedIn">Du musst angemeldet sein, um zu buchen.</p>
+      </div>
+    </div>
+
+    <!-- Booking Form Card -->
+    <div class="ad-card booking-form-card" *ngIf="isBookingMode">
+      <div class="ad-card-header">
+        <h2 class="section-title">🛒 Buchung erstellen</h2>
+      </div>
+      <div class="ad-card-body">
+        <!-- Step 1: Location -->
+        <div class="booking-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3 class="step-title">Platz wählen</h3>
+            <div class="location-picker">
+              <button
+                class="loc-btn"
+                *ngFor="let loc of allLocations"
+                [class.active]="selectedLocation === loc"
+                (click)="selectedLocation = loc; selectedDates.clear()"
+              >
+                {{ locationLabels[loc] }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Dates -->
+        <div class="booking-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3 class="step-title">Tage im Kalender anklicken</h3>
+            <p class="muted" *ngIf="selectedDates.size === 0">Klicke oben im Kalender auf die gewünschten Tage.</p>
+            <div class="selected-dates" *ngIf="selectedDates.size > 0">
+              <span class="date-chip" *ngFor="let d of selectedDates">
+                {{ formatDateDisplay(d) }}
+                <button class="chip-remove" (click)="selectedDates.delete(d)">×</button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Image -->
+        <div class="booking-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3 class="step-title">Werbebild hochladen</h3>
+            <div class="upload-zone" (click)="fileInput.click()">
+              <input #fileInput type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+              <div class="upload-placeholder" *ngIf="!bookingImage">
+                <span class="upload-icon">🖼️</span>
+                <span>Klicke zum Hochladen (max. 5 MB)</span>
+              </div>
+              <div class="upload-preview" *ngIf="bookingImage">
+                <img [src]="bookingImage" alt="Vorschau" />
+                <span class="preview-name">{{ bookingImageName }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="booking-summary" *ngIf="selectedDates.size > 0">
+          <div class="summary-row">
+            <span
+              >{{ selectedDates.size }} Tag{{ selectedDates.size > 1 ? 'e' : '' }} ×
+              {{ locationLabels[selectedLocation] }}</span
+            >
+            <span class="cost">{{ totalCost }} ZVC</span>
+          </div>
+          <div class="summary-row balance-row" [class.insufficient]="!canAfford">
+            <span>Dein Guthaben</span>
+            <span>{{ userBalance }} ZVC</span>
+          </div>
+          <div class="summary-row remaining-row" *ngIf="canAfford">
+            <span>Danach verbleibend</span>
+            <span>{{ userBalance - totalCost }} ZVC</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="booking-actions">
+          <button class="action-btn cancel-btn" (click)="cancelBooking()">Abbrechen</button>
+          <button
+            class="action-btn primary-btn"
+            [disabled]="selectedDates.size === 0 || !bookingImage || isSubmitting || !canAfford"
+            (click)="submitBooking()"
+          >
+            <span *ngIf="!isSubmitting">✅ Buchen ({{ totalCost }} ZVC)</span>
+            <span *ngIf="isSubmitting">⏳ Wird gesendet…</span>
+          </button>
+        </div>
+
+        <p class="muted security-note">🔒 Deine Werbung wird vor der Veröffentlichung von unserem Team geprüft.</p>
+      </div>
+    </div>
+  </div>
+</div>

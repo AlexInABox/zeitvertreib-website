@@ -18,6 +18,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'werbung',
+    loadComponent: () => import('./advertisement/advertisement.component').then((m) => m.AdvertisementComponent),
+  },
+  {
     path: 'cases',
     loadComponent: () => import('./case-management/case-management.component').then((m) => m.CaseManagementComponent),
   },
