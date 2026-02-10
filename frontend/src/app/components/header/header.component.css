@@ -106,14 +106,7 @@
   min-height: 42px !important;
   border-radius: 12px !important;
 }
-/* Match volume button height */
-.music-svg-btn {
-  height: 42px !important;
-  width: 42px !important;
-  min-width: 42px !important;
-  min-height: 42px !important;
-  border-radius: 12px !important;
-}
+
 /* Add padding so the slider handle can't reach the very top/bottom */
 .music-popover-inner {
   padding: 8px 0;
