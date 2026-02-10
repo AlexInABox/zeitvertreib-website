@@ -55,7 +55,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   copySongTitle(): void {
     if (this.currentTrack) {
-      navigator.clipboard.writeText(this.currentTrack);
+      navigator.clipboard.writeText(this.currentTrack).catch(() => {
+        // Clipboard write failed — silently ignore or provide fallback
+      });
     }
   }
 
