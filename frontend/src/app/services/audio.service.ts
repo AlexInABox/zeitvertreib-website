@@ -42,8 +42,7 @@ export class AudioService {
     try {
       entry.element.currentTime = 0;
       await entry.element.play();
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   stop(name: string): void {

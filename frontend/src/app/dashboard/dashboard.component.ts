@@ -496,7 +496,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     document.addEventListener('click', this.documentClickHandler);
 
     // Register roulette sounds (roulette.mp3)
-    this.audioService.register('roulette.spin', '/assets/sounds/roulette-spin.mp3', { loop: true, volume: this.audioVolume });
+    this.audioService.register('roulette.spin', '/assets/sounds/roulette-spin.mp3', {
+      loop: true,
+      volume: this.audioVolume,
+    });
     this.audioService.register('roulette.win', '/assets/sounds/roulette-win.mp3', { volume: this.audioVolume });
     this.audioService.register('roulette.lose', '/assets/sounds/roulette-lose.mp3', { volume: this.audioVolume });
 
@@ -1198,7 +1201,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Unregister lucky wheel sounds
     this.audioService.unregister('luckywheel.spin');
-
   }
 
   // ===== FAKERANK METHODS =====
@@ -2278,17 +2280,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           // Animate to the result (don't reveal win/loss yet)
           void this.audioService.play('slot.spin');
 
-          this.spin(
-            mySymbols,
-            slot1,
-            slot2,
-            slot3,
-            () => {
-              this.audioService.stop('slot.spin');
-              // Log win to the win log after animation completes
-              this.addToWinLog(winType, payout, [slot1, slot2, slot3], netChange);
-            },
-          );
+          this.spin(mySymbols, slot1, slot2, slot3, () => {
+            this.audioService.stop('slot.spin');
+            // Log win to the win log after animation completes
+            this.addToWinLog(winType, payout, [slot1, slot2, slot3], netChange);
+          });
 
           // Wait for animation to complete before revealing result
           setTimeout(() => {
@@ -3314,7 +3310,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.rouletteLoading = true;
     this.rouletteError = '';
     this.rouletteMessage = '';
-    this.showRouletteResult = false; 
+    this.showRouletteResult = false;
 
     const requestBody: RoulettePostRequest = {
       bet,
