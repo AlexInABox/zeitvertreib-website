@@ -1201,6 +1201,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Unregister lucky wheel sounds
     this.audioService.unregister('luckywheel.spin');
+
+    // Unregister slot sounds
+    this.audioService.unregister('slot.spin');
   }
 
   // ===== FAKERANK METHODS =====
