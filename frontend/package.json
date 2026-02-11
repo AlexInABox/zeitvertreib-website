@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "start": "ng serve --configuration local",
-    "build": "rm -rf node_modules/ && npm i && ng build --configuration production",
-    "build:dev": "rm -rf node_modules/ && npm i && ng build --configuration dev",
-    "build:local": "rm -rf node_modules/ && npm i && ng build --configuration local"
+    "build": "rimraf node_modules/ && npm i && ng build --configuration production",
+    "build:dev": "rimraf node_modules/ && npm i && ng build --configuration dev",
+    "build:local": "rimraf node_modules/ && npm i && ng build --configuration local"
   },
   "private": true,
   "dependencies": {
