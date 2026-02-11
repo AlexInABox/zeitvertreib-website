@@ -505,9 +505,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Lucky Wheel spin sound (wheel.mp3)
     this.audioService.register('luckywheel.spin', '/assets/sounds/wheel.mp3', { loop: true, volume: this.audioVolume });
+    this.audioService.register('luckywheel.win', '/assets/sounds/win.mp3', { volume: this.audioVolume });
+    this.audioService.register('luckywheel.lose', '/assets/sounds/lose.mp3', { volume: this.audioVolume });
 
     // Slot machine spin sound (slot.mp3)
     this.audioService.register('slot.spin', '/assets/sounds/slot.mp3', { loop: true, volume: this.audioVolume });
+    this.audioService.register('slot.win', '/assets/sounds/win.mp3', { volume: this.audioVolume });
+    this.audioService.register('slot.lose', '/assets/sounds/lose.mp3', { volume: this.audioVolume });
   }
 
   ngOnInit(): void {
@@ -2285,6 +2289,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           this.spin(mySymbols, slot1, slot2, slot3, () => {
             this.audioService.stop('slot.spin');
+
+            // Play win/lose jingle
+            if (payout > 0) {
+              void this.audioService.play('slot.win');
+            } else {
+              void this.audioService.play('slot.lose');
+            }
+
             // Log win to the win log after animation completes
             this.addToWinLog(winType, payout, [slot1, slot2, slot3], netChange);
           });
@@ -2535,6 +2547,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           // Wait for spin animation to complete
           setTimeout(() => {
             this.audioService.stop('luckywheel.spin');
+
+            // Play win/lose jingle
+            if (response.payout > 0) {
+              void this.audioService.play('luckywheel.win');
+            } else {
+              void this.audioService.play('luckywheel.lose');
+            }
+
             this.isWheelSpinning = false;
             this.luckyWheelLoading = false;
             this.showWheelResult = true;
