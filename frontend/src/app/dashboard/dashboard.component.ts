@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
@@ -376,6 +377,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private rouletteResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private rouletteClearResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+  // volume for sound effects
+  audioVolume = 0.5; // 0.0 - 1.0
+
   // Pre-computed SVG wheel segments
   rouletteWheelSegments: Array<{ path: string; color: string }> = this.generateRouletteWheelSegments();
 
@@ -464,6 +468,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   };
 
   private http = inject(HttpClient);
+  private audioService = inject(AudioService);
 
   constructor(public authService: AuthService) {
     this.generateRandomColors();
@@ -489,6 +494,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     };
     document.addEventListener('click', this.documentClickHandler);
+
+    // Register roulette sounds (roulette.mp3)
+    this.audioService.register('roulette.spin', '/assets/sounds/roulette-spin.mp3', { loop: true, volume: this.audioVolume });
+    this.audioService.register('roulette.win', '/assets/sounds/roulette-win.mp3', { volume: this.audioVolume });
+    this.audioService.register('roulette.lose', '/assets/sounds/roulette-lose.mp3', { volume: this.audioVolume });
+
+    // Lucky Wheel spin sound (wheel.mp3)
+    this.audioService.register('luckywheel.spin', '/assets/sounds/wheel.mp3', { loop: true, volume: this.audioVolume });
+
+    // Slot machine spin sound (slot.mp3)
+    this.audioService.register('slot.spin', '/assets/sounds/slot.mp3', { loop: true, volume: this.audioVolume });
   }
 
   ngOnInit(): void {
@@ -1174,6 +1190,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       clearTimeout(this.rouletteClearResultTimeoutId);
       this.rouletteClearResultTimeoutId = null;
     }
+
+    // Unregister roulette sounds
+    this.audioService.unregister('roulette.spin');
+    this.audioService.unregister('roulette.win');
+    this.audioService.unregister('roulette.lose');
+
+    // Unregister lucky wheel sounds
+    this.audioService.unregister('luckywheel.spin');
+
   }
 
   // ===== FAKERANK METHODS =====
@@ -2251,10 +2276,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
           ];
 
           // Animate to the result (don't reveal win/loss yet)
-          this.spin(mySymbols, slot1, slot2, slot3, () => {
-            // Log win to the win log after animation completes
-            this.addToWinLog(winType, payout, [slot1, slot2, slot3], netChange);
-          });
+          void this.audioService.play('slot.spin');
+
+          this.spin(
+            mySymbols,
+            slot1,
+            slot2,
+            slot3,
+            () => {
+              this.audioService.stop('slot.spin');
+              // Log win to the win log after animation completes
+              this.addToWinLog(winType, payout, [slot1, slot2, slot3], netChange);
+            },
+          );
 
           // Wait for animation to complete before revealing result
           setTimeout(() => {
@@ -2269,6 +2303,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }, 10000); // Animation duration (10 seconds)
         },
         error: (error) => {
+          // Stop slot sound on error
+          this.audioService.stop('slot.spin');
+
           this.isSpinning = false;
           this.slotMachineLoading = false;
           // Refund the cost on error
@@ -2429,6 +2466,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.isWheelSpinning = true;
+    void this.audioService.play('luckywheel.spin');
     this.luckyWheelLoading = true;
     this.luckyWheelError = '';
     this.luckyWheelMessage = '';
@@ -2497,6 +2535,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           // Wait for spin animation to complete
           setTimeout(() => {
+            this.audioService.stop('luckywheel.spin');
             this.isWheelSpinning = false;
             this.luckyWheelLoading = false;
             this.showWheelResult = true;
@@ -2519,6 +2558,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }, 4000); // 4 second spin animation
         },
         error: (error) => {
+          this.audioService.stop('luckywheel.spin');
           this.isWheelSpinning = false;
           this.luckyWheelLoading = false;
 
@@ -3270,10 +3310,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.isRouletteSpinning = true;
+    void this.audioService.play('roulette.spin');
     this.rouletteLoading = true;
     this.rouletteError = '';
     this.rouletteMessage = '';
-    this.showRouletteResult = false;
+    this.showRouletteResult = false; 
 
     const requestBody: RoulettePostRequest = {
       bet,
@@ -3310,6 +3351,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const remainingDelay = Math.max(0, 5000 - elapsedTime);
 
         this.rouletteResultTimeoutId = setTimeout(() => {
+          this.audioService.stop('roulette.spin');
+          void this.audioService.play(response.payout > 0 ? 'roulette.win' : 'roulette.lose');
+
           this.isRouletteSpinning = false;
           this.showRouletteResult = true;
 
@@ -3336,6 +3380,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }, remainingDelay);
       },
       error: (error) => {
+        this.audioService.stop('roulette.spin');
+
         this.isRouletteSpinning = false;
         this.rouletteLoading = false;
 
