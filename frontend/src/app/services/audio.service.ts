@@ -29,8 +29,14 @@ export class AudioService {
     const el = new Audio(url);
     el.loop = !!options.loop;
     el.volume = options.volume ?? this.defaultVolume;
-    if (options.preload !== false) {
-      void el.load();
+    // Use preload attribute for better browser behavior
+    el.preload = options.preload === false ? 'none' : 'auto';
+    try {
+      if (el.preload !== 'none') {
+        void el.load();
+      }
+    } catch (e) {
+      // ignore load errors
     }
 
     this.audios.set(name, { element: el, options });
@@ -42,7 +48,11 @@ export class AudioService {
     try {
       entry.element.currentTime = 0;
       await entry.element.play();
-    } catch (e) {}
+    } catch (e) {
+      // Helpful warning for debugging playback failures (autoplay policies, missing file, etc.)
+      // eslint-disable-next-line no-console
+      console.warn(`AudioService: failed to play "${name}"`, e);
+    }
   }
 
   stop(name: string): void {
