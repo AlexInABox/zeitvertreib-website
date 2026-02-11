@@ -500,8 +500,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       loop: true,
       volume: this.audioVolume,
     });
-    this.audioService.register('roulette.win', '/assets/sounds/roulette-win.mp3', { volume: this.audioVolume });
-    this.audioService.register('roulette.lose', '/assets/sounds/roulette-lose.mp3', { volume: this.audioVolume });
+    this.audioService.register('roulette.win', '/assets/sounds/win.mp3', { volume: this.audioVolume });
+    this.audioService.register('roulette.lose', '/assets/sounds/lose.mp3', { volume: this.audioVolume });
 
     // Lucky Wheel spin sound (wheel.mp3)
     this.audioService.register('luckywheel.spin', '/assets/sounds/wheel.mp3', { loop: true, volume: this.audioVolume });
