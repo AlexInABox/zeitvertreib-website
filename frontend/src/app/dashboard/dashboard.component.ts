@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
@@ -193,6 +193,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showRulesText = false;
   sprayRules: SprayRulesGetResponse | null = null;
   sprayRulesLoading = false;
+  chiikawaActive = false;
+  private chiikawaOriginalSrc: Map<HTMLImageElement, string> = new Map();
 
   // Fakerank-related properties
   currentFakerankId: number | null = null;
@@ -386,6 +388,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Pre-computed SVG wheel segments
   rouletteWheelSegments: Array<{ path: string; color: string }> = this.generateRouletteWheelSegments();
 
+  // Replace images with usagi.webp while chiikawa is active
+  applyChiikawaImages(): void {
+    if (this.chiikawaActive) return;
+    this.chiikawaOriginalSrc.clear();
+
+    const root = (this.elementRef && (this.elementRef.nativeElement as HTMLElement)) || document;
+
+    try {
+      const container = (root.querySelector && root.querySelector('.dashboard-container')) || (root as HTMLElement);
+      (container as HTMLElement)?.classList?.add('chiikawa');
+    } catch (e) {
+      // ignore
+    }
+
+    const imgs = root.querySelectorAll('img');
+
+    imgs.forEach((img) => {
+      try {
+        const el = img as HTMLImageElement;
+        if (!el.src || el.src.includes('/assets/usagi.webp')) return;
+
+        // Save original and replace
+        this.chiikawaOriginalSrc.set(el, el.src);
+        el.src = '/assets/usagi.webp';
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    this.chiikawaActive = true;
+  }
+
+  resetChiikawaImages(): void {
+    if (!this.chiikawaActive) return;
+
+    // Remove image replacements
+    this.chiikawaOriginalSrc.forEach((src, el) => {
+      try {
+        el.src = src;
+      } catch (e) {
+        // ignore
+      }
+    });
+    this.chiikawaOriginalSrc.clear();
+
+    try {
+      const root = (this.elementRef && (this.elementRef.nativeElement as HTMLElement)) || document;
+      const container = (root.querySelector && root.querySelector('.dashboard-container')) || (root as HTMLElement);
+      (container as HTMLElement)?.classList?.remove('chiikawa');
+    } catch (e) {
+      // ignore
+    }
+
+    this.chiikawaActive = false;
+  }
+
   private generateRouletteWheelSegments(): Array<{ path: string; color: string }> {
     const segments: Array<{ path: string; color: string }> = [];
     const total = 37;
@@ -472,6 +530,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private http = inject(HttpClient);
   private audioService = inject(AudioService);
+  private elementRef = inject(ElementRef);
 
   constructor(public authService: AuthService) {
     this.generateRandomColors();
@@ -515,6 +574,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.audioService.register('slot.spin', '/assets/sounds/slot.mp3', { loop: true, volume: this.audioVolume });
     this.audioService.register('slot.win', '/assets/sounds/win.mp3', { volume: this.audioVolume });
     this.audioService.register('slot.lose', '/assets/sounds/lose.mp3', { volume: this.audioVolume });
+
+    // Chiikawa (uwa.mp3)
+    this.audioService.register('uwa', '/assets/sounds/uwa.mp3', { volume: this.audioVolume });
   }
 
   ngOnInit(): void {
@@ -590,6 +652,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Safe method to get avatar with fallback
   getAvatarUrl(avatarUrl?: string): string {
+    // If chiikawa is active, always show usagi
+    if (this.chiikawaActive) return '/assets/usagi.webp';
     return avatarUrl || '/assets/logos/logo_full_color_1to1.png';
   }
 
@@ -1186,6 +1250,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Reset any chiikawa image replacements
+    this.resetChiikawaImages();
+
     // Clean up event listener
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
@@ -1211,6 +1278,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Unregister slot sounds
     this.audioService.unregister('slot.spin');
+    this.audioService.unregister('uwa');
   }
 
   // ===== FAKERANK METHODS =====
@@ -1424,6 +1492,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   redeemCodeAction(): void {
     if (!this.redeemCode || this.redeemCode.trim() === '') {
+      return;
+    }
+
+    const trimmed = this.redeemCode.trim();
+    if (trimmed.toLowerCase() === 'chiikawa') {
+      void this.audioService.play('uwa');
+      this.redeemCode = '';
+      this.applyChiikawaImages();
       return;
     }
 

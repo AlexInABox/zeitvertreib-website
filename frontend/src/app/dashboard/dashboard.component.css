@@ -25,6 +25,24 @@
   pointer-events: none;
 }
 
+/* Chiikawa background*/
+.dashboard-container.chiikawa::before {
+  background: url('/assets/chiikawa.png') center/cover no-repeat;
+  opacity: 1;
+  filter: saturate(1.05) contrast(1.02) brightness(0.98);
+}
+
+.dashboard-container.chiikawa .stats-card,
+.dashboard-container.chiikawa .cardWrapper,
+.dashboard-container.chiikawa .grid-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dashboard-container.chiikawa .stats-card::before {
+  display: none;
+}
+
 /* Grid Layout Styles */
 .dashboard-grid {
   display: grid;
