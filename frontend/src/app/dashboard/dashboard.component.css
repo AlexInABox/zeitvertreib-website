@@ -4,8 +4,15 @@
   position: relative;
   overflow: hidden;
   padding: 0.5rem;
+  transform-origin: center center;
 }
 
+.dashboard-container.screen-spin-active {
+  transition: transform 5s cubic-bezier(.25,.1,.25,1);
+}
+.dashboard-container.screen-resetting {
+  transition: transform 800ms cubic-bezier(.22,.9,.32,1);
+}
 .dashboard-container::before {
   content: '';
   position: absolute;

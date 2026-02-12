@@ -126,7 +126,7 @@ interface DiscordInviteResponse {
   selector: 'app-dashboard',
   imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule, DiscordStatsComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css',
+  styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   // Roulette wheel constants - European roulette sequence (clockwise from 0)
@@ -374,6 +374,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   rouletteWon = false;
   roulettePayout: number | null = null;
   rouletteRotation = 0;
+  screenRotation = 0;
+  screenSpinActive = false;
+  screenResetting = false;
   private rouletteResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private rouletteClearResultTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -3346,9 +3349,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.userStatistics.experience = (this.userStatistics.experience || 0) - bet;
 
-    // Record when the spin started to ensure result shows only after full animation
-    const spinStartTime = Date.now();
-
     this.authService.authenticatedPost<RoulettePostResponse>(`${environment.apiUrl}/roulette`, requestBody).subscribe({
       next: (response) => {
         this.rouletteSpinResult = response.spinResult;
@@ -3363,11 +3363,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const targetAngle = position * sectionSize + sectionSize / 2;
         // Rotate backwards (negative) to bring the target to the pointer, add full spins
         const fullSpins = 5 * 360; // 5 full rotations
-        this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + fullSpins + (360 - targetAngle);
+        const rotationDelta = fullSpins + (360 - targetAngle);
+        
+        // Final wheel rotation
+        this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + rotationDelta;
 
-        // Ensure result is not shown until 5 seconds have elapsed since spin started
-        const elapsedTime = Date.now() - spinStartTime;
-        const remainingDelay = Math.max(0, 5000 - elapsedTime);
+        //rotate screen feature
+        if (bet === 67) {
+          this.screenSpinActive = true;
+          this.screenResetting = false;
+          const screenFullSpins = 5 * 360; 
+          this.screenRotation = this.screenRotation - (this.screenRotation % 360) + screenFullSpins;
+        }
 
         this.rouletteResultTimeoutId = setTimeout(() => {
           this.audioService.stop('roulette.spin');
@@ -3378,6 +3385,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           if (response.payout > 0) {
             this.userStatistics.experience = (this.userStatistics.experience || 0) + response.payout;
+          }
+
+          if (bet === 67) {
+            this.screenSpinActive = false;
+            this.screenResetting = false;
+            this.screenRotation = 0;
           }
 
           this.addRouletteSpinToLog(
@@ -3396,7 +3409,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.rouletteSpinColor = null;
             this.rouletteLoading = false;
           }, 3000);
-        }, remainingDelay);
+        }, 5000);
       },
       error: (error) => {
         this.audioService.stop('roulette.spin');
@@ -3405,6 +3418,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.rouletteLoading = false;
 
         this.userStatistics.experience = (this.userStatistics.experience || 0) + bet;
+
+        this.screenSpinActive = false;
+        this.screenResetting = false;
+        this.screenRotation = 0;
 
         this.rouletteError = error?.error?.error || 'Fehler beim Drehen des Roulettes';
 
