@@ -3364,7 +3364,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Rotate backwards (negative) to bring the target to the pointer, add full spins
         const fullSpins = 5 * 360; // 5 full rotations
         const rotationDelta = fullSpins + (360 - targetAngle);
-        
+
         // Final wheel rotation
         this.rouletteRotation = this.rouletteRotation - (this.rouletteRotation % 360) + rotationDelta;
 
@@ -3372,7 +3372,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (bet === 67) {
           this.screenSpinActive = true;
           this.screenResetting = false;
-          const screenFullSpins = 5 * 360; 
+          const screenFullSpins = 5 * 360;
           this.screenRotation = this.screenRotation - (this.screenRotation % 360) + screenFullSpins;
         }
 
