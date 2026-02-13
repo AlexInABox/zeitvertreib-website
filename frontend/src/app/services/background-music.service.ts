@@ -5,7 +5,10 @@ import { ThemeService } from './theme.service';
 @Injectable({ providedIn: 'root' })
 export class BackgroundMusicService {
   private tracks: Record<string, { title: string; artist: string; file: string }> = {};
-  private tracksByTheme: { light?: Record<string, { title: string; artist: string; file: string }>; dark?: Record<string, { title: string; artist: string; file: string }> } = {};
+  private tracksByTheme: {
+    light?: Record<string, { title: string; artist: string; file: string }>;
+    dark?: Record<string, { title: string; artist: string; file: string }>;
+  } = {};
   private trackKeys: string[] = [];
   private audio: HTMLAudioElement | null = null;
   public isPlaying$ = new BehaviorSubject<boolean>(false);
@@ -61,7 +64,7 @@ export class BackgroundMusicService {
           runInInjectionContext(this.injector, () => {
             effect(() => {
               const isDark = this.themeService.isDark();
-              void isDark; 
+              void isDark;
               this.applyThemeTracks();
             });
           });
