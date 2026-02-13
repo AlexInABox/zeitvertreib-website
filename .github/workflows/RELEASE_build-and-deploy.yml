@@ -355,10 +355,11 @@ jobs:
             exit 1
           fi
 
-          # Publish file contents as step output (multi-line)
-          echo "body<<EOF" >> $GITHUB_OUTPUT
+          # Publish file contents as step output (multi-line) using a unique delimiter
+          DELIM="DELIM_${GITHUB_RUN_ID}_$(date +%s)_$RANDOM"
+          echo "body<<$DELIM" >> $GITHUB_OUTPUT
           cat "$FILE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$DELIM" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
