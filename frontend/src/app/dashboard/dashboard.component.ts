@@ -1267,7 +1267,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       clearTimeout(this.rouletteClearResultTimeoutId);
       this.rouletteClearResultTimeoutId = null;
     }
-
     // Unregister roulette sounds
     this.audioService.unregister('roulette.spin');
     this.audioService.unregister('roulette.win');
@@ -1275,9 +1274,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Unregister lucky wheel sounds
     this.audioService.unregister('luckywheel.spin');
+    this.audioService.unregister('luckywheel.win');
+    this.audioService.unregister('luckywheel.lose');
 
     // Unregister slot sounds
     this.audioService.unregister('slot.spin');
+    this.audioService.unregister('slot.win');
+    this.audioService.unregister('slot.lose');
     this.audioService.unregister('uwa');
   }
 
