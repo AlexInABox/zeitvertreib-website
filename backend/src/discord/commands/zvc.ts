@@ -169,11 +169,6 @@ export class ZvcCommand extends BaseCommand {
             value: `**${balance.toLocaleString('de-DE')}** ZVC`,
             inline: false,
           },
-          {
-            name: 'Steam ID',
-            value: steamId || 'N/A',
-            inline: false,
-          },
         )
         .setColor(0x3447ff)
         .setTimestamp();
@@ -221,7 +216,7 @@ export class ZvcCommand extends BaseCommand {
 
       // Get sender's Steam ID
       const senderResult = await db
-        .select({ id: playerdata.id, experience: playerdata.experience })
+        .select({ id: playerdata.id, experience: playerdata.experience, username: playerdata.username })
         .from(playerdata)
         .where(eq(playerdata.discordId, senderDiscordId))
         .limit(1);
@@ -244,7 +239,7 @@ export class ZvcCommand extends BaseCommand {
 
       // Get recipient's info
       const recipientResult = await db
-        .select({ id: playerdata.id, experience: playerdata.experience })
+        .select({ id: playerdata.id, experience: playerdata.experience, username: playerdata.username })
         .from(playerdata)
         .where(eq(playerdata.discordId, recipientUserId))
         .limit(1);
@@ -265,6 +260,7 @@ export class ZvcCommand extends BaseCommand {
       const recipientData = recipientResult[0]!;
       const recipientSteamId = recipientData.id;
       const recipientBalance = recipientData.experience || 0;
+      const recipientUsername = recipientData.username || 'Unknown';
 
       if (!recipientSteamId) {
         await helpers.reply('❌ Ein Fehler ist aufgetreten beim Abrufen der Empfängerdaten!');
@@ -316,11 +312,7 @@ export class ZvcCommand extends BaseCommand {
           .where(eq(playerdata.id, recipientSteamId)),
       ]);
 
-      const newSenderBalance = senderBalance - totalCost;
       const newRecipientBalance = recipientBalance + amount;
-
-      // Get display names
-      const recipientUser = interaction.data?.resolved?.users?.[recipientUserId];
 
       const successEmbed = new EmbedBuilder()
         .setTitle('✅ Überweisung erfolgreich')
@@ -336,12 +328,7 @@ export class ZvcCommand extends BaseCommand {
             inline: true,
           },
           {
-            name: `<@${senderDiscordId}> (Absender)`,
-            value: `**${newSenderBalance.toLocaleString('de-DE')}** ZVC`,
-            inline: true,
-          },
-          {
-            name: `<@${recipientUserId}> (Empfänger)`,
+            name: `${recipientUsername} (Empfänger)`,
             value: `**${newRecipientBalance.toLocaleString('de-DE')}** ZVC`,
             inline: true,
           },
