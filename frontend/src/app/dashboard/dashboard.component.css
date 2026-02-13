@@ -4,8 +4,15 @@
   position: relative;
   overflow: hidden;
   padding: 0.5rem;
+  transform-origin: center center;
 }
 
+.dashboard-container.screen-spin-active {
+  transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.dashboard-container.screen-resetting {
+  transition: transform 800ms cubic-bezier(0.22, 0.9, 0.32, 1);
+}
 .dashboard-container::before {
   content: '';
   position: absolute;
@@ -16,6 +23,24 @@
   background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
   opacity: 0.3;
   pointer-events: none;
+}
+
+/* Chiikawa background*/
+.dashboard-container.chiikawa::before {
+  background: url('/assets/chiikawa.png') center/cover no-repeat;
+  opacity: 1;
+  filter: saturate(1.05) contrast(1.02) brightness(0.98);
+}
+
+.dashboard-container.chiikawa .stats-card,
+.dashboard-container.chiikawa .cardWrapper,
+.dashboard-container.chiikawa .grid-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dashboard-container.chiikawa .stats-card::before {
+  display: none;
 }
 
 /* Grid Layout Styles */
@@ -3665,18 +3690,39 @@
   backdrop-filter: blur(10px);
 }
 
-/* Dark mode overrides: Hide outer layers for the games section as requested */
-.my-app-dark .zvcoins-container > .stats-card,
-.my-app-dark .zvcoins-container > .stats-card:hover,
-.my-app-dark .zvcoins-games-card,
-.my-app-dark .zvcoins-games-card:hover {
-  background: transparent !important;
-  border: none !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
+/* Dark mode overrides: Improve visibility and reduce transparency for cards */
+:host-context(.my-app-dark) .stats-card,
+:host-context(.my-app-dark) .player-card,
+:host-context(.my-app-dark) .zvcoins-combined-card,
+:host-context(.my-app-dark) .zvcoins-games-card,
+:host-context(.my-app-dark) .roulette-widget,
+:host-context(.my-app-dark) .slot-machine-widget,
+:host-context(.my-app-dark) .lucky-wheel-widget,
+:host-context(.my-app-dark) .chicken-cross-widget {
+  background: rgba(13, 13, 15, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8) !important;
 }
 
-.my-app-dark .zvcoins-container > .stats-card::before {
+:host-context(.my-app-dark) .stats-card:hover,
+:host-context(.my-app-dark) .player-card:hover,
+:host-context(.my-app-dark) .zvcoins-combined-card:hover,
+:host-context(.my-app-dark) .zvcoins-games-card:hover,
+:host-context(.my-app-dark) .roulette-widget:hover,
+:host-context(.my-app-dark) .slot-machine-widget:hover,
+:host-context(.my-app-dark) .lucky-wheel-widget:hover,
+:host-context(.my-app-dark) .chicken-cross-widget:hover {
+  background: rgba(22, 22, 26, 0.99) !important;
+}
+
+/* Inner elements and widgets should also be solid */
+:host-context(.my-app-dark) .stat-item {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:host-context(.my-app-dark) .zvcoins-container > .stats-card::before {
   display: none !important;
 }
 

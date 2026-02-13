@@ -368,7 +368,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
     }
 
     const nextMultiplier = getMultiplierForStep(game.seed, nextStep);
-    const newPayout = Math.floor(game.initialWager * nextMultiplier);
+    const newPayout = Math.floor(game.currentPayout * nextMultiplier);
 
     await db
       .update(chickenCrossGames)

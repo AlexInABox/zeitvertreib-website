@@ -341,12 +341,32 @@ jobs:
           find artifacts -name "*.dll" -exec cp {} release-assets/ \;
           ls -lah release-assets/
 
-      - name: Create Draft Release
+      - name: Read changelog file
+        id: changelog
+        run: |
+          FILE="changelogs/${{ steps.version.outputs.build_number }}.md"
+          if [ ! -f "$FILE" ]; then
+            echo "❌ Changelog file not found: $FILE"
+            exit 1
+          fi
+
+          if [[ ! -s "$FILE" ]]; then
+            echo "❌ Changelog file is empty: $FILE"
+            exit 1
+          fi
+
+          # Publish file contents as step output (multi-line) using a unique delimiter
+          DELIM="DELIM_${GITHUB_RUN_ID}_$(date +%s)_$RANDOM"
+          echo "body<<$DELIM" >> $GITHUB_OUTPUT
+          cat "$FILE" >> $GITHUB_OUTPUT
+          echo "$DELIM" >> $GITHUB_OUTPUT
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: Build ${{ steps.version.outputs.build_number }}
-          draft: true
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
           files: release-assets/*.dll
           make_latest: true
-          generate_release_notes: true
