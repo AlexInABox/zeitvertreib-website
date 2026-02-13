@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, effect } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ThemeService } from '../services/theme.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
 import type {
   SprayGetResponseItem,
@@ -391,6 +392,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Replace images with usagi.webp while chiikawa is active
   applyChiikawaImages(): void {
     if (this.chiikawaActive) return;
+
+    // Automatically switch to light mode for better Chiikawa visibility
+    this.themeService.setDarkMode(false);
+
     this.chiikawaOriginalSrc.clear();
 
     const root = (this.elementRef && (this.elementRef.nativeElement as HTMLElement)) || document;
@@ -531,10 +536,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private audioService = inject(AudioService);
   private elementRef = inject(ElementRef);
+  private themeService = inject(ThemeService);
 
   constructor(public authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
+
+    // Disable chiikawa mode when switching back to dark mode
+    effect(() => {
+      if (this.themeService.isDark() && this.chiikawaActive) {
+        this.resetChiikawaImages();
+      }
+    });
+
     // Moved loadSprays() to ngOnInit to fix race condition with isDonator
     this.loadFakerank();
     this.loadRedeemables();

@@ -14,12 +14,15 @@ export class ThemeService {
   }
 
   toggleDarkMode() {
-    const newVal = !this.isDarkSignal();
-    this.isDarkSignal.set(newVal);
-    this.applyTheme(newVal);
+    this.setDarkMode(!this.isDarkSignal());
+  }
+
+  setDarkMode(isDark: boolean) {
+    this.isDarkSignal.set(isDark);
+    this.applyTheme(isDark);
     try {
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('theme', newVal ? 'dark' : 'light');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
       }
     } catch {
       // Ignore storage errors to avoid breaking theme toggling
