@@ -36,7 +36,7 @@ jobs:
         env:
           NEXT_VERSION: ${{ steps.latest_tag.outputs.next_version }}
         run: |
-          CHANGELOG_FILE="changelog/${NEXT_VERSION}.md"
+          CHANGELOG_FILE="changelogs/${NEXT_VERSION}.md"
           
           if [[ ! -f "$CHANGELOG_FILE" ]]; then
             echo "❌ Changelog file not found: $CHANGELOG_FILE"

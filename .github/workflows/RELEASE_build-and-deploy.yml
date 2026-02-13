@@ -344,7 +344,7 @@ jobs:
       - name: Read changelog file
         id: changelog
         run: |
-          FILE="changelog/${{ steps.version.outputs.build_number }}.md"
+          FILE="changelogs/${{ steps.version.outputs.build_number }}.md"
           if [ ! -f "$FILE" ]; then
             echo "❌ Changelog file not found: $FILE"
             exit 1
