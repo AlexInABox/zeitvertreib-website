@@ -163,13 +163,11 @@ export class ZvcCommand extends BaseCommand {
       const embed = new EmbedBuilder()
         .setTitle('💰 ZVC Kontostand')
         .setDescription(`${displayName}`)
-        .addFields(
-          {
-            name: 'Kontostand',
-            value: `**${balance.toLocaleString('de-DE')}** ZVC`,
-            inline: false,
-          },
-        )
+        .addFields({
+          name: 'Kontostand',
+          value: `**${balance.toLocaleString('de-DE')}** ZVC`,
+          inline: false,
+        })
         .setColor(0x3447ff)
         .setTimestamp();
 
