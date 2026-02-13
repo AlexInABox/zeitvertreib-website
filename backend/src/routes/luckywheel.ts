@@ -9,6 +9,11 @@ import { playerdata } from '../db/schema.js';
 const MIN_BET = 1;
 const MAX_BET = 5000;
 
+// Users with reduced luck - will always get worst outcomes
+const REDUCED_LUCK_USERS = [
+  '76561199786214256@steam',
+];
+
 // Payout multipliers and their weights
 const LUCKYWHEEL_TABLE = [
   { multiplier: 0, weight: 1 },
@@ -173,19 +178,32 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    // Weighted random selection using crypto.getRandomValues
-    const totalWeight = LUCKYWHEEL_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
+    // Check if user has reduced luck
+    const hasReducedLuck = REDUCED_LUCK_USERS.includes(playerId);
 
-    const randomBuffer = new Uint32Array(1);
-    crypto.getRandomValues(randomBuffer);
-    let random = (randomBuffer[0]! / 0xffffffff) * totalWeight;
+    if (hasReducedLuck) {
+      console.log(`REDUCED LUCK: Forcing 0x multiplier for ${playerId}`);
+    }
 
     let selectedEntry = LUCKYWHEEL_TABLE[0]!;
-    for (const entry of LUCKYWHEEL_TABLE) {
-      random -= entry.weight;
-      if (random <= 0) {
-        selectedEntry = entry;
-        break;
+
+    if (hasReducedLuck) {
+      // Force worst outcome for reduced luck users
+      selectedEntry = LUCKYWHEEL_TABLE[0]!; // 0x multiplier
+    } else {
+      // Weighted random selection using crypto.getRandomValues
+      const totalWeight = LUCKYWHEEL_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
+
+      const randomBuffer = new Uint32Array(1);
+      crypto.getRandomValues(randomBuffer);
+      let random = (randomBuffer[0]! / 0xffffffff) * totalWeight;
+
+      for (const entry of LUCKYWHEEL_TABLE) {
+        random -= entry.weight;
+        if (random <= 0) {
+          selectedEntry = entry;
+          break;
+        }
       }
     }
 

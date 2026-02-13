@@ -16,6 +16,11 @@ import {
 const MIN_BET = 10;
 const MAX_BET = 5000;
 
+// Users with reduced luck - will always lose on first move
+const REDUCED_LUCK_USERS = [
+  '76561199786214256@steam',
+];
+
 function seededRandom(seed: number, step: number): number {
   const combined = seed * 10000 + step;
   let x = Math.sin(combined) * 10000;
@@ -36,7 +41,12 @@ function getSurvivalChance(multiplier: number): number {
   return Math.min(1.0, 0.95 / multiplier);
 }
 
-function doesSurvive(seed: number, step: number): boolean {
+function doesSurvive(seed: number, step: number, playerId?: string): boolean {
+  if (playerId && REDUCED_LUCK_USERS.includes(playerId)) {
+    console.log(`REDUCED LUCK: Forcing loss for ${playerId} in chicken cross at step ${step}`);
+    return false;
+  }
+
   const multiplier = getMultiplierForStep(seed, step);
   const survivalChance = getSurvivalChance(multiplier);
   const randomValue = crypto.getRandomValues(new Uint32Array(1));
@@ -350,7 +360,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
 
   if (intent === 'MOVE') {
     const nextStep = game.step + 1;
-    const survived = doesSurvive(game.seed, nextStep);
+    const survived = doesSurvive(game.seed, nextStep, game.userid);
 
     if (!survived) {
       await db
