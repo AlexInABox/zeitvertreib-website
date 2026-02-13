@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, effect, Injector, runInInjectionContext } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { ThemeService } from './theme.service';
 
 @Injectable({ providedIn: 'root' })
 export class BackgroundMusicService {
   private tracks: Record<string, { title: string; artist: string; file: string }> = {};
+  private tracksByTheme: { light?: Record<string, { title: string; artist: string; file: string }>; dark?: Record<string, { title: string; artist: string; file: string }> } = {};
   private trackKeys: string[] = [];
   private audio: HTMLAudioElement | null = null;
   public isPlaying$ = new BehaviorSubject<boolean>(false);
@@ -14,7 +16,9 @@ export class BackgroundMusicService {
   public isMuted$ = new BehaviorSubject<boolean>(true);
   public currentTrack$ = new BehaviorSubject<string | null>(null);
   private readonly STORAGE_KEY = 'zeit_bgm_volume';
-  private readonly MUTE_KEY = 'zeit_bgm_muted';
+  private readonly MUTE_KEY = 'zeit_bgm_muted_v2';
+  private themeService = inject(ThemeService);
+  private injector = inject(Injector);
 
   async init() {
     try {
@@ -30,8 +34,7 @@ export class BackgroundMusicService {
         }
       } catch {}
 
-      // Restore mute state, default to true (muted) for new users
-      let savedMuted = true;
+      let savedMuted = false;
       try {
         const mutedVal = localStorage.getItem(this.MUTE_KEY);
         if (mutedVal !== null) {
@@ -44,10 +47,29 @@ export class BackgroundMusicService {
       const res = await fetch('/assets/music/tracks.json', { cache: 'no-cache' });
       if (!res.ok) return;
       const data = await res.json();
+
       if (data.tracks && typeof data.tracks === 'object') {
-        this.tracks = data.tracks;
-        this.trackKeys = Object.keys(data.tracks);
-        this.loadRandomTrack();
+        if (data.tracks.light || data.tracks.dark) {
+          this.tracksByTheme.light = data.tracks.light || {};
+          this.tracksByTheme.dark = data.tracks.dark || {};
+
+          // apply current theme immediately
+          this.applyThemeTracks();
+          this.loadRandomTrack();
+
+          // react to future theme changes using runInInjectionContext
+          runInInjectionContext(this.injector, () => {
+            effect(() => {
+              const isDark = this.themeService.isDark();
+              void isDark; 
+              this.applyThemeTracks();
+            });
+          });
+        } else {
+          this.tracks = data.tracks;
+          this.trackKeys = Object.keys(data.tracks);
+          this.loadRandomTrack();
+        }
 
         // Only autoplay if user previously had music unmuted
         if (!this.muted) {
@@ -56,6 +78,26 @@ export class BackgroundMusicService {
       }
     } catch (e) {
       console.warn('BackgroundMusic: failed to load tracks', e);
+    }
+  }
+
+  private applyThemeTracks() {
+    const themeKey = this.themeService.isDark() ? 'dark' : 'light';
+    const source = (this.tracksByTheme as any)[themeKey] || {};
+    this.tracks = source;
+    this.trackKeys = Object.keys(source);
+
+    // If a track is playing, switch to a new track from the active pool
+    if (this.audio && this.isPlaying$.value) {
+      try {
+        this.audio.pause();
+      } catch {}
+      this.loadRandomTrack();
+      if (!this.muted) {
+        void this.tryAutoplay();
+      }
+    } else {
+      this.loadRandomTrack();
     }
   }
 
@@ -128,9 +170,6 @@ export class BackgroundMusicService {
       this.isMuted$.next(true);
       this.isPlaying$.next(false);
       this.requiresInteraction$.next(true);
-      try {
-        localStorage.setItem(this.MUTE_KEY, 'true');
-      } catch {}
       return false;
     }
   }

@@ -1,19 +1,28 @@
 {
   "tracks": {
-    "drifting": {
-      "title": "Drifting",
-      "artist": "qwertyqwerty",
-      "file": "Drifting [oVcdM2-3PXg].mp3"
+    "light": {
+      "drifting": {
+        "title": "Drifting",
+ "artist": "qwertyqwerty",
+        "file": "Drifting [oVcdM2-3PXg].mp3"
+      },
+      "starlight": {
+        "title": "Starlight",
+        "artist": "qwertyqwerty",
+        "file": "Starlight [9j6_7gCtfPw].mp3"
+      }
     },
-    "starlight": {
-      "title": "Starlight",
-      "artist": "qwertyqwerty",
-      "file": "Starlight [9j6_7gCtfPw].mp3"
-    },
-    "dreamscape": {
-      "title": "Dreamscape",
-      "artist": "009 Sound System",
-      "file": "Trance - 009 Sound System Dreamscape (HD) [TKfS5zVfGBc].mp3"
+    "dark": {
+      "laniakea": {
+        "title": "Laniakea",
+        "artist": "The Grey Room / Density & Time",
+        "file": "Laniakea - The Grey Room _ Density & Time.mp3"
+      },
+      "event-horizon": {
+        "title": "Event Horizon",
+        "artist": "The Grey Room / Density & Time",
+        "file": "Event Horizon - The Grey Room _ Density & Time.mp3"
+      }
     }
   }
 }
