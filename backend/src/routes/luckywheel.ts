@@ -10,9 +10,7 @@ const MIN_BET = 1;
 const MAX_BET = 5000;
 
 // Users with reduced luck - will always get worst outcomes
-const REDUCED_LUCK_USERS = [
-  '76561199786214256@steam',
-];
+const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
 
 // Payout multipliers and their weights
 const LUCKYWHEEL_TABLE = [

@@ -9,9 +9,7 @@ import { playerdata } from '../db/schema.js';
 const SLOT_COST = 10;
 
 // Users with reduced luck - will always lose
-const REDUCED_LUCK_USERS = [
-  '76561199786214256@steam',
-];
+const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
 
 const PAYOUT_TABLE = [
   {

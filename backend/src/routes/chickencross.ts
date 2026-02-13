@@ -17,9 +17,7 @@ const MIN_BET = 10;
 const MAX_BET = 5000;
 
 // Users with reduced luck - will always lose on first move
-const REDUCED_LUCK_USERS = [
-  '76561199786214256@steam',
-];
+const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
 
 function seededRandom(seed: number, step: number): number {
   const combined = seed * 10000 + step;
