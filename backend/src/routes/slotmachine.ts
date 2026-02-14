@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, REDUCED_LUCK_USERS } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -7,11 +7,6 @@ import { playerdata } from '../db/schema.js';
 
 // Payout table configuration - shared between endpoints
 const SLOT_COST = 10;
-
-// Users with reduced luck - will always lose
-const REDUCED_LUCK_USERS = [
-  '76561199786214256@steam',
-];
 
 const PAYOUT_TABLE = [
   {

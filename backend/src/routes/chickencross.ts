@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, REDUCED_LUCK_USERS } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
@@ -15,11 +15,6 @@ import {
 
 const MIN_BET = 10;
 const MAX_BET = 5000;
-
-// Users with reduced luck - will always lose on first move
-const REDUCED_LUCK_USERS = [
-  '76561199786214256@steam',
-];
 
 function seededRandom(seed: number, step: number): number {
   const combined = seed * 10000 + step;
