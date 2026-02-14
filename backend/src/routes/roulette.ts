@@ -15,6 +15,10 @@ import {
 
 const MIN_BET = 10;
 const MAX_BET = 500;
+
+// Users with reduced luck - will always lose
+const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
+
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 const BLACK_NUMBERS = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
 
@@ -115,7 +119,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
     );
   }
 
-  const playerId = validation.steamId;
+  const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
   const body: RoulettePostRequest = await request.json();
 
@@ -171,6 +175,13 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       );
     }
 
+    // Check if user has reduced luck
+    const hasReducedLuck = REDUCED_LUCK_USERS.includes(playerId);
+
+    if (hasReducedLuck) {
+      console.log(`REDUCED LUCK: Forcing loss for ${playerId} in roulette (bet: ${body.type})`);
+    }
+
     //"RNG" 0-36
     function biasedSpin(probZero = 0.1): number {
       // 10% bias for 0
@@ -183,7 +194,32 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       const scaled = (r - probZero) / (1 - probZero);
       return 1 + Math.floor(scaled * 36);
     }
-    const spinResult = biasedSpin();
+
+    // Force losing spin for reduced luck users
+    function forceLosingSpin(betType: RouletteBetType, betValue?: number): number {
+      // Force a result that guarantees loss based on bet type
+      switch (betType) {
+        case 'red':
+          return BLACK_NUMBERS[0]!; // Return first black number
+        case 'black':
+          return RED_NUMBERS[0]!; // Return first red number
+        case 'odd':
+          return 2; // Even number
+        case 'even':
+          return 1; // Odd number
+        case '1to18':
+          return 19; // Number in 19-36 range
+        case '19to36':
+          return 1; // Number in 1-18 range
+        case 'number':
+          // Return any number except the bet value
+          return betValue === 1 ? 2 : 1;
+        default:
+          return 0;
+      }
+    }
+
+    const spinResult = hasReducedLuck ? forceLosingSpin(body.type, body.value) : biasedSpin();
 
     //check win
     const betOutcome = checkBetOutcome(body.type, spinResult, body.value);
