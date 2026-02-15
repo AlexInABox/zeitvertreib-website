@@ -3,12 +3,12 @@
   <p class="muted">Manage ZV Coins and luck for all players. Admin access only.</p>
 
   <div class="search-wrapper" *ngIf="!isLoadingPlayers">
-    <input 
-      type="text" 
-      [ngModel]="searchTerm" 
-      (ngModelChange)="onSearchChange($event)" 
-      placeholder="Suche nach Name oder Steam ID..." 
-      class="search-input" 
+    <input
+      type="text"
+      [ngModel]="searchTerm"
+      (ngModelChange)="onSearchChange($event)"
+      placeholder="Suche nach Name oder Steam ID..."
+      class="search-input"
     />
     <i class="pi pi-search search-icon"></i>
   </div>
@@ -109,49 +109,49 @@
         Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ displayedRecordsEnd }} of {{ totalCount }} players
       </div>
       <div class="pagination-controls">
-        <button 
-          pButton 
-          type="button" 
-          icon="pi pi-angle-double-left" 
+        <button
+          pButton
+          type="button"
+          icon="pi pi-angle-double-left"
           class="p-button-text p-button-sm"
           [disabled]="currentPage === 1"
           (click)="goToPage(1)"
           title="First page"
         ></button>
-        <button 
-          pButton 
-          type="button" 
-          icon="pi pi-angle-left" 
+        <button
+          pButton
+          type="button"
+          icon="pi pi-angle-left"
           class="p-button-text p-button-sm"
           [disabled]="currentPage === 1"
           (click)="previousPage()"
           title="Previous page"
         ></button>
-        
-        <button 
+
+        <button
           *ngFor="let page of pageNumbers"
-          pButton 
-          type="button" 
+          pButton
+          type="button"
           [label]="page.toString()"
           class="p-button-sm"
           [class.p-button-outlined]="page !== currentPage"
           [disabled]="page === currentPage"
           (click)="goToPage(page)"
         ></button>
-        
-        <button 
-          pButton 
-          type="button" 
-          icon="pi pi-angle-right" 
+
+        <button
+          pButton
+          type="button"
+          icon="pi pi-angle-right"
           class="p-button-text p-button-sm"
           [disabled]="currentPage === totalPages"
           (click)="nextPage()"
           title="Next page"
         ></button>
-        <button 
-          pButton 
-          type="button" 
-          icon="pi pi-angle-double-right" 
+        <button
+          pButton
+          type="button"
+          icon="pi pi-angle-double-right"
           class="p-button-text p-button-sm"
           [disabled]="currentPage === totalPages"
           (click)="goToPage(totalPages)"

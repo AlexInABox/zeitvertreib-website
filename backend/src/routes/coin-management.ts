@@ -133,15 +133,19 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
 
     const totalPages = Math.ceil(totalCount / validPageSize);
 
-    return createResponse({ 
-      players: playersWithData,
-      pagination: {
-        page: validPage,
-        pageSize: validPageSize,
-        totalCount,
-        totalPages
-      }
-    }, 200, origin);
+    return createResponse(
+      {
+        players: playersWithData,
+        pagination: {
+          page: validPage,
+          pageSize: validPageSize,
+          totalCount,
+          totalPages,
+        },
+      },
+      200,
+      origin,
+    );
   } catch (error) {
     console.error('Error fetching players:', error);
     return createResponse({ error: 'Fehler beim Laden der Spielerliste' }, 500, origin);
