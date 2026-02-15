@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
   constructor(
     private backgroundMusic: BackgroundMusicService,
     private themeService: ThemeService,
-  ) { }
+  ) {}
 
   //feel free to transfer this to a seperate file and then call that, but I tried it and it broke everything and killed my grandma
   private easterDates: Record<number, { month: number; day: number }> = {

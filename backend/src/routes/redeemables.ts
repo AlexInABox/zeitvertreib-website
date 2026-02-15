@@ -31,11 +31,7 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
     // Get code data from database
-    const codeData = await db
-      .select()
-      .from(redemptionCodes)
-      .where(eq(redemptionCodes.code, code))
-      .get();
+    const codeData = await db.select().from(redemptionCodes).where(eq(redemptionCodes.code, code)).get();
 
     if (!codeData) {
       return createResponse({ error: 'Ungültiger Code' }, 404, origin);
@@ -53,20 +49,14 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     const playerId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId}@steam`;
 
     // Get current player data including redeemed codes
-    const playerDataResult = await db
-      .select()
-      .from(playerdata)
-      .where(eq(playerdata.id, playerId))
-      .get();
+    const playerDataResult = await db.select().from(playerdata).where(eq(playerdata.id, playerId)).get();
 
     if (!playerDataResult) {
       return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
     }
 
     // Check if player has already redeemed this code
-    const redeemedCodes = playerDataResult.redeemedCodes
-      ? playerDataResult.redeemedCodes.split(',')
-      : [];
+    const redeemedCodes = playerDataResult.redeemedCodes ? playerDataResult.redeemedCodes.split(',') : [];
     if (redeemedCodes.includes(code)) {
       return createResponse(
         { error: 'Du hast diesen Code bereits eingelöst' },
@@ -80,9 +70,7 @@ export async function handleRedeemCode(request: Request, env: Env): Promise<Resp
     const newBalance = currentBalance + codeData.credits;
 
     // Add code to player's redeemed codes list
-    const updatedRedeemedCodes = redeemedCodes.length > 0
-      ? `${playerDataResult.redeemedCodes},${code}`
-      : code;
+    const updatedRedeemedCodes = redeemedCodes.length > 0 ? `${playerDataResult.redeemedCodes},${code}` : code;
 
     // Update player balance and redeemed codes
     await db

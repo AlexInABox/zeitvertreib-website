@@ -71,7 +71,6 @@ interface DiscordInviteResponse {
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-
   // Discord stats
   discordMemberCount = 0;
   discordOnlineCount = 0;
@@ -153,12 +152,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-      teamColors: [],
-      vipColors: [],
-      donatorColors: [],
-      boosterColors: [],
-      otherColors: [],
-    };
+    teamColors: [],
+    vipColors: [],
+    donatorColors: [],
+    boosterColors: [],
+    otherColors: [],
+  };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
