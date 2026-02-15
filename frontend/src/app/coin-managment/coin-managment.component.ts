@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
@@ -8,6 +8,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 interface CoinUser {
   steamId: string;
@@ -17,6 +19,13 @@ interface CoinUser {
   luck: number; // percent (0 or 50)
 }
 
+interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 @Component({
   selector: 'app-coin-managment',
   standalone: true,
@@ -24,7 +33,7 @@ interface CoinUser {
   templateUrl: './coin-managment.component.html',
   styleUrls: ['./coin-managment.component.css'],
 })
-export class CoinManagmentComponent implements OnInit {
+export class CoinManagmentComponent implements OnInit, OnDestroy {
   users: CoinUser[] = [];
   reducedLuckUsers: Set<string> = new Set();
   editDialogVisible = false;
@@ -50,6 +59,15 @@ export class CoinManagmentComponent implements OnInit {
 
   // search state
   searchTerm: string = '';
+  private searchTermSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
+  debouncedSearchTerm: string = '';
+
+  // pagination state
+  currentPage = 1;
+  pageSize = 50;
+  totalCount = 0;
+  totalPages = 0;
 
   constructor(
     private http: HttpClient,
@@ -59,15 +77,41 @@ export class CoinManagmentComponent implements OnInit {
   ngOnInit() {
     this.loadPlayers();
     this.loadReducedLuckList();
+    
+    // Set up debounced search
+    this.searchSubscription = this.searchTermSubject
+      .pipe(
+        debounceTime(1000),
+        distinctUntilChanged()
+      )
+      .subscribe((term) => {
+        this.debouncedSearchTerm = term;
+      });
   }
 
-  loadPlayers() {
+  ngOnDestroy() {
+    this.searchSubscription?.unsubscribe();
+  }
+
+  onSearchChange(term: string) {
+    this.searchTerm = term;
+    this.searchTermSubject.next(term);
+  }
+
+  loadPlayers(page: number = 1) {
     this.isLoadingPlayers = true;
+    this.currentPage = page;
     const headers = this.getAuthHeaders();
-    this.http.get<{ players: CoinUser[] }>(`${environment.apiUrl}/coin-management/players`, { headers }).subscribe({
+    const url = `${environment.apiUrl}/coin-management/players?page=${page}&pageSize=${this.pageSize}`;
+    
+    this.http.get<{ players: CoinUser[]; pagination: PaginationInfo }>(url, { headers }).subscribe({
       next: (response) => {
         this.users = response.players;
         this.originalUsersOrder = [...response.players]; // store original order
+        this.currentPage = response.pagination.page;
+        this.pageSize = response.pagination.pageSize;
+        this.totalCount = response.pagination.totalCount;
+        this.totalPages = response.pagination.totalPages;
         this.applySorting();
         this.isLoadingPlayers = false;
       },
@@ -111,11 +155,11 @@ export class CoinManagmentComponent implements OnInit {
   }
 
   get filteredUsers(): CoinUser[] {
-    if (!this.searchTerm.trim()) {
+    if (!this.debouncedSearchTerm.trim()) {
       return this.users;
     }
 
-    const search = this.searchTerm.toLowerCase().trim();
+    const search = this.debouncedSearchTerm.toLowerCase().trim();
     return this.users.filter((user) => {
       const matchesName = user.username.toLowerCase().includes(search);
       const matchesSteamId = user.steamId.toLowerCase().includes(search);
@@ -314,6 +358,45 @@ export class CoinManagmentComponent implements OnInit {
           this.isLoading = false;
         },
       });
+  }
+
+  // Pagination methods
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
+    this.loadPlayers(page);
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.loadPlayers(this.currentPage + 1);
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.loadPlayers(this.currentPage - 1);
+    }
+  }
+
+  get pageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
+    
+    // Adjust start if we're near the end
+    if (endPage - startPage < maxPagesToShow - 1) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  get displayedRecordsEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.totalCount);
   }
 
   private getAuthHeaders(): HttpHeaders {
