@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/d1';
-import { playerdata } from '../db/schema.js';
-import { validateSession, createResponse, REDUCED_LUCK_USERS, fetchSteamUserData } from '../utils.js';
-import { desc, eq, sql } from 'drizzle-orm';
+import { playerdata, steamCache, reducedLuckUsers } from '../db/schema.js';
+import { validateSession, createResponse, fetchSteamUserData } from '../utils.js';
+import { desc, eq, sql, inArray } from 'drizzle-orm';
 import typia from 'typia';
 import { proxyFetch } from '../proxy.js';
 
@@ -41,21 +41,46 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
       .from(playerdata)
       .orderBy(desc(playerdata.experience));
 
-    // Fetch Steam user data for each player
-    const playersWithData: CoinManagementPlayer[] = await Promise.all(
-      players.map(async (player) => {
-        const steamUser = await fetchSteamUserData(player.id, env, ctx);
-        const hasReducedLuck = REDUCED_LUCK_USERS.includes(player.id);
-
-        return {
-          steamId: player.id,
-          username: steamUser?.username || 'Unknown Player',
-          avatarUrl: steamUser?.avatarUrl || '/assets/logos/logo_full_color_1to1.png',
-          coins: Number(player.experience) || 0,
-          luck: hasReducedLuck ? 0 : 50,
-        };
-      }),
+    // Batch-load Steam cache data
+    const steamIds = players.map((player) => player.id);
+    const steamCacheData = steamIds.length > 0
+      ? await db
+          .select()
+          .from(steamCache)
+          .where(inArray(steamCache.steamId, steamIds))
+      : [];
+    const steamDataMap = new Map<string, { username: string; avatarUrl: string }>(
+      steamCacheData.map((cache) => [
+        cache.steamId,
+        {
+          username: cache.username,
+          avatarUrl: cache.avatarUrl,
+        },
+      ]),
     );
+
+    // Batch-load reduced luck users from database
+    const reducedLuckData = steamIds.length > 0
+      ? await db
+          .select({ steamId: reducedLuckUsers.steamId })
+          .from(reducedLuckUsers)
+          .where(inArray(reducedLuckUsers.steamId, steamIds))
+      : [];
+    const reducedLuckSet = new Set(reducedLuckData.map((row) => row.steamId));
+
+    // Combine player data with cached Steam data
+    const playersWithData: CoinManagementPlayer[] = players.map((player) => {
+      const steamUser = steamDataMap.get(player.id);
+      const hasReducedLuck = reducedLuckSet.has(player.id);
+
+      return {
+        steamId: player.id,
+        username: steamUser?.username || 'Unknown Player',
+        avatarUrl: steamUser?.avatarUrl || '/assets/logos/logo_full_color_1to1.png',
+        coins: Number(player.experience) || 0,
+        luck: hasReducedLuck ? 0 : 50,
+      };
+    });
 
     return createResponse({ players: playersWithData }, 200, origin);
   } catch (error) {
@@ -157,44 +182,45 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
     return createResponse({ error: 'Zugriff verweigert - Admin-Rechte erforderlich' }, 403, origin);
   }
 
-  const body = await request.json();
+  const bodyRaw = await request.json();
 
-  if (!typia.is<AwardCoinsRequest>(body)) {
+  if (!typia.is<AwardCoinsRequest>(bodyRaw)) {
     return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
   }
+
+  const body = bodyRaw as AwardCoinsRequest;
+  
+  // Normalize Steam ID to include @steam suffix
+  const steamId = body.steamId.endsWith('@steam') ? body.steamId : `${body.steamId}@steam`;
 
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   try {
-    // Get current player data
-    const player = await db
-      .select({
-        experience: playerdata.experience,
-      })
-      .from(playerdata)
-      .where(eq(playerdata.id, body.steamId))
-      .limit(1);
-
-    if (player.length === 0 || !player[0]) {
-      return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
-    }
-
-    const playerData = player[0];
-    const currentCoins = Number(playerData.experience) || 0;
-    const newCoins = currentCoins + body.amount;
-
-    // Update player experience (coins)
+    // Update player experience (coins) and get the new value
     await db
       .update(playerdata)
       .set({
         experience: sql`${playerdata.experience} + ${body.amount}`,
       })
-      .where(eq(playerdata.id, body.steamId));
+      .where(eq(playerdata.id, steamId));
+
+    // Get the updated balance
+    const updatedPlayer = await db
+      .select({ experience: playerdata.experience })
+      .from(playerdata)
+      .where(eq(playerdata.id, steamId))
+      .limit(1);
+
+    if (updatedPlayer.length === 0 || !updatedPlayer[0]) {
+      return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
+    }
+
+    const newBalance = Number(updatedPlayer[0].experience) || 0;
 
     // Send Discord notification if enabled (non-blocking)
     if (body.discordNotification?.enabled && body.discordNotification.message) {
       // Fetch username for Discord message
-      const steamUser = await fetchSteamUserData(body.steamId, env, ctx);
+      const steamUser = await fetchSteamUserData(steamId, env, ctx);
       const username = steamUser?.username || 'Unknown Player';
 
       ctx.waitUntil(
@@ -204,7 +230,7 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
       );
     }
 
-    return createResponse({ success: true, newBalance: newCoins }, 200, origin);
+    return createResponse({ success: true, newBalance }, 200, origin);
   } catch (error) {
     console.error('Error awarding coins:', error);
     return createResponse({ error: 'Fehler beim Vergeben von Coins' }, 500, origin);

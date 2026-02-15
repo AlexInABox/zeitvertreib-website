@@ -59,7 +59,9 @@ export const playerdata = sqliteTable('playerdata', {
   migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
   firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
   lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
-});
+}, (table) => ({
+  experienceIdx: index('playerdata_experience_idx').on(table.experience),
+}));
 
 export const discordInfo = sqliteTable('discord_info', {
   discordId: text('discordId').primaryKey(),
@@ -262,4 +264,10 @@ export const chickenCrossGames = sqliteTable('chicken_cross_games', {
     .default('ACTIVE')
     .notNull(),
   lastUpdatedAt: integer('last_updated_at').notNull(),
+});
+
+export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
+  steamId: text('steam_id').primaryKey().notNull(),
+  addedAt: integer('added_at').notNull(),
+  reason: text('reason'),
 });
