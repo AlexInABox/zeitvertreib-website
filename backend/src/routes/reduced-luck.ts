@@ -72,7 +72,9 @@ export async function handleSetReducedLuck(request: Request, env: Env, _ctx: Exe
   return createResponse(
     {
       success: true,
-      message: hasReducedLuck ? 'Benutzer zu reduzierter Glücksliste hinzugefügt' : 'Benutzer von reduzierter Glücksliste entfernt',
+      message: hasReducedLuck
+        ? 'Benutzer zu reduzierter Glücksliste hinzugefügt'
+        : 'Benutzer von reduzierter Glücksliste entfernt',
       reducedLuckUsers: [...REDUCED_LUCK_USERS],
     },
     200,

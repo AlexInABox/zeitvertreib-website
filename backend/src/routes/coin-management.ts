@@ -91,7 +91,8 @@ async function sendCoinAwardToDiscord(
   env: Env,
 ): Promise<void> {
   try {
-    const message = customMessage || `🎁 **${username}** hat **${amount} ZVC** ${amount > 0 ? 'erhalten' : 'verloren'}!`;
+    const message =
+      customMessage || `🎁 **${username}** hat **${amount} ZVC** ${amount > 0 ? 'erhalten' : 'verloren'}!`;
 
     const embed = {
       title: '💰 Admin Coin Award',
@@ -197,12 +198,9 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
       const username = steamUser?.username || 'Unknown Player';
 
       ctx.waitUntil(
-        sendCoinAwardToDiscord(
-          username,
-          body.amount,
-          body.discordNotification.message,
-          env,
-        ).catch((error) => console.error('Failed to send Discord notification:', error)),
+        sendCoinAwardToDiscord(username, body.amount, body.discordNotification.message, env).catch((error) =>
+          console.error('Failed to send Discord notification:', error),
+        ),
       );
     }
 

@@ -289,11 +289,10 @@ export class CoinManagmentComponent implements OnInit {
     }
 
     this.http
-      .post<{ success: boolean; newBalance: number }>(
-        `${environment.apiUrl}/coin-management/award`,
-        requestBody,
-        { headers },
-      )
+      .post<{
+        success: boolean;
+        newBalance: number;
+      }>(`${environment.apiUrl}/coin-management/award`, requestBody, { headers })
       .subscribe({
         next: (response) => {
           const user = this.users.find((u) => u.steamId === this.selectedUser?.steamId);
