@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
@@ -70,7 +70,7 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
   totalPages = 0;
 
   constructor(
-    private http: HttpClient,
+    @Inject(HttpClient) private http: HttpClient,
     private authService: AuthService,
   ) {}
 
@@ -83,6 +83,8 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
       .pipe(debounceTime(1000), distinctUntilChanged())
       .subscribe((term) => {
         this.debouncedSearchTerm = term;
+        // Trigger backend search and reset to page 1
+        this.loadPlayers(1, term);
       });
   }
 
@@ -95,11 +97,17 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
     this.searchTermSubject.next(term);
   }
 
-  loadPlayers(page: number = 1) {
+  loadPlayers(page: number = 1, searchTerm?: string) {
     this.isLoadingPlayers = true;
     this.currentPage = page;
     const headers = this.getAuthHeaders();
-    const url = `${environment.apiUrl}/coin-management/players?page=${page}&pageSize=${this.pageSize}`;
+
+    // Use provided searchTerm or fall back to current debouncedSearchTerm
+    const search = searchTerm !== undefined ? searchTerm : this.debouncedSearchTerm;
+    let url = `${environment.apiUrl}/coin-management/players?page=${page}&pageSize=${this.pageSize}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
 
     this.http.get<{ players: CoinUser[]; pagination: PaginationInfo }>(url, { headers }).subscribe({
       next: (response) => {
@@ -151,18 +159,7 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
     return u.steamId;
   }
 
-  get filteredUsers(): CoinUser[] {
-    if (!this.debouncedSearchTerm.trim()) {
-      return this.users;
-    }
-
-    const search = this.debouncedSearchTerm.toLowerCase().trim();
-    return this.users.filter((user) => {
-      const matchesName = user.username.toLowerCase().includes(search);
-      const matchesSteamId = user.steamId.toLowerCase().includes(search);
-      return matchesName || matchesSteamId;
-    });
-  }
+  // Removed: filteredUsers - now using server-side filtering
 
   editUser(u: CoinUser) {
     this.selectedUser = u;

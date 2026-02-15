@@ -33,6 +33,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') || '1', 10);
   const pageSize = parseInt(url.searchParams.get('pageSize') || '50', 10);
+  const searchTerm = url.searchParams.get('search')?.trim() || '';
 
   // Validate pagination parameters
   const validPage = Math.max(1, page);
@@ -42,20 +43,49 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   try {
-    // Get total count of players
-    const totalCountResult = await db.select({ count: sql<number>`count(*)` }).from(playerdata);
-    const totalCount = Number(totalCountResult[0]?.count || 0);
+    // Build search condition if search term is provided
+    let totalCountResult;
+    let players;
 
-    // Get paginated players ordered by experience (coins)
-    const players = await db
-      .select({
-        id: playerdata.id,
-        experience: playerdata.experience,
-      })
-      .from(playerdata)
-      .orderBy(desc(playerdata.experience))
-      .limit(validPageSize)
-      .offset(offset);
+    if (searchTerm) {
+      // Search with username from steamCache
+      const searchPattern = `%${searchTerm}%`;
+
+      // Get total count of matching players
+      totalCountResult = await db
+        .select({ count: sql<number>`count(DISTINCT ${playerdata.id})` })
+        .from(playerdata)
+        .leftJoin(steamCache, eq(playerdata.id, steamCache.steamId))
+        .where(sql`${playerdata.id} LIKE ${searchPattern} OR ${steamCache.username} LIKE ${searchPattern}`);
+
+      // Get paginated matching players
+      players = await db
+        .select({
+          id: playerdata.id,
+          experience: playerdata.experience,
+        })
+        .from(playerdata)
+        .leftJoin(steamCache, eq(playerdata.id, steamCache.steamId))
+        .where(sql`${playerdata.id} LIKE ${searchPattern} OR ${steamCache.username} LIKE ${searchPattern}`)
+        .orderBy(desc(playerdata.experience))
+        .limit(validPageSize)
+        .offset(offset);
+    } else {
+      // No search - get all players
+      totalCountResult = await db.select({ count: sql<number>`count(*)` }).from(playerdata);
+
+      players = await db
+        .select({
+          id: playerdata.id,
+          experience: playerdata.experience,
+        })
+        .from(playerdata)
+        .orderBy(desc(playerdata.experience))
+        .limit(validPageSize)
+        .offset(offset);
+    }
+
+    const totalCount = Number(totalCountResult[0]?.count || 0);
 
     // Batch-load Steam cache data
     const steamIds = players.map((player: { id: string; experience: number | null }) => player.id);
