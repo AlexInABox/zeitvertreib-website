@@ -29,24 +29,40 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
     return createResponse({ error: 'Zugriff verweigert - Admin-Rechte erforderlich' }, 403, origin);
   }
 
+  // Parse pagination parameters from URL
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get('page') || '1', 10);
+  const pageSize = parseInt(url.searchParams.get('pageSize') || '50', 10);
+
+  // Validate pagination parameters
+  const validPage = Math.max(1, page);
+  const validPageSize = Math.min(Math.max(1, pageSize), 100); // Max 100 per page
+  const offset = (validPage - 1) * validPageSize;
+
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   try {
-    // Get all players ordered by experience (coins)
+    // Get total count of players
+    const totalCountResult = await db.select({ count: sql<number>`count(*)` }).from(playerdata);
+    const totalCount = Number(totalCountResult[0]?.count || 0);
+
+    // Get paginated players ordered by experience (coins)
     const players = await db
       .select({
         id: playerdata.id,
         experience: playerdata.experience,
       })
       .from(playerdata)
-      .orderBy(desc(playerdata.experience));
+      .orderBy(desc(playerdata.experience))
+      .limit(validPageSize)
+      .offset(offset);
 
     // Batch-load Steam cache data
-    const steamIds = players.map((player) => player.id);
+    const steamIds = players.map((player: { id: string; experience: number | null }) => player.id);
     const steamCacheData =
       steamIds.length > 0 ? await db.select().from(steamCache).where(inArray(steamCache.steamId, steamIds)) : [];
     const steamDataMap = new Map<string, { username: string; avatarUrl: string }>(
-      steamCacheData.map((cache) => [
+      steamCacheData.map((cache: { steamId: string; username: string; avatarUrl: string }) => [
         cache.steamId,
         {
           username: cache.username,
@@ -63,10 +79,10 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
             .from(reducedLuckUsers)
             .where(inArray(reducedLuckUsers.steamId, steamIds))
         : [];
-    const reducedLuckSet = new Set(reducedLuckData.map((row) => row.steamId));
+    const reducedLuckSet = new Set(reducedLuckData.map((row: { steamId: string }) => row.steamId));
 
     // Combine player data with cached Steam data
-    const playersWithData: CoinManagementPlayer[] = players.map((player) => {
+    const playersWithData: CoinManagementPlayer[] = players.map((player: { id: string; experience: number | null }) => {
       const steamUser = steamDataMap.get(player.id);
       const hasReducedLuck = reducedLuckSet.has(player.id);
 
@@ -79,7 +95,21 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
       };
     });
 
-    return createResponse({ players: playersWithData }, 200, origin);
+    const totalPages = Math.ceil(totalCount / validPageSize);
+
+    return createResponse(
+      {
+        players: playersWithData,
+        pagination: {
+          page: validPage,
+          pageSize: validPageSize,
+          totalCount,
+          totalPages,
+        },
+      },
+      200,
+      origin,
+    );
   } catch (error) {
     console.error('Error fetching players:', error);
     return createResponse({ error: 'Fehler beim Laden der Spielerliste' }, 500, origin);
