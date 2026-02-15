@@ -82,11 +82,14 @@ export async function handleSetReducedLuck(request: Request, env: Env, _ctx: Exe
   try {
     if (hasReducedLuck) {
       // Add to reduced luck list using INSERT OR IGNORE for efficiency
-      await db.insert(reducedLuckUsers).values({
-        steamId,
-        addedAt: Math.floor(Date.now() / 1000),
-        reason: body.reason || null,
-      }).onConflictDoNothing();
+      await db
+        .insert(reducedLuckUsers)
+        .values({
+          steamId,
+          addedAt: Math.floor(Date.now() / 1000),
+          reason: body.reason || null,
+        })
+        .onConflictDoNothing();
     } else {
       // Remove from reduced luck list
       await db.delete(reducedLuckUsers).where(eq(reducedLuckUsers.steamId, steamId));

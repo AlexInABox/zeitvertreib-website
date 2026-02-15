@@ -43,12 +43,8 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
 
     // Batch-load Steam cache data
     const steamIds = players.map((player) => player.id);
-    const steamCacheData = steamIds.length > 0
-      ? await db
-          .select()
-          .from(steamCache)
-          .where(inArray(steamCache.steamId, steamIds))
-      : [];
+    const steamCacheData =
+      steamIds.length > 0 ? await db.select().from(steamCache).where(inArray(steamCache.steamId, steamIds)) : [];
     const steamDataMap = new Map<string, { username: string; avatarUrl: string }>(
       steamCacheData.map((cache) => [
         cache.steamId,
@@ -60,12 +56,13 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
     );
 
     // Batch-load reduced luck users from database
-    const reducedLuckData = steamIds.length > 0
-      ? await db
-          .select({ steamId: reducedLuckUsers.steamId })
-          .from(reducedLuckUsers)
-          .where(inArray(reducedLuckUsers.steamId, steamIds))
-      : [];
+    const reducedLuckData =
+      steamIds.length > 0
+        ? await db
+            .select({ steamId: reducedLuckUsers.steamId })
+            .from(reducedLuckUsers)
+            .where(inArray(reducedLuckUsers.steamId, steamIds))
+        : [];
     const reducedLuckSet = new Set(reducedLuckData.map((row) => row.steamId));
 
     // Combine player data with cached Steam data
@@ -189,7 +186,7 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
   }
 
   const body = bodyRaw as AwardCoinsRequest;
-  
+
   // Normalize Steam ID to include @steam suffix
   const steamId = body.steamId.endsWith('@steam') ? body.steamId : `${body.steamId}@steam`;
 
