@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -21,6 +22,11 @@ export const routes: Routes = [
     path: 'paysafecard',
     loadComponent: () => import('./paysafecard/paysafecard.component').then((m) => m.PaysafecardComponent),
     canActivate: [authGuard],
+  },
+  {
+    path: 'coin_managment',
+    loadComponent: () => import('./coin-managment/coin-managment.component').then((m) => m.CoinManagmentComponent),
+    canActivate: [adminGuard],
   },
   {
     path: 'cases',

@@ -55,6 +55,8 @@ import {
   handleChickenCrossPost,
   handleChickenCrossActive,
 } from './routes/chickencross.js';
+import { handleGetReducedLuck, handleSetReducedLuck } from './routes/reduced-luck.js';
+import { handleListPlayers, handleCheckCoinManagementAccess, handleAwardCoins } from './routes/coin-management.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -177,6 +179,15 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/chickencross/active': handleChickenCrossActive,
   'GET:/chickencross': handleChickenCrossGet,
   'POST:/chickencross': handleChickenCrossPost,
+
+  // Coin Management routes
+  'GET:/coin-management/players': handleListPlayers,
+  'GET:/coin-management/access': handleCheckCoinManagementAccess,
+  'POST:/coin-management/award': handleAwardCoins,
+
+  // Reduced Luck routes
+  'GET:/reduced-luck': handleGetReducedLuck,
+  'POST:/reduced-luck': handleSetReducedLuck,
 };
 
 export default {

@@ -1,0 +1,237 @@
+<div class="coin-managment-page container">
+  <h1>Coin Managment</h1>
+  <p class="muted">Manage ZV Coins and luck for all players. Admin access only.</p>
+
+  <div class="search-wrapper" *ngIf="!isLoadingPlayers">
+    <input type="text" [(ngModel)]="searchTerm" placeholder="Suche nach Name oder Steam ID..." class="search-input" />
+    <i class="pi pi-search search-icon"></i>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoadingPlayers">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    <p>Loading players...</p>
+  </div>
+
+  <div class="table-wrapper" *ngIf="!isLoadingPlayers">
+    <table class="coin-table" role="table">
+      <thead>
+        <tr>
+          <th scope="col">Profile</th>
+          <th scope="col" class="sortable" (click)="sortBy('username')">
+            User
+            <span class="sort-indicator" *ngIf="sortField === 'username'">
+              <i
+                class="pi"
+                [class.pi-sort-up]="sortDirection === 'asc'"
+                [class.pi-sort-down]="sortDirection === 'desc'"
+              ></i>
+            </span>
+          </th>
+          <th scope="col" class="sortable" (click)="sortBy('coins')">
+            Coins
+            <span class="sort-indicator" *ngIf="sortField === 'coins'">
+              <i
+                class="pi"
+                [class.pi-sort-up]="sortDirection === 'asc'"
+                [class.pi-sort-down]="sortDirection === 'desc'"
+              ></i>
+            </span>
+          </th>
+          <th scope="col" class="sortable" (click)="sortBy('luck')">
+            Luck
+            <span class="sort-indicator" *ngIf="sortField === 'luck'">
+              <i
+                class="pi"
+                [class.pi-sort-up]="sortDirection === 'asc'"
+                [class.pi-sort-down]="sortDirection === 'desc'"
+              ></i>
+            </span>
+          </th>
+          <th scope="col" class="action-col"></th>
+          <th scope="col" class="action-col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of filteredUsers; trackBy: trackById">
+          <td class="profile-cell">
+            <p-avatar [image]="u.avatarUrl" shape="circle" styleClass="coin-avatar"></p-avatar>
+          </td>
+          <td
+            class="username-cell"
+            role="button"
+            aria-label="Kopiere Steam ID"
+            title="Steam ID kopieren"
+            (click)="copySteamId(u.steamId)"
+          >
+            <span class="username-text">{{ u.username }}</span>
+            <span class="copied-badge" *ngIf="copiedSteamId === u.steamId">Kopiert!</span>
+          </td>
+          <td class="coins-cell">{{ u.coins | number: '1.0-0' }}</td>
+          <td class="luck-cell">
+            <div class="luck-bar" aria-hidden="true">
+              <div class="luck-fill" [style.width.%]="u.luck"></div>
+            </div>
+            <span class="luck-label">{{ u.luck }}%</span>
+          </td>
+          <td class="action-cell">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pen"
+              label="Bearbeiten"
+              class="p-button-outlined edit-btn"
+              (click)="editUser(u)"
+            ></button>
+          </td>
+          <td class="action-cell">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-plus"
+              label="Award"
+              class="p-button-success"
+              (click)="awardCoins(u)"
+            ></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p-dialog
+  [(visible)]="editDialogVisible"
+  [header]="'Edit Luck: ' + (selectedUser?.username || '')"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-content" *ngIf="selectedUser">
+    <p class="dialog-subtitle">wähle die gewinnchance für den Spieler aus:</p>
+
+    <div class="luck-options">
+      <div
+        class="luck-option"
+        [class.selected]="selectedLuckOption === 'normal'"
+        (click)="selectedLuckOption = 'normal'"
+      >
+        <div class="luck-option-header">
+          <span class="luck-option-icon">🍀</span>
+          <span class="luck-option-title">Normales Glück</span>
+        </div>
+        <div class="luck-option-value">50%</div>
+        <div class="luck-option-description">Standardglück für alle Benutzer</div>
+      </div>
+
+      <div
+        class="luck-option"
+        [class.selected]="selectedLuckOption === 'reduced'"
+        (click)="selectedLuckOption = 'reduced'"
+      >
+        <div class="luck-option-header">
+          <span class="luck-option-icon">🎲</span>
+          <span class="luck-option-title">Reduziertes Glück</span>
+        </div>
+        <div class="luck-option-value">0%</div>
+        <div class="luck-option-description">Immer die schlechtesten Ergebnisse beim Glücksspiel</div>
+      </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancel"
+      class="p-button-text"
+      (click)="editDialogVisible = false"
+      [disabled]="isLoading"
+    ></button>
+    <button pButton type="button" label="Save" (click)="saveLuckChange()" [loading]="isLoading"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="awardDialogVisible"
+  [header]="'Award/Remove Coins: ' + (selectedUser?.username || '')"
+  [modal]="true"
+  [style]="{ width: '650px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-content" *ngIf="selectedUser">
+    <p class="dialog-subtitle">Enter amount to give (positive) or remove (negative):</p>
+
+    <div class="award-input-wrapper">
+      <label for="awardAmount">Amount:</label>
+      <input
+        id="awardAmount"
+        type="number"
+        [(ngModel)]="awardAmount"
+        placeholder="e.g., 100 or -50"
+        class="award-input"
+      />
+    </div>
+
+    <div class="award-preview" *ngIf="awardAmount !== 0">
+      <p class="preview-current">Current: {{ selectedUser.coins | number: '1.0-0' }} coins</p>
+      <p class="preview-arrow">↓</p>
+      <p class="preview-new" [class.positive]="awardAmount > 0" [class.negative]="awardAmount < 0">
+        New: {{ selectedUser.coins + awardAmount | number: '1.0-0' }} coins
+      </p>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Discord notification section -->
+    <div class="discord-section">
+      <div class="discord-header">
+        <h4>Discord Benachrichtigung</h4>
+        <div class="discord-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" [(ngModel)]="sendDiscordNotification" class="toggle-checkbox" />
+            <span class="toggle-text">Nachricht senden</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="discord-message-wrapper" *ngIf="sendDiscordNotification">
+        <label for="discordMessage">Nachricht anpassen:</label>
+        <textarea
+          id="discordMessage"
+          [(ngModel)]="discordMessage"
+          placeholder="Z.B.: 🎉 {{ selectedUser.username }} hat {{ awardAmount }} Coins erhalten!"
+          class="discord-textarea"
+          rows="3"
+        ></textarea>
+        <p class="discord-hint">Diese Nachricht wird an den Discord-Kanal gesendet.</p>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancel"
+      class="p-button-text"
+      (click)="awardDialogVisible = false"
+      [disabled]="isLoading"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Confirm"
+      (click)="saveAward()"
+      [loading]="isLoading"
+      [disabled]="awardAmount === 0"
+    ></button>
+  </ng-template>
+</p-dialog>
