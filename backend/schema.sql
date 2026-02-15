@@ -26,12 +26,24 @@ CREATE TABLE "playerdata" (
   username TEXT DEFAULT ''
 );
 
+-- Index to speed up ORDER BY experience queries
+CREATE INDEX IF NOT EXISTS playerdata_experience_idx ON playerdata(experience);
+
 
 CREATE TABLE IF NOT EXISTS kills (
     attacker TEXT,
     target TEXT,
     timestamp INTEGER
 );
+
+-- Table: reduced_luck_users
+-- Holds Steam IDs that should receive reduced luck behavior in gambling routes
+CREATE TABLE IF NOT EXISTS reduced_luck_users (
+    steam_id TEXT PRIMARY KEY,
+    added_at INTEGER NOT NULL,
+    reason TEXT
+);
+
 
 -- Financial transactions table for Zeitvertreib Community Server
 CREATE TABLE IF NOT EXISTS financial_transactions (
