@@ -210,18 +210,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.http.get<{ hasAccess: boolean }>(`${environment.apiUrl}/coin-management/access`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).subscribe({
-      next: (response) => {
-        this.isCoinManagementAdmin = response.hasAccess;
-        this.updateMenuItems();
-      },
-      error: () => {
-        this.isCoinManagementAdmin = false;
-        this.updateMenuItems();
-      },
-    });
+    this.http
+      .get<{ hasAccess: boolean }>(`${environment.apiUrl}/coin-management/access`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .subscribe({
+        next: (response) => {
+          this.isCoinManagementAdmin = response.hasAccess;
+          this.updateMenuItems();
+        },
+        error: () => {
+          this.isCoinManagementAdmin = false;
+          this.updateMenuItems();
+        },
+      });
   }
 
   login() {
