@@ -215,6 +215,9 @@ export class GamesComponent implements OnInit, OnDestroy {
   // Pre-computed SVG wheel segments
   rouletteWheelSegments: Array<{ path: string; color: string }> = this.generateRouletteWheelSegments();
 
+  // Expose static roulette wheel sequence to the template
+  rouletteWheelSequence = GamesComponent.ROULETTE_WHEEL_SEQUENCE;
+
   rouletteSpinLog: Array<{
     id: number;
     timestamp: number;

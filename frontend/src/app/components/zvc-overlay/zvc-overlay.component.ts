@@ -15,12 +15,21 @@ import { Subscription } from 'rxjs';
 import { ZvcService } from '../../services/zvc.service';
 import { AuthService } from '../../services/auth.service';
 
-interface OdometerColumn {
+type DigitColumn = {
   key: string;
-  type: 'digit' | 'separator';
+  type: 'digit';
   value: number;
   duration: number;
-}
+};
+
+type SeparatorColumn = {
+  key: string;
+  type: 'separator';
+  value: string;
+  duration: number;
+};
+
+type OdometerColumn = DigitColumn | SeparatorColumn;
 
 @Component({
   selector: 'app-zvc-overlay',
@@ -122,10 +131,10 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
     // Build digit/sep columns
     const newColumns: OdometerColumn[] = [];
     let digitIndex = 0;
-    const totalDigits = chars.filter((c) => c !== '.').length;
+    const totalDigits = chars.filter((c) => c !== '.' && c !== '-').length;
     for (const ch of chars) {
-      if (ch === '.') {
-        newColumns.push({ key: `sep-${digitIndex}`, type: 'separator', value: 0, duration: 0 });
+      if (ch === '.' || ch === '-') {
+        newColumns.push({ key: `sep-${digitIndex}`, type: 'separator', value: ch, duration: 0 });
       } else {
         const val = parseInt(ch, 10);
         const posFromRight = totalDigits - 1 - digitIndex;
@@ -190,6 +199,7 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private formatNumber(n: number): string[] {
+    const isNegative = n < 0;
     const abs = Math.abs(Math.floor(n));
     const s = abs.toString();
     const parts: string[] = [];
@@ -197,6 +207,9 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
     for (let i = 0; i < len; i++) {
       if (i > 0 && (len - i) % 3 === 0) parts.push('.');
       parts.push(s[i]);
+    }
+    if (isNegative) {
+      parts.unshift('-');
     }
     return parts;
   }

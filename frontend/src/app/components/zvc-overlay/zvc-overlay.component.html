@@ -3,8 +3,8 @@
     <span class="zvc-hud-icon">🪙</span>
     <div class="zvc-odometer" #odometerContainer>
       <ng-container *ngFor="let col of columns; trackBy: trackByKey">
-        <!-- Separator (dot) -->
-        <span *ngIf="col.type === 'separator'" class="odo-separator">.</span>
+        <!-- Separator (dot or sign) -->
+        <span *ngIf="col.type === 'separator'" class="odo-separator">{{ col.value }}</span>
         <!-- Digit column -->
         <div *ngIf="col.type === 'digit'" class="odo-digit-col">
           <div #ribbonRef class="odo-ribbon">
