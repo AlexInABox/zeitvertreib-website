@@ -39,8 +39,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
         experience: playerdata.experience,
       })
       .from(playerdata)
-      .orderBy(desc(playerdata.experience))
-      .limit(100); // Limit to top 100 players
+      .orderBy(desc(playerdata.experience));
 
     // Fetch Steam user data for each player
     const playersWithData: CoinManagementPlayer[] = await Promise.all(
@@ -182,11 +181,6 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
     const playerData = player[0];
     const currentCoins = Number(playerData.experience) || 0;
     const newCoins = currentCoins + body.amount;
-
-    // Prevent negative balance
-    if (newCoins < 0) {
-      return createResponse({ error: 'Ungültige Menge - würde zu negativem Guthaben führen' }, 400, origin);
-    }
 
     // Update player experience (coins)
     await db
