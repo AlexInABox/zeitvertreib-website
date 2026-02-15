@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, REDUCED_LUCK_USERS } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -15,9 +15,6 @@ import {
 
 const MIN_BET = 10;
 const MAX_BET = 500;
-
-// Users with reduced luck - will always lose
-const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
 
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 const BLACK_NUMBERS = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];

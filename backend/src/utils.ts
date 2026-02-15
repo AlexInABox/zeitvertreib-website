@@ -7,6 +7,9 @@ import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions } fr
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
+// Gambling: Users with reduced luck - will always get worst outcomes
+export const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
+
 // Response helpers
 export function createResponse(data: any, status = 200, origin?: string | null): Response {
   const headers: Record<string, string> = {

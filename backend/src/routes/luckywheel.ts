@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, REDUCED_LUCK_USERS } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -8,9 +8,6 @@ import { playerdata } from '../db/schema.js';
 // Lucky Wheel configuration - easily modifiable
 const MIN_BET = 1;
 const MAX_BET = 5000;
-
-// Users with reduced luck - will always get worst outcomes
-const REDUCED_LUCK_USERS = ['76561199786214256@steam'];
 
 // Payout multipliers and their weights
 const LUCKYWHEEL_TABLE = [
