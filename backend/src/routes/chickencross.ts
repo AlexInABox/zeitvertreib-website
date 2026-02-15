@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData, REDUCED_LUCK_USERS } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, checkHasReducedLuck } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
@@ -36,10 +36,13 @@ function getSurvivalChance(multiplier: number): number {
   return Math.min(1.0, 0.95 / multiplier);
 }
 
-function doesSurvive(seed: number, step: number, playerId?: string): boolean {
-  if (playerId && REDUCED_LUCK_USERS.includes(playerId)) {
-    console.log(`REDUCED LUCK: Forcing loss for ${playerId} in chicken cross at step ${step}`);
-    return false;
+async function doesSurvive(seed: number, step: number, env: Env, playerId?: string): Promise<boolean> {
+  if (playerId) {
+    const hasReducedLuck = await checkHasReducedLuck(playerId, env);
+    if (hasReducedLuck) {
+      console.log(`REDUCED LUCK: Forcing loss for ${playerId} in chicken cross at step ${step}`);
+      return false;
+    }
   }
 
   const multiplier = getMultiplierForStep(seed, step);
@@ -355,7 +358,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
 
   if (intent === 'MOVE') {
     const nextStep = game.step + 1;
-    const survived = doesSurvive(game.seed, nextStep, game.userid);
+    const survived = await doesSurvive(game.seed, nextStep, env, game.userid);
 
     if (!survived) {
       await db

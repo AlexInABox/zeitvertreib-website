@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData, REDUCED_LUCK_USERS } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, checkHasReducedLuck } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -239,7 +239,7 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
     // Check if user has reduced luck
-    const hasReducedLuck = REDUCED_LUCK_USERS.includes(playerId);
+    const hasReducedLuck = await checkHasReducedLuck(playerId, env);
 
     if (hasReducedLuck) {
       console.log(`REDUCED LUCK: Forcing loss for ${playerId} in slot machine`);
