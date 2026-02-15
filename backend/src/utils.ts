@@ -16,13 +16,9 @@ import { Context } from 'vm';
 export async function checkHasReducedLuck(steamId: string, env: Env): Promise<boolean> {
   const normalizedId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
   const db = drizzle(env.ZEITVERTREIB_DATA);
-  
-  const result = await db
-    .select()
-    .from(reducedLuckUsers)
-    .where(eq(reducedLuckUsers.steamId, normalizedId))
-    .limit(1);
-  
+
+  const result = await db.select().from(reducedLuckUsers).where(eq(reducedLuckUsers.steamId, normalizedId)).limit(1);
+
   return result.length > 0;
 }
 
