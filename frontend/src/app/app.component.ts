@@ -4,12 +4,13 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { DomainWarningComponent } from './components/domain-warning/domain-warning.component';
 import { ToastComponent } from './components/toast/toast.component';
+import { ZvcOverlayComponent } from './components/zvc-overlay/zvc-overlay.component';
 import { BackgroundMusicService } from './services/background-music.service';
 import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, HeaderComponent, DomainWarningComponent, ToastComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, DomainWarningComponent, ToastComponent, ZvcOverlayComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -20,7 +21,7 @@ export class AppComponent implements OnInit {
   constructor(
     private backgroundMusic: BackgroundMusicService,
     private themeService: ThemeService,
-  ) {}
+  ) { }
 
   //feel free to transfer this to a seperate file and then call that, but I tried it and it broke everything and killed my grandma
   private easterDates: Record<number, { month: number; day: number }> = {

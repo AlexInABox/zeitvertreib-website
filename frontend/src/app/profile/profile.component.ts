@@ -62,7 +62,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private deletionService: DeletionService,
     private birthdayService: BirthdayService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.currentSessionToken = this.authService.getSessionToken();
@@ -449,6 +449,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.birthdayError = `Jahr muss zwischen ${currentYear - 100} und ${currentYear} liegen`;
         return;
       }
+
+      // Check if user is at least 18 years old
+      const today = new Date();
+      const birthDate = new Date(this.editYear, this.editMonth - 1, this.editDay);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        this.birthdayError = 'Du musst mindestens 18 Jahre alt sein';
+        return;
+      }
     }
 
     this.birthdayLoading = true;
@@ -503,6 +516,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.birthdayError = 'Fehler beim Löschen. Bitte versuche es später erneut.';
       },
     });
+  }
+
+  isUnder18(): boolean {
+    if (!this.editYear || !this.editMonth || !this.editDay) return false;
+    const today = new Date();
+    const birthDate = new Date(this.editYear, this.editMonth - 1, this.editDay);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age < 18;
   }
 
   getDaysInMonth(month: number, year?: number): number {

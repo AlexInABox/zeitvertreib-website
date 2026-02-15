@@ -1,0 +1,155 @@
+/* ===== Sticky ZVC Balance HUD ===== */
+.zvc-balance-hud {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.zvc-hud-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.2s ease;
+  will-change: transform, box-shadow;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  contain: paint;
+  animation: hudSlideIn 0.4s ease-out;
+}
+
+.zvc-hud-inner:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.3);
+  transform: translate3d(0, -2px, 0);
+}
+
+@keyframes hudSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.zvc-hud-icon {
+  font-size: 1.1rem;
+}
+
+.zvc-hud-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-left: 0.15rem;
+}
+
+/* ===== Odometer ===== */
+.zvc-odometer {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  /* The viewport shows exactly 1 digit height */
+  height: 1.4em;
+}
+
+/* Each digit column is a fixed-width slot that clips its ribbon */
+.odo-digit-col {
+  display: inline-block;
+  width: 0.72em;
+  height: 1.4em;
+  overflow: hidden;
+  position: relative;
+}
+
+/*
+ * The ribbon contains digits 0–9 stacked vertically.
+ * Total ribbon height = 10 × 1.4em.
+ * translateY(-N × 10%) scrolls digit N into view.
+ */
+.odo-ribbon {
+  display: flex;
+  flex-direction: column;
+  /* 10 digits × 1.4em each */
+  height: calc(1.4em * 10);
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+}
+
+.odo-digit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 1.4em;
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thousand-separator dot */
+.odo-separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.3em;
+  height: 1.4em;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .zvc-balance-hud {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .zvc-hud-inner {
+    padding: 0.5rem 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .zvc-hud-icon {
+    font-size: 0.95rem;
+  }
+
+  .odo-digit {
+    font-size: 0.9rem;
+  }
+
+  .odo-separator {
+    font-size: 0.9rem;
+  }
+}

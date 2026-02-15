@@ -19,7 +19,7 @@ import {
   getFakerankColors,
   collectZvcForFakeranksAndValidateColors,
 } from './routes/fakerank.js';
-import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './routes/redeemables.js';
+import { handleRedeemCode } from './routes/redeemables.js';
 import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
 import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
 import { handleLuckyWheel, handleLuckyWheelInfo } from './routes/luckywheel.js';
@@ -107,9 +107,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'DELETE:/fakerank': deleteFakerank,
   'GET:/fakerank/colors': getFakerankColors,
 
-  // Redeemables routes
-  'GET:/redeemables': handleGetRedeemables,
-  'POST:/redeemables/redeem': handleRedeemItem,
+  // Code redemption route
   'POST:/redeem-code': handleRedeemCode,
 
   // Slot machine routes

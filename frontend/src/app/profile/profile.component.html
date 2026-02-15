@@ -119,6 +119,10 @@
           stimmst du zu, dass diese Information für alle einsehbar wird.
         </div>
 
+        <div *ngIf="isUnder18()" class="form-error">
+          Du musst mindestens 18 Jahre alt sein, um dein Geburtsjahr zu speichern.
+        </div>
+
         <div *ngIf="isBirthdayEditDisabled()" class="birthday-cooldown-edit-notice">
           ⏳ Du kannst deinen Geburtstag momentan nicht aktualisieren ({{ getDaysUntilBirthdayEdit() }} Tag{{
             getDaysUntilBirthdayEdit() !== 1 ? 'e' : ''
@@ -151,7 +155,7 @@
           <button
             class="btn btn-primary btn-small"
             (click)="saveBirthday()"
-            [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            [disabled]="birthdayLoading || isBirthdayEditDisabled() || isUnder18()"
           >
             <span *ngIf="!birthdayLoading">{{
               isBirthdayEditDisabled() ? 'Aktualisierung gesperrt' : 'Speichern'

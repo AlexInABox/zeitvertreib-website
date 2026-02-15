@@ -8,6 +8,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'games',
+    loadComponent: () => import('./games/games').then((m) => m.GamesComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'advent',
     loadComponent: () => import('./advent-calendar/advent-calendar.component').then((m) => m.AdventCalendarComponent),
     canActivate: [authGuard],

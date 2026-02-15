@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -464,15 +464,15 @@ export interface GetUploadUrlResponse {
 }
 
 // ============================================================================
-// Redeemables Types
+// Code Redemption Types
 // ============================================================================
 
-/** POST /redeemables/redeem request */
+/** POST /redeem-code request */
 export interface RedeemCodeRequest {
   code: string;
 }
 
-/** POST /redeemables/redeem response */
+/** POST /redeem-code response */
 export interface RedeemCodeResponse {
   success: boolean;
   credits: number;
@@ -753,7 +753,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
 
 // ============================================================================
 // Chicken Cross Types

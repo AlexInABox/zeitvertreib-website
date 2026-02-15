@@ -1,0 +1,18 @@
+<div class="zvc-balance-hud" *ngIf="visible">
+  <div class="zvc-hud-inner">
+    <span class="zvc-hud-icon">🪙</span>
+    <div class="zvc-odometer" #odometerContainer>
+      <ng-container *ngFor="let col of columns; trackBy: trackByKey">
+        <!-- Separator (dot) -->
+        <span *ngIf="col.type === 'separator'" class="odo-separator">.</span>
+        <!-- Digit column -->
+        <div *ngIf="col.type === 'digit'" class="odo-digit-col">
+          <div #ribbonRef class="odo-ribbon">
+            <span class="odo-digit" *ngFor="let d of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]">{{ d }}</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+    <span class="zvc-hud-label">ZVC</span>
+  </div>
+</div>
