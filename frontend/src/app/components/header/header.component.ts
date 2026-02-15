@@ -12,6 +12,8 @@ import { Subscription } from 'rxjs';
 import { BackgroundMusicService } from '../../services/background-music.service';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -28,6 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   avatarIcon = '';
   currentUser: SteamUser | null = null;
   isFakerankAdmin = false;
+  isCoinManagementAdmin = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
   private bgmInteractionSubscription?: Subscription;
@@ -59,6 +62,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
+    private http: HttpClient,
   ) {}
 
   get logoSrc(): string {
@@ -76,11 +80,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.currentUser = user;
       this.userLoggedIn = !!user;
       this.avatarIcon = user?.avatarUrl || '';
+      this.checkCoinManagementAccess(); // Check access when user logs in/out
     });
 
     // Subscribe to user data changes (including fakerank admin status)
     this.userDataSubscription = this.authService.currentUserData$.subscribe((_userData: UserData | null) => {
       this.isFakerankAdmin = this.authService.isFakerankAdmin();
+      this.checkCoinManagementAccess(); // Check coin management access when user data changes
       this.updateMenuItems(); // Update menu items when admin status changes
     });
 
@@ -121,7 +127,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         icon: PrimeIcons.CREDIT_CARD,
         route: '/paysafecard',
       },
-
       {
         label: 'Dashboard',
         icon: PrimeIcons.USER,
@@ -138,6 +143,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
         url: '/bewerben',
       },
     ];
+
+    // Conditionally add Coin Managment for admins only
+    if (this.isCoinManagementAdmin) {
+      this.items.push({
+        label: 'Coin Managment',
+        icon: PrimeIcons.WALLET,
+        route: '/coin_managment',
+      });
+    }
 
     // Check visibility window: show adventcalendar from Nov 15 through December (German timezone)
     const nowGerman = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
@@ -180,6 +194,34 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private checkPortrait() {
     this.isPortrait = window.innerHeight > window.innerWidth;
+  }
+
+  private checkCoinManagementAccess() {
+    if (!this.userLoggedIn) {
+      this.isCoinManagementAdmin = false;
+      this.updateMenuItems();
+      return;
+    }
+
+    const token = this.authService.getSessionToken();
+    if (!token) {
+      this.isCoinManagementAdmin = false;
+      this.updateMenuItems();
+      return;
+    }
+
+    this.http.get<{ hasAccess: boolean }>(`${environment.apiUrl}/coin-management/access`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).subscribe({
+      next: (response) => {
+        this.isCoinManagementAdmin = response.hasAccess;
+        this.updateMenuItems();
+      },
+      error: () => {
+        this.isCoinManagementAdmin = false;
+        this.updateMenuItems();
+      },
+    });
   }
 
   login() {

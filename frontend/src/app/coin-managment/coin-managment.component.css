@@ -1,0 +1,144 @@
+.coin-managment-page.container{padding:2rem}
+.coin-managment-page h1{font-size:1.75rem;margin-bottom:.75rem}
+.coin-managment-page p.muted{color:var(--p-text-muted);margin-top:.5rem}
+
+/* Search input */
+.search-wrapper{position:relative;margin-top:1.5rem;margin-bottom:1rem;max-width:500px}
+.search-input{width:100%;padding:.75rem 1rem .75rem 2.75rem;border:2px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(255,255,255,0.02);color:var(--p-text-color);font-size:1rem;transition:border-color .2s ease}
+.search-input:focus{outline:none;border-color:#3b82f6}
+.search-input::placeholder{color:var(--p-text-muted)}
+.search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--p-text-muted);pointer-events:none}
+html:not(.my-app-dark) .search-input{color:#ffffff}
+html:not(.my-app-dark) .search-input::placeholder{color:rgba(255,255,255,0.6)}
+
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:3rem;color:var(--p-text-muted)}
+
+.table-wrapper{margin-top:1.25rem;overflow:auto}
+.coin-table{width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden}
+.coin-table thead{background:transparent}
+.coin-table td{padding:.75rem 1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;height:64px}
+.coin-table th{font-weight:600;color:var(--p-text-muted);font-size:.85rem;padding:.75rem 1rem;height:40px;vertical-align:middle;text-align:left}
+.coin-table th.sortable{cursor:pointer;user-select:none;transition:color .2s ease}
+.coin-table th.sortable:hover{color:var(--p-text-color)}
+.sort-indicator{display:inline-block;margin-left:.25rem;font-size:.75rem;vertical-align:middle}
+.profile-cell{width:72px}
+.coin-avatar img{width:40px;height:40px;object-fit:cover;border-radius:50%;display:block}
+.username-cell{font-weight:600;cursor:pointer;position:relative;display:flex;align-items:center;gap:.5rem}
+.username-text{display:inline-block;padding-right:3.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.username-cell:hover .username-text{text-decoration:underline}
+/* Absolute-positioned badge so it doesn't affect layout */
+.copied-badge{position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);padding:.25rem .5rem;border-radius:999px;font-size:.75rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:var(--p-text-muted);pointer-events:none;white-space:nowrap;transition:opacity .15s ease,transform .15s ease}
+html:not(.my-app-dark) .copied-badge{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9)}
+@media(max-width:640px){.username-text{padding-right:2rem}.copied-badge{right:0.25rem;font-size:.7rem;padding:.2rem .4rem}}
+.coins-cell{white-space:nowrap}
+.luck-cell{display:flex;align-items:center;gap:.5rem;height:100%}
+.luck-bar{width:120px;height:8px;background:rgba(255,255,255,0.05);border-radius:999px;overflow:hidden}
+.luck-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#10b981);transition:width .3s ease}
+.luck-label{font-size:.85rem;color:var(--p-text-muted)}
+.action-col,.action-cell{padding-left:0.5rem;padding-right:0.5rem;vertical-align:middle;width:120px}
+.action-cell button{height:32px;width:100%;padding:0 1rem;font-size:0.85rem;display:flex;align-items:center;justify-content:center}
+
+/* Center the label text inside the Edit button while keeping the icon on the left.
+   Make the button narrower and ensure equal left/right spacing around the label. */
+.action-cell .edit-btn{
+  position: relative;
+  width: auto;                /* don't stretch to full cell width */
+  min-width: 96px;           /* thinner minimum width */
+  padding-left: 2.25rem;     /* reserve space for icon + left gap */
+  padding-right: 2.25rem;    /* symmetric right gap so label appears centered */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;            /* center inside the cell */
+  box-sizing: border-box;
+}
+.action-cell .edit-btn .p-button-icon-left{
+  position: absolute;
+  left: 0.5rem;
+}
+.action-cell .edit-btn .p-button-label{
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  transform: none;
+  pointer-events: none;
+}
+
+/* Light-mode override: make the Edit (Bearbeiten) label white when not using dark theme */
+html:not(.my-app-dark) .coin-managment-page .action-cell .edit-btn .p-button-label{
+  color: #ffffff;
+}
+
+/* Make all textual content on the Coin Managment page white in light mode
+   (scoped to this page; preserves explicit colors like errors/green badges) */
+html:not(.my-app-dark) .coin-managment-page {
+  color: #ffffff; /* base text color */
+}
+
+html:not(.my-app-dark) .coin-managment-page .muted,
+html:not(.my-app-dark) .coin-managment-page .luck-label,
+html:not(.my-app-dark) .coin-managment-page .coin-table th,
+html:not(.my-app-dark) .coin-managment-page .coin-table td,
+html:not(.my-app-dark) .coin-managment-page .username-cell,
+html:not(.my-app-dark) .coin-managment-page .preview-current,
+html:not(.my-app-dark) .coin-managment-page .award-input::placeholder {
+  color: rgba(255,255,255,0.85);
+}
+
+/* Ensure button labels are readable in light mode */
+html:not(.my-app-dark) .coin-managment-page .p-button-label{
+  color: #ffffff;
+}
+
+/* Keep error/success colors as defined (do not override .error-message, .preview-new.positive/negative) */
+/* Dialog styles */
+.dialog-content{padding:1rem 0}
+.dialog-subtitle{margin-bottom:1.5rem;color:var(--p-text-muted);font-size:.9rem}
+.luck-options{display:flex;flex-direction:column;gap:1rem}
+.luck-option{padding:1rem;border:2px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;transition:all .2s ease}
+.luck-option:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.02)}
+.luck-option.selected{border-color:#3b82f6;background:rgba(59,130,246,0.1)}
+.luck-option-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.luck-option-icon{font-size:1.5rem}
+.luck-option-title{font-weight:600;font-size:1rem}
+.luck-option-value{font-size:1.75rem;font-weight:700;margin-bottom:.25rem;color:#10b981}
+.luck-option.selected .luck-option-value{color:#3b82f6}
+.luck-option-description{font-size:.85rem;color:var(--p-text-muted)}
+.error-message{margin-top:1rem;padding:.75rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:.875rem}
+
+/* Award dialog styles */
+.award-input-wrapper{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.5rem}
+.award-input-wrapper label{font-weight:600;font-size:.9rem;color:var(--p-text-color)}
+.award-input{padding:.75rem;border:2px solid rgba(255,255,255,0.1);border-radius:6px;background:rgba(255,255,255,0.02);color:var(--p-text-color);font-size:1rem;transition:border-color .2s ease}
+.award-input:focus{outline:none;border-color:#3b82f6}
+.award-input::placeholder{color:var(--p-text-muted)}
+.award-preview{padding:1rem;background:rgba(255,255,255,0.02);border-radius:8px;text-align:center}
+.preview-current{font-size:.9rem;color:var(--p-text-muted);margin-bottom:.5rem}
+.preview-arrow{font-size:1.5rem;margin:.5rem 0;color:var(--p-text-muted)}
+.preview-new{font-size:1.25rem;font-weight:700;margin-top:.5rem}
+.preview-new.positive{color:#10b981}
+.preview-new.negative{color:#f59e0b}
+
+/* Discord notification section */
+.discord-section{margin-top:1.5rem;padding:1rem;background:rgba(88,101,242,0.05);border:1px solid rgba(88,101,242,0.2);border-radius:8px;transition:all .3s ease}
+.discord-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.discord-header h4{margin:0;font-size:1rem;color:var(--p-text-color);font-weight:600}
+.discord-toggle{display:flex;align-items:center}
+.toggle-label{display:flex;align-items:center;gap:.5rem;cursor:pointer;user-select:none}
+.toggle-checkbox{width:18px;height:18px;cursor:pointer;accent-color:#5865f2}
+.toggle-text{font-size:.9rem;color:var(--p-text-color)}
+.discord-message-wrapper{display:flex;flex-direction:column;gap:.5rem}
+.discord-message-wrapper label{font-weight:600;font-size:.9rem;color:var(--p-text-color)}
+.discord-textarea{padding:.75rem;border:2px solid rgba(255,255,255,0.1);border-radius:6px;background:rgba(255,255,255,0.02);color:var(--p-text-color);font-size:.9rem;font-family:inherit;resize:vertical;min-height:80px;transition:border-color .2s ease}
+.discord-textarea:focus{outline:none;border-color:#5865f2}
+.discord-textarea::placeholder{color:var(--p-text-muted)}
+.discord-hint{font-size:.8rem;color:var(--p-text-muted);margin-top:.25rem}
+html:not(.my-app-dark) .discord-section{background:rgba(88,101,242,0.08);border-color:rgba(88,101,242,0.25)}
+html:not(.my-app-dark) .discord-header h4,
+html:not(.my-app-dark) .toggle-text,
+html:not(.my-app-dark) .discord-message-wrapper label{color:#ffffff}
+html:not(.my-app-dark) .discord-textarea{color:#ffffff}
+html:not(.my-app-dark) .discord-textarea::placeholder{color:rgba(255,255,255,0.6)}
+
+@media(max-width:640px){.coin-table th:nth-child(4),.coin-table td:nth-child(4){display:none}.coin-table th:nth-child(3),.coin-table td:nth-child(3){min-width:80px}}
