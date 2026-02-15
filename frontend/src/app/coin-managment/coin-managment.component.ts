@@ -101,14 +101,14 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
     this.isLoadingPlayers = true;
     this.currentPage = page;
     const headers = this.getAuthHeaders();
-    
+
     // Use provided searchTerm or fall back to current debouncedSearchTerm
     const search = searchTerm !== undefined ? searchTerm : this.debouncedSearchTerm;
     let url = `${environment.apiUrl}/coin-management/players?page=${page}&pageSize=${this.pageSize}`;
     if (search) {
       url += `&search=${encodeURIComponent(search)}`;
     }
-    
+
     this.http.get<{ players: CoinUser[]; pagination: PaginationInfo }>(url, { headers }).subscribe({
       next: (response) => {
         this.users = response.players;

@@ -34,7 +34,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
   const page = parseInt(url.searchParams.get('page') || '1', 10);
   const pageSize = parseInt(url.searchParams.get('pageSize') || '50', 10);
   const searchTerm = url.searchParams.get('search')?.trim() || '';
-  
+
   // Validate pagination parameters
   const validPage = Math.max(1, page);
   const validPageSize = Math.min(Math.max(1, pageSize), 100); // Max 100 per page
@@ -50,15 +50,13 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
     if (searchTerm) {
       // Search with username from steamCache
       const searchPattern = `%${searchTerm}%`;
-      
+
       // Get total count of matching players
       totalCountResult = await db
         .select({ count: sql<number>`count(DISTINCT ${playerdata.id})` })
         .from(playerdata)
         .leftJoin(steamCache, eq(playerdata.id, steamCache.steamId))
-        .where(
-          sql`${playerdata.id} LIKE ${searchPattern} OR ${steamCache.username} LIKE ${searchPattern}`
-        );
+        .where(sql`${playerdata.id} LIKE ${searchPattern} OR ${steamCache.username} LIKE ${searchPattern}`);
 
       // Get paginated matching players
       players = await db
@@ -68,17 +66,13 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
         })
         .from(playerdata)
         .leftJoin(steamCache, eq(playerdata.id, steamCache.steamId))
-        .where(
-          sql`${playerdata.id} LIKE ${searchPattern} OR ${steamCache.username} LIKE ${searchPattern}`
-        )
+        .where(sql`${playerdata.id} LIKE ${searchPattern} OR ${steamCache.username} LIKE ${searchPattern}`)
         .orderBy(desc(playerdata.experience))
         .limit(validPageSize)
         .offset(offset);
     } else {
       // No search - get all players
-      totalCountResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(playerdata);
+      totalCountResult = await db.select({ count: sql<number>`count(*)` }).from(playerdata);
 
       players = await db
         .select({
