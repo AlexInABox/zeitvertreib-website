@@ -77,13 +77,10 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadPlayers();
     this.loadReducedLuckList();
-    
+
     // Set up debounced search
     this.searchSubscription = this.searchTermSubject
-      .pipe(
-        debounceTime(1000),
-        distinctUntilChanged()
-      )
+      .pipe(debounceTime(1000), distinctUntilChanged())
       .subscribe((term) => {
         this.debouncedSearchTerm = term;
       });
@@ -103,7 +100,7 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
     this.currentPage = page;
     const headers = this.getAuthHeaders();
     const url = `${environment.apiUrl}/coin-management/players?page=${page}&pageSize=${this.pageSize}`;
-    
+
     this.http.get<{ players: CoinUser[]; pagination: PaginationInfo }>(url, { headers }).subscribe({
       next: (response) => {
         this.users = response.players;
@@ -383,12 +380,12 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
     const maxPagesToShow = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
     let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-    
+
     // Adjust start if we're near the end
     if (endPage - startPage < maxPagesToShow - 1) {
       startPage = Math.max(1, endPage - maxPagesToShow + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }

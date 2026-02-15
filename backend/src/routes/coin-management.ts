@@ -33,7 +33,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') || '1', 10);
   const pageSize = parseInt(url.searchParams.get('pageSize') || '50', 10);
-  
+
   // Validate pagination parameters
   const validPage = Math.max(1, page);
   const validPageSize = Math.min(Math.max(1, pageSize), 100); // Max 100 per page
@@ -43,9 +43,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
 
   try {
     // Get total count of players
-    const totalCountResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(playerdata);
+    const totalCountResult = await db.select({ count: sql<number>`count(*)` }).from(playerdata);
     const totalCount = Number(totalCountResult[0]?.count || 0);
 
     // Get paginated players ordered by experience (coins)
@@ -99,15 +97,19 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
 
     const totalPages = Math.ceil(totalCount / validPageSize);
 
-    return createResponse({ 
-      players: playersWithData,
-      pagination: {
-        page: validPage,
-        pageSize: validPageSize,
-        totalCount,
-        totalPages
-      }
-    }, 200, origin);
+    return createResponse(
+      {
+        players: playersWithData,
+        pagination: {
+          page: validPage,
+          pageSize: validPageSize,
+          totalCount,
+          totalPages,
+        },
+      },
+      200,
+      origin,
+    );
   } catch (error) {
     console.error('Error fetching players:', error);
     return createResponse({ error: 'Fehler beim Laden der Spielerliste' }, 500, origin);
