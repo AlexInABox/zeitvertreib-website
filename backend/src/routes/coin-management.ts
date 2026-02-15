@@ -197,7 +197,7 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
     await db
       .update(playerdata)
       .set({
-        experience: sql`${playerdata.experience} + ${body.amount}`,
+        experience: sql`COALESCE(${playerdata.experience}, 0) + ${body.amount}`,
       })
       .where(eq(playerdata.id, steamId));
 
