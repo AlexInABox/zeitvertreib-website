@@ -418,8 +418,6 @@ html.my-app-dark.easter::after {
   gap: 1.5rem;
 }
 
-
-
 :root {
   --footer-link: rgba(255, 255, 245, 0.92); /* milk-white in dark mode */
   --footer-link-hover: rgba(255, 255, 245, 1);
@@ -429,7 +427,9 @@ html.my-app-dark.easter::after {
   color: var(--footer-link);
   text-decoration: none;
   font-size: 0.8rem; /* ~15px */
-  transition: color 0.12s ease-in-out, text-decoration 0.12s ease-in-out;
+  transition:
+    color 0.12s ease-in-out,
+    text-decoration 0.12s ease-in-out;
 }
 
 .footer-link:hover,
