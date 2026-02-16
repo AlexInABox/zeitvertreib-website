@@ -4,5 +4,5 @@
 /woisser/*.txt
   Content-Type: text/plain; charset=utf-8
 
-*.txt
+/*.txt
   Content-Type: text/plain; charset=utf-8
