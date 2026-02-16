@@ -10,16 +10,13 @@
 
   <body>
     <app-root></app-root>
-
-    <!-- Ko-fi Floating Widget -->
-    <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
-    <script>
-      kofiWidgetOverlay.draw('zeitvertreib', {
-        type: 'floating-chat',
-        'floating-chat.donateButton.text': 'Unterstütze uns!',
-        'floating-chat.donateButton.background-color': '#72a4f2',
-        'floating-chat.donateButton.text-color': '#fff',
-      });
-    </script>
+    <footer class="site-footer">
+  <div class="site-footer-inner">
+    <nav class="footer-links" aria-label="Rechtliches">
+      <a href="/imprint.txt" class="footer-link">Impressum</a>
+      <a href="/privacy-policy.txt" class="footer-link">Datenschutzerklärung</a>
+    </nav>
+  </div>
+</footer>
   </body>
 </html>
