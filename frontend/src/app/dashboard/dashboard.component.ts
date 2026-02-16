@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
+import { EasterEggService } from '../services/easter-egg.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
 import type {
   SprayGetResponseItem,
@@ -152,12 +153,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -200,19 +201,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedPet: string = 'none';
   selectedAura: string = 'none';
   cosmeticLoading = false;
-
-  // Code Redemption properties
-  redeemCode = '';
-  codeRedemptionLoading = false;
-  codeRedemptionMessage = '';
-  codeRedemptionSuccess = false;
-
-  // ZVC Transfer properties
-  transferRecipient = '';
-  transferAmount: number | null = null;
-  transferLoading = false;
-  transferMessage = '';
-  transferSuccess = false;
 
   // volume for sound effects
   audioVolume = 0.5; // 0.0 - 1.0
@@ -277,33 +265,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.chiikawaActive = false;
   }
 
-  // Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
-  isWeekendInBerlin(): boolean {
-    const berlinTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
-    const berlinDate = new Date(berlinTime);
-    const dayOfWeek = berlinDate.getDay();
-    // Sunday = 0, Saturday = 6
-    return dayOfWeek === 0 || dayOfWeek === 6;
-  }
-
-  // Helper method to calculate transfer tax (0% on weekends in Berlin)
-  getTransferTax(amount: number | null): number {
-    if (!amount) return 0;
-    const numAmount = Number(amount);
-    if (isNaN(numAmount) || numAmount <= 0) return 0;
-    // No tax on weekends in Berlin
-    if (this.isWeekendInBerlin()) return 0;
-    return Math.floor(numAmount * 0.05); // 5% tax
-  }
-
-  // Helper method to calculate total transfer cost
-  getTransferTotalCost(amount: number | null): number {
-    if (!amount) return 0;
-    const numAmount = Number(amount);
-    if (isNaN(numAmount) || numAmount <= 0) return 0;
-    return numAmount + this.getTransferTax(numAmount);
-  }
-
   // Mock data for owned cosmetics - in production this would come from backend
   ownedCosmetics = {
     hats: ['cap'] as string[], // User owns a baseball cap
@@ -315,6 +276,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private audioService = inject(AudioService);
   private elementRef = inject(ElementRef);
   private themeService = inject(ThemeService);
+  private easterEggService = inject(EasterEggService);
 
   constructor(public authService: AuthService) {
     this.generateRandomColors();
@@ -327,7 +289,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Moved loadSprays() to ngOnInit to fix race condition with isDonator
+    // Listen for chiikawa easter egg trigger from zvc overlay or other components
+    this.easterEggService.chiikawaTrigger$.subscribe(() => {
+      void this.audioService.play('uwa');
+      this.applyChiikawaImages();
+    });
     this.loadFakerank();
     this.loadSprayRules();
 
@@ -1195,212 +1161,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   redeemCodeAction(): void {
-    if (!this.redeemCode || this.redeemCode.trim() === '') {
-      return;
+    // Easter egg trigger - kept for backward compatibility
+    // Actual ZVC redemption is now handled by zvc-overlay component
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      this.easterEggService.triggerChiikawa();
     }
-
-    const trimmed = this.redeemCode.trim();
-    if (trimmed.toLowerCase() === 'chiikawa') {
-      void this.audioService.play('uwa');
-      this.redeemCode = '';
-      this.applyChiikawaImages();
-      return;
-    }
-
-    this.codeRedemptionLoading = true;
-    this.codeRedemptionMessage = '';
-    this.codeRedemptionSuccess = false;
-
-    // Call the backend API to redeem the code
-    this.authService
-      .authenticatedPost<{
-        success: boolean;
-        message: string;
-        credits?: number;
-        newBalance?: number;
-      }>(`${environment.apiUrl}/redeem-code`, { code: this.redeemCode.trim() })
-      .subscribe({
-        next: (response) => {
-          this.codeRedemptionLoading = false;
-          if (response?.success) {
-            this.codeRedemptionSuccess = true;
-            this.codeRedemptionMessage = response.message || 'Code erfolgreich eingelöst!';
-
-            // Update the user balance if provided
-            if (response.newBalance !== undefined) {
-              this.userStatistics.experience = response.newBalance;
-            } else if (response.credits) {
-              this.userStatistics.experience = (this.userStatistics.experience || 0) + response.credits;
-            }
-
-            // Clear the input after successful redemption
-            this.redeemCode = '';
-
-            // Force refresh the entire page to ensure all data is updated
-            window.location.reload();
-          } else {
-            this.codeRedemptionSuccess = false;
-            this.codeRedemptionMessage = response?.message || 'Code konnte nicht eingelöst werden';
-          }
-        },
-        error: (error) => {
-          this.codeRedemptionLoading = false;
-          this.codeRedemptionSuccess = false;
-
-          console.error('Error redeeming code:', error);
-          let errorMessage = 'Fehler beim Einlösen des Codes';
-
-          if (error?.error?.error) {
-            errorMessage = error.error.error;
-          } else if (error?.error?.message) {
-            errorMessage = error.error.message;
-          } else if (error?.message) {
-            errorMessage = error.message;
-          }
-
-          this.codeRedemptionMessage = errorMessage;
-        },
-      });
-
-    // Clear message after 5 seconds
-    setTimeout(() => {
-      this.codeRedemptionMessage = '';
-    }, 5000);
-  }
-
-  // ZVC Transfer method
-  transferZVC(): void {
-    if (!this.transferRecipient || !this.transferAmount) {
-      return;
-    }
-
-    // Convert to number and validate
-    const amount = Number(this.transferAmount);
-    if (isNaN(amount) || amount <= 0) {
-      this.transferMessage = 'Bitte gib einen gültigen Betrag ein';
-      this.transferSuccess = false;
-      setTimeout(() => {
-        this.transferMessage = '';
-      }, 3000);
-      return;
-    }
-
-    // Validate minimum transfer amount
-    if (amount < 100) {
-      this.transferMessage = 'Mindestbetrag für Transfers: 100 ZVC';
-      this.transferSuccess = false;
-      setTimeout(() => {
-        this.transferMessage = '';
-      }, 3000);
-      return;
-    }
-
-    // Validate maximum transfer amount
-    if (amount > 50000) {
-      this.transferMessage = 'Maximaler Transferbetrag: 50.000 ZVC';
-      this.transferSuccess = false;
-      setTimeout(() => {
-        this.transferMessage = '';
-      }, 3000);
-      return;
-    }
-
-    // Validate maximum transfer amount
-    if (amount > 50000) {
-      this.transferMessage = 'Maximaler Transferbetrag: 50.000 ZVC';
-      this.transferSuccess = false;
-      setTimeout(() => {
-        this.transferMessage = '';
-      }, 3000);
-      return;
-    }
-
-    // Validate transfer amount (use weekend-aware tax calculation)
-    const currentBalance = this.userStatistics.experience || 0;
-    const taxAmount = this.getTransferTax(amount);
-    const totalCost = amount + taxAmount;
-
-    if (totalCost > currentBalance) {
-      this.transferMessage = `Nicht genügend ZVC! Benötigt: ${totalCost} ZVC (${amount} + ${taxAmount} Steuer), Verfügbar: ${currentBalance} ZVC`;
-      this.transferSuccess = false;
-      setTimeout(() => {
-        this.transferMessage = '';
-      }, 5000);
-      return;
-    }
-
-    this.transferLoading = true;
-    this.transferMessage = '';
-    this.transferSuccess = false;
-
-    // Just trim the input and send it to backend - let backend handle Steam ID vs username detection
-    const cleanRecipient = this.transferRecipient.trim();
-
-    // Call the backend API
-    this.authService
-      .authenticatedPost<{
-        success: boolean;
-        message: string;
-        transfer?: {
-          amount: number;
-          tax: number;
-          totalCost: number;
-          recipient: string;
-          senderNewBalance: number;
-          recipientNewBalance: number;
-        };
-      }>(`${environment.apiUrl}/transfer-zvc`, {
-        recipient: cleanRecipient,
-        amount: amount, // Use the converted number
-      })
-      .subscribe({
-        next: (response) => {
-          this.transferLoading = false;
-          if (response?.success) {
-            this.transferSuccess = true;
-            this.transferMessage = response.message;
-
-            // Update the user balance immediately with the new balance from server
-            if (response.transfer?.senderNewBalance !== undefined) {
-              this.userStatistics.experience = response.transfer.senderNewBalance;
-            }
-
-            // Clear the inputs after successful transfer
-            this.transferRecipient = '';
-            this.transferAmount = null;
-
-            // Clear message after 5 seconds
-            setTimeout(() => {
-              this.transferMessage = '';
-            }, 5000);
-          } else {
-            this.transferSuccess = false;
-            this.transferMessage = response?.message || 'Transfer fehlgeschlagen';
-          }
-        },
-        error: (error) => {
-          this.transferLoading = false;
-          this.transferSuccess = false;
-
-          console.error('Error transferring ZVC:', error);
-          let errorMessage = 'Fehler beim Senden der ZVC';
-
-          if (error?.error?.error) {
-            errorMessage = error.error.error;
-          } else if (error?.error?.message) {
-            errorMessage = error.error.message;
-          } else if (error?.message) {
-            errorMessage = error.message;
-          }
-
-          this.transferMessage = errorMessage;
-
-          // Clear message after 5 seconds
-          setTimeout(() => {
-            this.transferMessage = '';
-          }, 5000);
-        },
-      });
   }
 
   // Cosmetic-related methods

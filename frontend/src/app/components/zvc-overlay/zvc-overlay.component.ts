@@ -11,9 +11,12 @@ import {
   NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { ZvcService } from '../../services/zvc.service';
 import { AuthService } from '../../services/auth.service';
+import { EasterEggService } from '../../services/easter-egg.service';
 
 type DigitColumn = {
   key: string;
@@ -34,13 +37,30 @@ type OdometerColumn = DigitColumn | SeparatorColumn;
 @Component({
   selector: 'app-zvc-overlay',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './zvc-overlay.component.html',
   styleUrls: ['./zvc-overlay.component.css'],
 })
 export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   columns: OdometerColumn[] = [];
   visible = false;
+
+  // UI state for expansion and interactions
+  expanded = false;
+  persistExpanded = false; // toggled by click
+
+  // Redeem code state
+  redeemCode = '';
+  codeRedemptionLoading = false;
+  codeRedemptionMessage = '';
+  codeRedemptionSuccess = false;
+
+  // Transfer state
+  transferRecipient = '';
+  transferAmount: number | null = null;
+  transferLoading = false;
+  transferMessage = '';
+  transferSuccess = false;
 
   @ViewChild('odometerContainer') odometerContainer!: ElementRef<HTMLElement>;
   @ViewChildren('ribbonRef') ribbons!: QueryList<ElementRef<HTMLElement>>;
@@ -52,6 +72,173 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   private zvcService = inject(ZvcService);
   private authService = inject(AuthService);
   private ngZone = inject(NgZone);
+  private easterEggService = inject(EasterEggService);
+
+  // Hover collapse timer
+  private collapseTimer: any = null;
+
+  // --- UI interaction helpers ---
+  onMouseEnter(): void {
+    if (this.collapseTimer) {
+      clearTimeout(this.collapseTimer);
+      this.collapseTimer = null;
+    }
+    this.expanded = true;
+  }
+
+  onMouseLeave(): void {
+    if (this.persistExpanded) return; // keep open after click
+    // small delay to make it easier to interact
+    this.collapseTimer = setTimeout(() => {
+      this.expanded = false;
+      this.collapseTimer = null;
+    }, 250);
+  }
+
+  togglePersist(): void {
+    this.persistExpanded = !this.persistExpanded;
+    this.expanded = this.persistExpanded || this.expanded;
+  }
+
+  // --- Helpers for weekend/tax calculation ---
+  isWeekendInBerlin(): boolean {
+    try {
+      const berlin = new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' });
+      const d = new Date(berlin);
+      const day = d.getDay();
+      return day === 0 || day === 6;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  getTransferTax(amount: number): number {
+    const rate = this.isWeekendInBerlin() ? 0 : 0.05;
+    return Math.floor(amount * rate);
+  }
+
+  getTransferTotalCost(amount: number): number {
+    return amount + this.getTransferTax(amount);
+  }
+
+  // --- Redeem code ---
+  redeemCodeAction(): void {
+    if (!this.redeemCode || this.redeemCode.trim() === '') return;
+
+    const trimmed = this.redeemCode.trim();
+    if (trimmed.toLowerCase() === 'chiikawa') {
+      this.redeemCode = '';
+      this.easterEggService.triggerChiikawa();
+      return;
+    }
+
+    this.codeRedemptionLoading = true;
+    this.codeRedemptionMessage = '';
+    this.codeRedemptionSuccess = false;
+
+    this.authService.authenticatedPost<any>(`${environment.apiUrl}/redeem-code`, { code: trimmed }).subscribe({
+      next: (resp) => {
+        this.codeRedemptionLoading = false;
+        if (resp?.success) {
+          this.codeRedemptionSuccess = true;
+          this.codeRedemptionMessage = resp.message || 'Code eingelöst!';
+          if (resp.newBalance !== undefined) {
+            this.zvcService.setBalance(resp.newBalance);
+          } else if (resp.credits) {
+            this.zvcService.adjustBalance(resp.credits);
+          }
+          this.redeemCode = '';
+        } else {
+          this.codeRedemptionSuccess = false;
+          this.codeRedemptionMessage = resp?.message || 'Code konnte nicht eingelöst werden';
+        }
+      },
+      error: (err) => {
+        this.codeRedemptionLoading = false;
+        this.codeRedemptionSuccess = false;
+        let msg = 'Fehler beim Einlösen des Codes';
+        if (err?.error?.error) msg = err.error.error;
+        else if (err?.message) msg = err.message;
+        this.codeRedemptionMessage = msg;
+      },
+    });
+
+    setTimeout(() => (this.codeRedemptionMessage = ''), 5000);
+  }
+
+  // --- Transfer ZVC ---
+  transferZVC(): void {
+    if (!this.transferRecipient || !this.transferAmount) return;
+
+    const amount = Number(this.transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      this.transferMessage = 'Bitte gib einen gültigen Betrag ein';
+      this.transferSuccess = false;
+      setTimeout(() => (this.transferMessage = ''), 3000);
+      return;
+    }
+
+    if (amount < 100) {
+      this.transferMessage = 'Mindestbetrag für Transfers: 100 ZVC';
+      this.transferSuccess = false;
+      setTimeout(() => (this.transferMessage = ''), 3000);
+      return;
+    }
+
+    if (amount > 50000) {
+      this.transferMessage = 'Maximaler Transferbetrag: 50.000 ZVC';
+      this.transferSuccess = false;
+      setTimeout(() => (this.transferMessage = ''), 3000);
+      return;
+    }
+
+    const currentBalance = this.zvcService.balance;
+    const tax = this.getTransferTax(amount);
+    const total = amount + tax;
+    if (total > currentBalance) {
+      this.transferMessage = `Nicht genügend ZVC! Benötigt: ${total} ZVC (${amount} + ${tax} Steuer)`;
+      this.transferSuccess = false;
+      setTimeout(() => (this.transferMessage = ''), 4000);
+      return;
+    }
+
+    this.transferLoading = true;
+    this.transferMessage = '';
+    this.transferSuccess = false;
+
+    this.authService
+      .authenticatedPost<any>(`${environment.apiUrl}/transfer-zvc`, {
+        recipient: this.transferRecipient.trim(),
+        amount: amount,
+      })
+      .subscribe({
+        next: (resp) => {
+          this.transferLoading = false;
+          if (resp?.success) {
+            this.transferSuccess = true;
+            this.transferMessage = resp.message || 'Transfer erfolgreich';
+            if (resp.transfer?.senderNewBalance !== undefined) {
+              this.zvcService.setBalance(resp.transfer.senderNewBalance);
+            }
+            this.transferRecipient = '';
+            this.transferAmount = null;
+            setTimeout(() => (this.transferMessage = ''), 5000);
+          } else {
+            this.transferSuccess = false;
+            this.transferMessage = resp?.message || 'Transfer fehlgeschlagen';
+          }
+        },
+        error: (err) => {
+          this.transferLoading = false;
+          this.transferSuccess = false;
+          let msg = 'Fehler beim Senden der ZVC';
+          if (err?.error?.error) msg = err.error.error;
+          else if (err?.message) msg = err.message;
+          this.transferMessage = msg;
+          setTimeout(() => (this.transferMessage = ''), 5000);
+        },
+      });
+  }
 
   ngOnInit(): void {
     this.authSub = this.authService.currentUser$.subscribe((user) => {
