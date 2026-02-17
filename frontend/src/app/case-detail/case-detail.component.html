@@ -180,7 +180,13 @@
                 <span class="username">{{ user.username }}</span>
                 <span class="steamid">{{ user.steamId }}</span>
               </div>
-              <button pButton icon="pi pi-times" class="unlink-btn" (click)="unlinkUserFromCase(user.steamId)" [text]="true"></button>
+              <button
+                pButton
+                icon="pi pi-times"
+                class="unlink-btn"
+                (click)="unlinkUserFromCase(user.steamId)"
+                [text]="true"
+              ></button>
             </div>
           </div>
 

@@ -866,12 +866,7 @@ export async function searchUsersForCase(request: Request, env: Env): Promise<Re
       })
       .from(schema.playerdata)
       .leftJoin(schema.steamCache, eq(schema.playerdata.id, schema.steamCache.steamId))
-      .where(
-        or(
-          like(schema.playerdata.id, searchPattern),
-          like(schema.steamCache.username, searchPattern),
-        ),
-      )
+      .where(or(like(schema.playerdata.id, searchPattern), like(schema.steamCache.username, searchPattern)))
       .limit(10);
 
     return createResponse(
@@ -1057,4 +1052,3 @@ export async function unlinkUserFromCase(request: Request, env: Env): Promise<Re
     );
   }
 }
-
