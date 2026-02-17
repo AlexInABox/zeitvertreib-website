@@ -283,11 +283,7 @@ export async function linkCase(request: Request, env: Env): Promise<Response> {
       .get();
 
     if (!adminPlayer || !adminPlayer.discordId) {
-      return createResponse(
-        { error: 'Admin account is not linked to a Discord ID' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Admin account is not linked to a Discord ID' }, 400, origin);
     }
 
     await db.insert(caseLinks).values({
