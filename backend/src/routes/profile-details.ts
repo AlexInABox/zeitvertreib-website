@@ -1,16 +1,8 @@
 import { createResponse, validateSession, isTeam } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import {
-  playerdata,
-  sprays,
-  sprayBans,
-  caseUserLinks,
-  coinSendingRestrictions,
-} from '../db/schema.js';
+import { playerdata, sprays, sprayBans, caseUserLinks, coinSendingRestrictions } from '../db/schema.js';
 import { eq, and, or } from 'drizzle-orm';
 import typia from 'typia';
-
-
 
 // Runtime-validated request shapes
 interface SetCoinRestrictionRequest {
@@ -30,11 +22,7 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
     // Verify admin (team member)
     const session = await validateSession(request, env);
     if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
-      return createResponse(
-        { error: 'Unauthorized' },
-        401,
-        origin,
-      );
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
     const url = new URL(request.url);
@@ -83,14 +71,14 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
       .where(eq(sprayBans.userid, steamId))
       .get();
 
-    // Fetch case links (using caseLinks table for linked cases)
+    // Fetch case links (using caseUserLinks table for linked cases)
     const cases = await db
       .select({
-        caseId: caseLinks.caseId,
-        linkedAt: caseLinks.linkedAt,
+        caseId: caseUserLinks.caseId,
+        linkedAt: caseUserLinks.linkedAt,
       })
-      .from(caseLinks)
-      .where(eq(caseLinks.steamId, steamId))
+      .from(caseUserLinks)
+      .where(eq(caseUserLinks.steamId, steamId))
       .all();
 
     // Fetch coin sending restriction
@@ -150,11 +138,7 @@ export async function deleteUserSpray(request: Request, env: Env): Promise<Respo
   try {
     const session = await validateSession(request, env);
     if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
-      return createResponse(
-        { error: 'Unauthorized' },
-        401,
-        origin,
-      );
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
     const url = new URL(request.url);
@@ -228,11 +212,7 @@ export async function setCoinRestriction(request: Request, env: Env): Promise<Re
   try {
     const session = await validateSession(request, env);
     if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
-      return createResponse(
-        { error: 'Unauthorized' },
-        401,
-        origin,
-      );
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
     const bodyRaw = await request.json();

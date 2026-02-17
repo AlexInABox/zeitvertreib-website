@@ -124,8 +124,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
-
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
