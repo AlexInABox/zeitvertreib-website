@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -72,7 +72,12 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
   constructor(
     @Inject(HttpClient) private http: HttpClient,
     private authService: AuthService,
+    private router: Router,
   ) {}
+
+  openProfile(steamId: string) {
+    this.router.navigate(['/manage', steamId]);
+  }
 
   ngOnInit() {
     this.loadPlayers();

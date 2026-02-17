@@ -275,3 +275,35 @@ export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
   addedAt: integer('added_at').notNull(),
   reason: text('reason'),
 });
+
+export const caseLinks = sqliteTable('case_links', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  caseId: text('case_id').notNull().unique(),
+  steamId: text('steam_id'),
+  discordId: text('discord_id'),
+  createdAt: integer('created_at').notNull().default(0),
+  createdByDiscordId: text('created_by_discord_id'),
+});
+
+export const coinSendingRestrictions = sqliteTable('coin_sending_restrictions', {
+  steamId: text('steam_id').primaryKey().notNull(),
+  restrictedUntil: integer('restricted_until').notNull(), // unix timestamp, 0 = permanent
+  reason: text('reason').notNull(),
+  restrictedByDiscordId: text('restricted_by_discord_id').notNull(),
+  restrictedAt: integer('restricted_at').notNull().default(0),
+});
+
+export const caseUserLinks = sqliteTable(
+  'case_user_links',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    caseId: text('case_id').notNull(),
+    steamId: text('steam_id').notNull(),
+    linkedAt: integer('linked_at').notNull().default(0),
+    linkedByDiscordId: text('linked_by_discord_id'),
+  },
+  (table) => ({
+    caseIdIdx: index('case_user_links_case_id_idx').on(table.caseId),
+    steamIdIdx: index('case_user_links_steam_id_idx').on(table.steamId),
+  }),
+);

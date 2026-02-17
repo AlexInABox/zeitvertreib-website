@@ -65,12 +65,11 @@
           <td
             class="username-cell"
             role="button"
-            aria-label="Kopiere Steam ID"
-            title="Steam ID kopieren"
-            (click)="copySteamId(u.steamId)"
+            aria-label="Profil öffnen"
+            title="Profil öffnen"
+            (click)="openProfile(u.steamId)"
           >
             <span class="username-text">{{ u.username }}</span>
-            <span class="copied-badge" *ngIf="copiedSteamId === u.steamId">Kopiert!</span>
           </td>
           <td class="coins-cell">{{ u.coins | number: '1.0-0' }}</td>
           <td class="luck-cell">

@@ -1,6 +1,8 @@
 import { AwsClient } from 'aws4fetch';
 import { createResponse, validateSession, isTeam } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
+import { eq, and, like, or } from 'drizzle-orm';
+import * as schema from '../db/schema.js';
 
 const BUCKET = 'test';
 
@@ -829,3 +831,230 @@ export async function handleDeleteCaseFile(request: Request, env: Env): Promise<
     );
   }
 }
+
+/// GET /cases/search-users?search={query}
+export async function searchUsersForCase(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+
+    if (!(await isTeam(sessionValidation.steamId, env))) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const url = new URL(request.url);
+    const searchQuery = url.searchParams.get('search') || '';
+
+    if (!searchQuery.trim()) {
+      return createResponse({ users: [] }, 200, origin);
+    }
+
+    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
+
+    // Search in playerdata and steamCache tables
+    const searchPattern = `%${searchQuery}%`;
+
+    const players = await db
+      .select({
+        steamId: schema.playerdata.id,
+        username: schema.steamCache.username,
+        avatarUrl: schema.steamCache.avatarUrl,
+      })
+      .from(schema.playerdata)
+      .leftJoin(schema.steamCache, eq(schema.playerdata.id, schema.steamCache.steamId))
+      .where(
+        or(
+          like(schema.playerdata.id, searchPattern),
+          like(schema.steamCache.username, searchPattern),
+        ),
+      )
+      .limit(10);
+
+    return createResponse(
+      {
+        users: players.map((p) => ({
+          steamId: p.steamId,
+          username: p.username || p.steamId,
+          avatarUrl: p.avatarUrl || '',
+        })),
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Search users error:', error);
+    return createResponse(
+      {
+        error: 'Failed to search users',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/// GET /cases/linked-users?caseId={caseId}
+export async function getLinkedUsers(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+
+    if (!(await isTeam(sessionValidation.steamId, env))) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const url = new URL(request.url);
+    const caseId = url.searchParams.get('caseId');
+
+    if (!caseId) {
+      return createResponse({ error: 'Missing required parameter: caseId' }, 400, origin);
+    }
+
+    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
+
+    const linkedUsers = await db
+      .select({
+        steamId: schema.caseUserLinks.steamId,
+        linkedAt: schema.caseUserLinks.linkedAt,
+        linkedByDiscordId: schema.caseUserLinks.linkedByDiscordId,
+        username: schema.steamCache.username,
+        avatarUrl: schema.steamCache.avatarUrl,
+      })
+      .from(schema.caseUserLinks)
+      .leftJoin(schema.steamCache, eq(schema.caseUserLinks.steamId, schema.steamCache.steamId))
+      .where(eq(schema.caseUserLinks.caseId, caseId));
+
+    return createResponse(
+      {
+        users: linkedUsers.map((u) => ({
+          steamId: u.steamId,
+          username: u.username || u.steamId,
+          avatarUrl: u.avatarUrl || '',
+          linkedAt: u.linkedAt,
+          linkedByDiscordId: u.linkedByDiscordId || '',
+        })),
+      },
+      200,
+      origin,
+    );
+  } catch (error) {
+    console.error('Get linked users error:', error);
+    return createResponse(
+      {
+        error: 'Failed to get linked users',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/// POST /cases/link-user
+export async function linkUserToCase(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+
+    if (!(await isTeam(sessionValidation.steamId, env))) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const body = (await request.json()) as { caseId: string; steamId: string };
+    const caseIdParam = body.caseId;
+    const steamId = body.steamId;
+
+    if (!caseIdParam || !steamId) {
+      return createResponse({ error: 'Missing required parameters: caseId, steamId' }, 400, origin);
+    }
+
+    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
+
+    // Check if link already exists
+    const existing = await db
+      .select({ id: schema.caseUserLinks.id })
+      .from(schema.caseUserLinks)
+      .where(and(eq(schema.caseUserLinks.caseId, caseIdParam), eq(schema.caseUserLinks.steamId, steamId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      return createResponse({ error: 'User already linked to this case' }, 400, origin);
+    }
+
+    // Create link
+    await db.insert(schema.caseUserLinks).values({
+      caseId: caseIdParam,
+      steamId: steamId,
+      linkedAt: Date.now(),
+      linkedByDiscordId: null, // Could be filled from user's Discord ID if available
+    });
+
+    return createResponse({ success: true }, 200, origin);
+  } catch (error) {
+    console.error('Link user error:', error);
+    return createResponse(
+      {
+        error: 'Failed to link user',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/// DELETE /cases/unlink-user?caseId={caseId}&steamId={steamId}
+export async function unlinkUserFromCase(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  try {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+
+    if (!(await isTeam(sessionValidation.steamId, env))) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const url = new URL(request.url);
+    const caseIdParam = url.searchParams.get('caseId');
+    const steamId = url.searchParams.get('steamId');
+
+    if (!caseIdParam || !steamId) {
+      return createResponse({ error: 'Missing required parameters: caseId, steamId' }, 400, origin);
+    }
+
+    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
+
+    await db
+      .delete(schema.caseUserLinks)
+      .where(and(eq(schema.caseUserLinks.caseId, caseIdParam), eq(schema.caseUserLinks.steamId, steamId)));
+
+    return createResponse({ success: true }, 200, origin);
+  } catch (error) {
+    console.error('Unlink user error:', error);
+    return createResponse(
+      {
+        error: 'Failed to unlink user',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+

@@ -40,6 +40,10 @@ import {
   handleUpdateCaseMetadata,
   handleDeleteCaseFile,
   handleGetFileHash,
+  searchUsersForCase,
+  getLinkedUsers,
+  linkUserToCase,
+  unlinkUserFromCase,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
@@ -57,6 +61,13 @@ import {
 } from './routes/chickencross.js';
 import { handleGetReducedLuck, handleSetReducedLuck } from './routes/reduced-luck.js';
 import { handleListPlayers, handleCheckCoinManagementAccess, handleAwardCoins } from './routes/coin-management.js';
+import {
+  getProfileDetails,
+  deleteUserSpray,
+  updateUserSpray,
+  setCoinRestriction,
+  linkCase,
+} from './routes/profile-details.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -95,6 +106,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'PUT:/cases/metadata': handleUpdateCaseMetadata,
   'GET:/cases/file/hash': handleGetFileHash,
   'DELETE:/cases/file': handleDeleteCaseFile,
+  'GET:/cases/search-users': searchUsersForCase,
+  'GET:/cases/linked-users': getLinkedUsers,
+  'POST:/cases/link-user': linkUserToCase,
+  'DELETE:/cases/unlink-user': unlinkUserFromCase,
 
   // Spray routes
   'POST:/spray': handlePostSpray,
@@ -188,6 +203,13 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Reduced Luck routes
   'GET:/reduced-luck': handleGetReducedLuck,
   'POST:/reduced-luck': handleSetReducedLuck,
+
+  // Profile Details routes
+  'GET:/profile-details': getProfileDetails,
+  'DELETE:/profile-details/spray': deleteUserSpray,
+  'PATCH:/profile-details/spray': updateUserSpray,
+  'POST:/profile-details/coin-restriction': setCoinRestriction,
+  'POST:/profile-details/case-link': linkCase,
 };
 
 export default {

@@ -1,19 +1,22 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, SteamUser } from '../services/auth.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { SessionsService, SessionInfo } from '../services/sessions.service';
 import { TakeoutService } from '../services/takeout.service';
 import { DeletionService } from '../services/deletion.service';
 import { BirthdayService } from '../services/birthday.service';
 import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
 @Component({
+  standalone: true,
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.css',
+  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: SteamUser | null = null;
@@ -23,6 +26,30 @@ export class ProfileComponent implements OnInit, OnDestroy {
   showIps = false;
   private authSubscription?: Subscription;
   private currentSessionToken: string | null = null;
+  viewedSteamId: string | null = null;
+  // True when this component is rendered for the admin/manage route (/manage/:id)
+  isManageView = false;
+  private routeSubscription?: Subscription;
+  viewedUser: {
+    steamId: string;
+    username?: string;
+    avatarUrl?: string;
+    coins?: number;
+    discordId?: string | null;
+    discordAvatarUrl?: string | null;
+    firstSeen?: number;
+    lastSeen?: number;
+    sprays?: any[];
+    sprayBanned?: boolean;
+    cases?: any[];
+    coinRestriction?: any;
+    moderation?: any;
+  } | null = null;
+  loadingViewedUser = false;
+
+  // Spray edit state
+  editingSprayId: number | null = null;
+  editingSprayName = '';
 
   // Takeout state
   lastTakeoutAt = 0;
@@ -55,16 +82,35 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   private readonly THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+  // Router is injected via `inject()` so standalone/component-level DI is stable
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   constructor(
     private authService: AuthService,
     private sessionsService: SessionsService,
     private takeoutService: TakeoutService,
     private deletionService: DeletionService,
     private birthdayService: BirthdayService,
-    private router: Router,
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
+    // Watch for optional :id param (viewing other users)
+    this.routeSubscription = this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      this.viewedSteamId = id;
+
+      // Detect if we are rendered via the admin manage route (/manage/:id)
+      // Prefer explicit routeConfig check, fallback to URL check.
+      this.isManageView = !!this.route.snapshot.routeConfig?.path?.startsWith('manage') || this.router.url.startsWith('/manage');
+
+      if (id) {
+        this.fetchViewedUser(id);
+      } else {
+        this.viewedUser = null;
+      }
+    });
     this.currentSessionToken = this.authService.getSessionToken();
     this.authSubscription = this.authService.currentUser$.subscribe((user: SteamUser | null) => {
       this.currentUser = user;
@@ -75,12 +121,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.loadTakeoutStatus();
         this.loadDeletionStatus();
         this.loadBirthday();
+
+        // If we're viewing our own profile but username/avatar were missing earlier, fill them now
+        if (this.viewedSteamId) {
+          const normalizedParam = this.viewedSteamId.endsWith('@steam') ? this.viewedSteamId : `${this.viewedSteamId}@steam`;
+          const currentId = user.steamId ? (user.steamId.endsWith('@steam') ? user.steamId : `${user.steamId}@steam`) : null;
+          if (currentId && normalizedParam === currentId) {
+            this.viewedUser = {
+              ...this.viewedUser!,
+              username: user.username,
+              avatarUrl: user.avatarUrl,
+            };
+          }
+        }
       }
     });
   }
 
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
+    this.routeSubscription?.unsubscribe();
   }
 
   loadSessions() {
@@ -190,6 +250,111 @@ export class ProfileComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.performLogout();
     this.router.navigate(['/']);
+  }
+
+  private buildAuthHeaders(): HttpHeaders {
+    let headers = new HttpHeaders();
+    const token = this.authService.getSessionToken();
+    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+    return headers;
+  }
+
+  private fetchViewedUser(steamId: string) {
+    this.viewedUser = { steamId };
+    this.loadingViewedUser = true;
+
+    // If viewing the logged-in user, pre-fill name/avatar from AuthService so local dev shows correct info
+    const normalizedParam = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const currentId = this.currentUser?.steamId ? (this.currentUser.steamId.endsWith('@steam') ? this.currentUser.steamId : `${this.currentUser.steamId}@steam`) : null;
+    if (currentId && normalizedParam === currentId) {
+      this.viewedUser = {
+        ...this.viewedUser,
+        username: this.currentUser?.username,
+        avatarUrl: this.currentUser?.avatarUrl,
+      };
+    }
+
+    const headers = this.buildAuthHeaders();
+
+    // Fetch enriched profile details from backend
+    const profileDetailsUrl = `${environment.apiUrl}/profile-details?steamId=${encodeURIComponent(steamId)}`;
+
+    this.http.get<any>(profileDetailsUrl, { headers }).subscribe({
+      next: (res) => {
+        this.viewedUser = {
+          ...this.viewedUser!,
+          // keep pre-filled username/avatar if backend doesn't return them
+          username: res.username || this.viewedUser?.username,
+          avatarUrl: res.avatarUrl || this.viewedUser?.avatarUrl,
+          coins: res.coins,
+          discordId: res.discordId,
+          discordAvatarUrl: res.discordAvatarUrl,
+          firstSeen: res.firstSeen,
+          lastSeen: res.lastSeen,
+          sprays: res.sprays || [],
+          sprayBanned: res.sprayBanned,
+          cases: res.cases || [],
+          coinRestriction: res.coinRestriction,
+          moderation: res.moderation,
+        };
+        this.loadingViewedUser = false;
+      },
+      error: (err) => {
+        console.error('Error fetching profile details:', err);
+        // Fallback to old method if /profile-details endpoint doesn't exist yet
+        this.fetchViewedUserFallback(steamId);
+      },
+    });
+  }
+
+  private fetchViewedUserFallback(steamId: string) {
+    this.viewedUser = { steamId };
+
+    const headers = this.buildAuthHeaders();
+
+    // Try coin-management players endpoint (supports search by steamId)
+    const url = `${environment.apiUrl}/coin-management/players?page=1&pageSize=1&search=${encodeURIComponent(
+      steamId,
+    )}`;
+
+    this.http.get<{ players: any[] }>(url, { headers }).subscribe({
+      next: (res) => {
+        const p = res.players?.[0];
+        if (p) {
+          this.viewedUser = {
+            ...this.viewedUser!,
+            username: p.username,
+            avatarUrl: p.avatarUrl,
+            coins: p.coins,
+          };
+        }
+      },
+      error: () => {
+        // ignore - we'll still try playerlist
+      },
+    });
+
+    // Try playerlist to obtain Discord info (public endpoint)
+    this.http.get<any[]>(`${environment.apiUrl}/playerlist`).subscribe({
+      next: (list) => {
+        if (!Array.isArray(list)) return;
+        const match = list.find((it) => {
+          const uid = (it.UserId || it.userid || it.userid)?.toString();
+          return uid === steamId || uid === `${steamId}@steam` || uid?.includes(steamId);
+        });
+        if (match) {
+          this.viewedUser = {
+            ...this.viewedUser!,
+            discordId: match.DiscordId || match.discordId || null,
+            discordAvatarUrl: match.AvatarUrl || match.avatarUrl || null,
+          };
+        }
+        this.loadingViewedUser = false;
+      },
+      error: () => {
+        this.loadingViewedUser = false;
+      },
+    });
   }
 
   // Takeout methods
@@ -533,5 +698,114 @@ export class ProfileComponent implements OnInit, OnDestroy {
   getDaysInMonth(month: number, year?: number): number {
     const y = year || 2000; // Use leap year by default to allow Feb 29
     return new Date(y, month, 0).getDate();
+  }
+
+  // Admin methods
+  deleteSpray(sprayId: number) {
+    if (!confirm('Wirklich löschen?')) return;
+
+    const headers = this.buildAuthHeaders();
+    const url = `${environment.apiUrl}/profile-details/spray?steamId=${encodeURIComponent(
+      this.viewedSteamId!,
+    )}&sprayId=${sprayId}`;
+
+    this.http.delete(url, { headers }).subscribe({
+      next: () => {
+        if (this.viewedUser?.sprays) {
+          this.viewedUser.sprays = this.viewedUser.sprays.filter((s) => s.id !== sprayId);
+        }
+      },
+      error: (err) => {
+        alert('Fehler beim Löschen des Sprays');
+        console.error('Error deleting spray:', err);
+      },
+    });
+  }
+
+  // Spray editing (admin)
+  startEditSpray(spray: any) {
+    this.editingSprayId = spray.id;
+    this.editingSprayName = spray.name || '';
+  }
+
+  cancelEditSpray() {
+    this.editingSprayId = null;
+    this.editingSprayName = '';
+  }
+
+  saveSprayEdit(sprayId: number) {
+    if (!this.viewedSteamId) return;
+    const name = this.editingSprayName.trim();
+    if (!name) return alert('Name darf nicht leer sein');
+
+    const headers = this.buildAuthHeaders();
+    const url = `${environment.apiUrl}/profile-details/spray`;
+
+    this.http.patch(url, { steamId: this.viewedSteamId, sprayId, name }, { headers }).subscribe({
+      next: (res: any) => {
+        if (this.viewedUser?.sprays) {
+          this.viewedUser.sprays = this.viewedUser.sprays.map((s) => (s.id === sprayId ? { ...s, name } : s));
+        }
+        this.cancelEditSpray();
+      },
+      error: (err) => {
+        alert('Fehler beim Speichern der Änderungen');
+        console.error('Error updating spray:', err);
+      },
+    });
+  }
+
+  setCoinRestriction(restrictedUntil: number, reason: string) {
+    if (!this.viewedSteamId) return;
+
+    const headers = this.buildAuthHeaders();
+    const url = `${environment.apiUrl}/profile-details/coin-restriction`;
+
+    this.http
+      .post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers })
+      .subscribe({
+        next: () => {
+          alert('Coin-Beschränkung gespeichert');
+          // Reload user data
+          this.fetchViewedUser(this.viewedSteamId!);
+        },
+        error: (err) => {
+          alert('Fehler beim Speichern der Coin-Beschränkung');
+          console.error('Error setting coin restriction:', err);
+        },
+      });
+  }
+
+  linkCase(caseId: string) {
+    if (!this.viewedSteamId) return;
+
+    const headers = this.buildAuthHeaders();
+    const url = `${environment.apiUrl}/profile-details/case-link`;
+
+    this.http
+      .post(url, { caseId, steamId: this.viewedSteamId, discordId: this.viewedUser?.discordId }, { headers })
+      .subscribe({
+        next: () => {
+          alert('Case verlinkt');
+          // Reload user data
+          this.fetchViewedUser(this.viewedSteamId!);
+        },
+        error: (err) => {
+          alert('Fehler beim Verlinken des Cases');
+          console.error('Error linking case:', err);
+        },
+      });
+  }
+
+  getDateDisplay(timestamp?: number): string {
+    if (!timestamp) return '-';
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

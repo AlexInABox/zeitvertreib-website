@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -7,8 +7,11 @@ import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
+import { AvatarModule } from 'primeng/avatar';
 import { AuthService } from '../services/auth.service';
 import { createMD5 } from 'hash-wasm';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 interface CaseFile {
   name: string;
@@ -32,13 +35,27 @@ interface CaseMetadata {
   tags?: string[];
 }
 
+interface LinkedUser {
+  steamId: string;
+  username: string;
+  avatarUrl: string;
+  linkedAt: number;
+  linkedByDiscordId: string;
+}
+
+interface SearchUser {
+  steamId: string;
+  username: string;
+  avatarUrl: string;
+}
+
 @Component({
   selector: 'app-case-detail',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, AvatarModule],
   templateUrl: './case-detail.component.html',
   styleUrl: './case-detail.component.css',
 })
-export class CaseDetailComponent implements OnInit {
+export class CaseDetailComponent implements OnInit, OnDestroy {
   caseId: string = '';
   caseName: string = '';
   files: CaseFile[] = [];
@@ -86,6 +103,15 @@ export class CaseDetailComponent implements OnInit {
   medalStartTime = 0;
   medalUrlInvalid = false;
 
+  // User search and linking state
+  linkedUsers: LinkedUser[] = [];
+  searchResults: SearchUser[] = [];
+  userSearchTerm = '';
+  private userSearchSubject = new Subject<string>();
+  private userSearchSubscription?: Subscription;
+  isSearchingUsers = false;
+  isLoadingLinkedUsers = false;
+
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
     { label: 'Name (Z-A)', value: 'name-desc' },
@@ -95,12 +121,11 @@ export class CaseDetailComponent implements OnInit {
     { label: 'Kleinste zuerst', value: 'smallest' },
   ];
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {}
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -135,14 +160,38 @@ export class CaseDetailComponent implements OnInit {
       this.isFakerankAdmin = this.authService.isFakerankAdmin();
     });
 
+    // Set up debounced user search
+    this.userSearchSubscription = this.userSearchSubject
+      .pipe(debounceTime(500), distinctUntilChanged())
+      .subscribe((term) => {
+        if (term.trim().length >= 2) {
+          this.searchUsers(term);
+        } else {
+          this.searchResults = [];
+        }
+      });
+
     this.route.paramMap.subscribe((params) => {
       this.caseId = params.get('id') || '';
       if (this.caseId) {
         this.caseName = decodeURIComponent(this.caseId);
         this.loadMetadata();
         this.loadFiles();
+        // Only load linked users if user is admin
+        if (this.isFakerankAdmin) {
+          this.loadLinkedUsers();
+        }
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.userSearchSubscription?.unsubscribe();
+  }
+
+  onUserSearchChange(term: string) {
+    this.userSearchTerm = term;
+    this.userSearchSubject.next(term);
   }
 
   loadMetadata() {
@@ -447,6 +496,97 @@ export class CaseDetailComponent implements OnInit {
           this.isSavingMetadata = false;
           console.error('Failed to save metadata:', error);
           alert('Fehler beim Speichern der Metadaten');
+        },
+      });
+  }
+
+  // User search and linking methods
+  loadLinkedUsers() {
+    this.isLoadingLinkedUsers = true;
+    this.http
+      .get<{ users: LinkedUser[] }>(`${environment.apiUrl}/cases/linked-users?caseId=${this.caseId}`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (response) => {
+          this.linkedUsers = response.users;
+          this.isLoadingLinkedUsers = false;
+        },
+        error: (error) => {
+          console.error('Error loading linked users:', error);
+          this.isLoadingLinkedUsers = false;
+        },
+      });
+  }
+
+  searchUsers(term: string) {
+    this.isSearchingUsers = true;
+    const headers = this.getAuthHeaders();
+    this.http
+      .get<{ users: SearchUser[] }>(
+        `${environment.apiUrl}/cases/search-users?search=${encodeURIComponent(term)}`,
+        { headers, withCredentials: true },
+      )
+      .subscribe({
+        next: (response) => {
+          this.searchResults = response.users;
+          this.isSearchingUsers = false;
+        },
+        error: (error) => {
+          console.error('Error searching users:', error);
+          this.searchResults = [];
+          this.isSearchingUsers = false;
+        },
+      });
+  }
+
+  linkUserToCase(user: SearchUser) {
+    const headers = this.getAuthHeaders();
+    this.http
+      .post(
+        `${environment.apiUrl}/cases/link-user`,
+        {
+          caseId: this.caseId,
+          steamId: user.steamId,
+        },
+        { headers, withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          // Reload linked users
+          this.loadLinkedUsers();
+          // Clear search
+          this.userSearchTerm = '';
+          this.searchResults = [];
+          alert('Benutzer erfolgreich verlinkt');
+        },
+        error: (error) => {
+          console.error('Error linking user:', error);
+          alert('Fehler beim Verlinken des Benutzers');
+        },
+      });
+  }
+
+  unlinkUserFromCase(steamId: string) {
+    if (!confirm('Möchtest du diesen Benutzer wirklich entfernen?')) {
+      return;
+    }
+
+    const headers = this.getAuthHeaders();
+    this.http
+      .delete(`${environment.apiUrl}/cases/unlink-user?caseId=${this.caseId}&steamId=${encodeURIComponent(steamId)}`, {
+        headers,
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.loadLinkedUsers();
+          alert('Benutzer erfolgreich entfernt');
+        },
+        error: (error) => {
+          console.error('Error unlinking user:', error);
+          alert('Fehler beim Entfernen des Benutzers');
         },
       });
   }
