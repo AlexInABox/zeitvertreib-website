@@ -282,12 +282,20 @@ export async function linkCase(request: Request, env: Env): Promise<Response> {
       .where(eq(playerdata.id, session.steamId))
       .get();
 
+    if (!adminPlayer || !adminPlayer.discordId) {
+      return createResponse(
+        { error: 'Admin account is not linked to a Discord ID' },
+        400,
+        origin,
+      );
+    }
+
     await db.insert(caseLinks).values({
       caseId: body.caseId,
       steamId: body.steamId,
       discordId: body.discordId,
       createdAt: Date.now(),
-      createdByDiscordId: adminPlayer?.discordId || 'unknown',
+      createdByDiscordId: adminPlayer.discordId,
     });
 
     return createResponse({ success: true, message: 'Case linked' }, 200, origin);
