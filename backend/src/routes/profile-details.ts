@@ -66,14 +66,14 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
       .where(eq(sprayBans.userid, steamId))
       .get();
 
-    // Fetch case links (now using caseUserLinks table for multiple users per case)
+    // Fetch case links (using caseLinks table for linked cases)
     const cases = await db
       .select({
-        caseId: caseUserLinks.caseId,
-        linkedAt: caseUserLinks.linkedAt,
+        caseId: caseLinks.caseId,
+        linkedAt: caseLinks.linkedAt,
       })
-      .from(caseUserLinks)
-      .where(eq(caseUserLinks.steamId, steamId))
+      .from(caseLinks)
+      .where(eq(caseLinks.steamId, steamId))
       .all();
 
     // Fetch coin sending restriction
