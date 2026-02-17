@@ -67,7 +67,7 @@
               <span class="spray-date">{{ getDateDisplay(spray.uploadedAt) }}</span>
             </div>
 
-            <div class="spray-actions">
+            <div class="spray-actions" *ngIf="isManageView">
               <ng-container *ngIf="editingSprayId !== spray.id">
                 <button class="btn btn-secondary btn-small" (click)="startEditSpray(spray)">
                   <i class="pi pi-pencil"></i> Bearbeiten

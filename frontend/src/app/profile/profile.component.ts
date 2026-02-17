@@ -290,7 +290,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // Fetch enriched profile details from backend
     const profileDetailsUrl = `${environment.apiUrl}/profile-details?steamId=${encodeURIComponent(steamId)}`;
 
-    this.http.get<any>(profileDetailsUrl, { headers }).subscribe({
+    this.http.get<any>(profileDetailsUrl, { headers, withCredentials: true }).subscribe({
       next: (res) => {
         this.viewedUser = {
           ...this.viewedUser!,
@@ -326,7 +326,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // Try coin-management players endpoint (supports search by steamId)
     const url = `${environment.apiUrl}/coin-management/players?page=1&pageSize=1&search=${encodeURIComponent(steamId)}`;
 
-    this.http.get<{ players: any[] }>(url, { headers }).subscribe({
+    this.http.get<{ players: any[] }>(url, { headers, withCredentials: true }).subscribe({
       next: (res) => {
         const p = res.players?.[0];
         if (p) {
@@ -718,7 +718,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.viewedSteamId!,
     )}&sprayId=${sprayId}`;
 
-    this.http.delete(url, { headers }).subscribe({
+    this.http.delete(url, { headers, withCredentials: true }).subscribe({
       next: () => {
         if (this.viewedUser?.sprays) {
           this.viewedUser.sprays = this.viewedUser.sprays.filter((s) => s.id !== sprayId);
@@ -750,7 +750,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
     const url = `${environment.apiUrl}/profile-details/spray`;
 
-    this.http.patch(url, { steamId: this.viewedSteamId, sprayId, name }, { headers }).subscribe({
+    this.http.patch(url, { steamId: this.viewedSteamId, sprayId, name }, { headers, withCredentials: true }).subscribe({
       next: (res: any) => {
         if (this.viewedUser?.sprays) {
           this.viewedUser.sprays = this.viewedUser.sprays.map((s) => (s.id === sprayId ? { ...s, name } : s));
@@ -770,7 +770,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
     const url = `${environment.apiUrl}/profile-details/coin-restriction`;
 
-    this.http.post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers }).subscribe({
+    this.http.post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers, withCredentials: true }).subscribe({
       next: () => {
         alert('Coin-Beschränkung gespeichert');
         // Reload user data
@@ -789,7 +789,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
 
     this.http
-      .post(`${environment.apiUrl}/cases/link-user`, { caseId, steamId: this.viewedSteamId }, { headers })
+      .post(`${environment.apiUrl}/cases/link-user`, { caseId, steamId: this.viewedSteamId }, { headers, withCredentials: true })
       .subscribe({
         next: () => {
           alert('Case verlinkt');
