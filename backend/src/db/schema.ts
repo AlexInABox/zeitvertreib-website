@@ -285,13 +285,19 @@ export const caseLinks = sqliteTable('case_links', {
   createdByDiscordId: text('created_by_discord_id'),
 });
 
-export const coinSendingRestrictions = sqliteTable('coin_sending_restrictions', {
-  steamId: text('steam_id').primaryKey().notNull(),
-  restrictedUntil: integer('restricted_until').notNull(), // unix timestamp, 0 = permanent
-  reason: text('reason').notNull(),
-  restrictedByDiscordId: text('restricted_by_discord_id').notNull(),
-  restrictedAt: integer('restricted_at').notNull().default(0),
-});
+export const coinSendingRestrictions = sqliteTable(
+  'coin_sending_restrictions',
+  {
+    steamId: text('steam_id').primaryKey().notNull(),
+    restrictedUntil: integer('restricted_until').notNull(), // unix timestamp, 0 = permanent
+    reason: text('reason').notNull(),
+    restrictedByDiscordId: text('restricted_by_discord_id').notNull(),
+    restrictedAt: integer('restricted_at').notNull().default(0),
+  },
+  (table) => ({
+    restrictedUntilIdx: index('coin_sending_restrictions_restricted_until_idx').on(table.restrictedUntil),
+  }),
+);
 
 export const caseUserLinks = sqliteTable(
   'case_user_links',
