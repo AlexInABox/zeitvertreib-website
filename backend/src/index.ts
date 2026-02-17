@@ -61,12 +61,7 @@ import {
 } from './routes/chickencross.js';
 import { handleGetReducedLuck, handleSetReducedLuck } from './routes/reduced-luck.js';
 import { handleListPlayers, handleCheckCoinManagementAccess, handleAwardCoins } from './routes/coin-management.js';
-import {
-  getProfileDetails,
-  deleteUserSpray,
-  updateUserSpray,
-  setCoinRestriction,
-} from './routes/profile-details.js';
+import { getProfileDetails, deleteUserSpray, updateUserSpray, setCoinRestriction } from './routes/profile-details.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -208,7 +203,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'DELETE:/profile-details/spray': deleteUserSpray,
   'PATCH:/profile-details/spray': updateUserSpray,
   'POST:/profile-details/coin-restriction': setCoinRestriction,
-
 };
 
 export default {
