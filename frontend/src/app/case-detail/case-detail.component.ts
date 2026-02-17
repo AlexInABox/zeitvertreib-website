@@ -525,7 +525,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     this.http
       .get<{
         users: SearchUser[];
-      }>(`${environment.apiUrl}/cases/search-users?search=${encodeURIComponent(term)}`, { headers, withCredentials: true })
+      }>(`${environment.apiUrl}/cases/search-users?search=${encodeURIComponent(term)}`, {
+        headers,
+        withCredentials: true,
+      })
       .subscribe({
         next: (response) => {
           this.searchResults = response.users;
