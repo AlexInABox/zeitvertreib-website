@@ -41,11 +41,7 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
     const steamId = url.searchParams.get('steamId');
 
     if (!steamId) {
-      return createResponse(
-        { error: 'Missing required parameter: steamId' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameter: steamId' }, 400, origin);
     }
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -63,11 +59,7 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
       .get();
 
     if (!player) {
-      return createResponse(
-        { error: 'Player not found' },
-        404,
-        origin,
-      );
+      return createResponse({ error: 'Player not found' }, 404, origin);
     }
 
     // Fetch sprays
@@ -91,14 +83,14 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
       .where(eq(sprayBans.userid, steamId))
       .get();
 
-    // Fetch case links (now using caseUserLinks table for multiple users per case)
+    // Fetch case links (using caseLinks table for linked cases)
     const cases = await db
       .select({
-        caseId: caseUserLinks.caseId,
-        linkedAt: caseUserLinks.linkedAt,
+        caseId: caseLinks.caseId,
+        linkedAt: caseLinks.linkedAt,
       })
-      .from(caseUserLinks)
-      .where(eq(caseUserLinks.steamId, steamId))
+      .from(caseLinks)
+      .where(eq(caseLinks.steamId, steamId))
       .all();
 
     // Fetch coin sending restriction
@@ -125,12 +117,14 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
         caseId: c.caseId,
         createdAt: c.linkedAt,
       })),
-      coinRestriction: coinRestriction ? {
-        restrictedUntil: coinRestriction.restrictedUntil,
-        reason: coinRestriction.reason,
-        isPermanent: coinRestriction.restrictedUntil === 0,
-      } : null,
-      // Placeholder for cedmod API 
+      coinRestriction: coinRestriction
+        ? {
+            restrictedUntil: coinRestriction.restrictedUntil,
+            reason: coinRestriction.reason,
+            isPermanent: coinRestriction.restrictedUntil === 0,
+          }
+        : null,
+      // Placeholder for cedmod API
       moderation: {
         warns: [],
         bans: [],
@@ -142,11 +136,7 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
     return createResponse(response, 200, origin);
   } catch (err) {
     console.error('Error fetching profile details:', err);
-    return createResponse(
-      { error: 'Internal server error' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Internal server error' }, 500, origin);
   }
 }
 
@@ -172,11 +162,7 @@ export async function deleteUserSpray(request: Request, env: Env): Promise<Respo
     const sprayId = url.searchParams.get('sprayId');
 
     if (!steamId || !sprayId) {
-      return createResponse(
-        { error: 'Missing required parameters' },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Missing required parameters' }, 400, origin);
     }
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -184,18 +170,10 @@ export async function deleteUserSpray(request: Request, env: Env): Promise<Respo
     // Delete the spray (D1 doesn't return affected rows, so we just attempt the delete)
     await db.delete(sprays).where(and(eq(sprays.id, Number(sprayId)), eq(sprays.userid, steamId)));
 
-    return createResponse(
-      { success: true, message: 'Spray deleted' },
-      200,
-      origin,
-    );
+    return createResponse({ success: true, message: 'Spray deleted' }, 200, origin);
   } catch (err) {
     console.error('Error deleting spray:', err);
-    return createResponse(
-      { error: 'Internal server error' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Internal server error' }, 500, origin);
   }
 }
 
@@ -275,9 +253,7 @@ export async function setCoinRestriction(request: Request, env: Env): Promise<Re
       .get();
 
     // Delete existing restriction if any
-    await db
-      .delete(coinSendingRestrictions)
-      .where(eq(coinSendingRestrictions.steamId, body.steamId));
+    await db.delete(coinSendingRestrictions).where(eq(coinSendingRestrictions.steamId, body.steamId));
 
     // Create new restriction
     if (body.restrictedUntil > 0 || body.restrictedUntil === 0) {
@@ -290,18 +266,10 @@ export async function setCoinRestriction(request: Request, env: Env): Promise<Re
       });
     }
 
-    return createResponse(
-      { success: true, message: 'Coin restriction updated' },
-      200,
-      origin,
-    );
+    return createResponse({ success: true, message: 'Coin restriction updated' }, 200, origin);
   } catch (err) {
     console.error('Error setting coin restriction:', err);
-    return createResponse(
-      { error: 'Internal server error' },
-      500,
-      origin,
-    );
+    return createResponse({ error: 'Internal server error' }, 500, origin);
   }
 }
 

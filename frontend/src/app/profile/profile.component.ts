@@ -103,7 +103,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
       // Detect if we are rendered via the admin manage route (/manage/:id)
       // Prefer explicit routeConfig check, fallback to URL check.
-      this.isManageView = !!this.route.snapshot.routeConfig?.path?.startsWith('manage') || this.router.url.startsWith('/manage');
+      this.isManageView =
+        !!this.route.snapshot.routeConfig?.path?.startsWith('manage') || this.router.url.startsWith('/manage');
 
       if (id) {
         this.fetchViewedUser(id);
@@ -124,8 +125,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
         // If we're viewing our own profile but username/avatar were missing earlier, fill them now
         if (this.viewedSteamId) {
-          const normalizedParam = this.viewedSteamId.endsWith('@steam') ? this.viewedSteamId : `${this.viewedSteamId}@steam`;
-          const currentId = user.steamId ? (user.steamId.endsWith('@steam') ? user.steamId : `${user.steamId}@steam`) : null;
+          const normalizedParam = this.viewedSteamId.endsWith('@steam')
+            ? this.viewedSteamId
+            : `${this.viewedSteamId}@steam`;
+          const currentId = user.steamId
+            ? user.steamId.endsWith('@steam')
+              ? user.steamId
+              : `${user.steamId}@steam`
+            : null;
           if (currentId && normalizedParam === currentId) {
             this.viewedUser = {
               ...this.viewedUser!,
@@ -265,7 +272,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     // If viewing the logged-in user, pre-fill name/avatar from AuthService so local dev shows correct info
     const normalizedParam = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
-    const currentId = this.currentUser?.steamId ? (this.currentUser.steamId.endsWith('@steam') ? this.currentUser.steamId : `${this.currentUser.steamId}@steam`) : null;
+    const currentId = this.currentUser?.steamId
+      ? this.currentUser.steamId.endsWith('@steam')
+        ? this.currentUser.steamId
+        : `${this.currentUser.steamId}@steam`
+      : null;
     if (currentId && normalizedParam === currentId) {
       this.viewedUser = {
         ...this.viewedUser,
@@ -313,9 +324,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
 
     // Try coin-management players endpoint (supports search by steamId)
-    const url = `${environment.apiUrl}/coin-management/players?page=1&pageSize=1&search=${encodeURIComponent(
-      steamId,
-    )}`;
+    const url = `${environment.apiUrl}/coin-management/players?page=1&pageSize=1&search=${encodeURIComponent(steamId)}`;
 
     this.http.get<{ players: any[] }>(url, { headers }).subscribe({
       next: (res) => {
@@ -339,7 +348,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: (list) => {
         if (!Array.isArray(list)) return;
         const match = list.find((it) => {
-          const uid = (it.UserId || it.userid || it.userid)?.toString();
+          const uid = (it.UserId || it.userId || it.userid)?.toString();
           return uid === steamId || uid === `${steamId}@steam` || uid?.includes(steamId);
         });
         if (match) {
@@ -761,19 +770,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
     const url = `${environment.apiUrl}/profile-details/coin-restriction`;
 
-    this.http
-      .post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers })
-      .subscribe({
-        next: () => {
-          alert('Coin-Beschränkung gespeichert');
-          // Reload user data
-          this.fetchViewedUser(this.viewedSteamId!);
-        },
-        error: (err) => {
-          alert('Fehler beim Speichern der Coin-Beschränkung');
-          console.error('Error setting coin restriction:', err);
-        },
-      });
+    this.http.post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers }).subscribe({
+      next: () => {
+        alert('Coin-Beschränkung gespeichert');
+        // Reload user data
+        this.fetchViewedUser(this.viewedSteamId!);
+      },
+      error: (err) => {
+        alert('Fehler beim Speichern der Coin-Beschränkung');
+        console.error('Error setting coin restriction:', err);
+      },
+    });
   }
 
   linkCase(caseId: string) {
