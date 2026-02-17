@@ -770,17 +770,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
     const url = `${environment.apiUrl}/profile-details/coin-restriction`;
 
-    this.http.post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers, withCredentials: true }).subscribe({
-      next: () => {
-        alert('Coin-Beschränkung gespeichert');
-        // Reload user data
-        this.fetchViewedUser(this.viewedSteamId!);
-      },
-      error: (err) => {
-        alert('Fehler beim Speichern der Coin-Beschränkung');
-        console.error('Error setting coin restriction:', err);
-      },
-    });
+    this.http
+      .post(url, { steamId: this.viewedSteamId, restrictedUntil, reason }, { headers, withCredentials: true })
+      .subscribe({
+        next: () => {
+          alert('Coin-Beschränkung gespeichert');
+          // Reload user data
+          this.fetchViewedUser(this.viewedSteamId!);
+        },
+        error: (err) => {
+          alert('Fehler beim Speichern der Coin-Beschränkung');
+          console.error('Error setting coin restriction:', err);
+        },
+      });
   }
 
   linkCase(caseId: string) {
@@ -789,7 +791,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
     const headers = this.buildAuthHeaders();
 
     this.http
-      .post(`${environment.apiUrl}/cases/link-user`, { caseId, steamId: this.viewedSteamId }, { headers, withCredentials: true })
+      .post(
+        `${environment.apiUrl}/cases/link-user`,
+        { caseId, steamId: this.viewedSteamId },
+        { headers, withCredentials: true },
+      )
       .subscribe({
         next: () => {
           alert('Case verlinkt');
