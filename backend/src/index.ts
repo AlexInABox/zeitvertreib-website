@@ -66,7 +66,6 @@ import {
   deleteUserSpray,
   updateUserSpray,
   setCoinRestriction,
-  linkCase,
 } from './routes/profile-details.js';
 
 // Simple response helper for internal use
@@ -209,7 +208,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'DELETE:/profile-details/spray': deleteUserSpray,
   'PATCH:/profile-details/spray': updateUserSpray,
   'POST:/profile-details/coin-restriction': setCoinRestriction,
-  'POST:/profile-details/case-link': linkCase,
+
 };
 
 export default {

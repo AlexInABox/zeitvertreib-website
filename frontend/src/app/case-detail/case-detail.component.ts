@@ -53,7 +53,7 @@ interface SearchUser {
   selector: 'app-case-detail',
   imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, AvatarModule],
   templateUrl: './case-detail.component.html',
-  styleUrl: './case-detail.component.css',
+  styleUrls: ['./case-detail.component.css'],
 })
 export class CaseDetailComponent implements OnInit, OnDestroy {
   caseId: string = '';
@@ -121,10 +121,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     { label: 'Kleinste zuerst', value: 'smallest' },
   ];
 
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+
+  constructor(private route: ActivatedRoute, private router: Router) {}
 
 
   @HostListener('document:click', ['$event'])

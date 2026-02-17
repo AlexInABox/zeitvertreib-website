@@ -780,10 +780,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!this.viewedSteamId) return;
 
     const headers = this.buildAuthHeaders();
-    const url = `${environment.apiUrl}/profile-details/case-link`;
 
     this.http
-      .post(url, { caseId, steamId: this.viewedSteamId, discordId: this.viewedUser?.discordId }, { headers })
+      .post(`${environment.apiUrl}/cases/link-user`, { caseId, steamId: this.viewedSteamId }, { headers })
       .subscribe({
         next: () => {
           alert('Case verlinkt');

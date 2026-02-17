@@ -12,7 +12,7 @@ import { ThemeService } from './services/theme.service';
   selector: 'app-root',
   imports: [CommonModule, RouterOutlet, HeaderComponent, DomainWarningComponent, ToastComponent, ZvcOverlayComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
   title = 'zeitvertreib-website';

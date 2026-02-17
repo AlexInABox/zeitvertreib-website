@@ -12,7 +12,7 @@ interface DiscordInviteResponse {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './discord-stats.component.html',
-  styleUrl: './discord-stats.component.css',
+  styleUrls: ['./discord-stats.component.css'],
 })
 export class DiscordStatsComponent implements OnInit {
   @Input() variant: 'full' | 'mini' = 'full';

@@ -1,17 +1,23 @@
-import { createResponse, validateSession } from '../utils.js';
+import { createResponse, validateSession, isTeam } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import {
   playerdata,
   sprays,
   sprayBans,
-  caseLinks,
   caseUserLinks,
   coinSendingRestrictions,
 } from '../db/schema.js';
 import { eq, and, or } from 'drizzle-orm';
+import typia from 'typia';
 
-// List of admin Steam IDs allowed to access profile details
-const PROFILE_ADMINS = ['76561198834070725@steam', '76561198354414854@steam'];
+
+
+// Runtime-validated request shapes
+interface SetCoinRestrictionRequest {
+  steamId: string;
+  restrictedUntil: number;
+  reason: string;
+}
 
 /**
  * GET /profile-details?steamId={steamId}
@@ -21,9 +27,9 @@ export async function getProfileDetails(request: Request, env: Env): Promise<Res
   const origin = request.headers.get('Origin');
 
   try {
-    // Verify admin
+    // Verify admin (team member)
     const session = await validateSession(request, env);
-    if (session.status !== 'valid' || !session.steamId || !PROFILE_ADMINS.includes(session.steamId)) {
+    if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
       return createResponse(
         { error: 'Unauthorized' },
         401,
@@ -153,7 +159,7 @@ export async function deleteUserSpray(request: Request, env: Env): Promise<Respo
 
   try {
     const session = await validateSession(request, env);
-    if (session.status !== 'valid' || !session.steamId || !PROFILE_ADMINS.includes(session.steamId)) {
+    if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
       return createResponse(
         { error: 'Unauthorized' },
         401,
@@ -202,7 +208,7 @@ export async function updateUserSpray(request: Request, env: Env): Promise<Respo
 
   try {
     const session = await validateSession(request, env);
-    if (session.status !== 'valid' || !session.steamId || !PROFILE_ADMINS.includes(session.steamId)) {
+    if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
@@ -243,7 +249,7 @@ export async function setCoinRestriction(request: Request, env: Env): Promise<Re
 
   try {
     const session = await validateSession(request, env);
-    if (session.status !== 'valid' || !session.steamId || !PROFILE_ADMINS.includes(session.steamId)) {
+    if (session.status !== 'valid' || !session.steamId || !(await isTeam(session.steamId, env))) {
       return createResponse(
         { error: 'Unauthorized' },
         401,
@@ -251,11 +257,13 @@ export async function setCoinRestriction(request: Request, env: Env): Promise<Re
       );
     }
 
-    const body: {
-      steamId: string;
-      restrictedUntil: number;
-      reason: string;
-    } = await request.json();
+    const bodyRaw = await request.json();
+
+    if (!typia.is<SetCoinRestrictionRequest>(bodyRaw)) {
+      return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
+    }
+
+    const body = bodyRaw as SetCoinRestrictionRequest;
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
@@ -297,73 +305,5 @@ export async function setCoinRestriction(request: Request, env: Env): Promise<Re
   }
 }
 
-/**
- * POST /profile-details/case-link
- * Link a case to a user
- */
-export async function linkCase(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const session = await validateSession(request, env);
-    if (session.status !== 'valid' || !session.steamId || !PROFILE_ADMINS.includes(session.steamId)) {
-      return createResponse(
-        { error: 'Unauthorized' },
-        401,
-        origin,
-      );
-    }
-
-    const body: {
-      caseId: string;
-      steamId?: string;
-      discordId?: string;
-    } = await request.json();
-
-    if (!body.caseId) {
-      return createResponse(
-        { error: 'Missing required parameter: caseId' },
-        400,
-        origin,
-      );
-    }
-
-    if (!body.steamId && !body.discordId) {
-      return createResponse(
-        { error: 'Must provide either steamId or discordId' },
-        400,
-        origin,
-      );
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-
-    // Get admin's Discord ID for audit trail
-    const adminPlayer = await db
-      .select({ discordId: playerdata.discordId })
-      .from(playerdata)
-      .where(eq(playerdata.id, session.steamId))
-      .get();
-
-    await db.insert(caseLinks).values({
-      caseId: body.caseId,
-      steamId: body.steamId,
-      discordId: body.discordId,
-      createdAt: Date.now(),
-      createdByDiscordId: adminPlayer?.discordId || 'unknown',
-    });
-
-    return createResponse(
-      { success: true, message: 'Case linked' },
-      200,
-      origin,
-    );
-  } catch (err) {
-    console.error('Error linking case:', err);
-    return createResponse(
-      { error: 'Internal server error' },
-      500,
-      origin,
-    );
-  }
-}
+// Removed: POST /profile-details/case-link — consolidated to /cases/link-user
+// Use POST /cases/link-user instead (writes to caseUserLinks and requires team membership).

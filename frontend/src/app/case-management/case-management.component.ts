@@ -30,7 +30,7 @@ interface CaseFolder {
   selector: 'app-case-management',
   imports: [CommonModule, FormsModule, ButtonModule, InputTextModule],
   templateUrl: './case-management.component.html',
-  styleUrl: './case-management.component.css',
+  styleUrls: ['./case-management.component.css'],
 })
 export class CaseManagementComponent implements OnInit {
   caseFolders: CaseFolder[] = [];
