@@ -348,7 +348,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: (list) => {
         if (!Array.isArray(list)) return;
         const match = list.find((it) => {
-          const uid = (it.UserId || it.userid || it.userid)?.toString();
+          const uid = (it.UserId || it.userId || it.userid)?.toString();
           return uid === steamId || uid === `${steamId}@steam` || uid?.includes(steamId);
         });
         if (match) {
