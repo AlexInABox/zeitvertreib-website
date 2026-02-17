@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -48,10 +48,6 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
   isLoadingPlayers = true;
   errorMessage = '';
 
-  // copy-to-clipboard state
-  copiedSteamId: string | null = null;
-  private _copyTimer: any = null;
-
   // sorting state
   sortField: 'username' | 'coins' | 'luck' | null = null;
   sortDirection: 'asc' | 'desc' = 'asc';
@@ -72,7 +68,12 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
   constructor(
     @Inject(HttpClient) private http: HttpClient,
     private authService: AuthService,
+    private router: Router,
   ) {}
+
+  openProfile(steamId: string) {
+    this.router.navigate(['/manage', steamId]);
+  }
 
   ngOnInit() {
     this.loadPlayers();
@@ -220,46 +221,6 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
 
       return this.sortDirection === 'asc' ? comparison : -comparison;
     });
-  }
-
-  copySteamId(steamId: string) {
-    // try the clipboard API, fall back to creating a temporary textarea
-    const copyText = async (text: string) => {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        return navigator.clipboard.writeText(text);
-      }
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        return Promise.resolve();
-      } catch (e) {
-        document.body.removeChild(ta);
-        return Promise.reject(e);
-      }
-    };
-
-    copyText(steamId)
-      .then(() => {
-        this.copiedSteamId = steamId;
-        if (this._copyTimer) {
-          clearTimeout(this._copyTimer);
-        }
-        this._copyTimer = setTimeout(() => {
-          if (this.copiedSteamId === steamId) this.copiedSteamId = null;
-          this._copyTimer = null;
-        }, 1600);
-      })
-      .catch((err) => {
-        console.error('Copy failed', err);
-        this.errorMessage = 'Kopieren fehlgeschlagen';
-        setTimeout(() => (this.errorMessage = ''), 1600);
-      });
   }
 
   saveLuckChange() {

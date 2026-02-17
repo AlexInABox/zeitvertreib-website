@@ -135,6 +135,73 @@
         </div>
       </div>
 
+      <!-- Linked Users Section -->
+      <div *ngIf="isFakerankAdmin" class="linked-users-section">
+        <div class="linked-users-card">
+          <div class="linked-users-header">
+            <div class="header-left">
+              <i class="pi pi-users"></i>
+              <h3 class="section-title">Verlinkte Benutzer</h3>
+              <span class="user-count" *ngIf="linkedUsers.length > 0">{{ linkedUsers.length }}</span>
+            </div>
+          </div>
+
+          <!-- User Search -->
+          <div class="user-search-wrapper">
+            <i class="pi pi-search search-icon"></i>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="userSearchTerm"
+              (ngModelChange)="onUserSearchChange(userSearchTerm)"
+              placeholder="Suche nach Name oder Steam ID..."
+              class="user-search-input"
+            />
+            <i class="pi pi-spin pi-spinner" *ngIf="isSearchingUsers"></i>
+          </div>
+
+          <!-- Search Results -->
+          <div class="search-results" *ngIf="searchResults.length > 0">
+            <div class="search-result-item" *ngFor="let user of searchResults" (click)="linkUserToCase(user)">
+              <p-avatar [image]="user.avatarUrl" shape="circle" styleClass="user-avatar"></p-avatar>
+              <div class="user-info">
+                <span class="username">{{ user.username }}</span>
+                <span class="steamid">{{ user.steamId }}</span>
+              </div>
+              <button pButton icon="pi pi-plus" class="link-btn" [text]="true"></button>
+            </div>
+          </div>
+
+          <!-- Linked Users List -->
+          <div class="linked-users-list" *ngIf="linkedUsers.length > 0">
+            <div class="linked-user-item" *ngFor="let user of linkedUsers">
+              <p-avatar [image]="user.avatarUrl" shape="circle" styleClass="user-avatar"></p-avatar>
+              <div class="user-info">
+                <span class="username">{{ user.username }}</span>
+                <span class="steamid">{{ user.steamId }}</span>
+              </div>
+              <button
+                pButton
+                icon="pi pi-times"
+                class="unlink-btn"
+                (click)="unlinkUserFromCase(user.steamId)"
+                [text]="true"
+              ></button>
+            </div>
+          </div>
+
+          <div class="no-linked-users" *ngIf="linkedUsers.length === 0 && !isLoadingLinkedUsers">
+            <i class="pi pi-users"></i>
+            <p>Keine verlinkten Benutzer</p>
+          </div>
+
+          <div class="loading-linked-users" *ngIf="isLoadingLinkedUsers">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Lade verlinkte Benutzer...</p>
+          </div>
+        </div>
+      </div>
+
       <!-- File Upload Section -->
       <div class="upload-section">
         <div class="upload-card">

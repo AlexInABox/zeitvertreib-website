@@ -19,7 +19,7 @@ import { environment } from '../../../environments/environment';
   selector: 'app-header',
   imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, FormsModule],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css',
+  styleUrls: ['./header.component.css'],
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   private boundCheckPortrait: () => void = () => {};

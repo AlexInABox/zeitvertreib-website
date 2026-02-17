@@ -1,388 +1,569 @@
 <div class="profile-page">
-  <!-- Loading State -->
-  <div *ngIf="!currentUser" class="loading-state">
-    <div class="loading-spinner"></div>
-    <p>Lade Profildaten...</p>
-  </div>
-
-  <div *ngIf="currentUser" class="profile-wrapper">
-    <!-- Profile Card -->
-    <div class="card profile-card">
-      <div class="card-header">
-        <span class="card-icon">👤</span>
-        <div class="card-title-group">
-          <h2>Profil</h2>
-          <span class="card-subtitle">Deine Account-Informationen</span>
-        </div>
-      </div>
-      <div class="profile-content">
-        <img [src]="currentUser.avatarUrl" [alt]="currentUser.username" class="avatar" />
-        <div class="profile-info">
-          <span class="username">{{ currentUser.username }}</span>
-          <span class="steamid">{{ currentUser.steamId }}</span>
-        </div>
-        <button class="btn btn-danger" (click)="logout()"><span>🚪</span> Abmelden</button>
-      </div>
-    </div>
-
-    <!-- Birthday Card -->
-    <div class="card birthday-card">
-      <div class="card-header">
-        <span class="card-icon">🎂</span>
-        <div class="card-title-group">
-          <h2>Geburtstag</h2>
-          <span class="card-subtitle">Erhalte an deinem Geburtstag besondere Belohnungen</span>
-        </div>
-      </div>
-
-      <!-- Loading -->
-      <div *ngIf="loadingBirthday" class="card-loading">
-        <div class="loading-spinner small"></div>
-        <span>Lade Geburtstag...</span>
-      </div>
-
-      <!-- Birthday Display (not editing) -->
-      <div *ngIf="!loadingBirthday && !isEditingBirthday" class="birthday-body">
-        <div class="birthday-content">
-          <div *ngIf="hasBirthday()" class="birthday-display">
-            <span class="birthday-label">{{ getBirthdayDisplay() }}</span>
-          </div>
-          <span *ngIf="!hasBirthday() && !isBirthdayEditDisabled()" class="muted">Noch kein Geburtstag gesetzt</span>
-
-          <div class="birthday-actions">
-            <button
-              class="btn btn-secondary btn-small"
-              (click)="startEditBirthday()"
-              [disabled]="!hasBirthday() && isBirthdayEditDisabled()"
-            >
-              {{ hasBirthday() ? '✏️ Bearbeiten' : '➕ Hinzufügen' }}
-            </button>
-          </div>
-
-          <!-- Cooldown message when birthday exists -->
-          <div *ngIf="hasBirthday() && isBirthdayEditDisabled()" class="birthday-cooldown-notice">
-            ⏳ Noch {{ getDaysUntilBirthdayEdit() }} Tag{{ getDaysUntilBirthdayEdit() !== 1 ? 'e' : '' }} bis zur
-            nächsten Aktualisierung. Du kannst aber noch löschen.
-          </div>
-
-          <!-- Cooldown message when birthday deleted -->
-          <div *ngIf="!hasBirthday() && isBirthdayEditDisabled()" class="birthday-deleted-cooldown-notice">
-            ⏳ Du kannst einen neuen Geburtstag in {{ getDaysUntilBirthdayEdit() }} Tag{{
-              getDaysUntilBirthdayEdit() !== 1 ? 'en' : ''
-            }}
-            hinzufügen
+  <ng-container *ngIf="viewedSteamId">
+    <div class="profile-wrapper">
+      <!-- Profile Card -->
+      <div class="card profile-card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-user"></i></span>
+          <div class="card-title-group">
+            <h2>Profil</h2>
+            <span class="card-subtitle">Benutzerprofil</span>
           </div>
         </div>
-      </div>
-
-      <!-- Birthday Edit Form -->
-      <div *ngIf="!loadingBirthday && isEditingBirthday" class="birthday-body">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="birthday-day">Tag</label>
-            <input
-              type="number"
-              id="birthday-day"
-              [(ngModel)]="editDay"
-              placeholder="01"
-              min="1"
-              max="31"
-              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
-            />
-          </div>
-          <div class="form-group">
-            <label for="birthday-month">Monat</label>
-            <input
-              type="number"
-              id="birthday-month"
-              [(ngModel)]="editMonth"
-              placeholder="01"
-              min="1"
-              max="12"
-              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
-            />
-          </div>
-          <div class="form-group">
-            <label for="birthday-year">Jahr <span class="optional">(optional)</span></label>
-            <input
-              type="number"
-              id="birthday-year"
-              [(ngModel)]="editYear"
-              placeholder="1990"
-              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
-            />
+        <div class="profile-content">
+          <a [href]="viewedUser?.avatarUrl" target="_blank" class="avatar-link">
+            <img *ngIf="viewedUser?.avatarUrl" [src]="viewedUser?.avatarUrl" class="avatar clickable" />
+          </a>
+          <div class="profile-info">
+            <span class="username">{{ viewedUser?.username || viewedUser?.steamId }}</span>
+            <span class="steamid">{{ viewedUser?.steamId }}</span>
           </div>
         </div>
 
-        <div *ngIf="!isBirthdayEditDisabled()" class="privacy-notice">
-          ⚠️ Dein Geburtstag ist <strong>öffentlich sichtbar</strong> und ist NICHT privat. Durch Klick auf "Speichern"
-          stimmst du zu, dass diese Information für alle einsehbar wird.
-        </div>
-
-        <div *ngIf="isUnder18()" class="form-error">
-          Du musst mindestens 18 Jahre alt sein, um dein Geburtsjahr zu speichern.
-        </div>
-
-        <div *ngIf="isBirthdayEditDisabled()" class="birthday-cooldown-edit-notice">
-          ⏳ Du kannst deinen Geburtstag momentan nicht aktualisieren ({{ getDaysUntilBirthdayEdit() }} Tag{{
-            getDaysUntilBirthdayEdit() !== 1 ? 'e' : ''
-          }}
-          verbleibend). Du kannst ihn aber trotzdem löschen.
-        </div>
-
-        <div class="form-error" *ngIf="birthdayError">{{ birthdayError }}</div>
-
-        <div class="birthday-form-actions">
-          <button
-            *ngIf="hasBirthday() && !showDeleteConfirm"
-            class="btn btn-danger btn-small"
-            (click)="showDeleteBirthdayConfirm()"
-            [disabled]="birthdayLoading"
-          >
-            🗑️ Löschen
-          </button>
-          <div *ngIf="showDeleteConfirm" class="birthday-delete-confirm">
-            <span class="delete-confirm-text">Wirklich löschen?</span>
-            <button class="btn btn-danger btn-small" (click)="deleteBirthday()" [disabled]="birthdayLoading">Ja</button>
-            <button class="btn btn-secondary btn-small" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">
-              Nein
-            </button>
+        <div class="stats-grid">
+          <div class="stat-item" *ngIf="viewedUser?.coins !== undefined">
+            <span class="stat-label">Coins</span>
+            <span class="stat-value">{{ viewedUser?.coins }}</span>
           </div>
-          <div class="spacer"></div>
-          <button class="btn btn-secondary btn-small" (click)="cancelEditBirthday()" [disabled]="birthdayLoading">
-            Abbrechen
-          </button>
-          <button
-            class="btn btn-primary btn-small"
-            (click)="saveBirthday()"
-            [disabled]="birthdayLoading || isBirthdayEditDisabled() || isUnder18()"
-          >
-            <span *ngIf="!birthdayLoading">{{
-              isBirthdayEditDisabled() ? 'Aktualisierung gesperrt' : 'Speichern'
-            }}</span>
-            <span *ngIf="birthdayLoading">Speichert...</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sessions Card -->
-    <div class="card sessions-card">
-      <div class="card-header">
-        <span class="card-icon">🔐</span>
-        <div class="card-title-group">
-          <h2>Aktive Sitzungen</h2>
-          <span class="card-subtitle">Verwalte deine aktiven Geräte</span>
-        </div>
-        <span *ngIf="sessions.length > 0" class="badge">{{ sessions.length }}</span>
-      </div>
-
-      <!-- Loading -->
-      <div *ngIf="loadingSessions" class="card-loading">
-        <div class="loading-spinner small"></div>
-        <span>Lade Sitzungen...</span>
-      </div>
-
-      <!-- Sessions Content -->
-      <div *ngIf="!loadingSessions && sessions.length > 0" class="sessions-content">
-        <button class="ip-toggle" (click)="toggleIps()">
-          {{ showIps ? '🙈 IPs verbergen' : '👁️ IPs anzeigen' }}
-        </button>
-
-        <div class="sessions-list">
-          <div
-            *ngFor="let session of sessions"
-            class="session-row"
-            [class.current]="isCurrentSession(session.id)"
-            [class.stale]="!isCurrentSession(session.id) && isStale(session.lastLoginAt)"
-          >
-            <span class="session-icon">{{ getDeviceIcon(session.userAgent) }}</span>
-            <div class="session-details">
-              <div class="session-main">
-                <span class="session-browser">{{ getBrowserName(session.userAgent) }}</span>
-                <span *ngIf="isCurrentSession(session.id)" class="tag tag-current">Aktuell</span>
-                <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)" class="tag tag-stale"
-                  >Inaktiv</span
-                >
-              </div>
-              <span class="session-ip">{{ getIpDisplay(session.ipAddress) }}</span>
-              <div class="session-time">
-                <span [class.text-warning]="isStale(session.lastLoginAt)">{{
-                  getRelativeTime(session.lastLoginAt)
-                }}</span>
-                <span class="dot">·</span>
-                <span>{{ formatDate(session.createdAt) }}</span>
-              </div>
+          <div class="stat-item" *ngIf="viewedUser?.discordId || viewedUser?.discordAvatarUrl">
+            <span class="stat-label">Discord</span>
+            <div class="stat-value discord-value">
+              <img *ngIf="viewedUser?.discordAvatarUrl" [src]="viewedUser?.discordAvatarUrl" class="avatar small" />
+              <span>{{ viewedUser?.discordId || 'Verbunden' }}</span>
             </div>
+          </div>
+          <div class="stat-item" *ngIf="viewedUser?.firstSeen">
+            <span class="stat-label">First Seen</span>
+            <span class="stat-value date-value">{{ getDateDisplay(viewedUser?.firstSeen) }}</span>
+          </div>
+          <div class="stat-item" *ngIf="viewedUser?.lastSeen">
+            <span class="stat-label">Last Seen</span>
+            <span class="stat-value date-value">{{ getDateDisplay(viewedUser?.lastSeen) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sprays/Stickers Card -->
+      <div class="card" *ngIf="viewedUser?.sprays && viewedUser?.sprays!.length > 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-palette"></i></span>
+          <div class="card-title-group">
+            <h2>Sprays</h2>
+            <span class="card-subtitle">{{ viewedUser?.sprays!.length }} Sprays</span>
+          </div>
+          <span class="badge" *ngIf="viewedUser?.sprayBanned">Gebannt</span>
+        </div>
+        <div class="sprays-list">
+          <div class="spray-item" *ngFor="let spray of viewedUser?.sprays">
+            <div class="spray-info">
+              <ng-container *ngIf="editingSprayId !== spray.id">
+                <span class="spray-name">{{ spray.name }}</span>
+              </ng-container>
+
+              <ng-container *ngIf="editingSprayId === spray.id">
+                <input class="spray-edit-input" [(ngModel)]="editingSprayName" />
+              </ng-container>
+
+              <span class="spray-date">{{ getDateDisplay(spray.uploadedAt) }}</span>
+            </div>
+
+            <div class="spray-actions" *ngIf="isManageView">
+              <ng-container *ngIf="editingSprayId !== spray.id">
+                <button class="btn btn-secondary btn-small" (click)="startEditSpray(spray)">
+                  <i class="pi pi-pencil"></i> Bearbeiten
+                </button>
+                <button class="btn btn-danger btn-small" (click)="deleteSpray(spray.id)">
+                  <i class="pi pi-trash"></i> Löschen
+                </button>
+              </ng-container>
+
+              <ng-container *ngIf="editingSprayId === spray.id">
+                <button class="btn btn-secondary btn-small" (click)="cancelEditSpray()">Abbrechen</button>
+                <button class="btn btn-primary btn-small" (click)="saveSprayEdit(spray.id)">Speichern</button>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Moderation Card -->
+      <div class="card" *ngIf="viewedUser?.moderation">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-shield"></i></span>
+          <div class="card-title-group">
+            <h2>Moderation</h2>
+            <span class="card-subtitle">Warn/Ban/Mute Status</span>
+          </div>
+        </div>
+        <div class="moderation-content">
+          <div class="moderation-section">
+            <span class="mod-label">Verwarnungen</span>
+            <span class="mod-value">{{ viewedUser?.moderation?.warns?.length || 0 }}</span>
+          </div>
+          <div class="moderation-section">
+            <span class="mod-label">Bans</span>
+            <span class="mod-value">{{ viewedUser?.moderation?.bans?.length || 0 }}</span>
+          </div>
+          <div class="moderation-section">
+            <span class="mod-label">Mutes</span>
+            <span class="mod-value">{{ viewedUser?.moderation?.mutes?.length || 0 }}</span>
+          </div>
+          <div class="moderation-section">
+            <span class="mod-label">Verlinkte Cases</span>
+            <span class="mod-value">{{ viewedUser?.cases?.length || 0 }}</span>
+          </div>
+          <div class="moderation-note" *ngIf="viewedUser?.moderation?.source === 'cedmod-api-not-implemented'">
+            noch nicht implementiert
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Cases in Moderation Context (admin/manage view only) -->
+      <div
+        class="card"
+        *ngIf="isManageView && viewedUser?.cases && viewedUser?.cases!.length > 0 && viewedUser?.moderation"
+      >
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-folder-open"></i></span>
+          <div class="card-title-group">
+            <h2>Cases</h2>
+            <span class="card-subtitle">{{ viewedUser?.cases!.length }} verlinkte(r) Fall/Fälle</span>
+          </div>
+        </div>
+        <div class="cases-list">
+          <a
+            [routerLink]="['/cases', caseItem.caseId]"
+            class="case-item clickable"
+            *ngFor="let caseItem of viewedUser?.cases"
+          >
+            <span class="case-id">Fall #{{ caseItem.caseId }}</span>
+            <span class="case-date">{{ getDateDisplay(caseItem.createdAt) }}</span>
+            <i class="pi pi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Coin Restriction Card -->
+      <div class="card" *ngIf="viewedUser?.coinRestriction">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-ban"></i></span>
+          <div class="card-title-group">
+            <h2>Coin-Beschränkung</h2>
+            <span class="card-subtitle">Benutzer kann keine Coins senden</span>
+          </div>
+        </div>
+        <div class="restriction-content">
+          <div class="restriction-item">
+            <span class="restriction-label">Grund</span>
+            <span class="restriction-value">{{ viewedUser?.coinRestriction?.reason }}</span>
+          </div>
+          <div class="restriction-item" *ngIf="!viewedUser?.coinRestriction?.isPermanent">
+            <span class="restriction-label">Bis</span>
+            <span class="restriction-value">{{ getDateDisplay(viewedUser?.coinRestriction?.restrictedUntil) }}</span>
+          </div>
+          <div class="restriction-item" *ngIf="viewedUser?.coinRestriction?.isPermanent">
+            <span class="restriction-label">Dauer</span>
+            <span class="restriction-value">Permanent</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!viewedSteamId">
+    <!-- Loading State -->
+    <div *ngIf="!currentUser" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Lade Profildaten...</p>
+    </div>
+
+    <div *ngIf="currentUser" class="profile-wrapper">
+      <!-- Profile Card -->
+      <div class="card profile-card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-user"></i></span>
+          <div class="card-title-group">
+            <h2>Profil</h2>
+            <span class="card-subtitle">Deine Account-Informationen</span>
+          </div>
+        </div>
+        <div class="profile-content">
+          <a [href]="currentUser.avatarUrl" target="_blank" class="avatar-link">
+            <img [src]="currentUser.avatarUrl" [alt]="currentUser.username" class="avatar clickable" />
+          </a>
+          <div class="profile-info">
+            <span class="username">{{ currentUser.username }}</span>
+            <span class="steamid">{{ currentUser.steamId }}</span>
+          </div>
+          <button class="btn btn-danger" (click)="logout()"><i class="pi pi-sign-out"></i> Abmelden</button>
+        </div>
+      </div>
+
+      <!-- Birthday Card -->
+      <div class="card birthday-card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-calendar"></i></span>
+          <div class="card-title-group">
+            <h2>Geburtstag</h2>
+            <span class="card-subtitle">Erhalte an deinem Geburtstag besondere Belohnungen</span>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loadingBirthday" class="card-loading">
+          <div class="loading-spinner small"></div>
+          <span>Lade Geburtstag...</span>
+        </div>
+
+        <!-- Birthday Display (not editing) -->
+        <div *ngIf="!loadingBirthday && !isEditingBirthday" class="birthday-body">
+          <div class="birthday-content">
+            <div *ngIf="hasBirthday()" class="birthday-display">
+              <span class="birthday-label">{{ getBirthdayDisplay() }}</span>
+            </div>
+            <span *ngIf="!hasBirthday() && !isBirthdayEditDisabled()" class="muted">Noch kein Geburtstag gesetzt</span>
+
+            <div class="birthday-actions">
+              <button
+                class="btn btn-secondary btn-small"
+                (click)="startEditBirthday()"
+                [disabled]="!hasBirthday() && isBirthdayEditDisabled()"
+              >
+                {{ hasBirthday() ? 'Bearbeiten' : 'Hinzufügen' }}
+              </button>
+            </div>
+
+            <!-- Cooldown message when birthday exists -->
+            <div *ngIf="hasBirthday() && isBirthdayEditDisabled()" class="birthday-cooldown-notice">
+              Noch {{ getDaysUntilBirthdayEdit() }} Tag{{ getDaysUntilBirthdayEdit() !== 1 ? 'e' : '' }} bis zur
+              nächsten Aktualisierung. Du kannst aber noch löschen.
+            </div>
+
+            <!-- Cooldown message when birthday deleted -->
+            <div *ngIf="!hasBirthday() && isBirthdayEditDisabled()" class="birthday-deleted-cooldown-notice">
+              Du kannst einen neuen Geburtstag in {{ getDaysUntilBirthdayEdit() }} Tag{{
+                getDaysUntilBirthdayEdit() !== 1 ? 'en' : ''
+              }}
+              hinzufügen
+            </div>
+          </div>
+        </div>
+
+        <!-- Birthday Edit Form -->
+        <div *ngIf="!loadingBirthday && isEditingBirthday" class="birthday-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="birthday-day">Tag</label>
+              <input
+                type="number"
+                id="birthday-day"
+                [(ngModel)]="editDay"
+                placeholder="01"
+                min="1"
+                max="31"
+                [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+              />
+            </div>
+            <div class="form-group">
+              <label for="birthday-month">Monat</label>
+              <input
+                type="number"
+                id="birthday-month"
+                [(ngModel)]="editMonth"
+                placeholder="01"
+                min="1"
+                max="12"
+                [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+              />
+            </div>
+            <div class="form-group">
+              <label for="birthday-year">Jahr <span class="optional">(optional)</span></label>
+              <input
+                type="number"
+                id="birthday-year"
+                [(ngModel)]="editYear"
+                placeholder="1990"
+                [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+              />
+            </div>
+          </div>
+
+          <div *ngIf="!isBirthdayEditDisabled()" class="privacy-notice">
+            <i class="pi pi-exclamation-triangle"></i> Dein Geburtstag ist <strong>öffentlich sichtbar</strong> und ist
+            NICHT privat. Durch Klick auf "Speichern" stimmst du zu, dass diese Information für alle einsehbar wird.
+          </div>
+
+          <div *ngIf="isUnder18()" class="form-error">
+            Du musst mindestens 18 Jahre alt sein, um dein Geburtsjahr zu speichern.
+          </div>
+
+          <div *ngIf="isBirthdayEditDisabled()" class="birthday-cooldown-edit-notice">
+            Du kannst deinen Geburtstag momentan nicht aktualisieren ({{ getDaysUntilBirthdayEdit() }} Tag{{
+              getDaysUntilBirthdayEdit() !== 1 ? 'e' : ''
+            }}
+            verbleibend). Du kannst ihn aber trotzdem löschen.
+          </div>
+
+          <div class="form-error" *ngIf="birthdayError">{{ birthdayError }}</div>
+
+          <div class="birthday-form-actions">
             <button
-              *ngIf="!isCurrentSession(session.id)"
-              class="btn-icon-only btn-revoke"
-              (click)="revokeSession(session.id)"
-              [disabled]="revokingSession === session.id"
-              title="Sitzung beenden"
+              *ngIf="hasBirthday() && !showDeleteConfirm"
+              class="btn btn-danger btn-small"
+              (click)="showDeleteBirthdayConfirm()"
+              [disabled]="birthdayLoading"
             >
-              <span *ngIf="revokingSession !== session.id">🗑️</span>
-              <span *ngIf="revokingSession === session.id" class="loading-spinner tiny"></span>
+              <i class="pi pi-trash"></i> Löschen
+            </button>
+            <div *ngIf="showDeleteConfirm" class="birthday-delete-confirm">
+              <span class="delete-confirm-text">Wirklich löschen?</span>
+              <button class="btn btn-danger btn-small" (click)="deleteBirthday()" [disabled]="birthdayLoading">
+                Ja
+              </button>
+              <button class="btn btn-secondary btn-small" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">
+                Nein
+              </button>
+            </div>
+            <div class="spacer"></div>
+            <button class="btn btn-secondary btn-small" (click)="cancelEditBirthday()" [disabled]="birthdayLoading">
+              Abbrechen
+            </button>
+            <button
+              class="btn btn-primary btn-small"
+              (click)="saveBirthday()"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled() || isUnder18()"
+            >
+              <span *ngIf="!birthdayLoading">{{
+                isBirthdayEditDisabled() ? 'Aktualisierung gesperrt' : 'Speichern'
+              }}</span>
+              <span *ngIf="birthdayLoading">Speichert...</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Empty -->
-      <div *ngIf="!loadingSessions && sessions.length === 0" class="card-empty">
-        <span>🔒</span>
-        <span>Keine aktiven Sitzungen</span>
-      </div>
-    </div>
+      <!-- Sessions Card -->
+      <div class="card sessions-card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-lock"></i></span>
+          <div class="card-title-group">
+            <h2>Aktive Sitzungen</h2>
+            <span class="card-subtitle">Verwalte deine aktiven Geräte</span>
+          </div>
+          <span *ngIf="sessions.length > 0" class="badge">{{ sessions.length }}</span>
+        </div>
 
-    <!-- Data Management Card -->
-    <div class="card data-card">
-      <div class="card-header">
-        <span class="card-icon">📊</span>
-        <div class="card-title-group">
-          <h2>Datenverwaltung</h2>
-          <span class="card-subtitle">Kontrolliere deine persönlichen Daten</span>
+        <!-- Loading -->
+        <div *ngIf="loadingSessions" class="card-loading">
+          <div class="loading-spinner small"></div>
+          <span>Lade Sitzungen...</span>
+        </div>
+
+        <!-- Sessions Content -->
+        <div *ngIf="!loadingSessions && sessions.length > 0" class="sessions-content">
+          <button class="ip-toggle" (click)="toggleIps()">
+            {{ showIps ? 'IPs verbergen' : 'IPs anzeigen' }}
+          </button>
+
+          <div class="sessions-list">
+            <div
+              *ngFor="let session of sessions"
+              class="session-row"
+              [class.current]="isCurrentSession(session.id)"
+              [class.stale]="!isCurrentSession(session.id) && isStale(session.lastLoginAt)"
+            >
+              <span class="session-icon">{{ getDeviceIcon(session.userAgent) }}</span>
+              <div class="session-details">
+                <div class="session-main">
+                  <span class="session-browser">{{ getBrowserName(session.userAgent) }}</span>
+                  <span *ngIf="isCurrentSession(session.id)" class="tag tag-current">Aktuell</span>
+                  <span *ngIf="!isCurrentSession(session.id) && isStale(session.lastLoginAt)" class="tag tag-stale"
+                    >Inaktiv</span
+                  >
+                </div>
+                <span class="session-ip">{{ getIpDisplay(session.ipAddress) }}</span>
+                <div class="session-time">
+                  <span [class.text-warning]="isStale(session.lastLoginAt)">{{
+                    getRelativeTime(session.lastLoginAt)
+                  }}</span>
+                  <span class="dot">·</span>
+                  <span>{{ formatDate(session.createdAt) }}</span>
+                </div>
+              </div>
+              <button
+                *ngIf="!isCurrentSession(session.id)"
+                class="btn-icon-only btn-revoke"
+                (click)="revokeSession(session.id)"
+                [disabled]="revokingSession === session.id"
+                title="Sitzung beenden"
+              >
+                <i *ngIf="revokingSession !== session.id" class="pi pi-trash"></i>
+                <span *ngIf="revokingSession === session.id" class="loading-spinner tiny"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="!loadingSessions && sessions.length === 0" class="card-empty">
+          <i class="pi pi-lock"></i>
+          <span>Keine aktiven Sitzungen</span>
         </div>
       </div>
-      <div class="data-buttons">
-        <button class="data-btn" [disabled]="isTakeoutDisabled()" (click)="openTakeoutModal()">
-          <span class="data-btn-icon">📥</span>
-          <div class="data-btn-text">
-            <span class="data-btn-title">Daten exportieren</span>
-            <span class="data-btn-desc" *ngIf="!isTakeoutDisabled()">Lade alle deine Daten herunter</span>
-            <span class="data-btn-desc" *ngIf="isTakeoutDisabled() && lastTakeoutAt > 0">
-              Zuletzt angefordert: {{ formatDate(lastTakeoutAt) }}
-            </span>
-          </div>
-          <span class="tag tag-cooldown" *ngIf="isTakeoutDisabled() && lastTakeoutAt > 0">
-            {{ getDaysUntilNextTakeout() }} Tage
-          </span>
-        </button>
 
-        <!-- Deletion Toggle -->
-        <div
-          class="toggle-container toggle-danger"
-          [class.disabled]="deletionLoading"
-          (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())"
-        >
-          <div class="toggle-content">
-            <span class="toggle-icon">🗑️</span>
-            <div class="toggle-text">
-              <span class="toggle-title">Account löschen</span>
-              <span class="toggle-desc" *ngIf="!isDeletionEnabled()">Markiere deinen Account zur Löschung</span>
-              <span class="toggle-desc" *ngIf="isDeletionEnabled()">
-                Aktiviert am {{ formatDate(deletionEnabledAt) }}
+      <!-- Data Management Card -->
+      <div class="card data-card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-database"></i></span>
+          <div class="card-title-group">
+            <h2>Datenverwaltung</h2>
+            <span class="card-subtitle">Kontrolliere deine persönlichen Daten</span>
+          </div>
+        </div>
+        <div class="data-buttons">
+          <button class="data-btn" [disabled]="isTakeoutDisabled()" (click)="openTakeoutModal()">
+            <span class="data-btn-icon"><i class="pi pi-download"></i></span>
+            <div class="data-btn-text">
+              <span class="data-btn-title">Daten exportieren</span>
+              <span class="data-btn-desc" *ngIf="!isTakeoutDisabled()">Lade alle deine Daten herunter</span>
+              <span class="data-btn-desc" *ngIf="isTakeoutDisabled() && lastTakeoutAt > 0">
+                Zuletzt angefordert: {{ formatDate(lastTakeoutAt) }}
               </span>
             </div>
-          </div>
-          <div class="toggle-switch" [class.disabled]="deletionLoading">
-            <input type="checkbox" [checked]="isDeletionEnabled()" [disabled]="deletionLoading" tabindex="-1" />
-            <span class="toggle-slider"></span>
-          </div>
-        </div>
+            <span class="tag tag-cooldown" *ngIf="isTakeoutDisabled() && lastTakeoutAt > 0">
+              {{ getDaysUntilNextTakeout() }} Tage
+            </span>
+          </button>
 
-        <!-- Deletion Instructions (shown when enabled) -->
-        <div class="deletion-instructions" *ngIf="isDeletionEnabled()">
-          <p class="deletion-instructions-title">📧 Nächster Schritt:</p>
-          <p class="deletion-instructions-text">
-            Behalte diesen Toggle aktiviert und sende eine E-Mail an
-            <a
-              href="mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20{{
-                getUserId()
-              }}"
-              >support&#64;zeitvertreib.vip</a
-            >
-            mit deiner User-ID:
-          </p>
-          <div class="userid-box">
-            <code>{{ getUserId() }}</code>
+          <!-- Deletion Toggle -->
+          <div
+            class="toggle-container toggle-danger"
+            [class.disabled]="deletionLoading"
+            (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())"
+          >
+            <div class="toggle-content">
+              <span class="toggle-icon"><i class="pi pi-trash"></i></span>
+              <div class="toggle-text">
+                <span class="toggle-title">Account löschen</span>
+                <span class="toggle-desc" *ngIf="!isDeletionEnabled()">Markiere deinen Account zur Löschung</span>
+                <span class="toggle-desc" *ngIf="isDeletionEnabled()">
+                  Aktiviert am {{ formatDate(deletionEnabledAt) }}
+                </span>
+              </div>
+            </div>
+            <div class="toggle-switch" [class.disabled]="deletionLoading">
+              <input type="checkbox" [checked]="isDeletionEnabled()" [disabled]="deletionLoading" tabindex="-1" />
+              <span class="toggle-slider"></span>
+            </div>
           </div>
-          <p class="deletion-instructions-hint">
-            Unser Team prüft deine Anfrage innerhalb von 30 Tagen. Wenn dein Toggle hier aktiviert ist, werden alle
-            deine Daten unwiderruflich gelöscht. Du erhältst eine Bestätigung per E-Mail.
+
+          <!-- Deletion Instructions (shown when enabled) -->
+          <div class="deletion-instructions" *ngIf="isDeletionEnabled()">
+            <p class="deletion-instructions-title"><i class="pi pi-envelope"></i> Nächster Schritt:</p>
+            <p class="deletion-instructions-text">
+              Behalte diesen Toggle aktiviert und sende eine E-Mail an
+              <a
+                href="mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20{{
+                  getUserId()
+                }}"
+                >support&#64;zeitvertreib.vip</a
+              >
+              mit deiner User-ID:
+            </p>
+            <div class="userid-box">
+              <code>{{ getUserId() }}</code>
+            </div>
+            <p class="deletion-instructions-hint">
+              Unser Team prüft deine Anfrage innerhalb von 30 Tagen. Wenn dein Toggle hier aktiviert ist, werden alle
+              deine Daten unwiderruflich gelöscht. Du erhältst eine Bestätigung per E-Mail.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Takeout Modal -->
+  <div class="modal-overlay" *ngIf="showTakeoutModal" (click)="closeTakeoutModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="pi pi-download"></i> Daten exportieren</h3>
+        <button class="modal-close" (click)="closeTakeoutModal()"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="takeout-success" *ngIf="takeoutSuccess">
+          <span class="success-icon"><i class="pi pi-check-circle"></i></span>
+          <p>Deine Daten wurden erfolgreich angefordert!</p>
+          <p class="success-hint">Du erhältst in Kürze eine E-Mail mit deinen Daten.</p>
+        </div>
+        <div *ngIf="!takeoutSuccess">
+          <p class="modal-description">
+            Wir senden dir eine E-Mail mit all deinen gespeicherten Daten als JSON-Datei. Dies beinhaltet
+            Spielstatistiken, Sitzungsdaten, Uploads und mehr.
+          </p>
+          <div class="form-group">
+            <label for="takeout-email">E-Mail-Adresse</label>
+            <input
+              type="email"
+              id="takeout-email"
+              [(ngModel)]="takeoutEmail"
+              placeholder="deine@email.de"
+              [disabled]="takeoutLoading"
+              (keyup.enter)="submitTakeout()"
+            />
+          </div>
+          <div class="takeout-error" *ngIf="takeoutError">
+            {{ takeoutError }}
+          </div>
+          <p class="modal-hint">
+            <i class="pi pi-exclamation-triangle"></i> Du kannst nur alle 30 Tage einen Export anfordern.
           </p>
         </div>
+      </div>
+      <div class="modal-footer" *ngIf="!takeoutSuccess">
+        <button class="btn btn-secondary" (click)="closeTakeoutModal()" [disabled]="takeoutLoading">Abbrechen</button>
+        <button class="btn btn-primary" (click)="submitTakeout()" [disabled]="takeoutLoading || !takeoutEmail">
+          <span *ngIf="!takeoutLoading">Export anfordern</span>
+          <span *ngIf="takeoutLoading">Wird gesendet...</span>
+        </button>
       </div>
     </div>
   </div>
-</div>
-
-<!-- Takeout Modal -->
-<div class="modal-overlay" *ngIf="showTakeoutModal" (click)="closeTakeoutModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>📥 Daten exportieren</h3>
-      <button class="modal-close" (click)="closeTakeoutModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="takeout-success" *ngIf="takeoutSuccess">
-        <span class="success-icon">✅</span>
-        <p>Deine Daten wurden erfolgreich angefordert!</p>
-        <p class="success-hint">Du erhältst in Kürze eine E-Mail mit deinen Daten.</p>
+  <!-- Deletion Confirmation Modal -->
+  <!-- Deletion Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeletionModal" (click)="closeDeletionModal()">
+    <div class="modal-content modal-danger" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header-danger">
+        <h3><i class="pi pi-exclamation-triangle"></i> Account zur Löschung markieren</h3>
+        <button class="modal-close" (click)="closeDeletionModal()"><i class="pi pi-times"></i></button>
       </div>
-      <div *ngIf="!takeoutSuccess">
-        <p class="modal-description">
-          Wir senden dir eine E-Mail mit all deinen gespeicherten Daten als JSON-Datei. Dies beinhaltet
-          Spielstatistiken, Sitzungsdaten, Uploads und mehr.
-        </p>
-        <div class="form-group">
-          <label for="takeout-email">E-Mail-Adresse</label>
-          <input
-            type="email"
-            id="takeout-email"
-            [(ngModel)]="takeoutEmail"
-            placeholder="deine@email.de"
-            [disabled]="takeoutLoading"
-            (keyup.enter)="submitTakeout()"
-          />
+      <div class="modal-body">
+        <div class="warning-box">
+          <p><strong>Bist du sicher?</strong></p>
+          <p>
+            Wenn du diesen Toggle aktivierst, kann dein Account und alle damit verbundenen Daten
+            <strong>jederzeit unwiderruflich gelöscht</strong> werden, sobald du eine Löschanfrage per E-Mail sendest.
+          </p>
         </div>
-        <div class="takeout-error" *ngIf="takeoutError">
-          {{ takeoutError }}
-        </div>
-        <p class="modal-hint">⚠️ Du kannst nur alle 30 Tage einen Export anfordern.</p>
-      </div>
-    </div>
-    <div class="modal-footer" *ngIf="!takeoutSuccess">
-      <button class="btn btn-secondary" (click)="closeTakeoutModal()" [disabled]="takeoutLoading">Abbrechen</button>
-      <button class="btn btn-primary" (click)="submitTakeout()" [disabled]="takeoutLoading || !takeoutEmail">
-        <span *ngIf="!takeoutLoading">Export anfordern</span>
-        <span *ngIf="takeoutLoading">Wird gesendet...</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Deletion Confirmation Modal -->
-<div class="modal-overlay" *ngIf="showDeletionModal" (click)="closeDeletionModal()">
-  <div class="modal-content modal-danger" (click)="$event.stopPropagation()">
-    <div class="modal-header modal-header-danger">
-      <h3>⚠️ Account zur Löschung markieren</h3>
-      <button class="modal-close" (click)="closeDeletionModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="warning-box">
-        <p><strong>Bist du sicher?</strong></p>
-        <p>
-          Wenn du diesen Toggle aktivierst, kann dein Account und alle damit verbundenen Daten
-          <strong>jederzeit unwiderruflich gelöscht</strong> werden, sobald du eine Löschanfrage per E-Mail sendest.
+        <p class="modal-description">Dies beinhaltet:</p>
+        <ul class="deletion-list">
+          <li>Alle Spielstatistiken und Fortschritte</li>
+          <li>Deine ZVCoins und Transaktionshistorie</li>
+          <li>Alle hochgeladenen Sprays und Fakeranks</li>
+          <li>Discord-Verknüpfungen und Sitzungsdaten</li>
+          <li>Sämtliche anderen gespeicherten Daten</li>
+        </ul>
+        <p class="modal-hint-danger">
+          <i class="pi pi-exclamation-triangle"></i> Diese Aktion kann nicht rückgängig gemacht werden!
         </p>
       </div>
-      <p class="modal-description">Dies beinhaltet:</p>
-      <ul class="deletion-list">
-        <li>Alle Spielstatistiken und Fortschritte</li>
-        <li>Deine ZVCoins und Transaktionshistorie</li>
-        <li>Alle hochgeladenen Sprays und Fakeranks</li>
-        <li>Discord-Verknüpfungen und Sitzungsdaten</li>
-        <li>Sämtliche anderen gespeicherten Daten</li>
-      </ul>
-      <p class="modal-hint-danger">⚠️ Diese Aktion kann nicht rückgängig gemacht werden!</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeDeletionModal()" [disabled]="deletionLoading">Abbrechen</button>
-      <button class="btn btn-danger" (click)="confirmEnableDeletion()" [disabled]="deletionLoading">
-        <span *ngIf="!deletionLoading">Ja, zur Löschung markieren</span>
-        <span *ngIf="deletionLoading">Wird aktiviert...</span>
-      </button>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeletionModal()" [disabled]="deletionLoading">Abbrechen</button>
+        <button class="btn btn-danger" (click)="confirmEnableDeletion()" [disabled]="deletionLoading">
+          <span *ngIf="!deletionLoading">Ja, zur Löschung markieren</span>
+          <span *ngIf="deletionLoading">Wird aktiviert...</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>

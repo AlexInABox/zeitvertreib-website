@@ -275,3 +275,34 @@ export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
   addedAt: integer('added_at').notNull(),
   reason: text('reason'),
 });
+
+// Removed: caseLinks table (legacy - replaced by caseUserLinks to support multiple users per case)
+
+export const coinSendingRestrictions = sqliteTable(
+  'coin_sending_restrictions',
+  {
+    steamId: text('steam_id').primaryKey().notNull(),
+    restrictedUntil: integer('restricted_until').notNull(), // unix timestamp, 0 = permanent
+    reason: text('reason').notNull(),
+    restrictedByDiscordId: text('restricted_by_discord_id').notNull(),
+    restrictedAt: integer('restricted_at').notNull().default(0),
+  },
+  (table) => ({
+    restrictedUntilIdx: index('coin_sending_restrictions_restricted_until_idx').on(table.restrictedUntil),
+  }),
+);
+
+export const caseUserLinks = sqliteTable(
+  'case_user_links',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    caseId: text('case_id').notNull(),
+    steamId: text('steam_id').notNull(),
+    linkedAt: integer('linked_at').notNull().default(0),
+    linkedByDiscordId: text('linked_by_discord_id'),
+  },
+  (table) => ({
+    caseIdIdx: index('case_user_links_case_id_idx').on(table.caseId),
+    steamIdIdx: index('case_user_links_steam_id_idx').on(table.steamId),
+  }),
+);

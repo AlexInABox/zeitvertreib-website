@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-domain-warning',
   imports: [CommonModule],
   templateUrl: './domain-warning.component.html',
-  styleUrl: './domain-warning.component.css',
+  styleUrls: ['./domain-warning.component.css'],
 })
 export class DomainWarningComponent implements OnInit {
   showWarning = false;
