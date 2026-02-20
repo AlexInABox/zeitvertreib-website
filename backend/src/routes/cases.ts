@@ -70,7 +70,6 @@ async function updateCaseLastUpdatedAt(caseId: string, env: Env): Promise<void> 
   await db.update(cases).set({ lastUpdatedAt: now }).where(eq(cases.id, caseId));
 }
 
-
 /// GET /cases/upload?case={caseId}&extension={ext}
 export async function handleCaseFileUpload(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -129,7 +128,7 @@ export async function handleCaseFileUpload(request: Request, env: Env): Promise<
     // Return the presigned PUT URL
     const responseBody: CaseFileUploadGetResponse = {
       url: presignedUrl.url,
-      method: 'PUT'
+      method: 'PUT',
     };
     return createResponse(responseBody, 200, origin);
   } catch (error) {
@@ -480,7 +479,6 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
     const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
     const caseId = hashHex.substring(0, 10);
 
-
     await db.insert(cases).values({
       id: caseId,
       createdByDiscordId: userid,
@@ -611,9 +609,7 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
       // Remove all previous links then insert the new list
       await db.delete(casesRelatedUsers).where(eq(casesRelatedUsers.caseId, caseId));
       if (uniqueSteamIds.length > 0) {
-        await db.insert(casesRelatedUsers).values(
-          uniqueSteamIds.map((steamId) => ({ caseId, steamId })),
-        );
+        await db.insert(casesRelatedUsers).values(uniqueSteamIds.map((steamId) => ({ caseId, steamId })));
       }
     }
 

@@ -85,7 +85,7 @@ export class CaseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -197,7 +197,7 @@ export class CaseDetailComponent implements OnInit {
   }
 
   getFileUrl(filename: string): string {
-    const file = this.caseData?.files.find(f => f.name === filename);
+    const file = this.caseData?.files.find((f) => f.name === filename);
     return file?.url || '';
   }
 
@@ -325,7 +325,7 @@ export class CaseDetailComponent implements OnInit {
 
   openViewer(filename: string, event?: Event) {
     if (event) event.preventDefault();
-    const file = this.caseData?.files.find(f => f.name === filename);
+    const file = this.caseData?.files.find((f) => f.name === filename);
     if (!file) return;
     if (this.isViewableFile(filename)) {
       this.viewerFileUrl = file.url;
@@ -518,7 +518,8 @@ export class CaseDetailComponent implements OnInit {
           }
         };
 
-        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`)));
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
         xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
         xhr.send(file);
       });
@@ -559,8 +560,14 @@ export class CaseDetailComponent implements OnInit {
   }
 
   async uploadMedalClip() {
-    if (!this.medalClipUrl.trim()) { alert('Bitte gib eine URL ein'); return; }
-    if (!this.isValidUrl(this.medalClipUrl)) { alert('Bitte gib eine gültige URL ein'); return; }
+    if (!this.medalClipUrl.trim()) {
+      alert('Bitte gib eine URL ein');
+      return;
+    }
+    if (!this.isValidUrl(this.medalClipUrl)) {
+      alert('Bitte gib eine gültige URL ein');
+      return;
+    }
 
     this.isFetchingMedalClip = true;
     this.medalDownloadProgress = 0;
@@ -596,8 +603,13 @@ export class CaseDetailComponent implements OnInit {
       for (const proxyUrl of corsProxies) {
         try {
           const resp = await fetch(proxyUrl);
-          if (resp.ok) { videoResponse = resp; break; }
-        } catch { continue; }
+          if (resp.ok) {
+            videoResponse = resp;
+            break;
+          }
+        } catch {
+          continue;
+        }
       }
 
       if (!videoResponse) throw new Error('Fehler beim Herunterladen des Videos');
@@ -624,7 +636,10 @@ export class CaseDetailComponent implements OnInit {
 
       const videoData = new Uint8Array(receivedLength);
       let position = 0;
-      for (const chunk of chunks) { videoData.set(chunk, position); position += chunk.length; }
+      for (const chunk of chunks) {
+        videoData.set(chunk, position);
+        position += chunk.length;
+      }
 
       this.medalDownloadProgress = 100;
       this.medalUploadProgress = 0;
@@ -655,7 +670,8 @@ export class CaseDetailComponent implements OnInit {
           }
         };
 
-        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`)));
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
         xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
         xhr.send(videoData);
       });

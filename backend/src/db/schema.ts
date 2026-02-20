@@ -1,68 +1,65 @@
 import { sqliteTable, check, text, integer, real, numeric } from 'drizzle-orm/sqlite-core';
 import { desc, sql } from 'drizzle-orm';
 
-export const playerdata = sqliteTable(
-  'playerdata',
-  {
-    id: text('id').primaryKey(),
-    discordId: text('discordId'),
-    experience: integer('experience').default(0),
-    playtime: integer('playtime').default(0),
-    roundsplayed: integer('roundsplayed').default(0),
-    usedmedkits: integer('usedmedkits').default(0),
-    usedcolas: integer('usedcolas').default(0),
-    pocketescapes: integer('pocketescapes').default(0),
-    usedadrenaline: integer('usedadrenaline').default(0),
-    fakerank: text('fakerank'),
-    snakehighscore: integer('snakehighscore').default(0),
-    killcount: integer('killcount').default(0),
-    deathcount: integer('deathcount').default(0),
-    fakerankUntil: integer('fakerank_until').default(0),
-    fakerankColor: text('fakerank_color', {
-      enum: [
-        'pink',
-        'red',
-        'brown',
-        'silver',
-        'default',
-        'light_green',
-        'crimson',
-        'cyan',
-        'aqua',
-        'deep_pink',
-        'tomato',
-        'yellow',
-        'magenta',
-        'blue_green',
-        'orange',
-        'lime',
-        'green',
-        'emerald',
-        'carmine',
-        'nickel',
-        'mint',
-        'army_green',
-        'pumpkin',
-      ],
-    }).default('default'),
-    fakerankadminUntil: integer('fakerankadmin_until').default(0),
-    redeemedCodes: text('redeemed_codes').default(''),
-    fakerankoverrideUntil: integer('fakerankoverride_until').default(0),
-    username: text('username').default(''),
-    slotSpins: integer('slotSpins').notNull().default(0),
-    slotWins: integer('slotWins').notNull().default(0),
-    slotLosses: integer('slotLosses').notNull().default(0),
-    luckyWheelSpins: integer('luckyWheelSpins').notNull().default(0),
-    luckyWheelWins: integer('luckyWheelWins').notNull().default(0),
-    luckyWheelLosses: integer('luckyWheelLosses').notNull().default(0),
-    rouletteSpins: integer('rouletteSpins').notNull().default(0),
-    rouletteWins: integer('rouletteWins').notNull().default(0),
-    rouletteLosses: integer('rouletteLosses').notNull().default(0),
-    migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
-    firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
-    lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
-  },
-);
+export const playerdata = sqliteTable('playerdata', {
+  id: text('id').primaryKey(),
+  discordId: text('discordId'),
+  experience: integer('experience').default(0),
+  playtime: integer('playtime').default(0),
+  roundsplayed: integer('roundsplayed').default(0),
+  usedmedkits: integer('usedmedkits').default(0),
+  usedcolas: integer('usedcolas').default(0),
+  pocketescapes: integer('pocketescapes').default(0),
+  usedadrenaline: integer('usedadrenaline').default(0),
+  fakerank: text('fakerank'),
+  snakehighscore: integer('snakehighscore').default(0),
+  killcount: integer('killcount').default(0),
+  deathcount: integer('deathcount').default(0),
+  fakerankUntil: integer('fakerank_until').default(0),
+  fakerankColor: text('fakerank_color', {
+    enum: [
+      'pink',
+      'red',
+      'brown',
+      'silver',
+      'default',
+      'light_green',
+      'crimson',
+      'cyan',
+      'aqua',
+      'deep_pink',
+      'tomato',
+      'yellow',
+      'magenta',
+      'blue_green',
+      'orange',
+      'lime',
+      'green',
+      'emerald',
+      'carmine',
+      'nickel',
+      'mint',
+      'army_green',
+      'pumpkin',
+    ],
+  }).default('default'),
+  fakerankadminUntil: integer('fakerankadmin_until').default(0),
+  redeemedCodes: text('redeemed_codes').default(''),
+  fakerankoverrideUntil: integer('fakerankoverride_until').default(0),
+  username: text('username').default(''),
+  slotSpins: integer('slotSpins').notNull().default(0),
+  slotWins: integer('slotWins').notNull().default(0),
+  slotLosses: integer('slotLosses').notNull().default(0),
+  luckyWheelSpins: integer('luckyWheelSpins').notNull().default(0),
+  luckyWheelWins: integer('luckyWheelWins').notNull().default(0),
+  luckyWheelLosses: integer('luckyWheelLosses').notNull().default(0),
+  rouletteSpins: integer('rouletteSpins').notNull().default(0),
+  rouletteWins: integer('rouletteWins').notNull().default(0),
+  rouletteLosses: integer('rouletteLosses').notNull().default(0),
+  migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
+  firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
+  lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
+});
 
 export const discordInfo = sqliteTable('discord_info', {
   discordId: text('discordId').primaryKey(),
@@ -274,34 +271,24 @@ export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
 });
 
 // Cases and all they need (moderation cases not csgo related lol)
-export const cases = sqliteTable('cases', {
-  id: text("id").primaryKey(),
-  title: text("title").default("").notNull(),
-  description: text("description").default("").notNull(),
-  createdByDiscordId: text("created_by_discord_id").notNull(),
-  createdAt: integer("created_at").notNull().default(0),
-  lastUpdatedAt: integer("last_updated_at").notNull().default(0),
-  category: text('category', {
-    enum: [
-      'cheating',
-      'abuse',
-      'exploiting',
-      'toxic_behavior',
-      'scamming',
-      'other',
-    ],
-  })
-},
-  (table) => [
-    check(
-      "cases_id_length_check",
-      sql`length(${table.id}) = 10`
-    ),
-  ]
+export const cases = sqliteTable(
+  'cases',
+  {
+    id: text('id').primaryKey(),
+    title: text('title').default('').notNull(),
+    description: text('description').default('').notNull(),
+    createdByDiscordId: text('created_by_discord_id').notNull(),
+    createdAt: integer('created_at').notNull().default(0),
+    lastUpdatedAt: integer('last_updated_at').notNull().default(0),
+    category: text('category', {
+      enum: ['cheating', 'abuse', 'exploiting', 'toxic_behavior', 'scamming', 'other'],
+    }),
+  },
+  (table) => [check('cases_id_length_check', sql`length(${table.id}) = 10`)],
 );
 
 // many-to-many
 export const casesRelatedUsers = sqliteTable('cases_related_users', {
-  caseId: text("case_id").references(() => cases.id),
-  steamId: text("steam_id").notNull(),
+  caseId: text('case_id').references(() => cases.id),
+  steamId: text('steam_id').notNull(),
 });
