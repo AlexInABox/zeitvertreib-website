@@ -280,9 +280,6 @@ export const cases = sqliteTable(
     createdByDiscordId: text('created_by_discord_id').notNull(),
     createdAt: integer('created_at').notNull().default(0),
     lastUpdatedAt: integer('last_updated_at').notNull().default(0),
-    category: text('category', {
-      enum: ['cheating', 'abuse', 'exploiting', 'toxic_behavior', 'scamming', 'other'],
-    }),
   },
   (table) => [check('cases_id_length_check', sql`length(${table.id}) = 10`)],
 );
