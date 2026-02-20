@@ -631,6 +631,12 @@
   animation: slideUp 0.5s ease-out backwards;
 }
 
+/* Make card a column flex container so footer can be pushed to bottom */
+.case-card {
+  display: flex;
+  flex-direction: column;
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -738,6 +744,11 @@
   margin-bottom: 1.25rem;
 }
 
+/* Allow the body to take available space so the footer stays at the bottom */
+.case-card-body {
+  flex: 1 1 auto;
+}
+
 .case-title {
   font-size: 1.375rem;
   font-weight: 700;
@@ -795,6 +806,11 @@
   align-items: center;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Push footer to the bottom without changing card height */
+.case-card-footer {
+  margin-top: auto;
 }
 
 .case-meta {
@@ -1290,4 +1306,62 @@
     width: 100%;
     padding: 0.875rem 1rem;
   }
+}
+
+/* Pagination */
+.pagination-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+}
+
+.page-info {
+  font-size: 0.9375rem;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.page-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.page-btn:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(126, 58, 242, 0.5) !important;
+}
+
+.page-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+/* Case description line on cards */
+.case-description {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  margin: 0.4rem 0 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Linked user count badge on card header */
+.case-linked-users {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
 }

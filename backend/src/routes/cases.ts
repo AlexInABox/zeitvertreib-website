@@ -1,10 +1,21 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isTeam } from '../utils.js';
+import { createResponse, validateSession, isTeam, fetchSteamUserData, validateSteamId } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, like, or } from 'drizzle-orm';
-import * as schema from '../db/schema.js';
+import { eq, desc, asc, inArray, sql } from 'drizzle-orm';
+import { cases, casesRelatedUsers } from '../db/schema.js';
+import typia from 'typia';
+import {
+  CaseFileUploadGetResponse,
+  CaseListItem,
+  ListCasesGetResponse,
+  ListCasesBySteamIdGetResponse,
+  GetCaseMetadataGetResponse,
+  CreateCasePostResponse,
+  UpdateCaseMetadataPutRequest,
+  UpdateCaseMetadataPutResponse,
+} from '@zeitvertreib/types';
 
-const BUCKET = 'test';
+const BUCKET = 'zeitvertreib-tickets';
 
 // Allowed file extensions
 const ALLOWED_EXTENSIONS = [
@@ -44,30 +55,47 @@ const aws = (env: Env): AwsClient =>
     region: 'us-east-1',
   });
 
+async function caseExists(caseId: string, env: Env): Promise<boolean> {
+  const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/`;
+  const checkRequest = await aws(env).sign(checkUrl, {
+    method: 'HEAD',
+  });
+  const checkResponse = await fetch(checkRequest);
+  return checkResponse.ok;
+}
+
+async function updateCaseLastUpdatedAt(caseId: string, env: Env): Promise<void> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const now = Date.now();
+  await db.update(cases).set({ lastUpdatedAt: now }).where(eq(cases.id, caseId));
+}
+
+
 /// GET /cases/upload?case={caseId}&extension={ext}
 export async function handleCaseFileUpload(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
+
+  const validation = await validateSession(request, env);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse(
+      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
+  }
+
+  if (!(await isTeam(validation.steamId, env))) {
+    return createResponse({ error: 'Unauthorized' }, 401, origin);
+  }
 
   try {
     // Get folder and extension from query parameters
     const url = new URL(request.url);
     const caseId = url.searchParams.get('case');
     const extension = url.searchParams.get('extension') || '';
-    console.log('caseId:', caseId, 'extension:', extension);
 
     if (!caseId) {
       return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
-    }
-
-    // Validate case ID format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      return createResponse(
-        {
-          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
-        },
-        400,
-        origin,
-      );
     }
 
     // Validate extension if provided
@@ -82,41 +110,28 @@ export async function handleCaseFileUpload(request: Request, env: Env): Promise<
       );
     }
 
-    // Verify that the folder exists
-    const folderPath = `case-${caseId}`;
-    const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderPath}/`;
-    const checkRequest = await aws(env).sign(checkUrl, {
-      method: 'HEAD',
-    });
-    const checkResponse = await fetch(checkRequest);
-
-    if (checkResponse.status === 404) {
-      return createResponse({ error: `Folder ${folderPath} does not exist` }, 404, origin);
+    if (!caseExists(caseId, env)) {
+      return createResponse({ error: `Case ${caseId} does not exist` }, 404, origin);
     }
 
     // Generate random filename
     const randomName = crypto.randomUUID();
-    const filename = extension ? `${randomName}.${extension}` : randomName;
-    const filePath = `case-${caseId}/${filename}`;
+    const filename = `${randomName}.${extension}`;
 
     // Create presigned PUT URL with 1 hour expiry
-    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`, {
+    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/${filename}`, {
       method: 'PUT',
       aws: { signQuery: true },
     });
 
+    await updateCaseLastUpdatedAt(caseId, env);
+
     // Return the presigned PUT URL
-    return createResponse(
-      {
-        url: presignedUrl.url,
-        method: 'PUT',
-        filename,
-        fileUrl: `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`,
-        expiresIn: 3600,
-      },
-      200,
-      origin,
-    );
+    const responseBody: CaseFileUploadGetResponse = {
+      url: presignedUrl.url,
+      method: 'PUT'
+    };
+    return createResponse(responseBody, 200, origin);
   } catch (error) {
     console.error('Presigned URL generation error:', error);
     return createResponse(
@@ -130,7 +145,8 @@ export async function handleCaseFileUpload(request: Request, env: Env): Promise<
   }
 }
 
-/// GET /cases
+/// GET /cases?page=1&limit=20&sortBy=createdAt&sortOrder=desc&createdByDiscordId=123
+/// GET /cases?steamId=76561198XXXXXXXXX  — returns ALL cases linked to that steamId, no pagination
 export async function handleListCases(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
@@ -140,45 +156,166 @@ export async function handleListCases(request: Request, env: Env): Promise<Respo
     if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
       return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
     }
-    let userid = sessionValidation.steamId;
+    const userid = sessionValidation.steamId;
 
     if (!(await isTeam(userid, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
-    // List objects with delimiter to get folders
-    const url = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&delimiter=/`;
-    const signedRequest = await aws(env).sign(url, {
-      method: 'GET',
-    });
+    // Parse query parameters for pagination and sorting
+    const url = new URL(request.url);
+    const filterBySteamId = url.searchParams.get('steamId');
 
-    const response = await fetch(signedRequest);
+    // If steamId is provided, return ALL cases linked to that steamId without pagination
+    if (filterBySteamId) {
+      const linkedCaseRows = await db
+        .select({ caseId: casesRelatedUsers.caseId })
+        .from(casesRelatedUsers)
+        .where(eq(casesRelatedUsers.steamId, filterBySteamId));
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      const linkedCaseIds = linkedCaseRows.map((r) => r.caseId).filter((id): id is string => id !== null);
+
+      if (linkedCaseIds.length === 0) {
+        return createResponse({ cases: [] }, 200, origin);
+      }
+
+      const casesList = await db
+        .select({
+          id: cases.id,
+          title: cases.title,
+          description: cases.description,
+          createdByDiscordId: cases.createdByDiscordId,
+          createdAt: cases.createdAt,
+          lastUpdatedAt: cases.lastUpdatedAt,
+        })
+        .from(cases)
+        .where(inArray(cases.id, linkedCaseIds))
+        .orderBy(desc(cases.createdAt));
+
+      const allLinkedUsers = await db
+        .select({
+          caseId: casesRelatedUsers.caseId,
+          steamId: casesRelatedUsers.steamId,
+        })
+        .from(casesRelatedUsers)
+        .where(inArray(casesRelatedUsers.caseId, linkedCaseIds));
+
+      const linkedUsersMap: Record<string, string[]> = {};
+      for (const link of allLinkedUsers) {
+        if (link.caseId) {
+          const existingList = linkedUsersMap[link.caseId];
+          if (existingList) {
+            existingList.push(link.steamId);
+          } else {
+            linkedUsersMap[link.caseId] = [link.steamId];
+          }
+        }
+      }
+
+      const casesWithLinkedUsers: CaseListItem[] = casesList.map((c) => ({
+        caseId: c.id,
+        title: c.title,
+        description: c.description,
+        createdByDiscordId: c.createdByDiscordId,
+        createdAt: c.createdAt,
+        lastUpdatedAt: c.lastUpdatedAt,
+        linkedSteamIds: linkedUsersMap[c.id] || [],
+      }));
+
+      const steamIdResponse: ListCasesBySteamIdGetResponse = { cases: casesWithLinkedUsers };
+      return createResponse(steamIdResponse, 200, origin);
     }
 
-    const xmlText = await response.text();
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
+    const sortBy = url.searchParams.get('sortBy') === 'lastUpdatedAt' ? 'lastUpdatedAt' : 'createdAt';
+    const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
+    const filterByDiscordId = url.searchParams.get('createdByDiscordId');
+    const offset = (page - 1) * limit;
 
-    // Parse XML response to extract CommonPrefixes
-    const prefixMatches = xmlText.matchAll(/<Prefix>([^<]+)<\/Prefix>/g);
-    const caseFolders = Array.from(prefixMatches)
-      .map((match) => match[1]?.replace('/', '') || '')
-      .filter((folder) => folder.startsWith('case-'));
+    // Build the query with optional filter
+    const whereCondition = filterByDiscordId ? eq(cases.createdByDiscordId, filterByDiscordId) : undefined;
+    const orderByColumn = sortBy === 'lastUpdatedAt' ? cases.lastUpdatedAt : cases.createdAt;
+    const orderByDirection = sortOrder === 'asc' ? asc(orderByColumn) : desc(orderByColumn);
 
-    return createResponse(
-      {
-        folders: caseFolders,
+    // Get total count for pagination info
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(cases)
+      .where(whereCondition);
+    const totalCount = countResult[0]?.count || 0;
+
+    // Query cases with pagination and sorting
+    const casesList = await db
+      .select({
+        id: cases.id,
+        title: cases.title,
+        description: cases.description,
+        createdByDiscordId: cases.createdByDiscordId,
+        createdAt: cases.createdAt,
+        lastUpdatedAt: cases.lastUpdatedAt,
+      })
+      .from(cases)
+      .where(whereCondition)
+      .orderBy(orderByDirection)
+      .limit(limit)
+      .offset(offset);
+
+    // Get linked steam IDs for all cases in one query
+    const caseIds = casesList.map((c) => c.id);
+    let linkedUsersMap: Record<string, string[]> = {};
+
+    if (caseIds.length > 0) {
+      const linkedUsers = await db
+        .select({
+          caseId: casesRelatedUsers.caseId,
+          steamId: casesRelatedUsers.steamId,
+        })
+        .from(casesRelatedUsers)
+        .where(inArray(casesRelatedUsers.caseId, caseIds));
+
+      for (const link of linkedUsers) {
+        if (link.caseId) {
+          const existingList = linkedUsersMap[link.caseId];
+          if (existingList) {
+            existingList.push(link.steamId);
+          } else {
+            linkedUsersMap[link.caseId] = [link.steamId];
+          }
+        }
+      }
+    }
+
+    // Build response with linked steam IDs
+    const casesWithLinkedUsers: CaseListItem[] = casesList.map((c) => ({
+      caseId: c.id,
+      title: c.title,
+      description: c.description,
+      createdByDiscordId: c.createdByDiscordId,
+      createdAt: c.createdAt,
+      lastUpdatedAt: c.lastUpdatedAt,
+      linkedSteamIds: linkedUsersMap[c.id] || [],
+    }));
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const paginatedResponse: ListCasesGetResponse = {
+      cases: casesWithLinkedUsers,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
-      200,
-      origin,
-    );
+    };
+    return createResponse(paginatedResponse, 200, origin);
   } catch (error) {
-    console.error('List folders error:', error);
+    console.error('List cases error:', error);
     return createResponse(
       {
-        error: 'Failed to list folders',
+        error: 'Failed to list cases',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,
@@ -187,8 +324,9 @@ export async function handleListCases(request: Request, env: Env): Promise<Respo
   }
 }
 
-/// GET /cases/metadata?case={caseId}
-export async function handleGetCaseMetadata(request: Request, env: Env): Promise<Response> {
+/// GET /cases/metadata?case={caseId} - Returns full case details: DB row, linked users, and file list
+export async function handleGetCaseMetadata(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
   try {
@@ -200,133 +338,110 @@ export async function handleGetCaseMetadata(request: Request, env: Env): Promise
       return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
-    // Validate case ID format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      return createResponse(
-        {
-          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
-        },
-        400,
-        origin,
-      );
+    // Fetch the full case row from DB
+    const caseResult = await db
+      .select({
+        id: cases.id,
+        title: cases.title,
+        description: cases.description,
+        createdByDiscordId: cases.createdByDiscordId,
+        createdAt: cases.createdAt,
+        lastUpdatedAt: cases.lastUpdatedAt,
+      })
+      .from(cases)
+      .where(eq(cases.id, caseId))
+      .limit(1);
+
+    if (caseResult.length === 0 || !caseExists(caseId, env)) {
+      return createResponse({ error: 'Case not found' }, 404, origin);
     }
 
-    const folderName = `case-${caseId}`;
+    const caseRow = caseResult[0]!;
 
-    // List all files in the folder to get count, size, and last modified
-    const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${folderName}/`;
+    // Fetch linked steam IDs then resolve each via fetchSteamUserData (refreshes stale cache)
+    const linkedSteamIdRows = await db
+      .select({ steamId: casesRelatedUsers.steamId })
+      .from(casesRelatedUsers)
+      .where(eq(casesRelatedUsers.caseId, caseId));
+
+    const linkedUsers = await Promise.all(
+      linkedSteamIdRows.map(async (row) => {
+        const steamData = await fetchSteamUserData(row.steamId, env, ctx);
+        return {
+          steamId: row.steamId,
+          username: steamData?.username || row.steamId,
+          avatarUrl: steamData?.avatarUrl || '',
+        };
+      }),
+    );
+
+    // List all files in the S3 folder
+    const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${caseId}/`;
     const listRequest = await aws(env).sign(listUrl, {
       method: 'GET',
     });
     const listResponse = await fetch(listRequest);
 
     if (!listResponse.ok) {
-      if (listResponse.status === 404) {
-        return createResponse({ error: 'Case not found' }, 404, origin);
-      }
-      throw new Error(`Failed to list files for ${folderName}`);
+      throw new Error(`Failed to list files for ${caseId}`);
     }
 
     const listXml = await listResponse.text();
 
-    // Extract all file entries (Contents elements)
     const contentsRegex = /<Contents>(.*?)<\/Contents>/gs;
     const contentsMatches = Array.from(listXml.matchAll(contentsRegex));
 
-    // If no contents found, the folder doesn't exist
-    if (contentsMatches.length === 0) {
-      return createResponse({ error: 'Case not found' }, 404, origin);
-    }
-
-    let fileCount = 0;
-    let totalSize = 0;
-    let createdAt = 0;
-    let lastModified = 0;
+    const files: Array<{ name: string; size: number; createdAt: number; url: string }> = [];
 
     for (const match of contentsMatches) {
       const content = match[1] || '';
 
-      // Extract Key to skip the folder itself
       const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
       const key = keyMatch ? keyMatch[1] : '';
 
-      // Skip the folder marker (ends with /)
-      if (key === `${folderName}/`) {
-        // Get creation date from folder marker
-        const folderModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
-        if (folderModifiedMatch) {
-          createdAt = new Date(folderModifiedMatch[1] || '').getTime();
-        }
+      // Skip the folder marker
+      if (!key || key === `${caseId}/`) {
         continue;
       }
 
-      // Check if this is the .meta file
-      const isMetaFile = key ? key.endsWith('/.meta') : false;
+      const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
+      const size = sizeMatch ? parseInt(sizeMatch[1] || '0', 10) : 0;
 
-      // Only count and add size for non-.meta files
-      if (!isMetaFile) {
-        fileCount++;
+      const lastModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
+      const createdAt = lastModifiedMatch ? new Date(lastModifiedMatch[1] || '').getTime() : 0;
 
-        // Extract Size
-        const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
-        if (sizeMatch) {
-          totalSize += parseInt(sizeMatch[1] || '0', 10);
-        }
-      }
+      const fileName = key.replace(`${caseId}/`, '');
 
-      // Extract LastModified for tracking most recent update (including .meta file)
-      const modifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
-      if (modifiedMatch) {
-        const fileModified = new Date(modifiedMatch[1] || '').getTime();
-        if (fileModified > lastModified) {
-          lastModified = fileModified;
-        }
-      }
-    }
-
-    // If no creation date from folder marker, use the oldest file or 0
-    if (createdAt === 0 && lastModified > 0) {
-      createdAt = lastModified;
-    }
-
-    // Try to fetch .meta file if it exists
-    let metaData = null;
-    try {
-      const metaFileKey = `${folderName}/.meta`;
-      const metaUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${metaFileKey}`;
-      const metaRequest = await aws(env).sign(metaUrl, {
+      // Generate presigned GET URL with 20-minute expiry
+      const getPresignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/${fileName}`, {
         method: 'GET',
+        aws: { signQuery: true },
       });
-      const metaResponse = await fetch(metaRequest);
 
-      if (metaResponse.ok) {
-        const metaText = await metaResponse.text();
-        try {
-          metaData = JSON.parse(metaText);
-        } catch (parseError) {
-          console.warn('Failed to parse .meta file as JSON:', parseError);
-        }
-      }
-    } catch (metaError) {
-      // .meta file doesn't exist or couldn't be fetched, that's okay
-      console.log('No .meta file found or error fetching it:', metaError);
+      files.push({
+        name: fileName,
+        size,
+        createdAt,
+        url: getPresignedUrl.url,
+      });
     }
 
-    const responseData: any = {
-      id: folderName,
-      caseId: caseId,
-      createdAt,
-      lastModified: lastModified || createdAt,
-      fileCount,
-      totalSize,
+    const metadataResponse: GetCaseMetadataGetResponse = {
+      id: caseRow.id,
+      caseId,
+      title: caseRow.title,
+      description: caseRow.description,
+      createdByDiscordId: caseRow.createdByDiscordId,
+      createdAt: caseRow.createdAt,
+      lastUpdatedAt: caseRow.lastUpdatedAt,
+      linkedUsers: linkedUsers.map((u) => ({
+        steamId: u.steamId,
+        username: u.username || u.steamId,
+        avatarUrl: u.avatarUrl || '',
+      })),
+      files,
     };
-
-    // Merge meta data directly into response if it exists
-    if (metaData !== null && typeof metaData === 'object') {
-      Object.assign(responseData, metaData);
-    }
-
-    return createResponse(responseData, 200, origin);
+    return createResponse(metadataResponse, 200, origin);
   } catch (error) {
     console.error('Get case metadata error:', error);
     return createResponse(
@@ -356,40 +471,25 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
-    // Generate random 5-character alphanumeric string and check if it exists
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let folderName = '';
-    let maxAttempts = 10;
-    let attempts = 0;
+    // Generate SHA-256 from random UUID and take first 10 chars
+    const randomData = crypto.randomUUID();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(randomData);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    const caseId = hashHex.substring(0, 10);
 
-    while (attempts < maxAttempts) {
-      let randomId = '';
-      for (let i = 0; i < 5; i++) {
-        randomId += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      folderName = `case-${randomId}`;
 
-      // Check if folder already exists
-      const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
-      const checkRequest = await aws(env).sign(checkUrl, {
-        method: 'HEAD',
-      });
-      const checkResponse = await fetch(checkRequest);
-
-      // If folder doesn't exist (404), we can use this name
-      if (checkResponse.status === 404) {
-        break;
-      }
-
-      attempts++;
-    }
-
-    if (attempts >= maxAttempts) {
-      throw new Error('Failed to generate unique folder name after multiple attempts');
-    }
+    await db.insert(cases).values({
+      id: caseId,
+      createdByDiscordId: userid,
+      createdAt: Date.now(),
+      lastUpdatedAt: Date.now(),
+    });
 
     // Create a folder by uploading an empty object with trailing slash
-    const url = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
+    const url = `https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/`;
     const signedRequest = await aws(env).sign(url, {
       method: 'PUT',
       body: new Uint8Array(0),
@@ -402,13 +502,8 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
       throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return createResponse(
-      {
-        folderName,
-      },
-      200,
-      origin,
-    );
+    const createResponse_: CreateCasePostResponse = { caseId };
+    return createResponse(createResponse_, 200, origin);
   } catch (error) {
     console.error('Create folder error:', error);
     return createResponse(
@@ -423,6 +518,10 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
 }
 
 /// PUT /cases/metadata?case={caseId}
+/// Body (all fields optional; omitting a field leaves it unchanged):
+///   title?: string
+///   description?: string
+///   linkedSteamIds?: string[]  — replaces the entire linked-user list when present
 export async function handleUpdateCaseMetadata(request: Request, env: Env): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
@@ -432,13 +531,12 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
     if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
       return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
     }
-    let userid = sessionValidation.steamId;
+    const userid = sessionValidation.steamId;
 
     if (!(await isTeam(userid, env))) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
-    // Get case ID from query parameter
     const url = new URL(request.url);
     const caseId = url.searchParams.get('case');
 
@@ -446,605 +544,86 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
       return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
     }
 
-    // Validate case ID format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      return createResponse(
-        {
-          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
-        },
-        400,
-        origin,
-      );
-    }
-
-    // Parse request body as JSON
-    let metaData: any;
+    // Parse and validate request body with typia
+    let bodyRaw: unknown;
     try {
-      metaData = await request.json();
-    } catch (parseError) {
+      bodyRaw = await request.json();
+    } catch {
       return createResponse({ error: 'Invalid JSON in request body' }, 400, origin);
     }
 
-    // Verify that the case folder exists
-    const folderName = `case-${caseId}`;
-    const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${folderName}/`;
-    const checkRequest = await aws(env).sign(checkUrl, {
-      method: 'HEAD',
-    });
-    const checkResponse = await fetch(checkRequest);
+    if (!typia.is<UpdateCaseMetadataPutRequest>(bodyRaw)) {
+      return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
+    }
 
-    if (checkResponse.status === 404) {
+    const body = bodyRaw as UpdateCaseMetadataPutRequest;
+
+    // Verify case exists in DB
+    const caseResult = await db.select({ id: cases.id }).from(cases).where(eq(cases.id, caseId)).limit(1);
+    if (caseResult.length === 0) {
       return createResponse({ error: 'Case not found' }, 404, origin);
     }
 
-    // Upload the .meta file
-    const metaFileKey = `${folderName}/.meta`;
-    const metaUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${metaFileKey}`;
-    const metaJson = JSON.stringify(metaData, null, 2);
+    // Build DB update — only include fields explicitly present in the body
+    const updateFields: Partial<{ title: string; description: string; lastUpdatedAt: number }> = {
+      lastUpdatedAt: Date.now(),
+    };
 
-    const putRequest = await aws(env).sign(metaUrl, {
-      method: 'PUT',
-      body: metaJson,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const putResponse = await fetch(putRequest);
-
-    if (!putResponse.ok) {
-      const errorText = await putResponse.text();
-      throw new Error(`S3 request failed: ${putResponse.status} ${putResponse.statusText} - ${errorText}`);
+    if ('title' in body && body.title !== undefined) {
+      updateFields.title = body.title;
     }
 
-    return createResponse(
-      {
-        success: true,
-        caseId,
-        message: 'Metadata updated successfully',
-      },
-      200,
-      origin,
-    );
+    if ('description' in body && body.description !== undefined) {
+      updateFields.description = body.description;
+    }
+
+    await db.update(cases).set(updateFields).where(eq(cases.id, caseId));
+
+    // Replace linked users when linkedSteamIds is present in the body
+    if ('linkedSteamIds' in body && body.linkedSteamIds !== undefined) {
+      // Validate and normalize each Steam ID
+      const validatedIds: string[] = [];
+      const invalidIds: string[] = [];
+
+      for (const id of body.linkedSteamIds) {
+        const validation = validateSteamId(id);
+        if (validation.valid && validation.normalized) {
+          validatedIds.push(validation.normalized);
+        } else {
+          invalidIds.push(`${id} (${validation.error})`);
+        }
+      }
+
+      if (invalidIds.length > 0) {
+        return createResponse(
+          {
+            error: 'One or more Steam IDs are invalid',
+            invalidIds,
+          },
+          400,
+          origin,
+        );
+      }
+
+      // Deduplicate validated Steam IDs
+      const uniqueSteamIds = Array.from(new Set(validatedIds));
+
+      // Remove all previous links then insert the new list
+      await db.delete(casesRelatedUsers).where(eq(casesRelatedUsers.caseId, caseId));
+      if (uniqueSteamIds.length > 0) {
+        await db.insert(casesRelatedUsers).values(
+          uniqueSteamIds.map((steamId) => ({ caseId, steamId })),
+        );
+      }
+    }
+
+    const updateResult: UpdateCaseMetadataPutResponse = { success: true, caseId };
+    return createResponse(updateResult, 200, origin);
   } catch (error) {
     console.error('Update case metadata error:', error);
     return createResponse(
       {
         error: 'Failed to update case metadata',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// GET /cases/files?case={caseId}
-export async function handleListCaseFiles(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    // Get case ID from query parameter
-    const url = new URL(request.url);
-    const caseId = url.searchParams.get('case');
-
-    if (!caseId) {
-      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
-    }
-
-    // Validate case ID format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      return createResponse(
-        {
-          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
-        },
-        400,
-        origin,
-      );
-    }
-
-    // List objects in the case folder
-    const folderPath = `case-${caseId}`;
-    const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${folderPath}/`;
-    const signedRequest = await aws(env).sign(listUrl, {
-      method: 'GET',
-    });
-
-    const response = await fetch(signedRequest);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`S3 request failed: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    const xmlText = await response.text();
-
-    // Parse XML response to extract file information with metadata
-    const contentsRegex = /<Contents>(.*?)<\/Contents>/gs;
-    const contentsMatches = Array.from(xmlText.matchAll(contentsRegex));
-
-    const fileData = contentsMatches
-      .map((match) => {
-        const content = match[1] || '';
-
-        // Extract Key
-        const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
-        const key = keyMatch ? keyMatch[1] : '';
-
-        // Skip the folder itself and .meta file
-        if (!key || key === `${folderPath}/` || key.endsWith('/.meta')) {
-          return null;
-        }
-
-        // Extract LastModified (creation/upload date)
-        const lastModifiedMatch = content.match(/<LastModified>([^<]+)<\/LastModified>/);
-        const lastModified = lastModifiedMatch ? new Date(lastModifiedMatch[1] || '').getTime() : 0;
-
-        // Extract Size
-        const sizeMatch = content.match(/<Size>(\d+)<\/Size>/);
-        const size = sizeMatch ? parseInt(sizeMatch[1] || '0', 10) : 0;
-
-        const fileName = key.replace(`${folderPath}/`, '');
-
-        return {
-          key,
-          fileName,
-          lastModified,
-          size,
-        };
-      })
-      .filter((file) => file !== null);
-
-    // Generate presigned GET URLs for each file (valid for 20 minutes = 1200 seconds)
-    const filesWithLinks = await Promise.all(
-      fileData.map(async (fileInfo) => {
-        // Create URL with X-Amz-Expires query parameter before signing
-        const baseUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${fileInfo.key}`;
-        const urlWithExpiry = `${baseUrl}?X-Amz-Expires=1200`;
-
-        const presignedUrl = await aws(env).sign(urlWithExpiry, {
-          method: 'GET',
-          aws: {
-            signQuery: true,
-          },
-        });
-
-        return {
-          name: fileInfo.fileName,
-          viewUrl: presignedUrl.url,
-          uploadedAt: fileInfo.lastModified,
-          size: fileInfo.size,
-          expiresIn: 1200, // 20 minutes in seconds
-        };
-      }),
-    );
-
-    return createResponse(
-      {
-        files: filesWithLinks,
-        expiresIn: 1200,
-      },
-      200,
-      origin,
-    );
-  } catch (error) {
-    console.error('List case files error:', error);
-    return createResponse(
-      {
-        error: 'Failed to list files',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// GET /cases/file/hash?case={caseId}&filename={filename}
-export async function handleGetFileHash(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    // Get case ID and filename from query parameters
-    const url = new URL(request.url);
-    const caseId = url.searchParams.get('case');
-    const filename = url.searchParams.get('filename');
-
-    if (!caseId) {
-      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
-    }
-
-    if (!filename) {
-      return createResponse({ error: 'Missing required parameter: filename' }, 400, origin);
-    }
-
-    // Validate case ID format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      return createResponse(
-        {
-          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
-        },
-        400,
-        origin,
-      );
-    }
-
-    // Construct the file path
-    const folderPath = `case-${caseId}`;
-    const filePath = `${folderPath}/${filename}`;
-
-    // Use HEAD request to get file metadata without downloading the file
-    // Retry logic to handle presigned URL issues
-    let headResponse: Response | null = null;
-    let lastError: Error | null = null;
-
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const headUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`;
-        const headRequest = await aws(env).sign(headUrl, {
-          method: 'HEAD',
-        });
-
-        headResponse = await fetch(headRequest);
-
-        if (headResponse.ok) {
-          break; // Success, exit retry loop
-        }
-
-        // If 404, no point retrying
-        if (headResponse.status === 404) {
-          return createResponse({ error: 'File not found' }, 404, origin);
-        }
-
-        // For other errors, capture and retry
-        lastError = new Error(`S3 request failed: ${headResponse.status} ${headResponse.statusText}`);
-
-        // Short delay before retry
-        if (attempt < 2) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
-        if (attempt < 2) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-      }
-    }
-
-    if (!headResponse || !headResponse.ok) {
-      const errorText = lastError?.message || 'Unknown error';
-      throw new Error(errorText);
-    }
-
-    // Get ETag header which contains the MD5 hash (remove quotes)
-    const etag = headResponse.headers.get('ETag')?.replace(/"/g, '') || '';
-    const contentLength = headResponse.headers.get('Content-Length') || '0';
-    const lastModified = headResponse.headers.get('Last-Modified') || '';
-
-    return createResponse(
-      {
-        filename,
-        hash: etag,
-        hashType: 'md5',
-        size: parseInt(contentLength, 10),
-        lastModified: lastModified ? new Date(lastModified).getTime() : 0,
-      },
-      200,
-      origin,
-    );
-  } catch (error) {
-    console.error('Get file hash error:', error);
-    return createResponse(
-      {
-        error: 'Failed to get file hash',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// DELETE /cases/file?case={caseId}&filename={filename}
-export async function handleDeleteCaseFile(request: Request, env: Env): Promise<Response> {
-  const db = drizzle(env.ZEITVERTREIB_DATA);
-  const origin = request.headers.get('Origin');
-
-  try {
-    const sessionValidation = await validateSession(request, env);
-    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
-    }
-    let userid = sessionValidation.steamId;
-
-    if (!(await isTeam(userid, env))) {
-      return createResponse({ error: 'Unauthorized' }, 401, origin);
-    }
-
-    // Get case ID and filename from query parameters
-    const url = new URL(request.url);
-    const caseId = url.searchParams.get('case');
-    const filename = url.searchParams.get('filename');
-
-    if (!caseId) {
-      return createResponse({ error: 'Missing required parameter: case' }, 400, origin);
-    }
-
-    if (!filename) {
-      return createResponse({ error: 'Missing required parameter: filename' }, 400, origin);
-    }
-
-    // Validate case ID format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      return createResponse(
-        {
-          error: 'Invalid case format. Must be 5 lowercase letters or numbers',
-        },
-        400,
-        origin,
-      );
-    }
-
-    // Prevent deletion of .meta file
-    if (filename === '.meta') {
-      return createResponse({ error: 'Cannot delete metadata file' }, 403, origin);
-    }
-
-    // Construct the file path
-    const folderPath = `case-${caseId}`;
-    const filePath = `${folderPath}/${filename}`;
-
-    // Delete the file from S3
-    const deleteUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${filePath}`;
-    const deleteRequest = await aws(env).sign(deleteUrl, {
-      method: 'DELETE',
-    });
-
-    const deleteResponse = await fetch(deleteRequest);
-
-    if (!deleteResponse.ok) {
-      if (deleteResponse.status === 404) {
-        return createResponse({ error: 'File not found' }, 404, origin);
-      }
-      const errorText = await deleteResponse.text();
-      throw new Error(`S3 request failed: ${deleteResponse.status} ${deleteResponse.statusText} - ${errorText}`);
-    }
-
-    return createResponse(
-      {
-        success: true,
-        message: 'File deleted successfully',
-        filename,
-      },
-      200,
-      origin,
-    );
-  } catch (error) {
-    console.error('Delete file error:', error);
-    return createResponse(
-      {
-        error: 'Failed to delete file',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// GET /cases/search-users?search={query}
-export async function searchUsersForCase(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const sessionValidation = await validateSession(request, env);
-    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
-    }
-
-    if (!(await isTeam(sessionValidation.steamId, env))) {
-      return createResponse({ error: 'Unauthorized' }, 401, origin);
-    }
-
-    const url = new URL(request.url);
-    const searchQuery = url.searchParams.get('search') || '';
-
-    if (!searchQuery.trim()) {
-      return createResponse({ users: [] }, 200, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
-
-    // Search in playerdata and steamCache tables
-    const searchPattern = `%${searchQuery}%`;
-
-    const players = await db
-      .select({
-        steamId: schema.playerdata.id,
-        username: schema.steamCache.username,
-        avatarUrl: schema.steamCache.avatarUrl,
-      })
-      .from(schema.playerdata)
-      .leftJoin(schema.steamCache, eq(schema.playerdata.id, schema.steamCache.steamId))
-      .where(or(like(schema.playerdata.id, searchPattern), like(schema.steamCache.username, searchPattern)))
-      .limit(10);
-
-    return createResponse(
-      {
-        users: players.map((p) => ({
-          steamId: p.steamId,
-          username: p.username || p.steamId,
-          avatarUrl: p.avatarUrl || '',
-        })),
-      },
-      200,
-      origin,
-    );
-  } catch (error) {
-    console.error('Search users error:', error);
-    return createResponse(
-      {
-        error: 'Failed to search users',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// GET /cases/linked-users?caseId={caseId}
-export async function getLinkedUsers(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const sessionValidation = await validateSession(request, env);
-    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
-    }
-
-    if (!(await isTeam(sessionValidation.steamId, env))) {
-      return createResponse({ error: 'Unauthorized' }, 401, origin);
-    }
-
-    const url = new URL(request.url);
-    const caseId = url.searchParams.get('caseId');
-
-    if (!caseId) {
-      return createResponse({ error: 'Missing required parameter: caseId' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
-
-    const linkedUsers = await db
-      .select({
-        steamId: schema.caseUserLinks.steamId,
-        linkedAt: schema.caseUserLinks.linkedAt,
-        linkedByDiscordId: schema.caseUserLinks.linkedByDiscordId,
-        username: schema.steamCache.username,
-        avatarUrl: schema.steamCache.avatarUrl,
-      })
-      .from(schema.caseUserLinks)
-      .leftJoin(schema.steamCache, eq(schema.caseUserLinks.steamId, schema.steamCache.steamId))
-      .where(eq(schema.caseUserLinks.caseId, caseId));
-
-    return createResponse(
-      {
-        users: linkedUsers.map((u) => ({
-          steamId: u.steamId,
-          username: u.username || u.steamId,
-          avatarUrl: u.avatarUrl || '',
-          linkedAt: u.linkedAt,
-          linkedByDiscordId: u.linkedByDiscordId || '',
-        })),
-      },
-      200,
-      origin,
-    );
-  } catch (error) {
-    console.error('Get linked users error:', error);
-    return createResponse(
-      {
-        error: 'Failed to get linked users',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// POST /cases/link-user
-export async function linkUserToCase(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const sessionValidation = await validateSession(request, env);
-    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
-    }
-
-    if (!(await isTeam(sessionValidation.steamId, env))) {
-      return createResponse({ error: 'Unauthorized' }, 401, origin);
-    }
-
-    const body = (await request.json()) as { caseId: string; steamId: string };
-    const caseIdParam = body.caseId;
-    const steamId = body.steamId;
-
-    if (!caseIdParam || !steamId) {
-      return createResponse({ error: 'Missing required parameters: caseId, steamId' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
-
-    // Check if link already exists
-    const existing = await db
-      .select({ id: schema.caseUserLinks.id })
-      .from(schema.caseUserLinks)
-      .where(and(eq(schema.caseUserLinks.caseId, caseIdParam), eq(schema.caseUserLinks.steamId, steamId)))
-      .limit(1);
-
-    if (existing.length > 0) {
-      return createResponse({ error: 'User already linked to this case' }, 400, origin);
-    }
-
-    // Create link
-    await db.insert(schema.caseUserLinks).values({
-      caseId: caseIdParam,
-      steamId: steamId,
-      linkedAt: Date.now(),
-      linkedByDiscordId: null, // Could be filled from user's Discord ID if available
-    });
-
-    return createResponse({ success: true }, 200, origin);
-  } catch (error) {
-    console.error('Link user error:', error);
-    return createResponse(
-      {
-        error: 'Failed to link user',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      500,
-      origin,
-    );
-  }
-}
-
-/// DELETE /cases/unlink-user?caseId={caseId}&steamId={steamId}
-export async function unlinkUserFromCase(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const sessionValidation = await validateSession(request, env);
-    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
-      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
-    }
-
-    if (!(await isTeam(sessionValidation.steamId, env))) {
-      return createResponse({ error: 'Unauthorized' }, 401, origin);
-    }
-
-    const url = new URL(request.url);
-    const caseIdParam = url.searchParams.get('caseId');
-    const steamId = url.searchParams.get('steamId');
-
-    if (!caseIdParam || !steamId) {
-      return createResponse({ error: 'Missing required parameters: caseId, steamId' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
-
-    await db
-      .delete(schema.caseUserLinks)
-      .where(and(eq(schema.caseUserLinks.caseId, caseIdParam), eq(schema.caseUserLinks.steamId, steamId)));
-
-    return createResponse({ success: true }, 200, origin);
-  } catch (error) {
-    console.error('Unlink user error:', error);
-    return createResponse(
-      {
-        error: 'Failed to unlink user',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,

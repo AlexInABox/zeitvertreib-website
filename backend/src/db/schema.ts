@@ -1,5 +1,5 @@
-import { sqliteTable, check, text, integer, index, real, numeric } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { sqliteTable, check, text, integer, real, numeric } from 'drizzle-orm/sqlite-core';
+import { desc, sql } from 'drizzle-orm';
 
 export const playerdata = sqliteTable(
   'playerdata',
@@ -62,9 +62,6 @@ export const playerdata = sqliteTable(
     firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
     lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
   },
-  (table) => ({
-    experienceIdx: index('playerdata_experience_idx').on(table.experience),
-  }),
 );
 
 export const discordInfo = sqliteTable('discord_info', {
@@ -157,7 +154,7 @@ export const steamCache = sqliteTable('steam_cache', {
 export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   discordId: text('discord_id').notNull(),
-  cardCode: text('card_code').notNull().unique(),
+  cardCode: text('card_code').notNull(),
   submittedAt: integer('submitted_at').notNull().default(0),
   processedAt: integer('processed_at').notNull().default(0),
   status: text('status', { enum: ['pending', 'approved', 'rejected'] })
@@ -276,33 +273,35 @@ export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
   reason: text('reason'),
 });
 
-// Removed: caseLinks table (legacy - replaced by caseUserLinks to support multiple users per case)
-
-export const coinSendingRestrictions = sqliteTable(
-  'coin_sending_restrictions',
-  {
-    steamId: text('steam_id').primaryKey().notNull(),
-    restrictedUntil: integer('restricted_until').notNull(), // unix timestamp, 0 = permanent
-    reason: text('reason').notNull(),
-    restrictedByDiscordId: text('restricted_by_discord_id').notNull(),
-    restrictedAt: integer('restricted_at').notNull().default(0),
-  },
-  (table) => ({
-    restrictedUntilIdx: index('coin_sending_restrictions_restricted_until_idx').on(table.restrictedUntil),
-  }),
+// Cases and all they need (moderation cases not csgo related lol)
+export const cases = sqliteTable('cases', {
+  id: text("id").primaryKey(),
+  title: text("title").default("").notNull(),
+  description: text("description").default("").notNull(),
+  createdByDiscordId: text("created_by_discord_id").notNull(),
+  createdAt: integer("created_at").notNull().default(0),
+  lastUpdatedAt: integer("last_updated_at").notNull().default(0),
+  category: text('category', {
+    enum: [
+      'cheating',
+      'abuse',
+      'exploiting',
+      'toxic_behavior',
+      'scamming',
+      'other',
+    ],
+  })
+},
+  (table) => [
+    check(
+      "cases_id_length_check",
+      sql`length(${table.id}) = 10`
+    ),
+  ]
 );
 
-export const caseUserLinks = sqliteTable(
-  'case_user_links',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    caseId: text('case_id').notNull(),
-    steamId: text('steam_id').notNull(),
-    linkedAt: integer('linked_at').notNull().default(0),
-    linkedByDiscordId: text('linked_by_discord_id'),
-  },
-  (table) => ({
-    caseIdIdx: index('case_user_links_case_id_idx').on(table.caseId),
-    steamIdIdx: index('case_user_links_steam_id_idx').on(table.steamId),
-  }),
-);
+// many-to-many
+export const casesRelatedUsers = sqliteTable('cases_related_users', {
+  caseId: text("case_id").references(() => cases.id),
+  steamId: text("steam_id").notNull(),
+});

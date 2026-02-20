@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
-      <p class="loading-text">Dateien werden geladen...</p>
+      <p class="loading-text">Fall wird geladen...</p>
       <div class="loading-dots">
         <span></span>
         <span></span>
@@ -18,7 +18,13 @@
       </div>
       <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
       <p class="error-message">{{ errorMessage }}</p>
-      <button pButton label="Erneut versuchen" icon="pi pi-refresh" class="retry-button" (click)="loadFiles()"></button>
+      <button
+        pButton
+        label="Erneut versuchen"
+        icon="pi pi-refresh"
+        class="retry-button"
+        (click)="loadCaseData()"
+      ></button>
     </div>
 
     <!-- Main Content -->
@@ -26,7 +32,6 @@
       <!-- Header Section -->
       <div class="header-section">
         <button
-          *ngIf="isAuthenticated"
           pButton
           icon="pi pi-arrow-left"
           label="Zurück zu Fällen"
@@ -40,38 +45,92 @@
               <i class="pi pi-folder-open header-icon"></i>
               <div class="title-text">
                 <h1 class="page-title">
-                  <span class="nickname">{{ metadata?.nickname || formatCaseName(caseId) }}</span>
-                  <span class="case-id" *ngIf="metadata?.nickname">#{{ caseId }}</span>
+                  <span class="nickname">{{ caseData?.title || formatCaseName(caseId) }}</span>
+                  <span class="case-id" *ngIf="caseData?.title">#{{ caseId }}</span>
                 </h1>
-                <p class="case-description" *ngIf="metadata?.description && !isEditingMetadata">
-                  {{ metadata?.description }}
-                </p>
-                <ng-container *ngIf="metadata?.tags as tags">
-                  <div class="case-tags" *ngIf="tags.length > 0 && !isEditingMetadata">
-                    <span class="tag" *ngFor="let tag of tags">
-                      {{ tag }}
-                    </span>
-                  </div>
-                </ng-container>
               </div>
+            </div>
+            <p class="case-description" *ngIf="caseData?.description && !isEditingMetadata">
+              {{ caseData?.description }}
+            </p>
+            <!-- Linked Users inline in header -->
+            <div *ngIf="isTeam" class="header-linked-users">
+              <div class="header-chips" *ngIf="caseData?.linkedUsers?.length">
+                <div
+                  class="header-chip"
+                  *ngFor="let user of caseData?.linkedUsers"
+                  (click)="copySteamIdToClipboard(user.steamId)"
+                  title="Klick zum Kopieren"
+                >
+                  <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
+                  <span class="chip-name">{{ user.username }}</span>
+                  <button
+                    class="chip-remove"
+                    (click)="removeLinkedUser(user.steamId, $event)"
+                    [disabled]="isManagingLinkedUsers"
+                    title="Entfernen"
+                  >
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="header-add-user">
+                <i class="pi pi-user-plus header-add-icon"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="newLinkedSteamId"
+                  placeholder="Steam-ID hinzufügen…"
+                  class="header-steamid-input"
+                  (keydown.enter)="addLinkedUser()"
+                  [disabled]="isManagingLinkedUsers"
+                  autocomplete="off"
+                />
+                <button
+                  class="header-add-btn"
+                  (click)="addLinkedUser()"
+                  [disabled]="isManagingLinkedUsers || !newLinkedSteamId.trim()"
+                >
+                  <i class="pi" [ngClass]="isManagingLinkedUsers ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
+                </button>
+              </div>
+            </div>
+            <div class="header-linked-error" *ngIf="linkedUserError">
+              <i class="pi pi-exclamation-circle"></i> {{ linkedUserError }}
+            </div>
+
+            <!-- Header meta strip -->
+            <div class="header-meta-row" *ngIf="caseData">
+              <span class="header-meta-item">
+                <i class="pi pi-file"></i>
+                {{ caseData.files.length }} {{ caseData.files.length === 1 ? 'Datei' : 'Dateien' }}
+              </span>
+              <span class="header-meta-sep">·</span>
+              <span class="header-meta-item">
+                <i class="pi pi-database"></i>
+                {{ getTotalSize() }}
+              </span>
+              <span class="header-meta-sep">·</span>
+              <span class="header-meta-item">
+                <i class="pi pi-calendar"></i>
+                {{ formatDate(caseData.createdAt) }}
+              </span>
+              <ng-container *ngIf="caseData.lastUpdatedAt !== caseData.createdAt">
+                <span class="header-meta-sep">·</span>
+                <span class="header-meta-item">
+                  <i class="pi pi-history"></i>
+                  {{ formatTimeAgo(caseData.lastUpdatedAt) }}
+                </span>
+              </ng-container>
             </div>
           </div>
           <div class="header-actions">
             <button
-              *ngIf="isFakerankAdmin && !isEditingMetadata"
+              *ngIf="isTeam && !isEditingMetadata"
               pButton
               label="Bearbeiten"
               icon="pi pi-pencil"
               class="edit-btn"
               (click)="startEditingMetadata()"
-            ></button>
-            <button
-              pButton
-              label="Aktualisieren"
-              icon="pi pi-refresh"
-              class="refresh-btn"
-              (click)="loadFiles()"
-              [disabled]="isLoading"
             ></button>
           </div>
         </div>
@@ -84,11 +143,11 @@
         </div>
         <div class="editor-body">
           <div class="form-field">
-            <label>Spitzname</label>
+            <label>Titel</label>
             <input
               type="text"
               pInputText
-              [(ngModel)]="editedNickname"
+              [(ngModel)]="editedTitle"
               placeholder="z.B. Wichtiger Fall"
               class="form-input"
             />
@@ -102,16 +161,6 @@
               rows="3"
               class="form-input"
             ></textarea>
-          </div>
-          <div class="form-field">
-            <label>Tags (kommagetrennt)</label>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="editedTags"
-              placeholder="z.B. wichtig, dringend, 2024"
-              class="form-input"
-            />
           </div>
         </div>
         <div class="editor-footer">
@@ -135,75 +184,8 @@
         </div>
       </div>
 
-      <!-- Linked Users Section -->
-      <div *ngIf="isFakerankAdmin" class="linked-users-section">
-        <div class="linked-users-card">
-          <div class="linked-users-header">
-            <div class="header-left">
-              <i class="pi pi-users"></i>
-              <h3 class="section-title">Verlinkte Benutzer</h3>
-              <span class="user-count" *ngIf="linkedUsers.length > 0">{{ linkedUsers.length }}</span>
-            </div>
-          </div>
-
-          <!-- User Search -->
-          <div class="user-search-wrapper">
-            <i class="pi pi-search search-icon"></i>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="userSearchTerm"
-              (ngModelChange)="onUserSearchChange(userSearchTerm)"
-              placeholder="Suche nach Name oder Steam ID..."
-              class="user-search-input"
-            />
-            <i class="pi pi-spin pi-spinner" *ngIf="isSearchingUsers"></i>
-          </div>
-
-          <!-- Search Results -->
-          <div class="search-results" *ngIf="searchResults.length > 0">
-            <div class="search-result-item" *ngFor="let user of searchResults" (click)="linkUserToCase(user)">
-              <p-avatar [image]="user.avatarUrl" shape="circle" styleClass="user-avatar"></p-avatar>
-              <div class="user-info">
-                <span class="username">{{ user.username }}</span>
-                <span class="steamid">{{ user.steamId }}</span>
-              </div>
-              <button pButton icon="pi pi-plus" class="link-btn" [text]="true"></button>
-            </div>
-          </div>
-
-          <!-- Linked Users List -->
-          <div class="linked-users-list" *ngIf="linkedUsers.length > 0">
-            <div class="linked-user-item" *ngFor="let user of linkedUsers">
-              <p-avatar [image]="user.avatarUrl" shape="circle" styleClass="user-avatar"></p-avatar>
-              <div class="user-info">
-                <span class="username">{{ user.username }}</span>
-                <span class="steamid">{{ user.steamId }}</span>
-              </div>
-              <button
-                pButton
-                icon="pi pi-times"
-                class="unlink-btn"
-                (click)="unlinkUserFromCase(user.steamId)"
-                [text]="true"
-              ></button>
-            </div>
-          </div>
-
-          <div class="no-linked-users" *ngIf="linkedUsers.length === 0 && !isLoadingLinkedUsers">
-            <i class="pi pi-users"></i>
-            <p>Keine verlinkten Benutzer</p>
-          </div>
-
-          <div class="loading-linked-users" *ngIf="isLoadingLinkedUsers">
-            <i class="pi pi-spin pi-spinner"></i>
-            <p>Lade verlinkte Benutzer...</p>
-          </div>
-        </div>
-      </div>
-
       <!-- File Upload Section -->
-      <div class="upload-section">
+      <div *ngIf="isTeam" class="upload-section">
         <div class="upload-card">
           <div class="upload-header">
             <i class="pi pi-cloud-upload upload-icon"></i>
@@ -313,33 +295,8 @@
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="stats-section" *ngIf="files.length > 0 || metadata">
-        <div class="stat-card" *ngIf="metadata">
-          <i class="pi pi-file stat-icon"></i>
-          <div class="stat-info">
-            <span class="stat-value">{{ metadata.fileCount }}</span>
-            <span class="stat-label">Dateien</span>
-          </div>
-        </div>
-        <div class="stat-card" *ngIf="metadata">
-          <i class="pi pi-database stat-icon"></i>
-          <div class="stat-info">
-            <span class="stat-value">{{ formatFileSize(metadata.totalSize) }}</span>
-            <span class="stat-label">Gesamtgröße</span>
-          </div>
-        </div>
-        <div class="stat-card" *ngIf="metadata">
-          <i class="pi pi-calendar stat-icon"></i>
-          <div class="stat-info">
-            <span class="stat-value">{{ formatDate(metadata.createdAt) }}</span>
-            <span class="stat-label">Erstellt am</span>
-          </div>
-        </div>
-      </div>
-
       <!-- Search and Sort -->
-      <div class="search-section" *ngIf="files.length > 0">
+      <div class="search-section" *ngIf="(caseData?.files?.length ?? 0) > 0">
         <div class="search-wrapper">
           <i class="pi pi-search search-icon"></i>
           <input
@@ -411,13 +368,13 @@
           <div class="file-card-body">
             <h3 class="file-title" [title]="file.name">{{ file.name }}</h3>
             <div class="file-stats">
-              <span class="stat-item" *ngIf="file.size">
+              <span class="stat-item">
                 <i class="pi pi-database"></i>
                 {{ formatFileSize(file.size) }}
               </span>
-              <span class="stat-item" *ngIf="file.uploadedAt">
+              <span class="stat-item" *ngIf="file.createdAt">
                 <i class="pi pi-calendar"></i>
-                {{ formatDate(file.uploadedAt) }}
+                {{ formatDate(file.createdAt) }}
               </span>
             </div>
           </div>
@@ -427,30 +384,22 @@
               *ngIf="isViewableFile(file.name)"
               class="file-action-btn view-btn"
               title="Datei öffnen"
-              (click)="openViewer(file)"
+              (click)="openViewer(file.name)"
             >
               <i class="pi pi-eye"></i>
               <span>Ansehen</span>
             </button>
             <a
-              [href]="getFileUrl(file)"
+              [href]="file.url"
+              target="_blank"
               download
               class="file-action-btn download-btn"
-              [class.full-width]="!isViewableFile(file.name) && !isFakerankAdmin"
+              [class.full-width]="!isViewableFile(file.name)"
               title="Datei herunterladen"
             >
               <i class="pi pi-download"></i>
               <span>Download</span>
             </a>
-            <button
-              *ngIf="isFakerankAdmin"
-              class="file-action-btn delete-btn"
-              title="Datei löschen"
-              (click)="deleteFile(file)"
-            >
-              <i class="pi pi-trash"></i>
-              <span>Löschen</span>
-            </button>
           </div>
 
           <!-- Hover Effect Overlay -->
@@ -459,7 +408,7 @@
       </div>
 
       <!-- Empty State (no files) -->
-      <div *ngIf="files.length === 0" class="empty-state">
+      <div *ngIf="(caseData?.files?.length ?? 0) === 0" class="empty-state">
         <div class="empty-illustration">
           <div class="empty-icon-wrapper">
             <i class="pi pi-inbox"></i>
@@ -479,7 +428,7 @@
       </div>
 
       <!-- Empty Search Results -->
-      <div *ngIf="files.length > 0 && filteredFiles.length === 0" class="empty-state">
+      <div *ngIf="(caseData?.files?.length ?? 0) > 0 && filteredFiles.length === 0" class="empty-state">
         <div class="empty-icon-wrapper">
           <i class="pi pi-search"></i>
         </div>
@@ -500,9 +449,9 @@
   <div class="media-viewer-overlay" *ngIf="viewerOpen" (click)="closeViewer()">
     <div class="media-viewer-content" (click)="$event.stopPropagation()">
       <div class="viewer-header">
-        <h2 class="viewer-title">{{ viewerFile?.name }}</h2>
+        <h2 class="viewer-title">{{ viewerFileName }}</h2>
         <div class="viewer-actions">
-          <a [href]="viewerFile?.viewUrl" download class="viewer-download-btn" title="Herunterladen">
+          <a [href]="viewerFileUrl" target="_blank" class="viewer-download-btn" title="Herunterladen">
             <i class="pi pi-download"></i>
             <span>Download</span>
           </a>
@@ -515,19 +464,19 @@
       <div class="viewer-body">
         <!-- Image Viewer -->
         <div *ngIf="viewerMediaType === 'image'" class="image-viewer">
-          <img [src]="viewerFile?.viewUrl" [alt]="viewerFile?.name" />
+          <img [src]="viewerFileUrl" [alt]="viewerFileName" />
         </div>
 
         <!-- Video Viewer -->
         <div *ngIf="viewerMediaType === 'video'" class="video-viewer">
-          <video controls [src]="viewerFile?.viewUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
+          <video controls [src]="viewerFileUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
         </div>
 
         <!-- Audio Viewer -->
         <div *ngIf="viewerMediaType === 'audio'" class="audio-viewer">
           <div class="audio-player-wrapper">
             <i class="pi pi-volume-up audio-icon"></i>
-            <audio controls [src]="viewerFile?.viewUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
+            <audio controls [src]="viewerFileUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
           </div>
         </div>
       </div>

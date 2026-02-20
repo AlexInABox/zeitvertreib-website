@@ -8,6 +8,48 @@ import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
 /**
+ * Validate and normalize a Steam64 ID
+ * @param steamId - The Steam ID to validate (can have @steam suffix)
+ * @returns { valid: boolean, normalized?: string, error?: string }
+ * - valid: true if the Steam ID is a valid Steam64
+ * - normalized: the normalized Steam ID (with @steam suffix) if valid
+ * - error: error message describing why the Steam ID is invalid
+ *
+ * Validation rules:
+ * - Min: 0x0110000100000000 (76561197960265728)
+ * - Max: 0x01100001FFFFFFFF (76561202255233023)
+ * - Must be exactly 17 decimal digits
+ */
+export function validateSteamId(steamId: string): { valid: boolean; normalized?: string; error?: string } {
+  const raw = steamId.trim();
+
+  // Check for empty string
+  if (!raw) {
+    return { valid: false, error: 'Steam ID darf nicht leer sein' };
+  }
+
+  // Remove all @steam suffixes (catches duplication like @steam@steam)
+  const base = raw.replace(/@steam/g, '');
+
+  // Check if exactly 17 decimal digits
+  if (!/^\d{17}$/.test(base)) {
+    return { valid: false, error: 'Steam ID muss genau 17 Dezimalziffern sein' };
+  }
+
+  // Verify within valid Steam64 ID range
+  const MIN_STEAM64 = 76561197960265728n; // 0x0110000100000000
+  const MAX_STEAM64 = 76561202255233023n; // 0x01100001FFFFFFFF
+  const steamId64 = BigInt(base);
+
+  if (steamId64 < MIN_STEAM64 || steamId64 > MAX_STEAM64) {
+    return { valid: false, error: 'Steam ID liegt außerhalb des gültigen Bereichs' };
+  }
+
+  // Normalize: return with @steam suffix
+  return { valid: true, normalized: `${base}@steam` };
+}
+
+/**
  * Check if a user has reduced luck by querying the database
  * @param steamId - The Steam ID to check (with or without @steam suffix)
  * @param env - Cloudflare environment with D1 database
@@ -163,7 +205,7 @@ export function extractSteamId(identity?: string): string | null {
 export async function fetchSteamUserData(steamId: string, env: Env, ctx: ExecutionContext): Promise<SteamUser | null> {
   steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
-  const staleThreshold = 24 * 60 * 60; // 24 hours in seconds
+  const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
   const db = drizzle(env.ZEITVERTREIB_DATA);
   let steamUser: SteamUser | null = null;
 
