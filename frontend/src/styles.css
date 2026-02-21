@@ -154,6 +154,109 @@ html.my-app-dark.easter::after {
 }
 
 /* =============================
+   Chiikawa Mode - Global Easter Egg
+   ============================= */
+body.chiikawa::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url('/assets/chiikawa.png') center/cover no-repeat;
+  background-attachment: fixed;
+  opacity: 1;
+  filter: saturate(1.05) contrast(1.02) brightness(1.05);
+  pointer-events: none;
+}
+
+/* Improve readability in chiikawa mode */
+body.chiikawa {
+  /* Ensure body has relative positioning for z-index context */
+  position: relative;
+}
+
+/* Make all cards and containers more readable in chiikawa mode */
+body.chiikawa .stats-card,
+body.chiikawa .card,
+body.chiikawa [class*='card'],
+body.chiikawa .p-card,
+body.chiikawa .container {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Hide the unrounded rectangle behind cards in dashboard */
+body.chiikawa .dashboard-container .cardWrapper,
+body.chiikawa .dashboard-container .grid-item,
+body.chiikawa .dashboard-container .stats-overview,
+body.chiikawa .dashboard-container .charts-container,
+body.chiikawa .dashboard-container .dashboard-grid > div {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Make text more readable with dark text */
+body.chiikawa,
+body.chiikawa *:not(button):not(.p-button):not(.btn) {
+  color: #1a1a1a !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Fix stat values that use background-clip: text */
+body.chiikawa .stat-value,
+body.chiikawa .stat-label,
+body.chiikawa .stat-item .stat-value,
+body.chiikawa .stat-item .stat-label,
+body.chiikawa .stat-item {
+  background: none !important;
+  -webkit-text-fill-color: #1a1a1a !important;
+  color: #1a1a1a !important;
+  text-shadow: none !important;
+}
+
+/* Ensure player card text is dark */
+body.chiikawa .player-card,
+body.chiikawa .player-card * {
+  color: #1a1a1a !important;
+}
+
+/* Ensure headings are dark */
+body.chiikawa h1,
+body.chiikawa h2,
+body.chiikawa h3,
+body.chiikawa h4,
+body.chiikawa h5,
+body.chiikawa h6 {
+  color: #0a0a0a !important;
+}
+
+/* Make links visible */
+body.chiikawa a {
+  color: #b41b85 !important;
+  text-shadow: none;
+}
+
+/* Buttons should remain readable */
+body.chiikawa button,
+body.chiikawa .p-button,
+body.chiikawa .btn {
+  text-shadow: none;
+}
+
+/* Hide dashboard-specific background pattern in chiikawa mode */
+body.chiikawa .dashboard-container::before {
+  display: none;
+}
+
+/* Remove text shadow from images */
+body.chiikawa img {
+  text-shadow: none;
+}
+
+/* =============================
    Vanilla utility classes
    (subset used in templates)
    ============================= */

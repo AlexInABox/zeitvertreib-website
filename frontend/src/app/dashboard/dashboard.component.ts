@@ -126,8 +126,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showRulesText = false;
   sprayRules: SprayRulesGetResponse | null = null;
   sprayRulesLoading = false;
-  chiikawaActive = false;
-  private chiikawaOriginalSrc: Map<HTMLImageElement, string> = new Map();
 
   // Fakerank-related properties
   currentFakerankId: number | null = null;
@@ -205,66 +203,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // volume for sound effects
   audioVolume = 0.5; // 0.0 - 1.0
 
-  // Replace images with usagi.webp while chiikawa is active
-  applyChiikawaImages(): void {
-    if (this.chiikawaActive) return;
-
-    // Automatically switch to light mode for better Chiikawa visibility
-    this.themeService.setDarkMode(false);
-
-    this.chiikawaOriginalSrc.clear();
-
-    const root = (this.elementRef && (this.elementRef.nativeElement as HTMLElement)) || document;
-
-    try {
-      const container = (root.querySelector && root.querySelector('.dashboard-container')) || (root as HTMLElement);
-      (container as HTMLElement)?.classList?.add('chiikawa');
-    } catch (e) {
-      // ignore
-    }
-
-    const imgs = root.querySelectorAll('img');
-
-    imgs.forEach((img) => {
-      try {
-        const el = img as HTMLImageElement;
-        if (!el.src || el.src.includes('/assets/usagi.webp')) return;
-
-        // Save original and replace
-        this.chiikawaOriginalSrc.set(el, el.src);
-        el.src = '/assets/usagi.webp';
-      } catch (e) {
-        // ignore
-      }
-    });
-
-    this.chiikawaActive = true;
-  }
-
-  resetChiikawaImages(): void {
-    if (!this.chiikawaActive) return;
-
-    // Remove image replacements
-    this.chiikawaOriginalSrc.forEach((src, el) => {
-      try {
-        el.src = src;
-      } catch (e) {
-        // ignore
-      }
-    });
-    this.chiikawaOriginalSrc.clear();
-
-    try {
-      const root = (this.elementRef && (this.elementRef.nativeElement as HTMLElement)) || document;
-      const container = (root.querySelector && root.querySelector('.dashboard-container')) || (root as HTMLElement);
-      (container as HTMLElement)?.classList?.remove('chiikawa');
-    } catch (e) {
-      // ignore
-    }
-
-    this.chiikawaActive = false;
-  }
-
   // Mock data for owned cosmetics - in production this would come from backend
   ownedCosmetics = {
     hats: ['cap'] as string[], // User owns a baseball cap
@@ -281,19 +219,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(public authService: AuthService) {
     this.generateRandomColors();
     this.loadUserStats();
-
-    // Disable chiikawa mode when switching back to dark mode
-    effect(() => {
-      if (this.themeService.isDark() && this.chiikawaActive) {
-        this.resetChiikawaImages();
-      }
-    });
-
-    // Listen for chiikawa easter egg trigger from zvc overlay or other components
-    this.easterEggService.chiikawaTrigger$.subscribe(() => {
-      void this.audioService.play('uwa');
-      this.applyChiikawaImages();
-    });
     this.loadFakerank();
     this.loadSprayRules();
 
@@ -305,9 +230,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     };
     document.addEventListener('click', this.documentClickHandler);
-
-    // Chiikawa (uwa.mp3)
-    this.audioService.register('uwa', '/assets/sounds/uwa.mp3', { volume: this.audioVolume });
   }
 
   ngOnInit(): void {
@@ -378,8 +300,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Safe method to get avatar with fallback
   getAvatarUrl(avatarUrl?: string): string {
-    // If chiikawa is active, always show usagi
-    if (this.chiikawaActive) return '/assets/usagi.webp';
     return avatarUrl || '/assets/logos/logo_full_color_1to1.png';
   }
 
@@ -941,14 +861,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Reset any chiikawa image replacements
-    this.resetChiikawaImages();
-
     // Clean up event listener
     if (this.documentClickHandler) {
       document.removeEventListener('click', this.documentClickHandler);
     }
-    this.audioService.unregister('uwa');
   }
 
   // ===== FAKERANK METHODS =====
