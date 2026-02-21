@@ -331,7 +331,7 @@ async function refreshDiscordCache(discordId: string, env: Env): Promise<void> {
   }
 
   const data: any = await res.json();
-  const displayName = data.username + (data.discriminator ? `#${data.discriminator}` : '');
+  const displayName = data.global_name || data.username;
   const username = data.username;
   const avatarUrl = data.avatar ? `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.png` : '';
 
