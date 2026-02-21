@@ -1,5 +1,12 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isTeam, fetchSteamUserData, validateSteamId, fetchDiscordUserData } from '../utils.js';
+import {
+  createResponse,
+  validateSession,
+  isTeam,
+  fetchSteamUserData,
+  validateSteamId,
+  fetchDiscordUserData,
+} from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, asc, inArray, sql } from 'drizzle-orm';
 import { cases, casesRelatedUsers, discordInfo, playerdata } from '../db/schema.js';
@@ -295,9 +302,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
     }
 
     // Fetch creator data for all cases
-    const createdByList = await Promise.all(
-      casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)),
-    );
+    const createdByList = await Promise.all(casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)));
 
     // Build response with linked steam IDs
     const casesWithLinkedUsers: CaseListItem[] = casesList.map((c, index) => ({
@@ -500,8 +505,6 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
     if (!(await isTeam(userid, env)) || discordId[0]?.discordId === null) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
-
-
 
     // Generate SHA-256 from random UUID and take first 10 chars
     const randomData = crypto.randomUUID();

@@ -3,7 +3,16 @@ import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, reducedLuckUsers, discordCache } from './db/schema.js';
+import {
+  playerdata,
+  kills,
+  loginSecrets,
+  discordInfo,
+  steamCache,
+  sessions,
+  reducedLuckUsers,
+  discordCache,
+} from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
@@ -285,9 +294,12 @@ async function refreshSteamCache(steamId: string, env: Env): Promise<void> {
     });
 }
 
-
 // Discord Cache Stuff
-export async function fetchDiscordUserData(discordId: string, env: Env, ctx: ExecutionContext): Promise<{ displayName: string; username: string; avatarUrl: string } | null> {
+export async function fetchDiscordUserData(
+  discordId: string,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<{ displayName: string; username: string; avatarUrl: string } | null> {
   const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
   const db = drizzle(env.ZEITVERTREIB_DATA);
   let cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
