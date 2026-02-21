@@ -234,11 +234,11 @@ export class CaseManagementComponent implements OnInit {
       return;
     }
     if (raw.length > 10) {
-      this.lookupError = 'Fall-ID darf maximal 10 Hex-Zeichen enthalten';
+      this.lookupError = 'Fall-ID darf maximal 10 Zeichen enthalten';
       return;
     }
-    if (!/^[a-f0-9]+$/.test(raw)) {
-      this.lookupError = 'Fall-ID darf nur Hex-Zeichen (0-9, a-f) enthalten';
+    if (!/^[a-z0-9]+$/.test(raw)) {
+      this.lookupError = 'Fall-ID darf nur alphanumerisch (a-z, 0-9) sein';
       return;
     }
     const caseId = raw.padEnd(10, '0');

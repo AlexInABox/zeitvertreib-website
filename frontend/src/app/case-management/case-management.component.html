@@ -6,7 +6,9 @@
         <div class="lookup-header">
           <i class="pi pi-search lookup-icon"></i>
           <h1 class="lookup-title">Fall suchen</h1>
-          <p class="lookup-subtitle">Gib bis zu 10 Hex-Zeichen ein — kürzere Eingaben werden mit Nullen aufgefüllt</p>
+          <p class="lookup-subtitle">
+            Gib bis zu 10 alphanumerische Zeichen ein — kürzere Eingaben werden mit Nullen aufgefüllt
+          </p>
         </div>
 
         <div class="lookup-body">
@@ -15,7 +17,7 @@
               type="text"
               pInputText
               [(ngModel)]="lookupCaseId"
-              placeholder="z.B. 3f7a2c9d (kürzere Eingaben werden mit Nullen aufgefüllt)"
+              placeholder="z.B. abc123456z"
               class="lookup-input"
               maxlength="10"
               (keypress)="onLookupKeyPress($event)"
