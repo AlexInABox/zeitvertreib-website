@@ -4,10 +4,10 @@ import { BehaviorSubject, Subject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class EasterEggService {
   private readonly CHIIKAWA_STORAGE_KEY = 'chiikawa_mode_enabled';
-  
+
   /** Observable that emits the current chiikawa mode state */
   private chiikawaState$ = new BehaviorSubject<boolean>(this.loadChiikawaState());
-  
+
   /** Public observable for chiikawa state */
   chiikawaTrigger$ = this.chiikawaState$.asObservable();
 
@@ -63,7 +63,7 @@ export class EasterEggService {
     const newState = !this.chiikawaState$.value;
     this.chiikawaState$.next(newState);
     this.saveChiikawaState(newState);
-    
+
     if (newState) {
       this.applyChiikawaMode();
       this.chiikawaActivated$.next();

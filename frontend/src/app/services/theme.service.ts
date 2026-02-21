@@ -59,7 +59,7 @@ export class ThemeService {
   private disableChiikawaIfActive() {
     // Directly manipulate DOM and localStorage to avoid circular dependencies
     if (typeof document === 'undefined') return;
-    
+
     if (document.body.classList.contains('chiikawa')) {
       document.body.classList.remove('chiikawa');
       try {
@@ -67,14 +67,16 @@ export class ThemeService {
       } catch {
         // ignore
       }
-      
+
       // Also trigger a storage event to notify EasterEggService
       try {
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'chiikawa_mode_enabled',
-          newValue: 'false',
-          oldValue: 'true',
-        }));
+        window.dispatchEvent(
+          new StorageEvent('storage', {
+            key: 'chiikawa_mode_enabled',
+            newValue: 'false',
+            oldValue: 'true',
+          }),
+        );
       } catch {
         // ignore
       }

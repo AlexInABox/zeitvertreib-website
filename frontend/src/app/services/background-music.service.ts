@@ -106,11 +106,11 @@ export class BackgroundMusicService {
   private applyChiikawaTrack() {
     // Set up the chiikawa track
     this.tracks = {
-      'chiikawa': {
+      chiikawa: {
         title: 'Chiikawa Theme',
         artist: 'Chiikawa',
-        file: 'chiikawa.mp3'
-      }
+        file: 'chiikawa.mp3',
+      },
     };
     this.trackKeys = ['chiikawa'];
 
@@ -146,7 +146,7 @@ export class BackgroundMusicService {
     }
 
     if (this.isChiikawaMode) return;
-    
+
     const themeKey = this.themeService.isDark() ? 'dark' : 'light';
     const source = (this.tracksByTheme as any)[themeKey] || {};
     this.tracks = source;

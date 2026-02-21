@@ -27,7 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private routerSubscription?: Subscription;
   private chiikawaOriginalSrc: Map<HTMLImageElement, string> = new Map();
   private audioService = inject(AudioService);
-  
+
   constructor(
     private backgroundMusic: BackgroundMusicService,
     private themeService: ThemeService,
