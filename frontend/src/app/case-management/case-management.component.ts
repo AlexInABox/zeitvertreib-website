@@ -76,7 +76,7 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -97,11 +97,9 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Debounced Steam-ID search: waits 600 ms after the user stops typing
-    this.steamIdSubject
-      .pipe(debounceTime(600), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe((query) => {
-        this.executeSteamIdSearch(query);
-      });
+    this.steamIdSubject.pipe(debounceTime(600), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe((query) => {
+      this.executeSteamIdSearch(query);
+    });
 
     // Debounced Discord-ID search: mirrors Steam-ID behaviour, uses isSearching
     this.discordIdSubject
