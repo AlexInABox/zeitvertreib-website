@@ -1,8 +1,8 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isTeam, fetchSteamUserData, validateSteamId } from '../utils.js';
+import { createResponse, validateSession, isTeam, fetchSteamUserData, validateSteamId, fetchDiscordUserData } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, asc, inArray, sql } from 'drizzle-orm';
-import { cases, casesRelatedUsers } from '../db/schema.js';
+import { cases, casesRelatedUsers, discordInfo, playerdata } from '../db/schema.js';
 import typia from 'typia';
 import {
   CaseFileUploadGetResponse,
@@ -146,7 +146,7 @@ export async function handleCaseFileUpload(request: Request, env: Env): Promise<
 
 /// GET /cases?page=1&limit=20&sortBy=createdAt&sortOrder=desc&createdByDiscordId=123
 /// GET /cases?steamId=76561198XXXXXXXXX  — returns ALL cases linked to that steamId, no pagination
-export async function handleListCases(request: Request, env: Env): Promise<Response> {
+export async function handleListCases(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -211,11 +211,20 @@ export async function handleListCases(request: Request, env: Env): Promise<Respo
         }
       }
 
-      const casesWithLinkedUsers: CaseListItem[] = casesList.map((c) => ({
+      const createdByList = await Promise.all(
+        casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)),
+      );
+
+      const casesWithLinkedUsers: CaseListItem[] = casesList.map((c, index) => ({
         caseId: c.id,
         title: c.title,
         description: c.description,
-        createdByDiscordId: c.createdByDiscordId,
+        createdBy: {
+          discordId: c.createdByDiscordId,
+          displayName: createdByList[index]?.displayName || c.createdByDiscordId,
+          username: createdByList[index]?.username || c.createdByDiscordId,
+          avatarUrl: createdByList[index]?.avatarUrl || '',
+        },
         createdAt: c.createdAt,
         lastUpdatedAt: c.lastUpdatedAt,
         linkedSteamIds: linkedUsersMap[c.id] || [],
@@ -285,12 +294,22 @@ export async function handleListCases(request: Request, env: Env): Promise<Respo
       }
     }
 
+    // Fetch creator data for all cases
+    const createdByList = await Promise.all(
+      casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)),
+    );
+
     // Build response with linked steam IDs
-    const casesWithLinkedUsers: CaseListItem[] = casesList.map((c) => ({
+    const casesWithLinkedUsers: CaseListItem[] = casesList.map((c, index) => ({
       caseId: c.id,
       title: c.title,
       description: c.description,
-      createdByDiscordId: c.createdByDiscordId,
+      createdBy: {
+        discordId: c.createdByDiscordId,
+        displayName: createdByList[index]?.displayName || c.createdByDiscordId,
+        username: createdByList[index]?.username || c.createdByDiscordId,
+        avatarUrl: createdByList[index]?.avatarUrl || '',
+      },
       createdAt: c.createdAt,
       lastUpdatedAt: c.lastUpdatedAt,
       linkedSteamIds: linkedUsersMap[c.id] || [],
@@ -425,12 +444,19 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
       });
     }
 
+    const createdBy = await fetchDiscordUserData(caseRow.createdByDiscordId, env, ctx);
+
     const metadataResponse: GetCaseMetadataGetResponse = {
       id: caseRow.id,
       caseId,
       title: caseRow.title,
       description: caseRow.description,
-      createdByDiscordId: caseRow.createdByDiscordId,
+      createdBy: {
+        discordId: caseRow.createdByDiscordId,
+        displayName: createdBy?.displayName || caseRow.createdByDiscordId,
+        username: createdBy?.username || caseRow.createdByDiscordId,
+        avatarUrl: createdBy?.avatarUrl || '',
+      },
       createdAt: caseRow.createdAt,
       lastUpdatedAt: caseRow.lastUpdatedAt,
       linkedUsers: linkedUsers.map((u) => ({
@@ -465,10 +491,17 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
       return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
     }
     let userid = sessionValidation.steamId;
+    const discordId = await db
+      .select({ discordId: playerdata.discordId })
+      .from(playerdata)
+      .where(eq(playerdata.id, userid))
+      .limit(1);
 
-    if (!(await isTeam(userid, env))) {
+    if (!(await isTeam(userid, env)) || discordId[0]?.discordId === null) {
       return createResponse({ error: 'Unauthorized' }, 401, origin);
     }
+
+
 
     // Generate SHA-256 from random UUID and take first 10 chars
     const randomData = crypto.randomUUID();
@@ -481,7 +514,7 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
 
     await db.insert(cases).values({
       id: caseId,
-      createdByDiscordId: userid,
+      createdByDiscordId: discordId[0]!.discordId,
       createdAt: Date.now(),
       lastUpdatedAt: Date.now(),
     });

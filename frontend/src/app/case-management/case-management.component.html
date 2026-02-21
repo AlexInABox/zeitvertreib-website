@@ -189,19 +189,31 @@
           </div>
 
           <div class="case-card-footer">
-            <div class="case-meta">
-              <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
-                <i class="pi pi-calendar-plus"></i>
-                {{ formatDate(item.createdAt) }}
-              </span>
-              <span
-                class="meta-item"
-                *ngIf="item.lastUpdatedAt !== item.createdAt"
-                [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)"
-              >
-                <i class="pi pi-history"></i>
-                {{ formatDate(item.lastUpdatedAt) }}
-              </span>
+            <div class="footer-left">
+              <!-- Creator Chip -->
+              <div class="case-creator-section" *ngIf="item.createdBy">
+                <div class="creator-chip">
+                  <img [src]="item.createdBy.avatarUrl" [alt]="item.createdBy.username" class="creator-avatar" />
+                  <span class="creator-name" [title]="'Erstellt von ' + item.createdBy.username">
+                    {{ item.createdBy.username }}
+                  </span>
+                </div>
+              </div>
+              <!-- Meta Items -->
+              <div class="case-meta">
+                <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
+                  <i class="pi pi-calendar-plus"></i>
+                  {{ formatDate(item.createdAt) }}
+                </span>
+                <span
+                  class="meta-item"
+                  *ngIf="item.lastUpdatedAt !== item.createdAt"
+                  [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)"
+                >
+                  <i class="pi pi-history"></i>
+                  {{ formatDate(item.lastUpdatedAt) }}
+                </span>
+              </div>
             </div>
             <div class="case-action">
               <i class="pi pi-arrow-right"></i>

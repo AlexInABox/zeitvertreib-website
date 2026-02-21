@@ -148,6 +148,14 @@ export const steamCache = sqliteTable('steam_cache', {
   lastUpdated: integer('last_updated').notNull().default(0),
 });
 
+export const discordCache = sqliteTable('discord_cache', {
+  discordId: text('discord_id').primaryKey().notNull(),
+  displayName: text('display_name').notNull(),
+  username: text('username').notNull(),
+  avatarUrl: text('avatar_url').notNull(),
+  lastUpdated: integer('last_updated').notNull().default(0),
+});
+
 export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   discordId: text('discord_id').notNull(),
