@@ -77,7 +77,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Register chiikawa sound (quieter!!!)
     try {
-      this.audioService.register('uwa', '/assets/sounds/uwa.mp3', { volume: 0.10 });
+      this.audioService.register('uwa', '/assets/sounds/uwa.mp3', { volume: 0.1 });
     } catch (e) {
       console.warn('Failed to register chiikawa sound', e);
     }
