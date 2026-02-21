@@ -1,13 +1,22 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../services/auth.service';
-import type { CaseListItem, ListCasesGetResponse, CreateCasePostResponse } from '@zeitvertreib/types';
+import type {
+  CaseListItem,
+  ListCasesGetResponse,
+  ListCasesBySteamIdGetResponse,
+  CreateCasePostResponse,
+} from '@zeitvertreib/types';
+
+type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
 
 @Component({
   selector: 'app-case-management',
@@ -15,10 +24,22 @@ import type { CaseListItem, ListCasesGetResponse, CreateCasePostResponse } from 
   templateUrl: './case-management.component.html',
   styleUrls: ['./case-management.component.css'],
 })
-export class CaseManagementComponent implements OnInit {
+export class CaseManagementComponent implements OnInit, OnDestroy {
   cases: CaseListItem[] = [];
   filteredCases: CaseListItem[] = [];
+
+  // Search state
+  searchMode: SearchMode = 'all';
   searchQuery = '';
+  steamIdQuery = '';
+  steamIdResults: CaseListItem[] | null = null;
+  discordIdQuery = '';
+  discordIdResults: CaseListItem[] | null = null;
+  caseIdQuery = '';
+  caseIdError = '';
+  isSearching = false;
+  searchError = '';
+
   sortBy: 'createdAt' | 'lastUpdatedAt' = 'createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
   sortDropdownOpen = false;
@@ -47,11 +68,15 @@ export class CaseManagementComponent implements OnInit {
     { label: 'Zuletzt aktualisiert (alt)', sortBy: 'lastUpdatedAt', sortOrder: 'asc' },
   ];
 
+  private steamIdSubject = new Subject<string>();
+  private discordIdSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -71,6 +96,20 @@ export class CaseManagementComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Debounced Steam-ID search: waits 600 ms after the user stops typing
+    this.steamIdSubject
+      .pipe(debounceTime(600), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((query) => {
+        this.executeSteamIdSearch(query);
+      });
+
+    // Debounced Discord-ID search: mirrors Steam-ID behaviour, uses isSearching
+    this.discordIdSubject
+      .pipe(debounceTime(600), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((query) => {
+        this.executeDiscordIdSearch(query);
+      });
+
     this.authService.currentUserData$.subscribe(() => {
       this.isTeam = this.authService.isTeam();
       if (this.isTeam) {
@@ -81,6 +120,190 @@ export class CaseManagementComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── Search mode helpers ────────────────────────────────────────────────────
+
+  setSearchMode(mode: SearchMode) {
+    if (this.searchMode === mode) return;
+    this.searchMode = mode;
+    this.searchQuery = '';
+    this.steamIdQuery = '';
+    this.steamIdResults = null;
+    this.discordIdQuery = '';
+    this.discordIdResults = null;
+    this.caseIdQuery = '';
+    this.caseIdError = '';
+    this.isSearching = false;
+    this.searchError = '';
+    this.page = 1;
+
+    if (mode === 'all') {
+      this.loadCases();
+    }
+    // steamId / discordId / caseId modes: wait for user to type
+  }
+
+  get displayedCases(): CaseListItem[] {
+    if (this.searchMode === 'steamId') {
+      return this.steamIdResults ?? [];
+    }
+    if (this.searchMode === 'discordId') {
+      return this.discordIdResults ?? [];
+    }
+    if (this.searchMode === 'caseId') {
+      return [];
+    }
+    return this.filteredCases;
+  }
+
+  get showPagination(): boolean {
+    return this.searchMode === 'all' && this.totalPages > 1;
+  }
+
+  get discordIdResultCount(): number {
+    return this.discordIdResults?.length ?? 0;
+  }
+
+  get steamIdResultCount(): number {
+    return this.steamIdResults?.length ?? 0;
+  }
+
+  // ── Case-ID lookup ────────────────────────────────────────────────────────
+
+  submitCaseIdSearch() {
+    this.caseIdError = '';
+    const raw = this.caseIdQuery.trim().toLowerCase();
+    if (!raw) {
+      this.caseIdError = 'Bitte eine Fall-ID eingeben';
+      return;
+    }
+    if (raw.length > 10) {
+      this.caseIdError = 'Fall-ID darf maximal 10 Zeichen enthalten';
+      return;
+    }
+    if (!/^[a-z0-9]+$/.test(raw)) {
+      this.caseIdError = 'Fall-ID darf nur alphanumerisch (a-z, 0-9) sein';
+      return;
+    }
+    this.router.navigate(['/cases', raw.padEnd(10, '0')]);
+  }
+
+  onCaseIdKeyPress(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      this.submitCaseIdSearch();
+    }
+  }
+
+  // ── Discord-ID search ─────────────────────────────────────────────────────
+
+  onDiscordIdQueryChange() {
+    const query = this.discordIdQuery.trim();
+    if (!query) {
+      this.discordIdResults = null;
+      this.isSearching = false;
+      this.searchError = '';
+      return;
+    }
+    this.isSearching = true;
+    this.searchError = '';
+    this.discordIdSubject.next(query);
+  }
+
+  clearDiscordIdSearch() {
+    this.discordIdQuery = '';
+    this.discordIdResults = null;
+    this.isSearching = false;
+    this.searchError = '';
+  }
+
+  private executeDiscordIdSearch(discordId: string) {
+    if (!discordId) {
+      this.isSearching = false;
+      this.discordIdResults = null;
+      return;
+    }
+
+    const params = new URLSearchParams({
+      createdByDiscordId: discordId,
+      page: '1',
+      limit: '100',
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    });
+    this.http
+      .get<ListCasesGetResponse>(`${environment.apiUrl}/cases?${params.toString()}`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (response) => {
+          this.discordIdResults = response.cases;
+          this.isSearching = false;
+        },
+        error: (error) => {
+          console.error('Error searching by Discord ID:', error);
+          this.searchError = error.error?.error || 'Fehler bei der Suche nach Discord-ID';
+          this.isSearching = false;
+          this.discordIdResults = [];
+        },
+      });
+  }
+
+  // ── Steam-ID search ────────────────────────────────────────────────────────
+
+  onSteamIdQueryChange() {
+    const query = this.steamIdQuery.trim();
+    if (!query) {
+      this.steamIdResults = null;
+      this.isSearching = false;
+      this.searchError = '';
+      return;
+    }
+    this.isSearching = true;
+    this.searchError = '';
+    this.steamIdSubject.next(query);
+  }
+
+  clearSteamIdSearch() {
+    this.steamIdQuery = '';
+    this.steamIdResults = null;
+    this.isSearching = false;
+    this.searchError = '';
+  }
+
+  private executeSteamIdSearch(steamId: string) {
+    if (!steamId) {
+      this.isSearching = false;
+      this.steamIdResults = null;
+      return;
+    }
+
+    const params = new URLSearchParams({ steamId });
+    this.http
+      .get<ListCasesBySteamIdGetResponse>(`${environment.apiUrl}/cases?${params.toString()}`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (response) => {
+          this.steamIdResults = response.cases;
+          this.isSearching = false;
+        },
+        error: (error) => {
+          console.error('Error searching by Steam ID:', error);
+          this.searchError = error.error?.error || 'Fehler bei der Suche nach Steam-ID';
+          this.isSearching = false;
+          this.steamIdResults = [];
+        },
+      });
+  }
+
+  // ── Main data loading ──────────────────────────────────────────────────────
+
   loadCases(resetPage = false) {
     if (resetPage) {
       this.page = 1;
@@ -88,12 +311,14 @@ export class CaseManagementComponent implements OnInit {
     this.isLoading = true;
     this.hasError = false;
 
-    const params = new URLSearchParams({
+    const paramsObj: Record<string, string> = {
       page: String(this.page),
       limit: String(this.limit),
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
-    });
+    };
+
+    const params = new URLSearchParams(paramsObj);
 
     this.http
       .get<ListCasesGetResponse>(`${environment.apiUrl}/cases?${params.toString()}`, {
