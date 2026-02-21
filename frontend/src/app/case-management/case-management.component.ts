@@ -51,7 +51,7 @@ export class CaseManagementComponent implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -228,15 +228,20 @@ export class CaseManagementComponent implements OnInit {
 
   lookupCase() {
     this.lookupError = '';
-    const caseId = this.lookupCaseId.trim().toLowerCase();
-    if (!caseId) {
+    const raw = this.lookupCaseId.trim().toLowerCase();
+    if (!raw) {
       this.lookupError = 'Bitte gib eine Fall-ID ein';
       return;
     }
-    if (!/^[a-f0-9]{10}$/.test(caseId)) {
-      this.lookupError = 'Fall-ID muss aus 10 Hex-Zeichen bestehen';
+    if (raw.length > 10) {
+      this.lookupError = 'Fall-ID darf maximal 10 Hex-Zeichen enthalten';
       return;
     }
+    if (!/^[a-f0-9]+$/.test(raw)) {
+      this.lookupError = 'Fall-ID darf nur Hex-Zeichen (0-9, a-f) enthalten';
+      return;
+    }
+    const caseId = raw.padEnd(10, '0');
     this.isLookingUp = true;
     this.router.navigate(['/cases', caseId]);
   }
