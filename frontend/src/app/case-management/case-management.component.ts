@@ -7,24 +7,7 @@ import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../services/auth.service';
-
-interface CaseMetadata {
-  id: string;
-  caseId: string;
-  createdAt: number;
-  lastModified: number;
-  fileCount: number;
-  totalSize: number;
-  // Optional metadata fields
-  nickname?: string;
-  description?: string;
-  tags?: string[];
-}
-
-interface CaseFolder {
-  name: string;
-  metadata: CaseMetadata;
-}
+import type { CaseListItem, ListCasesGetResponse, CreateCasePostResponse } from '@zeitvertreib/types';
 
 @Component({
   selector: 'app-case-management',
@@ -33,26 +16,35 @@ interface CaseFolder {
   styleUrls: ['./case-management.component.css'],
 })
 export class CaseManagementComponent implements OnInit {
-  caseFolders: CaseFolder[] = [];
-  filteredCaseFolders: CaseFolder[] = [];
+  cases: CaseListItem[] = [];
+  filteredCases: CaseListItem[] = [];
   searchQuery = '';
-  sortBy: 'newest' | 'oldest' | 'mostFiles' | 'largest' = 'newest';
+  sortBy: 'createdAt' | 'lastUpdatedAt' = 'createdAt';
+  sortOrder: 'asc' | 'desc' = 'desc';
   sortDropdownOpen = false;
+
+  // Pagination
+  page = 1;
+  limit = 20;
+  totalCount = 0;
+  totalPages = 0;
+  hasNextPage = false;
+  hasPreviousPage = false;
+
   isLoading = true;
   hasError = false;
   errorMessage = '';
 
-  // Public lookup state
   isTeam = false;
   lookupCaseId = '';
   lookupError = '';
   isLookingUp = false;
 
-  sortOptions = [
-    { label: 'Neueste zuerst', value: 'newest' },
-    { label: 'Älteste zuerst', value: 'oldest' },
-    { label: 'Meiste Dateien', value: 'mostFiles' },
-    { label: 'Größte zuerst', value: 'largest' },
+  sortOptions: { label: string; sortBy: 'createdAt' | 'lastUpdatedAt'; sortOrder: 'asc' | 'desc' }[] = [
+    { label: 'Neueste zuerst', sortBy: 'createdAt', sortOrder: 'desc' },
+    { label: 'Älteste zuerst', sortBy: 'createdAt', sortOrder: 'asc' },
+    { label: 'Kürzlich aktualisiert', sortBy: 'lastUpdatedAt', sortOrder: 'desc' },
+    { label: 'Zuletzt aktualisiert (alt)', sortBy: 'lastUpdatedAt', sortOrder: 'asc' },
   ];
 
   constructor(
@@ -64,9 +56,7 @@ export class CaseManagementComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    const dropdown = target.closest('.custom-dropdown');
-
-    if (!dropdown && this.sortDropdownOpen) {
+    if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
       this.sortDropdownOpen = false;
     }
   }
@@ -81,69 +71,49 @@ export class CaseManagementComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Subscribe to user data changes
-    this.authService.currentUserData$.subscribe((userData) => {
+    this.authService.currentUserData$.subscribe(() => {
       this.isTeam = this.authService.isTeam();
-
       if (this.isTeam) {
-        this.loadCaseFolders();
+        this.loadCases();
       } else {
         this.isLoading = false;
       }
     });
   }
 
-  loadCaseFolders() {
+  loadCases(resetPage = false) {
+    if (resetPage) {
+      this.page = 1;
+    }
     this.isLoading = true;
     this.hasError = false;
 
+    const params = new URLSearchParams({
+      page: String(this.page),
+      limit: String(this.limit),
+      sortBy: this.sortBy,
+      sortOrder: this.sortOrder,
+    });
+
     this.http
-      .get<{ folders: string[] }>(`${environment.apiUrl}/cases`, {
+      .get<ListCasesGetResponse>(`${environment.apiUrl}/cases?${params.toString()}`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .subscribe({
-        next: async (response) => {
-          // Fetch metadata for each case
-          const casesWithMetadata = await Promise.all(
-            response.folders.map(async (folderName) => {
-              const caseId = folderName.replace('case-', '');
-              try {
-                const metadata = await this.http
-                  .get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${caseId}`, { withCredentials: true })
-                  .toPromise();
-
-                return {
-                  name: folderName,
-                  metadata: metadata!,
-                };
-              } catch (error) {
-                console.error(`Error fetching metadata for ${caseId}:`, error);
-                // Return with default metadata if fetch fails
-                return {
-                  name: folderName,
-                  metadata: {
-                    id: folderName,
-                    caseId: caseId,
-                    createdAt: 0,
-                    lastModified: 0,
-                    fileCount: 0,
-                    totalSize: 0,
-                  },
-                };
-              }
-            }),
-          );
-
-          this.caseFolders = casesWithMetadata;
-          // Apply initial sorting (newest first)
+        next: (response) => {
+          this.cases = response.cases;
+          this.totalCount = response.pagination.totalCount;
+          this.totalPages = response.pagination.totalPages;
+          this.hasNextPage = response.pagination.hasNextPage;
+          this.hasPreviousPage = response.pagination.hasPreviousPage;
           this.filterCases();
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error loading case folders:', error);
+          console.error('Error loading cases:', error);
           this.hasError = true;
-          this.errorMessage = error.error?.error || 'Failed to load case folders';
+          this.errorMessage = error.error?.error || 'Fehler beim Laden der Fälle';
           this.isLoading = false;
         },
       });
@@ -151,9 +121,7 @@ export class CaseManagementComponent implements OnInit {
 
   createNewCase() {
     this.http
-      .post<{
-        folderName: string;
-      }>(
+      .post<CreateCasePostResponse>(
         `${environment.apiUrl}/cases`,
         {},
         {
@@ -163,43 +131,26 @@ export class CaseManagementComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          // Create a new case with initial metadata
-          const now = Date.now();
-          this.caseFolders.unshift({
-            name: response.folderName,
-            metadata: {
-              id: response.folderName,
-              caseId: response.folderName.replace('case-', ''),
-              createdAt: now,
-              lastModified: now,
-              fileCount: 0,
-              totalSize: 0,
-            },
-          });
-          this.filterCases();
+          this.router.navigate(['/cases', response.caseId]);
         },
         error: (error) => {
-          console.error('Error creating case folder:', error);
-          alert('Failed to create case folder: ' + (error.error?.error || 'Unknown error'));
+          console.error('Error creating case:', error);
+          alert('Fehler beim Erstellen des Falls: ' + (error.error?.error || 'Unbekannter Fehler'));
         },
       });
   }
 
-  openCase(caseFolder: CaseFolder) {
-    const caseId = caseFolder.name.replace('case-', '');
-    this.router.navigate(['/cases', caseId]);
+  openCase(item: CaseListItem) {
+    this.router.navigate(['/cases', item.caseId]);
   }
 
-  formatCaseName(name: string): string {
-    // Convert "case-123" to "Fall #123"
-    const caseNumber = name.replace('case-', '');
-    return `Fall #${caseNumber}`;
+  formatCaseName(caseId: string): string {
+    return `Fall #${caseId}`;
   }
 
   getRecentCasesCount(): number {
-    // Count cases created in the last 7 days
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return this.caseFolders.filter((caseFolder) => caseFolder.metadata.createdAt > sevenDaysAgo).length;
+    return this.cases.filter((c) => c.createdAt > sevenDaysAgo).length;
   }
 
   formatFileSize(bytes: number): string {
@@ -212,29 +163,17 @@ export class CaseManagementComponent implements OnInit {
 
   formatDate(timestamp: number): string {
     if (!timestamp) return 'Unbekannt';
-
     const date = new Date(timestamp);
     const now = new Date();
-    const diffTime = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-    // Just now
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     if (diffMinutes < 1) return 'Gerade eben';
-
-    // Minutes ago
     if (diffMinutes < 60) return `Vor ${diffMinutes} Min.`;
-
-    // Hours ago
     if (diffHours < 24) return `Vor ${diffHours} Std.`;
-
-    // Days ago
-    if (diffDays === 0) return 'Heute';
     if (diffDays === 1) return 'Gestern';
     if (diffDays < 7) return `Vor ${diffDays} Tagen`;
-
-    // Specific date for older items
     return date.toLocaleDateString('de-DE', {
       day: '2-digit',
       month: '2-digit',
@@ -242,100 +181,64 @@ export class CaseManagementComponent implements OnInit {
     });
   }
 
-  formatRelativeDate(timestamp: number): string {
-    return this.formatDate(timestamp);
-  }
-
-  getTotalFilesCount(): number {
-    return this.caseFolders.reduce((sum, caseFolder) => sum + caseFolder.metadata.fileCount, 0);
-  }
-
-  getTotalStorageSize(): string {
-    const totalBytes = this.caseFolders.reduce((sum, caseFolder) => sum + caseFolder.metadata.totalSize, 0);
-    return this.formatFileSize(totalBytes);
-  }
-
   filterCases() {
-    let filtered: CaseFolder[];
-
     if (!this.searchQuery.trim()) {
-      filtered = [...this.caseFolders];
-    } else {
-      const query = this.searchQuery.toLowerCase().trim();
-      filtered = this.caseFolders.filter((caseFolder) => {
-        const caseId = caseFolder.name.replace('case-', '').toLowerCase();
-        const caseName = this.formatCaseName(caseFolder.name).toLowerCase();
-        const nickname = caseFolder.metadata.nickname?.toLowerCase() || '';
-        const tags = caseFolder.metadata.tags?.map((tag) => tag.toLowerCase()).join(' ') || '';
-
-        return caseId.includes(query) || caseName.includes(query) || nickname.includes(query) || tags.includes(query);
-      });
+      this.filteredCases = [...this.cases];
+      return;
     }
-
-    // Apply sorting
-    this.filteredCaseFolders = this.sortCases(filtered);
+    const query = this.searchQuery.toLowerCase().trim();
+    this.filteredCases = this.cases.filter((c) => {
+      return (
+        c.caseId.toLowerCase().includes(query) ||
+        (c.title || '').toLowerCase().includes(query) ||
+        (c.description || '').toLowerCase().includes(query)
+      );
+    });
   }
 
-  sortCases(cases: CaseFolder[]): CaseFolder[] {
-    const sorted = [...cases];
-
-    switch (this.sortBy) {
-      case 'newest':
-        return sorted.sort((a, b) => b.metadata.createdAt - a.metadata.createdAt);
-      case 'oldest':
-        return sorted.sort((a, b) => a.metadata.createdAt - b.metadata.createdAt);
-      case 'mostFiles':
-        return sorted.sort((a, b) => b.metadata.fileCount - a.metadata.fileCount);
-      case 'largest':
-        return sorted.sort((a, b) => b.metadata.totalSize - a.metadata.totalSize);
-      default:
-        return sorted;
-    }
-  }
-
-  changeSortOrder(sortBy: 'newest' | 'oldest' | 'mostFiles' | 'largest') {
+  changeSortOrder(sortBy: 'createdAt' | 'lastUpdatedAt', sortOrder: 'asc' | 'desc') {
     this.sortBy = sortBy;
+    this.sortOrder = sortOrder;
     this.sortDropdownOpen = false;
-    this.filterCases();
+    this.loadCases(true);
   }
 
   toggleSortDropdown() {
     this.sortDropdownOpen = !this.sortDropdownOpen;
   }
 
-  lookupCase() {
-    // Reset error
-    this.lookupError = '';
+  getSortLabel(): string {
+    const opt = this.sortOptions.find((o) => o.sortBy === this.sortBy && o.sortOrder === this.sortOrder);
+    return opt?.label || 'Sortieren';
+  }
 
-    // Validate input
+  nextPage() {
+    if (this.hasNextPage) {
+      this.page++;
+      this.loadCases();
+    }
+  }
+
+  prevPage() {
+    if (this.hasPreviousPage) {
+      this.page--;
+      this.loadCases();
+    }
+  }
+
+  lookupCase() {
+    this.lookupError = '';
     const caseId = this.lookupCaseId.trim().toLowerCase();
     if (!caseId) {
       this.lookupError = 'Bitte gib eine Fall-ID ein';
       return;
     }
-
-    // Validate format (5 lowercase letters or numbers)
-    if (!/^[a-z0-9]{5}$/.test(caseId)) {
-      this.lookupError = 'Fall-ID muss aus 5 Zeichen (a-z, 0-9) bestehen';
+    if (!/^[a-f0-9]{10}$/.test(caseId)) {
+      this.lookupError = 'Fall-ID muss aus 10 Hex-Zeichen bestehen';
       return;
     }
-
-    // Check if case exists by fetching metadata
     this.isLookingUp = true;
-    this.http.get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${caseId}`).subscribe({
-      next: () => {
-        // Case exists, navigate to it
-        this.router.navigate(['/cases', caseId]);
-      },
-      error: (error) => {
-        this.isLookingUp = false;
-        if (error.status === 404) {
-          this.lookupError = 'Fall nicht gefunden';
-        } else {
-          this.lookupError = 'Fehler beim Überprüfen des Falls';
-        }
-      },
-    });
+    this.router.navigate(['/cases', caseId]);
   }
 
   onLookupKeyPress(event: KeyboardEvent) {
@@ -344,16 +247,12 @@ export class CaseManagementComponent implements OnInit {
     }
   }
 
-  closeSortDropdown() {
-    this.sortDropdownOpen = false;
-  }
-
-  getSortLabel(): string {
-    return this.sortOptions.find((opt) => opt.value === this.sortBy)?.label || 'Sortieren';
-  }
-
   clearSearch() {
     this.searchQuery = '';
     this.filterCases();
+  }
+
+  closeSortDropdown() {
+    this.sortDropdownOpen = false;
   }
 }

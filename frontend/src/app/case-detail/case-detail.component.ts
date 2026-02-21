@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -7,60 +7,23 @@ import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
-import { AvatarModule } from 'primeng/avatar';
 import { AuthService } from '../services/auth.service';
-import { createMD5 } from 'hash-wasm';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-interface CaseFile {
-  name: string;
-  viewUrl: string;
-  expiresIn: number;
-  uploadedAt?: number;
-  size?: number;
-  type?: string;
-}
-
-interface CaseMetadata {
-  id: string;
-  caseId: string;
-  createdAt: number;
-  lastModified: number;
-  fileCount: number;
-  totalSize: number;
-  // Optional metadata fields
-  nickname?: string;
-  description?: string;
-  tags?: string[];
-}
-
-interface LinkedUser {
-  steamId: string;
-  username: string;
-  avatarUrl: string;
-  linkedAt: number;
-  linkedByDiscordId: string;
-}
-
-interface SearchUser {
-  steamId: string;
-  username: string;
-  avatarUrl: string;
-}
+import type {
+  GetCaseMetadataGetResponse,
+  CaseFileUploadGetResponse,
+  UpdateCaseMetadataPutRequest,
+} from '@zeitvertreib/types';
 
 @Component({
   selector: 'app-case-detail',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, AvatarModule],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule],
   templateUrl: './case-detail.component.html',
   styleUrls: ['./case-detail.component.css'],
 })
-export class CaseDetailComponent implements OnInit, OnDestroy {
-  caseId: string = '';
-  caseName: string = '';
-  files: CaseFile[] = [];
-  filteredFiles: CaseFile[] = [];
-  metadata: CaseMetadata | null = null;
+export class CaseDetailComponent implements OnInit {
+  caseId = '';
+  caseData: GetCaseMetadataGetResponse | null = null;
+  filteredFiles: GetCaseMetadataGetResponse['files'] = [];
   searchQuery = '';
   sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest' = 'newest';
   sortDropdownOpen = false;
@@ -70,18 +33,17 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
 
   // Media viewer state
   viewerOpen = false;
-  viewerFile: CaseFile | null = null;
+  viewerFileUrl = '';
+  viewerFileName = '';
   viewerMediaType: 'image' | 'video' | 'audio' | null = null;
 
   // Auth state
-  isAuthenticated = false;
-  isFakerankAdmin = false;
+  isTeam = false;
 
   // Metadata editing state
   isEditingMetadata = false;
-  editedNickname = '';
+  editedTitle = '';
   editedDescription = '';
-  editedTags = '';
   isSavingMetadata = false;
 
   // Upload state
@@ -103,14 +65,10 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   medalStartTime = 0;
   medalUrlInvalid = false;
 
-  // User search and linking state
-  linkedUsers: LinkedUser[] = [];
-  searchResults: SearchUser[] = [];
-  userSearchTerm = '';
-  private userSearchSubject = new Subject<string>();
-  private userSearchSubscription?: Subscription;
-  isSearchingUsers = false;
-  isLoadingLinkedUsers = false;
+  // Linked user management state
+  newLinkedSteamId = '';
+  isManagingLinkedUsers = false;
+  linkedUserError = '';
 
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
@@ -132,9 +90,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    const dropdown = target.closest('.custom-dropdown');
-
-    if (!dropdown && this.sortDropdownOpen) {
+    if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
       this.sortDropdownOpen = false;
     }
   }
@@ -156,115 +112,66 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Check auth status
-    this.authService.currentUser$.subscribe((user) => {
-      this.isAuthenticated = !!user;
-      this.isFakerankAdmin = this.authService.isFakerankAdmin();
+    this.authService.currentUserData$.subscribe(() => {
+      this.isTeam = this.authService.isTeam();
     });
-
-    // Set up debounced user search
-    this.userSearchSubscription = this.userSearchSubject
-      .pipe(debounceTime(500), distinctUntilChanged())
-      .subscribe((term) => {
-        if (term.trim().length >= 2) {
-          this.searchUsers(term);
-        } else {
-          this.searchResults = [];
-        }
-      });
 
     this.route.paramMap.subscribe((params) => {
       this.caseId = params.get('id') || '';
       if (this.caseId) {
-        this.caseName = decodeURIComponent(this.caseId);
-        this.loadMetadata();
-        this.loadFiles();
-        // Only load linked users if user is admin
-        if (this.isFakerankAdmin) {
-          this.loadLinkedUsers();
-        }
+        this.loadCaseData();
       }
     });
   }
 
-  ngOnDestroy() {
-    this.userSearchSubscription?.unsubscribe();
-  }
+  loadCaseData() {
+    this.isLoading = true;
+    this.hasError = false;
 
-  onUserSearchChange(term: string) {
-    this.userSearchTerm = term;
-    this.userSearchSubject.next(term);
-  }
-
-  loadMetadata() {
-    this.http.get<CaseMetadata>(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`).subscribe({
-      next: (metadata) => {
-        this.metadata = metadata;
-        // Load metadata into edit fields
-        this.editedNickname = metadata.nickname || '';
-        this.editedDescription = metadata.description || '';
-        this.editedTags = metadata.tags?.join(', ') || '';
+    this.http.get<GetCaseMetadataGetResponse>(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`).subscribe({
+      next: (data) => {
+        this.caseData = data;
+        this.editedTitle = data.title || '';
+        this.editedDescription = data.description || '';
+        this.filterFiles();
+        this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load case metadata:', error);
-        // Don't show error to user, metadata is optional
+        console.error('Error loading case:', error);
+        this.hasError = true;
+        this.errorMessage = error.error?.error || 'Fehler beim Laden des Falls';
+        this.isLoading = false;
       },
     });
   }
 
-  loadFiles() {
-    this.isLoading = true;
-    this.hasError = false;
-
-    this.http
-      .get<{ files: CaseFile[]; expiresIn: number }>(`${environment.apiUrl}/cases/files?case=${this.caseId}`, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: (response) => {
-          this.files = response.files;
-          this.filterFiles();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading files:', error);
-          this.hasError = true;
-          this.errorMessage = error.error?.error || 'Failed to load files';
-          this.isLoading = false;
-        },
-      });
-  }
-
   filterFiles() {
-    let filtered: CaseFile[];
+    const files = this.caseData?.files ?? [];
+    let filtered = [...files];
 
-    if (!this.searchQuery.trim()) {
-      filtered = [...this.files];
-    } else {
+    if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase().trim();
-      filtered = this.files.filter((file) => file.name.toLowerCase().includes(query));
+      filtered = filtered.filter((f) => f.name.toLowerCase().includes(query));
     }
 
-    this.filteredFiles = this.sortFiles(filtered);
+    this.filteredFiles = this.sortFileList(filtered);
   }
 
-  sortFiles(files: CaseFile[]): CaseFile[] {
+  sortFileList(files: GetCaseMetadataGetResponse['files']): GetCaseMetadataGetResponse['files'] {
     const sorted = [...files];
-
     switch (this.sortBy) {
       case 'name':
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case 'name-desc':
         return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case 'newest':
-        return sorted.sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
+        return sorted.sort((a, b) => b.createdAt - a.createdAt);
       case 'oldest':
-        return sorted.sort((a, b) => (a.uploadedAt || 0) - (b.uploadedAt || 0));
+        return sorted.sort((a, b) => a.createdAt - b.createdAt);
       case 'largest':
-        return sorted.sort((a, b) => (b.size || 0) - (a.size || 0));
+        return sorted.sort((a, b) => b.size - a.size);
       case 'smallest':
-        return sorted.sort((a, b) => (a.size || 0) - (b.size || 0));
+        return sorted.sort((a, b) => a.size - b.size);
       default:
         return sorted;
     }
@@ -289,63 +196,76 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     this.filterFiles();
   }
 
+  getFileUrl(filename: string): string {
+    const file = this.caseData?.files.find((f) => f.name === filename);
+    return file?.url || '';
+  }
+
+  goBack() {
+    this.router.navigate(['/cases']);
+  }
+
+  copySteamIdToClipboard(steamId: string) {
+    navigator.clipboard.writeText(steamId).then(
+      () => {
+        console.log('Steam ID copied to clipboard:', steamId);
+      },
+      () => {
+        console.error('Failed to copy Steam ID');
+      },
+    );
+  }
+
+  validateSteamIdFormat(steamId: string): { valid: boolean; normalized?: string; error?: string } {
+    const raw = steamId.trim();
+
+    if (!raw) {
+      return { valid: false, error: 'Steam ID darf nicht leer sein' };
+    }
+
+    // Remove all @steam suffixes (catches duplication like @steam@steam)
+    const base = raw.replace(/@steam/g, '');
+
+    // Check if exactly 17 decimal digits
+    if (!/^\d{17}$/.test(base)) {
+      return { valid: false, error: 'Steam ID muss genau 17 Dezimalziffern sein' };
+    }
+
+    // Verify within valid Steam64 ID range
+    const MIN_STEAM64 = 76561197960265728n; // 0x0110000100000000
+    const MAX_STEAM64 = 76561202255233023n; // 0x01100001FFFFFFFF
+    const steamId64 = BigInt(base);
+
+    if (steamId64 < MIN_STEAM64 || steamId64 > MAX_STEAM64) {
+      return { valid: false, error: 'Steam ID liegt außerhalb des gültigen Bereichs' };
+    }
+
+    return { valid: true, normalized: `${base}@steam` };
+  }
+
   getFileExtension(filename: string): string {
-    const ext = filename.split('.').pop()?.toLowerCase() || '';
-    return ext;
+    return filename.split('.').pop()?.toLowerCase() || '';
   }
 
   getFileIcon(filename: string): string {
     const ext = this.getFileExtension(filename);
-
-    // Images
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
-      return 'pi-image';
-    }
-    // Videos
-    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) {
-      return 'pi-video';
-    }
-    // Audio
-    if (['mp3', 'wav', 'ogg'].includes(ext)) {
-      return 'pi-volume-up';
-    }
-    // Documents
-    if (['pdf'].includes(ext)) {
-      return 'pi-file-pdf';
-    }
-    if (['txt', 'md'].includes(ext)) {
-      return 'pi-file-edit';
-    }
-    // Archives
-    if (['zip', 'tar', 'gz'].includes(ext)) {
-      return 'pi-box';
-    }
-
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return 'pi-image';
+    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'pi-video';
+    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'pi-volume-up';
+    if (['pdf'].includes(ext)) return 'pi-file-pdf';
+    if (['txt', 'md'].includes(ext)) return 'pi-file-edit';
+    if (['zip', 'tar', 'gz'].includes(ext)) return 'pi-box';
     return 'pi-file';
   }
 
   getFileType(filename: string): string {
     const ext = this.getFileExtension(filename);
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
-      return 'Bild';
-    }
-    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) {
-      return 'Video';
-    }
-    if (['mp3', 'wav', 'ogg'].includes(ext)) {
-      return 'Audio';
-    }
-    if (['pdf'].includes(ext)) {
-      return 'PDF Dokument';
-    }
-    if (['txt', 'md'].includes(ext)) {
-      return 'Text Dokument';
-    }
-    if (['zip', 'tar', 'gz'].includes(ext)) {
-      return 'Archiv';
-    }
-
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return 'Bild';
+    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'Video';
+    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'Audio';
+    if (['pdf'].includes(ext)) return 'PDF Dokument';
+    if (['txt', 'md'].includes(ext)) return 'Text Dokument';
+    if (['zip', 'tar', 'gz'].includes(ext)) return 'Archiv';
     return ext.toUpperCase() + ' Datei';
   }
 
@@ -359,9 +279,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
 
   formatDate(timestamp: number | undefined): string {
     if (!timestamp) return '—';
-
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('de-DE', {
+    return new Date(timestamp).toLocaleDateString('de-DE', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -370,120 +288,84 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatTimeAgo(timestamp: number | undefined): string {
+    if (!timestamp) return '—';
+    const diff = Date.now() - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return 'gerade eben';
+    if (minutes < 60) return `vor ${minutes} Minute${minutes === 1 ? '' : 'n'}`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `vor ${hours} Stunde${hours === 1 ? '' : 'n'}`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `vor ${days} Tag${days === 1 ? '' : 'en'}`;
+    return this.formatDate(timestamp);
+  }
+
   getTotalSize(): string {
-    const totalBytes = this.files.reduce((sum, file) => sum + (file.size || 0), 0);
-    return this.formatFileSize(totalBytes);
+    const total = this.caseData?.files.reduce((sum, f) => sum + f.size, 0) ?? 0;
+    return this.formatFileSize(total);
   }
 
   formatCaseName(caseId: string): string {
     return `Fall #${caseId}`;
   }
 
-  getFileUrl(file: CaseFile): string {
-    return file.viewUrl;
-  }
-
-  goBack() {
-    this.router.navigate(['/cases']);
-  }
-
   isViewableFile(filename: string): boolean {
     const ext = this.getFileExtension(filename);
-    const viewableExtensions = [
-      // Images
-      'jpg',
-      'jpeg',
-      'png',
-      'gif',
-      'webp',
-      'bmp',
-      'svg',
-      // Videos
-      'mp4',
-      'webm',
-      'mov',
-      // Audio
-      'mp3',
-      'wav',
-      'ogg',
-    ];
-    return viewableExtensions.includes(ext);
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'mp4', 'webm', 'mov', 'mp3', 'wav', 'ogg'].includes(ext);
   }
 
   getMediaType(filename: string): 'image' | 'video' | 'audio' | null {
     const ext = this.getFileExtension(filename);
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) {
-      return 'image';
-    }
-    if (['mp4', 'webm', 'mov'].includes(ext)) {
-      return 'video';
-    }
-    if (['mp3', 'wav', 'ogg'].includes(ext)) {
-      return 'audio';
-    }
-
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return 'image';
+    if (['mp4', 'webm', 'mov'].includes(ext)) return 'video';
+    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'audio';
     return null;
   }
 
-  openViewer(file: CaseFile, event?: Event) {
-    if (event) {
-      event.preventDefault();
-    }
-
-    if (this.isViewableFile(file.name)) {
-      this.viewerFile = file;
-      this.viewerMediaType = this.getMediaType(file.name);
+  openViewer(filename: string, event?: Event) {
+    if (event) event.preventDefault();
+    const file = this.caseData?.files.find((f) => f.name === filename);
+    if (!file) return;
+    if (this.isViewableFile(filename)) {
+      this.viewerFileUrl = file.url;
+      this.viewerFileName = filename;
+      this.viewerMediaType = this.getMediaType(filename);
       this.viewerOpen = true;
-      // Prevent body scroll when viewer is open
       document.body.style.overflow = 'hidden';
     } else {
-      // For non-viewable files, trigger download
-      window.open(file.viewUrl, '_blank');
+      window.open(file.url, '_blank');
     }
   }
 
   closeViewer() {
     this.viewerOpen = false;
-    this.viewerFile = null;
+    this.viewerFileUrl = '';
+    this.viewerFileName = '';
     this.viewerMediaType = null;
-    // Restore body scroll
     document.body.style.overflow = '';
   }
 
-  downloadFile(file: CaseFile) {
-    window.open(file.viewUrl, '_blank');
-  }
-
   startEditingMetadata() {
+    this.editedTitle = this.caseData?.title || '';
+    this.editedDescription = this.caseData?.description || '';
     this.isEditingMetadata = true;
   }
 
   cancelEditingMetadata() {
     this.isEditingMetadata = false;
-    // Reset to current metadata
-    this.editedNickname = this.metadata?.nickname || '';
-    this.editedDescription = this.metadata?.description || '';
-    this.editedTags = this.metadata?.tags?.join(', ') || '';
+    this.editedTitle = this.caseData?.title || '';
+    this.editedDescription = this.caseData?.description || '';
   }
 
   saveMetadata() {
     this.isSavingMetadata = true;
-
-    // Parse tags from comma-separated string
-    const tags = this.editedTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-
-    const metadataPayload: any = {};
-
-    if (this.editedNickname) metadataPayload.nickname = this.editedNickname;
-    if (this.editedDescription) metadataPayload.description = this.editedDescription;
-    if (tags.length > 0) metadataPayload.tags = tags;
+    const payload: UpdateCaseMetadataPutRequest = {};
+    if (this.editedTitle.trim()) payload.title = this.editedTitle.trim();
+    if (this.editedDescription.trim()) payload.description = this.editedDescription.trim();
 
     this.http
-      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, metadataPayload, {
+      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -491,8 +373,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         next: () => {
           this.isSavingMetadata = false;
           this.isEditingMetadata = false;
-          // Reload metadata to get updated values
-          this.loadMetadata();
+          this.loadCaseData();
         },
         error: (error) => {
           this.isSavingMetadata = false;
@@ -502,94 +383,72 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
       });
   }
 
-  // User search and linking methods
-  loadLinkedUsers() {
-    this.isLoadingLinkedUsers = true;
+  addLinkedUser() {
+    this.linkedUserError = '';
+    const raw = this.newLinkedSteamId.trim();
+    if (!raw) {
+      this.linkedUserError = 'Bitte gib eine Steam-ID ein';
+      return;
+    }
+
+    // Validate Steam ID format
+    const validation = this.validateSteamIdFormat(raw);
+    if (!validation.valid) {
+      this.linkedUserError = validation.error || 'Ungültiges Steam-ID-Format';
+      return;
+    }
+
+    const steamId = validation.normalized || (raw.endsWith('@steam') ? raw : `${raw}@steam`);
+    const existing = (this.caseData?.linkedUsers ?? []).map((u) => u.steamId);
+    if (existing.includes(steamId)) {
+      this.linkedUserError = 'Benutzer ist bereits verlinkt';
+      return;
+    }
+
+    this.isManagingLinkedUsers = true;
+    const payload: UpdateCaseMetadataPutRequest = { linkedSteamIds: [...existing, steamId] };
+
     this.http
-      .get<{ users: LinkedUser[] }>(`${environment.apiUrl}/cases/linked-users?caseId=${this.caseId}`, {
+      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .subscribe({
-        next: (response) => {
-          this.linkedUsers = response.users;
-          this.isLoadingLinkedUsers = false;
-        },
-        error: (error) => {
-          console.error('Error loading linked users:', error);
-          this.isLoadingLinkedUsers = false;
-        },
-      });
-  }
-
-  searchUsers(term: string) {
-    this.isSearchingUsers = true;
-    const headers = this.getAuthHeaders();
-    this.http
-      .get<{
-        users: SearchUser[];
-      }>(`${environment.apiUrl}/cases/search-users?search=${encodeURIComponent(term)}`, {
-        headers,
-        withCredentials: true,
-      })
-      .subscribe({
-        next: (response) => {
-          this.searchResults = response.users;
-          this.isSearchingUsers = false;
-        },
-        error: (error) => {
-          console.error('Error searching users:', error);
-          this.searchResults = [];
-          this.isSearchingUsers = false;
-        },
-      });
-  }
-
-  linkUserToCase(user: SearchUser) {
-    const headers = this.getAuthHeaders();
-    this.http
-      .post(
-        `${environment.apiUrl}/cases/link-user`,
-        {
-          caseId: this.caseId,
-          steamId: user.steamId,
-        },
-        { headers, withCredentials: true },
-      )
-      .subscribe({
         next: () => {
-          // Reload linked users
-          this.loadLinkedUsers();
-          // Clear search
-          this.userSearchTerm = '';
-          this.searchResults = [];
-          alert('Benutzer erfolgreich verlinkt');
+          this.isManagingLinkedUsers = false;
+          this.newLinkedSteamId = '';
+          this.loadCaseData();
         },
         error: (error) => {
-          console.error('Error linking user:', error);
-          alert('Fehler beim Verlinken des Benutzers');
+          this.isManagingLinkedUsers = false;
+          console.error('Failed to add linked user:', error);
+          this.linkedUserError = error.error?.error || 'Fehler beim Hinzufügen des Benutzers';
         },
       });
   }
 
-  unlinkUserFromCase(steamId: string) {
-    if (!confirm('Möchtest du diesen Benutzer wirklich entfernen?')) {
-      return;
+  removeLinkedUser(steamId: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
     }
+    const remaining = (this.caseData?.linkedUsers ?? []).filter((u) => u.steamId !== steamId).map((u) => u.steamId);
 
-    const headers = this.getAuthHeaders();
+    this.isManagingLinkedUsers = true;
+    const payload: UpdateCaseMetadataPutRequest = { linkedSteamIds: remaining };
+
     this.http
-      .delete(`${environment.apiUrl}/cases/unlink-user?caseId=${this.caseId}&steamId=${encodeURIComponent(steamId)}`, {
-        headers,
+      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
+        headers: this.getAuthHeaders(),
         withCredentials: true,
       })
       .subscribe({
         next: () => {
-          this.loadLinkedUsers();
-          alert('Benutzer erfolgreich entfernt');
+          this.isManagingLinkedUsers = false;
+          this.loadCaseData();
         },
         error: (error) => {
-          console.error('Error unlinking user:', error);
+          this.isManagingLinkedUsers = false;
+          console.error('Failed to remove linked user:', error);
           alert('Fehler beim Entfernen des Benutzers');
         },
       });
@@ -602,102 +461,14 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async calculateFileHash(file: File, onProgress?: (progress: number) => void): Promise<string> {
-    const chunkSize = 2097152; // 2MB chunks
-    const chunks = Math.ceil(file.size / chunkSize);
-    const md5 = await createMD5();
-    md5.init();
-
-    for (let currentChunk = 0; currentChunk < chunks; currentChunk++) {
-      const start = currentChunk * chunkSize;
-      const end = Math.min(start + chunkSize, file.size);
-      const chunk = file.slice(start, end);
-      const buffer = await chunk.arrayBuffer();
-      md5.update(new Uint8Array(buffer));
-
-      // Report progress
-      if (onProgress) {
-        const progress = Math.round(((currentChunk + 1) / chunks) * 100);
-        onProgress(progress);
-      }
-    }
-
-    return md5.digest('hex');
-  }
-
-  private async calculateBufferHash(buffer: ArrayBuffer, onProgress?: (progress: number) => void): Promise<string> {
-    const data = new Uint8Array(buffer);
-    const chunkSize = 2097152; // 2MB chunks
-    const chunks = Math.ceil(data.length / chunkSize);
-    const md5 = await createMD5();
-    md5.init();
-
-    for (let currentChunk = 0; currentChunk < chunks; currentChunk++) {
-      const start = currentChunk * chunkSize;
-      const end = Math.min(start + chunkSize, data.length);
-      md5.update(data.slice(start, end));
-
-      // Report progress
-      if (onProgress) {
-        const progress = Math.round(((currentChunk + 1) / chunks) * 100);
-        onProgress(progress);
-      }
-    }
-
-    return md5.digest('hex');
-  }
-
-  private hexToBase64(hex: string): string {
-    const bytes = new Uint8Array(hex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
-  private async verifyUpload(filename: string, expectedHash: string, maxRetries = 3): Promise<boolean> {
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        // Small delay before checking (allow S3 to process)
-        if (attempt > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-
-        const response = await this.http
-          .get<{
-            filename: string;
-            hash: string;
-            size: number;
-            lastModified: number;
-          }>(`${environment.apiUrl}/cases/file/hash?case=${this.caseId}&filename=${encodeURIComponent(filename)}`)
-          .toPromise();
-
-        if (response?.hash === expectedHash) {
-          return true;
-        }
-
-        console.warn(`Hash mismatch on attempt ${attempt + 1}: expected ${expectedHash}, got ${response?.hash}`);
-      } catch (error) {
-        console.error(`Hash verification attempt ${attempt + 1} failed:`, error);
-      }
-    }
-
-    return false;
-  }
-
   private calculateETA(startTime: number, progress: number): string {
     if (progress === 0) return 'Berechne...';
     const elapsed = Date.now() - startTime;
     const total = (elapsed / progress) * 100;
     const remaining = total - elapsed;
     const seconds = Math.ceil(remaining / 1000);
-
     if (seconds < 10) return '<10s';
-
-    // Round to nearest 10 seconds
     const roundedSeconds = Math.ceil(seconds / 10) * 10;
-
     if (roundedSeconds < 60) return `~${roundedSeconds}s`;
     const minutes = Math.floor(roundedSeconds / 60);
     const secs = roundedSeconds % 60;
@@ -705,72 +476,39 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     return `~${minutes}m ${secs}s`;
   }
 
-  async uploadFile(retryCount = 0) {
+  async uploadFile() {
     if (!this.selectedFile) {
       alert('Bitte wähle eine Datei aus');
       return;
     }
 
-    const maxRetries = 3;
-
     this.isUploading = true;
     this.uploadProgress = 0;
-    this.uploadStatusMessage = 'Datei wird geladen...';
+    this.uploadStatusMessage = 'Upload-URL wird angefordert...';
     this.uploadETA = '';
     this.uploadStartTime = Date.now();
 
     try {
-      // Read the entire file into memory ONCE to ensure consistency
-      this.uploadStatusMessage = 'Datei wird in Speicher geladen...';
-      const fileBuffer = await this.selectedFile.arrayBuffer();
-      const fileData = new Uint8Array(fileBuffer);
+      const fileExtension = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
       const contentType = this.selectedFile.type || 'application/octet-stream';
 
-      // Calculate hash from the buffer (not from file) with progress tracking
-      const hashStartTime = Date.now();
-      this.uploadStatusMessage = 'Datei wird gehashed...';
-      const localHash = await this.calculateBufferHash(fileBuffer, (progress) => {
-        this.uploadProgress = progress;
-        this.uploadETA = this.calculateETA(hashStartTime, progress);
-        this.uploadStatusMessage = `Datei wird gehashed... (${progress}%)`;
-      });
-      console.log('Local file hash:', localHash);
-
-      // Convert hash to base64 for Content-MD5 header
-      const contentMD5 = this.hexToBase64(localHash);
-
-      // Get file extension
-      const fileExtension = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
-
-      this.uploadStatusMessage = 'Upload-URL wird angefordert...';
-      this.uploadProgress = 0;
-      this.uploadETA = '';
-
-      // Request upload URL from backend
-      const uploadUrlResponse = await this.http
-        .get<{
-          url: string;
-          method: string;
-          filename: string;
-          fileUrl: string;
-          expiresIn: number;
-        }>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`)
+      const uploadInfo = await this.http
+        .get<CaseFileUploadGetResponse>(
+          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
+          { headers: this.getAuthHeaders(), withCredentials: true },
+        )
         .toPromise();
 
-      if (!uploadUrlResponse) {
-        throw new Error('Failed to get upload URL');
-      }
+      if (!uploadInfo) throw new Error('Keine Upload-URL erhalten');
 
       this.uploadStatusMessage = 'Datei wird hochgeladen...';
       this.uploadStartTime = Date.now();
 
-      // Upload using fetch with explicit Content-Length and Content-MD5 for integrity
-      // This is more reliable than HttpClient for binary uploads to S3
+      const file = this.selectedFile;
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrlResponse.url, true);
+        xhr.open('PUT', uploadInfo.url, true);
         xhr.setRequestHeader('Content-Type', contentType);
-        xhr.setRequestHeader('Content-MD5', contentMD5);
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -780,131 +518,45 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
           }
         };
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.onabort = () => reject(new Error('Upload aborted'));
-
-        // Send the exact buffer we hashed
-        xhr.send(fileData);
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
+        xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
+        xhr.send(file);
       });
 
-      // Verify upload by comparing hashes
-      this.uploadStatusMessage = 'Upload wird verifiziert...';
-      this.uploadProgress = 100;
-      this.uploadETA = '';
-      console.log('Verifying upload...');
-
-      const isVerified = await this.verifyUpload(uploadUrlResponse.filename, localHash);
-
-      if (!isVerified) {
-        if (retryCount < maxRetries) {
-          console.warn(`Upload verification failed, retrying... (${retryCount + 1}/${maxRetries})`);
-          this.uploadStatusMessage = `Verifizierung fehlgeschlagen - Erneuter Versuch ${retryCount + 1}/${maxRetries}...`;
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          // Keep the same file and retry
-          await this.uploadFile(retryCount + 1);
-          return;
-        } else {
-          throw new Error(
-            'Upload-Überprüfung fehlgeschlagen: Die hochgeladene Datei stimmt nicht mit der Originaldatei überein. Bitte versuche es erneut.',
-          );
-        }
-      }
-
-      console.log('Upload verified successfully!');
-      this.uploadStatusMessage = 'Upload erfolgreich!';
-
-      // Reset upload state
       this.isUploading = false;
       this.uploadProgress = 0;
       this.uploadStatusMessage = '';
       this.uploadETA = '';
       this.selectedFile = null;
 
-      // Reset file input
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      if (fileInput) {
-        fileInput.value = '';
-      }
+      if (fileInput) fileInput.value = '';
 
-      // Reload files and metadata
-      this.loadFiles();
-      this.loadMetadata();
-
-      alert('Datei erfolgreich hochgeladen und verifiziert!');
+      this.loadCaseData();
+      alert('Datei erfolgreich hochgeladen!');
     } catch (error) {
       this.isUploading = false;
       this.uploadProgress = 0;
       this.uploadStatusMessage = '';
       this.uploadETA = '';
       console.error('Upload failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Fehler beim Hochladen der Datei';
-      alert(errorMessage);
-    }
-  }
-
-  async deleteFile(file: CaseFile) {
-    if (!confirm(`Möchten Sie die Datei "${file.name}" wirklich löschen?`)) {
-      return;
-    }
-
-    try {
-      const token = this.authService.getSessionToken();
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${environment.apiUrl}/cases/file?case=${this.caseId}&filename=${encodeURIComponent(file.name)}`,
-        {
-          method: 'DELETE',
-          headers: headers,
-          credentials: 'include',
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to delete file');
-      }
-
-      // Reload files and metadata
-      this.loadFiles();
-      this.loadMetadata();
-
-      alert('Datei erfolgreich gelöscht!');
-    } catch (error) {
-      console.error('Delete failed:', error);
-      alert('Fehler beim Löschen der Datei');
+      alert(error instanceof Error ? error.message : 'Fehler beim Hochladen der Datei');
     }
   }
 
   isValidUrl(urlString: string): boolean {
-    if (!urlString || !urlString.trim()) {
-      return false;
-    }
-
+    if (!urlString?.trim()) return false;
     try {
       const url = new URL(urlString.trim());
       return url.protocol.startsWith('http');
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
   onMedalUrlChange() {
-    if (this.medalClipUrl.trim()) {
-      this.medalUrlInvalid = !this.isValidUrl(this.medalClipUrl);
-    } else {
-      this.medalUrlInvalid = false;
-    }
+    this.medalUrlInvalid = this.medalClipUrl.trim() ? !this.isValidUrl(this.medalClipUrl) : false;
   }
 
   async uploadMedalClip() {
@@ -912,16 +564,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
       alert('Bitte gib eine URL ein');
       return;
     }
-
-    // Validate that it's a proper URL
-    try {
-      const url = new URL(this.medalClipUrl.trim());
-      // Check if it has a protocol (http/https)
-      if (!url.protocol.startsWith('http')) {
-        alert('Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)');
-        return;
-      }
-    } catch (error) {
+    if (!this.isValidUrl(this.medalClipUrl)) {
       alert('Bitte gib eine gültige URL ein');
       return;
     }
@@ -934,94 +577,56 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     this.medalStartTime = Date.now();
 
     try {
-      // Step 1: Query the Medal bypass API
       const bypassUrl = `https://medalbypass.vercel.app/api/clip?url=${encodeURIComponent(this.medalClipUrl)}`;
       const bypassResponse = await fetch(bypassUrl);
+      if (!bypassResponse.ok) throw new Error('Fehler beim Abrufen des Medal Clips');
 
-      if (!bypassResponse.ok) {
-        throw new Error('Fehler beim Abrufen des Medal Clips');
-      }
+      const bypassData = (await bypassResponse.json()) as { valid: boolean; src?: string; reasoning?: string };
+      if (!bypassData.valid) throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
+      if (!bypassData.src) throw new Error('Keine Video-URL erhalten');
 
-      const bypassData = (await bypassResponse.json()) as {
-        valid: boolean;
-        src?: string;
-        reasoning?: string;
-      };
-
-      if (!bypassData.valid) {
-        throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
-      }
-
-      if (!bypassData.src) {
-        throw new Error('Keine Video-URL erhalten');
-      }
-
-      // Extract file extension from the Medal.tv URL
-      const urlPath = bypassData.src.split('?')[0]; // Remove query parameters
-      const pathParts = urlPath.split('/');
-      const fileNameWithExt = pathParts[pathParts.length - 1]; // Get last part (filename)
+      const urlPath = bypassData.src.split('?')[0];
+      const fileNameWithExt = urlPath.split('/').pop() ?? 'clip.mp4';
       const fileExtension = fileNameWithExt.includes('.') ? fileNameWithExt.split('.').pop()!.toLowerCase() : 'mp4';
+      const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
 
-      const mimeType = fileExtension === 'mp4' ? 'video/mp4' : fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
-
-      // Generate filename with timestamp and proper extension
-      const filename = `medal-clip-${Date.now()}.${fileExtension}`;
-
-      // Step 2: Download the video with progress tracking using CORS proxy
       this.medalStatusMessage = 'Video wird heruntergeladen...';
-      this.medalDownloadProgress = 0;
-      this.medalUploadProgress = 0;
       this.medalStartTime = Date.now();
-      this.medalETA = '';
 
-      // Try multiple CORS proxy services in case one fails
       const corsProxies = [
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(bypassData.src)}`,
         `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`,
-        bypassData.src, // Try direct fetch as last resort
+        bypassData.src,
       ];
 
       let videoResponse: Response | null = null;
-      let lastError: Error | null = null;
-
       for (const proxyUrl of corsProxies) {
         try {
-          const response = await fetch(proxyUrl);
-          if (response.ok) {
-            videoResponse = response;
+          const resp = await fetch(proxyUrl);
+          if (resp.ok) {
+            videoResponse = resp;
             break;
           }
-        } catch (error) {
-          lastError = error as Error;
+        } catch {
           continue;
         }
       }
 
-      if (!videoResponse) {
-        throw new Error(
-          lastError?.message || 'Fehler beim Herunterladen des Videos - alle Proxy-Dienste fehlgeschlagen',
-        );
-      }
+      if (!videoResponse) throw new Error('Fehler beim Herunterladen des Videos');
 
       const contentLength = videoResponse.headers.get('content-length');
       const total = contentLength ? parseInt(contentLength, 10) : 0;
-
       const reader = videoResponse.body?.getReader();
-      if (!reader) {
-        throw new Error('Fehler beim Lesen des Videos');
-      }
+      if (!reader) throw new Error('Fehler beim Lesen des Videos');
 
       const chunks: Uint8Array[] = [];
       let receivedLength = 0;
 
       while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) break;
-
-        chunks.push(value);
-        receivedLength += value.length;
-
+        const readResult = await reader.read();
+        if (readResult.done) break;
+        chunks.push(readResult.value);
+        receivedLength += readResult.value.length;
         if (total > 0) {
           this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
           this.medalETA = this.calculateETA(this.medalStartTime, this.medalDownloadProgress);
@@ -1029,7 +634,6 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         }
       }
 
-      // Combine chunks into a single Uint8Array
       const videoData = new Uint8Array(receivedLength);
       let position = 0;
       for (const chunk of chunks) {
@@ -1037,47 +641,26 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
         position += chunk.length;
       }
 
-      // Step 3: Hash the downloaded video from the buffer directly
-      this.medalStatusMessage = 'Video wird gehashed...';
       this.medalDownloadProgress = 100;
       this.medalUploadProgress = 0;
-      this.medalETA = '';
+      this.medalStatusMessage = 'Upload-URL wird angefordert...';
 
-      const hashStartTime = Date.now();
-      const localHash = await this.calculateBufferHash(videoData.buffer, (progress) => {
-        this.medalUploadProgress = progress;
-        this.medalETA = this.calculateETA(hashStartTime, progress);
-        this.medalStatusMessage = `Video wird gehashed... (${progress}%)`;
-      });
-      console.log('Local Medal video hash:', localHash);
+      const uploadInfo = await this.http
+        .get<CaseFileUploadGetResponse>(
+          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
+          { headers: this.getAuthHeaders(), withCredentials: true },
+        )
+        .toPromise();
 
-      // Convert hash to base64 for Content-MD5 header
-      const contentMD5 = this.hexToBase64(localHash);
+      if (!uploadInfo?.url) throw new Error('Fehler beim Abrufen der Upload-URL');
 
-      // Step 4: Upload to case storage with progress tracking
       this.medalStatusMessage = 'Video wird hochgeladen...';
       this.medalStartTime = Date.now();
 
-      // Get presigned upload URL with extension parameter
-      const uploadUrlResponse = await this.http
-        .get<{
-          url: string;
-          filename: string;
-        }>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`, {
-          withCredentials: true,
-        })
-        .toPromise();
-
-      if (!uploadUrlResponse?.url) {
-        throw new Error('Fehler beim Abrufen der Upload-URL');
-      }
-
-      // Upload using XMLHttpRequest with explicit Content-MD5 for integrity
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrlResponse.url, true);
+        xhr.open('PUT', uploadInfo.url, true);
         xhr.setRequestHeader('Content-Type', mimeType);
-        xhr.setRequestHeader('Content-MD5', contentMD5);
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -1087,49 +670,21 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
           }
         };
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.onabort = () => reject(new Error('Upload aborted'));
-
-        // Send the exact buffer we hashed
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
+        xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
         xhr.send(videoData);
       });
 
-      // Verify upload by comparing hashes
-      this.medalStatusMessage = 'Upload wird verifiziert...';
-      this.medalUploadProgress = 100;
-      this.medalETA = '';
-      console.log('Verifying Medal clip upload...');
-
-      const isVerified = await this.verifyUpload(uploadUrlResponse.filename, localHash);
-
-      if (!isVerified) {
-        throw new Error(
-          'Upload-Überprüfung fehlgeschlagen: Die hochgeladene Datei stimmt nicht mit der Originaldatei überein.',
-        );
-      }
-
-      console.log('Medal clip upload verified successfully!');
-      this.medalStatusMessage = 'Upload erfolgreich!';
-
-      // Reset state
       this.isFetchingMedalClip = false;
       this.medalDownloadProgress = 0;
       this.medalUploadProgress = 0;
       this.medalClipUrl = '';
       this.medalStatusMessage = '';
-      this.medalETA = ''; // Reload files and metadata
-      this.loadFiles();
-      this.loadMetadata();
+      this.medalETA = '';
 
-      alert('Medal Clip erfolgreich hochgeladen und verifiziert!');
+      this.loadCaseData();
+      alert('Medal Clip erfolgreich hochgeladen!');
     } catch (error) {
       this.isFetchingMedalClip = false;
       this.medalDownloadProgress = 0;
@@ -1137,9 +692,7 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
       this.medalStatusMessage = '';
       this.medalETA = '';
       console.error('Medal clip upload failed:', error);
-
-      const errorMessage = error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips';
-      alert(errorMessage);
+      alert(error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips');
     }
   }
 }

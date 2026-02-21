@@ -1,71 +1,65 @@
-import { sqliteTable, check, text, integer, index, real, numeric } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { sqliteTable, check, text, integer, real, numeric } from 'drizzle-orm/sqlite-core';
+import { desc, sql } from 'drizzle-orm';
 
-export const playerdata = sqliteTable(
-  'playerdata',
-  {
-    id: text('id').primaryKey(),
-    discordId: text('discordId'),
-    experience: integer('experience').default(0),
-    playtime: integer('playtime').default(0),
-    roundsplayed: integer('roundsplayed').default(0),
-    usedmedkits: integer('usedmedkits').default(0),
-    usedcolas: integer('usedcolas').default(0),
-    pocketescapes: integer('pocketescapes').default(0),
-    usedadrenaline: integer('usedadrenaline').default(0),
-    fakerank: text('fakerank'),
-    snakehighscore: integer('snakehighscore').default(0),
-    killcount: integer('killcount').default(0),
-    deathcount: integer('deathcount').default(0),
-    fakerankUntil: integer('fakerank_until').default(0),
-    fakerankColor: text('fakerank_color', {
-      enum: [
-        'pink',
-        'red',
-        'brown',
-        'silver',
-        'default',
-        'light_green',
-        'crimson',
-        'cyan',
-        'aqua',
-        'deep_pink',
-        'tomato',
-        'yellow',
-        'magenta',
-        'blue_green',
-        'orange',
-        'lime',
-        'green',
-        'emerald',
-        'carmine',
-        'nickel',
-        'mint',
-        'army_green',
-        'pumpkin',
-      ],
-    }).default('default'),
-    fakerankadminUntil: integer('fakerankadmin_until').default(0),
-    redeemedCodes: text('redeemed_codes').default(''),
-    fakerankoverrideUntil: integer('fakerankoverride_until').default(0),
-    username: text('username').default(''),
-    slotSpins: integer('slotSpins').notNull().default(0),
-    slotWins: integer('slotWins').notNull().default(0),
-    slotLosses: integer('slotLosses').notNull().default(0),
-    luckyWheelSpins: integer('luckyWheelSpins').notNull().default(0),
-    luckyWheelWins: integer('luckyWheelWins').notNull().default(0),
-    luckyWheelLosses: integer('luckyWheelLosses').notNull().default(0),
-    rouletteSpins: integer('rouletteSpins').notNull().default(0),
-    rouletteWins: integer('rouletteWins').notNull().default(0),
-    rouletteLosses: integer('rouletteLosses').notNull().default(0),
-    migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
-    firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
-    lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
-  },
-  (table) => ({
-    experienceIdx: index('playerdata_experience_idx').on(table.experience),
-  }),
-);
+export const playerdata = sqliteTable('playerdata', {
+  id: text('id').primaryKey(),
+  discordId: text('discordId'),
+  experience: integer('experience').default(0),
+  playtime: integer('playtime').default(0),
+  roundsplayed: integer('roundsplayed').default(0),
+  usedmedkits: integer('usedmedkits').default(0),
+  usedcolas: integer('usedcolas').default(0),
+  pocketescapes: integer('pocketescapes').default(0),
+  usedadrenaline: integer('usedadrenaline').default(0),
+  fakerank: text('fakerank'),
+  snakehighscore: integer('snakehighscore').default(0),
+  killcount: integer('killcount').default(0),
+  deathcount: integer('deathcount').default(0),
+  fakerankUntil: integer('fakerank_until').default(0),
+  fakerankColor: text('fakerank_color', {
+    enum: [
+      'pink',
+      'red',
+      'brown',
+      'silver',
+      'default',
+      'light_green',
+      'crimson',
+      'cyan',
+      'aqua',
+      'deep_pink',
+      'tomato',
+      'yellow',
+      'magenta',
+      'blue_green',
+      'orange',
+      'lime',
+      'green',
+      'emerald',
+      'carmine',
+      'nickel',
+      'mint',
+      'army_green',
+      'pumpkin',
+    ],
+  }).default('default'),
+  fakerankadminUntil: integer('fakerankadmin_until').default(0),
+  redeemedCodes: text('redeemed_codes').default(''),
+  fakerankoverrideUntil: integer('fakerankoverride_until').default(0),
+  username: text('username').default(''),
+  slotSpins: integer('slotSpins').notNull().default(0),
+  slotWins: integer('slotWins').notNull().default(0),
+  slotLosses: integer('slotLosses').notNull().default(0),
+  luckyWheelSpins: integer('luckyWheelSpins').notNull().default(0),
+  luckyWheelWins: integer('luckyWheelWins').notNull().default(0),
+  luckyWheelLosses: integer('luckyWheelLosses').notNull().default(0),
+  rouletteSpins: integer('rouletteSpins').notNull().default(0),
+  rouletteWins: integer('rouletteWins').notNull().default(0),
+  rouletteLosses: integer('rouletteLosses').notNull().default(0),
+  migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
+  firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
+  lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
+});
 
 export const discordInfo = sqliteTable('discord_info', {
   discordId: text('discordId').primaryKey(),
@@ -157,7 +151,7 @@ export const steamCache = sqliteTable('steam_cache', {
 export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   discordId: text('discord_id').notNull(),
-  cardCode: text('card_code').notNull().unique(),
+  cardCode: text('card_code').notNull(),
   submittedAt: integer('submitted_at').notNull().default(0),
   processedAt: integer('processed_at').notNull().default(0),
   status: text('status', { enum: ['pending', 'approved', 'rejected'] })
@@ -276,33 +270,22 @@ export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
   reason: text('reason'),
 });
 
-// Removed: caseLinks table (legacy - replaced by caseUserLinks to support multiple users per case)
-
-export const coinSendingRestrictions = sqliteTable(
-  'coin_sending_restrictions',
+// Cases and all they need (moderation cases not csgo related lol)
+export const cases = sqliteTable(
+  'cases',
   {
-    steamId: text('steam_id').primaryKey().notNull(),
-    restrictedUntil: integer('restricted_until').notNull(), // unix timestamp, 0 = permanent
-    reason: text('reason').notNull(),
-    restrictedByDiscordId: text('restricted_by_discord_id').notNull(),
-    restrictedAt: integer('restricted_at').notNull().default(0),
+    id: text('id').primaryKey(),
+    title: text('title').default('').notNull(),
+    description: text('description').default('').notNull(),
+    createdByDiscordId: text('created_by_discord_id').notNull(),
+    createdAt: integer('created_at').notNull().default(0),
+    lastUpdatedAt: integer('last_updated_at').notNull().default(0),
   },
-  (table) => ({
-    restrictedUntilIdx: index('coin_sending_restrictions_restricted_until_idx').on(table.restrictedUntil),
-  }),
+  (table) => [check('cases_id_length_check', sql`length(${table.id}) = 10`)],
 );
 
-export const caseUserLinks = sqliteTable(
-  'case_user_links',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    caseId: text('case_id').notNull(),
-    steamId: text('steam_id').notNull(),
-    linkedAt: integer('linked_at').notNull().default(0),
-    linkedByDiscordId: text('linked_by_discord_id'),
-  },
-  (table) => ({
-    caseIdIdx: index('case_user_links_case_id_idx').on(table.caseId),
-    steamIdIdx: index('case_user_links_steam_id_idx').on(table.steamId),
-  }),
-);
+// many-to-many
+export const casesRelatedUsers = sqliteTable('cases_related_users', {
+  caseId: text('case_id').references(() => cases.id),
+  steamId: text('steam_id').notNull(),
+});
