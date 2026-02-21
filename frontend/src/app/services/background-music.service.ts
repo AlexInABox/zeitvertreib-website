@@ -1,6 +1,7 @@
 import { Injectable, inject, effect, Injector, runInInjectionContext } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { ThemeService } from './theme.service';
+import { EasterEggService } from './easter-egg.service';
 
 @Injectable({ providedIn: 'root' })
 export class BackgroundMusicService {
@@ -21,7 +22,11 @@ export class BackgroundMusicService {
   private readonly STORAGE_KEY = 'zeit_bgm_volume';
   private readonly MUTE_KEY = 'zeit_bgm_muted_v2';
   private themeService = inject(ThemeService);
+  private easterEggService = inject(EasterEggService);
   private injector = inject(Injector);
+  private chiikawaSubscription?: Subscription;
+  private isChiikawaMode = false;
+  private chiikawaTimeoutId?: ReturnType<typeof setTimeout>;
 
   async init() {
     try {
@@ -65,14 +70,28 @@ export class BackgroundMusicService {
             effect(() => {
               const isDark = this.themeService.isDark();
               void isDark;
-              this.applyThemeTracks();
+              if (!this.isChiikawaMode) {
+                this.applyThemeTracks();
+              }
             });
           });
         } else {
           this.tracks = data.tracks;
           this.trackKeys = Object.keys(data.tracks);
-          this.loadRandomTrack();
+          if (!this.isChiikawaMode) {
+            this.loadRandomTrack();
+          }
         }
+
+        // Subscribe to chiikawa mode changes
+        this.chiikawaSubscription = this.easterEggService.chiikawaTrigger$.subscribe((isActive) => {
+          this.isChiikawaMode = isActive;
+          if (isActive) {
+            this.applyChiikawaTrack();
+          } else {
+            this.applyThemeTracks();
+          }
+        });
 
         // Only autoplay if user previously had music unmuted
         if (!this.muted) {
@@ -84,7 +103,50 @@ export class BackgroundMusicService {
     }
   }
 
+  private applyChiikawaTrack() {
+    // Set up the chiikawa track
+    this.tracks = {
+      'chiikawa': {
+        title: 'Chiikawa Theme',
+        artist: 'Chiikawa',
+        file: 'chiikawa.mp3'
+      }
+    };
+    this.trackKeys = ['chiikawa'];
+
+    // If a track is playing, switch to the chiikawa track
+    if (this.audio && this.isPlaying$.value) {
+      try {
+        this.audio.pause();
+      } catch {}
+      this.loadRandomTrack();
+      if (!this.muted) {
+        // Clear any existing timeout
+        if (this.chiikawaTimeoutId) {
+          clearTimeout(this.chiikawaTimeoutId);
+        }
+        // Add 14 second delay before playing
+        this.chiikawaTimeoutId = setTimeout(() => {
+          // Only play if still in chiikawa mode and still unmuted
+          if (this.isChiikawaMode && !this.muted) {
+            void this.tryAutoplay();
+          }
+        }, 14000);
+      }
+    } else {
+      this.loadRandomTrack();
+    }
+  }
+
   private applyThemeTracks() {
+    // Clear any pending chiikawa playback
+    if (this.chiikawaTimeoutId) {
+      clearTimeout(this.chiikawaTimeoutId);
+      this.chiikawaTimeoutId = undefined;
+    }
+
+    if (this.isChiikawaMode) return;
+    
     const themeKey = this.themeService.isDark() ? 'dark' : 'light';
     const source = (this.tracksByTheme as any)[themeKey] || {};
     this.tracks = source;
@@ -205,5 +267,14 @@ export class BackgroundMusicService {
       localStorage.setItem(this.STORAGE_KEY, String(this.volume));
     } catch {}
     if (this.audio) this.audio.volume = this.volume;
+  }
+
+  ngOnDestroy() {
+    if (this.chiikawaSubscription) {
+      this.chiikawaSubscription.unsubscribe();
+    }
+    if (this.chiikawaTimeoutId) {
+      clearTimeout(this.chiikawaTimeoutId);
+    }
   }
 }
