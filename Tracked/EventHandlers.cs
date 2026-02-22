@@ -171,7 +171,6 @@ public static class EventHandlers
             AutoText = _ =>
             {
                 string hint = "<size=25><b>";
-                hint += "TPS: " + Server.Tps + "/" + Server.MaxTps + "\n";
                 if (KillsThisRound.FindAll(k => k.Attacker == ev.Player.UserId).Count > 0)
                     hint += $"Kills: {KillsThisRound.FindAll(k => k.Attacker == ev.Player.UserId).Count}\n";
 
@@ -181,10 +180,25 @@ public static class EventHandlers
             },
             YCoordinateAlign = HintVerticalAlign.Top,
             YCoordinate = 30,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f),
+            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 3,
             SyncSpeed = HintSyncSpeed.Fast
         };
         playerDisplay.AddHint(killFeed);
+        
+        Hint tpsInfo = new()
+        {
+            Alignment = HintAlignment.Left,
+            AutoText = _ =>
+            {
+                // ReSharper disable once ConvertToLambdaExpression
+                return "<size=23><b>" + Server.Tps + "/" + Server.MaxTps + " TPS</b></size>";
+            },
+            YCoordinateAlign = HintVerticalAlign.Top,
+            YCoordinate = 5,
+            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 80,
+            SyncSpeed = HintSyncSpeed.Slow
+        };
+        playerDisplay.AddHint(tpsInfo);
     }
 
     private static void OnLeft(PlayerLeftEventArgs ev)
@@ -209,7 +223,7 @@ public static class EventHandlers
         string color = ev.OldRole.GetRoleColor().ToHex();
         PlayerKillFeed[ev.Attacker.PlayerId].Insert(0, $"<color={color}>💀 - {ev.Player.Nickname}</color>");
 
-        Timing.CallDelayed(7f, () =>
+        Timing.CallDelayed(10f, () =>
         {
             if (!PlayerKillFeed.ContainsKey(ev.Attacker.PlayerId)) return;
             if (PlayerKillFeed[ev.Attacker.PlayerId].Count > 0)
