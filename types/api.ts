@@ -906,7 +906,7 @@ export interface UpdateCaseMetadataPutRequestParams {
 export interface UpdateCaseMetadataPutRequest {
   title?: string;
   description?: string;
-  rule?: string;
+  rule?: CaseRule | null;
   linkedSteamIds?: string[];
 }
 
