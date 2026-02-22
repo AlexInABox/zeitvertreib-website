@@ -47,12 +47,29 @@
                 <h1 class="page-title">
                   <span class="nickname">{{ caseData?.title || formatCaseName(caseId) }}</span>
                   <span class="case-id" *ngIf="caseData?.title">#{{ caseId }}</span>
+                  <!-- Creator chip -->
+                  <div *ngIf="caseData?.createdBy" class="header-creator">
+                    <div class="creator-chip-container">
+                      <div class="creator-label-icon">
+                        <span class="creator-label">Erstellt von</span>
+                      </div>
+                      <div class="creator-chip">
+                        <img
+                          [src]="caseData?.createdBy?.avatarUrl"
+                          [alt]="caseData?.createdBy?.username"
+                          class="creator-avatar"
+                        />
+                        <span class="creator-name">{{ caseData?.createdBy?.username }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </h1>
               </div>
             </div>
             <p class="case-description" *ngIf="caseData?.description && !isEditingMetadata">
               {{ caseData?.description }}
             </p>
+
             <!-- Linked Users inline in header -->
             <div *ngIf="isTeam" class="header-linked-users">
               <div class="header-chips" *ngIf="caseData?.linkedUsers?.length">

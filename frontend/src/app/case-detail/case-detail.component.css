@@ -299,6 +299,76 @@
 }
 
 /* ============================================
+   CREATOR CHIP (in header)
+============================================ */
+.header-creator {
+  margin-top: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.creator-chip-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.creator-label-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.creator-label-icon i {
+  font-size: 0.85rem;
+  color: #8b5cf6;
+}
+
+.creator-label {
+  font-weight: 500;
+}
+
+.creator-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-right: 0.6rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+  padding-left: 0.13rem;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
+  border: 1.5px solid rgba(139, 92, 246, 0.35);
+  border-radius: 2.5rem;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+  cursor: default;
+}
+
+.creator-chip:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.12));
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.creator-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.creator-name {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ============================================
    SEARCH SECTION
 ============================================ */
 .search-section {
