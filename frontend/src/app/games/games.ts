@@ -956,7 +956,7 @@ export class GamesComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             this.audioService.stop('luckywheel.spin');
 
-            if (response.payout > 0) {
+            if (response.payout > bet) {
               void this.audioService.play('luckywheel.win');
             } else {
               void this.audioService.play('luckywheel.lose');
