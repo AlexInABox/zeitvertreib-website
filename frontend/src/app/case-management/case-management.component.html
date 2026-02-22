@@ -162,6 +162,18 @@
               </button>
             </div>
           </div>
+
+          <!-- Rule Filter (only in 'all' mode) -->
+          <div class="rule-filter-wrapper" *ngIf="searchMode === 'all'">
+            <select
+              [(ngModel)]="ruleFilter"
+              (change)="onRuleFilterChange()"
+              class="rule-filter-select"
+            >
+              <option [ngValue]="null">Alle Regeln</option>
+              <option *ngFor="let rule of availableRules" [ngValue]="rule">{{ rule }}</option>
+            </select>
+          </div>
         </div>
 
         <!-- "Alle Fälle" — local text filter -->
@@ -336,6 +348,10 @@
             </h3>
             <p class="case-id">ID: {{ item.caseId }}</p>
             <p class="case-description" *ngIf="item.description">{{ item.description }}</p>
+            <div class="case-rule-badge" *ngIf="item.rule">
+              <i class="pi pi-shield"></i>
+              <span>{{ item.rule }}</span>
+            </div>
           </div>
 
           <div class="case-card-footer">

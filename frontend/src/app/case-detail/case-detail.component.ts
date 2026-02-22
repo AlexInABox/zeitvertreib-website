@@ -13,6 +13,7 @@ import type {
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
 } from '@zeitvertreib/types';
+import { CASE_RULES } from '@zeitvertreib/types';
 
 @Component({
   selector: 'app-case-detail',
@@ -44,7 +45,11 @@ export class CaseDetailComponent implements OnInit {
   isEditingMetadata = false;
   editedTitle = '';
   editedDescription = '';
+  editedRule: string | null = null;
   isSavingMetadata = false;
+
+  // Available case rules
+  readonly availableRules = CASE_RULES;
 
   // Upload state
   isUploading = false;
@@ -349,6 +354,7 @@ export class CaseDetailComponent implements OnInit {
   startEditingMetadata() {
     this.editedTitle = this.caseData?.title || '';
     this.editedDescription = this.caseData?.description || '';
+    this.editedRule = this.caseData?.rule || null;
     this.isEditingMetadata = true;
   }
 
@@ -356,6 +362,7 @@ export class CaseDetailComponent implements OnInit {
     this.isEditingMetadata = false;
     this.editedTitle = this.caseData?.title || '';
     this.editedDescription = this.caseData?.description || '';
+    this.editedRule = this.caseData?.rule || null;
   }
 
   saveMetadata() {
@@ -363,6 +370,7 @@ export class CaseDetailComponent implements OnInit {
     const payload: UpdateCaseMetadataPutRequest = {};
     if (this.editedTitle.trim()) payload.title = this.editedTitle.trim();
     if (this.editedDescription.trim()) payload.description = this.editedDescription.trim();
+    if (this.editedRule) payload.rule = this.editedRule;
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
