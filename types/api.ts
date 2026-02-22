@@ -830,7 +830,7 @@ export interface ListCasesGetRequest {
   sortBy?: 'createdAt' | 'lastUpdatedAt';
   sortOrder?: 'asc' | 'desc';
   createdByDiscordId?: string;
-  rule?: string;
+  rule?: CaseRule;
 }
 
 /** GET /cases request params (steamId mode — returns ALL, no pagination) */
