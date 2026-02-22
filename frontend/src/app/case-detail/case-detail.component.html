@@ -185,10 +185,7 @@
           </div>
           <div class="form-field">
             <label>Regelverstoß</label>
-            <select
-              [(ngModel)]="editedRule"
-              class="form-input rule-select"
-            >
+            <select [(ngModel)]="editedRule" class="form-input rule-select">
               <option [ngValue]="null">-- Kein Regelverstoß ausgewählt --</option>
               <option *ngFor="let rule of availableRules" [ngValue]="rule">{{ rule }}</option>
             </select>

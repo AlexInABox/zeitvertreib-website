@@ -165,11 +165,7 @@
 
           <!-- Rule Filter (only in 'all' mode) -->
           <div class="rule-filter-wrapper" *ngIf="searchMode === 'all'">
-            <select
-              [(ngModel)]="ruleFilter"
-              (change)="onRuleFilterChange()"
-              class="rule-filter-select"
-            >
+            <select [(ngModel)]="ruleFilter" (change)="onRuleFilterChange()" class="rule-filter-select">
               <option [ngValue]="null">Alle Regeln</option>
               <option *ngFor="let rule of availableRules" [ngValue]="rule">{{ rule }}</option>
             </select>
