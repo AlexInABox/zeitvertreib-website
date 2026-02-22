@@ -780,7 +780,12 @@ export interface CaseListItem {
   caseId: string;
   title: string | null;
   description: string | null;
-  createdByDiscordId: string;
+  createdBy: {
+    discordId: string;
+    displayName: string;
+    username: string;
+    avatarUrl: string;
+  };
   createdAt: number;
   lastUpdatedAt: number;
   linkedSteamIds: string[];
@@ -841,7 +846,12 @@ export interface GetCaseMetadataGetResponse {
   caseId: string;
   title: string | null;
   description: string | null;
-  createdByDiscordId: string;
+  createdBy: {
+    discordId: string;
+    displayName: string;
+    username: string;
+    avatarUrl: string;
+  };
   createdAt: number;
   lastUpdatedAt: number;
   linkedUsers: {

@@ -6,7 +6,9 @@
         <div class="lookup-header">
           <i class="pi pi-search lookup-icon"></i>
           <h1 class="lookup-title">Fall suchen</h1>
-          <p class="lookup-subtitle">Gib die 10-stellige Fall-ID ein</p>
+          <p class="lookup-subtitle">
+            Gib bis zu 10 alphanumerische Zeichen ein — kürzere Eingaben werden mit Nullen aufgefüllt
+          </p>
         </div>
 
         <div class="lookup-body">
@@ -15,7 +17,7 @@
               type="text"
               pInputText
               [(ngModel)]="lookupCaseId"
-              placeholder="z.B. 3f7a2c9d1e"
+              placeholder="z.B. abc123456z"
               class="lookup-input"
               maxlength="10"
               (keypress)="onLookupKeyPress($event)"
@@ -71,6 +73,17 @@
               <i class="pi pi-briefcase header-icon"></i>
               <h1 class="page-title">Fallverwaltung</h1>
             </div>
+            <div class="header-meta-row">
+              <span class="header-meta-item">
+                <i class="pi pi-folder"></i>
+                {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }}
+              </span>
+              <span class="header-meta-sep">·</span>
+              <span class="header-meta-item">
+                <i class="pi pi-clock"></i>
+                {{ getRecentCasesCount() }} kürzlich erstellt
+              </span>
+            </div>
           </div>
           <div class="header-actions">
             <button
@@ -86,54 +99,53 @@
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="stats-section">
-        <div class="stat-card">
-          <i class="pi pi-folder stat-icon"></i>
-          <div class="stat-info">
-            <span class="stat-value">{{ totalCount }}</span>
-            <span class="stat-label">Aktive Fälle</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <i class="pi pi-clock stat-icon"></i>
-          <div class="stat-info">
-            <span class="stat-value">{{ getRecentCasesCount() }}</span>
-            <span class="stat-label">Kürzlich erstellt</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search and Sort Bar -->
+      <!-- Search Section -->
       <div class="search-section">
-        <div class="search-wrapper">
-          <i class="pi pi-search search-icon"></i>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="searchQuery"
-            (input)="filterCases()"
-            placeholder="Suche nach Fall-ID, Titel oder Beschreibung..."
-            class="search-input"
-          />
-          <button
-            *ngIf="searchQuery"
-            pButton
-            icon="pi pi-times"
-            class="clear-btn"
-            (click)="clearSearch()"
-            [text]="true"
-          ></button>
-        </div>
+        <!-- Search Mode Selector -->
+        <div class="search-mode-row">
+          <div class="search-mode-pills">
+            <button
+              class="mode-pill"
+              [class.active]="searchMode === 'all'"
+              (click)="setSearchMode('all')"
+              type="button"
+            >
+              <i class="pi pi-list"></i>
+              <span>Alle Fälle</span>
+            </button>
+            <button
+              class="mode-pill"
+              [class.active]="searchMode === 'steamId'"
+              (click)="setSearchMode('steamId')"
+              type="button"
+            >
+              <i class="pi pi-id-card"></i>
+              <span>Steam-ID</span>
+            </button>
+            <button
+              class="mode-pill"
+              [class.active]="searchMode === 'discordId'"
+              (click)="setSearchMode('discordId')"
+              type="button"
+            >
+              <i class="pi pi-discord"></i>
+              <span>Discord-ID</span>
+            </button>
+            <button
+              class="mode-pill"
+              [class.active]="searchMode === 'caseId'"
+              (click)="setSearchMode('caseId')"
+              type="button"
+            >
+              <i class="pi pi-folder-open"></i>
+              <span>Fall-ID</span>
+            </button>
+          </div>
 
-        <!-- Custom Sort Dropdown -->
-        <div class="sort-wrapper">
-          <label class="sort-label">
-            <i class="pi pi-sort-alt"></i>
-            Sortieren:
-          </label>
-          <div class="custom-dropdown">
+          <!-- Sort Dropdown (only in 'all' mode) -->
+          <div class="custom-dropdown" *ngIf="searchMode === 'all'">
             <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
+              <i class="pi pi-sort-alt"></i>
               <span class="dropdown-label">{{ getSortLabel() }}</span>
               <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
@@ -152,18 +164,158 @@
           </div>
         </div>
 
-        <div class="search-results-info" *ngIf="searchQuery">
-          <span class="results-count">
-            {{ filteredCases.length }}
-            {{ filteredCases.length === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
-          </span>
+        <!-- "Alle Fälle" — local text filter -->
+        <div class="search-input-row" *ngIf="searchMode === 'all'">
+          <div class="search-wrapper">
+            <i class="pi pi-search search-icon"></i>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="searchQuery"
+              (input)="filterCases()"
+              placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
+              class="search-input"
+            />
+            <button
+              *ngIf="searchQuery"
+              pButton
+              icon="pi pi-times"
+              class="clear-btn"
+              (click)="clearSearch()"
+              [text]="true"
+            ></button>
+          </div>
+          <div class="search-hint" *ngIf="!searchQuery">
+            <i class="pi pi-info-circle"></i>
+            Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
+          </div>
+          <div class="search-results-info" *ngIf="searchQuery">
+            <i class="pi pi-filter"></i>
+            <span>{{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser Seite</span>
+          </div>
+        </div>
+
+        <!-- "Steam-ID" — server-side search across all cases -->
+        <div class="search-input-row" *ngIf="searchMode === 'steamId'">
+          <div class="search-wrapper">
+            <i class="pi pi-id-card search-icon"></i>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="steamIdQuery"
+              (input)="onSteamIdQueryChange()"
+              placeholder="Steam-ID eingeben (z.B. 76561198…)"
+              class="search-input"
+            />
+            <i class="pi pi-spin pi-spinner search-spinner" *ngIf="isSearching"></i>
+            <button
+              *ngIf="steamIdQuery && !isSearching"
+              pButton
+              icon="pi pi-times"
+              class="clear-btn"
+              (click)="clearSteamIdSearch()"
+              [text]="true"
+            ></button>
+          </div>
+          <div class="search-hint" *ngIf="!steamIdQuery">
+            <i class="pi pi-info-circle"></i>
+            Durchsucht <strong>alle</strong> Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse erscheinen
+            automatisch nach 600 ms.
+          </div>
+          <div class="search-error" *ngIf="searchError">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ searchError }}
+          </div>
+          <div class="search-results-info" *ngIf="steamIdResults !== null && !isSearching && !searchError">
+            <i class="pi pi-server"></i>
+            <span
+              >{{ steamIdResultCount }} {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite
+              Suche)</span
+            >
+          </div>
+        </div>
+
+        <!-- "Discord-ID" — server-side search by creator Discord ID (paginated) -->
+        <div class="search-input-row" *ngIf="searchMode === 'discordId'">
+          <div class="search-wrapper">
+            <i class="pi pi-discord search-icon"></i>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="discordIdQuery"
+              (input)="onDiscordIdQueryChange()"
+              placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
+              class="search-input"
+            />
+            <i class="pi pi-spin pi-spinner search-spinner" *ngIf="isSearching && discordIdQuery"></i>
+            <button
+              *ngIf="discordIdQuery && !isSearching"
+              pButton
+              icon="pi pi-times"
+              class="clear-btn"
+              (click)="clearDiscordIdSearch()"
+              [text]="true"
+            ></button>
+          </div>
+          <div class="search-hint" *ngIf="!discordIdQuery">
+            <i class="pi pi-info-circle"></i>
+            Filtert <strong>alle</strong> Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch nach
+            600 ms.
+          </div>
+          <div class="search-error" *ngIf="searchError">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ searchError }}
+          </div>
+          <div
+            class="search-results-info"
+            *ngIf="discordIdQuery && !isSearching && !searchError && discordIdResults !== null"
+          >
+            <i class="pi pi-server"></i>
+            <span
+              >{{ discordIdResultCount }}
+              {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite Suche)</span
+            >
+          </div>
+        </div>
+
+        <!-- "Fall-ID" — direct navigation to case detail -->
+        <div class="search-input-row" *ngIf="searchMode === 'caseId'">
+          <div class="search-wrapper">
+            <i class="pi pi-folder-open search-icon"></i>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="caseIdQuery"
+              (keypress)="onCaseIdKeyPress($event)"
+              (input)="caseIdError = ''"
+              placeholder="Fall-ID eingeben (z.B. abc1230000)"
+              class="search-input search-input--with-btn"
+              maxlength="10"
+            />
+            <button
+              pButton
+              icon="pi pi-arrow-right"
+              class="search-submit-btn"
+              (click)="submitCaseIdSearch()"
+              [disabled]="!caseIdQuery"
+            ></button>
+          </div>
+          <div class="search-hint" *ngIf="!caseIdQuery && !caseIdError">
+            <i class="pi pi-info-circle"></i>
+            Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil drücken
+            zum Öffnen.
+          </div>
+          <div class="search-error" *ngIf="caseIdError">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ caseIdError }}
+          </div>
         </div>
       </div>
 
       <!-- Cases Grid -->
-      <div class="cases-grid" *ngIf="filteredCases.length > 0">
+      <div class="cases-grid" *ngIf="displayedCases.length > 0">
         <div
-          *ngFor="let item of filteredCases; let i = index"
+          *ngFor="let item of displayedCases; let i = index"
           class="case-card"
           (click)="openCase(item)"
           [style.animation-delay]="i * 0.05 + 's'"
@@ -187,19 +339,31 @@
           </div>
 
           <div class="case-card-footer">
-            <div class="case-meta">
-              <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
-                <i class="pi pi-calendar-plus"></i>
-                {{ formatDate(item.createdAt) }}
-              </span>
-              <span
-                class="meta-item"
-                *ngIf="item.lastUpdatedAt !== item.createdAt"
-                [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)"
-              >
-                <i class="pi pi-history"></i>
-                {{ formatDate(item.lastUpdatedAt) }}
-              </span>
+            <div class="footer-left">
+              <!-- Creator Chip -->
+              <div class="case-creator-section" *ngIf="item.createdBy">
+                <div class="creator-chip">
+                  <img [src]="item.createdBy.avatarUrl" [alt]="item.createdBy.username" class="creator-avatar" />
+                  <span class="creator-name" [title]="'Erstellt von ' + item.createdBy.username">
+                    {{ item.createdBy.username }}
+                  </span>
+                </div>
+              </div>
+              <!-- Meta Items -->
+              <div class="case-meta">
+                <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
+                  <i class="pi pi-calendar-plus"></i>
+                  {{ formatDate(item.createdAt) }}
+                </span>
+                <span
+                  class="meta-item"
+                  *ngIf="item.lastUpdatedAt !== item.createdAt"
+                  [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)"
+                >
+                  <i class="pi pi-history"></i>
+                  {{ formatDate(item.lastUpdatedAt) }}
+                </span>
+              </div>
             </div>
             <div class="case-action">
               <i class="pi pi-arrow-right"></i>
@@ -212,7 +376,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="pagination-section" *ngIf="totalPages > 1">
+      <div class="pagination-section" *ngIf="showPagination">
         <button
           pButton
           icon="pi pi-chevron-left"
@@ -231,7 +395,75 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="cases.length === 0" class="empty-state">
+      <!-- discordId mode: no query entered yet -->
+      <div *ngIf="searchMode === 'discordId' && !discordIdQuery && !isLoading" class="empty-state empty-state-hint">
+        <div class="empty-icon-wrapper"><i class="pi pi-discord"></i></div>
+        <h3 class="empty-title">Discord-ID eingeben</h3>
+        <p class="empty-description">
+          Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.
+        </p>
+      </div>
+
+      <!-- discordId mode: searched but nothing found -->
+      <div
+        *ngIf="
+          searchMode === 'discordId' &&
+          discordIdQuery &&
+          !isSearching &&
+          discordIdResults !== null &&
+          discordIdResults.length === 0 &&
+          !searchError
+        "
+        class="empty-state"
+      >
+        <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
+        <h3 class="empty-title">Keine Fälle gefunden</h3>
+        <p class="empty-description">
+          Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
+        </p>
+        <button
+          pButton
+          label="Suche zurücksetzen"
+          icon="pi pi-times"
+          class="empty-action-btn"
+          (click)="clearDiscordIdSearch()"
+        ></button>
+      </div>
+
+      <!-- steamId mode: no query entered yet -->
+      <div *ngIf="searchMode === 'steamId' && !steamIdQuery && !isSearching" class="empty-state empty-state-hint">
+        <div class="empty-icon-wrapper"><i class="pi pi-id-card"></i></div>
+        <h3 class="empty-title">Steam-ID eingeben</h3>
+        <p class="empty-description">Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
+      </div>
+
+      <!-- steamId mode: searched but nothing found -->
+      <div
+        *ngIf="
+          searchMode === 'steamId' &&
+          steamIdResults !== null &&
+          steamIdResults.length === 0 &&
+          !isSearching &&
+          !searchError
+        "
+        class="empty-state"
+      >
+        <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
+        <h3 class="empty-title">Keine Fälle gefunden</h3>
+        <p class="empty-description">
+          Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
+        </p>
+        <button
+          pButton
+          label="Suche zurücksetzen"
+          icon="pi pi-times"
+          class="empty-action-btn"
+          (click)="clearSteamIdSearch()"
+        ></button>
+      </div>
+
+      <!-- all mode: no cases at all -->
+      <div *ngIf="searchMode === 'all' && cases.length === 0 && !isLoading" class="empty-state">
         <div class="empty-illustration">
           <div class="empty-icon-wrapper">
             <i class="pi pi-inbox"></i>

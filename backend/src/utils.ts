@@ -3,7 +3,16 @@ import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, reducedLuckUsers } from './db/schema.js';
+import {
+  playerdata,
+  kills,
+  loginSecrets,
+  discordInfo,
+  steamCache,
+  sessions,
+  reducedLuckUsers,
+  discordCache,
+} from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
@@ -278,6 +287,76 @@ async function refreshSteamCache(steamId: string, env: Env): Promise<void> {
     .onConflictDoUpdate({
       target: steamCache.steamId,
       set: {
+        username,
+        avatarUrl,
+        lastUpdated: now,
+      },
+    });
+}
+
+// Discord Cache Stuff
+export async function fetchDiscordUserData(
+  discordId: string,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<{ displayName: string; username: string; avatarUrl: string } | null> {
+  const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  let cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!cached) {
+    await refreshDiscordCache(discordId, env);
+    cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
+  }
+
+  if (cached) {
+    if (now - cached.lastUpdated >= staleThreshold) {
+      ctx.waitUntil(refreshDiscordCache(discordId, env));
+    }
+    return { displayName: cached.displayName, username: cached.username, avatarUrl: cached.avatarUrl };
+  }
+
+  return null;
+}
+
+async function refreshDiscordCache(discordId: string, env: Env): Promise<void> {
+  const url = `https://discord.com/api/v10/users/${discordId}`;
+
+  const res = await proxyFetch(url, { headers: { Authorization: `Bot ${env.DISCORD_TOKEN}` } }, env);
+
+  if (!res.ok) {
+    console.error(`Failed to refresh Discord cache for ${discordId}: ${res.status} ${res.statusText}`);
+    return;
+  }
+
+  const data: any = await res.json();
+  const displayName = data.global_name || data.username;
+  const username = data.username;
+  const avatarUrl = data.avatar ? `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.png` : '';
+
+  if (!displayName || !username) {
+    console.error(`Invalid data when refreshing Discord cache for ${discordId}`);
+    console.error('Data received:', data);
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  await db
+    .insert(discordCache)
+    .values({
+      discordId,
+      displayName,
+      username,
+      avatarUrl,
+      lastUpdated: now,
+    })
+    .onConflictDoUpdate({
+      target: discordCache.discordId,
+      set: {
+        displayName,
         username,
         avatarUrl,
         lastUpdated: now,
