@@ -105,7 +105,7 @@ export class CaseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -430,7 +430,10 @@ export class CaseDetailComponent implements OnInit {
     }
 
     this.isManagingLinkedUsers = true;
-    const payload: UpdateCaseMetadataPutRequest = { category: this.caseData!.category, linkedSteamIds: [...existing, steamId] };
+    const payload: UpdateCaseMetadataPutRequest = {
+      category: this.caseData!.category,
+      linkedSteamIds: [...existing, steamId],
+    };
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {

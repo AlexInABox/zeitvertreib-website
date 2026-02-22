@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank { }
+export interface GetUserFakerankResponse extends UserFakerank {}
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -725,7 +725,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest { }
+export interface BirthdayDeleteRequest {}
 
 // ============================================================================
 // Chicken Cross Types
@@ -791,7 +791,6 @@ export type CaseCategory =
   | 'Ban-Evasion'
   | 'Rundenende'
   | 'Sonstiges';
-
 
 export interface CaseListItem {
   caseId: string;
@@ -888,7 +887,7 @@ export interface GetCaseMetadataGetResponse {
 }
 
 /** POST /cases — no request body */
-export interface CreateCasePostRequest { }
+export interface CreateCasePostRequest {}
 
 /** POST /cases response */
 export interface CreateCasePostResponse {
