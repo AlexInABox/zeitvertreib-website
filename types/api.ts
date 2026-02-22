@@ -799,7 +799,7 @@ export interface CaseListItem {
   caseId: string;
   title: string | null;
   description: string | null;
-  rule: string | null;
+  rule: CaseRule | null;
   createdBy: {
     discordId: string;
     displayName: string;
