@@ -69,6 +69,10 @@
             <p class="case-description" *ngIf="caseData?.description && !isEditingMetadata">
               {{ caseData?.description }}
             </p>
+            <div class="case-rule" *ngIf="caseData?.rule && !isEditingMetadata">
+              <span class="rule-label">Regelverstoß:</span>
+              <span class="rule-badge">{{ caseData?.rule }}</span>
+            </div>
 
             <!-- Linked Users inline in header -->
             <div *ngIf="isTeam" class="header-linked-users">
@@ -178,6 +182,13 @@
               rows="3"
               class="form-input"
             ></textarea>
+          </div>
+          <div class="form-field">
+            <label>Regelverstoß</label>
+            <select [(ngModel)]="editedRule" class="form-input rule-select">
+              <option [ngValue]="null">-- Kein Regelverstoß ausgewählt --</option>
+              <option *ngFor="let rule of availableRules" [ngValue]="rule">{{ rule }}</option>
+            </select>
           </div>
         </div>
         <div class="editor-footer">

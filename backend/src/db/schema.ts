@@ -285,6 +285,7 @@ export const cases = sqliteTable(
     id: text('id').primaryKey(),
     title: text('title').default('').notNull(),
     description: text('description').default('').notNull(),
+    rule: text('rule'),
     createdByDiscordId: text('created_by_discord_id').notNull(),
     createdAt: integer('created_at').notNull().default(0),
     lastUpdatedAt: integer('last_updated_at').notNull().default(0),

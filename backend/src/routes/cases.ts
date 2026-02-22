@@ -8,7 +8,7 @@ import {
   fetchDiscordUserData,
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, desc, asc, inArray, sql } from 'drizzle-orm';
+import { eq, desc, asc, inArray, sql, and } from 'drizzle-orm';
 import { cases, casesRelatedUsers, discordInfo, playerdata } from '../db/schema.js';
 import typia from 'typia';
 import {
@@ -190,6 +190,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
           id: cases.id,
           title: cases.title,
           description: cases.description,
+          rule: cases.rule,
           createdByDiscordId: cases.createdByDiscordId,
           createdAt: cases.createdAt,
           lastUpdatedAt: cases.lastUpdatedAt,
@@ -226,6 +227,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         caseId: c.id,
         title: c.title,
         description: c.description,
+        rule: c.rule,
         createdBy: {
           discordId: c.createdByDiscordId,
           displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -246,10 +248,18 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
     const sortBy = url.searchParams.get('sortBy') === 'lastUpdatedAt' ? 'lastUpdatedAt' : 'createdAt';
     const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
     const filterByDiscordId = url.searchParams.get('createdByDiscordId');
+    const filterByRule = url.searchParams.get('rule');
     const offset = (page - 1) * limit;
 
-    // Build the query with optional filter
-    const whereCondition = filterByDiscordId ? eq(cases.createdByDiscordId, filterByDiscordId) : undefined;
+    // Build the query with optional filters
+    const whereConditions = [];
+    if (filterByDiscordId) {
+      whereConditions.push(eq(cases.createdByDiscordId, filterByDiscordId));
+    }
+    if (filterByRule) {
+      whereConditions.push(eq(cases.rule, filterByRule));
+    }
+    const whereCondition = whereConditions.length > 0 ? and(...whereConditions) : undefined;
     const orderByColumn = sortBy === 'lastUpdatedAt' ? cases.lastUpdatedAt : cases.createdAt;
     const orderByDirection = sortOrder === 'asc' ? asc(orderByColumn) : desc(orderByColumn);
 
@@ -266,6 +276,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         id: cases.id,
         title: cases.title,
         description: cases.description,
+        rule: cases.rule,
         createdByDiscordId: cases.createdByDiscordId,
         createdAt: cases.createdAt,
         lastUpdatedAt: cases.lastUpdatedAt,
@@ -309,6 +320,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       caseId: c.id,
       title: c.title,
       description: c.description,
+      rule: c.rule,
       createdBy: {
         discordId: c.createdByDiscordId,
         displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -367,6 +379,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
         id: cases.id,
         title: cases.title,
         description: cases.description,
+        rule: cases.rule,
         createdByDiscordId: cases.createdByDiscordId,
         createdAt: cases.createdAt,
         lastUpdatedAt: cases.lastUpdatedAt,
@@ -456,6 +469,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
       caseId,
       title: caseRow.title,
       description: caseRow.description,
+      rule: caseRow.rule,
       createdBy: {
         discordId: caseRow.createdByDiscordId,
         displayName: createdBy?.displayName || caseRow.createdByDiscordId,
@@ -599,7 +613,7 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
     }
 
     // Build DB update — only include fields explicitly present in the body
-    const updateFields: Partial<{ title: string; description: string; lastUpdatedAt: number }> = {
+    const updateFields: Partial<{ title: string; description: string; rule: string; lastUpdatedAt: number }> = {
       lastUpdatedAt: Date.now(),
     };
 
@@ -609,6 +623,10 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
 
     if ('description' in body && body.description !== undefined) {
       updateFields.description = body.description;
+    }
+
+    if ('rule' in body && body.rule !== undefined) {
+      updateFields.rule = body.rule;
     }
 
     await db.update(cases).set(updateFields).where(eq(cases.id, caseId));

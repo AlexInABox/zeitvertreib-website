@@ -15,6 +15,7 @@ import type {
   ListCasesBySteamIdGetResponse,
   CreateCasePostResponse,
 } from '@zeitvertreib/types';
+import { CASE_RULES } from '@zeitvertreib/types';
 
 type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
 
@@ -43,6 +44,10 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
   sortBy: 'createdAt' | 'lastUpdatedAt' = 'createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
   sortDropdownOpen = false;
+
+  // Rule filter
+  ruleFilter: string | null = null;
+  readonly availableRules = CASE_RULES;
 
   // Pagination
   page = 1;
@@ -316,6 +321,10 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
       sortOrder: this.sortOrder,
     };
 
+    if (this.ruleFilter) {
+      paramsObj['rule'] = this.ruleFilter;
+    }
+
     const params = new URLSearchParams(paramsObj);
 
     this.http
@@ -473,6 +482,10 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     if (event.key === 'Enter') {
       this.lookupCase();
     }
+  }
+
+  onRuleFilterChange() {
+    this.loadCases(true);
   }
 
   clearSearch() {
