@@ -11,11 +11,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../services/auth.service';
 import type {
   CaseListItem,
+  CaseCategory,
   ListCasesGetResponse,
   ListCasesBySteamIdGetResponse,
   CreateCasePostResponse,
 } from '@zeitvertreib/types';
-import { CASE_RULES } from '@zeitvertreib/types';
 
 type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
 
@@ -45,9 +45,24 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
   sortOrder: 'asc' | 'desc' = 'desc';
   sortDropdownOpen = false;
 
-  // Rule filter
-  ruleFilter: string | null = null;
-  readonly availableRules = CASE_RULES;
+  // Category filter
+  categoryFilter: CaseCategory | null = null;
+  readonly availableCategories: CaseCategory[] = [
+    'Beleidigungen',
+    'Supportflucht',
+    'Team-Trolling',
+    'Soundboard',
+    'Report-Abuse',
+    'Camping',
+    'Rollenflucht',
+    'Bug-Abusing',
+    'Diebstahl',
+    'Teaming',
+    'Gefesselte Klassen',
+    'Ban-Evasion',
+    'Rundenende',
+    'Sonstiges',
+  ];
 
   // Pagination
   page = 1;
@@ -81,7 +96,7 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -321,8 +336,8 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
       sortOrder: this.sortOrder,
     };
 
-    if (this.ruleFilter) {
-      paramsObj['rule'] = this.ruleFilter;
+    if (this.categoryFilter) {
+      paramsObj['category'] = this.categoryFilter;
     }
 
     const params = new URLSearchParams(paramsObj);
@@ -484,7 +499,7 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  onRuleFilterChange() {
+  onCategoryFilterChange() {
     this.loadCases(true);
   }
 

@@ -163,11 +163,11 @@
             </div>
           </div>
 
-          <!-- Rule Filter (only in 'all' mode) -->
+          <!-- Category Filter (only in 'all' mode) -->
           <div class="rule-filter-wrapper" *ngIf="searchMode === 'all'">
-            <select [(ngModel)]="ruleFilter" (change)="onRuleFilterChange()" class="rule-filter-select">
-              <option [ngValue]="null">Alle Regeln</option>
-              <option *ngFor="let rule of availableRules" [ngValue]="rule">{{ rule }}</option>
+            <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="rule-filter-select">
+              <option [ngValue]="null">Alle Kategorien</option>
+              <option *ngFor="let category of availableCategories" [ngValue]="category">{{ category }}</option>
             </select>
           </div>
         </div>
@@ -344,9 +344,9 @@
             </h3>
             <p class="case-id">ID: {{ item.caseId }}</p>
             <p class="case-description" *ngIf="item.description">{{ item.description }}</p>
-            <div class="case-rule-badge" *ngIf="item.rule">
+            <div class="case-rule-badge" *ngIf="item.category">
               <i class="pi pi-shield"></i>
-              <span>{{ item.rule }}</span>
+              <span>{{ item.category }}</span>
             </div>
           </div>
 

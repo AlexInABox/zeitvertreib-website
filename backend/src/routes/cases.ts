@@ -20,6 +20,7 @@ import {
   CreateCasePostResponse,
   UpdateCaseMetadataPutRequest,
   UpdateCaseMetadataPutResponse,
+  CaseCategory
 } from '@zeitvertreib/types';
 
 const BUCKET = 'zeitvertreib-tickets';
@@ -190,7 +191,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
           id: cases.id,
           title: cases.title,
           description: cases.description,
-          rule: cases.rule,
+          category: cases.category,
           createdByDiscordId: cases.createdByDiscordId,
           createdAt: cases.createdAt,
           lastUpdatedAt: cases.lastUpdatedAt,
@@ -227,7 +228,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         caseId: c.id,
         title: c.title,
         description: c.description,
-        rule: c.rule,
+        category: c.category,
         createdBy: {
           discordId: c.createdByDiscordId,
           displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -248,7 +249,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
     const sortBy = url.searchParams.get('sortBy') === 'lastUpdatedAt' ? 'lastUpdatedAt' : 'createdAt';
     const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
     const filterByDiscordId = url.searchParams.get('createdByDiscordId');
-    const filterByRule = url.searchParams.get('rule');
+    const filterByCategory = url.searchParams.get('category') as CaseCategory | null;
     const offset = (page - 1) * limit;
 
     // Build the query with optional filters
@@ -256,8 +257,8 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
     if (filterByDiscordId) {
       whereConditions.push(eq(cases.createdByDiscordId, filterByDiscordId));
     }
-    if (filterByRule) {
-      whereConditions.push(eq(cases.rule, filterByRule));
+    if (filterByCategory) {
+      whereConditions.push(eq(cases.category, filterByCategory));
     }
     const whereCondition = whereConditions.length > 0 ? and(...whereConditions) : undefined;
     const orderByColumn = sortBy === 'lastUpdatedAt' ? cases.lastUpdatedAt : cases.createdAt;
@@ -276,7 +277,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         id: cases.id,
         title: cases.title,
         description: cases.description,
-        rule: cases.rule,
+        category: cases.category,
         createdByDiscordId: cases.createdByDiscordId,
         createdAt: cases.createdAt,
         lastUpdatedAt: cases.lastUpdatedAt,
@@ -320,7 +321,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       caseId: c.id,
       title: c.title,
       description: c.description,
-      rule: c.rule,
+      category: c.category,
       createdBy: {
         discordId: c.createdByDiscordId,
         displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -379,7 +380,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
         id: cases.id,
         title: cases.title,
         description: cases.description,
-        rule: cases.rule,
+        category: cases.category,
         createdByDiscordId: cases.createdByDiscordId,
         createdAt: cases.createdAt,
         lastUpdatedAt: cases.lastUpdatedAt,
@@ -469,7 +470,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
       caseId,
       title: caseRow.title,
       description: caseRow.description,
-      rule: caseRow.rule,
+      category: caseRow.category,
       createdBy: {
         discordId: caseRow.createdByDiscordId,
         displayName: createdBy?.displayName || caseRow.createdByDiscordId,
@@ -613,7 +614,7 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
     }
 
     // Build DB update — only include fields explicitly present in the body
-    const updateFields: Partial<{ title: string; description: string; rule: string; lastUpdatedAt: number }> = {
+    const updateFields: Partial<{ title: string; description: string; category: CaseCategory; lastUpdatedAt: number }> = {
       lastUpdatedAt: Date.now(),
     };
 
@@ -625,8 +626,8 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
       updateFields.description = body.description;
     }
 
-    if ('rule' in body && body.rule !== undefined) {
-      updateFields.rule = body.rule;
+    if ('category' in body && body.category !== undefined) {
+      updateFields.category = body.category as CaseCategory;
     }
 
     await db.update(cases).set(updateFields).where(eq(cases.id, caseId));
