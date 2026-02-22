@@ -1,5 +1,5 @@
-import { sqliteTable, check, text, integer, index, real, numeric } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { sqliteTable, check, text, integer, real, numeric } from 'drizzle-orm/sqlite-core';
+import { desc, sql } from 'drizzle-orm';
 
 export const playerdata = sqliteTable('playerdata', {
   id: text('id').primaryKey(),
@@ -148,10 +148,18 @@ export const steamCache = sqliteTable('steam_cache', {
   lastUpdated: integer('last_updated').notNull().default(0),
 });
 
+export const discordCache = sqliteTable('discord_cache', {
+  discordId: text('discord_id').primaryKey().notNull(),
+  displayName: text('display_name').notNull(),
+  username: text('username').notNull(),
+  avatarUrl: text('avatar_url').notNull(),
+  lastUpdated: integer('last_updated').notNull().default(0),
+});
+
 export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   discordId: text('discord_id').notNull(),
-  cardCode: text('card_code').notNull().unique(),
+  cardCode: text('card_code').notNull(),
   submittedAt: integer('submitted_at').notNull().default(0),
   processedAt: integer('processed_at').notNull().default(0),
   status: text('status', { enum: ['pending', 'approved', 'rejected'] })
@@ -262,4 +270,50 @@ export const chickenCrossGames = sqliteTable('chicken_cross_games', {
     .default('ACTIVE')
     .notNull(),
   lastUpdatedAt: integer('last_updated_at').notNull(),
+});
+
+export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
+  steamId: text('steam_id').primaryKey().notNull(),
+  addedAt: integer('added_at').notNull(),
+  reason: text('reason'),
+});
+
+// Cases and all they need (moderation cases not csgo related lol)
+export const cases = sqliteTable(
+  'cases',
+  {
+    id: text('id').primaryKey(),
+    title: text('title').default('').notNull(),
+    description: text('description').default('').notNull(),
+    category: text('category', {
+      enum: [
+        'Beleidigungen',
+        'Supportflucht',
+        'Team-Trolling',
+        'Soundboard',
+        'Report-Abuse',
+        'Camping',
+        'Rollenflucht',
+        'Bug-Abusing',
+        'Diebstahl',
+        'Teaming',
+        'Gefesselte Klassen',
+        'Ban-Evasion',
+        'Rundenende',
+        'Sonstiges',
+      ],
+    })
+      .default('Sonstiges')
+      .notNull(),
+    createdByDiscordId: text('created_by_discord_id').notNull(),
+    createdAt: integer('created_at').notNull().default(0),
+    lastUpdatedAt: integer('last_updated_at').notNull().default(0),
+  },
+  (table) => [check('cases_id_length_check', sql`length(${table.id}) = 10`)],
+);
+
+// many-to-many
+export const casesRelatedUsers = sqliteTable('cases_related_users', {
+  caseId: text('case_id').references(() => cases.id),
+  steamId: text('steam_id').notNull(),
 });

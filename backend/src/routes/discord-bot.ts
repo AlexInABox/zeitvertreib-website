@@ -21,6 +21,7 @@ import {
   fakeranks,
   fakerankBans,
   deletedFakeranks,
+  donations,
 } from '../db/schema.js';
 
 interface VerificationResult {
@@ -2122,10 +2123,7 @@ export async function handleDiscordBotInteractions(
               try {
                 const db = drizzle(env.ZEITVERTREIB_DATA);
 
-                // Calculate ZVC reward (100 ZVC per 1€)
-                const zvcReward = Math.floor(amountNum * 100);
-
-                // Update submission status and add ZVC reward to user
+                // Update submission status
                 const now = Math.floor(Date.now() / 1000);
                 await db
                   .update(paysafeCardSubmissions)
@@ -2136,12 +2134,12 @@ export async function handleDiscordBotInteractions(
                   })
                   .where(eq(paysafeCardSubmissions.id, parseInt(submissionId)));
 
-                await db
-                  .update(playerdata)
-                  .set({
-                    experience: increment(playerdata.experience, zvcReward),
-                  })
-                  .where(eq(playerdata.discordId, submitterId));
+                // Add donation record
+                await db.insert(donations).values({
+                  discordId: submitterId,
+                  amount: amount,
+                  donatedAt: now,
+                });
 
                 // Get moderator info
                 let moderatorName = 'Unknown Moderator';
@@ -2217,7 +2215,7 @@ export async function handleDiscordBotInteractions(
                             {
                               title: '✅ Paysafecard Approved!',
                               description:
-                                'Deine Paysafecard-Einreichung wurde genehmigt!\n\n**Vielen Dank für deine Unterstützung von Zeitvertreib!** 💜\n\n🎁 **Belohnung:** +**1.000 ZVC** pro 10€',
+                                'Deine Paysafecard-Einreichung wurde genehmigt!\n\n**Vielen Dank für deine Unterstützung von Zeitvertreib!** 💜',
                               color: 0x10b981,
                               fields: [
                                 {
@@ -2228,11 +2226,6 @@ export async function handleDiscordBotInteractions(
                                 {
                                   name: '💰 Amount',
                                   value: `€${amountNum.toFixed(2)}`,
-                                  inline: true,
-                                },
-                                {
-                                  name: '🎁 ZVC Reward',
-                                  value: `+${zvcReward} ZVC`,
                                   inline: true,
                                 },
                                 {

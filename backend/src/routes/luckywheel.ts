@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData, checkHasReducedLuck } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -173,19 +173,32 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    // Weighted random selection using crypto.getRandomValues
-    const totalWeight = LUCKYWHEEL_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
+    // Check if user has reduced luck
+    const hasReducedLuck = await checkHasReducedLuck(playerId, env);
 
-    const randomBuffer = new Uint32Array(1);
-    crypto.getRandomValues(randomBuffer);
-    let random = (randomBuffer[0]! / 0xffffffff) * totalWeight;
+    if (hasReducedLuck) {
+      console.log(`REDUCED LUCK: Forcing 0x multiplier for ${playerId}`);
+    }
 
     let selectedEntry = LUCKYWHEEL_TABLE[0]!;
-    for (const entry of LUCKYWHEEL_TABLE) {
-      random -= entry.weight;
-      if (random <= 0) {
-        selectedEntry = entry;
-        break;
+
+    if (hasReducedLuck) {
+      // Force worst outcome for reduced luck users
+      selectedEntry = LUCKYWHEEL_TABLE[0]!; // 0x multiplier
+    } else {
+      // Weighted random selection using crypto.getRandomValues
+      const totalWeight = LUCKYWHEEL_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
+
+      const randomBuffer = new Uint32Array(1);
+      crypto.getRandomValues(randomBuffer);
+      let random = (randomBuffer[0]! / 0xffffffff) * totalWeight;
+
+      for (const entry of LUCKYWHEEL_TABLE) {
+        random -= entry.weight;
+        if (random <= 0) {
+          selectedEntry = entry;
+          break;
+        }
       }
     }
 

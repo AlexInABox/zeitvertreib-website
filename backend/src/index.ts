@@ -19,7 +19,7 @@ import {
   getFakerankColors,
   collectZvcForFakeranksAndValidateColors,
 } from './routes/fakerank.js';
-import { handleGetRedeemables, handleRedeemItem, handleRedeemCode } from './routes/redeemables.js';
+import { handleRedeemCode } from './routes/redeemables.js';
 import { updateLeaderboard, handleLeaderboardUpdate } from './routes/leaderboard.js';
 import { handleSlotMachine, handleSlotMachineInfo } from './routes/slotmachine.js';
 import { handleLuckyWheel, handleLuckyWheelInfo } from './routes/luckywheel.js';
@@ -35,11 +35,8 @@ import {
   handleCaseFileUpload,
   handleListCases,
   handleCreateCase,
-  handleListCaseFiles,
   handleGetCaseMetadata,
   handleUpdateCaseMetadata,
-  handleDeleteCaseFile,
-  handleGetFileHash,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
@@ -55,6 +52,8 @@ import {
   handleChickenCrossPost,
   handleChickenCrossActive,
 } from './routes/chickencross.js';
+import { handleGetReducedLuck, handleSetReducedLuck } from './routes/reduced-luck.js';
+import { handleListPlayers, handleCheckCoinManagementAccess, handleAwardCoins } from './routes/coin-management.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -85,14 +84,13 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/public/stats': handleGetPublicStats,
   'GET:/public/zvc': handleGetZeitvertreibCoins,
   'GET:/zvc': handleGetZeitvertreibCoins,
+
+  // Cases routes
   'GET:/cases/upload': handleCaseFileUpload,
   'GET:/cases': handleListCases,
   'POST:/cases': handleCreateCase,
-  'GET:/cases/files': handleListCaseFiles,
   'GET:/cases/metadata': handleGetCaseMetadata,
   'PUT:/cases/metadata': handleUpdateCaseMetadata,
-  'GET:/cases/file/hash': handleGetFileHash,
-  'DELETE:/cases/file': handleDeleteCaseFile,
 
   // Spray routes
   'POST:/spray': handlePostSpray,
@@ -107,9 +105,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'DELETE:/fakerank': deleteFakerank,
   'GET:/fakerank/colors': getFakerankColors,
 
-  // Redeemables routes
-  'GET:/redeemables': handleGetRedeemables,
-  'POST:/redeemables/redeem': handleRedeemItem,
+  // Code redemption route
   'POST:/redeem-code': handleRedeemCode,
 
   // Slot machine routes
@@ -179,6 +175,15 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/chickencross/active': handleChickenCrossActive,
   'GET:/chickencross': handleChickenCrossGet,
   'POST:/chickencross': handleChickenCrossPost,
+
+  // Coin Management routes
+  'GET:/coin-management/players': handleListPlayers,
+  'GET:/coin-management/access': handleCheckCoinManagementAccess,
+  'POST:/coin-management/award': handleAwardCoins,
+
+  // Reduced Luck routes
+  'GET:/reduced-luck': handleGetReducedLuck,
+  'POST:/reduced-luck': handleSetReducedLuck,
 };
 
 export default {

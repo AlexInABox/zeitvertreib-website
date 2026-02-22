@@ -1,10 +1,16 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () => import('./dashboard/dashboard.component').then((m) => m.DashboardComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'games',
+    loadComponent: () => import('./games/games').then((m) => m.GamesComponent),
     canActivate: [authGuard],
   },
   {
@@ -16,6 +22,11 @@ export const routes: Routes = [
     path: 'paysafecard',
     loadComponent: () => import('./paysafecard/paysafecard.component').then((m) => m.PaysafecardComponent),
     canActivate: [authGuard],
+  },
+  {
+    path: 'coin_managment',
+    loadComponent: () => import('./coin-managment/coin-managment.component').then((m) => m.CoinManagmentComponent),
+    canActivate: [adminGuard],
   },
   {
     path: 'cases',
@@ -30,6 +41,11 @@ export const routes: Routes = [
     path: 'profile',
     loadComponent: () => import('./profile/profile.component').then((m) => m.ProfileComponent),
     canActivate: [authGuard],
+  },
+  {
+    path: 'manage/:id',
+    loadComponent: () => import('./profile/profile.component').then((m) => m.ProfileComponent),
+    canActivate: [adminGuard],
   },
   {
     path: 'login',

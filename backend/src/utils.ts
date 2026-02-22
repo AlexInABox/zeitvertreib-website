@@ -3,9 +3,75 @@ import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions } from './db/schema.js';
+import {
+  playerdata,
+  kills,
+  loginSecrets,
+  discordInfo,
+  steamCache,
+  sessions,
+  reducedLuckUsers,
+  discordCache,
+} from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
+
+/**
+ * Validate and normalize a Steam64 ID
+ * @param steamId - The Steam ID to validate (can have @steam suffix)
+ * @returns { valid: boolean, normalized?: string, error?: string }
+ * - valid: true if the Steam ID is a valid Steam64
+ * - normalized: the normalized Steam ID (with @steam suffix) if valid
+ * - error: error message describing why the Steam ID is invalid
+ *
+ * Validation rules:
+ * - Min: 0x0110000100000000 (76561197960265728)
+ * - Max: 0x01100001FFFFFFFF (76561202255233023)
+ * - Must be exactly 17 decimal digits
+ */
+export function validateSteamId(steamId: string): { valid: boolean; normalized?: string; error?: string } {
+  const raw = steamId.trim();
+
+  // Check for empty string
+  if (!raw) {
+    return { valid: false, error: 'Steam ID darf nicht leer sein' };
+  }
+
+  // Remove all @steam suffixes (catches duplication like @steam@steam)
+  const base = raw.replace(/@steam/g, '');
+
+  // Check if exactly 17 decimal digits
+  if (!/^\d{17}$/.test(base)) {
+    return { valid: false, error: 'Steam ID muss genau 17 Dezimalziffern sein' };
+  }
+
+  // Verify within valid Steam64 ID range
+  const MIN_STEAM64 = 76561197960265728n; // 0x0110000100000000
+  const MAX_STEAM64 = 76561202255233023n; // 0x01100001FFFFFFFF
+  const steamId64 = BigInt(base);
+
+  if (steamId64 < MIN_STEAM64 || steamId64 > MAX_STEAM64) {
+    return { valid: false, error: 'Steam ID liegt außerhalb des gültigen Bereichs' };
+  }
+
+  // Normalize: return with @steam suffix
+  return { valid: true, normalized: `${base}@steam` };
+}
+
+/**
+ * Check if a user has reduced luck by querying the database
+ * @param steamId - The Steam ID to check (with or without @steam suffix)
+ * @param env - Cloudflare environment with D1 database
+ * @returns Promise<boolean> - True if user has reduced luck
+ */
+export async function checkHasReducedLuck(steamId: string, env: Env): Promise<boolean> {
+  const normalizedId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  const result = await db.select().from(reducedLuckUsers).where(eq(reducedLuckUsers.steamId, normalizedId)).limit(1);
+
+  return result.length > 0;
+}
 
 // Response helpers
 export function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -148,7 +214,7 @@ export function extractSteamId(identity?: string): string | null {
 export async function fetchSteamUserData(steamId: string, env: Env, ctx: ExecutionContext): Promise<SteamUser | null> {
   steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
-  const staleThreshold = 24 * 60 * 60; // 24 hours in seconds
+  const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
   const db = drizzle(env.ZEITVERTREIB_DATA);
   let steamUser: SteamUser | null = null;
 
@@ -221,6 +287,76 @@ async function refreshSteamCache(steamId: string, env: Env): Promise<void> {
     .onConflictDoUpdate({
       target: steamCache.steamId,
       set: {
+        username,
+        avatarUrl,
+        lastUpdated: now,
+      },
+    });
+}
+
+// Discord Cache Stuff
+export async function fetchDiscordUserData(
+  discordId: string,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<{ displayName: string; username: string; avatarUrl: string } | null> {
+  const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  let cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!cached) {
+    await refreshDiscordCache(discordId, env);
+    cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
+  }
+
+  if (cached) {
+    if (now - cached.lastUpdated >= staleThreshold) {
+      ctx.waitUntil(refreshDiscordCache(discordId, env));
+    }
+    return { displayName: cached.displayName, username: cached.username, avatarUrl: cached.avatarUrl };
+  }
+
+  return null;
+}
+
+async function refreshDiscordCache(discordId: string, env: Env): Promise<void> {
+  const url = `https://discord.com/api/v10/users/${discordId}`;
+
+  const res = await proxyFetch(url, { headers: { Authorization: `Bot ${env.DISCORD_TOKEN}` } }, env);
+
+  if (!res.ok) {
+    console.error(`Failed to refresh Discord cache for ${discordId}: ${res.status} ${res.statusText}`);
+    return;
+  }
+
+  const data: any = await res.json();
+  const displayName = data.global_name || data.username;
+  const username = data.username;
+  const avatarUrl = data.avatar ? `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.png` : '';
+
+  if (!displayName || !username) {
+    console.error(`Invalid data when refreshing Discord cache for ${discordId}`);
+    console.error('Data received:', data);
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  await db
+    .insert(discordCache)
+    .values({
+      discordId,
+      displayName,
+      username,
+      avatarUrl,
+      lastUpdated: now,
+    })
+    .onConflictDoUpdate({
+      target: discordCache.discordId,
+      set: {
+        displayName,
         username,
         avatarUrl,
         lastUpdated: now,

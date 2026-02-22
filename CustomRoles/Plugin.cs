@@ -12,7 +12,7 @@ public class Plugin : Plugin<Config>
     public override string Name { get; } = "CustomRoles";
     public override string Description { get; } = "CustomRole logic that allows UCR to have modules or spawn logic!";
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(1, 4, 0);
+    public override Version Version { get; } = new(1, 4, 1);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
 
     public Translation Translation { get; private set; }

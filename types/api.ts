@@ -436,43 +436,15 @@ export interface LuckyWheelPlayResponse {
 }
 
 // ============================================================================
-// Financial Types
+// Code Redemption Types
 // ============================================================================
 
-export type TransactionType = 'income' | 'expense';
-export type TransactionFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
-
-// Financial types removed — the backend no longer exposes `/financial` endpoints.
-/** GET /cases response */
-export interface ListCasesResponse {
-  folders: string[];
-}
-
-/** GET /cases/:caseId response */
-export interface GetCaseResponse {
-  files: string[];
-  caseId: string;
-}
-
-/** GET /cases/upload response */
-export interface GetUploadUrlResponse {
-  url: string;
-  method: string;
-  filename: string;
-  fileUrl: string;
-  expiresIn: number;
-}
-
-// ============================================================================
-// Redeemables Types
-// ============================================================================
-
-/** POST /redeemables/redeem request */
+/** POST /redeem-code request */
 export interface RedeemCodeRequest {
   code: string;
 }
 
-/** POST /redeemables/redeem response */
+/** POST /redeem-code response */
 export interface RedeemCodeResponse {
   success: boolean;
   credits: number;
@@ -798,6 +770,147 @@ export interface ChickenCrossPostResponse {
 //** GET /chickencross/active response */
 export interface ChickenCrossActiveResponse {
   activeGameSeed?: number;
+}
+
+// ============================================================================
+// Cases Types
+// ============================================================================
+
+export type CaseCategory =
+  | 'Beleidigungen'
+  | 'Supportflucht'
+  | 'Team-Trolling'
+  | 'Soundboard'
+  | 'Report-Abuse'
+  | 'Camping'
+  | 'Rollenflucht'
+  | 'Bug-Abusing'
+  | 'Diebstahl'
+  | 'Teaming'
+  | 'Gefesselte Klassen'
+  | 'Ban-Evasion'
+  | 'Rundenende'
+  | 'Sonstiges';
+
+export interface CaseListItem {
+  caseId: string;
+  title: string | null;
+  description: string | null;
+  category: CaseCategory;
+  createdBy: {
+    discordId: string;
+    displayName: string;
+    username: string;
+    avatarUrl: string;
+  };
+  createdAt: number;
+  lastUpdatedAt: number;
+  linkedSteamIds: string[];
+}
+
+/** GET /cases/upload?case={caseId}&extension={ext} request params */
+export interface CaseFileUploadGetRequest {
+  case: string;
+  extension?: string;
+}
+
+/** GET /cases/upload response */
+export interface CaseFileUploadGetResponse {
+  url: string;
+  method: 'PUT';
+}
+
+/** GET /cases request params (paginated mode) */
+export interface ListCasesGetRequest {
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'lastUpdatedAt';
+  sortOrder?: 'asc' | 'desc';
+  createdByDiscordId?: string;
+  category: CaseCategory;
+}
+
+/** GET /cases request params (steamId mode — returns ALL, no pagination) */
+export interface ListCasesBySteamIdGetRequest {
+  steamId: string;
+}
+
+/** GET /cases response (paginated) */
+export interface ListCasesGetResponse {
+  cases: CaseListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+/** GET /cases response (steamId mode — no pagination) */
+export interface ListCasesBySteamIdGetResponse {
+  cases: CaseListItem[];
+}
+
+/** GET /cases/metadata?case={caseId} request params */
+export interface GetCaseMetadataGetRequest {
+  case: string;
+}
+
+/** GET /cases/metadata response */
+export interface GetCaseMetadataGetResponse {
+  id: string;
+  caseId: string;
+  title: string | null;
+  description: string | null;
+  category: CaseCategory;
+  createdBy: {
+    discordId: string;
+    displayName: string;
+    username: string;
+    avatarUrl: string;
+  };
+  createdAt: number;
+  lastUpdatedAt: number;
+  linkedUsers: {
+    steamId: string;
+    username: string;
+    avatarUrl: string;
+  }[];
+  files: {
+    name: string;
+    size: number;
+    createdAt: number;
+    url: string;
+  }[];
+}
+
+/** POST /cases — no request body */
+export interface CreateCasePostRequest {}
+
+/** POST /cases response */
+export interface CreateCasePostResponse {
+  caseId: string;
+}
+
+/** PUT /cases/metadata?case={caseId} request params */
+export interface UpdateCaseMetadataPutRequestParams {
+  case: string;
+}
+
+/** PUT /cases/metadata request body */
+export interface UpdateCaseMetadataPutRequest {
+  title?: string;
+  description?: string;
+  category: CaseCategory;
+  linkedSteamIds?: string[];
+}
+
+/** PUT /cases/metadata response */
+export interface UpdateCaseMetadataPutResponse {
+  success: boolean;
+  caseId: string;
 }
 
 // ============================================================================

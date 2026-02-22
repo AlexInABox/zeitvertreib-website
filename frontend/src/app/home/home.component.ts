@@ -21,7 +21,7 @@ interface Player {
   selector: 'app-home',
   imports: [CommonModule, AnimateOnScrollModule, ImageModule, PanelModule, CardModule, DiscordStatsComponent],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css',
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
   images: string[] = [
