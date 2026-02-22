@@ -228,7 +228,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         caseId: c.id,
         title: c.title,
         description: c.description,
-        category: c.category,
+        category: c.category as CaseCategory,
         createdBy: {
           discordId: c.createdByDiscordId,
           displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -321,7 +321,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       caseId: c.id,
       title: c.title,
       description: c.description,
-      category: c.category,
+      category: c.category as CaseCategory,
       createdBy: {
         discordId: c.createdByDiscordId,
         displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -470,7 +470,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
       caseId,
       title: caseRow.title,
       description: caseRow.description,
-      category: caseRow.category,
+      category: caseRow.category as CaseCategory,
       createdBy: {
         discordId: caseRow.createdByDiscordId,
         displayName: createdBy?.displayName || caseRow.createdByDiscordId,
@@ -615,9 +615,9 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
 
     // Build DB update — only include fields explicitly present in the body
     const updateFields: Partial<{ title: string; description: string; category: CaseCategory; lastUpdatedAt: number }> =
-      {
-        lastUpdatedAt: Date.now(),
-      };
+    {
+      lastUpdatedAt: Date.now(),
+    };
 
     if ('title' in body && body.title !== undefined) {
       updateFields.title = body.title;
