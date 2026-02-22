@@ -370,7 +370,7 @@ export class CaseDetailComponent implements OnInit {
     const payload: UpdateCaseMetadataPutRequest = {};
     if (this.editedTitle.trim()) payload.title = this.editedTitle.trim();
     if (this.editedDescription.trim()) payload.description = this.editedDescription.trim();
-    if (this.editedRule) payload.rule = this.editedRule;
+    if (this.editedRule !== undefined) payload.rule = this.editedRule;
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
