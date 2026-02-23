@@ -938,3 +938,46 @@ export interface RoulettePostResponse {
   won: boolean;
   payout: number;
 }
+
+// ============================================================================
+// Z.E.I.T. Types
+// ============================================================================
+
+/** GET /zeit request params */
+export interface ZeitGetRequest {
+  steamid?: string;
+  discordid?: string;
+}
+
+/** GET /zeit response */
+export interface ZeitGetResponse {
+  steamid: string;
+  discordid?: string;
+  zvc: number;
+  playtime: number;
+  roundsplayed: number;
+  fakerank?: {
+    text: string;
+    color: FakerankColor;
+    banned: boolean;
+    banReason?: string;
+    bannedByDiscordId?: string;
+  };
+  sprays?: {
+    id: number;
+    name: string;
+    full_res: Base64URLString;
+  }[];
+  createdCases?: {
+    caseId: string;
+    title: string;
+    category: CaseCategory;
+    createdAt: number;
+  }[];
+  linkedCases?: {
+    caseId: string;
+    title: string;
+    category: CaseCategory;
+    linkedAt: number;
+  }[];
+}
