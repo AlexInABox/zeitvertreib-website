@@ -210,7 +210,7 @@
         </div>
         <div class="sprays-grid">
           <div class="spray-card" *ngFor="let spray of userData.sprays">
-            <img [src]="'data:image/png;base64,' + spray.full_res" [alt]="spray.name" class="spray-image" />
+            <img [src]="spray.full_res" [alt]="spray.name" class="spray-image" />
             <div class="spray-meta">
               <span class="spray-name">{{ spray.name }}</span>
               <span class="spray-id">ID: {{ spray.id }}</span>
