@@ -202,7 +202,7 @@ public static class EventHandlers
 
             HashSet<string> updatedIds = [];
 
-            foreach (Fakerank fakerank in response.Fakeranks)
+            foreach (FakerankElement fakerank in response.Fakeranks)
             {
                 string id = fakerank.Userid;
                 (string, string) rank = (fakerank.Text, fakerank.Color.ToString().ToSnakeCase());
