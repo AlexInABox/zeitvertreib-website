@@ -25,7 +25,7 @@ export const routes: Routes = [
   },
   {
     path: 'user_management',
-    loadComponent: () => import('./user-management/user-management.component').then((m) => m.UserManagementComponent),
+    loadComponent: () => import('./user-managment/user-managment.component').then((m) => m.UserManagmentComponent),
     canActivate: [adminGuard],
   },
   {

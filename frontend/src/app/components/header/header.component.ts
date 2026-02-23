@@ -149,12 +149,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-    // Conditionally add User Managment for admins only
+    // Conditionally add User Management for admins only
     if (this.isUserManagementAdmin) {
       this.items.push({
-        label: 'User Managment',
+        label: 'User Management',
         icon: PrimeIcons.WALLET,
-        route: '/user_managment',
+        route: '/user_management',
       });
     }
 
