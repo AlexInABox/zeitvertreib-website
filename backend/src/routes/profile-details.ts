@@ -82,7 +82,7 @@ export async function handleGetProfileDetails(request: Request, env: Env, ctx: E
         .select({
           id: cases.id,
           title: cases.title,
-          rule: cases.rule,
+          category: cases.category,
           createdByDiscordId: cases.createdByDiscordId,
           createdAt: cases.createdAt,
           lastUpdatedAt: cases.lastUpdatedAt,
@@ -98,7 +98,7 @@ export async function handleGetProfileDetails(request: Request, env: Env, ctx: E
       linkedCases = casesList.map((c, i) => ({
         caseId: c.id,
         title: c.title,
-        rule: c.rule ?? null,
+        rule: c.category ?? null,
         createdBy: {
           discordId: c.createdByDiscordId,
           displayName: creatorDataList[i]?.displayName ?? c.createdByDiscordId,
@@ -117,7 +117,7 @@ export async function handleGetProfileDetails(request: Request, env: Env, ctx: E
         .select({
           id: cases.id,
           title: cases.title,
-          rule: cases.rule,
+          category: cases.category,
           createdAt: cases.createdAt,
           lastUpdatedAt: cases.lastUpdatedAt,
         })
@@ -145,7 +145,7 @@ export async function handleGetProfileDetails(request: Request, env: Env, ctx: E
       createdCases = createdCasesList.map((c) => ({
         caseId: c.id,
         title: c.title,
-        rule: c.rule ?? null,
+        rule: c.category ?? null,
         createdAt: c.createdAt,
         lastUpdatedAt: c.lastUpdatedAt,
         linkedUserCount: linkedCountMap[c.id] ?? 0,
