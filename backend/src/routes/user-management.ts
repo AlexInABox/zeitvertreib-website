@@ -5,10 +5,10 @@ import { desc, eq, sql, inArray } from 'drizzle-orm';
 import typia from 'typia';
 import { proxyFetch } from '../proxy.js';
 
-// List of admin Steam IDs allowed to access coin management
-const COIN_MANAGEMENT_ADMINS = ['76561198834070725@steam', '76561198354414854@steam'];
+// List of admin Steam IDs allowed to access user management
+const USER_MANAGEMENT_ADMINS = ['76561198834070725@steam', '76561198354414854@steam'];
 
-interface CoinManagementPlayer {
+interface UserManagementPlayer {
   steamId: string;
   username: string;
   avatarUrl: string;
@@ -25,7 +25,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
   }
 
   // Check if user is an admin
-  if (!validation.steamId || !COIN_MANAGEMENT_ADMINS.includes(validation.steamId)) {
+  if (!validation.steamId || !USER_MANAGEMENT_ADMINS.includes(validation.steamId)) {
     return createResponse({ error: 'Zugriff verweigert - Admin-Rechte erforderlich' }, 403, origin);
   }
 
@@ -112,7 +112,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
     const reducedLuckSet = new Set(reducedLuckData.map((row: { steamId: string }) => row.steamId));
 
     // Combine player data with cached Steam data
-    const playersWithData: CoinManagementPlayer[] = players.map((player: { id: string; experience: number | null }) => {
+    const playersWithData: UserManagementPlayer[] = players.map((player: { id: string; experience: number | null }) => {
       const steamUser = steamDataMap.get(player.id);
       const hasReducedLuck = reducedLuckSet.has(player.id);
 
@@ -146,7 +146,7 @@ export async function handleListPlayers(request: Request, env: Env, ctx: Executi
   }
 }
 
-export async function handleCheckCoinManagementAccess(
+export async function handleCheckUserManagementAccess(
   request: Request,
   env: Env,
   _ctx: ExecutionContext,
@@ -158,7 +158,7 @@ export async function handleCheckCoinManagementAccess(
     return createResponse({ hasAccess: false }, 200, origin);
   }
 
-  const hasAccess = validation.steamId ? COIN_MANAGEMENT_ADMINS.includes(validation.steamId) : false;
+  const hasAccess = validation.steamId ? USER_MANAGEMENT_ADMINS.includes(validation.steamId) : false;
 
   return createResponse({ hasAccess }, 200, origin);
 }
@@ -235,7 +235,7 @@ export async function handleAwardCoins(request: Request, env: Env, ctx: Executio
   }
 
   // Check if user is an admin
-  if (!validation.steamId || !COIN_MANAGEMENT_ADMINS.includes(validation.steamId)) {
+  if (!validation.steamId || !USER_MANAGEMENT_ADMINS.includes(validation.steamId)) {
     return createResponse({ error: 'Zugriff verweigert - Admin-Rechte erforderlich' }, 403, origin);
   }
 

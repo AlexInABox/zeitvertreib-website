@@ -883,6 +883,11 @@
   font-size: 0.875rem;
 }
 
+.empty-state {
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -1278,11 +1283,60 @@
 }
 
 .case-id {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(139, 92, 246, 0.85);
+  font-family: ui-monospace, monospace;
+}
+
+.case-item-main {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.case-title {
   font-size: 0.9375rem;
   font-weight: 500;
   color: white;
-  font-family: ui-monospace, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.case-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.case-rule-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(139, 92, 246, 0.15);
+  color: rgba(139, 92, 246, 0.9);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.case-creator {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+.case-linked-count {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
 }
 
 .case-date {

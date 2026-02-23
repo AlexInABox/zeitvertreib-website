@@ -27,13 +27,13 @@ interface PaginationInfo {
 }
 
 @Component({
-  selector: 'app-coin-managment',
+  selector: 'app-user-managment',
   standalone: true,
   imports: [CommonModule, RouterModule, AvatarModule, ButtonModule, DialogModule, FormsModule],
-  templateUrl: './coin-managment.component.html',
-  styleUrls: ['./coin-managment.component.css'],
+  templateUrl: './user-managment.component.html',
+  styleUrls: ['./user-managment.component.css'],
 })
-export class CoinManagmentComponent implements OnInit, OnDestroy {
+export class UserManagmentComponent implements OnInit, OnDestroy {
   users: CoinUser[] = [];
   reducedLuckUsers: Set<string> = new Set();
   editDialogVisible = false;
@@ -105,7 +105,7 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
 
     // Use provided searchTerm or fall back to current debouncedSearchTerm
     const search = searchTerm !== undefined ? searchTerm : this.debouncedSearchTerm;
-    let url = `${environment.apiUrl}/coin-management/players?page=${page}&pageSize=${this.pageSize}`;
+    let url = `${environment.apiUrl}/user-management/players?page=${page}&pageSize=${this.pageSize}`;
     if (search) {
       url += `&search=${encodeURIComponent(search)}`;
     }
@@ -291,7 +291,7 @@ export class CoinManagmentComponent implements OnInit, OnDestroy {
       .post<{
         success: boolean;
         newBalance: number;
-      }>(`${environment.apiUrl}/coin-management/award`, requestBody, { headers })
+      }>(`${environment.apiUrl}/user-management/award`, requestBody, { headers })
       .subscribe({
         next: (response) => {
           const user = this.users.find((u) => u.steamId === this.selectedUser?.steamId);

@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import typia from 'typia';
 
 // List of admin Steam IDs allowed to manage reduced luck
-const COIN_MANAGEMENT_ADMINS = ['76561198834070725@steam', '76561198354414854@steam'];
+const USER_MANAGEMENT_ADMINS = ['76561198834070725@steam', '76561198354414854@steam'];
 
 interface SetReducedLuckRequest {
   steamId: string;
@@ -30,7 +30,7 @@ export async function handleGetReducedLuck(request: Request, env: Env, _ctx: Exe
   }
 
   // Check if user is an admin
-  if (!validation.steamId || !COIN_MANAGEMENT_ADMINS.includes(validation.steamId)) {
+  if (!validation.steamId || !USER_MANAGEMENT_ADMINS.includes(validation.steamId)) {
     return createResponse({ error: 'Zugriff verweigert - Admin-Rechte erforderlich' }, 403, origin);
   }
 
@@ -63,7 +63,7 @@ export async function handleSetReducedLuck(request: Request, env: Env, _ctx: Exe
   }
 
   // Check if user is an admin
-  if (!validation.steamId || !COIN_MANAGEMENT_ADMINS.includes(validation.steamId)) {
+  if (!validation.steamId || !USER_MANAGEMENT_ADMINS.includes(validation.steamId)) {
     return createResponse({ error: 'Zugriff verweigert - Admin-Rechte erforderlich' }, 403, origin);
   }
 

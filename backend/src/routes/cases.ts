@@ -20,6 +20,7 @@ import {
   CreateCasePostResponse,
   UpdateCaseMetadataPutRequest,
   UpdateCaseMetadataPutResponse,
+  CaseRule,
 } from '@zeitvertreib/types';
 
 const BUCKET = 'zeitvertreib-tickets';
@@ -227,7 +228,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         caseId: c.id,
         title: c.title,
         description: c.description,
-        rule: c.rule,
+        rule: c.rule as CaseRule | null,
         createdBy: {
           discordId: c.createdByDiscordId,
           displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -320,7 +321,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       caseId: c.id,
       title: c.title,
       description: c.description,
-      rule: c.rule,
+      rule: c.rule as CaseRule | null,
       createdBy: {
         discordId: c.createdByDiscordId,
         displayName: createdByList[index]?.displayName || c.createdByDiscordId,
@@ -613,7 +614,7 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
     }
 
     // Build DB update — only include fields explicitly present in the body
-    const updateFields: Partial<{ title: string; description: string; rule: string; lastUpdatedAt: number }> = {
+    const updateFields: Partial<{ title: string; description: string; rule: string | null; lastUpdatedAt: number }> = {
       lastUpdatedAt: Date.now(),
     };
 

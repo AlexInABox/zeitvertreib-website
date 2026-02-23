@@ -42,6 +42,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     sprays?: any[];
     sprayBanned?: boolean;
     cases?: any[];
+    createdCases?: any[];
     coinRestriction?: any;
     moderation?: any;
   } | null = null;
@@ -305,6 +306,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           sprays: res.sprays || [],
           sprayBanned: res.sprayBanned,
           cases: res.cases || [],
+          createdCases: res.createdCases || [],
           coinRestriction: res.coinRestriction,
           moderation: res.moderation,
         };
@@ -323,8 +325,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     const headers = this.buildAuthHeaders();
 
-    // Try coin-management players endpoint (supports search by steamId)
-    const url = `${environment.apiUrl}/coin-management/players?page=1&pageSize=1&search=${encodeURIComponent(steamId)}`;
+    // Try user-management players endpoint (supports search by steamId)
+    const url = `${environment.apiUrl}/user-management/players?page=1&pageSize=1&search=${encodeURIComponent(steamId)}`;
 
     this.http.get<{ players: any[] }>(url, { headers, withCredentials: true }).subscribe({
       next: (res) => {

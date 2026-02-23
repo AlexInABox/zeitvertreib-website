@@ -12,6 +12,7 @@ import type {
   GetCaseMetadataGetResponse,
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
+  CaseRule,
 } from '@zeitvertreib/types';
 import { CASE_RULES } from '@zeitvertreib/types';
 
@@ -221,6 +222,12 @@ export class CaseDetailComponent implements OnInit {
     );
   }
 
+  navigateToUserProfile(steamId: string) {
+    if (this.isTeam) {
+      this.router.navigate(['/manage', steamId]);
+    }
+  }
+
   validateSteamIdFormat(steamId: string): { valid: boolean; normalized?: string; error?: string } {
     const raw = steamId.trim();
 
@@ -370,7 +377,7 @@ export class CaseDetailComponent implements OnInit {
     const payload: UpdateCaseMetadataPutRequest = {};
     if (this.editedTitle.trim()) payload.title = this.editedTitle.trim();
     if (this.editedDescription.trim()) payload.description = this.editedDescription.trim();
-    if (this.editedRule !== undefined) payload.rule = this.editedRule;
+    if (this.editedRule !== undefined) payload.rule = this.editedRule as CaseRule | null;
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {

@@ -80,8 +80,9 @@
                 <div
                   class="header-chip"
                   *ngFor="let user of caseData?.linkedUsers"
-                  (click)="copySteamIdToClipboard(user.steamId)"
-                  title="Klick zum Kopieren"
+                  (click)="navigateToUserProfile(user.steamId)"
+                  title="Zum Profil"
+                  [style.cursor]="'pointer'"
                 >
                   <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
                   <span class="chip-name">{{ user.username }}</span>

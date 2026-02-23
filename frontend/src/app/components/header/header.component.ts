@@ -30,7 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   avatarIcon = '';
   currentUser: SteamUser | null = null;
   isFakerankAdmin = false;
-  isCoinManagementAdmin = false;
+  isUserManagementAdmin = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
   private bgmInteractionSubscription?: Subscription;
@@ -80,13 +80,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.currentUser = user;
       this.userLoggedIn = !!user;
       this.avatarIcon = user?.avatarUrl || '';
-      this.checkCoinManagementAccess(); // Check access when user logs in/out
+      this.checkUserManagementAccess(); // Check access when user logs in/out
     });
 
     // Subscribe to user data changes (including fakerank admin status)
     this.userDataSubscription = this.authService.currentUserData$.subscribe((_userData: UserData | null) => {
       this.isFakerankAdmin = this.authService.isFakerankAdmin();
-      this.checkCoinManagementAccess(); // Check coin management access when user data changes
+      this.checkUserManagementAccess(); // Check user management access when user data changes
       this.updateMenuItems(); // Update menu items when admin status changes
     });
 
@@ -149,12 +149,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-    // Conditionally add Coin Managment for admins only
-    if (this.isCoinManagementAdmin) {
+    // Conditionally add User Managment for admins only
+    if (this.isUserManagementAdmin) {
       this.items.push({
-        label: 'Coin Managment',
+        label: 'User Managment',
         icon: PrimeIcons.WALLET,
-        route: '/coin_managment',
+        route: '/user_managment',
       });
     }
 
@@ -201,31 +201,31 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isPortrait = window.innerHeight > window.innerWidth;
   }
 
-  private checkCoinManagementAccess() {
+  private checkUserManagementAccess() {
     if (!this.userLoggedIn) {
-      this.isCoinManagementAdmin = false;
+      this.isUserManagementAdmin = false;
       this.updateMenuItems();
       return;
     }
 
     const token = this.authService.getSessionToken();
     if (!token) {
-      this.isCoinManagementAdmin = false;
+      this.isUserManagementAdmin = false;
       this.updateMenuItems();
       return;
     }
 
     this.http
-      .get<{ hasAccess: boolean }>(`${environment.apiUrl}/coin-management/access`, {
+      .get<{ hasAccess: boolean }>(`${environment.apiUrl}/user-management/access`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe({
         next: (response) => {
-          this.isCoinManagementAdmin = response.hasAccess;
+          this.isUserManagementAdmin = response.hasAccess;
           this.updateMenuItems();
         },
         error: () => {
-          this.isCoinManagementAdmin = false;
+          this.isUserManagementAdmin = false;
           this.updateMenuItems();
         },
       });
