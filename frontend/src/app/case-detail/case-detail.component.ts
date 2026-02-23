@@ -236,6 +236,12 @@ export class CaseDetailComponent implements OnInit {
     );
   }
 
+  navigateToUserProfile(steamId: string) {
+    if (this.isTeam) {
+      this.router.navigate(['/manage', steamId]);
+    }
+  }
+
   validateSteamIdFormat(steamId: string): { valid: boolean; normalized?: string; error?: string } {
     const raw = steamId.trim();
 

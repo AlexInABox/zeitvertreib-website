@@ -19,7 +19,7 @@ export const adminGuard: CanActivateFn = () => {
   let headers = new HttpHeaders();
   headers = headers.set('Authorization', `Bearer ${sessionToken}`);
 
-  return http.get<{ hasAccess: boolean }>(`${environment.apiUrl}/coin-management/access`, { headers }).pipe(
+  return http.get<{ hasAccess: boolean }>(`${environment.apiUrl}/user-management/access`, { headers }).pipe(
     map((response) => {
       if (response.hasAccess) {
         return true;

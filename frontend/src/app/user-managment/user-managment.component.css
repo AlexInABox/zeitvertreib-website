@@ -1,11 +1,11 @@
-.coin-managment-page.container {
+.user-managment-page.container {
   padding: 2rem;
 }
-.coin-managment-page h1 {
+.user-managment-page h1 {
   font-size: 1.75rem;
   margin-bottom: 0.75rem;
 }
-.coin-managment-page p.muted {
+.user-managment-page p.muted {
   color: var(--p-text-muted);
   margin-top: 0.5rem;
 }
@@ -232,28 +232,28 @@ html:not(.my-app-dark) .copied-badge {
 }
 
 /* Light-mode override: make the Edit (Bearbeiten) label white when not using dark theme */
-html:not(.my-app-dark) .coin-managment-page .action-cell .edit-btn .p-button-label {
+html:not(.my-app-dark) .user-managment-page .action-cell .edit-btn .p-button-label {
   color: #ffffff;
 }
 
-/* Make all textual content on the Coin Managment page white in light mode
+/* Make all textual content on the User Managment page white in light mode
    (scoped to this page; preserves explicit colors like errors/green badges) */
-html:not(.my-app-dark) .coin-managment-page {
+html:not(.my-app-dark) .user-managment-page {
   color: #ffffff; /* base text color */
 }
 
-html:not(.my-app-dark) .coin-managment-page .muted,
-html:not(.my-app-dark) .coin-managment-page .luck-label,
-html:not(.my-app-dark) .coin-managment-page .coin-table th,
-html:not(.my-app-dark) .coin-managment-page .coin-table td,
-html:not(.my-app-dark) .coin-managment-page .username-cell,
-html:not(.my-app-dark) .coin-managment-page .preview-current,
-html:not(.my-app-dark) .coin-managment-page .award-input::placeholder {
+html:not(.my-app-dark) .user-managment-page .muted,
+html:not(.my-app-dark) .user-managment-page .luck-label,
+html:not(.my-app-dark) .user-managment-page .coin-table th,
+html:not(.my-app-dark) .user-managment-page .coin-table td,
+html:not(.my-app-dark) .user-managment-page .username-cell,
+html:not(.my-app-dark) .user-managment-page .preview-current,
+html:not(.my-app-dark) .user-managment-page .award-input::placeholder {
   color: rgba(255, 255, 255, 0.85);
 }
 
 /* Ensure button labels are readable in light mode */
-html:not(.my-app-dark) .coin-managment-page .p-button-label {
+html:not(.my-app-dark) .user-managment-page .p-button-label {
   color: #ffffff;
 }
 

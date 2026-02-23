@@ -321,7 +321,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       caseId: c.id,
       title: c.title,
       description: c.description,
-      category: c.category as CaseCategory,
+      category: c.category,
       createdBy: {
         discordId: c.createdByDiscordId,
         displayName: createdByList[index]?.displayName || c.createdByDiscordId,

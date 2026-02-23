@@ -24,8 +24,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'coin_managment',
-    loadComponent: () => import('./coin-managment/coin-managment.component').then((m) => m.CoinManagmentComponent),
+    path: 'user_management',
+    loadComponent: () => import('./user-managment/user-managment.component').then((m) => m.UserManagmentComponent),
     canActivate: [adminGuard],
   },
   {

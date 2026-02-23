@@ -53,7 +53,8 @@ import {
   handleChickenCrossActive,
 } from './routes/chickencross.js';
 import { handleGetReducedLuck, handleSetReducedLuck } from './routes/reduced-luck.js';
-import { handleListPlayers, handleCheckCoinManagementAccess, handleAwardCoins } from './routes/coin-management.js';
+import { handleGetProfileDetails } from './routes/profile-details.js';
+import { handleListPlayers, handleCheckUserManagementAccess, handleAwardCoins } from './routes/user-management.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -176,14 +177,17 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/chickencross': handleChickenCrossGet,
   'POST:/chickencross': handleChickenCrossPost,
 
-  // Coin Management routes
-  'GET:/coin-management/players': handleListPlayers,
-  'GET:/coin-management/access': handleCheckCoinManagementAccess,
-  'POST:/coin-management/award': handleAwardCoins,
+  // User Management routes
+  'GET:/user-management/players': handleListPlayers,
+  'GET:/user-management/access': handleCheckUserManagementAccess,
+  'POST:/user-management/award': handleAwardCoins,
 
   // Reduced Luck routes
   'GET:/reduced-luck': handleGetReducedLuck,
   'POST:/reduced-luck': handleSetReducedLuck,
+
+  // Profile Details route (team-only)
+  'GET:/profile-details': handleGetProfileDetails,
 };
 
 export default {
