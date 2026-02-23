@@ -614,9 +614,10 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
     }
 
     // Build DB update — only include fields explicitly present in the body
-    const updateFields: Partial<{ title: string; description: string; category: CaseCategory; lastUpdatedAt: number }> = {
-      lastUpdatedAt: Date.now(),
-    };
+    const updateFields: Partial<{ title: string; description: string; category: CaseCategory; lastUpdatedAt: number }> =
+      {
+        lastUpdatedAt: Date.now(),
+      };
 
     if ('title' in body && body.title !== undefined) {
       updateFields.title = body.title;
