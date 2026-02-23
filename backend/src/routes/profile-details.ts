@@ -3,8 +3,8 @@ import { eq, desc, inArray } from 'drizzle-orm';
 import { createResponse, validateSession, isTeam, fetchSteamUserData, fetchDiscordUserData } from '../utils.js';
 import { playerdata, steamCache, sprays, sprayBans, cases, casesRelatedUsers } from '../db/schema.js';
 
-/// GET /profile-details?steamId=...
-/// Returns comprehensive profile information for a given steamId (team-only).
+// GET /profile-details?steamId=...
+// Returns comprehensive profile information for a given steamId (team-only).
 export async function handleGetProfileDetails(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
