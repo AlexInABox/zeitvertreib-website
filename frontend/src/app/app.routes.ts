@@ -29,6 +29,11 @@ export const routes: Routes = [
     canActivate: [adminGuard],
   },
   {
+    path: 'zeit',
+    loadComponent: () => import('./zeit/zeit.component').then((m) => m.ZeitComponent),
+    // No guard - accessible to everyone, query locked in component
+  },
+  {
     path: 'cases',
     loadComponent: () => import('./case-management/case-management.component').then((m) => m.CaseManagementComponent),
   },

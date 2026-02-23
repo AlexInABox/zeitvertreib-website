@@ -1,0 +1,294 @@
+<div class="zeit-page">
+  <!-- Search / Landing View -->
+  <div class="search-view" *ngIf="!userData && !isLoading">
+    <div class="search-hero">
+      <h1>Z.E.I.T.</h1>
+      <p class="hero-subtitle">Zentrale Erfassungs- und Informations-Tabelle</p>
+      <p class="hero-description">Abfrage von Spielerdaten anhand einer Steam-ID oder Discord-ID.</p>
+    </div>
+
+    <div class="search-card">
+      <div class="search-type-toggle">
+        <button class="toggle-btn" [class.active]="searchType === 'steamid'" (click)="searchType = 'steamid'">
+          <i class="pi pi-desktop"></i> Steam-ID
+        </button>
+        <button class="toggle-btn" [class.active]="searchType === 'discordid'" (click)="searchType = 'discordid'">
+          <i class="pi pi-discord"></i> Discord-ID
+        </button>
+      </div>
+
+      <div class="search-input-wrapper">
+        <i class="pi pi-search search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="searchInput"
+          [placeholder]="
+            searchType === 'steamid'
+              ? 'Steam-ID eingeben (z. B. 76561198...)'
+              : 'Discord-ID eingeben (z. B. 123456789...)'
+          "
+          (keyup.enter)="performSearch()"
+        />
+      </div>
+
+      <button class="search-btn" [disabled]="!canQuery || !searchInputValid" (click)="performSearch()">
+        <i class="pi pi-search"></i> Abfragen
+      </button>
+
+      <div class="access-notice" *ngIf="!canQuery">
+        <div class="notice-content">
+          <div class="notice-icon"><i class="pi pi-lock"></i></div>
+          <div class="notice-text">
+            <p *ngIf="!isLoggedIn || !isTeamMember">
+              Du musst ein angemeldetes <b>Teammitglied</b> sein, um Abfragen auszuführen.
+            </p>
+          </div>
+        </div>
+        <button class="api-key-link" (click)="toggleApiKeyInput()">
+          <span>Registrierter Zeitvertreib-Partner? Hier klicken, um deinen API-Key zu verwenden.</span>
+        </button>
+      </div>
+
+      <div class="api-key-section" *ngIf="showApiKeyInput && !canQuery">
+        <div class="api-key-input-wrapper">
+          <input
+            type="password"
+            class="api-key-input"
+            [(ngModel)]="partnerApiKey"
+            placeholder="API-Key eingeben..."
+            (keyup.enter)="applyApiKey()"
+          />
+          <button class="api-key-apply-btn" (click)="applyApiKey()" [disabled]="!partnerApiKey.trim()">Anwenden</button>
+        </div>
+      </div>
+
+      <div class="api-key-active" *ngIf="apiKeyApplied">
+        <i class="pi pi-check-circle"></i>
+        <span>Partner API-Key aktiv</span>
+        <button class="remove-key-btn" (click)="removeApiKey()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner-ring"></div>
+    <p>Daten werden abgerufen…</p>
+  </div>
+
+  <!-- Result View -->
+  <div class="result-view" *ngIf="userData && !isLoading">
+    <button class="back-btn" (click)="resetSearch()"><i class="pi pi-arrow-left"></i> Neue Abfrage</button>
+
+    <div class="result-wrapper">
+      <!-- Profile Card -->
+      <div class="card profile-card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-user"></i></span>
+          <div class="card-title-group">
+            <h2>Profil</h2>
+            <span class="card-subtitle">Spielerinformationen</span>
+          </div>
+        </div>
+        <div class="profile-content">
+          <a [href]="userData.steam.avatar" target="_blank" class="avatar-link" *ngIf="userData.steam.avatar">
+            <img [src]="userData.steam.avatar" class="avatar" [alt]="userData.steam.username" />
+          </a>
+          <div class="profile-info">
+            <div class="username-row">
+              <span class="username">{{ userData.steam.username }}</span>
+            </div>
+            <span class="steamid">{{ userData.steam.id }}</span>
+            <div class="fakerank-display" *ngIf="userData.fakerank">
+              <span class="fakerank-label">Fakerank:</span>
+              <span class="fakerank-text" [style.color]="getFakerankColorHex(userData.fakerank.color)">
+                {{ userData.fakerank.text }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-footer" *ngIf="userData.discord">
+          <div class="discord-profile">
+            <div class="discord-brand">
+              <i class="pi pi-discord"></i>
+              <span>Verknüpftes Discord-Konto</span>
+            </div>
+            <div class="discord-user">
+              <img [src]="userData.discord.avatar" class="discord-avatar" *ngIf="userData.discord.avatar" />
+              <div class="discord-details">
+                <span class="discord-username">{{ userData.discord.username }}</span>
+                <span class="discord-id">{{ userData.discord.id }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-chart-bar"></i></span>
+          <div class="card-title-group">
+            <h2>Statistiken</h2>
+            <span class="card-subtitle">Spielaktivität</span>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">ZV-Coins</span>
+            <span class="stat-value">{{ formatNumber(userData.zvc) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Spielzeit</span>
+            <span class="stat-value">{{ formatPlaytime(userData.playtime) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Gespielte Runden</span>
+            <span class="stat-value">{{ formatNumber(userData.roundsplayed) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fakerank Bans Card -->
+      <div class="card" *ngIf="userData.fakerankBanned || userData.sprayBanned">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-ban"></i></span>
+          <div class="card-title-group">
+            <h2>Sperren</h2>
+            <span class="card-subtitle">Aktive Einschränkungen</span>
+          </div>
+        </div>
+        <div class="bans-content">
+          <div class="ban-item" *ngIf="userData.fakerankBanned">
+            <div class="ban-header">
+              <span class="ban-badge fakerank-ban">Fakerank-Sperre</span>
+            </div>
+            <div class="ban-detail" *ngIf="userData.fakerankBanReason">
+              <span class="ban-detail-label">Grund</span>
+              <span class="ban-detail-value">{{ userData.fakerankBanReason }}</span>
+            </div>
+            <div class="ban-detail" *ngIf="userData.fakerankBannedByDiscordId">
+              <span class="ban-detail-label">Gesperrt von</span>
+              <span class="ban-detail-value mono">{{ userData.fakerankBannedByDiscordId }}</span>
+            </div>
+          </div>
+          <div class="ban-item" *ngIf="userData.sprayBanned">
+            <div class="ban-header">
+              <span class="ban-badge spray-ban">Spray-Sperre</span>
+            </div>
+            <div class="ban-detail" *ngIf="userData.sprayBanReason">
+              <span class="ban-detail-label">Grund</span>
+              <span class="ban-detail-value">{{ userData.sprayBanReason }}</span>
+            </div>
+            <div class="ban-detail" *ngIf="userData.sprayBannedByDiscordId">
+              <span class="ban-detail-label">Gesperrt von</span>
+              <span class="ban-detail-value mono">{{ userData.sprayBannedByDiscordId }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sprays Card -->
+      <div class="card" *ngIf="userData.sprays.length > 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-palette"></i></span>
+          <div class="card-title-group">
+            <h2>Sprays</h2>
+            <span class="card-subtitle"
+              >{{ userData.sprays.length }} {{ userData.sprays.length === 1 ? 'Spray' : 'Sprays' }}</span
+            >
+          </div>
+          <span class="badge danger" *ngIf="userData.sprayBanned">Gesperrt</span>
+        </div>
+        <div class="sprays-grid">
+          <div class="spray-card" *ngFor="let spray of userData.sprays">
+            <img [src]="'data:image/png;base64,' + spray.full_res" [alt]="spray.name" class="spray-image" />
+            <div class="spray-meta">
+              <span class="spray-name">{{ spray.name }}</span>
+              <span class="spray-id">ID: {{ spray.id }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linked Cases Card -->
+      <div class="card" *ngIf="userData.linkedCases.length > 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-folder-open"></i></span>
+          <div class="card-title-group">
+            <h2>Verlinkte Cases</h2>
+            <span class="card-subtitle"
+              >{{ userData.linkedCases.length }} {{ userData.linkedCases.length === 1 ? 'Fall' : 'Fälle' }}</span
+            >
+          </div>
+        </div>
+        <div class="cases-list">
+          <a [routerLink]="['/cases', caseItem.caseId]" class="case-item" *ngFor="let caseItem of userData.linkedCases">
+            <div class="case-item-main">
+              <div class="case-item-text">
+                <span class="case-id">Fall #{{ caseItem.caseId }}</span>
+                <span class="case-title">{{ caseItem.title }}</span>
+              </div>
+            </div>
+            <div class="case-item-meta">
+              <span class="case-category-badge">{{ caseItem.category }}</span>
+              <span class="case-date">{{ formatTimestamp(caseItem.createdAt) }}</span>
+            </div>
+            <i class="pi pi-arrow-right case-arrow"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Created Cases Card -->
+      <div class="card" *ngIf="userData.createdCases.length > 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-file-edit"></i></span>
+          <div class="card-title-group">
+            <h2>Erstellte Cases</h2>
+            <span class="card-subtitle"
+              >{{ userData.createdCases.length }} {{ userData.createdCases.length === 1 ? 'Fall' : 'Fälle' }}</span
+            >
+          </div>
+        </div>
+        <div class="cases-list">
+          <a
+            [routerLink]="['/cases', caseItem.caseId]"
+            class="case-item"
+            *ngFor="let caseItem of userData.createdCases"
+          >
+            <div class="case-item-main">
+              <div class="case-item-text">
+                <span class="case-id">Fall #{{ caseItem.caseId }}</span>
+                <span class="case-title">{{ caseItem.title }}</span>
+              </div>
+            </div>
+            <div class="case-item-meta">
+              <span class="case-category-badge">{{ caseItem.category }}</span>
+              <span class="case-date">{{ formatTimestamp(caseItem.createdAt) }}</span>
+            </div>
+            <i class="pi pi-arrow-right case-arrow"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Empty Cases Notice -->
+      <div class="card empty-card" *ngIf="userData.createdCases.length === 0 && userData.linkedCases.length === 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-folder"></i></span>
+          <div class="card-title-group">
+            <h2>Cases</h2>
+            <span class="card-subtitle">Keine verknüpften oder erstellten Cases</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
