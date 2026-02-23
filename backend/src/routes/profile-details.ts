@@ -160,8 +160,16 @@ export async function handleGetProfileDetails(request: Request, env: Env, ctx: E
         coins: Number(player?.experience) || 0,
         discordId,
         discordAvatarUrl,
-        firstSeen: player?.firstSeen ? (player.firstSeen instanceof Date ? player.firstSeen.getTime() : player.firstSeen) : null,
-        lastSeen: player?.lastSeen ? (player.lastSeen instanceof Date ? player.lastSeen.getTime() : player.lastSeen) : null,
+        firstSeen: player?.firstSeen
+          ? player.firstSeen instanceof Date
+            ? player.firstSeen.getTime()
+            : player.firstSeen
+          : null,
+        lastSeen: player?.lastSeen
+          ? player.lastSeen instanceof Date
+            ? player.lastSeen.getTime()
+            : player.lastSeen
+          : null,
         sprays: userSprays,
         sprayBanned: isSprayBanned,
         cases: linkedCases,

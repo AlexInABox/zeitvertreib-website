@@ -119,15 +119,12 @@
       </div>
 
       <!-- Linked Cases (admin/manage view only) -->
-      <div
-        class="card"
-        *ngIf="isManageView && viewedUser"
-      >
+      <div class="card" *ngIf="isManageView && viewedUser">
         <div class="card-header">
           <span class="card-icon"><i class="pi pi-folder-open"></i></span>
           <div class="card-title-group">
             <h2>Verlinkte Cases</h2>
-            <span class="card-subtitle">{{ (viewedUser.cases?.length || 0) }} verlinkte(r) Fall/Fälle</span>
+            <span class="card-subtitle">{{ viewedUser.cases?.length || 0 }} verlinkte(r) Fall/Fälle</span>
           </div>
         </div>
         <div class="cases-list" *ngIf="viewedUser.cases && viewedUser.cases.length > 0">
@@ -142,7 +139,9 @@
             </div>
             <div class="case-item-meta">
               <span class="case-rule-badge" *ngIf="caseItem.rule">{{ caseItem.rule }}</span>
-              <span class="case-creator" *ngIf="caseItem.createdBy?.displayName">von {{ caseItem.createdBy.displayName }}</span>
+              <span class="case-creator" *ngIf="caseItem.createdBy?.displayName"
+                >von {{ caseItem.createdBy.displayName }}</span
+              >
               <span class="case-date">{{ getDateDisplay(caseItem.createdAt) }}</span>
             </div>
             <i class="pi pi-arrow-right"></i>
@@ -154,15 +153,12 @@
       </div>
 
       <!-- Created Cases (admin/manage view only) -->
-      <div
-        class="card"
-        *ngIf="isManageView && viewedUser"
-      >
+      <div class="card" *ngIf="isManageView && viewedUser">
         <div class="card-header">
           <span class="card-icon"><i class="pi pi-file-edit"></i></span>
           <div class="card-title-group">
             <h2>Erstellte Cases</h2>
-            <span class="card-subtitle">{{ (viewedUser.createdCases?.length || 0) }} erstellte(r) Fall/Fälle</span>
+            <span class="card-subtitle">{{ viewedUser.createdCases?.length || 0 }} erstellte(r) Fall/Fälle</span>
           </div>
         </div>
         <div class="cases-list" *ngIf="viewedUser.createdCases && viewedUser.createdCases.length > 0">
@@ -177,7 +173,10 @@
             </div>
             <div class="case-item-meta">
               <span class="case-rule-badge" *ngIf="caseItem.rule">{{ caseItem.rule }}</span>
-              <span class="case-linked-count" *ngIf="caseItem.linkedUserCount !== undefined && caseItem.linkedUserCount > 0">
+              <span
+                class="case-linked-count"
+                *ngIf="caseItem.linkedUserCount !== undefined && caseItem.linkedUserCount > 0"
+              >
                 {{ caseItem.linkedUserCount }} {{ caseItem.linkedUserCount === 1 ? 'Nutzer' : 'Nutzer' }} verlinkt
               </span>
               <span class="case-date">{{ getDateDisplay(caseItem.createdAt) }}</span>
