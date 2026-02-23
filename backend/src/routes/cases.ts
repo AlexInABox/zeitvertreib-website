@@ -21,7 +21,6 @@ import {
   UpdateCaseMetadataPutRequest,
   UpdateCaseMetadataPutResponse,
   CaseCategory,
-  CaseRule,
 } from '@zeitvertreib/types';
 
 const BUCKET = 'zeitvertreib-tickets';
