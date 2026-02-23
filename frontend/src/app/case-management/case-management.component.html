@@ -142,33 +142,35 @@
             </button>
           </div>
 
-          <!-- Sort Dropdown (only in 'all' mode) -->
-          <div class="custom-dropdown" *ngIf="searchMode === 'all'">
-            <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
-              <i class="pi pi-sort-alt"></i>
-              <span class="dropdown-label">{{ getSortLabel() }}</span>
-              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-            </button>
-            <div class="dropdown-menu" *ngIf="sortDropdownOpen">
-              <button
-                *ngFor="let option of sortOptions"
-                class="dropdown-item"
-                [class.active]="sortBy === option.sortBy && sortOrder === option.sortOrder"
-                (click)="changeSortOrder(option.sortBy, option.sortOrder)"
-                type="button"
-              >
-                <span>{{ option.label }}</span>
-                <i class="pi pi-check" *ngIf="sortBy === option.sortBy && sortOrder === option.sortOrder"></i>
+          <div class="search-mode-pills">
+            <!-- Sort Dropdown (only in 'all' mode) -->
+            <div class="custom-dropdown" *ngIf="searchMode === 'all'">
+              <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
+                <i class="pi pi-sort-alt"></i>
+                <span class="dropdown-label">{{ getSortLabel() }}</span>
+                <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
               </button>
+              <div class="dropdown-menu" *ngIf="sortDropdownOpen">
+                <button
+                  *ngFor="let option of sortOptions"
+                  class="dropdown-item"
+                  [class.active]="sortBy === option.sortBy && sortOrder === option.sortOrder"
+                  (click)="changeSortOrder(option.sortBy, option.sortOrder)"
+                  type="button"
+                >
+                  <span>{{ option.label }}</span>
+                  <i class="pi pi-check" *ngIf="sortBy === option.sortBy && sortOrder === option.sortOrder"></i>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- Rule Filter (only in 'all' mode) -->
-          <div class="rule-filter-wrapper" *ngIf="searchMode === 'all'">
-            <select [(ngModel)]="ruleFilter" (change)="onRuleFilterChange()" class="rule-filter-select">
-              <option [ngValue]="null">Alle Regeln</option>
-              <option *ngFor="let rule of availableRules" [ngValue]="rule">{{ rule }}</option>
-            </select>
+            <!-- Category Filter (only in 'all' mode) -->
+            <div class="rule-filter-wrapper" *ngIf="searchMode === 'all'">
+              <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="rule-filter-select">
+                <option [ngValue]="null">Alle Kategorien</option>
+                <option *ngFor="let category of availableCategories" [ngValue]="category">{{ category }}</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -344,9 +346,9 @@
             </h3>
             <p class="case-id">ID: {{ item.caseId }}</p>
             <p class="case-description" *ngIf="item.description">{{ item.description }}</p>
-            <div class="case-rule-badge" *ngIf="item.rule">
+            <div class="case-rule-badge" *ngIf="item.category">
               <i class="pi pi-shield"></i>
-              <span>{{ item.rule }}</span>
+              <span>{{ item.category }}</span>
             </div>
           </div>
 

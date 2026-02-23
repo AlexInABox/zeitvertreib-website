@@ -776,30 +776,27 @@ export interface ChickenCrossActiveResponse {
 // Cases Types
 // ============================================================================
 
-export const CASE_RULES = [
-  '1. Beleidigungen',
-  '2. Supportflucht',
-  '3. Team-Trolling',
-  '4. Soundboard',
-  '5. Report-Abuse',
-  '6. Camping',
-  '7. Rollenflucht',
-  '8. Bug-Abusing',
-  '9. Diebstahl',
-  '10. Teaming',
-  '11. Gefesselte Klassen',
-  '12. Ban-Evasion',
-  '13. Rundenende',
-  'Sonstiges',
-] as const;
-
-export type CaseRule = (typeof CASE_RULES)[number];
+export type CaseCategory =
+  | 'Beleidigungen'
+  | 'Supportflucht'
+  | 'Team-Trolling'
+  | 'Soundboard'
+  | 'Report-Abuse'
+  | 'Camping'
+  | 'Rollenflucht'
+  | 'Bug-Abusing'
+  | 'Diebstahl'
+  | 'Teaming'
+  | 'Gefesselte Klassen'
+  | 'Ban-Evasion'
+  | 'Rundenende'
+  | 'Sonstiges';
 
 export interface CaseListItem {
   caseId: string;
   title: string | null;
   description: string | null;
-  rule: CaseRule | null;
+  category: CaseCategory;
   createdBy: {
     discordId: string;
     displayName: string;
@@ -830,7 +827,7 @@ export interface ListCasesGetRequest {
   sortBy?: 'createdAt' | 'lastUpdatedAt';
   sortOrder?: 'asc' | 'desc';
   createdByDiscordId?: string;
-  rule?: CaseRule;
+  category: CaseCategory;
 }
 
 /** GET /cases request params (steamId mode — returns ALL, no pagination) */
@@ -867,7 +864,7 @@ export interface GetCaseMetadataGetResponse {
   caseId: string;
   title: string | null;
   description: string | null;
-  rule: string | null;
+  category: CaseCategory;
   createdBy: {
     discordId: string;
     displayName: string;
@@ -906,7 +903,7 @@ export interface UpdateCaseMetadataPutRequestParams {
 export interface UpdateCaseMetadataPutRequest {
   title?: string;
   description?: string;
-  rule?: CaseRule | null;
+  category: CaseCategory;
   linkedSteamIds?: string[];
 }
 

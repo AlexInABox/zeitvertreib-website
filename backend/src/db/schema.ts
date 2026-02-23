@@ -285,7 +285,26 @@ export const cases = sqliteTable(
     id: text('id').primaryKey(),
     title: text('title').default('').notNull(),
     description: text('description').default('').notNull(),
-    rule: text('rule'),
+    category: text('category', {
+      enum: [
+        'Beleidigungen',
+        'Supportflucht',
+        'Team-Trolling',
+        'Soundboard',
+        'Report-Abuse',
+        'Camping',
+        'Rollenflucht',
+        'Bug-Abusing',
+        'Diebstahl',
+        'Teaming',
+        'Gefesselte Klassen',
+        'Ban-Evasion',
+        'Rundenende',
+        'Sonstiges',
+      ],
+    })
+      .default('Sonstiges')
+      .notNull(),
     createdByDiscordId: text('created_by_discord_id').notNull(),
     createdAt: integer('created_at').notNull().default(0),
     lastUpdatedAt: integer('last_updated_at').notNull().default(0),

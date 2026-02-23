@@ -12,9 +12,8 @@ import type {
   GetCaseMetadataGetResponse,
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
-  CaseRule,
+  CaseCategory,
 } from '@zeitvertreib/types';
-import { CASE_RULES } from '@zeitvertreib/types';
 
 @Component({
   selector: 'app-case-detail',
@@ -46,11 +45,26 @@ export class CaseDetailComponent implements OnInit {
   isEditingMetadata = false;
   editedTitle = '';
   editedDescription = '';
-  editedRule: string | null = null;
+  editedCategory: CaseCategory = 'Sonstiges';
   isSavingMetadata = false;
 
-  // Available case rules
-  readonly availableRules = CASE_RULES;
+  // Available case categories
+  readonly availableCategories: CaseCategory[] = [
+    'Beleidigungen',
+    'Supportflucht',
+    'Team-Trolling',
+    'Soundboard',
+    'Report-Abuse',
+    'Camping',
+    'Rollenflucht',
+    'Bug-Abusing',
+    'Diebstahl',
+    'Teaming',
+    'Gefesselte Klassen',
+    'Ban-Evasion',
+    'Rundenende',
+    'Sonstiges',
+  ];
 
   // Upload state
   isUploading = false;
@@ -361,7 +375,7 @@ export class CaseDetailComponent implements OnInit {
   startEditingMetadata() {
     this.editedTitle = this.caseData?.title || '';
     this.editedDescription = this.caseData?.description || '';
-    this.editedRule = this.caseData?.rule || null;
+    this.editedCategory = this.caseData?.category ?? 'Sonstiges';
     this.isEditingMetadata = true;
   }
 
@@ -369,15 +383,16 @@ export class CaseDetailComponent implements OnInit {
     this.isEditingMetadata = false;
     this.editedTitle = this.caseData?.title || '';
     this.editedDescription = this.caseData?.description || '';
-    this.editedRule = this.caseData?.rule || null;
+    this.editedCategory = this.caseData?.category ?? 'Sonstiges';
   }
 
   saveMetadata() {
     this.isSavingMetadata = true;
-    const payload: UpdateCaseMetadataPutRequest = {};
+    const payload: UpdateCaseMetadataPutRequest = {
+      category: this.editedCategory,
+    };
     if (this.editedTitle.trim()) payload.title = this.editedTitle.trim();
     if (this.editedDescription.trim()) payload.description = this.editedDescription.trim();
-    if (this.editedRule !== undefined) payload.rule = this.editedRule as CaseRule | null;
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
@@ -421,7 +436,10 @@ export class CaseDetailComponent implements OnInit {
     }
 
     this.isManagingLinkedUsers = true;
-    const payload: UpdateCaseMetadataPutRequest = { linkedSteamIds: [...existing, steamId] };
+    const payload: UpdateCaseMetadataPutRequest = {
+      category: this.caseData!.category,
+      linkedSteamIds: [...existing, steamId],
+    };
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
@@ -449,7 +467,7 @@ export class CaseDetailComponent implements OnInit {
     const remaining = (this.caseData?.linkedUsers ?? []).filter((u) => u.steamId !== steamId).map((u) => u.steamId);
 
     this.isManagingLinkedUsers = true;
-    const payload: UpdateCaseMetadataPutRequest = { linkedSteamIds: remaining };
+    const payload: UpdateCaseMetadataPutRequest = { category: this.caseData!.category, linkedSteamIds: remaining };
 
     this.http
       .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
