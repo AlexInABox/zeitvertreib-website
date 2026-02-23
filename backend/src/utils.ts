@@ -2,6 +2,7 @@
 import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
+import { AwsClient } from 'aws4fetch';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
 import {
   playerdata,
@@ -757,4 +758,38 @@ export async function isVip(steamId: string, env: Env): Promise<boolean> {
   if (!discordInfoResult) return false;
 
   return discordInfoResult.vipSince > 0;
+}
+
+/**
+ * Fetch a spray image from S3 storage
+ * @param sprayId - The ID of the spray to fetch
+ * @param env - The environment with S3/MinIO credentials
+ * @returns The base64 encoded image string or null if not found
+ */
+export async function getSprayImage(sprayId: number, env: Env): Promise<string | null> {
+  // Initialize AWS client
+  const aws = new AwsClient({
+    accessKeyId: env.MINIO_ACCESS_KEY,
+    secretAccessKey: env.MINIO_SECRET_KEY,
+    service: 's3',
+    region: 'us-east-1',
+  });
+
+  // Construct S3 path and URL
+  const base64Url = `https://s3.zeitvertreib.vip/test/sprays/${sprayId}.base64`;
+
+  try {
+    // Sign and fetch the request
+    const base64Request = await aws.sign(base64Url, { method: 'GET' });
+    const base64Response = await fetch(base64Request);
+
+    if (base64Response.ok) {
+      return await base64Response.text();
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Failed to fetch spray image ${sprayId}:`, error);
+    return null;
+  }
 }

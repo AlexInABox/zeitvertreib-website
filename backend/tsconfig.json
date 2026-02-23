@@ -39,6 +39,7 @@
         "transform": "typia/lib/transform"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "exactOptionalPropertyTypes": false
   }
 }

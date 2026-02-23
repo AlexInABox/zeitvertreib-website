@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -725,7 +725,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
 
 // ============================================================================
 // Chicken Cross Types
@@ -887,7 +887,7 @@ export interface GetCaseMetadataGetResponse {
 }
 
 /** POST /cases — no request body */
-export interface CreateCasePostRequest {}
+export interface CreateCasePostRequest { }
 
 /** POST /cases response */
 export interface CreateCasePostResponse {
@@ -951,33 +951,44 @@ export interface ZeitGetRequest {
 
 /** GET /zeit response */
 export interface ZeitGetResponse {
-  steamid: string;
-  discordid?: string;
+  steam: {
+    id: string;
+    username: string;
+    avatar: string;
+  };
+  discord: {
+    id: string;
+    username: string;
+    avatar: string;
+  } | null;
   zvc: number;
   playtime: number;
   roundsplayed: number;
-  fakerank?: {
+  fakerank: {
     text: string;
     color: FakerankColor;
-    banned: boolean;
-    banReason?: string;
-    bannedByDiscordId?: string;
-  };
-  sprays?: {
+  } | null;
+  fakerankBanned: boolean;
+  fakerankBanReason?: string;
+  fakerankBannedByDiscordId?: string;
+  sprays: {
     id: number;
     name: string;
     full_res: Base64URLString;
   }[];
-  createdCases?: {
+  sprayBanned: boolean;
+  sprayBanReason?: string;
+  sprayBannedByDiscordId?: string;
+  createdCases: {
     caseId: string;
     title: string;
     category: CaseCategory;
     createdAt: number;
   }[];
-  linkedCases?: {
+  linkedCases: {
     caseId: string;
     title: string;
     category: CaseCategory;
-    linkedAt: number;
+    createdAt: number;
   }[];
 }
