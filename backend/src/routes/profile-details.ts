@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, inArray } from 'drizzle-orm';
 import { createResponse, validateSession, isTeam, fetchSteamUserData, fetchDiscordUserData } from '../utils.js';
-import { playerdata, steamCache, sprays, sprayBans, cases, casesRelatedUsers } from '../db/schema.js';
+import { playerdata, steamCache, sprays, sprayBans, cases, casesRelatedUsers, discordCache } from '../db/schema.js';
 
 /// GET /profile-details?steamId=...
 /// Returns comprehensive profile information for a given steamId (team-only).
@@ -91,22 +91,56 @@ export async function handleGetProfileDetails(request: Request, env: Env, ctx: E
         .where(inArray(cases.id, linkedCaseIds))
         .orderBy(desc(cases.createdAt));
 
-      const creatorDataList = await Promise.all(
-        casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)),
-      );
+      // Deduplicate creator Discord IDs and bulk load from cache
+      const uniqueCreatorIds = Array.from(new Set(casesList.map((c) => c.createdByDiscordId)));
+      const cachedCreators = await db
+        .select()
+        .from(discordCache)
+        .where(inArray(discordCache.discordId, uniqueCreatorIds));
 
-      linkedCases = casesList.map((c, i) => ({
-        caseId: c.id,
-        title: c.title,
-        rule: c.category ?? null,
-        createdBy: {
-          discordId: c.createdByDiscordId,
-          displayName: creatorDataList[i]?.displayName ?? c.createdByDiscordId,
-          avatarUrl: creatorDataList[i]?.avatarUrl ?? '',
-        },
-        createdAt: c.createdAt,
-        lastUpdatedAt: c.lastUpdatedAt,
-      }));
+      const creatorMap = new Map(cachedCreators.map((c) => [c.discordId, c]));
+      const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
+      const now = Math.floor(Date.now() / 1000);
+
+      // Refresh missing creators and schedule background refreshes for stale ones
+      const missingCreatorIds = uniqueCreatorIds.filter((id) => !creatorMap.has(id));
+      for (const creatorId of missingCreatorIds) {
+        await fetchDiscordUserData(creatorId, env, ctx);
+      }
+
+      // Reload missing creators now that they've been fetched
+      if (missingCreatorIds.length > 0) {
+        const newlyFetched = await db
+          .select()
+          .from(discordCache)
+          .where(inArray(discordCache.discordId, missingCreatorIds));
+        for (const creator of newlyFetched) {
+          creatorMap.set(creator.discordId, creator);
+        }
+      }
+
+      // Schedule background refreshes for stale entries
+      for (const creator of cachedCreators) {
+        if (now - creator.lastUpdated >= staleThreshold) {
+          ctx.waitUntil(fetchDiscordUserData(creator.discordId, env, ctx));
+        }
+      }
+
+      linkedCases = casesList.map((c) => {
+        const creatorData = creatorMap.get(c.createdByDiscordId);
+        return {
+          caseId: c.id,
+          title: c.title,
+          rule: c.category ?? null,
+          createdBy: {
+            discordId: c.createdByDiscordId,
+            displayName: creatorData?.displayName ?? c.createdByDiscordId,
+            avatarUrl: creatorData?.avatarUrl ?? '',
+          },
+          createdAt: c.createdAt,
+          lastUpdatedAt: c.lastUpdatedAt,
+        };
+      });
     }
 
     // 7. Created cases (cases where createdByDiscordId = this user's discordId)
