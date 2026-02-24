@@ -9,7 +9,7 @@ import {
   validateSteamId,
   getSprayImage,
   getCedModBans,
-  isCedModBanned
+  isCedModBanned,
 } from '../utils.js';
 import { eq, inArray } from 'drizzle-orm';
 import { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib/types';

@@ -795,13 +795,16 @@ export async function getSprayImage(sprayId: number, env: Env): Promise<string |
 }
 
 /**
- * 
+ *
  * Fetch CedMod bans for a given Steam ID
- * @param steamId 
- * @param env 
- * @returns 
+ * @param steamId
+ * @param env
+ * @returns
  */
-export async function getCedModBans(steamId: string, env: Env): Promise<{ id: number; reason: string; bannedAt: number, duration: number, issuer: string }[]> {
+export async function getCedModBans(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reason: string; bannedAt: number; duration: number; issuer: string }[]> {
   try {
     const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
     const url = new URL('https://cedmod.zeitvertreib.vip/Api/BanLog/Query');
@@ -816,7 +819,7 @@ export async function getCedModBans(steamId: string, env: Env): Promise<{ id: nu
       {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_BANS}`,
           'Content-Type': 'application/json',
         },
       },
@@ -862,7 +865,7 @@ export async function isCedModBanned(steamId: string, env: Env): Promise<boolean
       {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_BANS}`,
           'Content-Type': 'application/json',
         },
       },
@@ -870,7 +873,9 @@ export async function isCedModBanned(steamId: string, env: Env): Promise<boolean
     );
 
     if (!response.ok) {
-      console.error(`Failed to check CedMod active bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      console.error(
+        `Failed to check CedMod active bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`,
+      );
       return false;
     }
 

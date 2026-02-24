@@ -65,7 +65,7 @@ export class ZeitComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private zeitService: ZeitService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.authSubscription = this.authService.currentUser$.subscribe((user: any) => {
