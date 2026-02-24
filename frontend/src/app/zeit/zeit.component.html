@@ -105,6 +105,7 @@
           <div class="profile-info">
             <div class="username-row">
               <span class="username">{{ userData.steam.username }}</span>
+              <span class="badge danger" *ngIf="userData.cedmodActivelyBanned"><i class="pi pi-ban"></i> GEBANNT</span>
             </div>
             <span class="steamid">{{ userData.steam.id }}</span>
             <div class="fakerank-display" *ngIf="userData.fakerank">
@@ -196,24 +197,33 @@
         </div>
       </div>
 
-      <!-- Sprays Card -->
-      <div class="card" *ngIf="userData.sprays.length > 0">
+      <!-- CedMod Bans Card -->
+      <div class="card" *ngIf="userData.cedmodBans.length > 0">
         <div class="card-header">
-          <span class="card-icon"><i class="pi pi-palette"></i></span>
+          <span class="card-icon"><i class="pi pi-ban"></i></span>
           <div class="card-title-group">
-            <h2>Sprays</h2>
+            <h2>CedMod Bans</h2>
             <span class="card-subtitle"
-              >{{ userData.sprays.length }} {{ userData.sprays.length === 1 ? 'Spray' : 'Sprays' }}</span
+              >{{ userData.cedmodBans.length }} {{ userData.cedmodBans.length === 1 ? 'Eintrag' : 'Einträge' }}</span
             >
           </div>
-          <span class="badge danger" *ngIf="userData.sprayBanned">Gesperrt</span>
         </div>
-        <div class="sprays-grid">
-          <div class="spray-card" *ngFor="let spray of userData.sprays">
-            <img [src]="spray.full_res" [alt]="spray.name" class="spray-image" />
-            <div class="spray-meta">
-              <span class="spray-name">{{ spray.name }}</span>
-              <span class="spray-id">ID: {{ spray.id }}</span>
+        <div class="ban-list">
+          <div class="ban-row" *ngFor="let ban of userData.cedmodBans">
+            <div class="ban-row-top">
+              <div class="ban-main">
+                <span class="ban-id">#{{ ban.id }}</span>
+                <span class="ban-reason">{{ ban.reason }}</span>
+              </div>
+              <span class="ban-status active" *ngIf="userData.cedmodActivelyBanned">
+                <i class="pi pi-clock"></i>
+                {{ getBanStatus(ban.bannedAt, ban.duration) }}
+              </span>
+            </div>
+            <div class="ban-meta">
+              <span class="ban-meta-item"><i class="pi pi-user"></i>{{ ban.issuer }}</span>
+              <span class="ban-meta-item"><i class="pi pi-calendar"></i>{{ formatTimestamp(ban.bannedAt) }}</span>
+              <span class="ban-meta-item"><i class="pi pi-hourglass"></i>{{ formatDuration(ban.duration) }}</span>
             </div>
           </div>
         </div>
@@ -247,45 +257,36 @@
         </div>
       </div>
 
-      <!-- Created Cases Card -->
-      <div class="card" *ngIf="userData.createdCases.length > 0">
-        <div class="card-header">
-          <span class="card-icon"><i class="pi pi-file-edit"></i></span>
-          <div class="card-title-group">
-            <h2>Erstellte Cases</h2>
-            <span class="card-subtitle"
-              >{{ userData.createdCases.length }} {{ userData.createdCases.length === 1 ? 'Fall' : 'Fälle' }}</span
-            >
-          </div>
-        </div>
-        <div class="cases-list">
-          <a
-            [routerLink]="['/cases', caseItem.caseId]"
-            class="case-item"
-            *ngFor="let caseItem of userData.createdCases"
-          >
-            <div class="case-item-main">
-              <div class="case-item-text">
-                <span class="case-id">Fall #{{ caseItem.caseId }}</span>
-                <span class="case-title">{{ caseItem.title }}</span>
-              </div>
-            </div>
-            <div class="case-item-meta">
-              <span class="case-category-badge">{{ caseItem.category }}</span>
-              <span class="case-date">{{ formatTimestamp(caseItem.createdAt) }}</span>
-            </div>
-            <i class="pi pi-arrow-right case-arrow"></i>
-          </a>
-        </div>
-      </div>
-
       <!-- Empty Cases Notice -->
-      <div class="card empty-card" *ngIf="userData.createdCases.length === 0 && userData.linkedCases.length === 0">
+      <div class="card empty-card" *ngIf="userData.linkedCases.length === 0">
         <div class="card-header">
           <span class="card-icon"><i class="pi pi-folder"></i></span>
           <div class="card-title-group">
             <h2>Cases</h2>
-            <span class="card-subtitle">Keine verknüpften oder erstellten Cases</span>
+            <span class="card-subtitle">Keine verlinkten Cases</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sprays Card -->
+      <div class="card" *ngIf="userData.sprays.length > 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-palette"></i></span>
+          <div class="card-title-group">
+            <h2>Sprays</h2>
+            <span class="card-subtitle"
+              >{{ userData.sprays.length }} {{ userData.sprays.length === 1 ? 'Spray' : 'Sprays' }}</span
+            >
+          </div>
+          <span class="badge danger" *ngIf="userData.sprayBanned">Gesperrt</span>
+        </div>
+        <div class="sprays-grid">
+          <div class="spray-card" *ngFor="let spray of userData.sprays">
+            <img [src]="spray.full_res" [alt]="spray.name" class="spray-image" />
+            <div class="spray-meta">
+              <span class="spray-name">{{ spray.name }}</span>
+              <span class="spray-id">ID: {{ spray.id }}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -793,3 +793,91 @@ export async function getSprayImage(sprayId: number, env: Env): Promise<string |
     return null;
   }
 }
+
+/**
+ * 
+ * Fetch CedMod bans for a given Steam ID
+ * @param steamId 
+ * @param env 
+ * @returns 
+ */
+export async function getCedModBans(steamId: string, env: Env): Promise<{ id: number; reason: string; bannedAt: number, duration: number, issuer: string }[]> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/BanLog/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('idOnly', 'true');
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return data.players.map((player: any) => ({
+      id: player.id,
+      reason: player.reason || 'Unknown reason',
+      bannedAt: new Date(`${player.timeStamp}Z`).getTime(),
+      duration: (player.duration || 0) * 60 * 1000,
+      issuer: player.issuer || 'Unknown issuer',
+    }));
+  } catch (error) {
+    console.error(`Error fetching CedMod bans for ${steamId}:`, error);
+    return [];
+  }
+}
+
+export async function isCedModBanned(steamId: string, env: Env): Promise<boolean> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Ban/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '10');
+    url.searchParams.set('idOnly', 'true');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to check CedMod active bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return false;
+    }
+
+    const data: any = await response.json();
+    return (data.total ?? 0) > 0;
+  } catch (error) {
+    console.error(`Error checking CedMod active bans for ${steamId}:`, error);
+    return false;
+  }
+}

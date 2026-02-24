@@ -65,7 +65,7 @@ export class ZeitComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private zeitService: ZeitService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.authSubscription = this.authService.currentUser$.subscribe((user: any) => {
@@ -145,6 +145,56 @@ export class ZeitComponent implements OnInit, OnDestroy {
     this.userData = null;
     this.searchInput = '';
     this.errorMessage = '';
+  }
+
+  get hasActiveCedmodBan(): boolean {
+    if (!this.userData || !this.userData.cedmodBans || this.userData.cedmodBans.length === 0) {
+      return false;
+    }
+
+    const now = Date.now();
+    return this.userData.cedmodBans.some((ban) => ban.bannedAt + ban.duration > now);
+  }
+
+  isBanActive(bannedAt: number, duration: number): boolean {
+    return bannedAt + duration > Date.now();
+  }
+
+  getBanStatus(bannedAt: number, duration: number): string {
+    const now = Date.now();
+    const expiresAt = bannedAt + duration;
+
+    if (now >= expiresAt) {
+      return 'Abgelaufen';
+    }
+
+    const remainingMs = expiresAt - now;
+    const remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+    const remainingHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (remainingDays > 0) {
+      return `${remainingDays}d ${remainingHours}h verbleibend`;
+    } else if (remainingHours > 0) {
+      return `${remainingHours}h ${remainingMinutes}m verbleibend`;
+    } else {
+      return `${remainingMinutes}m verbleibend`;
+    }
+  }
+
+  formatDuration(durationMs: number): string {
+    const durationMinutes = Math.floor(durationMs / (1000 * 60));
+    const days = Math.floor(durationMinutes / (60 * 24));
+    const hours = Math.floor((durationMinutes % (60 * 24)) / 60);
+    const minutes = durationMinutes % 60;
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
   }
 
   getFakerankColorHex(color: FakerankColor): string {
