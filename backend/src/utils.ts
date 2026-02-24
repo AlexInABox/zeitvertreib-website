@@ -886,3 +886,52 @@ export async function isCedModBanned(steamId: string, env: Env): Promise<boolean
     return false;
   }
 }
+
+export async function getCedModWarns(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reason: string; warnedAt: number; issuer: string }[]> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Warn/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('idOnly', 'true');
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_WARNS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod warns for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return data.players.map((player: any) => ({
+      id: player.id,
+      reason: player.reason || 'Unknown reason',
+      warnedAt: new Date(`${player.timeStamp}Z`).getTime(),
+      issuer: player.issuer || 'Unknown issuer',
+    }));
+  } catch (error) {
+    console.error(`Error fetching CedMod warns for ${steamId}:`, error);
+    return [];
+  }
+}
+

@@ -106,6 +106,10 @@
             <div class="username-row">
               <span class="username">{{ userData.steam.username }}</span>
               <span class="badge danger" *ngIf="userData.cedmodActivelyBanned"><i class="pi pi-ban"></i> GEBANNT</span>
+              <span class="badge warning" *ngIf="userData.cedmodWarns.length > 0">
+                <i class="pi pi-exclamation-triangle"></i>
+                {{ userData.cedmodWarns.length }} {{ userData.cedmodWarns.length === 1 ? 'WARN' : 'WARNS' }}
+              </span>
             </div>
             <span class="steamid">{{ userData.steam.id }}</span>
             <div class="fakerank-display" *ngIf="userData.fakerank">
@@ -224,6 +228,31 @@
               <span class="ban-meta-item"><i class="pi pi-user"></i>{{ ban.issuer }}</span>
               <span class="ban-meta-item"><i class="pi pi-calendar"></i>{{ formatTimestamp(ban.bannedAt) }}</span>
               <span class="ban-meta-item"><i class="pi pi-hourglass"></i>{{ formatDuration(ban.duration) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CedMod Warns Card -->
+      <div class="card" *ngIf="userData.cedmodWarns.length > 0">
+        <div class="card-header">
+          <span class="card-icon"><i class="pi pi-exclamation-triangle"></i></span>
+          <div class="card-title-group">
+            <h2>CedMod Warns</h2>
+            <span class="card-subtitle"
+              >{{ userData.cedmodWarns.length }} {{ userData.cedmodWarns.length === 1 ? 'Eintrag' : 'Einträge' }}</span
+            >
+          </div>
+        </div>
+        <div class="warn-list">
+          <div class="warn-row" *ngFor="let warn of userData.cedmodWarns">
+            <div class="warn-main">
+              <span class="warn-id">#{{ warn.id }}</span>
+              <span class="warn-reason">{{ warn.reason }}</span>
+            </div>
+            <div class="warn-meta">
+              <span class="warn-meta-item"><i class="pi pi-user"></i>{{ warn.issuer }}</span>
+              <span class="warn-meta-item"><i class="pi pi-calendar"></i>{{ formatTimestamp(warn.warnedAt) }}</span>
             </div>
           </div>
         </div>

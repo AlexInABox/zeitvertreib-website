@@ -502,6 +502,16 @@
   color: #f87171;
 }
 
+.badge.warning {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.badge.warning i {
+  color: #fbbf24;
+}
+
 /* ================================================
    PROFILE CARD
    ================================================ */
@@ -1043,6 +1053,62 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
+.warn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.warn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.warn-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.warn-id {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: ui-monospace, monospace;
+}
+
+.warn-reason {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1.35;
+}
+
+.warn-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.warn-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.warn-meta-item i {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
 /* ================================================
    RESPONSIVE
    ================================================ */
@@ -1156,12 +1222,30 @@ html:not(.my-app-dark) .ban-reason {
   color: #1f2937;
 }
 
+html:not(.my-app-dark) .warn-reason {
+  color: #1f2937;
+}
+
 html:not(.my-app-dark) .ban-row {
   background: rgba(0, 0, 0, 0.02);
   border-color: rgba(0, 0, 0, 0.08);
 }
 
+html:not(.my-app-dark) .warn-row {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
 html:not(.my-app-dark) .ban-meta-item i {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+html:not(.my-app-dark) .warn-meta-item,
+html:not(.my-app-dark) .warn-id {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+html:not(.my-app-dark) .warn-meta-item i {
   color: rgba(0, 0, 0, 0.45);
 }
 
