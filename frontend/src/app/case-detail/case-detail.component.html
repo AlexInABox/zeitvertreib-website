@@ -55,7 +55,7 @@
                       </div>
                       <div
                         class="creator-chip"
-                        (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId)"
+                        (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
                         [style.cursor]="isTeam ? 'pointer' : 'default'"
                         [style.opacity]="isTeam ? '1' : '0.6'"
                         title="Zum Profil"
