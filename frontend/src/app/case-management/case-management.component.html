@@ -356,9 +356,15 @@
             <div class="footer-left">
               <!-- Creator Chip -->
               <div class="case-creator-section" *ngIf="item.createdBy">
-                <div class="creator-chip">
+                <div
+                  class="creator-chip"
+                  (click)="navigateToCreatorProfile(item.createdBy.discordId)"
+                  [style.cursor]="isTeam ? 'pointer' : 'default'"
+                  [style.opacity]="isTeam ? '1' : '0.6'"
+                  [title]="'Erstellt von ' + item.createdBy.username + (isTeam ? ' (klickbar)' : '')"
+                >
                   <img [src]="item.createdBy.avatarUrl" [alt]="item.createdBy.username" class="creator-avatar" />
-                  <span class="creator-name" [title]="'Erstellt von ' + item.createdBy.username">
+                  <span class="creator-name">
                     {{ item.createdBy.username }}
                   </span>
                 </div>
