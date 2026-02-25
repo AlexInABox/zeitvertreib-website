@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData, checkHasReducedLuck } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -238,13 +238,6 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    // Check if user has reduced luck
-    const hasReducedLuck = await checkHasReducedLuck(playerId, env);
-
-    if (hasReducedLuck) {
-      console.log(`REDUCED LUCK: Forcing loss for ${playerId} in slot machine`);
-    }
-
     // Helper function for cryptographically secure random number generation
     const getRandomIndex = (max: number): number => {
       const randomBuffer = new Uint32Array(1);
@@ -257,16 +250,9 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     let slot2: string;
     let slot3: string;
 
-    if (hasReducedLuck) {
-      // Force all different emojis for reduced luck users (guaranteed loss)
-      slot1 = SLOT_EMOJIS[0]!;
-      slot2 = SLOT_EMOJIS[1]!;
-      slot3 = SLOT_EMOJIS[2]!;
-    } else {
-      slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-      slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-      slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-    }
+    slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
 
     // Calculate payout
     const result = calculatePayout(slot1, slot2, slot3);

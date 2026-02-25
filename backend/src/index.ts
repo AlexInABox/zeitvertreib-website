@@ -52,9 +52,6 @@ import {
   handleChickenCrossPost,
   handleChickenCrossActive,
 } from './routes/chickencross.js';
-import { handleGetReducedLuck, handleSetReducedLuck } from './routes/reduced-luck.js';
-import { handleGetProfileDetails } from './routes/profile-details.js';
-import { handleListPlayers, handleCheckUserManagementAccess, handleAwardCoins } from './routes/user-management.js';
 import { getUserData } from './routes/zeit.js';
 
 // Simple response helper for internal use
@@ -177,18 +174,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/chickencross/active': handleChickenCrossActive,
   'GET:/chickencross': handleChickenCrossGet,
   'POST:/chickencross': handleChickenCrossPost,
-
-  // User Management routes
-  'GET:/user-management/players': handleListPlayers,
-  'GET:/user-management/access': handleCheckUserManagementAccess,
-  'POST:/user-management/award': handleAwardCoins,
-
-  // Reduced Luck routes
-  'GET:/reduced-luck': handleGetReducedLuck,
-  'POST:/reduced-luck': handleSetReducedLuck,
-
-  // Profile Details route (team-only)
-  'GET:/profile-details': handleGetProfileDetails,
 
   // Z.E.I.T. routes
   'GET:/zeit': getUserData,

@@ -4,16 +4,7 @@ import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { AwsClient } from 'aws4fetch';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
-import {
-  playerdata,
-  kills,
-  loginSecrets,
-  discordInfo,
-  steamCache,
-  sessions,
-  reducedLuckUsers,
-  discordCache,
-} from './db/schema.js';
+import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, discordCache } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
@@ -57,21 +48,6 @@ export function validateSteamId(steamId: string): { valid: boolean; normalized?:
 
   // Normalize: return with @steam suffix
   return { valid: true, normalized: `${base}@steam` };
-}
-
-/**
- * Check if a user has reduced luck by querying the database
- * @param steamId - The Steam ID to check (with or without @steam suffix)
- * @param env - Cloudflare environment with D1 database
- * @returns Promise<boolean> - True if user has reduced luck
- */
-export async function checkHasReducedLuck(steamId: string, env: Env): Promise<boolean> {
-  const normalizedId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
-  const db = drizzle(env.ZEITVERTREIB_DATA);
-
-  const result = await db.select().from(reducedLuckUsers).where(eq(reducedLuckUsers.steamId, normalizedId)).limit(1);
-
-  return result.length > 0;
 }
 
 // Response helpers
