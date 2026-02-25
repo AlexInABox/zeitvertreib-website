@@ -36,7 +36,7 @@ function getSurvivalChance(multiplier: number): number {
   return Math.min(1.0, 0.95 / multiplier);
 }
 
-function doesSurvive(seed: number, step: number): boolean {
+async function doesSurvive(seed: number, step: number, env: Env, playerId?: string): Promise<boolean> {
   const multiplier = getMultiplierForStep(seed, step);
   const survivalChance = getSurvivalChance(multiplier);
   const randomValue = crypto.getRandomValues(new Uint32Array(1));
@@ -350,7 +350,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
 
   if (intent === 'MOVE') {
     const nextStep = game.step + 1;
-    const survived = doesSurvive(game.seed, nextStep);
+    const survived = await doesSurvive(game.seed, nextStep, env, game.userid);
 
     if (!survived) {
       await db

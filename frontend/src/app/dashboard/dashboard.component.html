@@ -1,9 +1,4 @@
-<div
-  class="dashboard-container"
-  [style.transform]="'rotate(' + screenRotation + 'deg)'"
-  [class.screen-spin-active]="screenSpinActive"
-  [class.screen-resetting]="screenResetting"
->
+<div class="dashboard-container">
   <div class="relative z-10">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
@@ -75,1125 +70,196 @@
             </div>
           </div>
         </div>
-        <!-- ZV Coins Widget -->
-        <div class="grid-item zvcoins-container">
-          <div class="stats-card p-6 rounded-2xl">
-            <h3 class="text-xl font-bold text-white mb-4 cardHeader flex items-center justify-between">
-              <span>🪙 Zeitvertreib Coins</span>
-              <span class="zvcoins-balance-inline"> {{ userStatistics.experience | number: '1.0-0' }} ZVC </span>
-            </h3>
 
-            <!-- Code Redemption and Transfer Combined -->
-            <div class="zvcoins-balance-code-section mb-6">
-              <div class="zvcoins-combined-card">
-                <!-- Code Redemption Area -->
-                <div class="zvcoins-code-area">
-                  <div class="zvcoins-code-header">
-                    <div class="zvcoins-code-icon">🎫</div>
-                    <div class="zvcoins-code-info">
-                      <p class="zvcoins-code-label">Code einlösen</p>
-                    </div>
-                  </div>
+        <!-- Two columns under ZV Coins: Sprays (left) + Fakerank (right) -->
+        <div class="grid zvcoins-subgrid grid-cols-1 md:grid-cols-2 gap-2">
+          <!-- Custom Sprays (moved here from right column) -->
+          <div class="grid-item spray-card-container">
+            <div class="stats-card p-6 rounded-2xl">
+              <div class="spray-header" *ngIf="!isSprayBanned">
+                <h3 class="spray-title">🎨 Custom Sprays</h3>
+                <p class="spray-subtitle">Bis zu {{ isDonator ? '3' : '2' }} Sprays hochladen</p>
+              </div>
 
-                  <!-- Code Info Tip -->
-                  <div class="zvcoins-code-tip">
-                    <div class="code-tip-icon">💡</div>
-                    <div class="code-tip-text">
-                      Codes kannst du auf unserem
-                      <strong>Discord-Server</strong> oder bei speziellen Events gewinnen!!
-                    </div>
-                  </div>
-
-                  <div class="zvcoins-code-input-section">
-                    <div class="zvcoins-code-input-group">
-                      <input
-                        type="text"
-                        [(ngModel)]="redeemCode"
-                        placeholder="Gib deinen Code hier ein..."
-                        class="zvcoins-code-input"
-                        (keyup.enter)="redeemCodeAction()"
-                        [disabled]="codeRedemptionLoading"
-                      />
-                      <button
-                        class="zvcoins-code-btn"
-                        (click)="redeemCodeAction()"
-                        [disabled]="!redeemCode || codeRedemptionLoading"
-                      >
-                        <span *ngIf="!codeRedemptionLoading">🎁 Einlösen</span>
-                        <span *ngIf="codeRedemptionLoading">⏳ Wird eingelöst...</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Vertical Divider -->
-                <div class="zvcoins-divider"></div>
-
-                <!-- ZVC Transfer Area -->
-                <div class="zvcoins-transfer-area">
-                  <div class="zvcoins-transfer-header">
-                    <div class="zvcoins-transfer-icon">💸</div>
-                    <div class="zvcoins-transfer-info">
-                      <p class="zvcoins-transfer-label">Zeitvertreib Coins senden</p>
-                    </div>
-                  </div>
-
-                  <!-- Transaction Tax Disclaimer -->
-                  <div class="zvcoins-transfer-disclaimer">
-                    <div class="transfer-disclaimer-icon">{{ isWeekendInBerlin() ? '🎉' : '⚠️' }}</div>
-                    <div class="transfer-disclaimer-text">
-                      <ng-container *ngIf="isWeekendInBerlin(); else normalTax">
-                        <strong>🎊 Wochenend-Aktion!</strong> Keine Transaktionsgebühr!
-                      </ng-container>
-                      <ng-template #normalTax>
-                        <strong>Transaktionsgebühr:</strong> Auf jede Transaktion wird eine 5% Steuer erhoben.
-                        <span style="color: #4ade80"><br />Am Wochenende (Sa & So) ist die Steuer 0%!<br /></span>
-                      </ng-template>
-                    </div>
-                  </div>
-
-                  <!-- Transfer Cost Info -->
-                  <div *ngIf="transferAmount && transferAmount > 0" class="zvcoins-transfer-cost-info">
-                    <div class="transfer-cost-item">
-                      <span class="cost-label">Betrag:</span>
-                      <span class="cost-value">{{ transferAmount }} ZVC</span>
-                    </div>
-                    <div class="transfer-cost-item">
-                      <span class="cost-label">Steuer ({{ isWeekendInBerlin() ? '0% 🎉' : '5%' }}):</span>
-                      <span class="cost-value">{{ getTransferTax(transferAmount) }} ZVC</span>
-                    </div>
-                    <div class="transfer-cost-item transfer-cost-total">
-                      <span class="cost-label">Gesamt:</span>
-                      <span class="cost-value">{{ getTransferTotalCost(transferAmount) }} ZVC</span>
-                    </div>
-                  </div>
-
-                  <div class="zvcoins-transfer-input-section">
-                    <div class="zvcoins-transfer-input-group">
-                      <input
-                        type="text"
-                        [(ngModel)]="transferRecipient"
-                        placeholder="Steam ID oder Benutzername"
-                        class="zvcoins-transfer-input zvcoins-transfer-recipient"
-                        [disabled]="transferLoading"
-                      />
-                      <input
-                        type="text"
-                        [(ngModel)]="transferAmount"
-                        placeholder="Betrag"
-                        class="zvcoins-transfer-input zvcoins-transfer-amount"
-                        [disabled]="transferLoading"
-                      />
-                      <button
-                        class="zvcoins-transfer-btn"
-                        (click)="transferZVC()"
-                        [disabled]="
-                          !transferRecipient ||
-                          !transferAmount ||
-                          transferAmount <= 0 ||
-                          transferAmount < 100 ||
-                          transferAmount > 50000 ||
-                          getTransferTotalCost(transferAmount) > (userStatistics.experience || 0) ||
-                          transferLoading
-                        "
-                      >
-                        <span *ngIf="!transferLoading">💸 Senden</span>
-                        <span *ngIf="transferLoading">⏳ Wird gesendet...</span>
-                      </button>
-                    </div>
-                  </div>
+              <!-- Spray Ban Warning -->
+              <div *ngIf="isSprayBanned" class="spray-ban-warning">
+                <div class="spray-ban-icon">🔨</div>
+                <div class="spray-ban-content">
+                  <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
+                  <p class="spray-ban-reason"><strong>Grund:</strong> {{ sprayBanReason }}</p>
+                  <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ sprayBannedBy }}</p>
+                  <p class="spray-ban-contact">
+                    Öffne ein Ticket auf unserem
+                    <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"
+                      ><strong>Discord-Server</strong></a
+                    >.
+                  </p>
                 </div>
               </div>
 
-              <!-- Message displays outside the card for better visibility -->
-              <div
-                *ngIf="codeRedemptionMessage"
-                class="zvcoins-message mt-3"
-                [class.success]="codeRedemptionSuccess"
-                [class.error]="!codeRedemptionSuccess"
-              >
-                {{ codeRedemptionMessage }}
-              </div>
-              <div
-                *ngIf="transferMessage"
-                class="zvcoins-message mt-3"
-                [class.success]="transferSuccess"
-                [class.error]="!transferSuccess"
-              >
-                {{ transferMessage }}
-              </div>
-            </div>
-
-            <!-- Games Section-->
-            <div class="zvcoins-balance-code-section mb-6">
-              <div class="zvcoins-games-card">
-                <!-- Slot machine-->
-                <div class="slot-machine-widget">
-                  <div class="slot-machine-header">
-                    <h4 class="zvcoins-section-title">🎰 Slotmaschine</h4>
+              <div class="spray-grid" *ngIf="!isSprayBanned">
+                <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
+                  <!-- Locked Slot -->
+                  <div *ngIf="i === 2 && !isDonator" class="spray-locked">
+                    <p class="spray-locked-title">🔒 Extra Slot</p>
+                    <p class="spray-locked-text">Exklusiv für Unterstützer!</p>
+                    <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link">
+                      Freischalten
+                    </a>
                   </div>
 
-                  <div class="slotcontainer">
-                    <div class="slot">
-                      <div class="symbols" id="slot1Symbols"></div>
-                    </div>
-
-                    <div class="slot">
-                      <div class="symbols" id="slot2Symbols"></div>
-                    </div>
-
-                    <div class="slot">
-                      <div class="symbols" id="slot3Symbols"></div>
-                    </div>
-                  </div>
-
-                  <!-- Inline Compact Payout Info -->
-                  <div *ngIf="slotMachineInfo" class="slot-payout-compact">
-                    <div class="payout-compact-grid">
-                      <div
-                        *ngFor="let entry of slotMachineInfo.payoutTable"
-                        class="payout-compact-entry"
-                        [class.jackpot-entry]="entry.tier === 'jackpot'"
-                        [class.big-win-entry]="entry.tier === 'big_win'"
-                      >
-                        <span class="payout-compact-symbol">{{ entry.symbol }}</span>
-                        <span class="payout-compact-condition">{{ entry.condition }}</span>
-                        <span class="payout-compact-amount">+{{ entry.payout }}</span>
-                      </div>
-                    </div>
-                  </div>
-
+                  <!-- Uploaded Spray -->
                   <div
-                    class="slot-machine-controls wheel-bet-controls"
-                    style="display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch"
+                    *ngIf="shouldShowSpraySlot(i)"
+                    class="spray-uploaded"
+                    [attr.data-slot-index]="i"
+                    [attr.data-spray-id]="slot.id"
+                    [attr.data-is-donator]="isDonator"
                   >
-                    <button
-                      (click)="testSlotMachine()"
-                      class="wheel-spin-btn slot-spin-btn"
-                      [disabled]="isSpinning || !canAffordSlotMachine()"
-                      [class.spinning]="isSpinning"
-                      [class.disabled]="!canAffordSlotMachine()"
-                    >
-                      <span class="btn-text" *ngIf="!isSpinning">Drehen!</span>
-                      <span class="btn-text" *ngIf="isSpinning">Dreht...</span>
-                      <span class="btn-cost">🪙 {{ slotMachineInfo?.cost || 10 }} ZVC</span>
-                    </button>
-
-                    <button
-                      (click)="toggleAutoSpin()"
-                      class="wheel-autospin-btn slot-autospin-btn"
-                      [class.active]="autoSpinEnabled"
-                      [disabled]="!canAffordSlotMachine()"
-                    >
-                      <span *ngIf="!autoSpinEnabled">🔄 Auto</span>
-                      <span *ngIf="autoSpinEnabled">⏹️ Stoppen</span>
-                    </button>
-                  </div>
-
-                  <!-- Status Messages -->
-                  <div *ngIf="slotMachineMessage" class="slot-machine-message">
-                    {{ slotMachineMessage }}
-                  </div>
-                  <div *ngIf="slotMachineError" class="slot-machine-error">
-                    {{ slotMachineError }}
-                  </div>
-
-                  <!-- Win Log -->
-                  <div *ngIf="slotWinLog.length > 0" class="slot-win-log">
-                    <div class="win-log-header">
-                      <span class="win-log-title">📜 Letzte Spins</span>
-                      <div class="win-log-header-controls">
-                        <label class="win-log-toggle">
-                          <input type="checkbox" [(ngModel)]="hideLosses" class="toggle-checkbox" />
-                          <span class="toggle-slider"></span>
-                        </label>
-                        <span class="win-log-count">{{ getFilteredWinLog().length }}</span>
-                      </div>
-                    </div>
-                    <div class="win-log-list">
-                      <div
-                        *ngFor="let entry of getFilteredWinLog(); trackBy: trackByWinLogId"
-                        class="win-log-entry"
-                        [class.win-log-jackpot]="entry.winType === 'jackpot'"
-                        [class.win-log-big-win]="entry.winType === 'big_win'"
-                        [class.win-log-win]="entry.winType === 'small_win' || entry.winType === 'mini_win'"
-                        [class.win-log-loss]="entry.winType === 'loss'"
-                      >
-                        <div class="win-log-symbols">
-                          <span class="win-symbol">{{ entry.symbols[0] }}</span>
-                          <span class="win-symbol">{{ entry.symbols[1] }}</span>
-                          <span class="win-symbol">{{ entry.symbols[2] }}</span>
-                        </div>
-                        <div class="win-log-info">
-                          <span class="win-log-type" [style.color]="getWinTypeInfo(entry.winType).color">
-                            {{ getWinTypeInfo(entry.winType).emoji }}
-                            {{ getWinTypeInfo(entry.winType).label }}
-                          </span>
-                          <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
-                        </div>
-                        <div class="win-log-payout" [class.negative]="entry.payout === 0">
-                          <span class="payout-amount"> {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }} </span>
-                          <span class="payout-cost" *ngIf="entry.payout > 0">-{{ slotMachineInfo?.cost || 10 }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- Roulette Widget -->
-                <div class="roulette-widget">
-                  <div class="roulette-header">
-                    <h4 class="zvcoins-section-title">🎰 Roulette</h4>
-                  </div>
-
-                  <!-- Loading State -->
-                  <div *ngIf="!rouletteInfo && !rouletteError" class="text-center py-8">
-                    <div class="loading-spinner mx-auto mb-4"></div>
-                    <p class="text-lg text-white">Lade Roulette...</p>
-                  </div>
-
-                  <!-- Error State -->
-                  <div *ngIf="rouletteError && !rouletteInfo" class="text-center py-8">
-                    <div class="text-red-400 mb-4">⚠️</div>
-                    <p class="text-red-400">{{ rouletteError }}</p>
-                    <button
-                      (click)="loadRouletteInfo()"
-                      class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      Erneut versuchen
-                    </button>
-                  </div>
-
-                  <!-- Roulette Content -->
-                  <div *ngIf="rouletteInfo">
-                    <!-- Roulette Wheel Visualization -->
-                    <div class="roulette-wheel-container">
-                      <!-- Pointer at top (outside the rotating wheel) -->
-                      <div class="roulette-pointer"></div>
-                      <div
-                        class="roulette-wheel"
-                        [class.spinning]="isRouletteSpinning"
-                        [attr.data-result]="rouletteSpinResult"
-                        [style.transform]="'rotate(' + rouletteRotation + 'deg)'"
-                      >
-                        <!-- SVG Wheel Background -->
-                        <svg class="roulette-wheel-svg" viewBox="0 0 200 200">
-                          <g *ngFor="let segment of rouletteWheelSegments; let i = index">
-                            <path [attr.d]="segment.path" [attr.fill]="segment.color" />
-                          </g>
-                        </svg>
-                        <!-- Roulette logo center -->
-                        <div class="roulette-logo">
-                          <img src="/assets/logos/logo_full_color_1to1.png" alt="Zeitvertreib Logo" />
-                        </div>
-                        <!-- Roulette numbers 0-36 arranged in a circle -->
-                        <div class="roulette-numbers">
-                          <div
-                            *ngFor="
-                              let num of [
-                                0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11,
-                                36, 13, 27, 6, 34, 17, 25, 2, 21, 4, 19, 15, 32,
-                              ];
-                              let i = index
-                            "
-                            class="roulette-number"
-                            [ngStyle]="getRouletteNumberPosition(num)"
-                          >
-                            {{ num }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Result Display removed - no popup -->
-
-                    <!-- Bet Type Selection -->
-                    <div class="roulette-bet-type-section">
-                      <label class="bet-type-label">Wettart</label>
-                      <div class="bet-type-grid">
-                        <button
-                          class="bet-type-btn bet-type-btn-primary"
-                          [class.active]="rouletteBetType === 'red'"
-                          (click)="rouletteBetType = 'red'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 2x deinen Einsatz"
-                        >
-                          🔴 Rot
-                        </button>
-                        <button
-                          class="bet-type-btn bet-type-btn-primary"
-                          [class.active]="rouletteBetType === 'black'"
-                          (click)="rouletteBetType = 'black'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 2x deinen Einsatz"
-                        >
-                          ⚫ Schwarz
-                        </button>
-                        <button
-                          class="bet-type-btn"
-                          [class.active]="rouletteBetType === 'odd'"
-                          (click)="rouletteBetType = 'odd'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 2x deinen Einsatz"
-                        >
-                          Ungerade
-                        </button>
-                        <button
-                          class="bet-type-btn"
-                          [class.active]="rouletteBetType === 'even'"
-                          (click)="rouletteBetType = 'even'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 2x deinen Einsatz"
-                        >
-                          Gerade
-                        </button>
-                        <button
-                          class="bet-type-btn"
-                          [class.active]="rouletteBetType === '1to18'"
-                          (click)="rouletteBetType = '1to18'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 2x deinen Einsatz"
-                        >
-                          1-18
-                        </button>
-                        <button
-                          class="bet-type-btn"
-                          [class.active]="rouletteBetType === '19to36'"
-                          (click)="rouletteBetType = '19to36'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 2x deinen Einsatz"
-                        >
-                          19-36
-                        </button>
-                        <button
-                          class="bet-type-btn bet-type-btn-special"
-                          [class.active]="rouletteBetType === 'number'"
-                          (click)="rouletteBetType = 'number'"
-                          [disabled]="isRouletteSpinning"
-                          title="Gewinn: 36x deinen Einsatz"
-                        >
-                          Nummer
-                        </button>
-                      </div>
-
-                      <!-- Number input for specific number bet -->
-                      <div *ngIf="rouletteBetType === 'number'" class="number-input-section">
-                        <input
-                          type="number"
-                          [(ngModel)]="rouletteBetValue"
-                          (input)="onRouletteNumberInput($event)"
-                          min="1"
-                          max="36"
-                          placeholder="1-36"
-                          class="number-input"
-                          [disabled]="isRouletteSpinning"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- Bet Controls -->
-                    <div class="roulette-bet-controls">
-                      <div class="roulette-bet-display">
-                        <button
-                          (click)="adjustRouletteBet(-10)"
-                          class="roulette-bet-btn"
-                          [disabled]="isRouletteSpinning || rouletteBet <= rouletteInfo.minBet"
-                        >
-                          −
-                        </button>
-                        <div class="roulette-bet-amount">
-                          <label class="bet-label" for="rouletteBetInput">Einsatz</label>
-                          <div class="bet-input-wrapper">
-                            <input
-                              id="rouletteBetInput"
-                              class="bet-input"
-                              type="text"
-                              inputmode="numeric"
-                              pattern="[0-9]*"
-                              [value]="rouletteBetInput"
-                              (input)="onRouletteBetInput($event)"
-                              (keydown)="onRouletteBetKeydown($event)"
-                              (blur)="commitRouletteBetInput()"
-                              (keydown.enter)="commitRouletteBetInput(); $event.preventDefault()"
-                              [disabled]="isRouletteSpinning"
-                              [attr.min]="rouletteInfo.minBet"
-                              [attr.max]="rouletteInfo.maxBet"
-                            />
-                            <span class="bet-unit">ZVC</span>
-                          </div>
-                        </div>
-                        <button
-                          (click)="adjustRouletteBet(10)"
-                          class="roulette-bet-btn"
-                          [disabled]="isRouletteSpinning || rouletteBet >= rouletteInfo.maxBet"
-                        >
-                          +
-                        </button>
-                      </div>
-
+                    <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
+                    <div class="spray-info">
+                      <span class="spray-name">{{ slot.name }}</span>
                       <button
-                        (click)="spinRoulette()"
-                        class="roulette-spin-btn"
-                        [class.spinning]="isRouletteSpinning"
-                        [disabled]="!canAffordRoulette() || isRouletteSpinning"
+                        (click)="deleteSprayForSlot(i)"
+                        class="spray-delete-btn"
+                        [disabled]="slot.isUploading"
+                        [attr.data-slot]="i"
+                        [attr.data-id]="slot.id"
+                        [attr.data-donator]="isDonator"
                       >
-                        <span class="btn-icon">🎰</span>
-                        <span class="btn-text">{{ isRouletteSpinning ? 'Dreht...' : 'Drehen!' }}</span>
+                        <span *ngIf="!slot.isUploading">🗑️</span>
+                        <span *ngIf="slot.isUploading" class="spray-spinner"></span>
                       </button>
                     </div>
-
-                    <!-- Status Messages -->
-                    <div *ngIf="rouletteError && rouletteInfo" class="roulette-error">
-                      {{ rouletteError }}
-                    </div>
-
-                    <!-- Roulette Spin Log -->
-                    <div *ngIf="rouletteSpinLog.length > 0" class="slot-win-log roulette-spin-log">
-                      <div class="win-log-header">
-                        <span class="win-log-title">📜 Letzte Spins</span>
-                        <div class="win-log-header-controls">
-                          <label class="win-log-toggle" title="Verluste ausblenden">
-                            <input type="checkbox" [(ngModel)]="hideRouletteLosses" class="toggle-checkbox" />
-                            <span class="toggle-slider"></span>
-                          </label>
-                          <span class="win-log-count">{{ getFilteredRouletteSpinLog().length }}</span>
-                        </div>
-                      </div>
-                      <div class="win-log-list">
-                        <div
-                          *ngFor="let entry of getFilteredRouletteSpinLog(); trackBy: trackByRouletteSpinId"
-                          class="win-log-entry"
-                          [class.win-log-win]="entry.won"
-                          [class.win-log-loss]="!entry.won"
-                        >
-                          <div class="win-log-symbols">
-                            <span
-                              class="roulette-number-badge"
-                              [style.background-color]="
-                                getRouletteNumberColor(entry.spinResult) === 'red'
-                                  ? '#ef4444'
-                                  : getRouletteNumberColor(entry.spinResult) === 'black'
-                                    ? '#1f2937'
-                                    : '#10b981'
-                              "
-                            >
-                              {{ entry.spinResult }}
-                            </span>
-                          </div>
-                          <div class="win-log-info">
-                            <span class="win-log-type" [style.color]="getRouletteSpinTypeInfo(entry).color">
-                              {{ getRouletteSpinTypeInfo(entry).emoji }}
-                              {{ getRouletteSpinTypeInfo(entry).label }}
-                            </span>
-                            <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
-                          </div>
-                          <div class="win-log-payout" [class.negative]="!entry.won">
-                            <span class="payout-amount"> {{ entry.won ? '+' : '' }}{{ entry.payout }} </span>
-                            <span class="roulette-log-bet">-{{ entry.betAmount }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- Lucky Wheel Widget -->
-                <div class="lucky-wheel-widget">
-                  <div class="lucky-wheel-header">
-                    <h4 class="zvcoins-section-title">🎡 Glücksrad</h4>
                   </div>
 
-                  <!-- Loading State -->
-                  <div *ngIf="!luckyWheelInfo && !luckyWheelError" class="text-center py-8">
-                    <div class="loading-spinner mx-auto mb-4"></div>
-                    <p class="text-lg text-white">Lade Glücksrad...</p>
-                  </div>
-
-                  <!-- Error State -->
-                  <div *ngIf="luckyWheelError && !luckyWheelInfo" class="text-center py-8">
-                    <div class="text-red-400 mb-4">⚠️</div>
-                    <p class="text-red-400">{{ luckyWheelError }}</p>
-                    <button
-                      (click)="loadLuckyWheelInfo()"
-                      class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      Erneut versuchen
-                    </button>
-                  </div>
-
-                  <!-- Lucky Wheel Content -->
-                  <div *ngIf="luckyWheelInfo">
-                    <!-- Lucky Wheel SVG -->
-                    <div class="wheel-container">
-                      <svg
-                        class="lucky-wheel-svg"
-                        [class.spinning]="isWheelSpinning"
-                        [style.transform]="'rotate(' + wheelRotation + 'deg)'"
-                        viewBox="0 0 200 200"
-                      >
-                        <!-- Wheel segments -->
-                        <g *ngFor="let segment of getWheelSegments(); let i = index">
-                          <path
-                            class="wheel-segment"
-                            [attr.d]="
-                              'M 100 100 L ' +
-                              (100 + 100 * Math.cos((((i * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
-                              ' ' +
-                              (100 + 100 * Math.sin((((i * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
-                              ' A 100 100 0 0 1 ' +
-                              (100 + 100 * Math.cos(((((i + 1) * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
-                              ' ' +
-                              (100 + 100 * Math.sin(((((i + 1) * 360) / getTotalSegments() - 90) * Math.PI) / 180)) +
-                              ' Z'
-                            "
-                            [attr.fill]="segment.color"
-                            stroke="rgba(0,0,0,0.3)"
-                            stroke-width="1"
-                            [class.wheel-segment-active]="winningSegmentIndex === i && showWheelResult"
-                          />
-                        </g>
-
-                        <!-- Logo image in center -->
-                        <defs>
-                          <clipPath id="circleClip">
-                            <circle cx="100" cy="100" r="22" />
-                          </clipPath>
-                        </defs>
-                        <image
-                          *ngIf="!(lastWheelMultiplier !== null && showWheelResult)"
-                          href="assets/logos/logo_full_color_1to1.png"
-                          x="78"
-                          y="78"
-                          width="44"
-                          height="44"
-                          clip-path="url(#circleClip)"
-                        />
-
-                        <!-- Result display circle -->
-                        <circle
-                          *ngIf="lastWheelMultiplier !== null && showWheelResult"
-                          cx="100"
-                          cy="100"
-                          r="22"
-                          fill="rgba(0,0,0,0.9)"
-                        />
-                        <text
-                          *ngIf="lastWheelMultiplier !== null && showWheelResult"
-                          x="100"
-                          y="100"
-                          text-anchor="middle"
-                          dominant-baseline="middle"
-                          fill="white"
-                          font-size="14"
-                          font-weight="bold"
-                        >
-                          {{ lastWheelMultiplier + 'x' }}
-                        </text>
-                      </svg>
-
-                      <!-- Pointer arrow at top -->
-                      <div class="wheel-pointer"></div>
-                    </div>
-
-                    <!-- Multiplier Legend (compact colored badges) -->
-                    <div class="wheel-multiplier-legend">
-                      <div
-                        *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index"
-                        class="legend-badge"
-                        [style.background-color]="getMultiplierColor(entry.multiplier)"
-                      >
-                        {{ entry.multiplier }}x
-                      </div>
-                    </div>
-
-                    <!-- Bet Controls -->
-                    <div class="wheel-bet-controls">
-                      <div class="wheel-bet-display">
-                        <button
-                          (click)="adjustLuckyWheelBet(-10)"
-                          class="wheel-bet-btn"
-                          [disabled]="luckyWheelLoading || luckyWheelBet <= luckyWheelInfo.minBet"
-                        >
-                          −
-                        </button>
-                        <div class="wheel-bet-amount">
-                          <label class="bet-label" for="wheelBetInput">Einsatz</label>
-                          <div class="bet-input-wrapper">
-                            <input
-                              id="wheelBetInput"
-                              class="bet-input"
-                              type="text"
-                              inputmode="numeric"
-                              pattern="[0-9]*"
-                              [value]="luckyWheelBetInput"
-                              (input)="onLuckyWheelBetInput($event)"
-                              (keydown)="onLuckyWheelBetKeydown($event)"
-                              (blur)="commitLuckyWheelBetInput()"
-                              (keydown.enter)="commitLuckyWheelBetInput(); $event.preventDefault()"
-                              [disabled]="luckyWheelLoading"
-                              [attr.min]="luckyWheelInfo.minBet"
-                              [attr.max]="luckyWheelInfo.maxBet"
-                            />
-                            <span class="bet-unit">ZVC</span>
-                          </div>
-                        </div>
-                        <button
-                          (click)="adjustLuckyWheelBet(10)"
-                          class="wheel-bet-btn"
-                          [disabled]="luckyWheelLoading || luckyWheelBet >= luckyWheelInfo.maxBet"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      <button
-                        (click)="spinLuckyWheel()"
-                        class="wheel-spin-btn"
-                        [class.spinning]="isWheelSpinning"
-                        [disabled]="!canAffordLuckyWheel() || luckyWheelLoading"
-                      >
-                        <span class="btn-icon">🎡</span>
-                        <span class="btn-text">{{ isWheelSpinning ? 'Dreht...' : 'Drehen!' }}</span>
-                      </button>
-
-                      <button
-                        (click)="toggleAutoWheelSpin()"
-                        class="wheel-autospin-btn"
-                        [class.active]="autoWheelSpinEnabled"
-                        [disabled]="!luckyWheelInfo"
-                        title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}"
-                      >
-                        <span *ngIf="!autoWheelSpinEnabled">🔄 Auto</span>
-                        <span *ngIf="autoWheelSpinEnabled">⏹️ Stopp</span>
-                      </button>
-                    </div>
-
-                    <!-- Status Messages -->
-                    <div *ngIf="luckyWheelError && luckyWheelInfo" class="wheel-error">
-                      {{ luckyWheelError }}
-                    </div>
-
-                    <!-- Lucky Wheel Spin Log -->
-                    <div *ngIf="luckyWheelSpinLog.length > 0" class="slot-win-log wheel-spin-log">
-                      <div class="win-log-header">
-                        <span class="win-log-title">📜 Letzte Wheel-Spins</span>
-                        <div class="win-log-header-controls">
-                          <label class="win-log-toggle" title="Verluste ausblenden">
-                            <input type="checkbox" [(ngModel)]="hideWheelLosses" class="toggle-checkbox" />
-                            <span class="toggle-slider"></span>
-                          </label>
-                          <span class="win-log-count">{{ getFilteredWheelSpinLog().length }}</span>
-                        </div>
-                      </div>
-                      <div class="win-log-list">
-                        <div
-                          *ngFor="let entry of getFilteredWheelSpinLog(); trackBy: trackByWheelSpinId"
-                          class="win-log-entry"
-                          [class.win-log-win]="entry.payout > 0"
-                          [class.win-log-loss]="entry.payout === 0"
-                        >
-                          <div class="win-log-symbols">
-                            <span class="legend-badge" [style.background-color]="getMultiplierColor(entry.multiplier)"
-                              >{{ entry.multiplier }}x</span
-                            >
-                          </div>
-                          <div class="win-log-info">
-                            <span class="win-log-type" [style.color]="getWheelSpinTypeInfo(entry).color">
-                              {{ getWheelSpinTypeInfo(entry).emoji }}
-                              {{ getWheelSpinTypeInfo(entry).label }}
-                            </span>
-                            <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
-                          </div>
-                          <div class="win-log-payout" [class.negative]="entry.payout === 0">
-                            <span class="payout-amount"> {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }} </span>
-                            <span class="wheel-log-bet">-{{ entry.bet }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- Chicken Cross Widget -->
-                <div class="chicken-cross-widget">
-                  <div class="chicken-cross-header">
-                    <h4 class="zvcoins-section-title">🐔 Chicken Cross</h4>
-                    <div *ngIf="hasActiveChickenCrossGame()" class="chicken-payout-display">
-                      <span class="payout-label">Auszahlung:</span>
-                      <span class="payout-value">{{ chickenCrossGame!.currentPayout }} ZVC</span>
-                    </div>
-                  </div>
-
-                  <!-- Loading State -->
-                  <div *ngIf="!chickenCrossInfo && !chickenCrossError" class="text-center py-8">
-                    <div class="loading-spinner mx-auto mb-4"></div>
-                    <p class="text-lg text-white">Lade Spiel...</p>
-                  </div>
-
-                  <!-- Error State (no info) -->
-                  <div *ngIf="chickenCrossError && !chickenCrossInfo" class="text-center py-8">
-                    <div class="text-red-400 mb-4">⚠️</div>
-                    <p class="text-red-400">{{ chickenCrossError }}</p>
-                    <button
-                      (click)="loadChickenCrossInfo()"
-                      class="mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
-                    >
-                      Erneut versuchen
-                    </button>
-                  </div>
-
-                  <!-- Game Content -->
-                  <div *ngIf="chickenCrossInfo">
-                    <!-- Game Board Visualization -->
-                    <div class="chicken-game-board">
-                      <div
-                        class="chicken-road"
-                        #chickenRoad
-                        [attr.data-has-game]="hasActiveChickenCrossGame() || chickenCrossDeadGame"
-                      >
-                        <!-- Starting position (home) -->
-                        <div
-                          class="chicken-lane chicken-home"
-                          [class.chicken-current]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0"
-                          [class.chicken-dead-home]="chickenCrossDeadGame && !hasActiveChickenCrossGame()"
-                        >
-                          <span
-                            class="chicken-lane-marker"
-                            [class.chicken-emoji]="hasActiveChickenCrossGame() && chickenCrossGame!.step === 0"
-                          >
-                            {{ hasActiveChickenCrossGame() && chickenCrossGame!.step === 0 ? '🐔' : '🏠' }}
-                          </span>
-                          <span class="chicken-lane-label">Start</span>
-                        </div>
-
-                        <!-- Active game: passed steps + next 4 steps -->
-                        <ng-container *ngIf="hasActiveChickenCrossGame()">
-                          <!-- Passed steps (1 to current step) -->
-                          <div
-                            *ngFor="let step of [].constructor(chickenCrossGame!.step); let i = index"
-                            class="chicken-lane"
-                            [class.chicken-passed]="i + 1 < chickenCrossGame!.step"
-                            [class.chicken-current]="
-                              i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'
-                            "
-                            [class.chicken-suspense]="
-                              chickenCrossIsAnimating &&
-                              i + 1 === chickenCrossGame!.step &&
-                              chickenCrossGame!.state !== 'LOST'
-                            "
-                            [class.chicken-dead]="
-                              chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step
-                            "
-                            [class.chicken-success]="
-                              !chickenCrossIsAnimating &&
-                              i + 1 === chickenCrossGame!.step &&
-                              chickenCrossGame!.state === 'ACTIVE'
-                            "
-                          >
-                            <span
-                              class="chicken-lane-marker"
-                              [class.chicken-emoji]="
-                                i + 1 === chickenCrossGame!.step &&
-                                chickenCrossGame!.state !== 'LOST' &&
-                                !chickenCrossIsAnimating
-                              "
-                              [class.chicken-suspense-emoji]="
-                                chickenCrossIsAnimating &&
-                                i + 1 === chickenCrossGame!.step &&
-                                chickenCrossGame!.state !== 'LOST'
-                              "
-                            >
-                              {{
-                                chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step
-                                  ? '💀'
-                                  : i + 1 === chickenCrossGame!.step
-                                    ? '🐔'
-                                    : '✅'
-                              }}
-                            </span>
-                            <span class="chicken-lane-multiplier"
-                              >{{ getChickenMultiplierForStep(chickenCrossGame!.seed, i + 1) }}x</span
-                            >
-                            <!-- Explosion particles inside the dead lane -->
-                            <div
-                              *ngIf="chickenCrossLostAnimation && i + 1 === chickenCrossGame!.step"
-                              class="chicken-explosion-inline"
-                            >
-                              <div class="explosion-particle-inline" *ngFor="let p of [1, 2, 3, 4, 5, 6, 7, 8]"></div>
-                            </div>
-                          </div>
-
-                          <!-- Next 4 steps with multipliers -->
-                          <div
-                            *ngFor="let nextStep of getNextChickenSteps(); let i = index"
-                            class="chicken-lane chicken-future"
-                            [class.chicken-next-immediate]="i === 0"
-                          >
-                            <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
-                            <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
-                          </div>
-                        </ng-container>
-
-                        <!-- Dead game display (show the lost state while bet controls appear) -->
-                        <ng-container *ngIf="!hasActiveChickenCrossGame() && chickenCrossDeadGame">
-                          <div
-                            *ngFor="let step of [].constructor(chickenCrossDeadGame.step); let i = index"
-                            class="chicken-lane"
-                            [class.chicken-passed]="i + 1 < chickenCrossDeadGame.step"
-                            [class.chicken-dead]="i + 1 === chickenCrossDeadGame.step"
-                          >
-                            <span
-                              class="chicken-lane-marker"
-                              [class.chicken-dead-emoji]="i + 1 === chickenCrossDeadGame.step"
-                            >
-                              {{ i + 1 === chickenCrossDeadGame.step ? '💀' : '✅' }}
-                            </span>
-                            <span class="chicken-lane-multiplier"
-                              >{{ getChickenMultiplierForStep(chickenCrossDeadGame.seed, i + 1) }}x</span
-                            >
-                          </div>
-
-                          <!-- Show the next 4 steps that could have been -->
-                          <div
-                            *ngFor="let nextStep of getDeadChickenNextSteps(); let i = index"
-                            class="chicken-lane chicken-future"
-                            [class.chicken-next-immediate]="i === 0"
-                          >
-                            <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
-                            <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
-                          </div>
-                        </ng-container>
-
-                        <!-- No active game and no dead game: show start position + preview steps -->
-                        <ng-container *ngIf="!hasActiveChickenCrossGame() && !chickenCrossDeadGame">
-                          <div class="chicken-lane chicken-preview">
-                            <span class="chicken-lane-marker">❓</span>
-                          </div>
-                          <div class="chicken-lane chicken-preview">
-                            <span class="chicken-lane-marker">❓</span>
-                          </div>
-                          <div class="chicken-lane chicken-preview">
-                            <span class="chicken-lane-marker">❓</span>
-                          </div>
-                          <div class="chicken-lane chicken-preview">
-                            <span class="chicken-lane-marker">❓</span>
-                          </div>
-                          <div class="chicken-lane chicken-preview">
-                            <span class="chicken-lane-marker">❓</span>
-                          </div>
-                        </ng-container>
-                      </div>
-                    </div>
-
-                    <!-- Bet Controls (only shown when no active game) -->
-                    <div *ngIf="!hasActiveChickenCrossGame()" class="wheel-bet-controls chicken-bet-controls">
-                      <div class="wheel-bet-display">
-                        <button
-                          (click)="adjustChickenCrossBet(-10)"
-                          class="wheel-bet-btn"
-                          [disabled]="chickenCrossLoading || chickenCrossBet <= chickenCrossInfo.minBet"
-                        >
-                          −
-                        </button>
-                        <div class="wheel-bet-amount">
-                          <label class="bet-label" for="chickenBetInput">Einsatz</label>
-                          <div class="bet-input-wrapper">
-                            <input
-                              id="chickenBetInput"
-                              class="bet-input"
-                              type="text"
-                              inputmode="numeric"
-                              pattern="[0-9]*"
-                              [value]="chickenCrossBetInput"
-                              (input)="onChickenCrossBetInput($event)"
-                              (keydown)="onChickenCrossBetKeydown($event)"
-                              (blur)="commitChickenCrossBetInput()"
-                              (keydown.enter)="commitChickenCrossBetInput(); $event.preventDefault()"
-                              [disabled]="chickenCrossLoading"
-                              [attr.min]="chickenCrossInfo.minBet"
-                              [attr.max]="chickenCrossInfo.maxBet"
-                            />
-                            <span class="bet-unit">ZVC</span>
-                          </div>
-                        </div>
-                        <button
-                          (click)="adjustChickenCrossBet(10)"
-                          class="wheel-bet-btn"
-                          [disabled]="chickenCrossLoading || chickenCrossBet >= chickenCrossInfo.maxBet"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      <button
-                        (click)="startChickenCrossGame()"
-                        class="chicken-start-btn"
-                        [disabled]="!canAffordChickenCross() || chickenCrossLoading"
-                      >
-                        <span class="btn-icon">🐔</span>
-                        <span class="btn-text">{{ chickenCrossLoading ? 'Startet...' : 'Spiel starten!' }}</span>
-                      </button>
-                    </div>
-
-                    <!-- Game Actions (only shown during active game) -->
-                    <div *ngIf="hasActiveChickenCrossGame()" class="chicken-game-actions">
-                      <button
-                        (click)="chickenCrossMove()"
-                        class="chicken-action-btn chicken-move-btn"
-                        [disabled]="chickenCrossLoading || chickenCrossIsMoving || chickenCrossIsAnimating"
-                        [class.moving]="chickenCrossIsMoving || chickenCrossIsAnimating"
-                      >
-                        <span class="btn-icon">🐔</span>
-                        <span class="btn-text">Weiter!</span>
-                      </button>
-                      <button
-                        (click)="chickenCrossCashout()"
-                        class="chicken-action-btn chicken-cashout-btn"
-                        [disabled]="chickenCrossLoading || chickenCrossIsMoving || chickenCrossIsAnimating"
-                      >
-                        Cashout
-                      </button>
-                    </div>
-
-                    <!-- Error message only -->
-                    <div *ngIf="chickenCrossError && chickenCrossInfo" class="chicken-error">
-                      {{ chickenCrossError }}
-                    </div>
-
-                    <!-- Game History Log -->
-                    <div *ngIf="chickenCrossHistory.length > 0" class="slot-win-log chicken-history-log">
-                      <div class="win-log-header">
-                        <span class="win-log-title">📜 Letzte Spiele</span>
-                        <div class="win-log-header-controls">
-                          <label class="win-log-toggle" title="Verluste ausblenden">
-                            <input type="checkbox" [(ngModel)]="hideChickenLosses" class="toggle-checkbox" />
-                            <span class="toggle-slider"></span>
-                          </label>
-                          <span class="win-log-count">{{ getFilteredChickenHistory().length }}</span>
-                        </div>
-                      </div>
-                      <div class="win-log-list">
-                        <div
-                          *ngFor="let entry of getFilteredChickenHistory(); trackBy: trackByChickenHistoryId"
-                          class="win-log-entry"
-                          [class.win-log-win]="entry.state === 'CASHED_OUT'"
-                          [class.win-log-loss]="entry.state === 'LOST'"
-                        >
-                          <div class="win-log-symbols">
-                            <span class="chicken-history-multiplier">{{ entry.multiplier.toFixed(2) }}x 🐔</span>
-                          </div>
-                          <div class="win-log-info">
-                            <span class="win-log-type" [style.color]="getChickenHistoryTypeInfo(entry).color">
-                              {{ getChickenHistoryTypeInfo(entry).emoji }}
-                              {{ getChickenHistoryTypeInfo(entry).label }}
-                            </span>
-                            <span class="win-log-time">{{ getTimeAgo(entry.timestamp) }}</span>
-                          </div>
-                          <div class="win-log-payout" [class.negative]="entry.state === 'LOST'">
-                            <span class="payout-amount">
-                              {{ entry.state === 'CASHED_OUT' ? '+' + entry.finalPayout : '0' }}
-                            </span>
-                            <span class="payout-cost">-{{ entry.initialWager }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Redeemable Items -->
-            <div class="zvcoins-rewards-section mb-4">
-              <h4 class="zvcoins-section-title">🎁 Belohnungen einlösen</h4>
-
-              <!-- Loading State -->
-              <div *ngIf="redeemablesLoading" class="text-center py-8">
-                <div class="loading-spinner mx-auto mb-4"></div>
-                <p class="text-lg text-white">Lade Belohnungen...</p>
-              </div>
-
-              <!-- Error State -->
-              <div *ngIf="redeemablesError && !redeemablesLoading" class="text-center py-8">
-                <div class="text-red-400 mb-4">⚠️</div>
-                <p class="text-red-400">{{ redeemablesError }}</p>
-                <button
-                  (click)="loadRedeemables()"
-                  class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Erneut versuchen
-                </button>
-              </div>
-
-              <!-- Redeemables Grid -->
-              <div *ngIf="!redeemablesLoading && !redeemablesError" class="zvcoins-rewards-grid">
-                <div
-                  *ngFor="let redeemable of redeemables"
-                  class="zvcoins-reward-card"
-                  [class.zvcoins-affordable]="canAfford(redeemable.price) && isAvailable(redeemable)"
-                  [class.zvcoins-limited-time]="isLimitedTime(redeemable)"
-                  [class.zvcoins-expired]="isExpired(redeemable)"
-                  [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                >
-                  <!-- Limited Time Badge -->
+                  <!-- Preview & Upload (opens modal for better UX) -->
                   <div
-                    *ngIf="isLimitedTime(redeemable) && !isExpired(redeemable) && !isSoldOut(redeemable)"
-                    class="zvcoins-limited-badge"
+                    *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
+                    class="spray-preview"
                   >
-                    ⏰ Limitiert: {{ getTimeLeft(redeemable.redeemableuntil) }}
-                  </div>
-
-                  <!-- Expired Badge -->
-                  <div *ngIf="isExpired(redeemable)" class="zvcoins-expired-badge">❌ Nicht mehr verfügbar</div>
-
-                  <!-- Sold Out Badge -->
-                  <div *ngIf="isSoldOut(redeemable)" class="zvcoins-sold-out-badge">🚫 Ausverkauft</div>
-
-                  <div class="zvcoins-reward-header">
-                    <div class="zvcoins-reward-icon-large">
-                      {{ redeemable.emoji }}
-                    </div>
-                    <div class="zvcoins-reward-details">
-                      <h5 class="zvcoins-reward-title">
-                        {{ redeemable.name }}
-                      </h5>
-                      <p class="zvcoins-reward-description">
-                        {{ redeemable.description }}
-                      </p>
-                    </div>
-                    <div class="zvcoins-reward-price">
-                      <span class="zvcoins-price-amount">{{ redeemable.price | number: '1.0-0' }}</span>
-                      <span class="zvcoins-price-currency">ZVC</span>
+                    <div class="spray-preview-compact">
+                      <img [src]="slot.preview" alt="Preview" class="spray-image" />
                     </div>
                   </div>
-                  <div class="zvcoins-reward-progress">
-                    <div class="zvcoins-progress-container">
-                      <div class="zvcoins-progress-track">
-                        <div
-                          class="zvcoins-progress-bar-fill"
-                          [style.width.%]="getProgressPercentage(userStatistics.experience || 0, redeemable.price)"
-                        ></div>
+
+                  <!-- Uploading State -->
+                  <div *ngIf="slot.isUploading && !slot.id" class="spray-uploading-state">
+                    <div class="spray-spinner-large"></div>
+                    <div class="spray-uploading-text">Wird hochgeladen...</div>
+                  </div>
+
+                  <!-- Empty Slot -->
+                  <div *ngIf="(i < 2 || isDonator) && !slot.id && !slot.selectedFile" class="spray-empty">
+                    <input
+                      type="file"
+                      [id]="'spray' + i"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      (change)="onSprayFileSelected($event, i)"
+                      class="spray-file-input"
+                    />
+                    <label [for]="'spray' + i" class="spray-upload-zone">
+                      <div class="spray-upload-icon">📁</div>
+                      <div class="spray-upload-text">Bild wählen</div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="sprayError" class="spray-message spray-message-error">{{ sprayError }}</div>
+              <div *ngIf="spraySuccess" class="spray-message spray-message-success">{{ spraySuccess }}</div>
+            </div>
+          </div>
+
+          <!-- Fakerank (moved here from right column) -->
+          <div class="grid-item fakerank-container">
+            <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
+              <div class="spray-header">
+                <h3 class="spray-title">✨ Fakerank</h3>
+                <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
+                <span class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
+              </div>
+
+              <!-- Ban Warning -->
+              <div *ngIf="isFakerankBanned" class="spray-ban-warning">
+                <div class="spray-ban-icon">⛔</div>
+                <div class="spray-ban-content">
+                  <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
+                  <p class="spray-ban-reason">
+                    <strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}
+                  </p>
+                  <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
+                  <p class="spray-ban-contact">
+                    Öffne ein Ticket auf unserem
+                    <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"
+                      ><strong>Discord-Server</strong></a
+                    >.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Main Content (if not banned) -->
+              <div *ngIf="!isFakerankBanned">
+                <!-- Current Fakerank Display -->
+                <div class="fakerank-slot">
+                  <!-- Has Fakerank -->
+                  <div *ngIf="currentFakerank" class="fakerank-display-card">
+                    <div class="fakerank-content">
+                      <div class="fakerank-text">
+                        <span class="fakerank-label">Dein FakeRank:</span>
+                        <span class="fakerank-value" [style.color]="getColorHex(currentFakerankColor)">
+                          {{ currentFakerank }}
+                        </span>
+                        <div class="fakerank-color-badge">
+                          <span class="color-dot" [style.background-color]="getColorHex(currentFakerankColor)"></span>
+                          {{ getColorName(currentFakerankColor) }}
+                        </div>
                       </div>
-                      <span class="zvcoins-progress-text">
-                        {{ getProgressPercentage(userStatistics.experience || 0, redeemable.price) | number: '1.0-0' }}%
-                      </span>
                     </div>
-                    <button
-                      class="zvcoins-redeem-btn"
-                      [disabled]="!canRedeem(redeemable)"
-                      [class.zvcoins-redeem-available]="canRedeem(redeemable)"
-                      [class.zvcoins-expired]="isExpired(redeemable)"
-                      [class.zvcoins-sold-out]="isSoldOut(redeemable)"
-                      (click)="redeemItem(redeemable)"
-                    >
-                      {{ getAvailabilityText(redeemable) }}
-                    </button>
+                    <div class="fakerank-actions-inline">
+                      <button
+                        (click)="openFakerankModal()"
+                        class="fakerank-action-btn fakerank-edit-btn"
+                        [disabled]="fakerankLoading"
+                        title="Fakerank bearbeiten"
+                      >
+                        ✏️ Bearbeiten
+                      </button>
+                      <button
+                        (click)="deleteFakerank()"
+                        class="fakerank-action-btn fakerank-delete-btn"
+                        [disabled]="fakerankLoading"
+                        title="Fakerank löschen"
+                      >
+                        🗑️ Löschen
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Empty Slot (styled like transparent milky sprays slot) -->
+                  <div *ngIf="!currentFakerank" class="fakerank-empty-slot">
+                    <div class="fakerank-empty-content">
+                      <div class="fakerank-empty-icon">✨</div>
+                      <p class="fakerank-empty-text">Erstelle deinen persönlichen Rang!</p>
+                      <button (click)="openFakerankModal()" class="fakerank-create-btn" [disabled]="fakerankLoading">
+                        ✨ Erstellen
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Cost Disclaimer -->
+                  <div class="fakerank-cost-disclaimer">
+                    <div class="cost-disclaimer-icon">💰</div>
+                    <div class="cost-disclaimer-text">
+                      <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
+                      <strong>100 ZVC</strong>. Die Gebühr wird wöchentlich erneuert, solange dein Fakerank nicht von
+                      dir oder einem Teammitglied gelöscht wurde.
+                    </div>
                   </div>
                 </div>
 
-                <!-- No redeemables available message -->
-                <div *ngIf="redeemables.length === 0" class="text-center py-8 col-span-full">
-                  <div class="text-6xl mb-4">🎁</div>
-                  <p class="text-lg text-gray-300">Keine Belohnungen verfügbar</p>
-                  <p class="text-sm text-gray-400 mt-2">Schau später wieder vorbei!</p>
-                </div>
+                <!-- Messages -->
+                <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
+                <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
               </div>
             </div>
           </div>
@@ -1267,194 +333,6 @@
 
               <!-- Discord Stats -->
               <app-discord-stats variant="full"></app-discord-stats>
-            </div>
-          </div>
-        </div>
-        <!-- Custom Sprays -->
-        <div class="grid-item spray-card-container">
-          <div class="stats-card p-6 rounded-2xl">
-            <div class="spray-header" *ngIf="!isSprayBanned">
-              <h3 class="spray-title">🎨 Custom Sprays</h3>
-              <p class="spray-subtitle">Bis zu {{ isDonator ? '3' : '2' }} Sprays hochladen</p>
-            </div>
-
-            <!-- Spray Ban Warning -->
-            <div *ngIf="isSprayBanned" class="spray-ban-warning">
-              <div class="spray-ban-icon">🔨</div>
-              <div class="spray-ban-content">
-                <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
-                <p class="spray-ban-reason"><strong>Grund:</strong> {{ sprayBanReason }}</p>
-                <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ sprayBannedBy }}</p>
-                <p class="spray-ban-contact">
-                  Öffne ein Ticket auf unserem
-                  <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"
-                    ><strong>Discord-Server</strong></a
-                  >.
-                </p>
-              </div>
-            </div>
-
-            <div class="spray-grid" *ngIf="!isSprayBanned">
-              <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
-                <!-- Locked Slot -->
-                <div *ngIf="i === 2 && !isDonator" class="spray-locked">
-                  <p class="spray-locked-title">🔒 Extra Slot</p>
-                  <p class="spray-locked-text">Exklusiv für Unterstützer!</p>
-                  <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link"> Freischalten </a>
-                </div>
-
-                <!-- Uploaded Spray -->
-                <div
-                  *ngIf="shouldShowSpraySlot(i)"
-                  class="spray-uploaded"
-                  [attr.data-slot-index]="i"
-                  [attr.data-spray-id]="slot.id"
-                  [attr.data-is-donator]="isDonator"
-                >
-                  <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
-                  <div class="spray-info">
-                    <span class="spray-name">{{ slot.name }}</span>
-                    <button
-                      (click)="deleteSprayForSlot(i)"
-                      class="spray-delete-btn"
-                      [disabled]="slot.isUploading"
-                      [attr.data-slot]="i"
-                      [attr.data-id]="slot.id"
-                      [attr.data-donator]="isDonator"
-                    >
-                      <span *ngIf="!slot.isUploading">🗑️</span>
-                      <span *ngIf="slot.isUploading" class="spray-spinner"></span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Preview & Upload (opens modal for better UX) -->
-                <div
-                  *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
-                  class="spray-preview"
-                >
-                  <div class="spray-preview-compact">
-                    <img [src]="slot.preview" alt="Preview" class="spray-image" />
-                  </div>
-                </div>
-
-                <!-- Uploading State -->
-                <div *ngIf="slot.isUploading && !slot.id" class="spray-uploading-state">
-                  <div class="spray-spinner-large"></div>
-                  <div class="spray-uploading-text">Wird hochgeladen...</div>
-                </div>
-
-                <!-- Empty Slot -->
-                <div *ngIf="(i < 2 || isDonator) && !slot.id && !slot.selectedFile" class="spray-empty">
-                  <input
-                    type="file"
-                    [id]="'spray' + i"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    (change)="onSprayFileSelected($event, i)"
-                    class="spray-file-input"
-                  />
-                  <label [for]="'spray' + i" class="spray-upload-zone">
-                    <div class="spray-upload-icon">📁</div>
-                    <div class="spray-upload-text">Bild wählen</div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div *ngIf="sprayError" class="spray-message spray-message-error">{{ sprayError }}</div>
-            <div *ngIf="spraySuccess" class="spray-message spray-message-success">{{ spraySuccess }}</div>
-          </div>
-        </div>
-        <!-- Fakerank Card -->
-        <div class="grid-item fakerank-container">
-          <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
-            <!-- Card Header -->
-            <div class="spray-header">
-              <h3 class="spray-title">✨ Fakerank</h3>
-              <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
-              <span class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
-            </div>
-
-            <!-- Ban Warning -->
-            <div *ngIf="isFakerankBanned" class="spray-ban-warning">
-              <div class="spray-ban-icon">⛔</div>
-              <div class="spray-ban-content">
-                <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
-                <p class="spray-ban-reason">
-                  <strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}
-                </p>
-                <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
-                <p class="spray-ban-contact">
-                  Öffne ein Ticket auf unserem
-                  <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"
-                    ><strong>Discord-Server</strong></a
-                  >.
-                </p>
-              </div>
-            </div>
-
-            <!-- Main Content (if not banned) -->
-            <div *ngIf="!isFakerankBanned">
-              <!-- Current Fakerank Display -->
-              <div class="fakerank-slot">
-                <!-- Has Fakerank -->
-                <div *ngIf="currentFakerank" class="fakerank-display-card">
-                  <div class="fakerank-content">
-                    <div class="fakerank-text">
-                      <span class="fakerank-label">Dein FakeRank:</span>
-                      <span class="fakerank-value" [style.color]="getColorHex(currentFakerankColor)">
-                        {{ currentFakerank }}
-                      </span>
-                      <div class="fakerank-color-badge">
-                        <span class="color-dot" [style.background-color]="getColorHex(currentFakerankColor)"></span>
-                        {{ getColorName(currentFakerankColor) }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="fakerank-actions-inline">
-                    <button
-                      (click)="openFakerankModal()"
-                      class="fakerank-action-btn fakerank-edit-btn"
-                      [disabled]="fakerankLoading"
-                      title="Fakerank bearbeiten"
-                    >
-                      ✏️ Bearbeiten
-                    </button>
-                    <button
-                      (click)="deleteFakerank()"
-                      class="fakerank-action-btn fakerank-delete-btn"
-                      [disabled]="fakerankLoading"
-                      title="Fakerank löschen"
-                    >
-                      🗑️ Löschen
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Empty Slot (styled like transparent milky sprays slot) -->
-                <div *ngIf="!currentFakerank" class="fakerank-empty-slot">
-                  <div class="fakerank-empty-content">
-                    <div class="fakerank-empty-icon">✨</div>
-                    <p class="fakerank-empty-text">Erstelle deinen persönlichen Rang!</p>
-                    <button (click)="openFakerankModal()" class="fakerank-create-btn" [disabled]="fakerankLoading">
-                      ✨ Erstellen
-                    </button>
-                  </div>
-                </div>
-                <!-- Cost Disclaimer -->
-                <div class="fakerank-cost-disclaimer">
-                  <div class="cost-disclaimer-icon">💰</div>
-                  <div class="cost-disclaimer-text">
-                    <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
-                    <strong>100 ZVC</strong>. Die Gebühr wird wöchentlich erneuert, solange dein Fakerank nicht von dir
-                    oder einem Teammitglied gelöscht wurde.
-                  </div>
-                </div>
-              </div>
-
-              <!-- Messages -->
-              <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
-              <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
             </div>
           </div>
         </div>

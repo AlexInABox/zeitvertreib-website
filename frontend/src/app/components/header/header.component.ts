@@ -12,12 +12,14 @@ import { Subscription } from 'rxjs';
 import { BackgroundMusicService } from '../../services/background-music.service';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-header',
   imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, FormsModule],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css',
+  styleUrls: ['./header.component.css'],
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   private boundCheckPortrait: () => void = () => {};
@@ -28,6 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   avatarIcon = '';
   currentUser: SteamUser | null = null;
   isFakerankAdmin = false;
+  isUserManagementAdmin = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
   private bgmInteractionSubscription?: Subscription;
@@ -59,6 +62,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
+    private http: HttpClient,
   ) {}
 
   get logoSrc(): string {
@@ -76,11 +80,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.currentUser = user;
       this.userLoggedIn = !!user;
       this.avatarIcon = user?.avatarUrl || '';
+      this.checkUserManagementAccess(); // Check access when user logs in/out
     });
 
     // Subscribe to user data changes (including fakerank admin status)
     this.userDataSubscription = this.authService.currentUserData$.subscribe((_userData: UserData | null) => {
       this.isFakerankAdmin = this.authService.isFakerankAdmin();
+      this.checkUserManagementAccess(); // Check user management access when user data changes
       this.updateMenuItems(); // Update menu items when admin status changes
     });
 
@@ -121,16 +127,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
         icon: PrimeIcons.CREDIT_CARD,
         route: '/paysafecard',
       },
-
       {
         label: 'Dashboard',
         icon: PrimeIcons.USER,
         route: '/dashboard',
       },
       {
+        label: 'Spiele',
+        icon: PrimeIcons.CHART_SCATTER,
+        route: '/games',
+      },
+      {
         label: 'Cases',
         icon: PrimeIcons.FOLDER,
         route: '/cases',
+      },
+      {
+        label: 'Z.E.I.T.',
+        icon: PrimeIcons.SEARCH,
+        route: '/zeit',
       },
       {
         label: 'Bewerben',
@@ -180,6 +195,36 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private checkPortrait() {
     this.isPortrait = window.innerHeight > window.innerWidth;
+  }
+
+  private checkUserManagementAccess() {
+    if (!this.userLoggedIn) {
+      this.isUserManagementAdmin = false;
+      this.updateMenuItems();
+      return;
+    }
+
+    const token = this.authService.getSessionToken();
+    if (!token) {
+      this.isUserManagementAdmin = false;
+      this.updateMenuItems();
+      return;
+    }
+
+    this.http
+      .get<{ hasAccess: boolean }>(`${environment.apiUrl}/user-management/access`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .subscribe({
+        next: (response) => {
+          this.isUserManagementAdmin = response.hasAccess;
+          this.updateMenuItems();
+        },
+        error: () => {
+          this.isUserManagementAdmin = false;
+          this.updateMenuItems();
+        },
+      });
   }
 
   login() {

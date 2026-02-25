@@ -173,6 +173,8 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
+    let selectedEntry = LUCKYWHEEL_TABLE[0]!;
+
     // Weighted random selection using crypto.getRandomValues
     const totalWeight = LUCKYWHEEL_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
 
@@ -180,7 +182,6 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
     crypto.getRandomValues(randomBuffer);
     let random = (randomBuffer[0]! / 0xffffffff) * totalWeight;
 
-    let selectedEntry = LUCKYWHEEL_TABLE[0]!;
     for (const entry of LUCKYWHEEL_TABLE) {
       random -= entry.weight;
       if (random <= 0) {

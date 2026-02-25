@@ -7,7 +7,7 @@ import { NotificationService } from '../../services/notification.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './toast.component.html',
-  styleUrl: './toast.component.css',
+  styleUrls: ['./toast.component.css'],
 })
 export class ToastComponent {
   constructor(readonly notificationService: NotificationService) {}

@@ -35,23 +35,23 @@ public static class EventHandlers
 
         ServerSpecificSettingBase[] extra =
         [
-            new SSGroupHeader("Medic Fähigkeiten"),
+            new SSGroupHeader("Custom Rollen"),
             new SSKeybindSetting(
                 Plugin.Instance.Config!.KeybindId,
-                Plugin.Instance.Translation.KeybindSettingLabel,
+                "Medic - Heilaura",
                 KeyCode.None, true, false,
-                Plugin.Instance.Translation.KeybindSettingHintDescription)
+                "Hiermit heilst du dich selbst und Teammitglieder in deiner Umgeben!")
         ];
-
+        
         if (ServerSpecificSettingsSync.DefinedSettings == null)
             ServerSpecificSettingsSync.DefinedSettings = extra;
         else
             ServerSpecificSettingsSync.DefinedSettings =
                 ServerSpecificSettingsSync.DefinedSettings.Concat(extra).ToArray();
         ServerSpecificSettingsSync.SendToAll();
+        
 
-
-
+        
         PlayerEvents.Spawned += OnSpawned;
         PlayerEvents.Dying += OnDying;
         PlayerEvents.Death += OnDeath;
@@ -157,7 +157,7 @@ public static class EventHandlers
                 return;
             }
 
-            LabApi.Features.Wrappers.Cassie.Message(new CassieTtsPayload("pitch_0,8 THE jam_50_9 CASSIESYSTEM HAS BEEN jam_50_3 DEACTIVATED BY THE O5 jam_60_4 KILL SQUAD", "C.A.S.S.I.E. has been DEACTIVATED, by the O6 DEATHSQUAD."));
+            Announcer.Message(new CassieTtsPayload("pitch_0,8 THE jam_50_9 CASSIESYSTEM HAS BEEN jam_50_3 DEACTIVATED BY THE O5 jam_60_4 KILL SQUAD", "C.A.S.S.I.E. has been DEACTIVATED, by the O6 DEATHSQUAD."));
 
             foreach (Player player in Player.ReadyList.Where(player => player.Role == RoleTypeId.Spectator))
             {

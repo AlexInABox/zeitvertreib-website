@@ -7,6 +7,7 @@ import { playerdata } from '../db/schema.js';
 
 // Payout table configuration - shared between endpoints
 const SLOT_COST = 10;
+
 const PAYOUT_TABLE = [
   {
     symbol: '💎',
@@ -245,9 +246,13 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     };
 
     // Generate three random emojis
-    let slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-    let slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
-    let slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    let slot1: string;
+    let slot2: string;
+    let slot3: string;
+
+    slot1 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    slot2 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
+    slot3 = SLOT_EMOJIS[getRandomIndex(SLOT_EMOJIS.length)]!;
 
     // Calculate payout
     const result = calculatePayout(slot1, slot2, slot3);

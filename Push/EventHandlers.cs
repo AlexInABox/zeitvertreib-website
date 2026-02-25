@@ -49,7 +49,7 @@ public static class EventHandlers
                 Plugin.Instance.Config!.StrengthDropdownId,
                 "Wie stark möchtest du schubsen / geschubst werden?",
                 ["Extrem", "Normal", "Schwach"],
-                1,
+                0,
                 SSDropdownSetting.DropdownEntryType.Regular,
                 "Wenn du \"Schwach\" einstellst, wird deine Schubskraft um 50 % reduziert, UND andere Personen schubsen dich ebenfalls nur noch halb so weit! Diese Einstellung wird erst ab der NÄCHSTEN RUNDE wirksam.")
         ];
@@ -85,7 +85,7 @@ public static class EventHandlers
 
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
-        Strengths[ev.Player.PlayerId] = Strength.Normal;
+        Strengths[ev.Player.PlayerId] = Strength.Weak;
 
         Timing.CallDelayed(5f, () =>
         {

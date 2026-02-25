@@ -66,6 +66,20 @@ export async function handlePostBirthday(request: Request, env: Env): Promise<Re
     return createResponse({ error: 'Invalid date' }, 400, origin);
   }
 
+  // Reject users under 18 years old
+  if (body.year !== undefined) {
+    const today = new Date();
+    const birthDate = new Date(body.year, body.month - 1, body.day);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      return createResponse({ error: 'You must be at least 18 years old' }, 400, origin);
+    }
+  }
+
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const now = Date.now();
 

@@ -116,7 +116,7 @@ public static class Utils
                 Dictionary<string, List<(int id, string name)>> newSprayIds = new();
 
                 if (sprayResponse?.Sprays != null && sprayResponse.Sprays.Count > 0)
-                    foreach (Spray spray in sprayResponse.Sprays)
+                    foreach (SprayGetResponseItemSpray spray in sprayResponse.Sprays)
                     {
                         if (!newSprayIds.ContainsKey(spray.Userid))
                             newSprayIds[spray.Userid] = [];
@@ -205,7 +205,7 @@ public static class Utils
                 if (fullSprayResponse?.Sprays == null) return;
 
                 // Store spray data by userid and spray id
-                foreach (Spray spray in fullSprayResponse.Sprays)
+                foreach (SprayGetResponseItemSpray spray in fullSprayResponse.Sprays)
                 {
                     if (!UserSprayData.ContainsKey(spray.Userid))
                     {

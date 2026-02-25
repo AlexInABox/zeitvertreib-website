@@ -6,15 +6,8 @@
       Transaktionen, einschließlich Käufe mit ZVC, können nicht garantiert werden.
     </p>
     <div class="warning-buttons">
+      <button class="btn btn-secondary" (click)="dismissWarning()">Ich weiß, was ich tue</button>
       <button class="btn btn-primary" (click)="switchToProduction()">Zur Hauptseite wechseln</button>
-      <button
-        class="btn btn-secondary"
-        (click)="dismissWarning()"
-        [disabled]="!allowDismiss"
-        [attr.aria-disabled]="!allowDismiss"
-      >
-        {{ allowDismiss ? 'Ich weiß, was ich tue' : 'Ich weiß, was ich tue (' + secondsLeft + 's)' }}
-      </button>
     </div>
   </div>
 </div>

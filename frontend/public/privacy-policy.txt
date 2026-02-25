@@ -1,0 +1,162 @@
+Datenschutzerklärung
+
+1. Verantwortliche Stelle
+
+Verantwortlich für die Datenverarbeitung im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:
+
+Zeitvertreib – Alexander Betke
+c/o Online-Impressum.de #6455, Europaring 90, 53757 Sankt Augustin
+E-Mail: webmaster@zeitvertreib.vip
+
+
+2. Umfang und Zwecke der Verarbeitung
+
+Diese Datenschutzerklärung beschreibt, welche personenbezogenen Daten im Rahmen der Nutzung der
+Website, der zugehörigen Dienste, der Discord-Bots und der Backend-Services verarbeitet werden,
+zu welchen Zwecken und auf welcher Rechtsgrundlage dies geschieht. Verarbeitete Datenkategorien
+können je nach Nutzung und Angebot variieren. Relevante Kategorien, die in diesem Projekt verarbeitet
+werden, sind (nicht abschließend):
+- Identifikatoren: Steam-ID, Discord-ID, interne Nutzer-ID
+- Nutzungs- und Profildaten: Benutzername, Avatar-URL, Spielstatistiken, Spiel-spezifische Daten
+- Verbindungsdaten: IP-Adresse, User-Agent
+- Sitzungsdaten: Session-IDs, Login-Token, Login-Secrets (temporär)
+- Zahlungs- und Spendenbezogene Daten: Spenden- bzw. Transaktionsdaten, Paysafe-Übermittlungen (sofern eingereicht)
+- Moderationsdaten: Bans, Gründe, Moderator-IDs
+- Dateien/Uploads: hochgeladene Sprays, Fälle und zugehörige Metadaten
+
+Die Daten werden u. a. zu folgenden Zwecken verarbeitet:
+- Authentifizierung und Login (Steam-, Discord-OAuth; Login-Secrets)
+- Verwaltung von Sessions und Sicherheit
+- Bereitstellung von personalisierten Funktionen (z. B. Spielerstatistiken, Leaderboards, Fakerank)
+- Moderation und Missbrauchsprävention
+- Verarbeitung von Spenden und Paysafe-Einreichungen
+- Erfüllung rechtlicher Pflichten und zur Verteidigung gegen Missbrauch
+
+
+3. Rechtsgrundlagen der Verarbeitung
+
+Soweit die Verarbeitung personenbezogener Daten eine Einwilligung erfordert, erfolgt sie auf Grundlage
+von Art. 6 Abs. 1 lit. a DSGVO. Für die Verarbeitung, die zur Erfüllung eines Vertrags oder zur
+Durchführung vorvertraglicher Maßnahmen erforderlich ist (z. B. Authentifizierung, Bereitstellung
+von Diensten), stützt sich die Verarbeitung auf Art. 6 Abs. 1 lit. b DSGVO. Ferner kann berechtigtes
+Interesse (Art. 6 Abs. 1 lit. f DSGVO) zur Absicherung des Betriebs, zur Sicherstellung der
+IT-Sicherheit und zur Missbrauchsabwehr herangezogen werden.
+
+
+4. Datenweitergabe an Dritte / externe Dienste
+
+Zur Erbringung der Dienste werden vereinzelt Drittanbieter eingesetzt. Datenübermittlungen erfolgen
+nur, soweit dies zur Erfüllung der jeweiligen Funktionen erforderlich ist oder der Nutzer eingewilligt hat.
+Beispiele aus dem System:
+- Steam (OAuth): Übermittlung der Steam-ID und öffentlich verfügbarer Profildaten zur Authentifizierung
+- Discord (Bot API): Abfrage von Discord-Benutzerinformationen (z. B. zur Moderation/Verknüpfung)
+- Ko-fi: Webhook zur Spendenbenachrichtigung
+- Paysafe-Provider: zur Verifikation eingereichter Kartencodes (falls genutzt)
+- Cloudflare (D1, KV) als Hosting- und Datenspeicher
+
+Die genannten Dienste haben eigene Datenschutzbestimmungen; bitte prüfen Sie die jeweiligen Texte
+der Anbieter für Details zur Datenverarbeitung durch diese Drittparteien.
+
+
+5. Speicherung und Löschung
+
+Personenbezogene Daten werden nur so lange gespeichert, wie es für die Zwecke, für die sie erhoben
+wurden, erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen. Temporäre Daten (z. B.
+Login-Secrets) werden nach Ablauf ihrer Verwendbarkeit gelöscht. Nutzer können Löschung oder
+Einschränkung ihrer Daten über die vorhandenen Endpunkte (/deletion, /takeout) bzw. durch Kontaktaufnahme
+per E-Mail an webmaster@zeitvertreib.vip beantragen. Für die Löschung kann ein Login erforderlich sein,
+um Identitätsmissbrauch zu verhindern.
+
+
+6. Cookies und Sitzungsverwaltung
+
+Zur Verwaltung von Sitzungen setzt Zeitvertreib ein sicheres Session-Cookie (Name: session). Dieses
+Cookie enthält eine Session-ID; serverseitig werden zudem IP-Adresse und User-Agent in der Tabelle
+`sessions` gespeichert. Die Cookies werden mit `HttpOnly`/`Secure` und `SameSite`-Richtlinien gesetzt,
+wenn die Anwendung in Produktionsumgebung betrieben wird.
+
+Rechtliche Grundlage für technisch notwendige Cookies
+Das oben beschriebene Session-Cookie ist technisch erforderlich für die Authentifizierung und die
+Sitzungsverwaltung. Gemäß § 25 Abs. 2 Nr. 2 TTDSG dürfen technisch notwendige Cookies ohne vorherige
+Einwilligung gesetzt werden. Aus diesem Grund wird auf einen Cookie-Banner zur Einholung einer
+Einwilligung für rein technische Cookies verzichtet. Soweit zusätzliche Tracking- oder
+Marketing-Cookies eingesetzt würden, wären hierfür vorherige Einwilligungen erforderlich.
+
+
+7. Rechte der betroffenen Personen
+
+Betroffene Personen haben gemäß DSGVO die folgenden Rechte gegenüber dem Verantwortlichen:
+- Recht auf Auskunft über die verarbeiteten personenbezogenen Daten
+- Recht auf Berichtigung unrichtiger Daten
+- Recht auf Löschung («Recht auf Vergessenwerden»), soweit gesetzlich möglich
+- Recht auf Einschränkung der Verarbeitung
+- Recht auf Datenübertragbarkeit
+- Recht auf Widerruf erteilter Einwilligungen
+- Recht auf Beschwerde bei einer Aufsichtsbehörde
+
+Zur Ausübung dieser Rechte oder bei Fragen senden Sie bitte eine E-Mail an webmaster@zeitvertreib.vip.
+Alternativ können die API-Endpunkte `/deletion` und `/takeout` für Lösch- bzw. Exportanfragen genutzt
+(Authentifizierung erforderlich, um Missbrauch zu vermeiden).
+
+Aufsichtsbehörde
+Für Beschwerden steht Ihnen zusätzlich die zuständige Aufsichtsbehörde zur Verfügung:
+
+Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen
+Kavalleriestraße 2–4, 40213 Düsseldorf
+
+
+8. Sicherheitsmaßnahmen
+
+Es wurden technische und organisatorische Maßnahmen getroffen, um personenbezogene Daten vor
+unbefugtem Zugriff, Verlust oder Manipulation zu schützen. Hierzu gehören Zugangsbeschränkungen,
+verschlüsselte Verbindungen (HTTPS), sichere Cookies, sowie die Nutzung von geprüften Hosting-Diensten
+(Cloudflare Workers, D1, KV).
+
+
+9. Besondere Hinweise zu gespeicherten Daten (Auswahl)
+
+- `playerdata`, `discord_info`, `steam_cache`: Speicherung von Spiel- und Profildaten zum Zweck
+	der Darstellung persönlicher Statistiken und zur Verknüpfung von Accounts.
+- `sessions`: Speicherung von Session-ID, IP-Adresse und User-Agent zur Sicherstellung von
+	Authentifizierung, zur Erkennung von Missbrauch und zur Möglichkeit, Sessions zu beenden.
+- `login_secrets`: Temporäre Speicherung von geheimen Login-Tokens zur einmaligen Anmeldung;
+	Einträge laufen zeitlich ab und werden gelöscht.
+- `paysafe_card_submissions`, `donations`: Speicherung von Zahlungs- und Spenden-bezogenen Daten
+	zwecks Bearbeitung und Abrechnung.
+- Moderations-Tabellen (z. B. `spray_bans`, `fakerank_bans`): Speicherung von Ban-Informationen
+	inklusive Moderator-ID zur Nachvollziehbarkeit von Moderationsentscheidungen.
+
+
+12. Internationale Datenübermittlungen
+
+Bei Betrieb der Dienste kann es zur Übermittlung personenbezogener Daten in Länder außerhalb des
+EEA/der Schweiz/des Vereinigten Königreichs kommen, insbesondere in die USA. Für bestimmte
+Drittanbieter, die in dieser Infrastruktur verwendet werden (z. B. Cloudflare und Discord), bestehen
+rechtskonforme Schutzmaßnahmen: Beide Anbieter geben in ihren Datenschutzhinweisen an, sich zum
+EU‑US Data Privacy Framework (DPF) selbstzertifiziert zu haben; daher können Übermittlungen an diese
+Dienste auf der Grundlage des DPF erfolgen (Stand zum Zeitpunkt der Veröffentlichung dieses
+Dokuments). Soweit das DPF nicht greift oder keine Zertifizierung vorliegt, stützen sich
+Übermittlungen auf geeignete Garantien, insbesondere die von der EU anerkannten Standardvertragsklauseln
+(SCCs) und gegebenenfalls ergänzende technische und organisatorische Maßnahmen.
+
+Weitere Informationen zu den Übermittlungen und den von den Anbietern angebotenen Beschwerde- oder
+Schlichtungsmechanismen entnehmen Sie bitte den Datenschutzhinweisen der jeweiligen Dienste (z. B.
+Cloudflare: privacyquestions@cloudflare.com; Discord: privacy@discord.com) sowie der offiziellen
+DPF-Website https://www.dataprivacyframework.gov/.
+
+10. Änderungen dieser Datenschutzerklärung
+
+Diese Datenschutzerklärung kann bei Änderungen der Dienste oder der Rechtslage angepasst werden.
+Das Datum der letzten Aktualisierung finden Sie am Ende dieses Dokuments.
+
+
+11. Kontakt
+
+Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte kontaktieren Sie bitte:
+
+E-Mail: webmaster@zeitvertreib.vip
+
+Postalisch: Zeitvertreib – Alexander Betke, c/o Online-Impressum.de #6455, Europaring 90, 53757 Sankt Augustin
+
+
+Zuletzt aktualisiert: 16.02.2026

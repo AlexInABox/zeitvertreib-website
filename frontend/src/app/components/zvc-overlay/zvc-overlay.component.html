@@ -1,0 +1,116 @@
+<div
+  class="zvc-balance-hud"
+  *ngIf="visible"
+  [class.is-expanded]="expanded"
+  (mouseenter)="onMouseEnter()"
+  (mouseleave)="onMouseLeave()"
+>
+  <div class="zvc-hud-inner" [class.expanded]="expanded">
+    <!-- Balance row -->
+    <div class="zvc-balance-row" (click)="togglePersist()">
+      <span class="zvc-hud-icon">🪙</span>
+      <div class="zvc-odometer" #odometerContainer>
+        <ng-container *ngFor="let col of columns; trackBy: trackByKey">
+          <span *ngIf="col.type === 'separator'" class="odo-separator">{{ col.value }}</span>
+          <div *ngIf="col.type === 'digit'" class="odo-digit-col">
+            <div #ribbonRef class="odo-ribbon">
+              <span class="odo-digit" *ngFor="let d of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]">{{ d }}</span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+      <span class="zvc-hud-label">ZVC</span>
+      <span class="zvc-expand-chevron" [class.open]="expanded">&#x25B2;</span>
+    </div>
+
+    <!-- Expandable content (inside the same glass container) -->
+    <div class="zvc-expand-body" [class.open]="expanded">
+      <div class="zvc-expand-content">
+        <!-- Redeem Code -->
+        <div class="zvc-section">
+          <div class="zvc-section-label">🎫 Code einlösen</div>
+          <div class="zvc-input-row">
+            <input
+              type="text"
+              class="zvc-input"
+              placeholder="Code eingeben"
+              [(ngModel)]="redeemCode"
+              (keyup.enter)="redeemCodeAction()"
+              [disabled]="codeRedemptionLoading"
+              (click)="$event.stopPropagation()"
+            />
+            <button
+              class="zvc-btn"
+              (click)="redeemCodeAction(); $event.stopPropagation()"
+              [disabled]="!redeemCode || codeRedemptionLoading"
+            >
+              <span *ngIf="!codeRedemptionLoading">Einlösen</span>
+              <span *ngIf="codeRedemptionLoading" class="zvc-spinner"></span>
+            </button>
+          </div>
+          <div class="zvc-hint">Codes gibt es auf unserem <strong>Discord</strong> oder bei Events.</div>
+          <div
+            *ngIf="codeRedemptionMessage"
+            class="zvc-msg"
+            [class.success]="codeRedemptionSuccess"
+            [class.error]="!codeRedemptionSuccess"
+          >
+            {{ codeRedemptionMessage }}
+          </div>
+        </div>
+
+        <div class="zvc-divider"></div>
+
+        <!-- Transfer -->
+        <div class="zvc-section">
+          <div class="zvc-section-label">💸 ZVC senden</div>
+          <div class="zvc-tax-badge">{{ isWeekendInBerlin() ? '🎉 0% Steuer' : '⚠️ 5% Steuer' }}</div>
+          <div class="zvc-input-row">
+            <input
+              type="text"
+              class="zvc-input"
+              placeholder="Empfänger (SteamID / Name)"
+              [(ngModel)]="transferRecipient"
+              [disabled]="transferLoading"
+              (click)="$event.stopPropagation()"
+            />
+          </div>
+          <div class="zvc-input-row">
+            <input
+              type="number"
+              class="zvc-input"
+              placeholder="Betrag"
+              [(ngModel)]="transferAmount"
+              [disabled]="transferLoading"
+              (click)="$event.stopPropagation()"
+            />
+            <button
+              class="zvc-btn"
+              (click)="transferZVC(); $event.stopPropagation()"
+              [disabled]="!transferRecipient || !transferAmount || transferLoading"
+            >
+              <span *ngIf="!transferLoading">Senden</span>
+              <span *ngIf="transferLoading" class="zvc-spinner"></span>
+            </button>
+          </div>
+
+          <div *ngIf="transferAmount && transferAmount > 0" class="zvc-cost-breakdown">
+            <span
+              >{{ transferAmount }} + {{ getTransferTax(transferAmount) }} Steuer =
+              <strong>{{ getTransferTotalCost(transferAmount) }} ZVC</strong></span
+            >
+          </div>
+
+          <div
+            *ngIf="transferMessage"
+            class="zvc-msg"
+            [class.success]="transferSuccess"
+            [class.error]="!transferSuccess"
+          >
+            {{ transferMessage }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

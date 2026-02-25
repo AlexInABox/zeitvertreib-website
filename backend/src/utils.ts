@@ -2,10 +2,53 @@
 import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
+import { AwsClient } from 'aws4fetch';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
-import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions } from './db/schema.js';
+import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, discordCache } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
+
+/**
+ * Validate and normalize a Steam64 ID
+ * @param steamId - The Steam ID to validate (can have @steam suffix)
+ * @returns { valid: boolean, normalized?: string, error?: string }
+ * - valid: true if the Steam ID is a valid Steam64
+ * - normalized: the normalized Steam ID (with @steam suffix) if valid
+ * - error: error message describing why the Steam ID is invalid
+ *
+ * Validation rules:
+ * - Min: 0x0110000100000000 (76561197960265728)
+ * - Max: 0x01100001FFFFFFFF (76561202255233023)
+ * - Must be exactly 17 decimal digits
+ */
+export function validateSteamId(steamId: string): { valid: boolean; normalized?: string; error?: string } {
+  const raw = steamId.trim();
+
+  // Check for empty string
+  if (!raw) {
+    return { valid: false, error: 'Steam ID darf nicht leer sein' };
+  }
+
+  // Remove all @steam suffixes (catches duplication like @steam@steam)
+  const base = raw.replace(/@steam/g, '');
+
+  // Check if exactly 17 decimal digits
+  if (!/^\d{17}$/.test(base)) {
+    return { valid: false, error: 'Steam ID muss genau 17 Dezimalziffern sein' };
+  }
+
+  // Verify within valid Steam64 ID range
+  const MIN_STEAM64 = 76561197960265728n; // 0x0110000100000000
+  const MAX_STEAM64 = 76561202255233023n; // 0x01100001FFFFFFFF
+  const steamId64 = BigInt(base);
+
+  if (steamId64 < MIN_STEAM64 || steamId64 > MAX_STEAM64) {
+    return { valid: false, error: 'Steam ID liegt außerhalb des gültigen Bereichs' };
+  }
+
+  // Normalize: return with @steam suffix
+  return { valid: true, normalized: `${base}@steam` };
+}
 
 // Response helpers
 export function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -148,7 +191,7 @@ export function extractSteamId(identity?: string): string | null {
 export async function fetchSteamUserData(steamId: string, env: Env, ctx: ExecutionContext): Promise<SteamUser | null> {
   steamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
 
-  const staleThreshold = 24 * 60 * 60; // 24 hours in seconds
+  const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
   const db = drizzle(env.ZEITVERTREIB_DATA);
   let steamUser: SteamUser | null = null;
 
@@ -221,6 +264,76 @@ async function refreshSteamCache(steamId: string, env: Env): Promise<void> {
     .onConflictDoUpdate({
       target: steamCache.steamId,
       set: {
+        username,
+        avatarUrl,
+        lastUpdated: now,
+      },
+    });
+}
+
+// Discord Cache Stuff
+export async function fetchDiscordUserData(
+  discordId: string,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<{ displayName: string; username: string; avatarUrl: string } | null> {
+  const staleThreshold = 24 * 60 * 60 * 7; // 1 week in seconds
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  let cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!cached) {
+    await refreshDiscordCache(discordId, env);
+    cached = await db.select().from(discordCache).where(eq(discordCache.discordId, discordId)).get();
+  }
+
+  if (cached) {
+    if (now - cached.lastUpdated >= staleThreshold) {
+      ctx.waitUntil(refreshDiscordCache(discordId, env));
+    }
+    return { displayName: cached.displayName, username: cached.username, avatarUrl: cached.avatarUrl };
+  }
+
+  return null;
+}
+
+async function refreshDiscordCache(discordId: string, env: Env): Promise<void> {
+  const url = `https://discord.com/api/v10/users/${discordId}`;
+
+  const res = await proxyFetch(url, { headers: { Authorization: `Bot ${env.DISCORD_TOKEN}` } }, env);
+
+  if (!res.ok) {
+    console.error(`Failed to refresh Discord cache for ${discordId}: ${res.status} ${res.statusText}`);
+    return;
+  }
+
+  const data: any = await res.json();
+  const displayName = data.global_name || data.username;
+  const username = data.username;
+  const avatarUrl = data.avatar ? `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.png` : '';
+
+  if (!displayName || !username) {
+    console.error(`Invalid data when refreshing Discord cache for ${discordId}`);
+    console.error('Data received:', data);
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  await db
+    .insert(discordCache)
+    .values({
+      discordId,
+      displayName,
+      username,
+      avatarUrl,
+      lastUpdated: now,
+    })
+    .onConflictDoUpdate({
+      target: discordCache.discordId,
+      set: {
+        displayName,
         username,
         avatarUrl,
         lastUpdated: now,
@@ -621,4 +734,179 @@ export async function isVip(steamId: string, env: Env): Promise<boolean> {
   if (!discordInfoResult) return false;
 
   return discordInfoResult.vipSince > 0;
+}
+
+/**
+ * Fetch a spray image from S3 storage
+ * @param sprayId - The ID of the spray to fetch
+ * @param env - The environment with S3/MinIO credentials
+ * @returns The base64 encoded image string or null if not found
+ */
+export async function getSprayImage(sprayId: number, env: Env): Promise<string | null> {
+  // Initialize AWS client
+  const aws = new AwsClient({
+    accessKeyId: env.MINIO_ACCESS_KEY,
+    secretAccessKey: env.MINIO_SECRET_KEY,
+    service: 's3',
+    region: 'us-east-1',
+  });
+
+  // Construct S3 path and URL
+  const base64Url = `https://s3.zeitvertreib.vip/test/sprays/${sprayId}.base64`;
+
+  try {
+    // Sign and fetch the request
+    const base64Request = await aws.sign(base64Url, { method: 'GET' });
+    const base64Response = await fetch(base64Request);
+
+    if (base64Response.ok) {
+      return await base64Response.text();
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Failed to fetch spray image ${sprayId}:`, error);
+    return null;
+  }
+}
+
+/**
+ *
+ * Fetch CedMod bans for a given Steam ID
+ * @param steamId
+ * @param env
+ * @returns
+ */
+export async function getCedModBans(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reason: string; bannedAt: number; duration: number; issuer: string }[]> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/BanLog/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('idOnly', 'true');
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return data.players.map((player: any) => ({
+      id: player.id,
+      reason: player.reason || 'Unknown reason',
+      bannedAt: new Date(`${player.timeStamp}Z`).getTime(),
+      duration: (player.duration || 0) * 60 * 1000,
+      issuer: player.issuer || 'Unknown issuer',
+    }));
+  } catch (error) {
+    console.error(`Error fetching CedMod bans for ${steamId}:`, error);
+    return [];
+  }
+}
+
+export async function isCedModBanned(steamId: string, env: Env): Promise<boolean> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Ban/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '10');
+    url.searchParams.set('idOnly', 'true');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(
+        `Failed to check CedMod active bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`,
+      );
+      return false;
+    }
+
+    const data: any = await response.json();
+    return (data.total ?? 0) > 0;
+  } catch (error) {
+    console.error(`Error checking CedMod active bans for ${steamId}:`, error);
+    return false;
+  }
+}
+
+export async function getCedModWarns(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reason: string; warnedAt: number; issuer: string }[]> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Warn/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('idOnly', 'true');
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_WARNS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod warns for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return data.players.map((player: any) => ({
+      id: player.id,
+      reason: player.reason || 'Unknown reason',
+      warnedAt: new Date(`${player.timeStamp}Z`).getTime(),
+      issuer: player.issuer || 'Unknown issuer',
+    }));
+  } catch (error) {
+    console.error(`Error fetching CedMod warns for ${steamId}:`, error);
+    return [];
+  }
 }

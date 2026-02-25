@@ -1,5 +1,5 @@
 UPDATE playerdata
-SET experience = 2840140800;
+SET experience = 20000;
 
 UPDATE advent_calendar
 SET
