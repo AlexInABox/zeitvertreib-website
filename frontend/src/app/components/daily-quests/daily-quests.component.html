@@ -1,0 +1,80 @@
+<div class="daily-quests-card">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="quest-loading">
+    <div class="text-center">
+      <div class="loading-spinner mx-auto mb-4"></div>
+      <p class="text-white mt-2">Quests werden geladen...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="hasError && !isLoading" class="quest-error">
+    <p class="text-red-400 mb-3">{{ errorMessage }}</p>
+    <button pButton type="button" label="Erneut versuchen" (click)="loadQuests()" class="w-full"></button>
+  </div>
+
+  <!-- Quests Display -->
+  <div *ngIf="!isLoading && !hasError" class="quests-container">
+    <div class="quests-header">
+      <h3 class="quests-title">Tägliche Quests</h3>
+      <p class="quests-subtitle">Erfülle die Quests und erhalte Belohnungen</p>
+    </div>
+
+    <div class="quests-grid">
+      <div *ngFor="let quest of quests" class="quest-item">
+        <!-- Quest Content -->
+        <div class="quest-content">
+          <div class="quest-header">
+            <div class="quest-title-row">
+              <span class="quest-name">{{ quest.description }}</span>
+            </div>
+            <div class="quest-status" [ngClass]="{ 'quest-completed': isQuestCompleted(quest) }">
+              <span *ngIf="isQuestCompleted(quest)" class="status-badge">✓ Abgeschlossen</span>
+              <span *ngIf="!isQuestCompleted(quest)" class="status-badge">Noch nicht Abgeschlossen</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="quest-progress">
+            <p-progressBar
+              [value]="getProgressPercentage(quest)"
+              [showValue]="false"
+              [style]="{ height: '6px' }"
+              styleClass="quest-progress-bar"
+            ></p-progressBar>
+            <p class="quest-progress-text">
+              {{ quest.currentProgress }} / {{ quest.targetValue }}
+            </p>
+          </div>
+
+          <!-- Rewards -->
+          <div class="quest-rewards">
+            <div class="reward-item">
+              <span class="reward-amount">+{{ quest.coinReward }} Coins</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Claim Button -->
+        <div class="quest-action">
+          <button
+            *ngIf="isQuestCompleted(quest) && !quest.isClaimed"
+            pButton
+            type="button"
+            label="Beanspruchen"
+            (click)="claimReward(quest)"
+            [disabled]="claimingQuestId === quest.questId"
+            [loading]="claimingQuestId === quest.questId"
+            class="quest-claim-btn"
+          ></button>
+          <div *ngIf="quest.isClaimed" class="quest-claimed-badge">
+            <span>✓ Beansprucht</span>
+          </div>
+          <div *ngIf="!isQuestCompleted(quest)" class="quest-locked-badge">
+            <span>Noch nicht abgeschlossen</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
