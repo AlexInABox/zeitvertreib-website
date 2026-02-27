@@ -107,7 +107,7 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
             rewardClaimed: 0,
           })
           .returning();
-        
+
         existingCompletion = created[0];
       }
 
