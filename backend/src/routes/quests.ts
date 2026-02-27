@@ -3,7 +3,12 @@ import { validateSession, getPlayerData, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
 import typia from 'typia';
-import type { GetQuestsTodayResponse, ClaimQuestRewardRequest, ClaimQuestRewardResponse, DailyQuestProgress } from '@zeitvertreib/types';
+import type {
+  GetQuestsTodayResponse,
+  ClaimQuestRewardRequest,
+  ClaimQuestRewardResponse,
+  DailyQuestProgress,
+} from '@zeitvertreib/types';
 
 /**
  * Get 3 random daily quests for today.
@@ -16,7 +21,11 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
   const sessionResult = await validateSession(request, env);
 
   if (sessionResult.status !== 'valid' || !sessionResult.steamId) {
-    return createResponse({ error: sessionResult.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: sessionResult.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   try {
@@ -29,11 +38,7 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
     const allQuests = await db.select().from(questDefinitions).where(eq(questDefinitions.isActive, 1));
 
     if (allQuests.length < 3) {
-      return createResponse(
-        { error: 'Not enough active quests available' },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Not enough active quests available' }, 500, origin);
     }
 
     // Generate 3 pseudo-random quests based on date (same quests for all players each day)
@@ -52,12 +57,7 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
     const completions = await db
       .select()
       .from(questCompletion)
-      .where(
-        and(
-          eq(questCompletion.userId, sessionResult.steamId),
-          eq(questCompletion.date, todayDate),
-        ),
-      );
+      .where(and(eq(questCompletion.userId, sessionResult.steamId), eq(questCompletion.date, todayDate)));
 
     const completionMap = new Map(completions.map((c) => [c.questId, c]));
 
@@ -149,7 +149,11 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
   const sessionResult = await validateSession(request, env);
 
   if (sessionResult.status !== 'valid' || !sessionResult.steamId) {
-    return createResponse({ error: sessionResult.status === 'expired' ? 'Session expired' : 'Not authenticated' }, 401, origin);
+    return createResponse(
+      { error: sessionResult.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
   }
 
   let body: ClaimQuestRewardRequest;
@@ -225,25 +229,25 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
 
     switch (questDef.questType) {
       case 'medipacks':
-        isActuallyCompleted = ((playerData.usedmedkits || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.usedmedkits || 0) - baseline >= questDef.targetValue;
         break;
       case 'colas':
-        isActuallyCompleted = ((playerData.usedcolas || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.usedcolas || 0) - baseline >= questDef.targetValue;
         break;
       case 'playtime':
-        isActuallyCompleted = ((playerData.playtime || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.playtime || 0) - baseline >= questDef.targetValue;
         break;
       case 'kills':
-        isActuallyCompleted = ((playerData.killcount || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.killcount || 0) - baseline >= questDef.targetValue;
         break;
       case 'rounds':
-        isActuallyCompleted = ((playerData.roundsplayed || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.roundsplayed || 0) - baseline >= questDef.targetValue;
         break;
       case 'pocketescapes':
-        isActuallyCompleted = ((playerData.pocketescapes || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.pocketescapes || 0) - baseline >= questDef.targetValue;
         break;
       case 'adrenaline':
-        isActuallyCompleted = ((playerData.usedadrenaline || 0) - baseline) >= questDef.targetValue;
+        isActuallyCompleted = (playerData.usedadrenaline || 0) - baseline >= questDef.targetValue;
         break;
     }
 
@@ -260,10 +264,7 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
       .where(eq(playerdata.id, sessionResult.steamId));
 
     // Mark reward as claimed
-    await db
-      .update(questCompletion)
-      .set({ rewardClaimed: 1 })
-      .where(eq(questCompletion.id, completion.id));
+    await db.update(questCompletion).set({ rewardClaimed: 1 }).where(eq(questCompletion.id, completion.id));
 
     const response: ClaimQuestRewardResponse = {
       success: true,
@@ -297,7 +298,7 @@ function getRandomQuestIds(seed: number, quests: any[], count: number): number[]
     const index = seedIter % available.length;
     const selectedQuest = available[index];
     result.push(selectedQuest.id);
-    
+
     const selectedType = selectedQuest.questType;
     for (let j = available.length - 1; j >= 0; j--) {
       if (available[j].questType === selectedType) {

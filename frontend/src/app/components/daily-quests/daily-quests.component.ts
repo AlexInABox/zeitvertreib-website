@@ -64,9 +64,13 @@ export class DailyQuestsComponent implements OnInit {
 
     const headers = this.getAuthHeaders();
     this.http
-      .post(`${environment.apiUrl}/quests/claim-reward`, {
-        questId: quest.questId,
-      }, { headers })
+      .post(
+        `${environment.apiUrl}/quests/claim-reward`,
+        {
+          questId: quest.questId,
+        },
+        { headers },
+      )
       .subscribe({
         next: () => {
           // Update quest state

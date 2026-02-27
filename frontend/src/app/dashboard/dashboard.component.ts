@@ -68,7 +68,16 @@ interface DiscordInviteResponse {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule, DiscordStatsComponent, DailyQuestsComponent],
+  imports: [
+    ButtonModule,
+    CardModule,
+    ChartModule,
+    AvatarModule,
+    CommonModule,
+    FormsModule,
+    DiscordStatsComponent,
+    DailyQuestsComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
