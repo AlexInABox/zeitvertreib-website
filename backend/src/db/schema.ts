@@ -272,12 +272,6 @@ export const chickenCrossGames = sqliteTable('chicken_cross_games', {
   lastUpdatedAt: integer('last_updated_at').notNull(),
 });
 
-export const reducedLuckUsers = sqliteTable('reduced_luck_users', {
-  steamId: text('steam_id').primaryKey().notNull(),
-  addedAt: integer('added_at').notNull(),
-  reason: text('reason'),
-});
-
 // Cases and all they need (moderation cases not csgo related lol)
 export const cases = sqliteTable(
   'cases',

@@ -4,16 +4,7 @@ import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { AwsClient } from 'aws4fetch';
 import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
-import {
-  playerdata,
-  kills,
-  loginSecrets,
-  discordInfo,
-  steamCache,
-  sessions,
-  reducedLuckUsers,
-  discordCache,
-} from './db/schema.js';
+import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, discordCache } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
 
@@ -57,21 +48,6 @@ export function validateSteamId(steamId: string): { valid: boolean; normalized?:
 
   // Normalize: return with @steam suffix
   return { valid: true, normalized: `${base}@steam` };
-}
-
-/**
- * Check if a user has reduced luck by querying the database
- * @param steamId - The Steam ID to check (with or without @steam suffix)
- * @param env - Cloudflare environment with D1 database
- * @returns Promise<boolean> - True if user has reduced luck
- */
-export async function checkHasReducedLuck(steamId: string, env: Env): Promise<boolean> {
-  const normalizedId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
-  const db = drizzle(env.ZEITVERTREIB_DATA);
-
-  const result = await db.select().from(reducedLuckUsers).where(eq(reducedLuckUsers.steamId, normalizedId)).limit(1);
-
-  return result.length > 0;
 }
 
 // Response helpers
@@ -791,5 +767,146 @@ export async function getSprayImage(sprayId: number, env: Env): Promise<string |
   } catch (error) {
     console.error(`Failed to fetch spray image ${sprayId}:`, error);
     return null;
+  }
+}
+
+/**
+ *
+ * Fetch CedMod bans for a given Steam ID
+ * @param steamId
+ * @param env
+ * @returns
+ */
+export async function getCedModBans(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reason: string; bannedAt: number; duration: number; issuer: string }[]> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/BanLog/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('idOnly', 'true');
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return data.players.map((player: any) => ({
+      id: player.id,
+      reason: player.reason || 'Unknown reason',
+      bannedAt: new Date(`${player.timeStamp}Z`).getTime(),
+      duration: (player.duration || 0) * 60 * 1000,
+      issuer: player.issuer || 'Unknown issuer',
+    }));
+  } catch (error) {
+    console.error(`Error fetching CedMod bans for ${steamId}:`, error);
+    return [];
+  }
+}
+
+export async function isCedModBanned(steamId: string, env: Env): Promise<boolean> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Ban/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '10');
+    url.searchParams.set('idOnly', 'true');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_BANS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(
+        `Failed to check CedMod active bans for ${normalizedSteamId}: ${response.status} ${response.statusText}`,
+      );
+      return false;
+    }
+
+    const data: any = await response.json();
+    return (data.total ?? 0) > 0;
+  } catch (error) {
+    console.error(`Error checking CedMod active bans for ${steamId}:`, error);
+    return false;
+  }
+}
+
+export async function getCedModWarns(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reason: string; warnedAt: number; issuer: string }[]> {
+  try {
+    const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Warn/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('idOnly', 'true');
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY_WARNS}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod warns for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return data.players.map((player: any) => ({
+      id: player.id,
+      reason: player.reason || 'Unknown reason',
+      warnedAt: new Date(`${player.timeStamp}Z`).getTime(),
+      issuer: player.issuer || 'Unknown issuer',
+    }));
+  } catch (error) {
+    console.error(`Error fetching CedMod warns for ${steamId}:`, error);
+    return [];
   }
 }

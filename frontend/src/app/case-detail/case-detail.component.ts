@@ -238,7 +238,13 @@ export class CaseDetailComponent implements OnInit {
 
   navigateToUserProfile(steamId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/manage', steamId]);
+      this.router.navigate(['/zeit'], { queryParams: { steamId } });
+    }
+  }
+
+  navigateToCreatorProfile(discordId: string) {
+    if (this.isTeam) {
+      this.router.navigate(['/zeit'], { queryParams: { discordId } });
     }
   }
 

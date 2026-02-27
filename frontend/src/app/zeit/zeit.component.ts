@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ZeitService } from '../services/zeit.service';
@@ -26,6 +26,7 @@ export class ZeitComponent implements OnInit, OnDestroy {
   isLoggedIn = false;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
+  private queryParamSubscription?: Subscription;
 
   // Partner API key
   showApiKeyInput = false;
@@ -65,6 +66,7 @@ export class ZeitComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private zeitService: ZeitService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
@@ -75,11 +77,34 @@ export class ZeitComponent implements OnInit, OnDestroy {
     this.userDataSubscription = this.authService.currentUserData$.subscribe(() => {
       this.isTeamMember = this.authService.isTeam();
     });
+
+    // Check for steamId or discordId query parameter and auto-search if present
+    this.queryParamSubscription = this.route.queryParams.subscribe((params) => {
+      const steamId = params['steamId'];
+      const discordId = params['discordId'];
+      if ((steamId || discordId) && !this.userData) {
+        // Auto-search when steamId or discordId is provided via query parameter
+        if (steamId) {
+          this.searchInput = steamId;
+          this.searchType = 'steamid';
+        } else if (discordId) {
+          this.searchInput = discordId;
+          this.searchType = 'discordid';
+        }
+        // Use a small delay to ensure auth state is initialized
+        setTimeout(() => {
+          if (this.canQuery) {
+            this.performSearch();
+          }
+        }, 100);
+      }
+    });
   }
 
   ngOnDestroy() {
     this.authSubscription?.unsubscribe();
     this.userDataSubscription?.unsubscribe();
+    this.queryParamSubscription?.unsubscribe();
   }
 
   get canQuery(): boolean {
@@ -145,6 +170,56 @@ export class ZeitComponent implements OnInit, OnDestroy {
     this.userData = null;
     this.searchInput = '';
     this.errorMessage = '';
+  }
+
+  get hasActiveCedmodBan(): boolean {
+    if (!this.userData || !this.userData.cedmodBans || this.userData.cedmodBans.length === 0) {
+      return false;
+    }
+
+    const now = Date.now();
+    return this.userData.cedmodBans.some((ban) => ban.bannedAt + ban.duration > now);
+  }
+
+  isBanActive(bannedAt: number, duration: number): boolean {
+    return bannedAt + duration > Date.now();
+  }
+
+  getBanStatus(bannedAt: number, duration: number): string {
+    const now = Date.now();
+    const expiresAt = bannedAt + duration;
+
+    if (now >= expiresAt) {
+      return 'Abgelaufen';
+    }
+
+    const remainingMs = expiresAt - now;
+    const remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+    const remainingHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (remainingDays > 0) {
+      return `${remainingDays}d ${remainingHours}h verbleibend`;
+    } else if (remainingHours > 0) {
+      return `${remainingHours}h ${remainingMinutes}m verbleibend`;
+    } else {
+      return `${remainingMinutes}m verbleibend`;
+    }
+  }
+
+  formatDuration(durationMs: number): string {
+    const durationMinutes = Math.floor(durationMs / (1000 * 60));
+    const days = Math.floor(durationMinutes / (60 * 24));
+    const hours = Math.floor((durationMinutes % (60 * 24)) / 60);
+    const minutes = durationMinutes % 60;
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
   }
 
   getFakerankColorHex(color: FakerankColor): string {

@@ -391,6 +391,12 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     this.router.navigate(['/cases', item.caseId]);
   }
 
+  navigateToCreatorProfile(discordId: string) {
+    if (this.isTeam) {
+      this.router.navigate(['/zeit'], { queryParams: { discordId } });
+    }
+  }
+
   formatCaseName(caseId: string): string {
     return `Fall #${caseId}`;
   }

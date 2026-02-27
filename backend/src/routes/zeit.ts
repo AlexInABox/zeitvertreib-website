@@ -8,6 +8,9 @@ import {
   isTeam,
   validateSteamId,
   getSprayImage,
+  getCedModBans,
+  isCedModBanned,
+  getCedModWarns,
 } from '../utils.js';
 import { eq, inArray } from 'drizzle-orm';
 import { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib/types';
@@ -137,7 +140,9 @@ export async function getUserData(request: Request, env: Env, ctx: ExecutionCont
     sprayBanned: sprayBanResult.length > 0,
     sprayBanReason: sprayBanResult[0]?.reason,
     sprayBannedByDiscordId: sprayBanResult[0]?.bannedByDiscordId,
-    createdCases: createdCasesData,
+    cedmodBans: await getCedModBans(steamId, env),
+    cedmodActivelyBanned: await isCedModBanned(steamId, env),
+    cedmodWarns: await getCedModWarns(steamId, env),
     linkedCases: linkedCasesData,
   };
   return createResponse(userData, 200, origin);

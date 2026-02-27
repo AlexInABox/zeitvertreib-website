@@ -154,15 +154,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
     ];
 
-    // Conditionally add User Management for admins only
-    if (this.isUserManagementAdmin) {
-      this.items.push({
-        label: 'User Management',
-        icon: PrimeIcons.WALLET,
-        route: '/user_management',
-      });
-    }
-
     // Check visibility window: show adventcalendar from Nov 15 through December (German timezone)
     const nowGerman = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
     const currentMonth = nowGerman.getMonth() + 1; // 0-indexed

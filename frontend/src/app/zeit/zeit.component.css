@@ -474,18 +474,42 @@
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.3rem 0.75rem;
-  border-radius: 9999px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+}
+
+.badge i {
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
 }
 
 .badge.danger {
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge.danger i {
+  color: #f87171;
+}
+
+.badge.warning {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.badge.warning i {
+  color: #fbbf24;
 }
 
 /* ================================================
@@ -873,6 +897,7 @@
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .case-category-badge {
@@ -891,6 +916,41 @@
   white-space: nowrap;
 }
 
+.case-date.expired {
+  color: rgba(239, 68, 68, 0.6);
+  text-decoration: line-through;
+}
+
+.ban-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  white-space: nowrap;
+}
+
+.ban-status-badge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.ban-status-badge.expired {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.ban-status-badge i {
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+}
+
 .case-arrow {
   color: rgba(255, 255, 255, 0.2);
   font-size: 0.75rem;
@@ -899,6 +959,154 @@
 
 .case-item:hover .case-arrow {
   color: rgba(255, 255, 255, 0.5);
+}
+
+.ban-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.ban-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ban-row-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ban-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ban-id {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: ui-monospace, monospace;
+}
+
+.ban-reason {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1.35;
+}
+
+.ban-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.375rem;
+  white-space: nowrap;
+}
+
+.ban-status.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.ban-status.expired {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.ban-status i {
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+}
+
+.ban-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.ban-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ban-meta-item i {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.warn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.warn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.warn-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.warn-id {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: ui-monospace, monospace;
+}
+
+.warn-reason {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1.35;
+}
+
+.warn-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.warn-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.warn-meta-item i {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 /* ================================================
@@ -955,6 +1163,11 @@
   .case-arrow {
     display: none;
   }
+
+  .ban-row-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ================================================
@@ -996,10 +1209,43 @@ html:not(.my-app-dark) .stat-label,
 html:not(.my-app-dark) .steamid,
 html:not(.my-app-dark) .discord-id,
 html:not(.my-app-dark) .case-id,
+html:not(.my-app-dark) .ban-id,
 html:not(.my-app-dark) .fakerank-label,
 html:not(.my-app-dark) .ban-detail-label,
 html:not(.my-app-dark) .spray-id,
-html:not(.my-app-dark) .case-date {
+html:not(.my-app-dark) .case-date,
+html:not(.my-app-dark) .ban-meta-item {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+html:not(.my-app-dark) .ban-reason {
+  color: #1f2937;
+}
+
+html:not(.my-app-dark) .warn-reason {
+  color: #1f2937;
+}
+
+html:not(.my-app-dark) .ban-row {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html:not(.my-app-dark) .warn-row {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+html:not(.my-app-dark) .ban-meta-item i {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+html:not(.my-app-dark) .warn-meta-item,
+html:not(.my-app-dark) .warn-id {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+html:not(.my-app-dark) .warn-meta-item i {
   color: rgba(0, 0, 0, 0.45);
 }
 

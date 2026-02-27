@@ -979,11 +979,19 @@ export interface ZeitGetResponse {
   sprayBanned: boolean;
   sprayBanReason?: string;
   sprayBannedByDiscordId?: string;
-  createdCases: {
-    caseId: string;
-    title: string;
-    category: CaseCategory;
-    createdAt: number;
+  cedmodBans: {
+    id: number;
+    reason: string;
+    bannedAt: number;
+    duration: number;
+    issuer: string;
+  }[];
+  cedmodActivelyBanned: boolean;
+  cedmodWarns: {
+    id: number;
+    reason: string;
+    warnedAt: number;
+    issuer: string;
   }[];
   linkedCases: {
     caseId: string;

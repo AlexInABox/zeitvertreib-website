@@ -1,4 +1,4 @@
-import { validateSession, createResponse, increment, fetchSteamUserData, checkHasReducedLuck } from '../utils.js';
+import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -172,13 +172,6 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       );
     }
 
-    // Check if user has reduced luck
-    const hasReducedLuck = await checkHasReducedLuck(playerId, env);
-
-    if (hasReducedLuck) {
-      console.log(`REDUCED LUCK: Forcing loss for ${playerId} in roulette (bet: ${body.type})`);
-    }
-
     //"RNG" 0-36
     function biasedSpin(probZero = 0.1): number {
       // 10% bias for 0
@@ -216,7 +209,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
       }
     }
 
-    const spinResult = hasReducedLuck ? forceLosingSpin(body.type, body.value) : biasedSpin();
+    const spinResult = biasedSpin();
 
     //check win
     const betOutcome = checkBetOutcome(body.type, spinResult, body.value);
