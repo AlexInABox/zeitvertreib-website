@@ -13,6 +13,7 @@ import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { EasterEggService } from '../services/easter-egg.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
+import { DailyQuestsComponent } from '../components/daily-quests/daily-quests.component';
 import type {
   SprayGetResponseItem,
   SprayPostRequest,
@@ -67,7 +68,16 @@ interface DiscordInviteResponse {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [ButtonModule, CardModule, ChartModule, AvatarModule, CommonModule, FormsModule, DiscordStatsComponent],
+  imports: [
+    ButtonModule,
+    CardModule,
+    ChartModule,
+    AvatarModule,
+    CommonModule,
+    FormsModule,
+    DiscordStatsComponent,
+    DailyQuestsComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })

@@ -1000,3 +1000,48 @@ export interface ZeitGetResponse {
     createdAt: number;
   }[];
 }
+
+// ============================================================================
+// Daily Quests Types
+// ============================================================================
+
+export type QuestType = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
+
+export interface QuestDefinition {
+  id: number;
+  questType: QuestType;
+  targetValue: number;
+  coinReward: number;
+  description: string;
+  isActive: boolean;
+}
+
+export interface DailyQuestProgress {
+  id: number;
+  questId: number;
+  questType: QuestType;
+  description: string;
+  targetValue: number;
+  currentProgress: number;
+  coinReward: number;
+  isCompleted: boolean;
+  isClaimed: boolean;
+}
+
+/** GET /quests/today response */
+export interface GetQuestsTodayResponse {
+  date: string; // YYYY-MM-DD
+  quests: DailyQuestProgress[];
+}
+
+/** POST /quests/claim-reward request body */
+export interface ClaimQuestRewardRequest {
+  questId: number;
+}
+
+/** POST /quests/claim-reward response */
+export interface ClaimQuestRewardResponse {
+  success: boolean;
+  coinsAwarded: number;
+  message: string;
+}

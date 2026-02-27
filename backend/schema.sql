@@ -193,3 +193,75 @@ INSERT OR IGNORE INTO recurring_transactions (
     ('expense', 'services', 15.20, 'DDoS Protection - Cloudflare', 'monthly', '2025-01-02', '2025-02-02', 'SRV-REC-001', 'Monthly DDoS protection'),
     ('expense', 'domain', 12.99, 'Domain Renewal zeitvertreib.dev', 'yearly', '2025-01-15', '2026-01-15', 'DOM-REC-001', 'Annual domain renewal'),
     ('income', 'donation', 25.00, 'Recurring Patreon Support', 'monthly', '2025-01-01', '2025-02-01', 'PAT-REC-001', 'Monthly Patreon donation');
+
+-- Daily Quests Tables
+CREATE TABLE IF NOT EXISTS quest_definitions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quest_type TEXT NOT NULL CHECK (quest_type IN ('medipacks', 'playtime', 'kills', 'colas', 'rounds', 'pocketescapes', 'adrenaline')),
+    target_value INTEGER NOT NULL,
+    coin_reward INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    UNIQUE(quest_type, target_value)
+);
+
+CREATE TABLE IF NOT EXISTS quest_completion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    quest_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    completed_at INTEGER NOT NULL,
+    baseline_value INTEGER DEFAULT 0,
+    reward_claimed INTEGER DEFAULT 0,
+    UNIQUE(user_id, quest_id, date)
+);
+
+-- Index for quest completion queries
+CREATE INDEX IF NOT EXISTS idx_quest_completion_user_date ON quest_completion(user_id, date);
+
+-- Comprehensive quest definitions for daily quests
+INSERT OR IGNORE INTO quest_definitions (quest_type, target_value, coin_reward, description, is_active) VALUES
+    -- Medipack quests
+    ('medipacks', 1, 20, 'Verwende 1 Medikit', 1),
+    ('medipacks', 4, 35, 'Verwende 4 Medikits', 1),
+    ('medipacks', 10, 50, 'Verwende 10 Medikits', 1),
+
+    
+    -- Cola quests
+    ('colas', 1, 10, 'Trinke 1 cola', 1),
+    ('colas', 3, 30, 'Trinke 3 colas', 1),
+    ('colas', 5, 50, 'Trinke 5 colas', 1),
+
+    
+    -- Playtime quests (in seconds)
+    ('playtime', 600, 20, 'Spiele 10 für Minuten', 1),
+    ('playtime', 1200, 40, 'Spiele 20 für Minuten', 1),
+    ('playtime', 1800, 60, 'Spiele 30 für Minuten', 1),
+
+    
+    -- Kill quests
+    ('kills', 3, 25, 'Erziele 3 kills', 1),
+    ('kills', 5, 50, 'Erziele 5 kills', 1),
+    ('kills', 10, 75, 'Erziele 10 kills', 1),
+    ('kills', 20, 100, 'Erziele 20 kills', 1),
+
+    
+    -- Round quests
+    ('rounds', 3, 20, 'Spiele 3 Runden', 1),
+    ('rounds', 5, 35, 'Spiele 5 Runden', 1),
+    ('rounds', 10, 60, 'Spiele 10 Runden', 1),
+    ('rounds', 15, 100, 'Spiele 15 Runden', 1),
+
+    
+    -- Pocket escape quests
+    ('pocketescapes', 1, 30, 'Schaffe 1 Pocket Escape', 1),
+    ('pocketescapes', 2, 60, 'Schaffe 2 Pocket Escapes', 1),
+    ('pocketescapes', 3, 90, 'Schaffe 3 Pocket Escapes', 1),
+    ('pocketescapes', 5, 150, 'Schaffe 5 Pocket Escapes', 1),
+
+    
+    -- Adrenaline used quests
+    ('adrenaline', 2, 25, 'Verwende 2 Adrenaline', 1),
+    ('adrenaline', 4, 40, 'Verwende 4 Adrenaline', 1),
+    ('adrenaline', 6, 60, 'Verwende 6 Adrenaline', 1),
+    ('adrenaline', 10, 100, 'Verwende 10 Adrenaline', 1);
