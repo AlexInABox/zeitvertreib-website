@@ -93,22 +93,20 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
       }
 
       let existingCompletion = completionMap.get(quest.id);
-      
+
       // Create completion record on first fetch if it doesn't exist
       if (!existingCompletion) {
-        await db
-          .insert(questCompletion)
-          .values({
-            userId: sessionResult.steamId,
-            questId: quest.id,
-            date: todayDate,
-            completedAt: 0,
-            baselineValue: currentProgress,
-            rewardClaimed: 0,
-          });
-        
+        await db.insert(questCompletion).values({
+          userId: sessionResult.steamId,
+          questId: quest.id,
+          date: todayDate,
+          completedAt: 0,
+          baselineValue: currentProgress,
+          rewardClaimed: 0,
+        });
+
         // Fetch the created record to get the full data including auto-generated ID
-        const created: typeof questCompletion.$inferSelect[] = await db
+        const created: (typeof questCompletion.$inferSelect)[] = await db
           .select()
           .from(questCompletion)
           .where(
@@ -119,7 +117,7 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
             ),
           )
           .limit(1);
-        
+
         existingCompletion = created[0];
       }
 
