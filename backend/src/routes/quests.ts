@@ -92,25 +92,50 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
           break;
       }
 
-      const existingCompletion = completionMap.get(quest.id);
+      let existingCompletion = completionMap.get(quest.id);
+      
+      // Create completion record on first fetch if it doesn't exist
+      if (!existingCompletion) {
+        await db
+          .insert(questCompletion)
+          .values({
+            userId: sessionResult.steamId,
+            questId: quest.id,
+            date: todayDate,
+            completedAt: 0,
+            baselineValue: currentProgress,
+            rewardClaimed: 0,
+          });
+        
+        // Fetch the created record to get the full data including auto-generated ID
+        const created: typeof questCompletion.$inferSelect[] = await db
+          .select()
+          .from(questCompletion)
+          .where(
+            and(
+              eq(questCompletion.userId, sessionResult.steamId),
+              eq(questCompletion.questId, quest.id),
+              eq(questCompletion.date, todayDate),
+            ),
+          )
+          .limit(1);
+        
+        existingCompletion = created[0];
+      }
+
       let isCompleted = existingCompletion ? existingCompletion.completedAt > 0 : false;
       const isClaimed = existingCompletion ? existingCompletion.rewardClaimed === 1 : false;
 
       // Get baseline for incremental progress calculation
-      let baseline = existingCompletion?.baselineValue ?? 0;
-      let incrementalProgress = currentProgress - baseline;
+      const baseline = existingCompletion?.baselineValue ?? 0;
+      const incrementalProgress = currentProgress - baseline;
 
-      // Auto-create completion record when quest target is reached
-      if (!existingCompletion && incrementalProgress >= quest.targetValue) {
-        baseline = currentProgress - quest.targetValue; // Set baseline so incremental = targetValue
-        await db.insert(questCompletion).values({
-          userId: sessionResult.steamId,
-          questId: quest.id,
-          date: todayDate,
-          completedAt: Math.floor(Date.now() / 1000),
-          baselineValue: baseline,
-          rewardClaimed: 0,
-        });
+      // Check if quest should be marked as completed
+      if (!isCompleted && incrementalProgress >= quest.targetValue && existingCompletion) {
+        await db
+          .update(questCompletion)
+          .set({ completedAt: Math.floor(Date.now() / 1000) })
+          .where(eq(questCompletion.id, existingCompletion.id));
         isCompleted = true;
       }
 
