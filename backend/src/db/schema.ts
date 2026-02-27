@@ -317,8 +317,7 @@ export const questDefinitions = sqliteTable('quest_definitions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   questType: text('quest_type', {
     enum: ['medipacks', 'playtime', 'kills', 'colas', 'rounds', 'pocketescapes', 'adrenaline'],
-  })
-    .notNull(),
+  }).notNull(),
   targetValue: integer('target_value').notNull(),
   coinReward: integer('coin_reward').notNull(),
   description: text('description').notNull(),
