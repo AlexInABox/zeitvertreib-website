@@ -93,7 +93,7 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
       }
 
       let existingCompletion = completionMap.get(quest.id);
-      
+
       // Create completion record on first fetch if it doesn't exist
       if (!existingCompletion) {
         const created = await db
