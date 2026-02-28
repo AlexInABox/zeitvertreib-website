@@ -278,6 +278,7 @@ export default {
     // Collect fakerank zvc fees every day at midnight UTC
     if (controller.cron === '0 0 * * *') {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
+      await db.delete(schema.dailyQuestProgress);
     }
 
     // Flush advent calendar table on January 2nd at 03:00 UTC

@@ -11,6 +11,9 @@ import {
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
+
+import { logProgress } from './quests.js';
+
 import type { StatsPostRequest } from '@zeitvertreib/types';
 
 export async function handleGetStats(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -104,6 +107,18 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
         username: player.username || playerdata.username,
       })
       .where(eq(playerdata.id, player.userid));
+
+    // Log quest progress for relevant quests
+    await logProgress(env, {
+      userId: player.userid,
+      medipacks: player.medkits,
+      colas: player.colas,
+      playtime: player.timePlayed,
+      kills: body.kills.filter((kill) => kill.Attacker === player.userid).length,
+      rounds: player.roundsPlayed,
+      pocketescapes: player.pocketEscapes,
+      adrenaline: player.adrenaline,
+    });
   }
 
   // Add all kill records to the kills table

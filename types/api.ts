@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -725,7 +725,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
 
 // ============================================================================
 // Chicken Cross Types
@@ -887,7 +887,7 @@ export interface GetCaseMetadataGetResponse {
 }
 
 /** POST /cases — no request body */
-export interface CreateCasePostRequest {}
+export interface CreateCasePostRequest { }
 
 /** POST /cases response */
 export interface CreateCasePostResponse {
@@ -1005,27 +1005,24 @@ export interface ZeitGetResponse {
 // Daily Quests Types
 // ============================================================================
 
-export type QuestType = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
+export type QuestCategory = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
 
 export interface QuestDefinition {
-  id: number;
-  questType: QuestType;
+  category: QuestCategory;
   targetValue: number;
   coinReward: number;
   description: string;
-  isActive: boolean;
 }
 
 export interface DailyQuestProgress {
   id: number;
-  questId: number;
-  questType: QuestType;
+  category: QuestCategory;
   description: string;
   targetValue: number;
   currentProgress: number;
   coinReward: number;
   isCompleted: boolean;
-  isClaimed: boolean;
+  claimedAt: number;
 }
 
 /** GET /quests/today response */

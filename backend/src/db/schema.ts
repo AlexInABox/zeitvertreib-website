@@ -312,24 +312,11 @@ export const casesRelatedUsers = sqliteTable('cases_related_users', {
   steamId: text('steam_id').notNull(),
 });
 
-// Daily Quests
-export const questDefinitions = sqliteTable('quest_definitions', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  questType: text('quest_type', {
-    enum: ['medipacks', 'playtime', 'kills', 'colas', 'rounds', 'pocketescapes', 'adrenaline'],
-  }).notNull(),
-  targetValue: integer('target_value').notNull(),
-  coinReward: integer('coin_reward').notNull(),
-  description: text('description').notNull(),
-  isActive: integer('is_active').default(1),
-});
-
-export const questCompletion = sqliteTable('quest_completion', {
+// We purge this daily
+export const dailyQuestProgress = sqliteTable('daily_quest_progress', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull(),
-  questId: integer('quest_id').notNull(),
-  date: text('date').notNull(), // YYYY-MM-DD
-  completedAt: integer('completed_at').notNull(),
-  baselineValue: integer('baseline_value').default(0), // Player's stat value when quest appeared
-  rewardClaimed: integer('reward_claimed').default(0), // 0 = false, 1 = true
+  category: text('category').notNull(),
+  progress: integer('progress').notNull().default(0),
+  claimedAt: integer('claimed_at').notNull().default(0),
 });

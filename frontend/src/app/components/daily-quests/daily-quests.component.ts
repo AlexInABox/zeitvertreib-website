@@ -60,21 +60,21 @@ export class DailyQuestsComponent implements OnInit {
   claimReward(quest: DailyQuestProgress): void {
     if (this.claimingQuestId !== null) return; // Prevent multiple clicks
 
-    this.claimingQuestId = quest.questId;
+    this.claimingQuestId = quest.id;
 
     const headers = this.getAuthHeaders();
     this.http
       .post(
         `${environment.apiUrl}/quests/claim-reward`,
         {
-          questId: quest.questId,
+          questId: quest.id,
         },
         { headers },
       )
       .subscribe({
         next: () => {
           // Update quest state
-          quest.isClaimed = true;
+          quest.claimedAt = Math.floor(Date.now() / 1000);
           this.claimingQuestId = null;
         },
         error: (error) => {

@@ -56,16 +56,16 @@
         <!-- Claim Button -->
         <div class="quest-action">
           <button
-            *ngIf="isQuestCompleted(quest) && !quest.isClaimed"
+            *ngIf="isQuestCompleted(quest) && quest.claimedAt === 0"
             pButton
             type="button"
             label="Beanspruchen"
             (click)="claimReward(quest)"
-            [disabled]="claimingQuestId === quest.questId"
-            [loading]="claimingQuestId === quest.questId"
+            [disabled]="claimingQuestId === quest.id"
+            [loading]="claimingQuestId === quest.id"
             class="quest-claim-btn"
           ></button>
-          <div *ngIf="quest.isClaimed" class="quest-claimed-badge">
+          <div *ngIf="quest.claimedAt > 0" class="quest-claimed-badge">
             <span>✓ Beansprucht</span>
           </div>
           <div *ngIf="!isQuestCompleted(quest)" class="quest-locked-badge">
