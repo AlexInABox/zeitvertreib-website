@@ -9,7 +9,7 @@ import type {
   ClaimQuestRewardResponse,
   DailyQuestProgress,
   QuestDefinition,
-  StatsPostRequest
+  StatsPostRequest,
 } from '@zeitvertreib/types';
 
 const QUEST_DEFINITIONS: QuestDefinition[] = [
@@ -150,12 +150,7 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
     const progressRows = await db
       .select()
       .from(dailyQuestProgress)
-      .where(
-        and(
-          eq(dailyQuestProgress.id, body.questId),
-          eq(dailyQuestProgress.userId, sessionResult.steamId),
-        ),
-      )
+      .where(and(eq(dailyQuestProgress.id, body.questId), eq(dailyQuestProgress.userId, sessionResult.steamId)))
       .limit(1);
 
     const progressRow = progressRows[0];
@@ -194,7 +189,7 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
       db
         .update(dailyQuestProgress)
         .set({ claimedAt: Math.floor(Date.now() / 1000) })
-        .where(eq(dailyQuestProgress.id, progressRow.id))
+        .where(eq(dailyQuestProgress.id, progressRow.id)),
     ]);
 
     const response: ClaimQuestRewardResponse = {
@@ -244,7 +239,6 @@ function getDailyQuests(dateString: string): QuestDefinition[] {
   return result;
 }
 
-
 export async function logProgress(
   env: Env,
   params: {
@@ -276,10 +270,7 @@ export async function logProgress(
   const relevantQuests = getDailyQuests(todayDate).filter((q) => (deltas[q.category] ?? 0) > 0);
   if (relevantQuests.length === 0) return;
 
-  const progressRows = await db
-    .select()
-    .from(dailyQuestProgress)
-    .where(eq(dailyQuestProgress.userId, params.userId));
+  const progressRows = await db.select().from(dailyQuestProgress).where(eq(dailyQuestProgress.userId, params.userId));
 
   const progressMap = new Map(progressRows.map((r) => [r.category, r]));
 
