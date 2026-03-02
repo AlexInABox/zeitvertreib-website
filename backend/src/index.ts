@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/d1';
+import { eq, not, like, and } from 'drizzle-orm';
 import * as schema from './db/schema.js';
 import {
   handleSteamLogin,
@@ -53,7 +54,7 @@ import {
   handleChickenCrossActive,
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
-import { handleGetQuestsToday, handleGetQuestsWeekly, handleClaimQuestReward } from './routes/quests.js';
+import { handleGetQuestsToday, handleGetQuestsWeekly, handleClaimQuestReward, getCurrentWeekString } from './routes/quests.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -279,7 +280,17 @@ export default {
     // Collect fakerank zvc fees every day at midnight UTC
     if (controller.cron === '0 0 * * *') {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
-      await db.delete(schema.dailyQuestProgress);
+      
+      // Delete daily quest progress (non-weekly categories)
+      await db.delete(schema.dailyQuestProgress).where(not(like(schema.dailyQuestProgress.category, 'weekly-%')));
+      
+      // Delete old weekly quest progress (categories not from the current week)
+      const currentWeekString = getCurrentWeekString();
+      const currentWeekCode = currentWeekString.replace('-', ''); // e.g., 2026-W10 -> 2026W10
+      const currentWeekPattern = `weekly-${currentWeekCode}-%`;
+      await db
+        .delete(schema.dailyQuestProgress)
+        .where(and(like(schema.dailyQuestProgress.category, 'weekly-%'), not(like(schema.dailyQuestProgress.category, currentWeekPattern))));
     }
 
     // Flush advent calendar table on January 2nd at 03:00 UTC

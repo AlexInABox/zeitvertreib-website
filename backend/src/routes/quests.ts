@@ -1,7 +1,7 @@
 import { dailyQuestProgress, playerdata } from '../db/schema.js';
 import { validateSession, getPlayerData, createResponse, increment } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import typia from 'typia';
 import type {
   GetQuestsTodayResponse,
@@ -254,7 +254,10 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
   }
 }
 
-function getCurrentWeekString(date: Date = new Date()): string {
+/**
+ * Get the current ISO week string (e.g., 2026-W10)
+ */
+export function getCurrentWeekString(date: Date = new Date()): string {
   const tempDate = new Date(date.valueOf());
   const dayNum = (tempDate.getDay() + 6) % 7; // Monday = 0, Sunday = 6
   tempDate.setDate(tempDate.getDate() - dayNum + 3); // Move to Thursday of the same ISO week
@@ -291,11 +294,17 @@ export async function handleGetQuestsWeekly(request: Request, env: Env, ctx: Exe
 
     const weeklyQuests = getWeeklyQuests(weekString);
 
-    // Get progress rows for this user
+    // Get progress rows for this user, limited to the categories of this week's quests
+    const weeklyQuestCategories = weeklyQuests.map((q) => q.category);
     const progressRows = await db
       .select()
       .from(dailyQuestProgress)
-      .where(eq(dailyQuestProgress.userId, sessionResult.steamId));
+      .where(
+        and(
+          eq(dailyQuestProgress.userId, sessionResult.steamId),
+          inArray(dailyQuestProgress.category, weeklyQuestCategories),
+        ),
+      );
 
     const progressMap = new Map(progressRows.map((r) => [r.category, r]));
 
@@ -450,7 +459,12 @@ export async function logProgress(
   const allRelevantQuests = [...dailyQuests, ...weeklyQuestsToUpdate];
   if (allRelevantQuests.length === 0) return;
 
-  const progressRows = await db.select().from(dailyQuestProgress).where(eq(dailyQuestProgress.userId, params.userId));
+  // Query only the progress rows for the quests we're updating
+  const relevantCategories = allRelevantQuests.map((q) => q.category);
+  const progressRows = await db
+    .select()
+    .from(dailyQuestProgress)
+    .where(and(eq(dailyQuestProgress.userId, params.userId), inArray(dailyQuestProgress.category, relevantCategories)));
 
   const progressMap = new Map(progressRows.map((r) => [r.category, r]));
 
