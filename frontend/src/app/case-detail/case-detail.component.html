@@ -295,17 +295,28 @@
                     *ngFor="let report of recentReportsForPlayer"
                     [class.selected]="selectedReportToken === report.reportToken"
                   >
-                    <div class="report-item-header" (click)="selectedReportToken = report.reportToken; selectedReportFile = ''">
+                    <div
+                      class="report-item-header"
+                      (click)="selectedReportToken = report.reportToken; selectedReportFile = ''"
+                    >
                       <div class="report-item-info">
                         <div class="report-status" [ngClass]="report.status">{{ report.status }}</div>
                         <div class="report-users">
                           <div class="report-user">
-                            <img [src]="report.reporterAvatarUrl || '/assets/default-avatar.png'" [alt]="report.reporterUsername" class="report-user-avatar" />
+                            <img
+                              [src]="report.reporterAvatarUrl || '/assets/default-avatar.png'"
+                              [alt]="report.reporterUsername"
+                              class="report-user-avatar"
+                            />
                             <span class="report-user-name">{{ report.reporterUsername }}</span>
                           </div>
                           <span class="report-arrow">→</span>
                           <div class="report-user">
-                            <img [src]="report.reportedAvatarUrl || '/assets/default-avatar.png'" [alt]="report.reportedUsername" class="report-user-avatar" />
+                            <img
+                              [src]="report.reportedAvatarUrl || '/assets/default-avatar.png'"
+                              [alt]="report.reportedUsername"
+                              class="report-user-avatar"
+                            />
                             <span class="report-user-name">{{ report.reportedUsername }}</span>
                           </div>
                         </div>
@@ -313,9 +324,14 @@
                       </div>
                       <i class="pi pi-check selected-indicator" *ngIf="selectedReportToken === report.reportToken"></i>
                     </div>
-                    <div class="report-description">{{ report.description | slice: 0: 100 }}{{ report.description.length > 100 ? '...' : '' }}</div>
+                    <div class="report-description">
+                      {{ report.description | slice: 0 : 100 }}{{ report.description.length > 100 ? '...' : '' }}
+                    </div>
 
-                    <div class="report-files" *ngIf="selectedReportToken === report.reportToken && report.files.length > 0">
+                    <div
+                      class="report-files"
+                      *ngIf="selectedReportToken === report.reportToken && report.files.length > 0"
+                    >
                       <div class="files-label">Datei auswählen:</div>
                       <div
                         class="report-file-item"
@@ -328,7 +344,10 @@
                         <i class="pi pi-check file-check" *ngIf="selectedReportFile === file"></i>
                       </div>
                     </div>
-                    <div class="report-no-files" *ngIf="selectedReportToken === report.reportToken && report.files.length === 0">
+                    <div
+                      class="report-no-files"
+                      *ngIf="selectedReportToken === report.reportToken && report.files.length === 0"
+                    >
                       <i class="pi pi-info-circle"></i> Dieser Report hat keine Dateien.
                     </div>
                   </div>
@@ -340,7 +359,7 @@
                 label="In Case importieren"
                 icon="pi pi-download"
                 class="upload-btn"
-                style="margin-top: 0.5rem; width: 100%;"
+                style="margin-top: 0.5rem; width: 100%"
                 (click)="importReportFile()"
                 [disabled]="!selectedReportFile || isImportingReport"
                 [loading]="isImportingReport"
@@ -357,7 +376,9 @@
             </div>
             <div class="progress-bar-wrapper">
               <div class="progress-bar" [style.width.%]="importReportProgress"></div>
-              <span class="progress-text-centered">{{ importReportProgress > 0 ? importReportProgress + '%' : '' }}</span>
+              <span class="progress-text-centered">{{
+                importReportProgress > 0 ? importReportProgress + '%' : ''
+              }}</span>
             </div>
           </div>
 

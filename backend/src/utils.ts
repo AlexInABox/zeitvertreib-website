@@ -920,9 +920,7 @@ export async function getCedModLastReport(
   env: Env,
 ): Promise<{ reportedSteamId: string; reason: string; reportedAt: number } | null> {
   try {
-    const normalizedSteamId = reporterSteamId.endsWith('@steam')
-      ? reporterSteamId
-      : `${reporterSteamId}@steam`;
+    const normalizedSteamId = reporterSteamId.endsWith('@steam') ? reporterSteamId : `${reporterSteamId}@steam`;
     const bareSteamId = normalizedSteamId.replace(/@steam$/i, '');
 
     const headers = {
@@ -1050,7 +1048,7 @@ function parseReportLogResponse(
     }
   }
 
-  // If no issuer match, pick the most recent where we can extract a different Steam ID  
+  // If no issuer match, pick the most recent where we can extract a different Steam ID
   for (const item of sorted) {
     const target = extractTarget(item);
     if (target) {

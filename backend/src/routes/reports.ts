@@ -1,5 +1,13 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isTeam, validateSteamId, getCedModWarns, getCedModLastReport, fetchSteamUserData } from '../utils.js';
+import {
+  createResponse,
+  validateSession,
+  isTeam,
+  validateSteamId,
+  getCedModWarns,
+  getCedModLastReport,
+  fetchSteamUserData,
+} from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc } from 'drizzle-orm';
 import { reports } from '../db/schema.js';
@@ -70,7 +78,11 @@ export async function handleCreateReport(request: Request, env: Env): Promise<Re
     }
 
     if (body.description.length > MAX_DESCRIPTION_LENGTH) {
-      return createResponse({ error: `Beschreibung darf maximal ${MAX_DESCRIPTION_LENGTH} Zeichen lang sein` }, 400, origin);
+      return createResponse(
+        { error: `Beschreibung darf maximal ${MAX_DESCRIPTION_LENGTH} Zeichen lang sein` },
+        400,
+        origin,
+      );
     }
 
     const reportToken = crypto.randomUUID();
@@ -120,11 +132,7 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
     }
 
     if (extension && !ALLOWED_EXTENSIONS.includes(extension.toLowerCase())) {
-      return createResponse(
-        { error: 'Ungültige Dateiendung', allowedExtensions: ALLOWED_EXTENSIONS },
-        400,
-        origin,
-      );
+      return createResponse({ error: 'Ungültige Dateiendung', allowedExtensions: ALLOWED_EXTENSIONS }, 400, origin);
     }
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -135,20 +143,16 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
     }
 
     if (report.fileCount >= MAX_FILES_PER_REPORT) {
-      return createResponse(
-        { error: `Maximale Anzahl an Dateien (${MAX_FILES_PER_REPORT}) erreicht` },
-        400,
-        origin,
-      );
+      return createResponse({ error: `Maximale Anzahl an Dateien (${MAX_FILES_PER_REPORT}) erreicht` }, 400, origin);
     }
 
     const randomName = crypto.randomUUID();
     const filename = `${randomName}.${extension.toLowerCase()}`;
 
-    const presignedUrl = await aws(env).sign(
-      `https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`,
-      { method: 'PUT', aws: { signQuery: true } },
-    );
+    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`, {
+      method: 'PUT',
+      aws: { signQuery: true },
+    });
 
     // Increment file count
     await db
@@ -231,10 +235,10 @@ export async function handleGetReportFile(request: Request, env: Env): Promise<R
       }
     }
 
-    const presignedUrl = await aws(env).sign(
-      `https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`,
-      { method: 'GET', aws: { signQuery: true } },
-    );
+    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`, {
+      method: 'GET',
+      aws: { signQuery: true },
+    });
 
     return createResponse({ url: presignedUrl.url }, 200, origin);
   } catch (error) {
@@ -261,7 +265,7 @@ export async function handleListReports(request: Request, env: Env): Promise<Res
     const allReports = await db.select().from(reports).orderBy(desc(reports.createdAt)).all();
 
     const responseBody: ListReportsGetResponse = {
-      reports: allReports.map((r: typeof allReports[number]) => ({
+      reports: allReports.map((r: (typeof allReports)[number]) => ({
         reportToken: r.reportToken,
         steamId: r.steamId,
         reportedSteamId: r.reportedSteamId,
@@ -280,7 +284,11 @@ export async function handleListReports(request: Request, env: Env): Promise<Res
 }
 
 /// GET /reports/by-reported-player?steamId={steamId} — list reports for a specific reported player (staff only)
-export async function handleGetReportsByReportedPlayer(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+export async function handleGetReportsByReportedPlayer(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   const validation = await validateSession(request, env);
@@ -311,7 +319,7 @@ export async function handleGetReportsByReportedPlayer(request: Request, env: En
 
     // Fetch files and Steam user data for each report
     const reportsWithFiles = await Promise.all(
-      playerReports.map(async (r: typeof playerReports[number]) => {
+      playerReports.map(async (r: (typeof playerReports)[number]) => {
         const [reporterData, reportedData, files] = await Promise.all([
           fetchSteamUserData(r.steamId, env, ctx),
           fetchSteamUserData(r.reportedSteamId, env, ctx),
@@ -419,7 +427,7 @@ export async function handleGetRecentReports(request: Request, env: Env, ctx: Ex
 
     // Fetch files and Steam user data for each report
     const reportsWithFiles = await Promise.all(
-      recentReports.map(async (r: typeof recentReports[number]) => {
+      recentReports.map(async (r: (typeof recentReports)[number]) => {
         const [reporterData, reportedData, files] = await Promise.all([
           fetchSteamUserData(r.steamId, env, ctx),
           fetchSteamUserData(r.reportedSteamId, env, ctx),

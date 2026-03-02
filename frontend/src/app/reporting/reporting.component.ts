@@ -7,11 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
-import {
-  CreateReportPostResponse,
-  ReportFileUploadGetResponse,
-  CedModLastReportResponse,
-} from '@zeitvertreib/types';
+import { CreateReportPostResponse, ReportFileUploadGetResponse, CedModLastReportResponse } from '@zeitvertreib/types';
 
 interface FileUpload {
   file: File;
@@ -44,8 +40,7 @@ export class ReportingComponent implements OnInit, OnDestroy {
   currentView: 'form' | 'uploading' | 'success' = 'form';
   isSubmitting = false;
   errorMessage = '';
-  reportToken = '';  
-
+  reportToken = '';
 
   // File preview (unused since lookup removed)
   // keep for compatibility but will remain empty
@@ -71,7 +66,10 @@ export class ReportingComponent implements OnInit, OnDestroy {
 
   private authSub?: Subscription;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     // Auto-fill own Steam ID if user is logged in
@@ -201,10 +199,10 @@ export class ReportingComponent implements OnInit, OnDestroy {
       const headers: HeadersInit = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(
-        `${this.apiUrl}/profile-details?steamId=${encodeURIComponent(steamId)}`,
-        { headers, credentials: 'include' },
-      );
+      const response = await fetch(`${this.apiUrl}/profile-details?steamId=${encodeURIComponent(steamId)}`, {
+        headers,
+        credentials: 'include',
+      });
 
       const profile: SteamProfile = { steamId };
       if (response.ok) {
@@ -422,8 +420,6 @@ export class ReportingComponent implements OnInit, OnDestroy {
       void this.fetchSteamProfile(normalized, 'own');
     }
   }
-
-
 
   isImageFile(filename: string): boolean {
     const ext = filename.split('.').pop()?.toLowerCase() || '';

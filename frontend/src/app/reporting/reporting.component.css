@@ -450,8 +450,6 @@
   flex-wrap: wrap;
 }
 
-
-
 .detail-header h2 {
   font-size: 1.3rem;
   color: #f1f5f9;
@@ -777,7 +775,9 @@
   cursor: pointer;
   padding: 0.35rem 0.5rem;
   font-size: 0.8rem;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   flex-shrink: 0;
   display: flex;
   align-items: center;
