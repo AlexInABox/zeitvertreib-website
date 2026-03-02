@@ -14,7 +14,7 @@ public class Plugin : Plugin<Config>
         "Replace AFK players with a random spectator.";
 
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(1, 1, 0);
+    public override Version Version { get; } = new(1, 2, 0);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
 
     public static Plugin Instance { get; private set; }
