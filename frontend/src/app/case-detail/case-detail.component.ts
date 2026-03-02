@@ -181,17 +181,12 @@ export class CaseDetailComponent implements OnInit {
   activateReportMode() {
     this.uploadMode = 'report';
     if (!this.reportPickerLoaded) {
-      this.loadReportsForLinkedUsers();
+      this.loadRecentReports();
     }
   }
 
-  private loadReportsForLinkedUsers() {
-    const steamIds = this.caseData?.linkedUsers?.map((u) => u.steamId) ?? [];
+  private loadRecentReports() {
     if (!this.isTeam) return;
-    if (steamIds.length === 0) {
-      this.reportFilesError = 'Keine verknüpften Spieler im Fall.';
-      return;
-    }
 
     this.isLoadingRecentReports = true;
     this.reportFilesError = '';
@@ -200,39 +195,25 @@ export class CaseDetailComponent implements OnInit {
     this.selectedReportFile = '';
     this.reportPickerLoaded = true;
 
-    let pending = steamIds.length;
-    for (const steamId of steamIds) {
-      this.http
-        .get<GetReportsByReportedPlayerResponse>(
-          `${environment.apiUrl}/reports/by-reported-player?steamId=${encodeURIComponent(steamId)}`,
-          { headers: this.getAuthHeaders(), withCredentials: true },
-        )
-        .subscribe({
-          next: (data) => {
-            this.recentReportsForPlayer = [
-              ...this.recentReportsForPlayer,
-              ...data.reports,
-            ].sort((a, b) => b.createdAt - a.createdAt);
-            pending--;
-            if (pending === 0) {
-              this.isLoadingRecentReports = false;
-              if (this.recentReportsForPlayer.length === 0) {
-                this.reportFilesError = 'Keine Uploads für die verknüpften Spieler gefunden.';
-              }
-            }
-          },
-          error: (error) => {
-            console.error('Error loading reports for player:', steamId, error);
-            pending--;
-            if (pending === 0) {
-              this.isLoadingRecentReports = false;
-              if (this.recentReportsForPlayer.length === 0) {
-                this.reportFilesError = error.error?.error || 'Fehler beim Laden der Reports.';
-              }
-            }
-          },
-        });
-    }
+    this.http
+      .get<GetReportsByReportedPlayerResponse>(
+        `${environment.apiUrl}/reports/recent?limit=50`,
+        { headers: this.getAuthHeaders(), withCredentials: true },
+      )
+      .subscribe({
+        next: (data) => {
+          this.recentReportsForPlayer = data.reports.sort((a, b) => b.createdAt - a.createdAt);
+          this.isLoadingRecentReports = false;
+          if (this.recentReportsForPlayer.length === 0) {
+            this.reportFilesError = 'Keine letzten Uploads gefunden.';
+          }
+        },
+        error: (error) => {
+          console.error('Error loading recent reports:', error);
+          this.isLoadingRecentReports = false;
+          this.reportFilesError = error.error?.error || 'Fehler beim Laden der Reports.';
+        },
+      });
   }
 
   filterFiles() {
@@ -563,6 +544,57 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
+  private addLinkedUsersFromReport(): void {
+    // Find the selected report object
+    const selectedReport = this.recentReportsForPlayer.find((r) => r.reportToken === this.selectedReportToken);
+    if (!selectedReport) {
+      console.warn('Selected report not found in recentReportsForPlayer');
+      return;
+    }
+
+    // Extract and normalize Steam IDs
+    const reporterSteamId = selectedReport.steamId.endsWith('@steam')
+      ? selectedReport.steamId
+      : `${selectedReport.steamId}@steam`;
+    const reportedSteamId = selectedReport.reportedSteamId.endsWith('@steam')
+      ? selectedReport.reportedSteamId
+      : `${selectedReport.reportedSteamId}@steam`;
+
+    // Get existing linked users
+    const existing = (this.caseData?.linkedUsers ?? []).map((u) => u.steamId);
+
+    // Collect new Steam IDs to add (avoid duplicates)
+    const newSteamIds = [reporterSteamId, reportedSteamId].filter((id) => !existing.includes(id));
+
+    if (newSteamIds.length === 0) {
+      // Both users already linked, no need to update
+      return;
+    }
+
+    // Add the new users
+    const allLinkedIds = [...existing, ...newSteamIds];
+    const payload: UpdateCaseMetadataPutRequest = {
+      category: this.caseData!.category,
+      linkedSteamIds: allLinkedIds,
+    };
+
+    this.http
+      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          console.log('Automatically added linked users from report');
+          this.loadCaseData();
+        },
+        error: (error) => {
+          console.error('Failed to add linked users from report:', error);
+          // Don't show error to user since the file upload succeeded
+        },
+      });
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -738,6 +770,10 @@ export class CaseDetailComponent implements OnInit {
       this.importReportStatus = '';
       this.selectedReportFile = '';
       this.loadCaseData();
+      
+      // Automatically add both the reporter and reported player to linked users
+      this.addLinkedUsersFromReport();
+      
       alert('Datei erfolgreich aus Report importiert!');
     } catch (error) {
       this.isImportingReport = false;
