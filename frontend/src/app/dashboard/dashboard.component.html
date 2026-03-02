@@ -71,9 +71,14 @@
           </div>
         </div>
 
-        <!-- Daily Quests Card -->
-        <div class="grid-item quests-card-container">
-          <app-daily-quests></app-daily-quests>
+        <!-- Quests Cards - Daily and Weekly side by side -->
+        <div class="grid zvcoins-subgrid grid-cols-1 md:grid-cols-2 gap-2">
+          <div class="grid-item quests-card-container">
+            <app-daily-quests [questType]="'daily'"></app-daily-quests>
+          </div>
+          <div class="grid-item quests-card-container">
+            <app-daily-quests [questType]="'weekly'"></app-daily-quests>
+          </div>
         </div>
 
         <!-- Two columns under ZV Coins: Sprays (left) + Fakerank (right) -->

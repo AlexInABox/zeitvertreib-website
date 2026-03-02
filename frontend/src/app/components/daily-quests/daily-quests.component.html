@@ -14,8 +14,8 @@
   <!-- Quests Display -->
   <div *ngIf="!isLoading && !hasError" class="quests-container">
     <div class="quests-header">
-      <h3 class="quests-title">📅 Tägliche Quests</h3>
-      <p class="quests-subtitle">Erfülle Quests für wertvolle ZVC</p>
+      <h3 class="quests-title">{{ questTitle }}</h3>
+      <p class="quests-subtitle">{{ questSubtitle }}</p>
     </div>
 
     <div class="quests-list">
@@ -53,7 +53,7 @@
 
             <!-- Progress text -->
             <div *ngIf="!isQuestCompleted(quest)" class="progress-text">
-              {{ quest.currentProgress }} / {{ quest.targetValue }}
+              {{ getProgressText(quest) }}
             </div>
           </div>
         </div>
