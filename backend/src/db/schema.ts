@@ -320,3 +320,12 @@ export const dailyQuestProgress = sqliteTable('daily_quest_progress', {
   progress: integer('progress').notNull().default(0),
   claimedAt: integer('claimed_at').notNull().default(0),
 });
+
+// We purge this weekly
+export const weeklyQuestProgress = sqliteTable('weekly_quest_progress', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id').notNull(),
+  category: text('category').notNull(),
+  progress: integer('progress').notNull().default(0),
+  claimedAt: integer('claimed_at').notNull().default(0),
+});

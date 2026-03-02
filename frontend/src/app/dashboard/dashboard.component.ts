@@ -13,7 +13,7 @@ import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { EasterEggService } from '../services/easter-egg.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
-import { DailyQuestsComponent } from '../components/daily-quests/daily-quests.component';
+import { QuestsComponent } from '../components/quests/quests.component';
 import type {
   SprayGetResponseItem,
   SprayPostRequest,
@@ -76,7 +76,7 @@ interface DiscordInviteResponse {
     CommonModule,
     FormsModule,
     DiscordStatsComponent,
-    DailyQuestsComponent,
+    QuestsComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],

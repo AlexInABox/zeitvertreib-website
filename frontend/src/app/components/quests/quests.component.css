@@ -1,5 +1,5 @@
 /* Daily Quests Global Wrapping */
-.daily-quests-card {
+.quests-card {
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -19,12 +19,16 @@
   will-change: transform;
 }
 
-.daily-quests-card:hover {
+.quest-grid {
+  gap: 1.5rem;
+}
+
+.quests-card:hover {
   transform: translateY(-4px) translateZ(0);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.daily-quests-card::before {
+.quests-card::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -334,66 +338,5 @@
   .quest-action {
     width: 100%;
     justify-content: flex-end;
-  }
-}
-
-/* Light mode support */
-@media (prefers-color-scheme: light) {
-  .quest-name {
-    text-shadow: none;
-    color: #1f2937;
-  }
-  .quests-title {
-    color: #1f2937;
-    text-shadow: none;
-  }
-  .quests-subtitle {
-    color: #4b5563;
-  }
-  .state-text {
-    color: #1f2937;
-  }
-  .quest-completed .quest-name {
-    color: #059669;
-  }
-
-  .claim-btn {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.3);
-    color: #059669;
-  }
-  .claim-btn:hover:not(:disabled) {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: rgba(16, 185, 129, 0.5);
-    color: #047857;
-  }
-  .claimed-badge {
-    color: #059669;
-  }
-
-  .progress-track {
-    background: rgba(0, 0, 0, 0.1);
-  }
-
-  .quest-row {
-    min-height: 64px;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.05);
-  }
-
-  .quest-row:hover:not(.quest-completed):not(.quest-claimed) {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(139, 92, 246, 0.2);
-  }
-
-  .quest-completed {
-    background: rgba(16, 185, 129, 0.05);
-    border-color: rgba(16, 185, 129, 0.15);
-  }
-
-  .quest-completed:hover {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.25);
   }
 }

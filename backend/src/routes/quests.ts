@@ -1,34 +1,15 @@
-import { dailyQuestProgress, playerdata } from '../db/schema.js';
+import { dailyQuestProgress, weeklyQuestProgress, playerdata } from '../db/schema.js';
 import { validateSession, getPlayerData, createResponse, increment } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import typia from 'typia';
 import type {
-  GetQuestsTodayResponse,
-  GetQuestsWeeklyResponse,
+  GetQuestsResponse,
+  QuestProgress,
   ClaimQuestRewardRequest,
   ClaimQuestRewardResponse,
-  DailyQuestProgress,
   QuestDefinition,
 } from '@zeitvertreib/types';
-
-/**
- * Extract base category from a quest category string.
- * Handles both daily (e.g., 'kills') and weekly (e.g., 'weekly-2026W09-kills') formats.
- */
-function extractBaseCategory(category: string): string {
-  // Weekly format: weekly-2026W09-kills -> kills
-  const weeklyMatch = category.match(/^weekly-\d{4}W\d{2}-(.+)$/);
-  if (weeklyMatch && weeklyMatch[1]) {
-    return weeklyMatch[1];
-  }
-  // Old weekly format fallback: weekly-kills -> kills
-  if (category.startsWith('weekly-')) {
-    return category.replace('weekly-', '');
-  }
-  // Daily format: kills -> kills
-  return category;
-}
 
 const QUEST_DEFINITIONS: QuestDefinition[] = [
   // Medipack quests
@@ -67,60 +48,34 @@ const QUEST_DEFINITIONS: QuestDefinition[] = [
 
 const WEEKLY_QUEST_DEFINITIONS: QuestDefinition[] = [
   // Weekly Medipack quests
-  { category: 'weekly-medipacks', targetValue: 30, coinReward: 175, description: 'Verwende diese Woche 30 Medikits' },
-  { category: 'weekly-medipacks', targetValue: 60, coinReward: 325, description: 'Verwende diese Woche 60 Medikits' },
-  { category: 'weekly-medipacks', targetValue: 100, coinReward: 550, description: 'Verwende diese Woche 100 Medikits' },
+  { category: 'medipacks', targetValue: 30, coinReward: 175, description: 'Verwende diese Woche 30 Medikits' },
+  { category: 'medipacks', targetValue: 60, coinReward: 325, description: 'Verwende diese Woche 60 Medikits' },
+  { category: 'medipacks', targetValue: 100, coinReward: 550, description: 'Verwende diese Woche 100 Medikits' },
   // Weekly Cola quests
-  { category: 'weekly-colas', targetValue: 25, coinReward: 150, description: 'Trinke diese Woche 25 Colas' },
+  { category: 'colas', targetValue: 25, coinReward: 150, description: 'Trinke diese Woche 25 Colas' },
   // Weekly Playtime quests (in seconds)
-  { category: 'weekly-playtime', targetValue: 18000, coinReward: 450, description: 'Spiele diese Woche 5 Stunden' },
-  { category: 'weekly-playtime', targetValue: 36000, coinReward: 750, description: 'Spiele diese Woche 10 Stunden' },
-  { category: 'weekly-playtime', targetValue: 54000, coinReward: 1000, description: 'Spiele diese Woche 15 Stunden' },
+  { category: 'playtime', targetValue: 18000, coinReward: 450, description: 'Spiele diese Woche 5 Stunden' },
+  { category: 'playtime', targetValue: 36000, coinReward: 750, description: 'Spiele diese Woche 10 Stunden' },
+  { category: 'playtime', targetValue: 54000, coinReward: 1000, description: 'Spiele diese Woche 15 Stunden' },
   // Weekly Kill quests
-  { category: 'weekly-kills', targetValue: 50, coinReward: 200, description: 'Erziele diese Woche 50 Kills' },
-  { category: 'weekly-kills', targetValue: 75, coinReward: 350, description: 'Erziele diese Woche 75 Kills' },
+  { category: 'kills', targetValue: 50, coinReward: 200, description: 'Erziele diese Woche 50 Kills' },
+  { category: 'kills', targetValue: 75, coinReward: 350, description: 'Erziele diese Woche 75 Kills' },
   // Weekly Round quests
-  { category: 'weekly-rounds', targetValue: 35, coinReward: 200, description: 'Spiele diese Woche 35 Runden' },
-  { category: 'weekly-rounds', targetValue: 50, coinReward: 375, description: 'Spiele diese Woche 50 Runden' },
+  { category: 'rounds', targetValue: 35, coinReward: 200, description: 'Spiele diese Woche 35 Runden' },
+  { category: 'rounds', targetValue: 50, coinReward: 375, description: 'Spiele diese Woche 50 Runden' },
   // Weekly Pocket escape quests
-  {
-    category: 'weekly-pocketescapes',
-    targetValue: 5,
-    coinReward: 300,
-    description: 'Schaffe diese Woche 5 Pocket Escapes',
-  },
-  {
-    category: 'weekly-pocketescapes',
-    targetValue: 10,
-    coinReward: 550,
-    description: 'Schaffe diese Woche 10 Pocket Escapes',
-  },
+  { category: 'pocketescapes', targetValue: 5, coinReward: 300, description: 'Schaffe diese Woche 5 Pocket Escapes' },
+  { category: 'pocketescapes', targetValue: 10, coinReward: 550, description: 'Schaffe diese Woche 10 Pocket Escapes' },
   // Weekly Adrenaline quests
-  {
-    category: 'weekly-adrenaline',
-    targetValue: 25,
-    coinReward: 175,
-    description: 'Verwende diese Woche 25 Adrenaline',
-  },
-  {
-    category: 'weekly-adrenaline',
-    targetValue: 50,
-    coinReward: 325,
-    description: 'Verwende diese Woche 50 Adrenaline',
-  },
-  {
-    category: 'weekly-adrenaline',
-    targetValue: 80,
-    coinReward: 525,
-    description: 'Verwende diese Woche 80 Adrenaline',
-  },
+  { category: 'adrenaline', targetValue: 25, coinReward: 175, description: 'Verwende diese Woche 25 Adrenaline' },
+  { category: 'adrenaline', targetValue: 50, coinReward: 325, description: 'Verwende diese Woche 50 Adrenaline' },
+  { category: 'adrenaline', targetValue: 80, coinReward: 525, description: 'Verwende diese Woche 80 Adrenaline' },
 ];
 
 /**
- * Get 3 random daily quests for today.
- * Quests rotate daily and player progress is tracked per day.
+ * Get 3 random daily quests for today and 3 weekly quests for this week.
  */
-export async function handleGetQuestsToday(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+export async function handleGetQuests(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   const origin = request.headers.get('Origin');
 
@@ -135,24 +90,20 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
   }
 
   try {
-    const todayDate = new Date().toISOString().split('T')[0];
-    if (!todayDate) {
-      return createResponse({ error: 'Failed to get current date' }, 500, origin);
-    }
+    const todaysQuests = getDailyQuests();
+    const weeklyQuests = getWeeklyQuests();
 
-    const todaysQuests = getDailyQuests(todayDate);
+    // Fetch daily and weekly progress in parallel
+    const [dailyProgressRows, weeklyProgressRows] = await Promise.all([
+      db.select().from(dailyQuestProgress).where(eq(dailyQuestProgress.userId, sessionResult.steamId)),
+      db.select().from(weeklyQuestProgress).where(eq(weeklyQuestProgress.userId, sessionResult.steamId)),
+    ]);
 
-    // Get progress rows for this user
-    const progressRows = await db
-      .select()
-      .from(dailyQuestProgress)
-      .where(eq(dailyQuestProgress.userId, sessionResult.steamId));
+    const dailyProgressMap = new Map(dailyProgressRows.map((r) => [r.category, r]));
+    const weeklyProgressMap = new Map(weeklyProgressRows.map((r) => [r.category, r]));
 
-    const progressMap = new Map(progressRows.map((r) => [r.category, r]));
-
-    // Build quest progress response
-    const questsProgress: DailyQuestProgress[] = todaysQuests.map((quest) => {
-      const row = progressMap.get(quest.category);
+    const dailyQuestsProgress: QuestProgress[] = todaysQuests.map((quest) => {
+      const row = dailyProgressMap.get(quest.category);
       const currentProgress = row?.progress ?? 0;
       const isCompleted = currentProgress >= quest.targetValue;
       const claimedAt = row?.claimedAt ?? 0;
@@ -169,9 +120,27 @@ export async function handleGetQuestsToday(request: Request, env: Env, ctx: Exec
       };
     });
 
-    const response: GetQuestsTodayResponse = {
-      date: todayDate,
-      quests: questsProgress,
+    const weeklyQuestsProgress: QuestProgress[] = weeklyQuests.map((quest) => {
+      const row = weeklyProgressMap.get(quest.category);
+      const currentProgress = row?.progress ?? 0;
+      const isCompleted = currentProgress >= quest.targetValue;
+      const claimedAt = row?.claimedAt ?? 0;
+
+      return {
+        id: row?.id ?? 0,
+        category: quest.category,
+        description: quest.description,
+        targetValue: quest.targetValue,
+        currentProgress,
+        coinReward: quest.coinReward,
+        isCompleted,
+        claimedAt,
+      };
+    });
+
+    const response: GetQuestsResponse = {
+      dailyQuests: dailyQuestsProgress,
+      weeklyQuests: weeklyQuestsProgress,
     };
 
     return createResponse(response, 200, origin);
@@ -215,27 +184,46 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
       return createResponse({ error: 'Failed to get current date' }, 500, origin);
     }
 
-    // Look up the progress row by id
-    const progressRows = await db
+    // Look up the progress row — try daily table first, then weekly
+    const dailyRows = await db
       .select()
       .from(dailyQuestProgress)
       .where(and(eq(dailyQuestProgress.id, body.questId), eq(dailyQuestProgress.userId, sessionResult.steamId)))
       .limit(1);
 
-    const progressRow = progressRows[0];
-    if (!progressRow) {
-      return createResponse({ error: 'Quest progress not found' }, 400, origin);
+    const todaysQuests = getDailyQuests();
+    const weeklyQuests = getWeeklyQuests();
+
+    const dailyRow = dailyRows[0];
+    let progressRow: { id: number; userId: string; category: string; progress: number; claimedAt: number } | undefined;
+    let questDef: QuestDefinition | undefined;
+    let isWeeklyQuest = false;
+
+    if (dailyRow) {
+      questDef = todaysQuests.find((q) => q.category === dailyRow.category);
+      if (questDef) {
+        progressRow = dailyRow;
+      }
     }
 
-    // Verify the category belongs to either today's quests or this week's quests
-    const weekString = getCurrentWeekString();
-    const todaysQuests = getDailyQuests(todayDate);
-    const weeklyQuests = getWeeklyQuests(weekString);
-    const allQuests = [...todaysQuests, ...weeklyQuests];
+    if (!progressRow) {
+      const weeklyRows = await db
+        .select()
+        .from(weeklyQuestProgress)
+        .where(and(eq(weeklyQuestProgress.id, body.questId), eq(weeklyQuestProgress.userId, sessionResult.steamId)))
+        .limit(1);
+      const weeklyRow = weeklyRows[0];
+      if (weeklyRow) {
+        questDef = weeklyQuests.find((q) => q.category === weeklyRow.category);
+        if (questDef) {
+          progressRow = weeklyRow;
+          isWeeklyQuest = true;
+        }
+      }
+    }
 
-    const questDef = allQuests.find((q) => q.category === progressRow.category);
-    if (!questDef) {
-      return createResponse({ error: 'Quest is not available' }, 400, origin);
+    if (!progressRow || !questDef) {
+      return createResponse({ error: 'Quest progress not found' }, 400, origin);
     }
 
     if ((progressRow.claimedAt ?? 0) > 0) {
@@ -252,18 +240,34 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
       return createResponse({ error: 'Player data not found' }, 404, origin);
     }
 
-    await db.batch([
-      db
-        .update(playerdata)
-        .set({
-          experience: increment(playerdata.experience, questDef.coinReward),
-        })
-        .where(eq(playerdata.id, sessionResult.steamId)),
-      db
-        .update(dailyQuestProgress)
-        .set({ claimedAt: Math.floor(Date.now() / 1000) })
-        .where(eq(dailyQuestProgress.id, progressRow.id)),
-    ]);
+    const claimTimestamp = Math.floor(Date.now() / 1000);
+    if (isWeeklyQuest) {
+      await db.batch([
+        db
+          .update(playerdata)
+          .set({
+            experience: increment(playerdata.experience, questDef.coinReward),
+          })
+          .where(eq(playerdata.id, sessionResult.steamId)),
+        db
+          .update(weeklyQuestProgress)
+          .set({ claimedAt: claimTimestamp })
+          .where(eq(weeklyQuestProgress.id, progressRow.id)),
+      ]);
+    } else {
+      await db.batch([
+        db
+          .update(playerdata)
+          .set({
+            experience: increment(playerdata.experience, questDef.coinReward),
+          })
+          .where(eq(playerdata.id, sessionResult.steamId)),
+        db
+          .update(dailyQuestProgress)
+          .set({ claimedAt: claimTimestamp })
+          .where(eq(dailyQuestProgress.id, progressRow.id)),
+      ]);
+    }
 
     const response: ClaimQuestRewardResponse = {
       success: true,
@@ -281,7 +285,7 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
 /**
  * Get the current ISO week string (e.g., 2026-W10)
  */
-export function getCurrentWeekString(date: Date = new Date()): string {
+function getCurrentWeekString(date: Date = new Date()): string {
   const tempDate = new Date(date.valueOf());
   const dayNum = (tempDate.getDay() + 6) % 7; // Monday = 0, Sunday = 6
   tempDate.setDate(tempDate.getDate() - dayNum + 3); // Move to Thursday of the same ISO week
@@ -297,78 +301,12 @@ export function getCurrentWeekString(date: Date = new Date()): string {
 }
 
 /**
- * Get 3 random weekly quests for the current week.
- */
-export async function handleGetQuestsWeekly(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const db = drizzle(env.ZEITVERTREIB_DATA);
-  const origin = request.headers.get('Origin');
-
-  const sessionResult = await validateSession(request, env);
-
-  if (sessionResult.status !== 'valid' || !sessionResult.steamId) {
-    return createResponse(
-      { error: sessionResult.status === 'expired' ? 'Session expired' : 'Not authenticated' },
-      401,
-      origin,
-    );
-  }
-
-  try {
-    const weekString = getCurrentWeekString();
-
-    const weeklyQuests = getWeeklyQuests(weekString);
-
-    // Get progress rows for this user, limited to the categories of this week's quests
-    const weeklyQuestCategories = weeklyQuests.map((q) => q.category);
-    const progressRows = await db
-      .select()
-      .from(dailyQuestProgress)
-      .where(
-        and(
-          eq(dailyQuestProgress.userId, sessionResult.steamId),
-          inArray(dailyQuestProgress.category, weeklyQuestCategories),
-        ),
-      );
-
-    const progressMap = new Map(progressRows.map((r) => [r.category, r]));
-
-    // Build quest progress response
-    const questsProgress: DailyQuestProgress[] = weeklyQuests.map((quest) => {
-      const row = progressMap.get(quest.category);
-      const currentProgress = row?.progress ?? 0;
-      const isCompleted = currentProgress >= quest.targetValue;
-      const claimedAt = row?.claimedAt ?? 0;
-
-      return {
-        id: row?.id ?? 0,
-        category: quest.category,
-        description: quest.description,
-        targetValue: quest.targetValue,
-        currentProgress,
-        coinReward: quest.coinReward,
-        isCompleted,
-        claimedAt,
-      };
-    });
-
-    const response: GetQuestsWeeklyResponse = {
-      week: weekString,
-      quests: questsProgress,
-    };
-
-    return createResponse(response, 200, origin);
-  } catch (error) {
-    console.error('Weekly quests error:', error);
-    return createResponse({ error: 'Failed to fetch weekly quests' }, 500, origin);
-  }
-}
-
-/**
- * Returns 3 pseudo-random quests for a given date string (YYYY-MM-DD).
+ * Returns 3 pseudo-random quests for today's date.
  * Same quests for all players each day, each with a different category.
  */
-function getDailyQuests(dateString: string): QuestDefinition[] {
+function getDailyQuests(): QuestDefinition[] {
   let hash = 0;
+  const dateString = new Date().toISOString().split('T')[0] ?? '';
   for (let i = 0; i < dateString.length; i++) {
     const char = dateString.charCodeAt(i);
     hash = (hash << 5) - hash + char;
@@ -400,10 +338,10 @@ function getDailyQuests(dateString: string): QuestDefinition[] {
 /**
  * Returns 3 pseudo-random weekly quests for a given week string (YYYY-Wxx).
  * Same quests for all players each week, each with a different category.
- * Categories include the week string to ensure automatic reset each Monday.
  */
-function getWeeklyQuests(weekString: string): QuestDefinition[] {
+function getWeeklyQuests(): QuestDefinition[] {
   let hash = 0;
+  const weekString = getCurrentWeekString();
   for (let i = 0; i < weekString.length; i++) {
     const char = weekString.charCodeAt(i);
     hash = (hash << 5) - hash + char;
@@ -419,15 +357,7 @@ function getWeeklyQuests(weekString: string): QuestDefinition[] {
     const selected = available[index];
     if (!selected) continue;
 
-    // Include week string in category for automatic weekly reset
-    // e.g., weekly-medipacks becomes weekly-2026W09-medipacks
-    const baseCategory = selected.category.replace('weekly-', '');
-    const weekCategory = `weekly-${weekString.replace('-', '')}-${baseCategory}` as QuestDefinition['category'];
-
-    result.push({
-      ...selected,
-      category: weekCategory,
-    });
+    result.push(selected);
 
     // Remove all quests of the same base category so each weekly quest is unique
     const selectedCategory = selected.category;
@@ -455,10 +385,6 @@ export async function logProgress(
   },
 ): Promise<void> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
-  const todayDate = new Date().toISOString().split('T')[0];
-  if (!todayDate) return;
-
-  const weekString = getCurrentWeekString();
 
   const deltas: Record<string, number> = {
     medipacks: params.medipacks ?? 0,
@@ -470,43 +396,66 @@ export async function logProgress(
     adrenaline: params.adrenaline ?? 0,
   };
 
-  // Get both daily and weekly quests that have non-zero deltas
-  const dailyQuests = getDailyQuests(todayDate).filter((q) => (deltas[q.category] ?? 0) > 0);
-  const weeklyQuests = getWeeklyQuests(weekString);
+  // Get today's daily quests and this week's weekly quests that have non-zero deltas
+  const dailyQuestsToUpdate = getDailyQuests().filter((q) => (deltas[q.category] ?? 0) > 0);
+  const weeklyQuestsToUpdate = getWeeklyQuests().filter((wq) => (deltas[wq.category] ?? 0) > 0);
 
-  // Map weekly quest categories to their base categories (e.g., weekly-2026W09-kills -> kills)
-  const weeklyQuestsToUpdate = weeklyQuests.filter((wq) => {
-    const baseCategory = extractBaseCategory(wq.category);
-    return (deltas[baseCategory] ?? 0) > 0;
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allDailyStatements: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allWeeklyStatements: any[] = [];
 
-  const allRelevantQuests = [...dailyQuests, ...weeklyQuestsToUpdate];
-  if (allRelevantQuests.length === 0) return;
+  if (dailyQuestsToUpdate.length > 0) {
+    const dailyProgressRows = await db
+      .select()
+      .from(dailyQuestProgress)
+      .where(eq(dailyQuestProgress.userId, params.userId));
+    const dailyProgressMap = new Map(dailyProgressRows.map((r) => [r.category, r]));
 
-  // Query only the progress rows for the quests we're updating
-  const relevantCategories = allRelevantQuests.map((q) => q.category);
-  const progressRows = await db
-    .select()
-    .from(dailyQuestProgress)
-    .where(and(eq(dailyQuestProgress.userId, params.userId), inArray(dailyQuestProgress.category, relevantCategories)));
-
-  const progressMap = new Map(progressRows.map((r) => [r.category, r]));
-
-  const statements = allRelevantQuests.map((quest) => {
-    // For weekly quests, get the delta from the base category (e.g., weekly-2026W09-kills -> kills)
-    const categoryKey = quest.category.startsWith('weekly-')
-      ? extractBaseCategory(quest.category)
-      : (quest.category as keyof typeof deltas);
-    const delta = deltas[categoryKey] ?? 0;
-    const existingRow = progressMap.get(quest.category);
-    if (existingRow) {
-      return db
-        .update(dailyQuestProgress)
-        .set({ progress: increment(dailyQuestProgress.progress, delta) })
-        .where(eq(dailyQuestProgress.id, existingRow.id));
+    for (const quest of dailyQuestsToUpdate) {
+      const delta = deltas[quest.category] ?? 0;
+      const existingRow = dailyProgressMap.get(quest.category);
+      if (existingRow) {
+        allDailyStatements.push(
+          db
+            .update(dailyQuestProgress)
+            .set({ progress: increment(dailyQuestProgress.progress, delta) })
+            .where(eq(dailyQuestProgress.id, existingRow.id)),
+        );
+      } else {
+        allDailyStatements.push(
+          db.insert(dailyQuestProgress).values({ userId: params.userId, category: quest.category, progress: delta }),
+        );
+      }
     }
-    return db.insert(dailyQuestProgress).values({ userId: params.userId, category: quest.category, progress: delta });
-  });
+  }
 
-  await db.batch(statements as unknown as Parameters<typeof db.batch>[0]);
+  if (weeklyQuestsToUpdate.length > 0) {
+    const weeklyProgressRows = await db
+      .select()
+      .from(weeklyQuestProgress)
+      .where(eq(weeklyQuestProgress.userId, params.userId));
+    const weeklyProgressMap = new Map(weeklyProgressRows.map((r) => [r.category, r]));
+
+    for (const quest of weeklyQuestsToUpdate) {
+      const delta = deltas[quest.category] ?? 0;
+      const existingRow = weeklyProgressMap.get(quest.category);
+      if (existingRow) {
+        allWeeklyStatements.push(
+          db
+            .update(weeklyQuestProgress)
+            .set({ progress: increment(weeklyQuestProgress.progress, delta) })
+            .where(eq(weeklyQuestProgress.id, existingRow.id)),
+        );
+      } else {
+        allWeeklyStatements.push(
+          db.insert(weeklyQuestProgress).values({ userId: params.userId, category: quest.category, progress: delta }),
+        );
+      }
+    }
+  }
+
+  const allStatements = [...allDailyStatements, ...allWeeklyStatements];
+  if (allStatements.length === 0) return;
+  await db.batch(allStatements as unknown as Parameters<typeof db.batch>[0]);
 }

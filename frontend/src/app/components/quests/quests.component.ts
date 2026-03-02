@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -6,19 +6,18 @@ import { CardModule } from 'primeng/card';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
-import type { GetQuestsTodayResponse, GetQuestsWeeklyResponse, DailyQuestProgress } from '@zeitvertreib/types';
+import type { GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
 
 @Component({
-  selector: 'app-daily-quests',
+  selector: 'app-quests',
   standalone: true,
   imports: [CommonModule, ButtonModule, CardModule, ProgressBarModule],
-  templateUrl: './daily-quests.component.html',
-  styleUrls: ['./daily-quests.component.css'],
+  templateUrl: './quests.component.html',
+  styleUrls: ['./quests.component.css'],
 })
-export class DailyQuestsComponent implements OnInit {
-  @Input() questType: 'daily' | 'weekly' = 'daily';
-
-  quests: DailyQuestProgress[] = [];
+export class QuestsComponent implements OnInit {
+  dailyQuests: QuestProgress[] = [];
+  weeklyQuests: QuestProgress[] = [];
   isLoading = true;
   hasError = false;
   errorMessage = '';
@@ -40,27 +39,17 @@ export class DailyQuestsComponent implements OnInit {
     this.loadQuests();
   }
 
-  get questTitle(): string {
-    return this.questType === 'daily' ? '📅 Tägliche Quests' : '📆 Wöchentliche Quests';
-  }
-
-  get questSubtitle(): string {
-    return this.questType === 'daily'
-      ? 'Erfülle Tägliche Quests für wertvolle ZVC'
-      : 'Erfülle Wöchentliche Quests für wertvolle ZVC';
-  }
-
   loadQuests(): void {
     this.isLoading = true;
     this.hasError = false;
 
-    const endpoint = this.questType === 'daily' ? '/quests/today' : '/quests/weekly';
     const headers = this.getAuthHeaders();
     this.http
-      .get<GetQuestsTodayResponse | GetQuestsWeeklyResponse>(`${environment.apiUrl}${endpoint}`, { headers })
+      .get<GetQuestsResponse>(`${environment.apiUrl}/quests`, { headers })
       .subscribe({
         next: (response) => {
-          this.quests = response.quests;
+          this.dailyQuests = response.dailyQuests;
+          this.weeklyQuests = response.weeklyQuests;
           this.isLoading = false;
         },
         error: (error) => {
@@ -72,7 +61,7 @@ export class DailyQuestsComponent implements OnInit {
       });
   }
 
-  claimReward(quest: DailyQuestProgress): void {
+  claimReward(quest: QuestProgress): void {
     if (this.claimingQuestId !== null) return; // Prevent multiple clicks
 
     this.claimingQuestId = quest.id;
@@ -100,11 +89,11 @@ export class DailyQuestsComponent implements OnInit {
       });
   }
 
-  isQuestCompleted(quest: DailyQuestProgress): boolean {
+  isQuestCompleted(quest: QuestProgress): boolean {
     return quest.isCompleted && quest.currentProgress >= quest.targetValue;
   }
 
-  getProgressPercentage(quest: DailyQuestProgress): number {
+  getProgressPercentage(quest: QuestProgress): number {
     if (quest.targetValue === 0) return 0;
     return Math.min((quest.currentProgress / quest.targetValue) * 100, 100);
   }
@@ -112,7 +101,7 @@ export class DailyQuestsComponent implements OnInit {
   /**
    * Return a user-friendly progress string, converting playtime from seconds to minutes.
    */
-  getProgressText(quest: DailyQuestProgress): string {
+  getProgressText(quest: QuestProgress): string {
     if (quest.category.includes('playtime')) {
       const currMin = Math.floor(quest.currentProgress / 60);
       const targMin = Math.floor(quest.targetValue / 60);

@@ -1,5 +1,4 @@
 import { drizzle } from 'drizzle-orm/d1';
-import { not, like, and } from 'drizzle-orm';
 import * as schema from './db/schema.js';
 import {
   handleSteamLogin,
@@ -54,12 +53,7 @@ import {
   handleChickenCrossActive,
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
-import {
-  handleGetQuestsToday,
-  handleGetQuestsWeekly,
-  handleClaimQuestReward,
-  getCurrentWeekString,
-} from './routes/quests.js';
+import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -133,9 +127,8 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/adventcalendar': handleGetAdventCalendar,
   'POST:/adventcalendar/redeem': handleRedeemAdventDoor,
 
-  // Daily Quests routes
-  'GET:/quests/today': handleGetQuestsToday,
-  'GET:/quests/weekly': handleGetQuestsWeekly,
+  // Quests routes
+  'GET:/quests': handleGetQuests,
   'POST:/quests/claim-reward': handleClaimQuestReward,
 
   // Other routes
@@ -287,20 +280,12 @@ export default {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
 
       // Delete daily quest progress (non-weekly categories)
-      await db.delete(schema.dailyQuestProgress).where(not(like(schema.dailyQuestProgress.category, 'weekly-%')));
+      await db.delete(schema.dailyQuestProgress);
+    }
 
-      // Delete old weekly quest progress (categories not from the current week)
-      const currentWeekString = getCurrentWeekString();
-      const currentWeekCode = currentWeekString.replace('-', ''); // e.g., 2026-W10 -> 2026W10
-      const currentWeekPattern = `weekly-${currentWeekCode}-%`;
-      await db
-        .delete(schema.dailyQuestProgress)
-        .where(
-          and(
-            like(schema.dailyQuestProgress.category, 'weekly-%'),
-            not(like(schema.dailyQuestProgress.category, currentWeekPattern)),
-          ),
-        );
+    // Purge weekly quest progress every Monday at midnight UTC
+    if (controller.cron === '0 0 * * 1') {
+      await db.delete(schema.weeklyQuestProgress);
     }
 
     // Flush advent calendar table on January 2nd at 03:00 UTC

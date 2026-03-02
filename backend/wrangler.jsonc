@@ -109,6 +109,7 @@
           "0 3 2 1 *", // Added for yearly advent calendar reset
           "0 0 * * *", // Added for daily tax calculation
           "0 6 * * *", // Added for daily birthday check
+          "0 0 * * 1", // Added for weekly quest progress purge (every Monday midnight)
         ],
       },
     },
