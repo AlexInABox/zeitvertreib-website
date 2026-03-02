@@ -236,7 +236,7 @@
               <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
               <span>Medal Clip</span>
             </button>
-            <button class="mode-btn" [class.active]="uploadMode === 'report'" (click)="uploadMode = 'report'">
+            <button class="mode-btn" [class.active]="uploadMode === 'report'" (click)="activateReportMode()">
               <i class="pi pi-flag"></i>
               <span>Aus Report</span>
             </button>
@@ -272,41 +272,58 @@
           <!-- Report Import Mode -->
           <div class="upload-body report-mode" *ngIf="uploadMode === 'report'">
             <div class="report-picker-wrapper">
-              <div class="report-token-row">
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="reportPickerToken"
-                  placeholder="Report-Token eingeben..."
-                  class="medal-input"
-                  [disabled]="isLoadingReportFiles || isImportingReport"
-                  (keyup.enter)="loadReportFiles()"
-                />
-                <button
-                  pButton
-                  label="Dateien laden"
-                  icon="pi pi-search"
-                  class="upload-btn"
-                  (click)="loadReportFiles()"
-                  [disabled]="!reportPickerToken.trim() || isLoadingReportFiles || isImportingReport"
-                  [loading]="isLoadingReportFiles"
-                ></button>
-              </div>
-              <span class="report-picker-error" *ngIf="reportFilesError">
-                <i class="pi pi-exclamation-circle"></i> {{ reportFilesError }}
-              </span>
-              <div class="report-file-list" *ngIf="reportPickerFiles.length > 0">
-                <div
-                  class="report-file-item"
-                  *ngFor="let f of reportPickerFiles"
-                  [class.selected]="selectedReportFile === f"
-                  (click)="selectedReportFile = f"
-                >
-                  <i class="pi" [ngClass]="'pi-' + getFileIcon(f)"></i>
-                  <span class="report-file-name">{{ f }}</span>
-                  <i class="pi pi-check selected-check" *ngIf="selectedReportFile === f"></i>
+              <div class="report-list-section">
+                <div class="report-list-header">
+                  <h3>Uploads für diesen Spieler</h3>
+                  <span class="report-count" *ngIf="recentReportsForPlayer.length > 0">
+                    {{ recentReportsForPlayer.length }} {{ recentReportsForPlayer.length === 1 ? 'Report' : 'Reports' }}
+                  </span>
+                </div>
+
+                <div class="report-loading" *ngIf="isLoadingRecentReports">
+                  <i class="pi pi-spin pi-spinner"></i>
+                  <span>Reports werden geladen...</span>
+                </div>
+
+                <span class="report-picker-error" *ngIf="reportFilesError && !isLoadingRecentReports">
+                  <i class="pi pi-exclamation-circle"></i> {{ reportFilesError }}
+                </span>
+
+                <div class="report-selector-list" *ngIf="recentReportsForPlayer.length > 0">
+                  <div
+                    class="report-item"
+                    *ngFor="let report of recentReportsForPlayer"
+                    [class.selected]="selectedReportToken === report.reportToken"
+                  >
+                    <div class="report-item-header" (click)="selectedReportToken = report.reportToken; selectedReportFile = ''">
+                      <div class="report-item-info">
+                        <div class="report-status" [ngClass]="report.status">{{ report.status }}</div>
+                        <span class="report-date">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+                      </div>
+                      <i class="pi pi-check selected-indicator" *ngIf="selectedReportToken === report.reportToken"></i>
+                    </div>
+                    <div class="report-description">{{ report.description | slice: 0: 100 }}{{ report.description.length > 100 ? '...' : '' }}</div>
+
+                    <div class="report-files" *ngIf="selectedReportToken === report.reportToken && report.files.length > 0">
+                      <div class="files-label">Datei auswählen:</div>
+                      <div
+                        class="report-file-item"
+                        *ngFor="let file of report.files"
+                        [class.selected]="selectedReportFile === file"
+                        (click)="selectedReportFile = file"
+                      >
+                        <i class="pi" [ngClass]="'pi-' + getFileIcon(file)"></i>
+                        <span class="report-file-name">{{ file }}</span>
+                        <i class="pi pi-check file-check" *ngIf="selectedReportFile === file"></i>
+                      </div>
+                    </div>
+                    <div class="report-no-files" *ngIf="selectedReportToken === report.reportToken && report.files.length === 0">
+                      <i class="pi pi-info-circle"></i> Dieser Report hat keine Dateien.
+                    </div>
+                  </div>
                 </div>
               </div>
+
               <button
                 pButton
                 label="In Case importieren"
@@ -316,7 +333,7 @@
                 (click)="importReportFile()"
                 [disabled]="!selectedReportFile || isImportingReport"
                 [loading]="isImportingReport"
-                *ngIf="reportPickerFiles.length > 0"
+                *ngIf="selectedReportFile"
               ></button>
             </div>
           </div>

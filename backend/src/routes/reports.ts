@@ -10,6 +10,7 @@ import {
   ReportFileUploadGetResponse,
   GetReportByTokenResponse,
   ListReportsGetResponse,
+  GetReportsByReportedPlayerResponse,
   UpdateReportStatusPutRequest,
   UpdateReportStatusPutResponse,
   GetReportWarnsResponse,
@@ -274,6 +275,60 @@ export async function handleListReports(request: Request, env: Env): Promise<Res
     return createResponse(responseBody, 200, origin);
   } catch (error) {
     console.error('Error listing reports:', error);
+    return createResponse({ error: 'Fehler beim Laden der Reports' }, 500, origin);
+  }
+}
+
+/// GET /reports/by-reported-player?steamId={steamId} — list reports for a specific reported player (staff only)
+export async function handleGetReportsByReportedPlayer(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  const validation = await validateSession(request, env);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
+  }
+
+  if (!(await isTeam(validation.steamId, env))) {
+    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
+  }
+
+  try {
+    const url = new URL(request.url);
+    const reportedSteamId = url.searchParams.get('steamId');
+
+    if (!reportedSteamId || !validateSteamId(reportedSteamId)) {
+      return createResponse({ error: 'Ungültige Steam-ID' }, 400, origin);
+    }
+
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+    const playerReports = await db
+      .select()
+      .from(reports)
+      .where(eq(reports.reportedSteamId, reportedSteamId))
+      .orderBy(desc(reports.createdAt))
+      .limit(10)
+      .all();
+
+    // Fetch files for each report
+    const reportsWithFiles = await Promise.all(
+      playerReports.map(async (r: typeof playerReports[number]) => ({
+        reportToken: r.reportToken,
+        steamId: r.steamId,
+        reportedSteamId: r.reportedSteamId,
+        description: r.description,
+        status: r.status as ReportStatus,
+        createdAt: r.createdAt,
+        fileCount: r.fileCount,
+        files: await listReportFiles(r.reportToken, env),
+      })),
+    );
+
+    const responseBody: GetReportsByReportedPlayerResponse = {
+      reports: reportsWithFiles,
+    };
+    return createResponse(responseBody, 200, origin);
+  } catch (error) {
+    console.error('Error fetching reports by reported player:', error);
     return createResponse({ error: 'Fehler beim Laden der Reports' }, 500, origin);
   }
 }

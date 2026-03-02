@@ -13,6 +13,8 @@ import type {
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
   CaseCategory,
+  GetReportsByReportedPlayerResponse,
+  ReportWithFilesItem,
 } from '@zeitvertreib/types';
 
 @Component({
@@ -85,12 +87,13 @@ export class CaseDetailComponent implements OnInit {
   medalStartTime = 0;
   medalUrlInvalid = false;
 
-  // Report file picker state
-  reportPickerToken = '';
-  reportPickerFiles: string[] = [];
-  isLoadingReportFiles = false;
-  reportFilesError = '';
+  // Report file picker state - lazy-loaded when the "Aus Report" tab is opened
+  recentReportsForPlayer: ReportWithFilesItem[] = [];
+  reportPickerLoaded = false;
+  selectedReportToken = '';
   selectedReportFile = '';
+  isLoadingRecentReports = false;
+  reportFilesError = '';
   isImportingReport = false;
   importReportProgress = 0;
   importReportStatus = '';
@@ -173,6 +176,63 @@ export class CaseDetailComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  activateReportMode() {
+    this.uploadMode = 'report';
+    if (!this.reportPickerLoaded) {
+      this.loadReportsForLinkedUsers();
+    }
+  }
+
+  private loadReportsForLinkedUsers() {
+    const steamIds = this.caseData?.linkedUsers?.map((u) => u.steamId) ?? [];
+    if (!this.isTeam) return;
+    if (steamIds.length === 0) {
+      this.reportFilesError = 'Keine verknüpften Spieler im Fall.';
+      return;
+    }
+
+    this.isLoadingRecentReports = true;
+    this.reportFilesError = '';
+    this.recentReportsForPlayer = [];
+    this.selectedReportToken = '';
+    this.selectedReportFile = '';
+    this.reportPickerLoaded = true;
+
+    let pending = steamIds.length;
+    for (const steamId of steamIds) {
+      this.http
+        .get<GetReportsByReportedPlayerResponse>(
+          `${environment.apiUrl}/reports/by-reported-player?steamId=${encodeURIComponent(steamId)}`,
+          { headers: this.getAuthHeaders(), withCredentials: true },
+        )
+        .subscribe({
+          next: (data) => {
+            this.recentReportsForPlayer = [
+              ...this.recentReportsForPlayer,
+              ...data.reports,
+            ].sort((a, b) => b.createdAt - a.createdAt);
+            pending--;
+            if (pending === 0) {
+              this.isLoadingRecentReports = false;
+              if (this.recentReportsForPlayer.length === 0) {
+                this.reportFilesError = 'Keine Uploads für die verknüpften Spieler gefunden.';
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error loading reports for player:', steamId, error);
+            pending--;
+            if (pending === 0) {
+              this.isLoadingRecentReports = false;
+              if (this.recentReportsForPlayer.length === 0) {
+                this.reportFilesError = error.error?.error || 'Fehler beim Laden der Reports.';
+              }
+            }
+          },
+        });
+    }
   }
 
   filterFiles() {
@@ -609,35 +669,12 @@ export class CaseDetailComponent implements OnInit {
   }
 
   async loadReportFiles(): Promise<void> {
-    const token = this.reportPickerToken.trim();
-    if (!token) return;
-
-    this.isLoadingReportFiles = true;
-    this.reportFilesError = '';
-    this.reportPickerFiles = [];
-    this.selectedReportFile = '';
-
-    try {
-      const response = await fetch(`${environment.apiUrl}/reports?token=${encodeURIComponent(token)}`);
-      if (!response.ok) {
-        const err = await response.json();
-        this.reportFilesError = err.error || 'Report nicht gefunden.';
-        return;
-      }
-      const data = await response.json();
-      this.reportPickerFiles = data.files ?? [];
-      if (this.reportPickerFiles.length === 0) {
-        this.reportFilesError = 'Dieser Report hat keine Dateien.';
-      }
-    } catch {
-      this.reportFilesError = 'Netzwerkfehler beim Laden des Reports.';
-    } finally {
-      this.isLoadingReportFiles = false;
-    }
+    // This method is deprecated with auto-loading. Files are now pre-loaded from recent reports.
+    // Keep for backward compatibility but it's no longer needed.
   }
 
   async importReportFile(): Promise<void> {
-    if (!this.selectedReportFile || !this.reportPickerToken.trim()) return;
+    if (!this.selectedReportFile || !this.selectedReportToken.trim()) return;
 
     this.isImportingReport = true;
     this.importReportProgress = 0;
@@ -650,7 +687,7 @@ export class CaseDetailComponent implements OnInit {
       if (sessionToken) fetchHeaders['Authorization'] = `Bearer ${sessionToken}`;
 
       const fileUrlResponse = await fetch(
-        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(this.reportPickerToken.trim())}&file=${encodeURIComponent(this.selectedReportFile)}`,
+        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(this.selectedReportToken.trim())}&file=${encodeURIComponent(this.selectedReportFile)}`,
         { headers: fetchHeaders, credentials: 'include' },
       );
       if (!fileUrlResponse.ok) throw new Error('Konnte Download-URL nicht abrufen.');

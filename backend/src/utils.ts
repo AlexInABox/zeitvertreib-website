@@ -924,8 +924,10 @@ export async function getCedModLastReport(
       ? reporterSteamId
       : `${reporterSteamId}@steam`;
 
+    // CedMod's Query endpoints filter by the subject/target of the record (same pattern as Warn/Query).
+    // To find reports *filed by* a player we use the issuer parameter.
     const url = new URL('https://cedmod.zeitvertreib.vip/Api/ReportLog/Query');
-    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('issuer', normalizedSteamId);
     url.searchParams.set('banList', '11026');
     url.searchParams.set('page', '0');
     url.searchParams.set('max', '10');
@@ -943,16 +945,19 @@ export async function getCedModLastReport(
     );
 
     if (!response.ok) {
-      console.warn(`CedMod ReportLog query failed for ${normalizedSteamId}: ${response.status}`);
-      return null;
+      console.warn(`CedMod ReportLog issuer query failed for ${normalizedSteamId}: ${response.status}`);
+      // Fall back to querying by q (target) in case issuer param is not supported
+      return await getCedModLastReportByTarget(normalizedSteamId, env);
     }
 
     const data: any = await response.json();
+    console.log(`CedMod ReportLog issuer response for ${normalizedSteamId}:`, JSON.stringify(data).slice(0, 500));
 
     // CedMod may return `reports`, `players`, or `items` depending on version
     const items: any[] = data.reports ?? data.players ?? data.items ?? [];
 
     if (!Array.isArray(items) || items.length === 0) {
+      console.log(`CedMod ReportLog: no items found for issuer=${normalizedSteamId}, data keys: ${Object.keys(data).join(', ')}`);
       return null;
     }
 
@@ -964,17 +969,20 @@ export async function getCedModLastReport(
     });
 
     const latest = sorted[0];
+    console.log(`CedMod ReportLog latest item fields: ${Object.keys(latest ?? {}).join(', ')}`);
 
-    // Target / reported player: may be `target`, `targetId`, `userId`, or a nested `player.id`
+    // Target / reported player: may be in various fields depending on CedMod version
     const rawTarget: string =
       latest?.target ??
       latest?.targetId ??
       latest?.targetUserId ??
+      latest?.reportedUserId ??
       latest?.player?.userId ??
       latest?.userId ??
       '';
 
     if (!rawTarget) {
+      console.warn(`CedMod ReportLog: could not extract target from item: ${JSON.stringify(latest)}`);
       return null;
     }
 
@@ -988,6 +996,82 @@ export async function getCedModLastReport(
     };
   } catch (error) {
     console.error(`Error fetching CedMod last report for ${reporterSteamId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fallback: query CedMod ReportLog by the target's Steam ID (q= param) and filter items
+ * where the queried player appears as the issuer, in case the 'issuer' param is not supported.
+ */
+async function getCedModLastReportByTarget(
+  normalizedSteamId: string,
+  env: Env,
+): Promise<{ reportedSteamId: string; reason: string; reportedAt: number } | null> {
+  try {
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/ReportLog/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.warn(`CedMod ReportLog q-fallback failed: ${response.status}`);
+      return null;
+    }
+
+    const data: any = await response.json();
+    console.log(`CedMod ReportLog q-fallback response for ${normalizedSteamId}:`, JSON.stringify(data).slice(0, 500));
+
+    const items: any[] = data.reports ?? data.players ?? data.items ?? [];
+    if (!Array.isArray(items) || items.length === 0) return null;
+
+    // Filter to items where the queried player is the issuer/reporter, not the target
+    const asIssuer = items.filter((item: any) => {
+      const issuer: string = item?.issuer ?? item?.issuerId ?? item?.reporterUserId ?? item?.reporter ?? '';
+      return issuer.replace(/@steam$/i, '') === normalizedSteamId.replace(/@steam$/i, '');
+    });
+
+    const pool = asIssuer.length > 0 ? asIssuer : items;
+
+    const sorted = [...pool].sort((a: any, b: any) => {
+      const ta = new Date(`${a.timeStamp ?? a.timestamp ?? ''}Z`).getTime();
+      const tb = new Date(`${b.timeStamp ?? b.timestamp ?? ''}Z`).getTime();
+      return tb - ta;
+    });
+
+    const latest = sorted[0];
+    const rawTarget: string =
+      latest?.target ??
+      latest?.targetId ??
+      latest?.targetUserId ??
+      latest?.reportedUserId ??
+      latest?.player?.userId ??
+      latest?.userId ??
+      '';
+
+    if (!rawTarget) return null;
+
+    const reportedSteamId = rawTarget.replace(/@steam$/i, '');
+    return {
+      reportedSteamId,
+      reason: latest?.reason ?? latest?.message ?? '',
+      reportedAt: new Date(`${latest?.timeStamp ?? latest?.timestamp ?? ''}Z`).getTime(),
+    };
+  } catch (error) {
+    console.error(`CedMod ReportLog q-fallback error:`, error);
     return null;
   }
 }
