@@ -54,6 +54,16 @@ import {
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
+import {
+  handleCreateReport,
+  handleReportFileUpload,
+  handleGetReport,
+  handleGetReportFile,
+  handleListReports,
+  handleUpdateReportStatus,
+  handleGetReportWarns,
+  handleCedModLookup,
+} from './routes/reports.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -182,6 +192,16 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Z.E.I.T. routes
   'GET:/zeit': getUserData,
+
+  // Reporting routes
+  'POST:/reports': handleCreateReport,
+  'GET:/reports': handleGetReport,
+  'GET:/reports/upload': handleReportFileUpload,
+  'GET:/reports/files': handleGetReportFile,
+  'GET:/reports/list': handleListReports,
+  'PUT:/reports/status': handleUpdateReportStatus,
+  'GET:/reports/warns': handleGetReportWarns,
+  'GET:/reports/cedmod-lookup': handleCedModLookup,
 };
 
 export default {

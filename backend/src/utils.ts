@@ -910,3 +910,84 @@ export async function getCedModWarns(
     return [];
   }
 }
+
+/**
+ * Fetch the most recent in-game report filed by a player (as the reporter/issuer)
+ * via CedMod's ReportLog API. Returns the reported player's Steam ID and reason.
+ */
+export async function getCedModLastReport(
+  reporterSteamId: string,
+  env: Env,
+): Promise<{ reportedSteamId: string; reason: string; reportedAt: number } | null> {
+  try {
+    const normalizedSteamId = reporterSteamId.endsWith('@steam')
+      ? reporterSteamId
+      : `${reporterSteamId}@steam`;
+
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/ReportLog/Query');
+    url.searchParams.set('q', normalizedSteamId);
+    url.searchParams.set('banList', '11026');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('max', '10');
+
+    const response = await proxyFetch(
+      url.toString(),
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.CEDMOD_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (!response.ok) {
+      console.warn(`CedMod ReportLog query failed for ${normalizedSteamId}: ${response.status}`);
+      return null;
+    }
+
+    const data: any = await response.json();
+
+    // CedMod may return `reports`, `players`, or `items` depending on version
+    const items: any[] = data.reports ?? data.players ?? data.items ?? [];
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return null;
+    }
+
+    // Sort descending by timestamp and take the most recent
+    const sorted = [...items].sort((a: any, b: any) => {
+      const ta = new Date(`${a.timeStamp ?? a.timestamp ?? ''}Z`).getTime();
+      const tb = new Date(`${b.timeStamp ?? b.timestamp ?? ''}Z`).getTime();
+      return tb - ta;
+    });
+
+    const latest = sorted[0];
+
+    // Target / reported player: may be `target`, `targetId`, `userId`, or a nested `player.id`
+    const rawTarget: string =
+      latest?.target ??
+      latest?.targetId ??
+      latest?.targetUserId ??
+      latest?.player?.userId ??
+      latest?.userId ??
+      '';
+
+    if (!rawTarget) {
+      return null;
+    }
+
+    // Strip @steam suffix to get the plain Steam64 ID
+    const reportedSteamId = rawTarget.replace(/@steam$/i, '');
+
+    return {
+      reportedSteamId,
+      reason: latest?.reason ?? latest?.message ?? '',
+      reportedAt: new Date(`${latest?.timeStamp ?? latest?.timestamp ?? ''}Z`).getTime(),
+    };
+  } catch (error) {
+    console.error(`Error fetching CedMod last report for ${reporterSteamId}:`, error);
+    return null;
+  }
+}

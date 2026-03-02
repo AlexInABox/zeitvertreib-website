@@ -152,6 +152,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         icon: PrimeIcons.PAPERCLIP,
         url: '/bewerben',
       },
+      {
+        label: 'Melden',
+        icon: PrimeIcons.FLAG,
+        route: '/reporting',
+      },
     ];
 
     // Check visibility window: show adventcalendar from Nov 15 through December (German timezone)

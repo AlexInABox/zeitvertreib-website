@@ -75,7 +75,7 @@ export class CaseDetailComponent implements OnInit {
   selectedFile: File | null = null;
 
   // Medal clip upload state
-  uploadMode: 'file' | 'medal' = 'file';
+  uploadMode: 'file' | 'medal' | 'report' = 'file';
   medalClipUrl = '';
   isFetchingMedalClip = false;
   medalDownloadProgress = 0;
@@ -84,6 +84,16 @@ export class CaseDetailComponent implements OnInit {
   medalETA = '';
   medalStartTime = 0;
   medalUrlInvalid = false;
+
+  // Report file picker state
+  reportPickerToken = '';
+  reportPickerFiles: string[] = [];
+  isLoadingReportFiles = false;
+  reportFilesError = '';
+  selectedReportFile = '';
+  isImportingReport = false;
+  importReportProgress = 0;
+  importReportStatus = '';
 
   // Linked user management state
   newLinkedSteamId = '';
@@ -596,6 +606,109 @@ export class CaseDetailComponent implements OnInit {
 
   onMedalUrlChange() {
     this.medalUrlInvalid = this.medalClipUrl.trim() ? !this.isValidUrl(this.medalClipUrl) : false;
+  }
+
+  async loadReportFiles(): Promise<void> {
+    const token = this.reportPickerToken.trim();
+    if (!token) return;
+
+    this.isLoadingReportFiles = true;
+    this.reportFilesError = '';
+    this.reportPickerFiles = [];
+    this.selectedReportFile = '';
+
+    try {
+      const response = await fetch(`${environment.apiUrl}/reports?token=${encodeURIComponent(token)}`);
+      if (!response.ok) {
+        const err = await response.json();
+        this.reportFilesError = err.error || 'Report nicht gefunden.';
+        return;
+      }
+      const data = await response.json();
+      this.reportPickerFiles = data.files ?? [];
+      if (this.reportPickerFiles.length === 0) {
+        this.reportFilesError = 'Dieser Report hat keine Dateien.';
+      }
+    } catch {
+      this.reportFilesError = 'Netzwerkfehler beim Laden des Reports.';
+    } finally {
+      this.isLoadingReportFiles = false;
+    }
+  }
+
+  async importReportFile(): Promise<void> {
+    if (!this.selectedReportFile || !this.reportPickerToken.trim()) return;
+
+    this.isImportingReport = true;
+    this.importReportProgress = 0;
+    this.importReportStatus = 'Datei wird vom Report geladen...';
+
+    try {
+      // 1. Get presigned download URL for the report file
+      const sessionToken = this.authService.getSessionToken();
+      const fetchHeaders: HeadersInit = {};
+      if (sessionToken) fetchHeaders['Authorization'] = `Bearer ${sessionToken}`;
+
+      const fileUrlResponse = await fetch(
+        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(this.reportPickerToken.trim())}&file=${encodeURIComponent(this.selectedReportFile)}`,
+        { headers: fetchHeaders, credentials: 'include' },
+      );
+      if (!fileUrlResponse.ok) throw new Error('Konnte Download-URL nicht abrufen.');
+      const fileUrlData = await fileUrlResponse.json();
+      const downloadUrl: string = fileUrlData.url;
+
+      // 2. Download the file as a Blob
+      this.importReportStatus = 'Datei wird heruntergeladen...';
+      const downloadResponse = await fetch(downloadUrl);
+      if (!downloadResponse.ok) throw new Error('Download fehlgeschlagen.');
+      const blob = await downloadResponse.blob();
+
+      // 3. Get presigned upload URL for the case
+      this.importReportStatus = 'Upload-URL wird angefordert...';
+      const ext = this.selectedReportFile.split('.').pop()?.toLowerCase() || '';
+      const uploadInfo = await this.http
+        .get<CaseFileUploadGetResponse>(
+          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${ext}`,
+          { headers: this.getAuthHeaders(), withCredentials: true },
+        )
+        .toPromise();
+      if (!uploadInfo) throw new Error('Keine Upload-URL erhalten.');
+
+      // 4. PUT blob to case storage with progress tracking
+      this.importReportStatus = 'Datei wird hochgeladen...';
+      const uploadStartTime = Date.now();
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadInfo.url, true);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            this.importReportProgress = Math.round((event.loaded / event.total) * 100);
+            this.importReportStatus = `Datei wird hochgeladen... (${this.importReportProgress}%)`;
+          }
+        };
+
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300
+            ? resolve()
+            : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
+        xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
+        xhr.send(blob);
+      });
+
+      this.isImportingReport = false;
+      this.importReportProgress = 0;
+      this.importReportStatus = '';
+      this.selectedReportFile = '';
+      this.loadCaseData();
+      alert('Datei erfolgreich aus Report importiert!');
+    } catch (error) {
+      this.isImportingReport = false;
+      this.importReportProgress = 0;
+      this.importReportStatus = '';
+      console.error('Report import failed:', error);
+      alert(error instanceof Error ? error.message : 'Fehler beim Importieren der Datei');
+    }
   }
 
   async uploadMedalClip() {

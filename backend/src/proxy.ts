@@ -1,4 +1,9 @@
 export async function proxyFetch(url: string, options: RequestInit = {}, env: Env): Promise<Response> {
+  // if the proxy host isn't configured (e.g. local development), just do a normal fetch
+  if (!env.PROXY_HOST) {
+    return fetch(url, options);
+  }
+
   try {
     const target = new URL(url);
 

@@ -1974,7 +1974,88 @@
   font-size: 0.9rem;
 }
 
-.medal-input:disabled {
+/* Report Import Mode */
+.report-mode {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.report-picker-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.report-token-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.report-token-row .medal-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-picker-error {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #f59e0b;
+}
+
+.report-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.report-file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  user-select: none;
+}
+
+.report-file-item:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #e2e8f0;
+}
+
+.report-file-item.selected {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #c4b5fd;
+}
+
+.report-file-name {
+  flex: 1;
+  word-break: break-all;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.selected-check {
+  color: #a78bfa;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+
   opacity: 0.6;
   cursor: not-allowed;
 }

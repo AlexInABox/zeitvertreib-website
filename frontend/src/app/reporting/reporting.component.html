@@ -1,0 +1,194 @@
+<div class="reporting-page">
+  <!-- ===== HEADER SECTION ===== -->
+  <div class="page-header">
+    <h1><i class="pi pi-flag"></i> Spieler melden</h1>
+    <p class="subtitle">
+      Melde regelwidriges Verhalten anonym. Lade Clips & Screenshots hoch, um deine Meldung zu unterstützen.
+    </p>
+    <div class="header-actions">
+      <button pButton label="Neue Meldung" icon="pi pi-plus" class="header-btn" *ngIf="currentView !== 'form'"
+        (click)="showForm()"></button>
+      </div>
+  </div>
+
+  <!-- ===== FORM VIEW ===== -->
+  <div class="form-container" *ngIf="currentView === 'form'">
+    <!-- Error message -->
+    <div class="error-banner" *ngIf="errorMessage">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ errorMessage }}</span>
+      <button class="close-btn" (click)="errorMessage = ''"><i class="pi pi-times"></i></button>
+    </div>
+
+    <!-- Steam IDs -->
+    <div class="form-section">
+      <label class="form-label">
+        <i class="pi pi-user"></i> Deine Steam-ID
+      </label>
+
+      <!-- Profile chip: shown when profile resolved and not editing -->
+      <div class="steam-profile-chip" *ngIf="steamIdProfile && !editingSteamId">
+        <img *ngIf="steamIdProfile.avatarUrl" [src]="steamIdProfile.avatarUrl" class="profile-chip-avatar" [alt]="steamIdProfile.username" />
+        <div *ngIf="!steamIdProfile.avatarUrl" class="profile-chip-avatar-placeholder"><i class="pi pi-user"></i></div>
+        <div class="profile-chip-info">
+          <span class="profile-chip-name">{{ steamIdProfile.username || steamIdProfile.steamId }}</span>
+          <span class="profile-chip-id" *ngIf="steamIdProfile.username">{{ steamIdProfile.steamId }}</span>
+        </div>
+        <button class="profile-chip-edit" (click)="startEditSteamId()" title="Bearbeiten">
+          <i class="pi pi-pencil"></i>
+        </button>
+      </div>
+
+      <!-- Loading state -->
+      <div class="profile-chip-loading" *ngIf="isFetchingSteamProfile && !editingSteamId">
+        <i class="pi pi-spin pi-spinner"></i> Profil wird geladen...
+      </div>
+
+      <!-- Input: shown when editing or no valid ID resolved yet -->
+      <input *ngIf="!steamIdProfile && !isFetchingSteamProfile || editingSteamId" pInputText type="text" [(ngModel)]="steamId"
+        placeholder="z.B. 76561198012345678"
+        [class.input-error]="steamId.length > 0 && !isSteamIdValid" class="form-input"
+        (ngModelChange)="onSteamIdChange($event)"
+        (keyup.enter)="resolveFromInput('own')"
+        (blur)="resolveFromInput('own')" />
+
+      <span class="autofill-hint" *ngIf="steamIdAutoFilled && steamIdProfile && !editingSteamId">
+        <i class="pi pi-check-circle"></i> Automatisch aus deinem Account ausgefüllt.
+      </span>
+      <span class="hint" *ngIf="(!steamIdProfile || editingSteamId) && steamId.length > 0 && !isSteamIdValid">Steam-ID muss 17 Ziffern lang sein.</span>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">
+        <i class="pi pi-user-minus"></i> Steam-ID des gemeldeten Spielers
+      </label>
+
+      <!-- Profile chip: shown when profile resolved and not editing -->
+      <div class="steam-profile-chip" *ngIf="reportedSteamIdProfile && !editingReportedSteamId">
+        <img *ngIf="reportedSteamIdProfile.avatarUrl" [src]="reportedSteamIdProfile.avatarUrl" class="profile-chip-avatar" [alt]="reportedSteamIdProfile.username" />
+        <div *ngIf="!reportedSteamIdProfile.avatarUrl" class="profile-chip-avatar-placeholder"><i class="pi pi-user"></i></div>
+        <div class="profile-chip-info">
+          <span class="profile-chip-name">{{ reportedSteamIdProfile.username || reportedSteamIdProfile.steamId }}</span>
+          <span class="profile-chip-id" *ngIf="reportedSteamIdProfile.username">{{ reportedSteamIdProfile.steamId }}</span>
+        </div>
+        <button class="profile-chip-edit" (click)="startEditReportedSteamId()" title="Bearbeiten">
+          <i class="pi pi-pencil"></i>
+        </button>
+      </div>
+
+      <!-- Loading state -->
+      <div class="profile-chip-loading" *ngIf="isFetchingReportedProfile && !editingReportedSteamId">
+        <i class="pi pi-spin pi-spinner"></i> Profil wird geladen...
+      </div>
+
+      <!-- Input & autofill button: shown when editing or no valid ID resolved yet -->
+      <div class="lookup-row" *ngIf="!reportedSteamIdProfile && !isFetchingReportedProfile || editingReportedSteamId">
+        <input pInputText type="text" [(ngModel)]="reportedSteamId" placeholder="z.B. 76561198087654321"
+          [class.input-error]="reportedSteamId.length > 0 && !isReportedSteamIdValid" class="form-input"
+          (ngModelChange)="onReportedSteamIdChange($event)"
+          (keyup.enter)="resolveFromInput('reported')"
+          (blur)="resolveFromInput('reported')" />
+        <button pButton icon="pi pi-bolt" label="Aus letztem Ingame-Report" class="lookup-autofill-btn"
+          [loading]="isLookingUp" [disabled]="!isSteamIdValid || isLookingUp"
+          title="Trägt automatisch die Steam-ID des zuletzt von dir gemeldeten Spielers ein"
+          (click)="lookupFromCedMod()"></button>
+      </div>
+      <!-- Autofill button only (when chip is shown) -->
+      <div *ngIf="reportedSteamIdProfile && !editingReportedSteamId" style="margin-top: 0.5rem;">
+        <button pButton icon="pi pi-bolt" label="Aus letztem Ingame-Report" class="lookup-autofill-btn"
+          [loading]="isLookingUp" [disabled]="!isSteamIdValid || isLookingUp"
+          title="Trägt automatisch die Steam-ID des zuletzt von dir gemeldeten Spielers ein"
+          (click)="lookupFromCedMod()"></button>
+      </div>
+
+      <span class="hint" *ngIf="(!reportedSteamIdProfile || editingReportedSteamId) && reportedSteamId.length > 0 && !isReportedSteamIdValid">
+        Steam-ID muss 17 Ziffern lang sein.
+      </span>
+      <span class="lookup-cedmod-error" *ngIf="lookupCedModError">
+        <i class="pi pi-exclamation-circle"></i> {{ lookupCedModError }}
+      </span>
+    </div>
+
+    <!-- File Upload -->
+    <div class="form-section">
+      <label class="form-label">
+        <i class="pi pi-upload"></i> Beweise hochladen
+        <span class="optional-badge">Optional</span>
+      </label>
+      <p class="upload-hint">
+        Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV). Max. 5 Dateien, je 100 MB.
+      </p>
+
+      <div class="upload-zone" (click)="fileInput.click()" (dragover)="$event.preventDefault()"
+        (drop)="$event.preventDefault(); onFileSelect($event)">
+        <i class="pi pi-cloud-upload upload-icon"></i>
+        <span>Dateien hierher ziehen oder klicken</span>
+        <input #fileInput type="file" multiple hidden accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
+          (change)="onFileSelect($event)" />
+      </div>
+
+      <!-- File list -->
+      <div class="file-list" *ngIf="files.length > 0">
+        <div class="file-item" *ngFor="let f of files; let i = index">
+          <i [class]="getFileIcon(f.file.name)"></i>
+          <span class="file-name">{{ f.file.name }}</span>
+          <span class="file-size">{{ formatFileSize(f.file.size) }}</span>
+          <button class="remove-btn" (click)="removeFile(i)" title="Entfernen">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button pButton label="Meldung absenden" icon="pi pi-send" class="submit-btn" [loading]="isSubmitting"
+      [disabled]="!isFormValid || isSubmitting"
+      (click)="submitReport()"></button>
+  </div>
+
+  <!-- ===== UPLOADING VIEW ===== -->
+  <div class="upload-progress-container" *ngIf="currentView === 'uploading'">
+    <h2><i class="pi pi-spin pi-spinner"></i> Dateien werden hochgeladen...</h2>
+    <div class="upload-list">
+      <div class="upload-item" *ngFor="let f of files">
+        <div class="upload-item-header">
+          <i [class]="getFileIcon(f.file.name)"></i>
+          <span class="file-name">{{ f.file.name }}</span>
+          <span class="upload-status" [ngClass]="{
+            'status-done': f.status === 'done',
+            'status-error': f.status === 'error',
+            'status-uploading': f.status === 'uploading'
+          }">
+            {{ f.status === 'done' ? 'Fertig' : f.status === 'error' ? 'Fehler' : f.status === 'uploading' ?
+            f.progress + '%' : 'Warten...' }}
+          </span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" [style.width.%]="f.progress"
+            [class.error]="f.status === 'error'"></div>
+        </div>
+        <p class="upload-error-msg" *ngIf="f.errorMessage">{{ f.errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SUCCESS VIEW ===== -->
+  <div class="success-container" *ngIf="currentView === 'success'">
+    <div class="success-icon-wrapper">
+      <i class="pi pi-check-circle"></i>
+    </div>
+    <h2>Meldung erfolgreich erstellt!</h2>
+    <p>Dein Report-Token ist deine Referenz, um den Status nachzuverfolgen. Bewahre ihn gut auf!</p>
+
+    <div class="token-box">
+      <code>{{ reportToken }}</code>
+      <button pButton icon="pi pi-copy" class="copy-btn" (click)="copyToken()" label="Kopieren"></button>
+    </div>
+
+    <div class="success-actions">
+      <button pButton label="Neue Meldung" icon="pi pi-plus" class="header-btn" (click)="showForm()"></button>
+    </div>
+  </div>
+
+
+</div>
