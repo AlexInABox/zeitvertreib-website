@@ -1006,7 +1006,14 @@ export interface ZeitGetResponse {
 // ============================================================================
 
 // Base categories for daily quests
-export type DailyQuestCategory = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
+export type DailyQuestCategory =
+  | 'medipacks'
+  | 'playtime'
+  | 'kills'
+  | 'colas'
+  | 'rounds'
+  | 'pocketescapes'
+  | 'adrenaline';
 
 export type WeeklyQuestCategory =
   | 'weekly-medipacks'

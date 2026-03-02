@@ -84,12 +84,37 @@ const WEEKLY_QUEST_DEFINITIONS: QuestDefinition[] = [
   { category: 'weekly-rounds', targetValue: 35, coinReward: 200, description: 'Spiele diese Woche 35 Runden' },
   { category: 'weekly-rounds', targetValue: 50, coinReward: 375, description: 'Spiele diese Woche 50 Runden' },
   // Weekly Pocket escape quests
-  { category: 'weekly-pocketescapes', targetValue: 5, coinReward: 300, description: 'Schaffe diese Woche 5 Pocket Escapes' },
-  { category: 'weekly-pocketescapes', targetValue: 10, coinReward: 550, description: 'Schaffe diese Woche 10 Pocket Escapes' },
+  {
+    category: 'weekly-pocketescapes',
+    targetValue: 5,
+    coinReward: 300,
+    description: 'Schaffe diese Woche 5 Pocket Escapes',
+  },
+  {
+    category: 'weekly-pocketescapes',
+    targetValue: 10,
+    coinReward: 550,
+    description: 'Schaffe diese Woche 10 Pocket Escapes',
+  },
   // Weekly Adrenaline quests
-  { category: 'weekly-adrenaline', targetValue: 25, coinReward: 175, description: 'Verwende diese Woche 25 Adrenaline' },
-  { category: 'weekly-adrenaline', targetValue: 50, coinReward: 325, description: 'Verwende diese Woche 50 Adrenaline' },
-  { category: 'weekly-adrenaline', targetValue: 80, coinReward: 525, description: 'Verwende diese Woche 80 Adrenaline' },
+  {
+    category: 'weekly-adrenaline',
+    targetValue: 25,
+    coinReward: 175,
+    description: 'Verwende diese Woche 25 Adrenaline',
+  },
+  {
+    category: 'weekly-adrenaline',
+    targetValue: 50,
+    coinReward: 325,
+    description: 'Verwende diese Woche 50 Adrenaline',
+  },
+  {
+    category: 'weekly-adrenaline',
+    targetValue: 80,
+    coinReward: 525,
+    description: 'Verwende diese Woche 80 Adrenaline',
+  },
 ];
 
 /**
@@ -385,12 +410,12 @@ function getWeeklyQuests(weekString: string): QuestDefinition[] {
     const index = (seed + i * 54321) % available.length;
     const selected = available[index];
     if (!selected) continue;
-    
+
     // Include week string in category for automatic weekly reset
     // e.g., weekly-medipacks becomes weekly-2026W09-medipacks
     const baseCategory = selected.category.replace('weekly-', '');
     const weekCategory = `weekly-${weekString.replace('-', '')}-${baseCategory}` as QuestDefinition['category'];
-    
+
     result.push({
       ...selected,
       category: weekCategory,
