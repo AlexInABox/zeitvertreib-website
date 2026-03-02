@@ -1002,7 +1002,7 @@ export interface ZeitGetResponse {
 }
 
 // ============================================================================
-// Daily Quests Types
+// Quest Types
 // ============================================================================
 
 // Base categories for daily quests
