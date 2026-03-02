@@ -1119,6 +1119,22 @@ export interface GetReportWarnsResponse {
   }[];
 }
 
+/** GET /reports/by-reported-player?steamId={steamId} — fetch reports for a reported player (staff only) */
+export interface GetReportsByReportedPlayerResponse {
+  reports: ReportWithFilesItem[];
+}
+
+export interface ReportWithFilesItem {
+  reportToken: string;
+  steamId: string;
+  reportedSteamId: string;
+  description: string;
+  status: ReportStatus;
+  createdAt: number;
+  fileCount: number;
+  files: string[];
+}
+
 /** GET /reports/cedmod-lookup?steamId={steamId} — fetch reporter's last in-game report from CedMod (public) */
 export interface CedModLastReportResponse {
   found: boolean;

@@ -1983,19 +1983,32 @@
 .report-picker-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
 }
 
-.report-token-row {
+.report-list-section {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  align-items: flex-start;
 }
 
-.report-token-row .medal-input {
-  flex: 1;
-  min-width: 0;
+.report-list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+.report-count {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #c4b5fd;
 }
 
 .report-picker-error {
@@ -2006,13 +2019,130 @@
   color: #f59e0b;
 }
 
-.report-file-list {
+.report-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  padding: 0.5rem 0;
+}
+
+.report-no-files {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  padding: 0.35rem 0;
+}
+
+.report-selector-list {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  max-height: 220px;
+  gap: 0.75rem;
+  max-height: 400px;
   overflow-y: auto;
   padding-right: 2px;
+}
+
+.report-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.report-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.report-item.selected {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.report-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.report-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.report-status {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1f2937;
+}
+
+.report-status.pending {
+  background: #fbbf24;
+}
+
+.report-status.reviewing {
+  background: #60a5fa;
+}
+
+.report-status.resolved {
+  background: #34d399;
+}
+
+.report-status.dismissed {
+  background: #9ca3af;
+}
+
+.report-date {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.selected-indicator {
+  color: #a78bfa;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.report-description {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.report-files {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.5rem;
+}
+
+.files-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .report-file-item {
@@ -2020,9 +2150,9 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.55rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 0.85rem;
@@ -2049,7 +2179,7 @@
   font-size: 0.8rem;
 }
 
-.selected-check {
+.file-check {
   color: #a78bfa;
   font-size: 0.85rem;
   flex-shrink: 0;
