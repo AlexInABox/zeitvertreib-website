@@ -53,7 +53,7 @@ import {
   handleChickenCrossActive,
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
-import { handleGetQuestsToday, handleClaimQuestReward } from './routes/quests.js';
+import { handleGetQuestsToday, handleGetQuestsWeekly, handleClaimQuestReward } from './routes/quests.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -129,6 +129,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Daily Quests routes
   'GET:/quests/today': handleGetQuestsToday,
+  'GET:/quests/weekly': handleGetQuestsWeekly,
   'POST:/quests/claim-reward': handleClaimQuestReward,
 
   // Other routes

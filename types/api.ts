@@ -1005,7 +1005,26 @@ export interface ZeitGetResponse {
 // Daily Quests Types
 // ============================================================================
 
-export type QuestCategory = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
+// Base categories for daily quests
+export type DailyQuestCategory = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
+
+export type WeeklyQuestCategory =
+  | 'weekly-medipacks'
+  | 'weekly-playtime'
+  | 'weekly-kills'
+  | 'weekly-colas'
+  | 'weekly-rounds'
+  | 'weekly-pocketescapes'
+  | 'weekly-adrenaline'
+  | `weekly-${string}-medipacks`
+  | `weekly-${string}-playtime`
+  | `weekly-${string}-kills`
+  | `weekly-${string}-colas`
+  | `weekly-${string}-rounds`
+  | `weekly-${string}-pocketescapes`
+  | `weekly-${string}-adrenaline`;
+
+export type QuestCategory = DailyQuestCategory | WeeklyQuestCategory;
 
 export interface QuestDefinition {
   category: QuestCategory;
@@ -1028,6 +1047,12 @@ export interface DailyQuestProgress {
 /** GET /quests/today response */
 export interface GetQuestsTodayResponse {
   date: string; // YYYY-MM-DD
+  quests: DailyQuestProgress[];
+}
+
+/** GET /quests/weekly response */
+export interface GetQuestsWeeklyResponse {
+  week: string; // YYYY-Wxx (ISO week format)
   quests: DailyQuestProgress[];
 }
 
