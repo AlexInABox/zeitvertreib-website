@@ -1043,3 +1043,86 @@ export interface ClaimQuestRewardResponse {
   coinsAwarded: number;
   message: string;
 }
+
+// ============================================================================
+// Reporting Types
+// ============================================================================
+
+export type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
+
+/** POST /reports — create a new report (no auth required) */
+export interface CreateReportPostRequest {
+  steamId: string;
+  reportedSteamId: string;
+  description: string;
+}
+
+/** POST /reports response */
+export interface CreateReportPostResponse {
+  reportToken: string;
+  message: string;
+}
+
+/** GET /reports/upload?report={reportToken}&extension={ext} — get presigned upload URL */
+export interface ReportFileUploadGetResponse {
+  url: string;
+  method: string;
+}
+
+/** GET /reports?token={reportToken} — view a report by token (no auth) */
+export interface GetReportByTokenResponse {
+  reportToken: string;
+  steamId: string;
+  reportedSteamId: string;
+  description: string;
+  status: ReportStatus;
+  createdAt: number;
+  files: string[];
+}
+
+/** GET /reports/list — list all reports (staff only) */
+export interface ListReportsGetResponse {
+  reports: ReportListItem[];
+}
+
+export interface ReportListItem {
+  reportToken: string;
+  steamId: string;
+  reportedSteamId: string;
+  description: string;
+  status: ReportStatus;
+  createdAt: number;
+  linkedCaseId: string | null;
+  fileCount: number;
+}
+
+/** PUT /reports/status — update report status (staff only) */
+export interface UpdateReportStatusPutRequest {
+  reportToken: string;
+  status: ReportStatus;
+  linkedCaseId?: string;
+}
+
+/** PUT /reports/status response */
+export interface UpdateReportStatusPutResponse {
+  success: boolean;
+  message: string;
+}
+
+/** GET /reports/warns?steamId={steamId} — fetch CedMod warns for a Steam ID (staff only) */
+export interface GetReportWarnsResponse {
+  warns: {
+    id: number;
+    reason: string;
+    warnedAt: number;
+    issuer: string;
+  }[];
+}
+
+/** GET /reports/cedmod-lookup?steamId={steamId} — fetch reporter's last in-game report from CedMod (public) */
+export interface CedModLastReportResponse {
+  found: boolean;
+  reportedSteamId: string | null;
+  reason: string | null;
+  reportedAt: number | null;
+}

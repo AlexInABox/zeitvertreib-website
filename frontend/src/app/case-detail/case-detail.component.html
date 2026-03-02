@@ -236,6 +236,10 @@
               <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
               <span>Medal Clip</span>
             </button>
+            <button class="mode-btn" [class.active]="uploadMode === 'report'" (click)="uploadMode = 'report'">
+              <i class="pi pi-flag"></i>
+              <span>Aus Report</span>
+            </button>
           </div>
 
           <!-- File Upload Mode -->
@@ -263,6 +267,70 @@
               [disabled]="!selectedFile || isUploading"
               [loading]="isUploading"
             ></button>
+          </div>
+
+          <!-- Report Import Mode -->
+          <div class="upload-body report-mode" *ngIf="uploadMode === 'report'">
+            <div class="report-picker-wrapper">
+              <div class="report-token-row">
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="reportPickerToken"
+                  placeholder="Report-Token eingeben..."
+                  class="medal-input"
+                  [disabled]="isLoadingReportFiles || isImportingReport"
+                  (keyup.enter)="loadReportFiles()"
+                />
+                <button
+                  pButton
+                  label="Dateien laden"
+                  icon="pi pi-search"
+                  class="upload-btn"
+                  (click)="loadReportFiles()"
+                  [disabled]="!reportPickerToken.trim() || isLoadingReportFiles || isImportingReport"
+                  [loading]="isLoadingReportFiles"
+                ></button>
+              </div>
+              <span class="report-picker-error" *ngIf="reportFilesError">
+                <i class="pi pi-exclamation-circle"></i> {{ reportFilesError }}
+              </span>
+              <div class="report-file-list" *ngIf="reportPickerFiles.length > 0">
+                <div
+                  class="report-file-item"
+                  *ngFor="let f of reportPickerFiles"
+                  [class.selected]="selectedReportFile === f"
+                  (click)="selectedReportFile = f"
+                >
+                  <i class="pi" [ngClass]="'pi-' + getFileIcon(f)"></i>
+                  <span class="report-file-name">{{ f }}</span>
+                  <i class="pi pi-check selected-check" *ngIf="selectedReportFile === f"></i>
+                </div>
+              </div>
+              <button
+                pButton
+                label="In Case importieren"
+                icon="pi pi-download"
+                class="upload-btn"
+                style="margin-top: 0.5rem; width: 100%;"
+                (click)="importReportFile()"
+                [disabled]="!selectedReportFile || isImportingReport"
+                [loading]="isImportingReport"
+                *ngIf="reportPickerFiles.length > 0"
+              ></button>
+            </div>
+          </div>
+
+          <!-- Report Import Progress -->
+          <div class="upload-progress-container" *ngIf="isImportingReport && uploadMode === 'report'">
+            <div class="progress-info">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>{{ importReportStatus }}</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" [style.width.%]="importReportProgress"></div>
+              <span class="progress-text-centered">{{ importReportProgress > 0 ? importReportProgress + '%' : '' }}</span>
+            </div>
           </div>
 
           <!-- Medal Clip Upload Mode -->

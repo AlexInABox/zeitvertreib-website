@@ -56,6 +56,10 @@ export const routes: Routes = [
     loadComponent: () => import('./no-steam-link/no-steam-link.component').then((m) => m.NoSteamLinkComponent),
   },
   {
+    path: 'reporting',
+    loadComponent: () => import('./reporting/reporting.component').then((m) => m.ReportingComponent),
+  },
+  {
     path: 'auth/callback',
     loadComponent: () => import('./auth-callback/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },

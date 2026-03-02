@@ -329,3 +329,14 @@ export const weeklyQuestProgress = sqliteTable('weekly_quest_progress', {
   progress: integer('progress').notNull().default(0),
   claimedAt: integer('claimed_at').notNull().default(0),
 });
+
+export const reports = sqliteTable('reports', {
+  reportToken: text('report_token').primaryKey(),
+  steamId: text('steam_id').notNull(),
+  reportedSteamId: text('reported_steam_id').notNull(),
+  description: text('description').notNull(),
+  status: text('status', { enum: ['pending', 'reviewing', 'resolved', 'dismissed'] }).notNull().default('pending'),
+  linkedCaseId: text('linked_case_id'),
+  fileCount: integer('file_count').notNull().default(0),
+  createdAt: integer('created_at').notNull().default(0),
+});
