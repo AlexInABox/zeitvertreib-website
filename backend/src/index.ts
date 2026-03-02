@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, not, like, and } from 'drizzle-orm';
+import { not, like, and } from 'drizzle-orm';
 import * as schema from './db/schema.js';
 import {
   handleSteamLogin,
