@@ -66,7 +66,7 @@ export class DailyQuestsComponent implements OnInit {
         error: (error) => {
           console.error('Failed to load quests:', error);
           this.hasError = true;
-          this.errorMessage = 'Quests konnte nicht geladen werden.';
+          this.errorMessage = 'Quests konnten nicht geladen werden.';
           this.isLoading = false;
         },
       });
