@@ -4,6 +4,7 @@ using System.Linq;
 using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
+using LabApi.Features.Extensions;
 using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
@@ -53,6 +54,16 @@ public static class EventHandlers
 
     private static bool HasMoved(Player player)
     {
+        // ReSharper disable once InvertIf
+        if (RoleTypeId.Tutorial.TryGetRandomSpawnPoint(out Vector3 tutorialTowerPos, out _))
+        {
+            Collider[] hitColliders = Physics.OverlapSphere(tutorialTowerPos, 12f);
+            foreach (Collider collider in hitColliders)
+            {
+                if (Player.TryGet(collider.gameObject, out Player nearbyPlayer) && nearbyPlayer.PlayerId == player.PlayerId) return true;
+            }
+        }
+        
         return Vector3.Distance(player.Position, LastPosition[player.PlayerId]) > 0.01f ||
                Quaternion.Angle(player.Rotation, LastRotation[player.PlayerId]) > 1f ||
                Vector2.Distance(player.LookRotation, LastLookRotation[player.PlayerId]) > 1f;
