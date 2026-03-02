@@ -10,7 +10,6 @@ import type {
   ClaimQuestRewardResponse,
   DailyQuestProgress,
   QuestDefinition,
-  StatsPostRequest,
 } from '@zeitvertreib/types';
 
 /**
