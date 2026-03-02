@@ -196,10 +196,10 @@ export class CaseDetailComponent implements OnInit {
     this.reportPickerLoaded = true;
 
     this.http
-      .get<GetReportsByReportedPlayerResponse>(
-        `${environment.apiUrl}/reports/recent?limit=50`,
-        { headers: this.getAuthHeaders(), withCredentials: true },
-      )
+      .get<GetReportsByReportedPlayerResponse>(`${environment.apiUrl}/reports/recent?limit=50`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
       .subscribe({
         next: (data) => {
           this.recentReportsForPlayer = data.reports.sort((a, b) => b.createdAt - a.createdAt);
@@ -736,10 +736,10 @@ export class CaseDetailComponent implements OnInit {
       this.importReportStatus = 'Upload-URL wird angefordert...';
       const ext = this.selectedReportFile.split('.').pop()?.toLowerCase() || '';
       const uploadInfo = await this.http
-        .get<CaseFileUploadGetResponse>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${ext}`,
-          { headers: this.getAuthHeaders(), withCredentials: true },
-        )
+        .get<CaseFileUploadGetResponse>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${ext}`, {
+          headers: this.getAuthHeaders(),
+          withCredentials: true,
+        })
         .toPromise();
       if (!uploadInfo) throw new Error('Keine Upload-URL erhalten.');
 
@@ -758,9 +758,7 @@ export class CaseDetailComponent implements OnInit {
         };
 
         xhr.onload = () =>
-          xhr.status >= 200 && xhr.status < 300
-            ? resolve()
-            : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
+          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
         xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
         xhr.send(blob);
       });
@@ -770,10 +768,10 @@ export class CaseDetailComponent implements OnInit {
       this.importReportStatus = '';
       this.selectedReportFile = '';
       this.loadCaseData();
-      
+
       // Automatically add both the reporter and reported player to linked users
       this.addLinkedUsersFromReport();
-      
+
       alert('Datei erfolgreich aus Report importiert!');
     } catch (error) {
       this.isImportingReport = false;

@@ -2115,6 +2115,48 @@
   color: #94a3b8;
 }
 
+.report-player {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.report-users {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.report-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.report-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #1e293b;
+  border: 1px solid #475569;
+}
+
+.report-user-name {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.report-arrow {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
 .selected-indicator {
   color: #a78bfa;
   font-size: 0.9rem;
@@ -2183,11 +2225,6 @@
   color: #a78bfa;
   font-size: 0.85rem;
   flex-shrink: 0;
-}
-
-
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .medal-upload-btn {
