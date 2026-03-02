@@ -6,11 +6,7 @@ import { CardModule } from 'primeng/card';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
-import type {
-  GetQuestsTodayResponse,
-  GetQuestsWeeklyResponse,
-  DailyQuestProgress,
-} from '@zeitvertreib/types';
+import type { GetQuestsTodayResponse, GetQuestsWeeklyResponse, DailyQuestProgress } from '@zeitvertreib/types';
 
 @Component({
   selector: 'app-daily-quests',
