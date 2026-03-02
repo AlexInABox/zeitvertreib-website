@@ -379,6 +379,56 @@ export async function handleUpdateReportStatus(request: Request, env: Env): Prom
   }
 }
 
+/// GET /reports/recent - get the most recent reports with files (staff only, for case integration)
+export async function handleGetRecentReports(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  const validation = await validateSession(request, env);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
+  }
+
+  if (!(await isTeam(validation.steamId, env))) {
+    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
+  }
+
+  try {
+    const url = new URL(request.url);
+    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
+
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+    const recentReports = await db
+      .select()
+      .from(reports)
+      .where(eq(reports.status, 'pending')) // Only pending reports with potential evidence
+      .orderBy(desc(reports.createdAt))
+      .limit(limit)
+      .all();
+
+    // Fetch files for each report
+    const reportsWithFiles = await Promise.all(
+      recentReports.map(async (r: typeof recentReports[number]) => ({
+        reportToken: r.reportToken,
+        steamId: r.steamId,
+        reportedSteamId: r.reportedSteamId,
+        description: r.description,
+        status: r.status as ReportStatus,
+        createdAt: r.createdAt,
+        fileCount: r.fileCount,
+        files: await listReportFiles(r.reportToken, env),
+      })),
+    );
+
+    const responseBody: GetReportsByReportedPlayerResponse = {
+      reports: reportsWithFiles,
+    };
+    return createResponse(responseBody, 200, origin);
+  } catch (error) {
+    console.error('Error fetching recent reports:', error);
+    return createResponse({ error: 'Fehler beim Laden der Reports' }, 500, origin);
+  }
+}
+
 /// GET /reports/warns?steamId={steamId} — fetch CedMod warns (staff only)
 export async function handleGetReportWarns(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
