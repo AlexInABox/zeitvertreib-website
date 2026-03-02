@@ -53,6 +53,7 @@ import {
   handleChickenCrossActive,
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
+import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -125,6 +126,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Advent Calendar routes
   'GET:/adventcalendar': handleGetAdventCalendar,
   'POST:/adventcalendar/redeem': handleRedeemAdventDoor,
+
+  // Quests routes
+  'GET:/quests': handleGetQuests,
+  'POST:/quests/claim-reward': handleClaimQuestReward,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
@@ -273,6 +278,14 @@ export default {
     // Collect fakerank zvc fees every day at midnight UTC
     if (controller.cron === '0 0 * * *') {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
+
+      // Delete daily quest progress (non-weekly categories)
+      await db.delete(schema.dailyQuestProgress);
+    }
+
+    // Purge weekly quest progress every Monday at midnight UTC
+    if (controller.cron === '0 0 * * 1') {
+      await db.delete(schema.weeklyQuestProgress);
     }
 
     // Flush advent calendar table on January 2nd at 03:00 UTC

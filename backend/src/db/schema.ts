@@ -311,3 +311,21 @@ export const casesRelatedUsers = sqliteTable('cases_related_users', {
   caseId: text('case_id').references(() => cases.id),
   steamId: text('steam_id').notNull(),
 });
+
+// We purge this daily
+export const dailyQuestProgress = sqliteTable('daily_quest_progress', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id').notNull(),
+  category: text('category').notNull(),
+  progress: integer('progress').notNull().default(0),
+  claimedAt: integer('claimed_at').notNull().default(0),
+});
+
+// We purge this weekly
+export const weeklyQuestProgress = sqliteTable('weekly_quest_progress', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id').notNull(),
+  category: text('category').notNull(),
+  progress: integer('progress').notNull().default(0),
+  claimedAt: integer('claimed_at').notNull().default(0),
+});

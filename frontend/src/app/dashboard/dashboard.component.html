@@ -71,6 +71,11 @@
           </div>
         </div>
 
+        <!-- Quests Cards - Daily and Weekly side by side -->
+        <div class="grid-item">
+          <app-quests></app-quests>
+        </div>
+
         <!-- Two columns under ZV Coins: Sprays (left) + Fakerank (right) -->
         <div class="grid zvcoins-subgrid grid-cols-1 md:grid-cols-2 gap-2">
           <!-- Custom Sprays (moved here from right column) -->
@@ -332,7 +337,9 @@
               </div>
 
               <!-- Discord Stats -->
-              <app-discord-stats variant="full"></app-discord-stats>
+              <div class="mt-4">
+                <app-discord-stats variant="full"></app-discord-stats>
+              </div>
             </div>
           </div>
         </div>

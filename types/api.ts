@@ -1000,3 +1000,46 @@ export interface ZeitGetResponse {
     createdAt: number;
   }[];
 }
+
+// ============================================================================
+// Quest Types
+// ============================================================================
+
+// Base categories for daily quests
+export type QuestCategory = 'medipacks' | 'playtime' | 'kills' | 'colas' | 'rounds' | 'pocketescapes' | 'adrenaline';
+
+export interface QuestDefinition {
+  category: QuestCategory;
+  targetValue: number;
+  coinReward: number;
+  description: string;
+}
+
+export interface QuestProgress {
+  id: number;
+  category: QuestCategory;
+  description: string;
+  targetValue: number;
+  currentProgress: number;
+  coinReward: number;
+  isCompleted: boolean;
+  claimedAt: number;
+}
+
+/** GET /quests/today response */
+export interface GetQuestsResponse {
+  dailyQuests: QuestProgress[];
+  weeklyQuests: QuestProgress[];
+}
+
+/** POST /quests/claim-reward request body */
+export interface ClaimQuestRewardRequest {
+  questId: number;
+}
+
+/** POST /quests/claim-reward response */
+export interface ClaimQuestRewardResponse {
+  success: boolean;
+  coinsAwarded: number;
+  message: string;
+}
