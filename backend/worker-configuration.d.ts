@@ -27,6 +27,7 @@ declare namespace Cloudflare {
     CEDMOD_API_KEY: string;
     CEDMOD_API_KEY_BANS: string;
     CEDMOD_API_KEY_WARNS: string;
+    CEDMOD_API_KEY_REPORTS: string;
     PLAYERLIST_API_KEY: string;
     MINIO_ACCESS_KEY: string;
     MINIO_SECRET_KEY: string;

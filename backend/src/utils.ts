@@ -913,7 +913,7 @@ export async function getCedModWarns(
 
 /**
  * Fetch the most recent in-game report filed by a player (as the reporter/issuer)
- * via CedMod's ReportLog API. Returns the reported player's Steam ID and reason.
+ * via CedMod's Report API. Returns the reported player's Steam ID and reason.
  */
 export async function getCedModLastReport(
   reporterSteamId: string,
@@ -923,155 +923,144 @@ export async function getCedModLastReport(
     const normalizedSteamId = reporterSteamId.endsWith('@steam')
       ? reporterSteamId
       : `${reporterSteamId}@steam`;
+    const bareSteamId = normalizedSteamId.replace(/@steam$/i, '');
 
-    // CedMod's Query endpoints filter by the subject/target of the record (same pattern as Warn/Query).
-    // To find reports *filed by* a player we use the issuer parameter.
-    const url = new URL('https://cedmod.zeitvertreib.vip/Api/ReportLog/Query');
-    url.searchParams.set('issuer', normalizedSteamId);
-    url.searchParams.set('banList', '11026');
-    url.searchParams.set('page', '0');
-    url.searchParams.set('max', '10');
-
-    const response = await proxyFetch(
-      url.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${env.CEDMOD_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      },
-      env,
-    );
-
-    if (!response.ok) {
-      console.warn(`CedMod ReportLog issuer query failed for ${normalizedSteamId}: ${response.status}`);
-      // Fall back to querying by q (target) in case issuer param is not supported
-      return await getCedModLastReportByTarget(normalizedSteamId, env);
-    }
-
-    const data: any = await response.json();
-    console.log(`CedMod ReportLog issuer response for ${normalizedSteamId}:`, JSON.stringify(data).slice(0, 500));
-
-    // CedMod may return `reports`, `players`, or `items` depending on version
-    const items: any[] = data.reports ?? data.players ?? data.items ?? [];
-
-    if (!Array.isArray(items) || items.length === 0) {
-      console.log(`CedMod ReportLog: no items found for issuer=${normalizedSteamId}, data keys: ${Object.keys(data).join(', ')}`);
-      return null;
-    }
-
-    // Sort descending by timestamp and take the most recent
-    const sorted = [...items].sort((a: any, b: any) => {
-      const ta = new Date(`${a.timeStamp ?? a.timestamp ?? ''}Z`).getTime();
-      const tb = new Date(`${b.timeStamp ?? b.timestamp ?? ''}Z`).getTime();
-      return tb - ta;
-    });
-
-    const latest = sorted[0];
-    console.log(`CedMod ReportLog latest item fields: ${Object.keys(latest ?? {}).join(', ')}`);
-
-    // Target / reported player: may be in various fields depending on CedMod version
-    const rawTarget: string =
-      latest?.target ??
-      latest?.targetId ??
-      latest?.targetUserId ??
-      latest?.reportedUserId ??
-      latest?.player?.userId ??
-      latest?.userId ??
-      '';
-
-    if (!rawTarget) {
-      console.warn(`CedMod ReportLog: could not extract target from item: ${JSON.stringify(latest)}`);
-      return null;
-    }
-
-    // Strip @steam suffix to get the plain Steam64 ID
-    const reportedSteamId = rawTarget.replace(/@steam$/i, '');
-
-    return {
-      reportedSteamId,
-      reason: latest?.reason ?? latest?.message ?? '',
-      reportedAt: new Date(`${latest?.timeStamp ?? latest?.timestamp ?? ''}Z`).getTime(),
+    const headers = {
+      Authorization: `Bearer ${env.CEDMOD_API_KEY_REPORTS}`,
+      'Content-Type': 'application/json',
     };
+
+    // --- Attempt 1: /Api/Report/User (targeted, by userId) ---
+    const userUrl = new URL('https://cedmod.zeitvertreib.vip/Api/Report/User');
+    userUrl.searchParams.set('userId', normalizedSteamId);
+    userUrl.searchParams.set('banList', '11026');
+    userUrl.searchParams.set('page', '0');
+    userUrl.searchParams.set('max', '50');
+
+    const userResponse = await proxyFetch(userUrl.toString(), { method: 'GET', headers }, env);
+
+    if (userResponse.ok) {
+      const rawData = await userResponse.json();
+      const result = parseReportLogResponse(rawData, bareSteamId);
+      if (result) return result;
+      // fall through to Query if User returned nothing useful
+    }
+
+    // --- Attempt 2: /Api/Report/Query (general search) ---
+    const queryUrl = new URL('https://cedmod.zeitvertreib.vip/Api/Report/Query');
+    queryUrl.searchParams.set('q', normalizedSteamId);
+    queryUrl.searchParams.set('banList', '11026');
+    queryUrl.searchParams.set('page', '0');
+    queryUrl.searchParams.set('max', '50');
+
+    const queryResponse = await proxyFetch(queryUrl.toString(), { method: 'GET', headers }, env);
+
+    if (!queryResponse.ok) {
+      return null;
+    }
+
+    const rawQueryData = await queryResponse.json();
+    return parseReportLogResponse(rawQueryData, bareSteamId);
   } catch (error) {
     console.error(`Error fetching CedMod last report for ${reporterSteamId}:`, error);
     return null;
   }
 }
 
-/**
- * Fallback: query CedMod ReportLog by the target's Steam ID (q= param) and filter items
- * where the queried player appears as the issuer, in case the 'issuer' param is not supported.
- */
-async function getCedModLastReportByTarget(
-  normalizedSteamId: string,
-  env: Env,
-): Promise<{ reportedSteamId: string; reason: string; reportedAt: number } | null> {
-  try {
-    const url = new URL('https://cedmod.zeitvertreib.vip/Api/ReportLog/Query');
-    url.searchParams.set('q', normalizedSteamId);
-    url.searchParams.set('banList', '11026');
-    url.searchParams.set('page', '0');
-    url.searchParams.set('max', '50');
+function parseReportLogResponse(
+  data: any,
+  bareSteamId: string,
+): { reportedSteamId: string; reason: string; reportedAt: number } | null {
+  // CedMod may wrap items under various keys depending on version
+  let items: any[] = [];
+  if (Array.isArray(data)) {
+    items = data;
+  } else {
+    items = data.reports ?? data.players ?? data.items ?? data.list ?? data.results ?? data.data ?? [];
+  }
 
-    const response = await proxyFetch(
-      url.toString(),
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${env.CEDMOD_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      },
-      env,
-    );
-
-    if (!response.ok) {
-      console.warn(`CedMod ReportLog q-fallback failed: ${response.status}`);
-      return null;
-    }
-
-    const data: any = await response.json();
-    console.log(`CedMod ReportLog q-fallback response for ${normalizedSteamId}:`, JSON.stringify(data).slice(0, 500));
-
-    const items: any[] = data.reports ?? data.players ?? data.items ?? [];
-    if (!Array.isArray(items) || items.length === 0) return null;
-
-    // Filter to items where the queried player is the issuer/reporter, not the target
-    const asIssuer = items.filter((item: any) => {
-      const issuer: string = item?.issuer ?? item?.issuerId ?? item?.reporterUserId ?? item?.reporter ?? '';
-      return issuer.replace(/@steam$/i, '') === normalizedSteamId.replace(/@steam$/i, '');
-    });
-
-    const pool = asIssuer.length > 0 ? asIssuer : items;
-
-    const sorted = [...pool].sort((a: any, b: any) => {
-      const ta = new Date(`${a.timeStamp ?? a.timestamp ?? ''}Z`).getTime();
-      const tb = new Date(`${b.timeStamp ?? b.timestamp ?? ''}Z`).getTime();
-      return tb - ta;
-    });
-
-    const latest = sorted[0];
-    const rawTarget: string =
-      latest?.target ??
-      latest?.targetId ??
-      latest?.targetUserId ??
-      latest?.reportedUserId ??
-      latest?.player?.userId ??
-      latest?.userId ??
-      '';
-
-    if (!rawTarget) return null;
-
-    const reportedSteamId = rawTarget.replace(/@steam$/i, '');
-    return {
-      reportedSteamId,
-      reason: latest?.reason ?? latest?.message ?? '',
-      reportedAt: new Date(`${latest?.timeStamp ?? latest?.timestamp ?? ''}Z`).getTime(),
-    };
-  } catch (error) {
-    console.error(`CedMod ReportLog q-fallback error:`, error);
+  // Check if no results
+  if (data.total === 0 || !Array.isArray(items) || items.length === 0) {
     return null;
   }
+
+  // Check every plausible field name for the issuer/reporter role
+  const isIssuer = (item: any): boolean => {
+    const candidates = [
+      item?.issuer,
+      item?.issuerId,
+      item?.issuerUserId,
+      item?.reporter,
+      item?.reporterId,
+      item?.reporterUserId,
+      item?.reporterSteamId,
+      item?.createdBy,
+      item?.createdById,
+    ];
+    return candidates.some((val: any) => {
+      if (!val) return false;
+      const cleaned = String(val).replace(/@steam$/i, '');
+      return cleaned === bareSteamId;
+    });
+  };
+
+  // Try to extract the target/reported player from a report item
+  const extractTarget = (item: any): string | null => {
+    const candidates = [
+      item?.target,
+      item?.targetId,
+      item?.targetUserId,
+      item?.targetSteamId,
+      item?.reportedUserId,
+      item?.reportedSteamId,
+      item?.reportedId,
+      item?.reported,
+      item?.player?.userId,
+      item?.player?.id,
+      item?.userId,
+    ];
+    for (const val of candidates) {
+      if (!val) continue;
+      const cleaned = String(val).replace(/@steam$/i, '');
+      if (cleaned !== bareSteamId && /^\d{17}$/.test(cleaned)) {
+        return cleaned;
+      }
+    }
+    return null;
+  };
+
+  // Sort descending by timestamp
+  const sorted = [...items].sort((a: any, b: any) => {
+    const ta = new Date(`${a.timeStamp ?? a.timestamp ?? a.createdAt ?? ''}Z`).getTime();
+    const tb = new Date(`${b.timeStamp ?? b.timestamp ?? b.createdAt ?? ''}Z`).getTime();
+    return tb - ta;
+  });
+
+  // First, try to find a report where this player is explicitly the issuer
+  for (const item of sorted) {
+    if (isIssuer(item)) {
+      const target = extractTarget(item);
+      if (target) {
+        return {
+          reportedSteamId: target,
+          reason: item?.reason ?? item?.message ?? item?.text ?? '',
+          reportedAt: new Date(`${item?.timeStamp ?? item?.timestamp ?? item?.createdAt ?? ''}Z`).getTime(),
+        };
+      }
+    }
+  }
+
+  // If no issuer match, pick the most recent where we can extract a different Steam ID  
+  for (const item of sorted) {
+    const target = extractTarget(item);
+    if (target) {
+      return {
+        reportedSteamId: target,
+        reason: item?.reason ?? item?.message ?? item?.text ?? '',
+        reportedAt: new Date(`${item?.timeStamp ?? item?.timestamp ?? item?.createdAt ?? ''}Z`).getTime(),
+      };
+    }
+  }
+
+  return null;
 }
