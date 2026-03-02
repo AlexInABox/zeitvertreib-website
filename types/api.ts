@@ -1127,7 +1127,11 @@ export interface GetReportsByReportedPlayerResponse {
 export interface ReportWithFilesItem {
   reportToken: string;
   steamId: string;
+  reporterUsername: string;
+  reporterAvatarUrl: string;
   reportedSteamId: string;
+  reportedUsername: string;
+  reportedAvatarUrl: string;
   description: string;
   status: ReportStatus;
   createdAt: number;

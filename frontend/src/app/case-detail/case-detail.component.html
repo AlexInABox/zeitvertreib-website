@@ -298,6 +298,17 @@
                     <div class="report-item-header" (click)="selectedReportToken = report.reportToken; selectedReportFile = ''">
                       <div class="report-item-info">
                         <div class="report-status" [ngClass]="report.status">{{ report.status }}</div>
+                        <div class="report-users">
+                          <div class="report-user">
+                            <img [src]="report.reporterAvatarUrl || '/assets/default-avatar.png'" [alt]="report.reporterUsername" class="report-user-avatar" />
+                            <span class="report-user-name">{{ report.reporterUsername }}</span>
+                          </div>
+                          <span class="report-arrow">→</span>
+                          <div class="report-user">
+                            <img [src]="report.reportedAvatarUrl || '/assets/default-avatar.png'" [alt]="report.reportedUsername" class="report-user-avatar" />
+                            <span class="report-user-name">{{ report.reportedUsername }}</span>
+                          </div>
+                        </div>
                         <span class="report-date">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
                       </div>
                       <i class="pi pi-check selected-indicator" *ngIf="selectedReportToken === report.reportToken"></i>

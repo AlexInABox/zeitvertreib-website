@@ -1,5 +1,5 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isTeam, validateSteamId, getCedModWarns, getCedModLastReport } from '../utils.js';
+import { createResponse, validateSession, isTeam, validateSteamId, getCedModWarns, getCedModLastReport, fetchSteamUserData } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc } from 'drizzle-orm';
 import { reports } from '../db/schema.js';
@@ -280,7 +280,7 @@ export async function handleListReports(request: Request, env: Env): Promise<Res
 }
 
 /// GET /reports/by-reported-player?steamId={steamId} — list reports for a specific reported player (staff only)
-export async function handleGetReportsByReportedPlayer(request: Request, env: Env): Promise<Response> {
+export async function handleGetReportsByReportedPlayer(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   const validation = await validateSession(request, env);
@@ -309,18 +309,30 @@ export async function handleGetReportsByReportedPlayer(request: Request, env: En
       .limit(10)
       .all();
 
-    // Fetch files for each report
+    // Fetch files and Steam user data for each report
     const reportsWithFiles = await Promise.all(
-      playerReports.map(async (r: typeof playerReports[number]) => ({
-        reportToken: r.reportToken,
-        steamId: r.steamId,
-        reportedSteamId: r.reportedSteamId,
-        description: r.description,
-        status: r.status as ReportStatus,
-        createdAt: r.createdAt,
-        fileCount: r.fileCount,
-        files: await listReportFiles(r.reportToken, env),
-      })),
+      playerReports.map(async (r: typeof playerReports[number]) => {
+        const [reporterData, reportedData, files] = await Promise.all([
+          fetchSteamUserData(r.steamId, env, ctx),
+          fetchSteamUserData(r.reportedSteamId, env, ctx),
+          listReportFiles(r.reportToken, env),
+        ]);
+
+        return {
+          reportToken: r.reportToken,
+          steamId: r.steamId,
+          reporterUsername: reporterData?.username || r.steamId,
+          reporterAvatarUrl: reporterData?.avatarUrl || '',
+          reportedSteamId: r.reportedSteamId,
+          reportedUsername: reportedData?.username || r.reportedSteamId,
+          reportedAvatarUrl: reportedData?.avatarUrl || '',
+          description: r.description,
+          status: r.status as ReportStatus,
+          createdAt: r.createdAt,
+          fileCount: r.fileCount,
+          files,
+        };
+      }),
     );
 
     const responseBody: GetReportsByReportedPlayerResponse = {
@@ -380,7 +392,7 @@ export async function handleUpdateReportStatus(request: Request, env: Env): Prom
 }
 
 /// GET /reports/recent - get the most recent reports with files (staff only, for case integration)
-export async function handleGetRecentReports(request: Request, env: Env): Promise<Response> {
+export async function handleGetRecentReports(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   const validation = await validateSession(request, env);
@@ -405,18 +417,30 @@ export async function handleGetRecentReports(request: Request, env: Env): Promis
       .limit(limit)
       .all();
 
-    // Fetch files for each report
+    // Fetch files and Steam user data for each report
     const reportsWithFiles = await Promise.all(
-      recentReports.map(async (r: typeof recentReports[number]) => ({
-        reportToken: r.reportToken,
-        steamId: r.steamId,
-        reportedSteamId: r.reportedSteamId,
-        description: r.description,
-        status: r.status as ReportStatus,
-        createdAt: r.createdAt,
-        fileCount: r.fileCount,
-        files: await listReportFiles(r.reportToken, env),
-      })),
+      recentReports.map(async (r: typeof recentReports[number]) => {
+        const [reporterData, reportedData, files] = await Promise.all([
+          fetchSteamUserData(r.steamId, env, ctx),
+          fetchSteamUserData(r.reportedSteamId, env, ctx),
+          listReportFiles(r.reportToken, env),
+        ]);
+
+        return {
+          reportToken: r.reportToken,
+          steamId: r.steamId,
+          reporterUsername: reporterData?.username || r.steamId,
+          reporterAvatarUrl: reporterData?.avatarUrl || '',
+          reportedSteamId: r.reportedSteamId,
+          reportedUsername: reportedData?.username || r.reportedSteamId,
+          reportedAvatarUrl: reportedData?.avatarUrl || '',
+          description: r.description,
+          status: r.status as ReportStatus,
+          createdAt: r.createdAt,
+          fileCount: r.fileCount,
+          files,
+        };
+      }),
     );
 
     const responseBody: GetReportsByReportedPlayerResponse = {
