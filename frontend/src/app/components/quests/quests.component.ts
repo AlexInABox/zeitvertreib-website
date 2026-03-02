@@ -44,21 +44,19 @@ export class QuestsComponent implements OnInit {
     this.hasError = false;
 
     const headers = this.getAuthHeaders();
-    this.http
-      .get<GetQuestsResponse>(`${environment.apiUrl}/quests`, { headers })
-      .subscribe({
-        next: (response) => {
-          this.dailyQuests = response.dailyQuests;
-          this.weeklyQuests = response.weeklyQuests;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Failed to load quests:', error);
-          this.hasError = true;
-          this.errorMessage = 'Quests konnten nicht geladen werden.';
-          this.isLoading = false;
-        },
-      });
+    this.http.get<GetQuestsResponse>(`${environment.apiUrl}/quests`, { headers }).subscribe({
+      next: (response) => {
+        this.dailyQuests = response.dailyQuests;
+        this.weeklyQuests = response.weeklyQuests;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load quests:', error);
+        this.hasError = true;
+        this.errorMessage = 'Quests konnten nicht geladen werden.';
+        this.isLoading = false;
+      },
+    });
   }
 
   claimReward(quest: QuestProgress): void {
