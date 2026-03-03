@@ -238,6 +238,8 @@ export class CaseDetailComponent implements OnInit {
     this.isLoadingLinkedReports = true;
     this.linkedReportsError = '';
     this.linkedReports = [];
+    this.editingReportStatus = {};
+    this.updatingReportStatus = {};
 
     this.http
       .get<GetReportsByCaseResponse>(`${environment.apiUrl}/reports/by-case?caseId=${this.caseId}`, {
@@ -247,6 +249,10 @@ export class CaseDetailComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.linkedReports = data.reports.sort((a, b) => b.createdAt - a.createdAt);
+          // Initialize the editingReportStatus map with current report statuses
+          this.linkedReports.forEach((report) => {
+            this.editingReportStatus[report.reportToken] = report.status;
+          });
           this.isLoadingLinkedReports = false;
           if (this.linkedReports.length === 0) {
             this.linkedReportsError = 'Keine verlinkten Reports gefunden.';
@@ -333,8 +339,9 @@ export class CaseDetailComponent implements OnInit {
           const report = this.linkedReports.find((r) => r.reportToken === reportToken);
           if (report) {
             report.status = newStatus;
+            // Reinitialize the dropdown state with the updated status
+            this.editingReportStatus[reportToken] = newStatus;
           }
-          delete this.editingReportStatus[reportToken];
           this.updatingReportStatus[reportToken] = false;
         },
         error: (error) => {

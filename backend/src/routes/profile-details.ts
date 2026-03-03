@@ -1,4 +1,4 @@
-import { createResponse, fetchSteamUserData } from '../utils.js';
+import { createResponse, fetchSteamUserData, validateSteamId } from '../utils.js';
 
 /**
  * GET /profile-details?steamId={steamId}
@@ -14,18 +14,24 @@ export async function handleGetProfileDetails(
   try {
     // Parse the query parameter
     const url = new URL(request.url);
-    const steamId = url.searchParams.get('steamId');
+    const steamIdParam = url.searchParams.get('steamId');
 
-    if (!steamId) {
+    if (!steamIdParam) {
       return createResponse({ error: 'steamId parameter is required' }, 400, origin);
     }
 
+    // Validate and normalize the Steam ID
+    const validation = validateSteamId(steamIdParam);
+    if (!validation.valid || !validation.normalized) {
+      return createResponse({ error: validation.error || 'Invalid Steam ID' }, 400, origin);
+    }
+
     // Fetch steam user data (username and avatar)
-    const steamUser = await fetchSteamUserData(steamId, env, ctx);
+    const steamUser = await fetchSteamUserData(validation.normalized, env, ctx);
 
     if (!steamUser) {
       return createResponse(
-        { error: 'Failed to fetch Steam user data', steamId },
+        { error: 'Failed to fetch Steam user data' },
         500,
         origin,
       );
