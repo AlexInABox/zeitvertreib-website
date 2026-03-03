@@ -511,12 +511,9 @@
                 <div class="status-editor">
                   <label class="status-label">Status:</label>
                   <select
-                    [(ngModel)]="editingReportStatus[report.reportToken]"
+                    [ngModel]="editingReportStatus[report.reportToken] || report.status"
+                    (ngModelChange)="editingReportStatus[report.reportToken] = $event"
                     class="status-select"
-                    *ngIf="
-                      !editingReportStatus[report.reportToken] ||
-                      editingReportStatus[report.reportToken] === report.status
-                    "
                   >
                     <option value="pending">Ausstehend</option>
                     <option value="reviewing">Übergang</option>
