@@ -604,10 +604,14 @@ export async function handleGetReportsByCase(request: Request, env: Env, ctx: Ex
     // Fetch steam user data for reporters and reported
     const reportsWithUsers = await Promise.all(
       linkedReports.map(async (r) => {
-        const reporterData = await fetchSteamUserData(r.steamId, env, ctx);
-        const reportedData = await fetchSteamUserData(r.reportedSteamId, env, ctx);
-        const files = await listReportFiles(r.reportToken, env);
+        const reporterPromise = fetchSteamUserData(r.steamId, env, ctx);
+        const reportedPromise = fetchSteamUserData(r.reportedSteamId, env, ctx);
+        const filesPromise = listReportFiles(r.reportToken, env);
 
+        const results = await Promise.all([reporterPromise, reportedPromise, filesPromise]);
+        const reporterData = results[0];
+        const reportedData = results[1];
+        const files = results[2];
         return {
           reportToken: r.reportToken,
           steamId: r.steamId,
