@@ -562,3 +562,76 @@ export async function handleCedModLookup(request: Request, env: Env): Promise<Re
     return createResponse({ error: 'Fehler beim Abfragen des CedMod-Reports' }, 500, origin);
   }
 }
+
+/// GET /reports/by-case?caseId={caseId} — get all reports linked to a case (staff only)
+export async function handleGetReportsByCase(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  const validation = await validateSession(request, env);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
+  }
+
+  if (!(await isTeam(validation.steamId, env))) {
+    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
+  }
+
+  try {
+    const url = new URL(request.url);
+    const caseId = url.searchParams.get('caseId');
+
+    if (!caseId) {
+      return createResponse({ error: 'caseId parameter is required' }, 400, origin);
+    }
+
+    const db = drizzle(env.ZEITVERTREIB_DATA);
+
+    // Get all reports linked to this case
+    const linkedReports = await db
+      .select({
+        reportToken: reports.reportToken,
+        steamId: reports.steamId,
+        reportedSteamId: reports.reportedSteamId,
+        description: reports.description,
+        status: reports.status,
+        fileCount: reports.fileCount,
+        createdAt: reports.createdAt,
+      })
+      .from(reports)
+      .where(eq(reports.linkedCaseId, caseId))
+      .orderBy(desc(reports.createdAt));
+
+    // Fetch steam user data for reporters and reported
+    const reportsWithUsers = await Promise.all(
+      linkedReports.map(async (r) => {
+        const reporterPromise = fetchSteamUserData(r.steamId, env, ctx);
+        const reportedPromise = fetchSteamUserData(r.reportedSteamId, env, ctx);
+        const filesPromise = listReportFiles(r.reportToken, env);
+
+        const results = await Promise.all([reporterPromise, reportedPromise, filesPromise]);
+        const reporterData = results[0];
+        const reportedData = results[1];
+        const files = results[2];
+        return {
+          reportToken: r.reportToken,
+          steamId: r.steamId,
+          reportedSteamId: r.reportedSteamId,
+          reporterUsername: reporterData?.username || r.steamId,
+          reporterAvatarUrl: reporterData?.avatarUrl || '',
+          reportedUsername: reportedData?.username || r.reportedSteamId,
+          reportedAvatarUrl: reportedData?.avatarUrl || '',
+          description: r.description,
+          status: r.status,
+          fileCount: r.fileCount,
+          files,
+          createdAt: r.createdAt,
+        };
+      }),
+    );
+
+    return createResponse({ reports: reportsWithUsers }, 200, origin);
+  } catch (error) {
+    console.error('Error fetching reports by case:', error);
+    return createResponse({ error: 'Fehler beim Abrufen der Reports' }, 500, origin);
+  }
+}

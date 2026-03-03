@@ -446,6 +446,146 @@
         </div>
       </div>
 
+      <!-- Linked Reports Section -->
+      <div class="linked-reports-card card" *ngIf="isTeam">
+        <div class="card-header">
+          <div class="header-left">
+            <i class="pi pi-flag card-icon"></i>
+            <div>
+              <h2 class="card-title">Verlinkte Reports</h2>
+              <p class="card-subtitle">Reports mit dieser Fall verlinken oder Status ändern</p>
+            </div>
+          </div>
+          <button
+            pButton
+            icon="pi pi-refresh"
+            [loading]="isLoadingLinkedReports"
+            (click)="loadLinkedReports()"
+            class="refresh-btn"
+            title="Verlinkte Reports neu laden"
+          ></button>
+        </div>
+        <div class="card-body">
+          <!-- Linked Reports Loading State -->
+          <div class="report-loading" *ngIf="isLoadingLinkedReports">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Verlinkte Reports werden geladen...</span>
+          </div>
+
+          <!-- Linked Reports Error State -->
+          <span class="report-picker-error" *ngIf="linkedReportsError && !isLoadingLinkedReports">
+            <i class="pi pi-exclamation-circle"></i> {{ linkedReportsError }}
+          </span>
+
+          <!-- Linked Reports List -->
+          <div class="linked-reports-list" *ngIf="linkedReports.length > 0 && !isLoadingLinkedReports">
+            <div class="linked-report-item" *ngFor="let report of linkedReports">
+              <div class="report-header-row">
+                <div class="report-users">
+                  <div class="report-user">
+                    <img
+                      [src]="report.reporterAvatarUrl || '/assets/default-avatar.png'"
+                      [alt]="report.reporterUsername"
+                      class="report-user-avatar"
+                    />
+                    <span class="report-user-name">{{ report.reporterUsername }}</span>
+                  </div>
+                  <span class="report-arrow">→</span>
+                  <div class="report-user">
+                    <img
+                      [src]="report.reportedAvatarUrl || '/assets/default-avatar.png'"
+                      [alt]="report.reportedUsername"
+                      class="report-user-avatar"
+                    />
+                    <span class="report-user-name">{{ report.reportedUsername }}</span>
+                  </div>
+                </div>
+                <span class="report-date">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+              </div>
+
+              <div class="report-description">
+                {{ report.description | slice: 0 : 100 }}{{ report.description.length > 100 ? '...' : '' }}
+              </div>
+
+              <div class="report-status-row">
+                <div class="status-editor">
+                  <label class="status-label">Status:</label>
+                  <select
+                    [ngModel]="editingReportStatus[report.reportToken] || report.status"
+                    (ngModelChange)="editingReportStatus[report.reportToken] = $event"
+                    class="status-select"
+                  >
+                    <option value="pending">Ausstehend</option>
+                    <option value="reviewing">Übergang</option>
+                    <option value="resolved">Gelöst</option>
+                    <option value="dismissed">Ablehnung</option>
+                  </select>
+                  <button
+                    *ngIf="
+                      editingReportStatus[report.reportToken] &&
+                      editingReportStatus[report.reportToken] !== report.status
+                    "
+                    pButton
+                    icon="pi pi-check"
+                    class="status-confirm-btn"
+                    [loading]="updatingReportStatus[report.reportToken]"
+                    (click)="updateReportStatus(report.reportToken, editingReportStatus[report.reportToken])"
+                  ></button>
+                </div>
+
+                <div class="report-files-info">
+                  <i class="pi pi-file"></i>
+                  <span>{{ report.fileCount }} {{ report.fileCount === 1 ? 'Datei' : 'Dateien' }}</span>
+                </div>
+
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="unlink-btn"
+                  (click)="unlinkReportFromCase(report.reportToken)"
+                  title="Report-Verknüpfung entfernen"
+                ></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Link Report From Recent Section -->
+          <div class="link-report-section" *ngIf="!isLoadingLinkedReports">
+            <div class="section-label">Report verlinken:</div>
+            <div class="recent-reports-selector">
+              <div class="reports-list-compact" *ngIf="recentReportsForPlayer.length > 0">
+                <div
+                  class="report-item-compact"
+                  *ngFor="let report of recentReportsForPlayer"
+                  [class.linked]="isReportLinked(report.reportToken)"
+                >
+                  <div class="report-item-info">
+                    <div class="report-users-compact">
+                      <span class="report-user-name">{{ report.reporterUsername }}</span>
+                      <span class="report-arrow">→</span>
+                      <span class="report-user-name">{{ report.reportedUsername }}</span>
+                    </div>
+                    <span class="report-date-compact">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+                  </div>
+                  <button
+                    *ngIf="!isReportLinked(report.reportToken)"
+                    pButton
+                    icon="pi pi-link"
+                    class="link-btn"
+                    (click)="linkReportToCase(report.reportToken)"
+                    title="Report mit diesem Fall verlinken"
+                  ></button>
+                </div>
+              </div>
+              <div *ngIf="recentReportsForPlayer.length === 0 && !isLoadingRecentReports" class="no-recent-reports">
+                <i class="pi pi-inbox"></i>
+                <p>Keine Reports verfügbar. Lade zuerst einige Reports hoch.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Search and Sort -->
       <div class="search-section" *ngIf="(caseData?.files?.length ?? 0) > 0">
         <div class="search-wrapper">

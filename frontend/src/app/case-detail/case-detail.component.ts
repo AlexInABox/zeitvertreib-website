@@ -15,6 +15,10 @@ import type {
   CaseCategory,
   GetReportsByReportedPlayerResponse,
   ReportWithFilesItem,
+  GetReportsByCaseResponse,
+  UpdateReportStatusPutRequest,
+  UpdateReportStatusPutResponse,
+  ReportStatus,
 } from '@zeitvertreib/types';
 
 @Component({
@@ -98,6 +102,13 @@ export class CaseDetailComponent implements OnInit {
   importReportProgress = 0;
   importReportStatus = '';
 
+  // Linked reports state
+  linkedReports: ReportWithFilesItem[] = [];
+  isLoadingLinkedReports = false;
+  linkedReportsError = '';
+  editingReportStatus: { [reportToken: string]: ReportStatus } = {};
+  updatingReportStatus: { [reportToken: string]: boolean } = {};
+
   // Linked user management state
   newLinkedSteamId = '';
   isManagingLinkedUsers = false;
@@ -168,6 +179,11 @@ export class CaseDetailComponent implements OnInit {
         this.editedDescription = data.description || '';
         this.filterFiles();
         this.isLoading = false;
+        // Load related data
+        if (this.isTeam) {
+          this.loadLinkedReports();
+          this.loadRecentReports();
+        }
       },
       error: (error) => {
         console.error('Error loading case:', error);
@@ -214,6 +230,126 @@ export class CaseDetailComponent implements OnInit {
           this.reportFilesError = error.error?.error || 'Fehler beim Laden der Reports.';
         },
       });
+  }
+
+  loadLinkedReports() {
+    if (!this.isTeam) return;
+
+    this.isLoadingLinkedReports = true;
+    this.linkedReportsError = '';
+    this.linkedReports = [];
+
+    this.http
+      .get<GetReportsByCaseResponse>(
+        `${environment.apiUrl}/reports/by-case?caseId=${encodeURIComponent(this.caseId)}`,
+        {
+          headers: this.getAuthHeaders(),
+          withCredentials: true,
+        },
+      )
+      .subscribe({
+        next: (data) => {
+          this.linkedReports = data.reports.sort((a, b) => b.createdAt - a.createdAt);
+          this.isLoadingLinkedReports = false;
+          if (this.linkedReports.length === 0) {
+            this.linkedReportsError = 'Keine verlinkten Reports gefunden.';
+          }
+        },
+        error: (error) => {
+          console.error('Error loading linked reports:', error);
+          this.isLoadingLinkedReports = false;
+          this.linkedReportsError = error.error?.error || 'Fehler beim Laden der verlinkten Reports.';
+        },
+      });
+  }
+
+  linkReportToCase(reportToken: string) {
+    if (!this.isTeam || !reportToken) return;
+
+    const body: UpdateReportStatusPutRequest = {
+      reportToken,
+      status: 'reviewing',
+      linkedCaseId: this.caseId,
+    };
+
+    this.http
+      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.selectedReportToken = '';
+          this.selectedReportFile = '';
+          this.loadLinkedReports();
+        },
+        error: (error) => {
+          console.error('Error linking report:', error);
+          this.reportFilesError = error.error?.error || 'Fehler beim Verlinken des Reports.';
+        },
+      });
+  }
+
+  unlinkReportFromCase(reportToken: string) {
+    if (!this.isTeam || !reportToken) return;
+
+    const body: UpdateReportStatusPutRequest = {
+      reportToken,
+      status: 'pending',
+      linkedCaseId: null,
+    };
+
+    this.http
+      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.loadLinkedReports();
+        },
+        error: (error) => {
+          console.error('Error unlinking report:', error);
+          this.linkedReportsError = error.error?.error || 'Fehler beim Entfernen des Report-Links.';
+        },
+      });
+  }
+
+  updateReportStatus(reportToken: string, newStatus: ReportStatus) {
+    if (!this.isTeam || !reportToken) return;
+
+    const body: UpdateReportStatusPutRequest = {
+      reportToken,
+      status: newStatus,
+      linkedCaseId: this.caseId,
+    };
+
+    this.updatingReportStatus[reportToken] = true;
+
+    this.http
+      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          const report = this.linkedReports.find((r) => r.reportToken === reportToken);
+          if (report) {
+            report.status = newStatus;
+          }
+          delete this.editingReportStatus[reportToken];
+          this.updatingReportStatus[reportToken] = false;
+        },
+        error: (error) => {
+          console.error('Error updating report status:', error);
+          this.linkedReportsError = error.error?.error || 'Fehler beim Aktualisieren des Report-Status.';
+          this.updatingReportStatus[reportToken] = false;
+        },
+      });
+  }
+
+  isReportLinked(reportToken: string): boolean {
+    return this.linkedReports.some((lr) => lr.reportToken === reportToken);
   }
 
   filterFiles() {

@@ -65,7 +65,9 @@ import {
   handleUpdateReportStatus,
   handleGetReportWarns,
   handleCedModLookup,
+  handleGetReportsByCase,
 } from './routes/reports.js';
+import { handleGetProfileDetails } from './routes/profile-details.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -202,10 +204,14 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/reports/files': handleGetReportFile,
   'GET:/reports/list': handleListReports,
   'GET:/reports/by-reported-player': handleGetReportsByReportedPlayer,
+  'GET:/reports/by-case': handleGetReportsByCase,
   'GET:/reports/recent': handleGetRecentReports,
   'PUT:/reports/status': handleUpdateReportStatus,
   'GET:/reports/warns': handleGetReportWarns,
   'GET:/reports/cedmod-lookup': handleCedModLookup,
+
+  // Profile Details routes
+  'GET:/profile-details': handleGetProfileDetails,
 };
 
 export default {

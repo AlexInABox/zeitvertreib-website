@@ -1100,7 +1100,7 @@ export interface ReportListItem {
 export interface UpdateReportStatusPutRequest {
   reportToken: string;
   status: ReportStatus;
-  linkedCaseId?: string;
+  linkedCaseId?: string | null;
 }
 
 /** PUT /reports/status response */
@@ -1137,6 +1137,11 @@ export interface ReportWithFilesItem {
   createdAt: number;
   fileCount: number;
   files: string[];
+}
+
+/** GET /reports/by-case?caseId={caseId} — fetch reports linked to a case (staff only) */
+export interface GetReportsByCaseResponse {
+  reports: ReportWithFilesItem[];
 }
 
 /** GET /reports/cedmod-lookup?steamId={steamId} — fetch reporter's last in-game report from CedMod (public) */
