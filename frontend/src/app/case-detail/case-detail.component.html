@@ -504,7 +504,7 @@
               </div>
 
               <div class="report-description">
-                {{ report.description | slice: 0: 100 }}{{ report.description.length > 100 ? '...' : '' }}
+                {{ report.description | slice: 0 : 100 }}{{ report.description.length > 100 ? '...' : '' }}
               </div>
 
               <div class="report-status-row">
@@ -513,7 +513,10 @@
                   <select
                     [(ngModel)]="editingReportStatus[report.reportToken]"
                     class="status-select"
-                    *ngIf="!editingReportStatus[report.reportToken] || editingReportStatus[report.reportToken] === report.status"
+                    *ngIf="
+                      !editingReportStatus[report.reportToken] ||
+                      editingReportStatus[report.reportToken] === report.status
+                    "
                   >
                     <option value="pending">Ausstehend</option>
                     <option value="reviewing">Übergang</option>
@@ -521,7 +524,10 @@
                     <option value="dismissed">Ablehnung</option>
                   </select>
                   <button
-                    *ngIf="editingReportStatus[report.reportToken] && editingReportStatus[report.reportToken] !== report.status"
+                    *ngIf="
+                      editingReportStatus[report.reportToken] &&
+                      editingReportStatus[report.reportToken] !== report.status
+                    "
                     pButton
                     icon="pi pi-check"
                     class="status-confirm-btn"

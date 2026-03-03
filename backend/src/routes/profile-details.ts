@@ -4,11 +4,7 @@ import { createResponse, fetchSteamUserData } from '../utils.js';
  * GET /profile-details?steamId={steamId}
  * Fetch enriched profile data (username and avatar) for a Steam user
  */
-export async function handleGetProfileDetails(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
+export async function handleGetProfileDetails(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   try {
@@ -24,11 +20,7 @@ export async function handleGetProfileDetails(
     const steamUser = await fetchSteamUserData(steamId, env, ctx);
 
     if (!steamUser) {
-      return createResponse(
-        { error: 'Failed to fetch Steam user data', steamId },
-        500,
-        origin,
-      );
+      return createResponse({ error: 'Failed to fetch Steam user data', steamId }, 500, origin);
     }
 
     // Return the profile data
