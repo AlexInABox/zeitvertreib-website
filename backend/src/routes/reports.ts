@@ -16,14 +16,12 @@ import {
   CreateReportPostRequest,
   CreateReportPostResponse,
   ReportFileUploadGetResponse,
-  GetReportByTokenResponse,
   ListReportsGetResponse,
   GetReportsByReportedPlayerResponse,
-  UpdateReportStatusPutRequest,
-  UpdateReportStatusPutResponse,
+  UpdateReportLinkPutRequest,
+  UpdateReportLinkPutResponse,
   GetReportWarnsResponse,
   CedModLastReportResponse,
-  ReportStatus,
 } from '@zeitvertreib/types';
 
 const BUCKET = 'zeitvertreib-reports';
@@ -98,7 +96,6 @@ export async function handleCreateReport(request: Request, env: Env): Promise<Re
       steamId: body.steamId,
       reportedSteamId: body.reportedSteamId,
       description: body.description.trim(),
-      status: 'pending',
       cedmodReason,
       fileCount: 0,
       createdAt: now,
@@ -176,47 +173,18 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
   }
 }
 
-/// GET /reports?token={reportToken} — view a report by token (no auth, privacy via token)
-export async function handleGetReport(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const url = new URL(request.url);
-    const reportToken = url.searchParams.get('token');
-
-    if (!reportToken) {
-      return createResponse({ error: 'Fehlender Parameter: token' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    const report = await db.select().from(reports).where(eq(reports.reportToken, reportToken)).get();
-
-    if (!report) {
-      return createResponse({ error: 'Report nicht gefunden' }, 404, origin);
-    }
-
-    // List files from S3
-    const files = await listReportFiles(reportToken, env);
-
-    const responseBody: GetReportByTokenResponse = {
-      reportToken: report.reportToken,
-      steamId: report.steamId,
-      reportedSteamId: report.reportedSteamId,
-      description: report.description,
-      status: report.status as ReportStatus,
-      createdAt: report.createdAt,
-      files,
-    };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error getting report:', error);
-    return createResponse({ error: 'Fehler beim Laden des Reports' }, 500, origin);
-  }
-}
-
-/// GET /reports/files?report={reportToken}&file={filename} — get presigned download URL
+/// GET /reports/files?report={reportToken}&file={filename} — get presigned download URL (staff only)
 export async function handleGetReportFile(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
+
+  const validation = await validateSession(request, env);
+  if (validation.status !== 'valid' || !validation.steamId) {
+    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
+  }
+
+  if (!(await isTeam(validation.steamId, env))) {
+    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
+  }
 
   try {
     const url = new URL(request.url);
@@ -225,19 +193,6 @@ export async function handleGetReportFile(request: Request, env: Env): Promise<R
 
     if (!reportToken || !filename) {
       return createResponse({ error: 'Fehlende Parameter: report, file' }, 400, origin);
-    }
-
-    // Check if the request is from staff or from the token holder
-    const validation = await validateSession(request, env);
-    const isStaff = validation.status === 'valid' && validation.steamId && (await isTeam(validation.steamId, env));
-
-    // For non-staff, verify the token exists (token knowledge = access)
-    if (!isStaff) {
-      const db = drizzle(env.ZEITVERTREIB_DATA);
-      const report = await db.select().from(reports).where(eq(reports.reportToken, reportToken)).get();
-      if (!report) {
-        return createResponse({ error: 'Report nicht gefunden' }, 404, origin);
-      }
     }
 
     const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`, {
@@ -275,7 +230,6 @@ export async function handleListReports(request: Request, env: Env): Promise<Res
         steamId: r.steamId,
         reportedSteamId: r.reportedSteamId,
         description: r.description,
-        status: r.status as ReportStatus,
         createdAt: r.createdAt,
         linkedCaseId: r.linkedCaseId,
         fileCount: r.fileCount,
@@ -336,12 +290,11 @@ export async function handleGetReportsByReportedPlayer(
           reportToken: r.reportToken,
           steamId: r.steamId,
           reporterUsername: reporterData?.username || r.steamId,
-          reporterAvatarUrl: reporterData?.avatarUrl || '',
+          reporterAvatarUrl: reporterData?.avatarUrl || null,
           reportedSteamId: r.reportedSteamId,
           reportedUsername: reportedData?.username || r.reportedSteamId,
-          reportedAvatarUrl: reportedData?.avatarUrl || '',
+          reportedAvatarUrl: reportedData?.avatarUrl || null,
           description: r.description,
-          status: r.status as ReportStatus,
           createdAt: r.createdAt,
           fileCount: r.fileCount,
           files,
@@ -360,8 +313,8 @@ export async function handleGetReportsByReportedPlayer(
   }
 }
 
-/// PUT /reports/status — update report status (staff only)
-export async function handleUpdateReportStatus(request: Request, env: Env): Promise<Response> {
+/// PUT /reports/link — link or unlink a report to/from a case (staff only)
+export async function handleUpdateReportLink(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   const validation = await validateSession(request, env);
@@ -374,9 +327,9 @@ export async function handleUpdateReportStatus(request: Request, env: Env): Prom
   }
 
   try {
-    const body: UpdateReportStatusPutRequest = await request.json();
+    const body: UpdateReportLinkPutRequest = await request.json();
 
-    if (!typia.is<UpdateReportStatusPutRequest>(body)) {
+    if (!typia.is<UpdateReportLinkPutRequest>(body)) {
       return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
     }
 
@@ -387,22 +340,19 @@ export async function handleUpdateReportStatus(request: Request, env: Env): Prom
       return createResponse({ error: 'Report nicht gefunden' }, 404, origin);
     }
 
-    const updateData: Record<string, any> = { status: body.status };
-    if (body.linkedCaseId !== undefined) {
-      // updateData is a generic record, so use bracket notation to satisfy TS
-      updateData['linkedCaseId'] = body.linkedCaseId;
-    }
+    await db
+      .update(reports)
+      .set({ linkedCaseId: body.linkedCaseId ?? null })
+      .where(eq(reports.reportToken, body.reportToken));
 
-    await db.update(reports).set(updateData).where(eq(reports.reportToken, body.reportToken));
-
-    const responseBody: UpdateReportStatusPutResponse = {
+    const responseBody: UpdateReportLinkPutResponse = {
       success: true,
-      message: 'Report-Status aktualisiert',
+      message: 'Report-Verknüpfung aktualisiert',
     };
     return createResponse(responseBody, 200, origin);
   } catch (error) {
-    console.error('Error updating report status:', error);
-    return createResponse({ error: 'Fehler beim Aktualisieren des Reports' }, 500, origin);
+    console.error('Error updating report link:', error);
+    return createResponse({ error: 'Fehler beim Aktualisieren der Verknüpfung' }, 500, origin);
   }
 }
 
@@ -427,7 +377,6 @@ export async function handleGetRecentReports(request: Request, env: Env, ctx: Ex
     const recentReports = await db
       .select()
       .from(reports)
-      .where(eq(reports.status, 'pending')) // Only pending reports with potential evidence
       .orderBy(desc(reports.createdAt))
       .limit(limit)
       .all();
@@ -445,12 +394,11 @@ export async function handleGetRecentReports(request: Request, env: Env, ctx: Ex
           reportToken: r.reportToken,
           steamId: r.steamId,
           reporterUsername: reporterData?.username || r.steamId,
-          reporterAvatarUrl: reporterData?.avatarUrl || '',
+          reporterAvatarUrl: reporterData?.avatarUrl || null,
           reportedSteamId: r.reportedSteamId,
           reportedUsername: reportedData?.username || r.reportedSteamId,
-          reportedAvatarUrl: reportedData?.avatarUrl || '',
+          reportedAvatarUrl: reportedData?.avatarUrl || null,
           description: r.description,
-          status: r.status as ReportStatus,
           createdAt: r.createdAt,
           fileCount: r.fileCount,
           files,
@@ -605,7 +553,6 @@ export async function handleGetReportsByCase(
         steamId: reports.steamId,
         reportedSteamId: reports.reportedSteamId,
         description: reports.description,
-        status: reports.status,
         fileCount: reports.fileCount,
         cedmodReason: reports.cedmodReason,
         createdAt: reports.createdAt,
@@ -630,7 +577,6 @@ export async function handleGetReportsByCase(
           reportedUsername: reportedData?.username || r.reportedSteamId,
           reportedAvatarUrl: reportedData?.avatarUrl || null,
           description: r.description,
-          status: r.status,
           fileCount: r.fileCount,
           files,
           createdAt: r.createdAt,

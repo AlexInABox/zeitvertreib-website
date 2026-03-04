@@ -16,8 +16,8 @@ import type {
   GetReportsByReportedPlayerResponse,
   ReportWithFilesItem,
   GetReportsByCaseResponse,
-  UpdateReportStatusPutRequest,
-  UpdateReportStatusPutResponse,
+  UpdateReportLinkPutRequest,
+  UpdateReportLinkPutResponse,
 } from '@zeitvertreib/types';
 
 @Component({
@@ -261,14 +261,13 @@ export class CaseDetailComponent implements OnInit {
   linkReportToCase(reportToken: string) {
     if (!this.isTeam || !reportToken) return;
 
-    const body: UpdateReportStatusPutRequest = {
+    const body: UpdateReportLinkPutRequest = {
       reportToken,
-      status: 'reviewing',
       linkedCaseId: this.caseId,
     };
 
     this.http
-      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+      .put<UpdateReportLinkPutResponse>(`${environment.apiUrl}/reports/link`, body, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -288,14 +287,13 @@ export class CaseDetailComponent implements OnInit {
   unlinkReportFromCase(reportToken: string) {
     if (!this.isTeam || !reportToken) return;
 
-    const body: UpdateReportStatusPutRequest = {
+    const body: UpdateReportLinkPutRequest = {
       reportToken,
-      status: 'pending',
       linkedCaseId: null,
     };
 
     this.http
-      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+      .put<UpdateReportLinkPutResponse>(`${environment.apiUrl}/reports/link`, body, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
