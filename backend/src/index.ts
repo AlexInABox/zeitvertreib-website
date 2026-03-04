@@ -57,12 +57,11 @@ import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 import {
   handleCreateReport,
   handleReportFileUpload,
-  handleGetReport,
   handleGetReportFile,
   handleListReports,
   handleGetReportsByReportedPlayer,
   handleGetRecentReports,
-  handleUpdateReportStatus,
+  handleUpdateReportLink,
   handleGetReportWarns,
   handleCedModLookup,
   handleGetReportsByCase,
@@ -199,14 +198,13 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Reporting routes
   'POST:/reports': handleCreateReport,
-  'GET:/reports': handleGetReport,
   'GET:/reports/upload': handleReportFileUpload,
   'GET:/reports/files': handleGetReportFile,
   'GET:/reports/list': handleListReports,
   'GET:/reports/by-reported-player': handleGetReportsByReportedPlayer,
   'GET:/reports/by-case': handleGetReportsByCase,
   'GET:/reports/recent': handleGetRecentReports,
-  'PUT:/reports/status': handleUpdateReportStatus,
+  'PUT:/reports/link': handleUpdateReportLink,
   'GET:/reports/warns': handleGetReportWarns,
   'GET:/reports/cedmod-lookup': handleCedModLookup,
 

@@ -16,9 +16,8 @@ import type {
   GetReportsByReportedPlayerResponse,
   ReportWithFilesItem,
   GetReportsByCaseResponse,
-  UpdateReportStatusPutRequest,
-  UpdateReportStatusPutResponse,
-  ReportStatus,
+  UpdateReportLinkPutRequest,
+  UpdateReportLinkPutResponse,
 } from '@zeitvertreib/types';
 
 @Component({
@@ -106,8 +105,7 @@ export class CaseDetailComponent implements OnInit {
   linkedReports: ReportWithFilesItem[] = [];
   isLoadingLinkedReports = false;
   linkedReportsError = '';
-  editingReportStatus: { [reportToken: string]: ReportStatus } = {};
-  updatingReportStatus: { [reportToken: string]: boolean } = {};
+  openingReportFile: { [key: string]: boolean } = {};
 
   // Linked user management state
   newLinkedSteamId = '';
@@ -266,14 +264,13 @@ export class CaseDetailComponent implements OnInit {
   linkReportToCase(reportToken: string) {
     if (!this.isTeam || !reportToken) return;
 
-    const body: UpdateReportStatusPutRequest = {
+    const body: UpdateReportLinkPutRequest = {
       reportToken,
-      status: 'reviewing',
       linkedCaseId: this.caseId,
     };
 
     this.http
-      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+      .put<UpdateReportLinkPutResponse>(`${environment.apiUrl}/reports/link`, body, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -293,14 +290,13 @@ export class CaseDetailComponent implements OnInit {
   unlinkReportFromCase(reportToken: string) {
     if (!this.isTeam || !reportToken) return;
 
-    const body: UpdateReportStatusPutRequest = {
+    const body: UpdateReportLinkPutRequest = {
       reportToken,
-      status: 'pending',
       linkedCaseId: null,
     };
 
     this.http
-      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
+      .put<UpdateReportLinkPutResponse>(`${environment.apiUrl}/reports/link`, body, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
@@ -315,41 +311,43 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
-  updateReportStatus(reportToken: string, newStatus: ReportStatus) {
-    if (!this.isTeam || !reportToken) return;
-
-    const body: UpdateReportStatusPutRequest = {
-      reportToken,
-      status: newStatus,
-      linkedCaseId: this.caseId,
-    };
-
-    this.updatingReportStatus[reportToken] = true;
-
-    this.http
-      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: () => {
-          const report = this.linkedReports.find((r) => r.reportToken === reportToken);
-          if (report) {
-            report.status = newStatus;
-          }
-          delete this.editingReportStatus[reportToken];
-          this.updatingReportStatus[reportToken] = false;
-        },
-        error: (error) => {
-          console.error('Error updating report status:', error);
-          this.linkedReportsError = error.error?.error || 'Fehler beim Aktualisieren des Report-Status.';
-          this.updatingReportStatus[reportToken] = false;
-        },
-      });
-  }
-
   isReportLinked(reportToken: string): boolean {
     return this.linkedReports.some((lr) => lr.reportToken === reportToken);
+  }
+
+  openReportFile(reportToken: string, filename: string) {
+    const key = `${reportToken}/${filename}`;
+    if (this.openingReportFile[key]) return;
+    this.openingReportFile[key] = true;
+
+    this.http
+      .get<{
+        url: string;
+      }>(
+        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`,
+        { headers: this.getAuthHeaders(), withCredentials: true },
+      )
+      .subscribe({
+        next: (data) => {
+          this.openingReportFile[key] = false;
+          if (this.isViewableFile(filename)) {
+            this.viewerFileUrl = data.url;
+            this.viewerFileName = filename;
+            this.viewerMediaType = this.getMediaType(filename);
+            this.viewerOpen = true;
+            document.body.style.overflow = 'hidden';
+          } else {
+            const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+            if (newWindow) {
+              newWindow.opener = null;
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching report file URL:', error);
+          this.openingReportFile[key] = false;
+        },
+      });
   }
 
   filterFiles() {

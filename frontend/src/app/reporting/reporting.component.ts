@@ -431,10 +431,6 @@ export class ReportingComponent implements OnInit, OnDestroy {
     return ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext);
   }
 
-  copyToken(): void {
-    navigator.clipboard.writeText(this.reportToken);
-  }
-
   formatDate(timestamp: number): string {
     return new Date(timestamp).toLocaleString('de-DE', {
       day: '2-digit',

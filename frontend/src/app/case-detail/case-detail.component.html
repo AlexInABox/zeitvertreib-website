@@ -300,7 +300,6 @@
                       (click)="selectedReportToken = report.reportToken; selectedReportFile = ''"
                     >
                       <div class="report-item-info">
-                        <div class="report-status" [ngClass]="report.status">{{ report.status }}</div>
                         <div class="report-users">
                           <div class="report-user">
                             <img
@@ -508,34 +507,34 @@
               </div>
 
               <div class="report-status-row">
-                <div class="status-editor">
-                  <label class="status-label">Status:</label>
-                  <select
-                    [ngModel]="editingReportStatus[report.reportToken] || report.status"
-                    (ngModelChange)="editingReportStatus[report.reportToken] = $event"
-                    class="status-select"
-                  >
-                    <option value="pending">Ausstehend</option>
-                    <option value="reviewing">Übergang</option>
-                    <option value="resolved">Gelöst</option>
-                    <option value="dismissed">Ablehnung</option>
-                  </select>
-                  <button
-                    *ngIf="
-                      editingReportStatus[report.reportToken] &&
-                      editingReportStatus[report.reportToken] !== report.status
-                    "
-                    pButton
-                    icon="pi pi-check"
-                    class="status-confirm-btn"
-                    [loading]="updatingReportStatus[report.reportToken]"
-                    (click)="updateReportStatus(report.reportToken, editingReportStatus[report.reportToken])"
-                  ></button>
-                </div>
-
                 <div class="report-files-info">
-                  <i class="pi pi-file"></i>
-                  <span>{{ report.fileCount }} {{ report.fileCount === 1 ? 'Datei' : 'Dateien' }}</span>
+                  <ng-container *ngIf="report.files && report.files.length > 0; else noReportFiles">
+                    <div class="report-file-list">
+                      <button
+                        *ngFor="let file of report.files"
+                        class="report-file-btn"
+                        [disabled]="openingReportFile[report.reportToken + '/' + file]"
+                        (click)="openReportFile(report.reportToken, file)"
+                        [title]="file"
+                      >
+                        <i
+                          class="pi"
+                          [ngClass]="{
+                            'pi-video': getMediaType(file) === 'video',
+                            'pi-image': getMediaType(file) === 'image',
+                            'pi-volume-up': getMediaType(file) === 'audio',
+                            'pi-file': getMediaType(file) === null,
+                            'pi-spin pi-spinner': openingReportFile[report.reportToken + '/' + file],
+                          }"
+                        ></i>
+                        <span>{{ file }}</span>
+                      </button>
+                    </div>
+                  </ng-container>
+                  <ng-template #noReportFiles>
+                    <i class="pi pi-file"></i>
+                    <span>{{ report.fileCount }} {{ report.fileCount === 1 ? 'Datei' : 'Dateien' }}</span>
+                  </ng-template>
                 </div>
 
                 <button

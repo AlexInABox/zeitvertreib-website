@@ -1048,8 +1048,6 @@ export interface ClaimQuestRewardResponse {
 // Reporting Types
 // ============================================================================
 
-export type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
-
 /** POST /reports — create a new report (no auth required) */
 export interface CreateReportPostRequest {
   steamId: string;
@@ -1069,17 +1067,6 @@ export interface ReportFileUploadGetResponse {
   method: string;
 }
 
-/** GET /reports?token={reportToken} — view a report by token (no auth) */
-export interface GetReportByTokenResponse {
-  reportToken: string;
-  steamId: string;
-  reportedSteamId: string;
-  description: string;
-  status: ReportStatus;
-  createdAt: number;
-  files: string[];
-}
-
 /** GET /reports/list — list all reports (staff only) */
 export interface ListReportsGetResponse {
   reports: ReportListItem[];
@@ -1090,21 +1077,21 @@ export interface ReportListItem {
   steamId: string;
   reportedSteamId: string;
   description: string;
-  status: ReportStatus;
   createdAt: number;
   linkedCaseId: string | null;
   fileCount: number;
+  /** Reason from the reporter's last in-game CedMod report (staff only) */
+  cedmodReason: string | null;
 }
 
-/** PUT /reports/status — update report status (staff only) */
-export interface UpdateReportStatusPutRequest {
+/** PUT /reports/link — link or unlink a report to/from a case (staff only) */
+export interface UpdateReportLinkPutRequest {
   reportToken: string;
-  status: ReportStatus;
-  linkedCaseId?: string | null;
+  linkedCaseId: string | null;
 }
 
-/** PUT /reports/status response */
-export interface UpdateReportStatusPutResponse {
+/** PUT /reports/link response */
+export interface UpdateReportLinkPutResponse {
   success: boolean;
   message: string;
 }
@@ -1128,15 +1115,16 @@ export interface ReportWithFilesItem {
   reportToken: string;
   steamId: string;
   reporterUsername: string;
-  reporterAvatarUrl: string;
+  reporterAvatarUrl: string | null;
   reportedSteamId: string;
   reportedUsername: string;
-  reportedAvatarUrl: string;
+  reportedAvatarUrl: string | null;
   description: string;
-  status: ReportStatus;
   createdAt: number;
   fileCount: number;
   files: string[];
+  /** Reason from the reporter's last in-game CedMod report (staff only) */
+  cedmodReason: string | null;
 }
 
 /** GET /reports/by-case?caseId={caseId} — fetch reports linked to a case (staff only) */
