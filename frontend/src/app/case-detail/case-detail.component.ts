@@ -238,7 +238,7 @@ export class CaseDetailComponent implements OnInit {
     this.linkedReports = [];
 
     this.http
-      .get<GetReportsByCaseResponse>(`${environment.apiUrl}/reports/by-case?caseId=${this.caseId}`, {
+      .get<GetReportsByCaseResponse>(`${environment.apiUrl}/reports/by-case?caseId=${encodeURIComponent(this.caseId)}`, {
         headers: this.getAuthHeaders(),
         withCredentials: true,
       })
