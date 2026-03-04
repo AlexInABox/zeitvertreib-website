@@ -320,10 +320,9 @@ export class CaseDetailComponent implements OnInit {
     this.openingReportFile[key] = true;
 
     this.http
-      .get<{ url: string }>(
-        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`,
-        { headers: this.getAuthHeaders(), withCredentials: true },
-      )
+      .get<{
+        url: string;
+      }>(`${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`, { headers: this.getAuthHeaders(), withCredentials: true })
       .subscribe({
         next: (data) => {
           this.openingReportFile[key] = false;
