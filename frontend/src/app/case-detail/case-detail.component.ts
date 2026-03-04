@@ -336,7 +336,10 @@ export class CaseDetailComponent implements OnInit {
             this.viewerOpen = true;
             document.body.style.overflow = 'hidden';
           } else {
-            window.open(data.url, '_blank');
+            const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+            if (newWindow) {
+              newWindow.opener = null;
+            }
           }
         },
         error: (error) => {
