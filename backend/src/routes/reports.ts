@@ -374,12 +374,7 @@ export async function handleGetRecentReports(request: Request, env: Env, ctx: Ex
     const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
 
     const db = drizzle(env.ZEITVERTREIB_DATA);
-    const recentReports = await db
-      .select()
-      .from(reports)
-      .orderBy(desc(reports.createdAt))
-      .limit(limit)
-      .all();
+    const recentReports = await db.select().from(reports).orderBy(desc(reports.createdAt)).limit(limit).all();
 
     // Fetch files and Steam user data for each report
     const reportsWithFiles = await Promise.all(
