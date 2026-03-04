@@ -322,7 +322,10 @@ export class CaseDetailComponent implements OnInit {
     this.http
       .get<{
         url: string;
-      }>(`${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`, { headers: this.getAuthHeaders(), withCredentials: true })
+      }>(
+        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`,
+        { headers: this.getAuthHeaders(), withCredentials: true },
+      )
       .subscribe({
         next: (data) => {
           this.openingReportFile[key] = false;
