@@ -2646,7 +2646,9 @@
   color: #a78bfa;
   font-size: 0.7rem;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
   max-width: 200px;
   overflow: hidden;
 }

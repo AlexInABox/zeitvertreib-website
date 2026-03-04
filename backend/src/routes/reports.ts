@@ -520,11 +520,7 @@ export async function handleCedModLookup(request: Request, env: Env): Promise<Re
 }
 
 /// GET /reports/by-case?caseId={caseId} — get all reports linked to a case (staff only)
-export async function handleGetReportsByCase(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
+export async function handleGetReportsByCase(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   const validation = await validateSession(request, env);
@@ -564,10 +560,13 @@ export async function handleGetReportsByCase(
     // Fetch steam user data for reporters and reported
     const reportsWithUsers = await Promise.all(
       linkedReports.map(async (r) => {
-        const reporterData = await fetchSteamUserData(r.steamId, env, ctx);
-        const reportedData = await fetchSteamUserData(r.reportedSteamId, env, ctx);
-        const files = await listReportFiles(r.reportToken, env);
+        const reporterDataPromise = fetchSteamUserData(r.steamId, env, ctx);
+        const reportedDataPromise = fetchSteamUserData(r.reportedSteamId, env, ctx);
+        const filesPromise = listReportFiles(r.reportToken, env);
 
+        const reporterData = await reporterDataPromise;
+        const reportedData = await reportedDataPromise;
+        const files = await filesPromise;
         return {
           reportToken: r.reportToken,
           steamId: r.steamId,

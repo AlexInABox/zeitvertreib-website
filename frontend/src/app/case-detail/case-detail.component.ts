@@ -238,10 +238,13 @@ export class CaseDetailComponent implements OnInit {
     this.linkedReports = [];
 
     this.http
-      .get<GetReportsByCaseResponse>(`${environment.apiUrl}/reports/by-case?caseId=${this.caseId}`, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
+      .get<GetReportsByCaseResponse>(
+        `${environment.apiUrl}/reports/by-case?caseId=${encodeURIComponent(this.caseId)}`,
+        {
+          headers: this.getAuthHeaders(),
+          withCredentials: true,
+        },
+      )
       .subscribe({
         next: (data) => {
           this.linkedReports = data.reports.sort((a, b) => b.createdAt - a.createdAt);
@@ -318,7 +321,9 @@ export class CaseDetailComponent implements OnInit {
     this.openingReportFile[key] = true;
 
     this.http
-      .get<{ url: string }>(
+      .get<{
+        url: string;
+      }>(
         `${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`,
         { headers: this.getAuthHeaders(), withCredentials: true },
       )
@@ -332,7 +337,10 @@ export class CaseDetailComponent implements OnInit {
             this.viewerOpen = true;
             document.body.style.overflow = 'hidden';
           } else {
-            window.open(data.url, '_blank');
+            const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+            if (newWindow) {
+              newWindow.opener = null;
+            }
           }
         },
         error: (error) => {

@@ -503,7 +503,7 @@
               </div>
 
               <div class="report-description">
-                {{ report.description | slice: 0: 100 }}{{ report.description.length > 100 ? '...' : '' }}
+                {{ report.description | slice: 0 : 100 }}{{ report.description.length > 100 ? '...' : '' }}
               </div>
 
               <div class="report-status-row">
@@ -524,7 +524,7 @@
                             'pi-image': getMediaType(file) === 'image',
                             'pi-volume-up': getMediaType(file) === 'audio',
                             'pi-file': getMediaType(file) === null,
-                            'pi-spin pi-spinner': openingReportFile[report.reportToken + '/' + file]
+                            'pi-spin pi-spinner': openingReportFile[report.reportToken + '/' + file],
                           }"
                         ></i>
                         <span>{{ file }}</span>
