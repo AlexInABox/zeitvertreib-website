@@ -1087,7 +1087,7 @@ export interface ReportListItem {
 /** PUT /reports/link — link or unlink a report to/from a case (staff only) */
 export interface UpdateReportLinkPutRequest {
   reportToken: string;
-  linkedCaseId?: string | null;
+  linkedCaseId: string | null;
 }
 
 /** PUT /reports/link response */
