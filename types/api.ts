@@ -1094,6 +1094,8 @@ export interface ReportListItem {
   createdAt: number;
   linkedCaseId: string | null;
   fileCount: number;
+  /** Reason from the reporter's last in-game CedMod report (staff only) */
+  cedmodReason: string | null;
 }
 
 /** PUT /reports/status — update report status (staff only) */
@@ -1137,6 +1139,8 @@ export interface ReportWithFilesItem {
   createdAt: number;
   fileCount: number;
   files: string[];
+  /** Reason from the reporter's last in-game CedMod report (staff only) */
+  cedmodReason: string | null;
 }
 
 /** GET /reports/by-case?caseId={caseId} — fetch reports linked to a case (staff only) */

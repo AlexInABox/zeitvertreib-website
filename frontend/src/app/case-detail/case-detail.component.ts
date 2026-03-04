@@ -18,7 +18,6 @@ import type {
   GetReportsByCaseResponse,
   UpdateReportStatusPutRequest,
   UpdateReportStatusPutResponse,
-  ReportStatus,
 } from '@zeitvertreib/types';
 
 @Component({
@@ -106,8 +105,7 @@ export class CaseDetailComponent implements OnInit {
   linkedReports: ReportWithFilesItem[] = [];
   isLoadingLinkedReports = false;
   linkedReportsError = '';
-  editingReportStatus: { [reportToken: string]: ReportStatus } = {};
-  updatingReportStatus: { [reportToken: string]: boolean } = {};
+  openingReportFile: { [key: string]: boolean } = {};
 
   // Linked user management state
   newLinkedSteamId = '';
@@ -238,8 +236,6 @@ export class CaseDetailComponent implements OnInit {
     this.isLoadingLinkedReports = true;
     this.linkedReportsError = '';
     this.linkedReports = [];
-    this.editingReportStatus = {};
-    this.updatingReportStatus = {};
 
     this.http
       .get<GetReportsByCaseResponse>(`${environment.apiUrl}/reports/by-case?caseId=${this.caseId}`, {
@@ -249,10 +245,6 @@ export class CaseDetailComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.linkedReports = data.reports.sort((a, b) => b.createdAt - a.createdAt);
-          // Initialize the editingReportStatus map with current report statuses
-          this.linkedReports.forEach((report) => {
-            this.editingReportStatus[report.reportToken] = report.status;
-          });
           this.isLoadingLinkedReports = false;
           if (this.linkedReports.length === 0) {
             this.linkedReportsError = 'Keine verlinkten Reports gefunden.';
@@ -318,42 +310,38 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
-  updateReportStatus(reportToken: string, newStatus: ReportStatus) {
-    if (!this.isTeam || !reportToken) return;
-
-    const body: UpdateReportStatusPutRequest = {
-      reportToken,
-      status: newStatus,
-      linkedCaseId: this.caseId,
-    };
-
-    this.updatingReportStatus[reportToken] = true;
-
-    this.http
-      .put<UpdateReportStatusPutResponse>(`${environment.apiUrl}/reports/status`, body, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: () => {
-          const report = this.linkedReports.find((r) => r.reportToken === reportToken);
-          if (report) {
-            report.status = newStatus;
-            // Reinitialize the dropdown state with the updated status
-            this.editingReportStatus[reportToken] = newStatus;
-          }
-          this.updatingReportStatus[reportToken] = false;
-        },
-        error: (error) => {
-          console.error('Error updating report status:', error);
-          this.linkedReportsError = error.error?.error || 'Fehler beim Aktualisieren des Report-Status.';
-          this.updatingReportStatus[reportToken] = false;
-        },
-      });
-  }
-
   isReportLinked(reportToken: string): boolean {
     return this.linkedReports.some((lr) => lr.reportToken === reportToken);
+  }
+
+  openReportFile(reportToken: string, filename: string) {
+    const key = `${reportToken}/${filename}`;
+    if (this.openingReportFile[key]) return;
+    this.openingReportFile[key] = true;
+
+    this.http
+      .get<{ url: string }>(
+        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`,
+        { headers: this.getAuthHeaders(), withCredentials: true },
+      )
+      .subscribe({
+        next: (data) => {
+          this.openingReportFile[key] = false;
+          if (this.isViewableFile(filename)) {
+            this.viewerFileUrl = data.url;
+            this.viewerFileName = filename;
+            this.viewerMediaType = this.getMediaType(filename);
+            this.viewerOpen = true;
+            document.body.style.overflow = 'hidden';
+          } else {
+            window.open(data.url, '_blank');
+          }
+        },
+        error: (error) => {
+          console.error('Error fetching report file URL:', error);
+          this.openingReportFile[key] = false;
+        },
+      });
   }
 
   filterFiles() {

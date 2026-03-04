@@ -339,6 +339,7 @@ export const reports = sqliteTable('reports', {
     .notNull()
     .default('pending'),
   linkedCaseId: text('linked_case_id'),
+  cedmodReason: text('cedmod_reason'),
   fileCount: integer('file_count').notNull().default(0),
   createdAt: integer('created_at').notNull().default(0),
 });

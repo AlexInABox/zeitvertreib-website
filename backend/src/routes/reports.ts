@@ -88,6 +88,10 @@ export async function handleCreateReport(request: Request, env: Env): Promise<Re
     const reportToken = crypto.randomUUID();
     const now = Date.now();
 
+    // Auto-fetch the reporter's last in-game CedMod report reason (best-effort)
+    const cedmodData = await getCedModLastReport(body.steamId, env);
+    const cedmodReason = cedmodData ? cedmodData.reason : null;
+
     const db = drizzle(env.ZEITVERTREIB_DATA);
     await db.insert(reports).values({
       reportToken,
@@ -95,6 +99,7 @@ export async function handleCreateReport(request: Request, env: Env): Promise<Re
       reportedSteamId: body.reportedSteamId,
       description: body.description.trim(),
       status: 'pending',
+      cedmodReason,
       fileCount: 0,
       createdAt: now,
     });
@@ -274,6 +279,7 @@ export async function handleListReports(request: Request, env: Env): Promise<Res
         createdAt: r.createdAt,
         linkedCaseId: r.linkedCaseId,
         fileCount: r.fileCount,
+        cedmodReason: r.cedmodReason ?? null,
       })),
     };
     return createResponse(responseBody, 200, origin);
@@ -339,6 +345,7 @@ export async function handleGetReportsByReportedPlayer(
           createdAt: r.createdAt,
           fileCount: r.fileCount,
           files,
+          cedmodReason: r.cedmodReason ?? null,
         };
       }),
     );
@@ -447,6 +454,7 @@ export async function handleGetRecentReports(request: Request, env: Env, ctx: Ex
           createdAt: r.createdAt,
           fileCount: r.fileCount,
           files,
+          cedmodReason: r.cedmodReason ?? null,
         };
       }),
     );
@@ -599,6 +607,7 @@ export async function handleGetReportsByCase(
         description: reports.description,
         status: reports.status,
         fileCount: reports.fileCount,
+        cedmodReason: reports.cedmodReason,
         createdAt: reports.createdAt,
       })
       .from(reports)
@@ -625,6 +634,7 @@ export async function handleGetReportsByCase(
           fileCount: r.fileCount,
           files,
           createdAt: r.createdAt,
+          cedmodReason: r.cedmodReason ?? null,
         };
       }),
     );

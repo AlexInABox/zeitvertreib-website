@@ -2554,8 +2554,9 @@
 
 .report-status-row {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   justify-content: space-between;
   padding-top: 0.75rem;
   border-top: 1px solid rgba(139, 92, 246, 0.1);
@@ -2618,10 +2619,53 @@
   gap: 0.375rem;
   font-size: 0.75rem;
   color: #94a3b8;
+  flex: 1;
+  min-width: 0;
 }
 
 .report-files-info i {
   font-size: 0.875rem;
+}
+
+.report-file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.report-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 5px;
+  color: #a78bfa;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.report-file-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-file-btn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #c4b5fd;
+}
+
+.report-file-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .unlink-btn {
