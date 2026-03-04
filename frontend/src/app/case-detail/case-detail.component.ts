@@ -238,10 +238,13 @@ export class CaseDetailComponent implements OnInit {
     this.linkedReports = [];
 
     this.http
-      .get<GetReportsByCaseResponse>(`${environment.apiUrl}/reports/by-case?caseId=${encodeURIComponent(this.caseId)}`, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
+      .get<GetReportsByCaseResponse>(
+        `${environment.apiUrl}/reports/by-case?caseId=${encodeURIComponent(this.caseId)}`,
+        {
+          headers: this.getAuthHeaders(),
+          withCredentials: true,
+        },
+      )
       .subscribe({
         next: (data) => {
           this.linkedReports = data.reports.sort((a, b) => b.createdAt - a.createdAt);
