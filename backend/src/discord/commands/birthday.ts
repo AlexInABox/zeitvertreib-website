@@ -198,6 +198,21 @@ export class BirthdayCommand extends BaseCommand {
       return;
     }
 
+    // Reject users under 18 years old
+    if (year !== null) {
+      const today = new Date();
+      const birthDate = new Date(year, month - 1, day);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        await helpers.reply('❌ Du musst mindestens 18 Jahre alt sein um deinen Geburtstag zu setzen.');
+        return;
+      }
+    }
+
     // Check 30-day cooldown
     const now = Date.now();
     const birthdayLastUpdatedRecord = await db
