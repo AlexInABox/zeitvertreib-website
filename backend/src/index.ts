@@ -312,7 +312,7 @@ export default {
     }
 
     // Purge weekly quest progress every Monday at midnight UTC
-    if (controller.cron === '0 0 * * 1') {
+    if (controller.cron === '0 0 * * MON') {
       await db.delete(schema.weeklyQuestProgress);
     }
 
