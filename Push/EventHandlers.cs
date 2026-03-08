@@ -111,6 +111,14 @@ public static class EventHandlers
                 Plugin.Instance.Config!.Debug);
             return;
         }
+        
+        // Don't allow pushing after the nuke detonated (balancing)
+        if (Warhead.IsDetonated)
+        {
+            Logger.Debug($"{pushingPlayer.Nickname} is not allowed to push after the nuke detonated.",
+                Plugin.Instance.Config!.Debug);
+            return;
+        }
 
         // Check if the pushingPlayer is on cooldown
         float currentTime = Time.time;
