@@ -79,7 +79,7 @@ public static class EventHandlers
             },
             YCoordinateAlign = HintVerticalAlign.Top,
             YCoordinate = 30,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f),
+            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 5,
             SyncSpeed = HintSyncSpeed.Slowest
         };
         PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);

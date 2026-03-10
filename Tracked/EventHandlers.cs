@@ -191,11 +191,13 @@ public static class EventHandlers
             Alignment = HintAlignment.Left,
             AutoText = _ =>
             {
-                // ReSharper disable once ConvertToLambdaExpression
-                return "<size=23><b>" + Server.Tps + "/" + Server.MaxTps + " TPS</b></size>";
+                Color roleColor = ev.Player.Role.GetRoleColor();
+                string hexColor = ColorUtility.ToHtmlStringRGB(roleColor);
+
+                return $"<size=22><b><color=#{hexColor}>{Server.Tps}/{Server.MaxTps} TPS</color></b></size>";
             },
             YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = 5,
+            YCoordinate = 6,
             XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 80,
             SyncSpeed = HintSyncSpeed.Slow
         };
