@@ -5,7 +5,6 @@ import { caseToCedModReportLinks } from '../db/schema.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 
-
 const REPORTS_BUCKET = 'zeitvertreib-reports';
 const CASES_BUCKET = 'zeitvertreib-tickets';
 
@@ -82,13 +81,10 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
   const uploadBucket = linkedCaseId ? CASES_BUCKET : REPORTS_BUCKET;
   const uploadFolder = linkedCaseId ?? reportId.toString();
 
-  const presignedUrl = await aws(env).sign(
-    `https://s3.zeitvertreib.vip/${uploadBucket}/${uploadFolder}/${filename}`,
-    {
-      method: 'PUT',
-      aws: { signQuery: true },
-    },
-  );
+  const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${uploadBucket}/${uploadFolder}/${filename}`, {
+    method: 'PUT',
+    aws: { signQuery: true },
+  });
 
   const responseBody: ReportFileUploadGetResponse = { url: presignedUrl.url, method: 'PUT' };
   return createResponse(responseBody, 200, origin);

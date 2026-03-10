@@ -58,15 +58,15 @@
     "BACKEND_URL": "http://localhost:8787/api",
   },
   "ratelimits": [
-        {
-          "name": "REPORT_UPLOADS_LIMITER",
-          "namespace_id": "1001",
-          "simple": {
-            "limit": 1,
-            "period": 60
-          }
-        }
-      ],
+    {
+      "name": "REPORT_UPLOADS_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 1,
+        "period": 60,
+      },
+    },
+  ],
   "workers_dev": false,
   "env": {
     "production": {
@@ -128,9 +128,9 @@
           "namespace_id": "1001",
           "simple": {
             "limit": 1,
-            "period": 60
-          }
-        }
+            "period": 60,
+          },
+        },
       ],
     },
     "dev": {
@@ -183,9 +183,9 @@
           "namespace_id": "1001",
           "simple": {
             "limit": 1,
-            "period": 60
-          }
-        }
+            "period": 60,
+          },
+        },
       ],
     },
   },

@@ -175,10 +175,10 @@ export class ReportingComponent implements OnInit {
   }
 
   private cleanupUploaderCallbacks(): void {
-    this.fileUploader.onBeforeUploadItem = () => { };
-    this.fileUploader.onProgressItem = () => { };
-    this.fileUploader.onSuccessItem = () => { };
-    this.fileUploader.onErrorItem = () => { };
+    this.fileUploader.onBeforeUploadItem = () => {};
+    this.fileUploader.onProgressItem = () => {};
+    this.fileUploader.onSuccessItem = () => {};
+    this.fileUploader.onErrorItem = () => {};
   }
 
   getFileIcon(filename: string): string {
