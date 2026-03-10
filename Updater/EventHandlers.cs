@@ -79,11 +79,11 @@ public static class EventHandlers
                 {
                     string? tagName = (string?)r["tag_name"];
                     if (tagName == null || tagName.Length <= 6 || !tagName.StartsWith("build-"))
-                        return (Release: r, Build: (int?)null);
-                    
+                        return (Release: r, Build: null);
+
                     if (int.TryParse(tagName.Substring(6), out int build))
-                        return (Release: r, Build: (int?)build);
-                    
+                        return (Release: r, Build: build);
+
                     return (Release: r, Build: (int?)null);
                 })
                 .Where(x => x.Build.HasValue)

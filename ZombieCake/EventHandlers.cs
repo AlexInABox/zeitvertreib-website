@@ -25,7 +25,7 @@ public static class EventHandlers
     }
 
     private static IEnumerator<float> MainLoop()
-    { 
+    {
         while (true)
         {
             foreach (Player player in Player.ReadyList.TakeWhile(player => player.Role == RoleTypeId.Scp0492))
@@ -41,13 +41,13 @@ public static class EventHandlers
                 if (!hit.transform.name.Contains("Cake")) continue;
 
                 if (player.TryGetEffect("Scp559Effect", out _)) continue;
-                
+
                 player.SendHitMarker();
                 Timing.CallDelayed(0.5f, () => player.SendHitMarker());
                 Timing.CallDelayed(1f, () => player.SendHitMarker());
                 Timing.CallDelayed(1.25f, () => player.SendHitMarker());
                 Timing.CallDelayed(1.35f, () => player.SendHitMarker());
-                
+
                 player.EnableEffect<Scp559Effect>();
                 player.EnableEffect<MovementBoost>(10);
 

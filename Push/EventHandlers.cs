@@ -39,7 +39,7 @@ public static class EventHandlers
 
         ServerSpecificSettingBase[] extra =
         [
-            new SSGroupHeader("Push"),
+            new SSGroupHeader("Schubsen"),
             new SSKeybindSetting(
                 Plugin.Instance.Config!.KeybindId,
                 Plugin.Instance.Translation.KeybindSettingLabel,
@@ -111,7 +111,7 @@ public static class EventHandlers
                 Plugin.Instance.Config!.Debug);
             return;
         }
-        
+
         // Don't allow pushing after the nuke detonated (balancing)
         if (Warhead.IsDetonated)
         {
@@ -160,8 +160,9 @@ public static class EventHandlers
         forwardDirection.y = 0;
 
 
-        Strength targetStrength = Strengths[targetedPlayer.PlayerId];
-        Strength pushingStrength = Strengths[pushingPlayer.PlayerId];
+        Strength targetStrength = Strengths.TryGetValue(targetedPlayer.PlayerId, out Strength s1) ? s1 : Strength.Weak;
+        Strength pushingStrength = Strengths.TryGetValue(pushingPlayer.PlayerId, out Strength s2) ? s2 : Strength.Weak;
+
         Strength weakestStrength = targetStrength < pushingStrength ? targetStrength : pushingStrength;
         bool isDangerousRoom = targetedPlayer.Room is { Name: RoomName.EzGateA } or { Name: RoomName.Hcz106 };
 
@@ -169,14 +170,12 @@ public static class EventHandlers
 
         Timing.RunCoroutine(ApplyPushForce(targetedPlayer, forwardDirection.normalized, multiplier));
 
-        // Show hint to the pushingPlayer
-        pushingPlayer.SendHint(
-            Plugin.Instance.Translation.PlayerPushSuccessfulHint.Replace("$player$", targetedPlayer.Nickname),
-            Plugin.Instance.Config!.PlayerPushHintDuration);
+        // Pushing player feedback
+        pushingPlayer.SendHitMarker(0.5f);
 
-        // Show hint to the targetedPlayer
+        // Pushed player feedback
         targetedPlayer.SendHint(
-            Plugin.Instance.Translation.PlayerGotPushedHint.Replace("$player$", pushingPlayer.Nickname),
+            "<b>Du wurdest von jemanden <color=yellow>geschubst!</color></b>",
             Plugin.Instance.Config!.PlayerGotPushedHintDuration);
 
         // Update the player's cooldown time

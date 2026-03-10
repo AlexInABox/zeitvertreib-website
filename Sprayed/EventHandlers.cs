@@ -26,7 +26,7 @@ public static class EventHandlers
 
         ServerSpecificSettingBase[] extra =
         [
-            new SSGroupHeader(Plugin.Instance.Translation.SprayGroupHeader),
+            new SSGroupHeader("Sprays"),
             new SSKeybindSetting(
                 Plugin.Instance.Config!.KeybindId,
                 Plugin.Instance.Translation.KeybindSettingLabel,
@@ -38,7 +38,7 @@ public static class EventHandlers
                 ["Kein Spray verfügbar!"]),
             new SSTwoButtonsSetting(
                 Plugin.Instance.Config!.SprayHudToogleSettingId,
-                "Sprayed HUD?",
+                "HUD anzeigen?",
                 "Zeigen",
                 "Verbergen",
                 false,
