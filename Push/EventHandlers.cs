@@ -161,7 +161,7 @@ public static class EventHandlers
 
 
         Strength targetStrength = Strengths[targetedPlayer.PlayerId];
-        Strength pushingStrength = Strengths[targetedPlayer.PlayerId];
+        Strength pushingStrength = Strengths[pushingPlayer.PlayerId];
         Strength weakestStrength = targetStrength < pushingStrength ? targetStrength : pushingStrength;
         bool isDangerousRoom = targetedPlayer.Room is { Name: RoomName.EzGateA } or { Name: RoomName.Hcz106 };
 
