@@ -37,6 +37,8 @@ import {
   handleCreateCase,
   handleGetCaseMetadata,
   handleUpdateCaseMetadata,
+  handleLinkCaseToReport,
+  handleUnlinkCaseFromReport,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
@@ -54,19 +56,7 @@ import {
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
-import {
-  handleCreateReport,
-  handleReportFileUpload,
-  handleGetReportFile,
-  handleListReports,
-  handleGetReportsByReportedPlayer,
-  handleGetRecentReports,
-  handleUpdateReportLink,
-  handleGetReportWarns,
-  handleCedModLookup,
-  handleGetReportsByCase,
-} from './routes/reports.js';
-import { handleGetProfileDetails } from './routes/profile-details.js';
+import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -104,6 +94,8 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'POST:/cases': handleCreateCase,
   'GET:/cases/metadata': handleGetCaseMetadata,
   'PUT:/cases/metadata': handleUpdateCaseMetadata,
+  'POST:/cases/link': handleLinkCaseToReport,
+  'DELETE:/cases/link': handleUnlinkCaseFromReport,
 
   // Spray routes
   'POST:/spray': handlePostSpray,
@@ -197,19 +189,8 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/zeit': getUserData,
 
   // Reporting routes
-  'POST:/reports': handleCreateReport,
   'GET:/reports/upload': handleReportFileUpload,
-  'GET:/reports/files': handleGetReportFile,
-  'GET:/reports/list': handleListReports,
-  'GET:/reports/by-reported-player': handleGetReportsByReportedPlayer,
-  'GET:/reports/by-case': handleGetReportsByCase,
-  'GET:/reports/recent': handleGetRecentReports,
-  'PUT:/reports/link': handleUpdateReportLink,
-  'GET:/reports/warns': handleGetReportWarns,
-  'GET:/reports/cedmod-lookup': handleCedModLookup,
-
-  // Profile Details routes
-  'GET:/profile-details': handleGetProfileDetails,
+  'GET:/reports': handleGetReports,
 };
 
 export default {

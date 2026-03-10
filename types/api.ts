@@ -806,6 +806,7 @@ export interface CaseListItem {
   createdAt: number;
   lastUpdatedAt: number;
   linkedSteamIds: string[];
+  linkedReportIds: number[];
 }
 
 /** GET /cases/upload?case={caseId}&extension={ext} request params */
@@ -884,6 +885,7 @@ export interface GetCaseMetadataGetResponse {
     createdAt: number;
     url: string;
   }[];
+  linkedReportIds: number[];
 }
 
 /** POST /cases — no request body */
@@ -911,6 +913,12 @@ export interface UpdateCaseMetadataPutRequest {
 export interface UpdateCaseMetadataPutResponse {
   success: boolean;
   caseId: string;
+}
+
+/** POST /cases/link request params */
+export interface LinkCaseToReportPostRequest {
+  caseId: string;
+  reportId: number;
 }
 
 // ============================================================================
@@ -1045,97 +1053,40 @@ export interface ClaimQuestRewardResponse {
 }
 
 // ============================================================================
-// Reporting Types
+// Public report clip submission endpoint types
 // ============================================================================
 
-/** POST /reports — create a new report (no auth required) */
-export interface CreateReportPostRequest {
-  steamId: string;
-  reportedSteamId: string;
-  description: string;
-}
-
-/** POST /reports response */
-export interface CreateReportPostResponse {
-  reportToken: string;
-  message: string;
-}
-
-/** GET /reports/upload?report={reportToken}&extension={ext} — get presigned upload URL */
-export interface ReportFileUploadGetResponse {
-  url: string;
-  method: string;
-}
-
-/** GET /reports/list — list all reports (staff only) */
-export interface ListReportsGetResponse {
-  reports: ReportListItem[];
-}
-
-export interface ReportListItem {
-  reportToken: string;
-  steamId: string;
-  reportedSteamId: string;
-  description: string;
-  createdAt: number;
-  linkedCaseId: string | null;
-  fileCount: number;
-  /** Reason from the reporter's last in-game CedMod report (staff only) */
-  cedmodReason: string | null;
-}
-
-/** PUT /reports/link — link or unlink a report to/from a case (staff only) */
-export interface UpdateReportLinkPutRequest {
-  reportToken: string;
-  linkedCaseId: string | null;
-}
-
-/** PUT /reports/link response */
-export interface UpdateReportLinkPutResponse {
-  success: boolean;
-  message: string;
-}
-
-/** GET /reports/warns?steamId={steamId} — fetch CedMod warns for a Steam ID (staff only) */
-export interface GetReportWarnsResponse {
-  warns: {
+// Every user landing on /reports, will see a list of open/recent reports. (All reports from the last 30 minutes or something)
+// They can then select any of the reports, and upload any media (maybe only photos and videos) as evidence for that report.
+/** GET /reports response*/
+export interface GetReportsResponse {
+  reports: {
     id: number;
+    reporter: {
+      id: string;
+      username: string;
+      avatarUrl: string;
+    };
+    reported: {
+      id: string;
+      username: string;
+      avatarUrl: string;
+    };
     reason: string;
-    warnedAt: number;
-    issuer: string;
+    createdAt: number;
   }[];
 }
 
-/** GET /reports/by-reported-player?steamId={steamId} — fetch reports for a reported player (staff only) */
-export interface GetReportsByReportedPlayerResponse {
-  reports: ReportWithFilesItem[];
+//When uploading evidence, the client should first call GET /reports to get a pre-signed URL for the upload, then upload the file directly to S3 using that URL.
+// After generating this pre-signed URL, the backend will notify team members about a new incomming upload for a given case via discord!
+/** GET /reports/upload?reportId={reportId}&extension={ext} request params */
+export interface ReportFileUploadGetRequest {
+  reportId: number;
+  extension: string;
 }
 
-export interface ReportWithFilesItem {
-  reportToken: string;
-  steamId: string;
-  reporterUsername: string;
-  reporterAvatarUrl: string | null;
-  reportedSteamId: string;
-  reportedUsername: string;
-  reportedAvatarUrl: string | null;
-  description: string;
-  createdAt: number;
-  fileCount: number;
-  files: string[];
-  /** Reason from the reporter's last in-game CedMod report (staff only) */
-  cedmodReason: string | null;
-}
-
-/** GET /reports/by-case?caseId={caseId} — fetch reports linked to a case (staff only) */
-export interface GetReportsByCaseResponse {
-  reports: ReportWithFilesItem[];
-}
-
-/** GET /reports/cedmod-lookup?steamId={steamId} — fetch reporter's last in-game report from CedMod (public) */
-export interface CedModLastReportResponse {
-  found: boolean;
-  reportedSteamId: string | null;
-  reason: string | null;
-  reportedAt: number | null;
+/** GET /reports/upload response */
+export interface ReportFileUploadGetResponse {
+  url: string;
+  method: 'PUT';
 }

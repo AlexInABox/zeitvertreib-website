@@ -126,6 +126,65 @@
               <i class="pi pi-exclamation-circle"></i> {{ linkedUserError }}
             </div>
 
+            <!-- Linked Reports -->
+            <div *ngIf="isTeam" class="header-linked-users">
+              <div class="header-chips" *ngIf="caseData?.linkedReportIds?.length">
+                <div
+                  class="header-chip report-chip"
+                  *ngFor="let reportId of caseData?.linkedReportIds"
+                  (click)="copyReportIdToClipboard(reportId)"
+                  title="ID kopieren"
+                >
+                  <i class="pi pi-flag chip-report-icon"></i>
+                  <span class="chip-name">Report #{{ reportId }}</span>
+                  <button
+                    class="chip-remove"
+                    (click)="removeLinkedReport(reportId, $event)"
+                    [disabled]="isLinkingReport"
+                    title="Verknüpfung entfernen"
+                  >
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="header-add-user">
+                <i class="pi pi-flag-fill header-add-icon"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="newLinkedReportId"
+                  placeholder="Report-ID verknüpfen…"
+                  class="header-steamid-input"
+                  (keydown.enter)="linkReport()"
+                  [disabled]="isLinkingReport"
+                  autocomplete="off"
+                  inputmode="numeric"
+                />
+                <button
+                  class="header-add-btn"
+                  (click)="linkReport()"
+                  [disabled]="isLinkingReport || !newLinkedReportId.trim()"
+                >
+                  <i class="pi" [ngClass]="isLinkingReport ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
+                </button>
+              </div>
+              <div class="header-linked-error" *ngIf="reportLinkError">
+                <i class="pi pi-exclamation-circle"></i> {{ reportLinkError }}
+              </div>
+              <div class="header-linked-success" *ngIf="reportLinkSuccess">
+                <i class="pi pi-check-circle"></i> {{ reportLinkSuccess }}
+              </div>
+            </div>
+
+            <!-- Non-team: read-only report IDs -->
+            <div *ngIf="!isTeam && caseData?.linkedReportIds?.length" class="header-linked-users">
+              <div class="header-chips">
+                <div class="header-chip report-chip" *ngFor="let reportId of caseData?.linkedReportIds">
+                  <i class="pi pi-flag chip-report-icon"></i>
+                  <span class="chip-name">Report #{{ reportId }}</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Header meta strip -->
             <div class="header-meta-row" *ngIf="caseData">
               <span class="header-meta-item">
@@ -236,10 +295,6 @@
               <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
               <span>Medal Clip</span>
             </button>
-            <button class="mode-btn" [class.active]="uploadMode === 'report'" (click)="activateReportMode()">
-              <i class="pi pi-flag"></i>
-              <span>Aus Report</span>
-            </button>
           </div>
 
           <!-- File Upload Mode -->
@@ -267,118 +322,6 @@
               [disabled]="!selectedFile || isUploading"
               [loading]="isUploading"
             ></button>
-          </div>
-
-          <!-- Report Import Mode -->
-          <div class="upload-body report-mode" *ngIf="uploadMode === 'report'">
-            <div class="report-picker-wrapper">
-              <div class="report-list-section">
-                <div class="report-list-header">
-                  <h3>Letzte Uploads</h3>
-                  <span class="report-count" *ngIf="recentReportsForPlayer.length > 0">
-                    {{ recentReportsForPlayer.length }} {{ recentReportsForPlayer.length === 1 ? 'Report' : 'Reports' }}
-                  </span>
-                </div>
-
-                <div class="report-loading" *ngIf="isLoadingRecentReports">
-                  <i class="pi pi-spin pi-spinner"></i>
-                  <span>Reports werden geladen...</span>
-                </div>
-
-                <span class="report-picker-error" *ngIf="reportFilesError && !isLoadingRecentReports">
-                  <i class="pi pi-exclamation-circle"></i> {{ reportFilesError }}
-                </span>
-
-                <div class="report-selector-list" *ngIf="recentReportsForPlayer.length > 0">
-                  <div
-                    class="report-item"
-                    *ngFor="let report of recentReportsForPlayer"
-                    [class.selected]="selectedReportToken === report.reportToken"
-                  >
-                    <div
-                      class="report-item-header"
-                      (click)="selectedReportToken = report.reportToken; selectedReportFile = ''"
-                    >
-                      <div class="report-item-info">
-                        <div class="report-users">
-                          <div class="report-user">
-                            <img
-                              [src]="report.reporterAvatarUrl || '/assets/default-avatar.png'"
-                              [alt]="report.reporterUsername"
-                              class="report-user-avatar"
-                            />
-                            <span class="report-user-name">{{ report.reporterUsername }}</span>
-                          </div>
-                          <span class="report-arrow">→</span>
-                          <div class="report-user">
-                            <img
-                              [src]="report.reportedAvatarUrl || '/assets/default-avatar.png'"
-                              [alt]="report.reportedUsername"
-                              class="report-user-avatar"
-                            />
-                            <span class="report-user-name">{{ report.reportedUsername }}</span>
-                          </div>
-                        </div>
-                        <span class="report-date">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
-                      </div>
-                      <i class="pi pi-check selected-indicator" *ngIf="selectedReportToken === report.reportToken"></i>
-                    </div>
-                    <div class="report-description">
-                      {{ report.description | slice: 0 : 100 }}{{ report.description.length > 100 ? '...' : '' }}
-                    </div>
-
-                    <div
-                      class="report-files"
-                      *ngIf="selectedReportToken === report.reportToken && report.files.length > 0"
-                    >
-                      <div class="files-label">Datei auswählen:</div>
-                      <div
-                        class="report-file-item"
-                        *ngFor="let file of report.files"
-                        [class.selected]="selectedReportFile === file"
-                        (click)="selectedReportFile = file"
-                      >
-                        <i class="pi" [ngClass]="'pi-' + getFileIcon(file)"></i>
-                        <span class="report-file-name">{{ file }}</span>
-                        <i class="pi pi-check file-check" *ngIf="selectedReportFile === file"></i>
-                      </div>
-                    </div>
-                    <div
-                      class="report-no-files"
-                      *ngIf="selectedReportToken === report.reportToken && report.files.length === 0"
-                    >
-                      <i class="pi pi-info-circle"></i> Dieser Report hat keine Dateien.
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                pButton
-                label="In Case importieren"
-                icon="pi pi-download"
-                class="upload-btn"
-                style="margin-top: 0.5rem; width: 100%"
-                (click)="importReportFile()"
-                [disabled]="!selectedReportFile || isImportingReport"
-                [loading]="isImportingReport"
-                *ngIf="selectedReportFile"
-              ></button>
-            </div>
-          </div>
-
-          <!-- Report Import Progress -->
-          <div class="upload-progress-container" *ngIf="isImportingReport && uploadMode === 'report'">
-            <div class="progress-info">
-              <i class="pi pi-spin pi-spinner"></i>
-              <span>{{ importReportStatus }}</span>
-            </div>
-            <div class="progress-bar-wrapper">
-              <div class="progress-bar" [style.width.%]="importReportProgress"></div>
-              <span class="progress-text-centered">{{
-                importReportProgress > 0 ? importReportProgress + '%' : ''
-              }}</span>
-            </div>
           </div>
 
           <!-- Medal Clip Upload Mode -->
@@ -441,146 +384,6 @@
             <i class="pi pi-info-circle"></i>
             <span *ngIf="uploadMode === 'file'">Erlaubte Dateitypen: Bilder, Videos, Audio, PDF, TXT, Archive</span>
             <span *ngIf="uploadMode === 'medal'">Füge deine Medal.tv Clip-URL ein und lade das Video direkt hoch</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Linked Reports Section -->
-      <div class="linked-reports-card card" *ngIf="isTeam">
-        <div class="card-header">
-          <div class="header-left">
-            <i class="pi pi-flag card-icon"></i>
-            <div>
-              <h2 class="card-title">Verlinkte Reports</h2>
-              <p class="card-subtitle">Reports mit dieser Fall verlinken oder Status ändern</p>
-            </div>
-          </div>
-          <button
-            pButton
-            icon="pi pi-refresh"
-            [loading]="isLoadingLinkedReports"
-            (click)="loadLinkedReports()"
-            class="refresh-btn"
-            title="Verlinkte Reports neu laden"
-          ></button>
-        </div>
-        <div class="card-body">
-          <!-- Linked Reports Loading State -->
-          <div class="report-loading" *ngIf="isLoadingLinkedReports">
-            <i class="pi pi-spin pi-spinner"></i>
-            <span>Verlinkte Reports werden geladen...</span>
-          </div>
-
-          <!-- Linked Reports Error State -->
-          <span class="report-picker-error" *ngIf="linkedReportsError && !isLoadingLinkedReports">
-            <i class="pi pi-exclamation-circle"></i> {{ linkedReportsError }}
-          </span>
-
-          <!-- Linked Reports List -->
-          <div class="linked-reports-list" *ngIf="linkedReports.length > 0 && !isLoadingLinkedReports">
-            <div class="linked-report-item" *ngFor="let report of linkedReports">
-              <div class="report-header-row">
-                <div class="report-users">
-                  <div class="report-user">
-                    <img
-                      [src]="report.reporterAvatarUrl || '/assets/default-avatar.png'"
-                      [alt]="report.reporterUsername"
-                      class="report-user-avatar"
-                    />
-                    <span class="report-user-name">{{ report.reporterUsername }}</span>
-                  </div>
-                  <span class="report-arrow">→</span>
-                  <div class="report-user">
-                    <img
-                      [src]="report.reportedAvatarUrl || '/assets/default-avatar.png'"
-                      [alt]="report.reportedUsername"
-                      class="report-user-avatar"
-                    />
-                    <span class="report-user-name">{{ report.reportedUsername }}</span>
-                  </div>
-                </div>
-                <span class="report-date">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
-              </div>
-
-              <div class="report-description">
-                {{ report.description | slice: 0 : 100 }}{{ report.description.length > 100 ? '...' : '' }}
-              </div>
-
-              <div class="report-status-row">
-                <div class="report-files-info">
-                  <ng-container *ngIf="report.files && report.files.length > 0; else noReportFiles">
-                    <div class="report-file-list">
-                      <button
-                        *ngFor="let file of report.files"
-                        class="report-file-btn"
-                        [disabled]="openingReportFile[report.reportToken + '/' + file]"
-                        (click)="openReportFile(report.reportToken, file)"
-                        [title]="file"
-                      >
-                        <i
-                          class="pi"
-                          [ngClass]="{
-                            'pi-video': getMediaType(file) === 'video',
-                            'pi-image': getMediaType(file) === 'image',
-                            'pi-volume-up': getMediaType(file) === 'audio',
-                            'pi-file': getMediaType(file) === null,
-                            'pi-spin pi-spinner': openingReportFile[report.reportToken + '/' + file],
-                          }"
-                        ></i>
-                        <span>{{ file }}</span>
-                      </button>
-                    </div>
-                  </ng-container>
-                  <ng-template #noReportFiles>
-                    <i class="pi pi-file"></i>
-                    <span>{{ report.fileCount }} {{ report.fileCount === 1 ? 'Datei' : 'Dateien' }}</span>
-                  </ng-template>
-                </div>
-
-                <button
-                  pButton
-                  icon="pi pi-trash"
-                  class="unlink-btn"
-                  (click)="unlinkReportFromCase(report.reportToken)"
-                  title="Report-Verknüpfung entfernen"
-                ></button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Link Report From Recent Section -->
-          <div class="link-report-section" *ngIf="!isLoadingLinkedReports">
-            <div class="section-label">Report verlinken:</div>
-            <div class="recent-reports-selector">
-              <div class="reports-list-compact" *ngIf="recentReportsForPlayer.length > 0">
-                <div
-                  class="report-item-compact"
-                  *ngFor="let report of recentReportsForPlayer"
-                  [class.linked]="isReportLinked(report.reportToken)"
-                >
-                  <div class="report-item-info">
-                    <div class="report-users-compact">
-                      <span class="report-user-name">{{ report.reporterUsername }}</span>
-                      <span class="report-arrow">→</span>
-                      <span class="report-user-name">{{ report.reportedUsername }}</span>
-                    </div>
-                    <span class="report-date-compact">{{ report.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
-                  </div>
-                  <button
-                    *ngIf="!isReportLinked(report.reportToken)"
-                    pButton
-                    icon="pi pi-link"
-                    class="link-btn"
-                    (click)="linkReportToCase(report.reportToken)"
-                    title="Report mit diesem Fall verlinken"
-                  ></button>
-                </div>
-              </div>
-              <div *ngIf="recentReportsForPlayer.length === 0 && !isLoadingRecentReports" class="no-recent-reports">
-                <i class="pi pi-inbox"></i>
-                <p>Keine Reports verfügbar. Lade zuerst einige Reports hoch.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -648,6 +451,25 @@
           class="file-card"
           [style.animation-delay]="i * 0.05 + 's'"
         >
+          <!-- Thumbnail Preview (images & videos only) -->
+          <div class="file-thumbnail" *ngIf="isImageFile(file.name) || isVideoFile(file.name)">
+            <img
+              *ngIf="isImageFile(file.name)"
+              [src]="file.url"
+              [alt]="file.name"
+              loading="lazy"
+              class="file-thumbnail-media"
+            />
+            <video
+              *ngIf="isVideoFile(file.name)"
+              [src]="file.url + '#t=0.1'"
+              preload="metadata"
+              muted
+              playsinline
+              class="file-thumbnail-media"
+            ></video>
+          </div>
+
           <div class="file-card-header">
             <div class="file-icon-wrapper">
               <i class="pi" [ngClass]="getFileIcon(file.name)"></i>

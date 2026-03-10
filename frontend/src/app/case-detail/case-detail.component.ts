@@ -14,11 +14,6 @@ import type {
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
   CaseCategory,
-  GetReportsByReportedPlayerResponse,
-  ReportWithFilesItem,
-  GetReportsByCaseResponse,
-  UpdateReportLinkPutRequest,
-  UpdateReportLinkPutResponse,
 } from '@zeitvertreib/types';
 
 @Component({
@@ -81,7 +76,7 @@ export class CaseDetailComponent implements OnInit {
   selectedFile: File | null = null;
 
   // Medal clip upload state
-  uploadMode: 'file' | 'medal' | 'report' = 'file';
+  uploadMode: 'file' | 'medal' = 'file';
   medalClipUrl = '';
   isFetchingMedalClip = false;
   medalDownloadProgress = 0;
@@ -91,27 +86,16 @@ export class CaseDetailComponent implements OnInit {
   medalStartTime = 0;
   medalUrlInvalid = false;
 
-  // Report file picker state - lazy-loaded when the "Aus Report" tab is opened
-  recentReportsForPlayer: ReportWithFilesItem[] = [];
-  reportPickerLoaded = false;
-  selectedReportToken = '';
-  selectedReportFile = '';
-  isLoadingRecentReports = false;
-  reportFilesError = '';
-  isImportingReport = false;
-  importReportProgress = 0;
-  importReportStatus = '';
-
-  // Linked reports state
-  linkedReports: ReportWithFilesItem[] = [];
-  isLoadingLinkedReports = false;
-  linkedReportsError = '';
-  openingReportFile: { [key: string]: boolean } = {};
-
   // Linked user management state
   newLinkedSteamId = '';
   isManagingLinkedUsers = false;
   linkedUserError = '';
+
+  // Linked report management state
+  newLinkedReportId = '';
+  isLinkingReport = false;
+  reportLinkError = '';
+  reportLinkSuccess = '';
 
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
@@ -187,11 +171,6 @@ export class CaseDetailComponent implements OnInit {
         this.editedDescription = data.description || '';
         this.filterFiles();
         this.isLoading = false;
-        // Load related data
-        if (this.isTeam) {
-          this.loadLinkedReports();
-          this.loadRecentReports();
-        }
       },
       error: (error) => {
         console.error('Error loading case:', error);
@@ -200,164 +179,6 @@ export class CaseDetailComponent implements OnInit {
         this.isLoading = false;
       },
     });
-  }
-
-  activateReportMode() {
-    this.uploadMode = 'report';
-    if (!this.reportPickerLoaded) {
-      this.loadRecentReports();
-    }
-  }
-
-  private loadRecentReports() {
-    if (!this.isTeam) return;
-
-    this.isLoadingRecentReports = true;
-    this.reportFilesError = '';
-    this.recentReportsForPlayer = [];
-    this.selectedReportToken = '';
-    this.selectedReportFile = '';
-    this.reportPickerLoaded = true;
-
-    this.http
-      .get<GetReportsByReportedPlayerResponse>(`${environment.apiUrl}/reports/recent?limit=50`, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: (data) => {
-          this.recentReportsForPlayer = data.reports.sort((a, b) => b.createdAt - a.createdAt);
-          this.isLoadingRecentReports = false;
-          if (this.recentReportsForPlayer.length === 0) {
-            this.reportFilesError = 'Keine letzten Uploads gefunden.';
-          }
-        },
-        error: (error) => {
-          console.error('Error loading recent reports:', error);
-          this.isLoadingRecentReports = false;
-          this.reportFilesError = error.error?.error || 'Fehler beim Laden der Reports.';
-        },
-      });
-  }
-
-  loadLinkedReports() {
-    if (!this.isTeam) return;
-
-    this.isLoadingLinkedReports = true;
-    this.linkedReportsError = '';
-    this.linkedReports = [];
-
-    this.http
-      .get<GetReportsByCaseResponse>(
-        `${environment.apiUrl}/reports/by-case?caseId=${encodeURIComponent(this.caseId)}`,
-        {
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        },
-      )
-      .subscribe({
-        next: (data) => {
-          this.linkedReports = data.reports.sort((a, b) => b.createdAt - a.createdAt);
-          this.isLoadingLinkedReports = false;
-          if (this.linkedReports.length === 0) {
-            this.linkedReportsError = 'Keine verlinkten Reports gefunden.';
-          }
-        },
-        error: (error) => {
-          console.error('Error loading linked reports:', error);
-          this.isLoadingLinkedReports = false;
-          this.linkedReportsError = error.error?.error || 'Fehler beim Laden der verlinkten Reports.';
-        },
-      });
-  }
-
-  linkReportToCase(reportToken: string) {
-    if (!this.isTeam || !reportToken) return;
-
-    const body: UpdateReportLinkPutRequest = {
-      reportToken,
-      linkedCaseId: this.caseId,
-    };
-
-    this.http
-      .put<UpdateReportLinkPutResponse>(`${environment.apiUrl}/reports/link`, body, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: () => {
-          this.selectedReportToken = '';
-          this.selectedReportFile = '';
-          this.loadLinkedReports();
-        },
-        error: (error) => {
-          console.error('Error linking report:', error);
-          this.reportFilesError = error.error?.error || 'Fehler beim Verlinken des Reports.';
-        },
-      });
-  }
-
-  unlinkReportFromCase(reportToken: string) {
-    if (!this.isTeam || !reportToken) return;
-
-    const body: UpdateReportLinkPutRequest = {
-      reportToken,
-      linkedCaseId: null,
-    };
-
-    this.http
-      .put<UpdateReportLinkPutResponse>(`${environment.apiUrl}/reports/link`, body, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: () => {
-          this.loadLinkedReports();
-        },
-        error: (error) => {
-          console.error('Error unlinking report:', error);
-          this.linkedReportsError = error.error?.error || 'Fehler beim Entfernen des Report-Links.';
-        },
-      });
-  }
-
-  isReportLinked(reportToken: string): boolean {
-    return this.linkedReports.some((lr) => lr.reportToken === reportToken);
-  }
-
-  openReportFile(reportToken: string, filename: string) {
-    const key = `${reportToken}/${filename}`;
-    if (this.openingReportFile[key]) return;
-    this.openingReportFile[key] = true;
-
-    this.http
-      .get<{
-        url: string;
-      }>(
-        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(reportToken)}&file=${encodeURIComponent(filename)}`,
-        { headers: this.getAuthHeaders(), withCredentials: true },
-      )
-      .subscribe({
-        next: (data) => {
-          this.openingReportFile[key] = false;
-          if (this.isViewableFile(filename)) {
-            this.viewerFileUrl = data.url;
-            this.viewerFileName = filename;
-            this.viewerMediaType = this.getMediaType(filename);
-            this.viewerOpen = true;
-            document.body.style.overflow = 'hidden';
-          } else {
-            const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
-            if (newWindow) {
-              newWindow.opener = null;
-            }
-          }
-        },
-        error: (error) => {
-          console.error('Error fetching report file URL:', error);
-          this.openingReportFile[key] = false;
-        },
-      });
   }
 
   filterFiles() {
@@ -429,6 +250,11 @@ export class CaseDetailComponent implements OnInit {
         console.error('Failed to copy Steam ID');
       },
     );
+  }
+
+  copyReportIdToClipboard(reportId: number, event?: Event) {
+    if (event) event.stopPropagation();
+    navigator.clipboard.writeText(String(reportId));
   }
 
   navigateToUserProfile(steamId: string) {
@@ -540,6 +366,16 @@ export class CaseDetailComponent implements OnInit {
   isViewableFile(filename: string): boolean {
     const ext = this.getFileExtension(filename);
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'mp4', 'webm', 'mov', 'mp3', 'wav', 'ogg'].includes(ext);
+  }
+
+  isImageFile(filename: string): boolean {
+    const ext = this.getFileExtension(filename);
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+  }
+
+  isVideoFile(filename: string): boolean {
+    const ext = this.getFileExtension(filename);
+    return ['mp4', 'webm', 'mov'].includes(ext);
   }
 
   getMediaType(filename: string): 'image' | 'video' | 'audio' | null {
@@ -661,6 +497,69 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
+  removeLinkedReport(reportId: number, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isLinkingReport = true;
+    this.reportLinkError = '';
+    this.reportLinkSuccess = '';
+    this.http
+      .delete(`${environment.apiUrl}/cases/link?caseId=${this.caseId}&reportId=${reportId}`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.isLinkingReport = false;
+          this.loadCaseData();
+        },
+        error: (error) => {
+          this.isLinkingReport = false;
+          this.reportLinkError = error.error?.error || 'Fehler beim Entfernen des Reports';
+        },
+      });
+  }
+
+  linkReport() {
+    this.reportLinkError = '';
+    this.reportLinkSuccess = '';
+    const raw = this.newLinkedReportId.trim();
+    if (!raw) {
+      this.reportLinkError = 'Bitte gib eine Report-ID ein';
+      return;
+    }
+    const reportId = parseInt(raw, 10);
+    if (isNaN(reportId) || reportId <= 0) {
+      this.reportLinkError = 'Report-ID muss eine positive Zahl sein';
+      return;
+    }
+    if ((this.caseData?.linkedReportIds ?? []).includes(reportId)) {
+      this.reportLinkError = 'Report ist bereits mit diesem Fall verknüpft';
+      return;
+    }
+
+    this.isLinkingReport = true;
+    this.http
+      .post(
+        `${environment.apiUrl}/cases/link?caseId=${this.caseId}&reportId=${reportId}`,
+        {},
+        { headers: this.getAuthHeaders(), withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          this.isLinkingReport = false;
+          this.newLinkedReportId = '';
+          this.reportLinkSuccess = `Report #${reportId} wurde erfolgreich verknüpft`;
+          this.loadCaseData();
+        },
+        error: (error) => {
+          this.isLinkingReport = false;
+          this.reportLinkError = error.error?.error || 'Fehler beim Verknüpfen des Reports';
+        },
+      });
+  }
+
   removeLinkedUser(steamId: string, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -684,57 +583,6 @@ export class CaseDetailComponent implements OnInit {
           this.isManagingLinkedUsers = false;
           console.error('Failed to remove linked user:', error);
           alert('Fehler beim Entfernen des Benutzers');
-        },
-      });
-  }
-
-  private addLinkedUsersFromReport(): void {
-    // Find the selected report object
-    const selectedReport = this.recentReportsForPlayer.find((r) => r.reportToken === this.selectedReportToken);
-    if (!selectedReport) {
-      console.warn('Selected report not found in recentReportsForPlayer');
-      return;
-    }
-
-    // Extract and normalize Steam IDs
-    const reporterSteamId = selectedReport.steamId.endsWith('@steam')
-      ? selectedReport.steamId
-      : `${selectedReport.steamId}@steam`;
-    const reportedSteamId = selectedReport.reportedSteamId.endsWith('@steam')
-      ? selectedReport.reportedSteamId
-      : `${selectedReport.reportedSteamId}@steam`;
-
-    // Get existing linked users
-    const existing = (this.caseData?.linkedUsers ?? []).map((u) => u.steamId);
-
-    // Collect new Steam IDs to add (avoid duplicates)
-    const newSteamIds = [reporterSteamId, reportedSteamId].filter((id) => !existing.includes(id));
-
-    if (newSteamIds.length === 0) {
-      // Both users already linked, no need to update
-      return;
-    }
-
-    // Add the new users
-    const allLinkedIds = [...existing, ...newSteamIds];
-    const payload: UpdateCaseMetadataPutRequest = {
-      category: this.caseData!.category,
-      linkedSteamIds: allLinkedIds,
-    };
-
-    this.http
-      .put(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`, payload, {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
-      })
-      .subscribe({
-        next: () => {
-          console.log('Automatically added linked users from report');
-          this.loadCaseData();
-        },
-        error: (error) => {
-          console.error('Failed to add linked users from report:', error);
-          // Don't show error to user since the file upload succeeded
         },
       });
   }
@@ -830,80 +678,6 @@ export class CaseDetailComponent implements OnInit {
 
   onMedalUrlChange() {
     this.medalUrlInvalid = this.medalClipUrl.trim() ? !this.isValidUrl(this.medalClipUrl) : false;
-  }
-
-  async loadReportFiles(): Promise<void> {
-    // This method is deprecated with auto-loading. Files are now pre-loaded from recent reports.
-    // Keep for backward compatibility but it's no longer needed.
-  }
-
-  async importReportFile(): Promise<void> {
-    if (!this.selectedReportFile || !this.selectedReportToken.trim()) return;
-
-    this.isImportingReport = true;
-    this.importReportProgress = 0;
-    this.importReportStatus = 'Datei wird vom Report geladen...';
-
-    try {
-      // 1. Get presigned download URL for the report file
-      const sessionToken = this.authService.getSessionToken();
-      const fetchHeaders: HeadersInit = {};
-      if (sessionToken) fetchHeaders['Authorization'] = `Bearer ${sessionToken}`;
-
-      const fileUrlResponse = await fetch(
-        `${environment.apiUrl}/reports/files?report=${encodeURIComponent(this.selectedReportToken.trim())}&file=${encodeURIComponent(this.selectedReportFile)}`,
-        { headers: fetchHeaders, credentials: 'include' },
-      );
-      if (!fileUrlResponse.ok) throw new Error('Konnte Download-URL nicht abrufen.');
-      const fileUrlData = await fileUrlResponse.json();
-      const downloadUrl: string = fileUrlData.url;
-
-      // 2. Download the file as a Blob
-      this.importReportStatus = 'Datei wird heruntergeladen...';
-      const downloadResponse = await fetch(downloadUrl);
-      if (!downloadResponse.ok) throw new Error('Download fehlgeschlagen.');
-      const blob = await downloadResponse.blob();
-
-      // 3. Get presigned upload URL for the case
-      this.importReportStatus = 'Upload-URL wird angefordert...';
-      const ext = this.selectedReportFile.split('.').pop()?.toLowerCase() || '';
-      const uploadInfo = await this.http
-        .get<CaseFileUploadGetResponse>(`${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${ext}`, {
-          headers: this.getAuthHeaders(),
-          withCredentials: true,
-        })
-        .toPromise();
-      if (!uploadInfo) throw new Error('Keine Upload-URL erhalten.');
-
-      // 4. Upload via ng2-file-upload for reliable transfer
-      this.importReportStatus = 'Datei wird hochgeladen...';
-      const contentType = blob.type || 'application/octet-stream';
-      const uploadFile = new File([blob], this.selectedReportFile, { type: contentType });
-
-      await this.uploadFileToPresignedUrl(uploadFile, uploadInfo.url, contentType, {
-        onProgress: (progress) => {
-          this.importReportProgress = progress;
-          this.importReportStatus = `Datei wird hochgeladen... (${progress}%)`;
-        },
-      });
-
-      this.isImportingReport = false;
-      this.importReportProgress = 0;
-      this.importReportStatus = '';
-      this.selectedReportFile = '';
-      this.loadCaseData();
-
-      // Automatically add both the reporter and reported player to linked users
-      this.addLinkedUsersFromReport();
-
-      alert('Datei erfolgreich aus Report importiert!');
-    } catch (error) {
-      this.isImportingReport = false;
-      this.importReportProgress = 0;
-      this.importReportStatus = '';
-      console.error('Report import failed:', error);
-      alert(error instanceof Error ? error.message : 'Fehler beim Importieren der Datei');
-    }
   }
 
   async uploadMedalClip() {

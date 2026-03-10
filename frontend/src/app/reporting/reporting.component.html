@@ -1,259 +1,203 @@
 <div class="reporting-page">
-  <!-- ===== HEADER SECTION ===== -->
-  <div class="page-header">
-    <h1><i class="pi pi-flag"></i> Spieler melden</h1>
-    <p class="subtitle">
-      Melde regelwidriges Verhalten anonym. Lade Clips & Screenshots hoch, um deine Meldung zu unterstützen.
-    </p>
-    <div class="header-actions">
-      <button
-        pButton
-        label="Neue Meldung"
-        icon="pi pi-plus"
-        class="header-btn"
-        *ngIf="currentView !== 'form'"
-        (click)="showForm()"
-      ></button>
-    </div>
-  </div>
-
-  <!-- ===== FORM VIEW ===== -->
-  <div class="form-container" *ngIf="currentView === 'form'">
-    <!-- Error message -->
-    <div class="error-banner" *ngIf="errorMessage">
-      <i class="pi pi-exclamation-triangle"></i>
-      <span>{{ errorMessage }}</span>
-      <button class="close-btn" (click)="errorMessage = ''"><i class="pi pi-times"></i></button>
-    </div>
-
-    <!-- Steam IDs -->
-    <div class="form-section">
-      <label class="form-label"> <i class="pi pi-user"></i> Deine Steam-ID </label>
-
-      <!-- Profile chip: shown when profile resolved and not editing -->
-      <div class="steam-profile-chip" *ngIf="steamIdProfile && !editingSteamId">
-        <img
-          *ngIf="steamIdProfile.avatarUrl"
-          [src]="steamIdProfile.avatarUrl"
-          class="profile-chip-avatar"
-          [alt]="steamIdProfile.username"
-        />
-        <div *ngIf="!steamIdProfile.avatarUrl" class="profile-chip-avatar-placeholder"><i class="pi pi-user"></i></div>
-        <div class="profile-chip-info">
-          <span class="profile-chip-name">{{ steamIdProfile.username || steamIdProfile.steamId }}</span>
-          <span class="profile-chip-id" *ngIf="steamIdProfile.username">{{ steamIdProfile.steamId }}</span>
-        </div>
-        <button class="profile-chip-edit" (click)="startEditSteamId()" title="Bearbeiten">
-          <i class="pi pi-pencil"></i>
-        </button>
-      </div>
-
-      <!-- Loading state -->
-      <div class="profile-chip-loading" *ngIf="isFetchingSteamProfile && !editingSteamId">
-        <i class="pi pi-spin pi-spinner"></i> Profil wird geladen...
-      </div>
-
-      <!-- Input: shown when editing or no valid ID resolved yet -->
-      <input
-        *ngIf="(!steamIdProfile && !isFetchingSteamProfile) || editingSteamId"
-        pInputText
-        type="text"
-        [(ngModel)]="steamId"
-        placeholder="z.B. 76561198012345678"
-        [class.input-error]="steamId.length > 0 && !isSteamIdValid"
-        class="form-input"
-        (ngModelChange)="onSteamIdChange($event)"
-        (keyup.enter)="resolveFromInput('own')"
-        (blur)="resolveFromInput('own')"
-      />
-
-      <span class="autofill-hint" *ngIf="steamIdAutoFilled && steamIdProfile && !editingSteamId">
-        <i class="pi pi-check-circle"></i> Automatisch aus deinem Account ausgefüllt.
-      </span>
-      <span class="hint" *ngIf="(!steamIdProfile || editingSteamId) && steamId.length > 0 && !isSteamIdValid"
-        >Steam-ID muss 17 Ziffern lang sein.</span
-      >
-    </div>
-
-    <div class="form-section">
-      <label class="form-label"> <i class="pi pi-user-minus"></i> Steam-ID des gemeldeten Spielers </label>
-
-      <!-- Profile chip: shown when profile resolved and not editing -->
-      <div class="steam-profile-chip" *ngIf="reportedSteamIdProfile && !editingReportedSteamId">
-        <img
-          *ngIf="reportedSteamIdProfile.avatarUrl"
-          [src]="reportedSteamIdProfile.avatarUrl"
-          class="profile-chip-avatar"
-          [alt]="reportedSteamIdProfile.username"
-        />
-        <div *ngIf="!reportedSteamIdProfile.avatarUrl" class="profile-chip-avatar-placeholder">
-          <i class="pi pi-user"></i>
-        </div>
-        <div class="profile-chip-info">
-          <span class="profile-chip-name">{{ reportedSteamIdProfile.username || reportedSteamIdProfile.steamId }}</span>
-          <span class="profile-chip-id" *ngIf="reportedSteamIdProfile.username">{{
-            reportedSteamIdProfile.steamId
-          }}</span>
-        </div>
-        <button class="profile-chip-edit" (click)="startEditReportedSteamId()" title="Bearbeiten">
-          <i class="pi pi-pencil"></i>
-        </button>
-      </div>
-
-      <!-- Loading state -->
-      <div class="profile-chip-loading" *ngIf="isFetchingReportedProfile && !editingReportedSteamId">
-        <i class="pi pi-spin pi-spinner"></i> Profil wird geladen...
-      </div>
-
-      <!-- Input & autofill button: shown when editing or no valid ID resolved yet -->
-      <div class="lookup-row" *ngIf="(!reportedSteamIdProfile && !isFetchingReportedProfile) || editingReportedSteamId">
-        <input
-          pInputText
-          type="text"
-          [(ngModel)]="reportedSteamId"
-          placeholder="z.B. 76561198087654321"
-          [class.input-error]="reportedSteamId.length > 0 && !isReportedSteamIdValid"
-          class="form-input"
-          (ngModelChange)="onReportedSteamIdChange($event)"
-          (keyup.enter)="resolveFromInput('reported')"
-          (blur)="resolveFromInput('reported')"
-        />
-        <button
-          pButton
-          icon="pi pi-bolt"
-          label="Aus letztem Ingame-Report"
-          class="lookup-autofill-btn"
-          [loading]="isLookingUp"
-          [disabled]="!isSteamIdValid || isLookingUp"
-          title="Trägt automatisch die Steam-ID des zuletzt von dir gemeldeten Spielers ein"
-          (click)="lookupFromCedMod()"
-        ></button>
-      </div>
-      <!-- Autofill button only (when chip is shown) -->
-      <div *ngIf="reportedSteamIdProfile && !editingReportedSteamId" style="margin-top: 0.5rem">
-        <button
-          pButton
-          icon="pi pi-bolt"
-          label="Aus letztem Ingame-Report"
-          class="lookup-autofill-btn"
-          [loading]="isLookingUp"
-          [disabled]="!isSteamIdValid || isLookingUp"
-          title="Trägt automatisch die Steam-ID des zuletzt von dir gemeldeten Spielers ein"
-          (click)="lookupFromCedMod()"
-        ></button>
-      </div>
-
-      <span
-        class="hint"
-        *ngIf="
-          (!reportedSteamIdProfile || editingReportedSteamId) && reportedSteamId.length > 0 && !isReportedSteamIdValid
-        "
-      >
-        Steam-ID muss 17 Ziffern lang sein.
-      </span>
-      <span class="lookup-cedmod-error" *ngIf="lookupCedModError">
-        <i class="pi pi-exclamation-circle"></i> {{ lookupCedModError }}
-      </span>
-    </div>
-
-    <!-- File Upload -->
-    <div class="form-section">
-      <label class="form-label">
-        <i class="pi pi-upload"></i> Beweise hochladen
-        <span class="optional-badge">Optional</span>
-      </label>
-      <p class="upload-hint">
-        Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV). Max. 5 Dateien, je 100 MB.
+  <!-- ===== LIST VIEW ===== -->
+  <ng-container *ngIf="!selectedReport">
+    <div class="page-hero">
+      <h1>Reports</h1>
+      <p class="hero-description">
+        Wähle <u>deinen</u> aktiven Report aus und lade Beweise hoch, um das Team zu unterstützen.
       </p>
+    </div>
 
-      <div
-        class="upload-zone"
-        (click)="fileInput.click()"
-        (dragover)="$event.preventDefault()"
-        (drop)="$event.preventDefault(); onFileSelect($event)"
-      >
-        <i class="pi pi-cloud-upload upload-icon"></i>
-        <span>Dateien hierher ziehen oder klicken</span>
-        <input
-          #fileInput
-          type="file"
-          multiple
-          hidden
-          accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
-          (change)="onFileSelect($event)"
-        />
-      </div>
+    <!-- Loading -->
+    <div class="centered-state" *ngIf="isLoading">
+      <div class="spinner-ring"></div>
+      <span>Reports werden geladen…</span>
+    </div>
 
-      <!-- File list -->
-      <div class="file-list" *ngIf="files.length > 0">
-        <div class="file-item" *ngFor="let f of files; let i = index">
-          <i [class]="getFileIcon(f.file.name)"></i>
-          <span class="file-name">{{ f.file.name }}</span>
-          <span class="file-size">{{ formatFileSize(f.file.size) }}</span>
-          <button class="remove-btn" (click)="removeFile(i)" title="Entfernen">
-            <i class="pi pi-times"></i>
-          </button>
+    <!-- Error -->
+    <div class="notice-banner notice-error" *ngIf="loadError && !isLoading">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ loadError }}</span>
+      <button (click)="loadReports()"><i class="pi pi-refresh"></i> Erneut versuchen</button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="!isLoading && !loadError && reports.length === 0">
+      <p>Momentan gibt es keine laufenden Reports...</p>
+    </div>
+
+    <!-- Report list -->
+    <div class="report-list" *ngIf="!isLoading && !loadError && reports.length > 0">
+      <div class="report-card" *ngFor="let report of reports" (click)="selectReport(report)">
+        <div class="report-card-meta">
+          <span class="report-id">#{{ report.id }}</span>
+          <span class="report-time">{{ formatTimestamp(report.createdAt) }}</span>
+        </div>
+        <div class="report-card-players">
+          <div class="player-entry">
+            <img [src]="report.reporter.avatarUrl" class="avatar" *ngIf="report.reporter.avatarUrl" alt="" />
+            <div class="avatar-placeholder" *ngIf="!report.reporter.avatarUrl"><i class="pi pi-user"></i></div>
+            <div class="player-details">
+              <span class="player-role">Reporter</span>
+              <span class="player-name">{{ report.reporter.username }}</span>
+            </div>
+          </div>
+          <i class="pi pi-arrow-right arrow-divider"></i>
+          <div class="player-entry">
+            <img [src]="report.reported.avatarUrl" class="avatar" *ngIf="report.reported.avatarUrl" alt="" />
+            <div class="avatar-placeholder" *ngIf="!report.reported.avatarUrl"><i class="pi pi-user"></i></div>
+            <div class="player-details">
+              <span class="player-role">Gemeldet</span>
+              <span class="player-name">{{ report.reported.username }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-card-reason">
+          <i class="pi pi-comment"></i>
+          <span>{{ report.reason }}</span>
+        </div>
+        <div class="report-card-cta">
+          <i class="pi pi-upload"></i>
+          <span>Beweis hochladen</span>
+          <i class="pi pi-chevron-right cta-arrow"></i>
         </div>
       </div>
     </div>
+  </ng-container>
 
-    <!-- Submit -->
-    <button
-      pButton
-      label="Meldung absenden"
-      icon="pi pi-send"
-      class="submit-btn"
-      [loading]="isSubmitting"
-      [disabled]="!isFormValid || isSubmitting"
-      (click)="submitReport()"
-    ></button>
-  </div>
+  <!-- ===== UPLOAD VIEW ===== -->
+  <ng-container *ngIf="selectedReport">
+    <div class="upload-view">
+      <button class="ghost-btn" (click)="backToList()"><i class="pi pi-arrow-left"></i> Zurück zur Übersicht</button>
 
-  <!-- ===== UPLOADING VIEW ===== -->
-  <div class="upload-progress-container" *ngIf="currentView === 'uploading'">
-    <h2><i class="pi pi-spin pi-spinner"></i> Dateien werden hochgeladen...</h2>
-    <div class="upload-list">
-      <div class="upload-item" *ngFor="let f of files">
-        <div class="upload-item-header">
-          <i [class]="getFileIcon(f.file.name)"></i>
-          <span class="file-name">{{ f.file.name }}</span>
-          <span
-            class="upload-status"
-            [ngClass]="{
-              'status-done': f.status === 'done',
-              'status-error': f.status === 'error',
-              'status-uploading': f.status === 'uploading',
-            }"
-          >
-            {{
-              f.status === 'done'
-                ? 'Fertig'
-                : f.status === 'error'
-                  ? 'Fehler'
-                  : f.status === 'uploading'
-                    ? f.progress + '%'
-                    : 'Warten...'
-            }}
-          </span>
+      <!-- Report summary -->
+      <div class="summary-card">
+        <div class="summary-header">
+          <span class="report-id">#{{ selectedReport.id }}</span>
+          <span class="report-time">{{ formatTimestamp(selectedReport.createdAt) }}</span>
         </div>
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" [style.width.%]="f.progress" [class.error]="f.status === 'error'"></div>
+        <div class="report-card-players">
+          <div class="player-entry">
+            <img
+              [src]="selectedReport.reporter.avatarUrl"
+              class="avatar"
+              *ngIf="selectedReport.reporter.avatarUrl"
+              alt=""
+            />
+            <div class="avatar-placeholder" *ngIf="!selectedReport.reporter.avatarUrl"><i class="pi pi-user"></i></div>
+            <div class="player-details">
+              <span class="player-role">Reporter</span>
+              <span class="player-name">{{ selectedReport.reporter.username }}</span>
+            </div>
+          </div>
+          <i class="pi pi-arrow-right arrow-divider"></i>
+          <div class="player-entry">
+            <img
+              [src]="selectedReport.reported.avatarUrl"
+              class="avatar"
+              *ngIf="selectedReport.reported.avatarUrl"
+              alt=""
+            />
+            <div class="avatar-placeholder" *ngIf="!selectedReport.reported.avatarUrl"><i class="pi pi-user"></i></div>
+            <div class="player-details">
+              <span class="player-role">Gemeldet</span>
+              <span class="player-name">{{ selectedReport.reported.username }}</span>
+            </div>
+          </div>
         </div>
-        <p class="upload-error-msg" *ngIf="f.errorMessage">{{ f.errorMessage }}</p>
+        <div class="report-card-reason">
+          <i class="pi pi-comment"></i>
+          <span>{{ selectedReport.reason }}</span>
+        </div>
+      </div>
+
+      <!-- Upload box -->
+      <div class="upload-box" *ngIf="!uploadDone">
+        <div class="upload-box-header">
+          <i class="pi pi-upload"></i>
+          <span>Beweise hochladen</span>
+        </div>
+        <p class="upload-hint">
+          Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV) &middot; Max. 100 MB
+        </p>
+
+        <!-- Error message -->
+        <div class="notice-banner notice-error" *ngIf="errorMessage">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ errorMessage }}</span>
+          <button (click)="errorMessage = ''"><i class="pi pi-times"></i></button>
+        </div>
+
+        <!-- Drop zone -->
+        <div
+          class="upload-zone"
+          (click)="fileInput.click()"
+          (dragover)="$event.preventDefault()"
+          (drop)="$event.preventDefault(); onFileSelect($event)"
+        >
+          <i class="pi pi-cloud-upload"></i>
+          <span>Klicken oder Datei hierher ziehen</span>
+          <input
+            #fileInput
+            type="file"
+            hidden
+            accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
+            (change)="onFileSelect($event)"
+          />
+        </div>
+
+        <!-- File list -->
+        <div class="file-list" *ngIf="files.length > 0">
+          <div class="file-item" *ngFor="let f of files; let i = index">
+            <i [class]="getFileIcon(f.file.name)"></i>
+            <span class="file-name">{{ f.file.name }}</span>
+            <span class="file-size">{{ formatFileSize(f.file.size) }}</span>
+            <button
+              class="icon-btn"
+              (click)="removeFile(i)"
+              *ngIf="f.status === 'pending'"
+              [disabled]="isUploading"
+              title="Entfernen"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+            <span class="status-badge status-uploading" *ngIf="f.status === 'uploading'"
+              >{{ f.progress | number: '1.0-0' }}%</span
+            >
+            <span class="status-badge status-done" *ngIf="f.status === 'done'"><i class="pi pi-check"></i></span>
+            <span class="status-badge status-error" *ngIf="f.status === 'error'" [title]="f.errorMessage || ''"
+              ><i class="pi pi-times-circle"></i
+            ></span>
+            <div class="progress-bar" *ngIf="f.status === 'uploading'">
+              <div class="progress-fill" [style.width.%]="f.progress"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload button -->
+        <button class="primary-btn" [disabled]="files.length === 0 || isUploading" (click)="uploadAll()">
+          <i class="pi pi-upload" *ngIf="!isUploading"></i>
+          <i class="pi pi-spinner pi-spin" *ngIf="isUploading"></i>
+          {{ isUploading ? 'L\u00e4dt hoch\u2026' : 'Hochladen' }}
+        </button>
+      </div>
+
+      <!-- Success state -->
+      <div class="success-box" *ngIf="uploadDone">
+        <i class="pi pi-check-circle success-icon" *ngIf="allUploadsSuccessful"></i>
+        <i class="pi pi-exclamation-triangle warn-icon" *ngIf="!allUploadsSuccessful"></i>
+        <h2>{{ allUploadsSuccessful ? 'Erfolgreich hochgeladen!' : 'Upload fehlgeschlagen' }}</h2>
+        <p>
+          {{
+            allUploadsSuccessful
+              ? 'Vielen Dank! Dein Beweis wurde übermittelt.'
+              : 'Dein Beweis konnte nicht hochgeladen werden.'
+          }}
+        </p>
+        <button class="ghost-btn" style="align-self: center" (click)="backToList()">
+          <i class="pi pi-list"></i> Zurück zu Reports
+        </button>
       </div>
     </div>
-  </div>
-
-  <!-- ===== SUCCESS VIEW ===== -->
-  <div class="success-container" *ngIf="currentView === 'success'">
-    <div class="success-icon-wrapper">
-      <i class="pi pi-check-circle"></i>
-    </div>
-    <h2>Meldung erfolgreich erstellt!</h2>
-    <p>Deine Meldung wurde übermittelt und wird von unserem Team bearbeitet.</p>
-
-    <div class="success-actions">
-      <button pButton label="Neue Meldung" icon="pi pi-plus" class="header-btn" (click)="showForm()"></button>
-    </div>
-  </div>
+  </ng-container>
 </div>

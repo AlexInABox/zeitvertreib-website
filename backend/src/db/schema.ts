@@ -330,13 +330,7 @@ export const weeklyQuestProgress = sqliteTable('weekly_quest_progress', {
   claimedAt: integer('claimed_at').notNull().default(0),
 });
 
-export const reports = sqliteTable('reports', {
-  reportToken: text('report_token').primaryKey(),
-  steamId: text('steam_id').notNull(),
-  reportedSteamId: text('reported_steam_id').notNull(),
-  description: text('description').notNull(),
-  linkedCaseId: text('linked_case_id'),
-  cedmodReason: text('cedmod_reason'),
-  fileCount: integer('file_count').notNull().default(0),
-  createdAt: integer('created_at').notNull().default(0),
+export const caseToCedModReportLinks = sqliteTable('case_to_cedmod_report_links', {
+  caseId: text('case_id').references(() => cases.id),
+  reportId: integer('report_id').notNull(),
 });

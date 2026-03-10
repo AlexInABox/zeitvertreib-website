@@ -43,6 +43,7 @@ declare namespace Cloudflare {
     EMAIL_PASSWORD: string;
     PLAYERLIST_STORAGE: DurableObjectNamespace<import('./src/index').PlayerlistStorage>;
     ZEITVERTREIB_DATA: D1Database;
+    REPORT_UPLOADS_LIMITER: RateLimit;
   }
 }
 interface Env extends Cloudflare.Env {}

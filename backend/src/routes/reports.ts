@@ -1,30 +1,13 @@
 import { AwsClient } from 'aws4fetch';
-import {
-  createResponse,
-  validateSession,
-  isTeam,
-  validateSteamId,
-  getCedModWarns,
-  getCedModLastReport,
-  fetchSteamUserData,
-} from '../utils.js';
+import { createResponse, getCedModLastReports, fetchSteamUserData } from '../utils.js';
+import { GetReportsResponse, ReportFileUploadGetRequest, ReportFileUploadGetResponse } from '@zeitvertreib/types';
+import { caseToCedModReportLinks } from '../db/schema.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, desc } from 'drizzle-orm';
-import { reports } from '../db/schema.js';
-import typia from 'typia';
-import {
-  CreateReportPostRequest,
-  CreateReportPostResponse,
-  ReportFileUploadGetResponse,
-  ListReportsGetResponse,
-  GetReportsByReportedPlayerResponse,
-  UpdateReportLinkPutRequest,
-  UpdateReportLinkPutResponse,
-  GetReportWarnsResponse,
-  CedModLastReportResponse,
-} from '@zeitvertreib/types';
+import { eq } from 'drizzle-orm';
 
-const BUCKET = 'zeitvertreib-reports';
+
+const REPORTS_BUCKET = 'zeitvertreib-reports';
+const CASES_BUCKET = 'zeitvertreib-tickets';
 
 const ALLOWED_EXTENSIONS = [
   // Images
@@ -49,539 +32,95 @@ const aws = (env: Env): AwsClient =>
     region: 'us-east-1',
   });
 
-const MAX_DESCRIPTION_LENGTH = 2000;
-const MAX_FILES_PER_REPORT = 5;
-
-/// POST /reports — create a new report (no auth required)
-export async function handleCreateReport(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const body: CreateReportPostRequest = await request.json();
-
-    if (!typia.is<CreateReportPostRequest>(body)) {
-      return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
-    }
-
-    if (!validateSteamId(body.steamId)) {
-      return createResponse({ error: 'Ungültige Steam-ID (deine)' }, 400, origin);
-    }
-
-    if (!validateSteamId(body.reportedSteamId)) {
-      return createResponse({ error: 'Ungültige Steam-ID (gemeldeter Spieler)' }, 400, origin);
-    }
-
-    if (body.description.trim().length === 0) {
-      return createResponse({ error: 'Beschreibung darf nicht leer sein' }, 400, origin);
-    }
-
-    if (body.description.length > MAX_DESCRIPTION_LENGTH) {
-      return createResponse(
-        { error: `Beschreibung darf maximal ${MAX_DESCRIPTION_LENGTH} Zeichen lang sein` },
-        400,
-        origin,
-      );
-    }
-
-    const reportToken = crypto.randomUUID();
-    const now = Date.now();
-
-    // Auto-fetch the reporter's last in-game CedMod report reason (best-effort)
-    const cedmodData = await getCedModLastReport(body.steamId, env);
-    const cedmodReason = cedmodData ? cedmodData.reason : null;
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    await db.insert(reports).values({
-      reportToken,
-      steamId: body.steamId,
-      reportedSteamId: body.reportedSteamId,
-      description: body.description.trim(),
-      cedmodReason,
-      fileCount: 0,
-      createdAt: now,
-    });
-
-    // Create the folder in S3
-    const folderUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/`;
-    const folderRequest = await aws(env).sign(folderUrl, {
-      method: 'PUT',
-      aws: { signQuery: true },
-    });
-    await fetch(folderRequest);
-
-    const responseBody: CreateReportPostResponse = {
-      reportToken,
-      message: 'Report wurde erstellt. Bewahre den Token auf, um den Status zu verfolgen.',
-    };
-    return createResponse(responseBody, 201, origin);
-  } catch (error) {
-    console.error('Error creating report:', error);
-    return createResponse({ error: 'Fehler beim Erstellen des Reports' }, 500, origin);
-  }
-}
-
-/// GET /reports/upload?report={reportToken}&extension={ext} — get presigned upload URL (no auth)
+/// GET /reports/upload?reportId={reportId}&extension={ext}
 export async function handleReportFileUpload(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
 
-  try {
-    const url = new URL(request.url);
-    const reportToken = url.searchParams.get('report');
-    const extension = url.searchParams.get('extension') || '';
+  const url = new URL(request.url);
+  const reportIdParam = url.searchParams.get('reportId');
+  const extension = url.searchParams.get('extension') || '';
 
-    if (!reportToken) {
-      return createResponse({ error: 'Fehlender Parameter: report' }, 400, origin);
-    }
+  if (!reportIdParam) {
+    return createResponse({ error: 'Missing required parameter: reportId' }, 400, origin);
+  }
 
-    if (extension && !ALLOWED_EXTENSIONS.includes(extension.toLowerCase())) {
-      return createResponse({ error: 'Ungültige Dateiendung', allowedExtensions: ALLOWED_EXTENSIONS }, 400, origin);
-    }
+  const reportId = parseInt(reportIdParam, 10);
+  if (isNaN(reportId)) {
+    return createResponse({ error: 'Invalid reportId: must be a number' }, 400, origin);
+  }
 
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    const report = await db.select().from(reports).where(eq(reports.reportToken, reportToken)).get();
+  if (!ALLOWED_EXTENSIONS.includes(extension.toLowerCase())) {
+    return createResponse({ error: 'Invalid file extension', allowedExtensions: ALLOWED_EXTENSIONS }, 400, origin);
+  }
 
-    if (!report) {
-      return createResponse({ error: 'Report nicht gefunden' }, 404, origin);
-    }
+  // Rate limit uploads per report to prevent abuse
+  const { success } = await env.REPORT_UPLOADS_LIMITER.limit({ key: reportId.toString() });
+  if (!success) {
+    return createResponse({ error: 'Upload limit exceeded for this report' }, 429, origin);
+  }
 
-    if (report.fileCount >= MAX_FILES_PER_REPORT) {
-      return createResponse({ error: `Maximale Anzahl an Dateien (${MAX_FILES_PER_REPORT}) erreicht` }, 400, origin);
-    }
+  // Check if reportId exists!
+  const cedModReports = await getCedModLastReports(env);
+  const reportExists = cedModReports.some((report) => report.id === reportId);
+  if (!reportExists) {
+    return createResponse({ error: 'Report not found' }, 404, origin);
+  }
 
-    const randomName = crypto.randomUUID();
-    const filename = `${randomName}.${extension.toLowerCase()}`;
+  // Check if this report is already linked to a case; if so, store in the cases bucket instead
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const caseLink = await db
+    .select({ caseId: caseToCedModReportLinks.caseId })
+    .from(caseToCedModReportLinks)
+    .where(eq(caseToCedModReportLinks.reportId, reportId))
+    .limit(1);
 
-    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`, {
+  const linkedCaseId = caseLink[0]?.caseId ?? null;
+
+  const randomName = crypto.randomUUID();
+  const filename = `${randomName}.${extension}`;
+
+  const uploadBucket = linkedCaseId ? CASES_BUCKET : REPORTS_BUCKET;
+  const uploadFolder = linkedCaseId ?? reportId.toString();
+
+  const presignedUrl = await aws(env).sign(
+    `https://s3.zeitvertreib.vip/${uploadBucket}/${uploadFolder}/${filename}`,
+    {
       method: 'PUT',
       aws: { signQuery: true },
-    });
+    },
+  );
 
-    // Increment file count
-    await db
-      .update(reports)
-      .set({ fileCount: report.fileCount + 1 })
-      .where(eq(reports.reportToken, reportToken));
-
-    const responseBody: ReportFileUploadGetResponse = {
-      url: presignedUrl.url,
-      method: 'PUT',
-    };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Report file upload error:', error);
-    return createResponse({ error: 'Fehler beim Generieren der Upload-URL' }, 500, origin);
-  }
+  const responseBody: ReportFileUploadGetResponse = { url: presignedUrl.url, method: 'PUT' };
+  return createResponse(responseBody, 200, origin);
 }
 
-/// GET /reports/files?report={reportToken}&file={filename} — get presigned download URL (staff only)
-export async function handleGetReportFile(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const url = new URL(request.url);
-    const reportToken = url.searchParams.get('report');
-    const filename = url.searchParams.get('file');
-
-    if (!reportToken || !filename) {
-      return createResponse({ error: 'Fehlende Parameter: report, file' }, 400, origin);
-    }
-
-    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${reportToken}/${filename}`, {
-      method: 'GET',
-      aws: { signQuery: true },
-    });
-
-    return createResponse({ url: presignedUrl.url }, 200, origin);
-  } catch (error) {
-    console.error('Error getting report file:', error);
-    return createResponse({ error: 'Fehler beim Laden der Datei' }, 500, origin);
-  }
-}
-
-/// GET /reports/list — list all reports (staff only)
-export async function handleListReports(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    const allReports = await db.select().from(reports).orderBy(desc(reports.createdAt)).all();
-
-    const responseBody: ListReportsGetResponse = {
-      reports: allReports.map((r: (typeof allReports)[number]) => ({
-        reportToken: r.reportToken,
-        steamId: r.steamId,
-        reportedSteamId: r.reportedSteamId,
-        description: r.description,
-        createdAt: r.createdAt,
-        linkedCaseId: r.linkedCaseId,
-        fileCount: r.fileCount,
-        cedmodReason: r.cedmodReason ?? null,
-      })),
-    };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error listing reports:', error);
-    return createResponse({ error: 'Fehler beim Laden der Reports' }, 500, origin);
-  }
-}
-
-/// GET /reports/by-reported-player?steamId={steamId} — list reports for a specific reported player (staff only)
-export async function handleGetReportsByReportedPlayer(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const url = new URL(request.url);
-    const reportedSteamId = url.searchParams.get('steamId');
-
-    if (!reportedSteamId || !validateSteamId(reportedSteamId)) {
-      return createResponse({ error: 'Ungültige Steam-ID' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    const playerReports = await db
-      .select()
-      .from(reports)
-      .where(eq(reports.reportedSteamId, reportedSteamId))
-      .orderBy(desc(reports.createdAt))
-      .limit(10)
-      .all();
-
-    // Fetch files and Steam user data for each report
-    const reportsWithFiles = await Promise.all(
-      playerReports.map(async (r: (typeof playerReports)[number]) => {
-        const [reporterData, reportedData, files] = await Promise.all([
-          fetchSteamUserData(r.steamId, env, ctx),
-          fetchSteamUserData(r.reportedSteamId, env, ctx),
-          listReportFiles(r.reportToken, env),
-        ]);
-
-        return {
-          reportToken: r.reportToken,
-          steamId: r.steamId,
-          reporterUsername: reporterData?.username || r.steamId,
-          reporterAvatarUrl: reporterData?.avatarUrl || null,
-          reportedSteamId: r.reportedSteamId,
-          reportedUsername: reportedData?.username || r.reportedSteamId,
-          reportedAvatarUrl: reportedData?.avatarUrl || null,
-          description: r.description,
-          createdAt: r.createdAt,
-          fileCount: r.fileCount,
-          files,
-          cedmodReason: r.cedmodReason ?? null,
-        };
-      }),
-    );
-
-    const responseBody: GetReportsByReportedPlayerResponse = {
-      reports: reportsWithFiles,
-    };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error fetching reports by reported player:', error);
-    return createResponse({ error: 'Fehler beim Laden der Reports' }, 500, origin);
-  }
-}
-
-/// PUT /reports/link — link or unlink a report to/from a case (staff only)
-export async function handleUpdateReportLink(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const body: UpdateReportLinkPutRequest = await request.json();
-
-    if (!typia.is<UpdateReportLinkPutRequest>(body)) {
-      return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    const report = await db.select().from(reports).where(eq(reports.reportToken, body.reportToken)).get();
-
-    if (!report) {
-      return createResponse({ error: 'Report nicht gefunden' }, 404, origin);
-    }
-
-    await db
-      .update(reports)
-      .set({ linkedCaseId: body.linkedCaseId ?? null })
-      .where(eq(reports.reportToken, body.reportToken));
-
-    const responseBody: UpdateReportLinkPutResponse = {
-      success: true,
-      message: 'Report-Verknüpfung aktualisiert',
-    };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error updating report link:', error);
-    return createResponse({ error: 'Fehler beim Aktualisieren der Verknüpfung' }, 500, origin);
-  }
-}
-
-/// GET /reports/recent - get the most recent reports with files (staff only, for case integration)
-export async function handleGetRecentReports(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const url = new URL(request.url);
-    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    const recentReports = await db.select().from(reports).orderBy(desc(reports.createdAt)).limit(limit).all();
-
-    // Fetch files and Steam user data for each report
-    const reportsWithFiles = await Promise.all(
-      recentReports.map(async (r: (typeof recentReports)[number]) => {
-        const [reporterData, reportedData, files] = await Promise.all([
-          fetchSteamUserData(r.steamId, env, ctx),
-          fetchSteamUserData(r.reportedSteamId, env, ctx),
-          listReportFiles(r.reportToken, env),
-        ]);
-
-        return {
-          reportToken: r.reportToken,
-          steamId: r.steamId,
-          reporterUsername: reporterData?.username || r.steamId,
-          reporterAvatarUrl: reporterData?.avatarUrl || null,
-          reportedSteamId: r.reportedSteamId,
-          reportedUsername: reportedData?.username || r.reportedSteamId,
-          reportedAvatarUrl: reportedData?.avatarUrl || null,
-          description: r.description,
-          createdAt: r.createdAt,
-          fileCount: r.fileCount,
-          files,
-          cedmodReason: r.cedmodReason ?? null,
-        };
-      }),
-    );
-
-    const responseBody: GetReportsByReportedPlayerResponse = {
-      reports: reportsWithFiles,
-    };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error fetching recent reports:', error);
-    return createResponse({ error: 'Fehler beim Laden der Reports' }, 500, origin);
-  }
-}
-
-/// GET /reports/warns?steamId={steamId} — fetch CedMod warns (staff only)
-export async function handleGetReportWarns(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const url = new URL(request.url);
-    const steamId = url.searchParams.get('steamId');
-
-    if (!steamId || !validateSteamId(steamId)) {
-      return createResponse({ error: 'Ungültige Steam-ID' }, 400, origin);
-    }
-
-    const warns = await getCedModWarns(steamId, env);
-
-    const responseBody: GetReportWarnsResponse = { warns };
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error fetching warns:', error);
-    return createResponse({ error: 'Fehler beim Laden der Verwarnungen' }, 500, origin);
-  }
-}
-
-// Helper: list files in a report folder from S3
-async function listReportFiles(reportToken: string, env: Env): Promise<string[]> {
-  try {
-    const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}?list-type=2&prefix=${reportToken}/`;
-    const listRequest = await aws(env).sign(listUrl, { method: 'GET' });
-    const listResponse = await fetch(listRequest);
-
-    if (!listResponse.ok) {
-      return [];
-    }
-
-    const xml = await listResponse.text();
-    const files: string[] = [];
-
-    // Parse S3 ListObjectsV2 XML response
-    const keyRegex = /<Key>([^<]+)<\/Key>/g;
-    let match = keyRegex.exec(xml);
-    while (match !== null) {
-      const key = match[1] as string; // regex capture guaranteed by pattern
-      // Skip the folder itself
-      if (key !== `${reportToken}/`) {
-        const filename = key.replace(`${reportToken}/`, '');
-        if (filename) {
-          files.push(filename);
-        }
-      }
-      match = keyRegex.exec(xml);
-    }
-
-    return files;
-  } catch (error) {
-    console.error('Error listing report files:', error);
-    return [];
-  }
-}
-
-/// GET /reports/cedmod-lookup?steamId={steamId} — auto-fill: last in-game report filed by this player (public)
-export async function handleCedModLookup(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  try {
-    const url = new URL(request.url);
-    const steamId = url.searchParams.get('steamId');
-
-    if (!steamId || !validateSteamId(steamId).valid) {
-      return createResponse({ error: 'Ungültige Steam-ID' }, 400, origin);
-    }
-
-    const result = await getCedModLastReport(steamId, env);
-
-    const responseBody: CedModLastReportResponse = result
-      ? {
-          found: true,
-          reportedSteamId: result.reportedSteamId,
-          reason: result.reason,
-          reportedAt: result.reportedAt,
-        }
-      : {
-          found: false,
-          reportedSteamId: null,
-          reason: null,
-          reportedAt: null,
-        };
-
-    return createResponse(responseBody, 200, origin);
-  } catch (error) {
-    console.error('Error in CedMod lookup:', error);
-    return createResponse({ error: 'Fehler beim Abfragen des CedMod-Reports' }, 500, origin);
-  }
-}
-
-/// GET /reports/by-case?caseId={caseId} — get all reports linked to a case (staff only)
-export async function handleGetReportsByCase(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const origin = request.headers.get('Origin');
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid' || !validation.steamId) {
-    return createResponse({ error: 'Nicht authentifiziert' }, 401, origin);
-  }
-
-  if (!(await isTeam(validation.steamId, env))) {
-    return createResponse({ error: 'Keine Berechtigung' }, 401, origin);
-  }
-
-  try {
-    const url = new URL(request.url);
-    const caseId = url.searchParams.get('caseId');
-
-    if (!caseId) {
-      return createResponse({ error: 'caseId parameter is required' }, 400, origin);
-    }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-
-    // Get all reports linked to this case
-    const linkedReports = await db
-      .select({
-        reportToken: reports.reportToken,
-        steamId: reports.steamId,
-        reportedSteamId: reports.reportedSteamId,
-        description: reports.description,
-        fileCount: reports.fileCount,
-        cedmodReason: reports.cedmodReason,
-        createdAt: reports.createdAt,
-      })
-      .from(reports)
-      .where(eq(reports.linkedCaseId, caseId))
-      .orderBy(desc(reports.createdAt));
-
-    // Fetch steam user data for reporters and reported
-    const reportsWithUsers = await Promise.all(
-      linkedReports.map(async (r) => {
-        const reporterDataPromise = fetchSteamUserData(r.steamId, env, ctx);
-        const reportedDataPromise = fetchSteamUserData(r.reportedSteamId, env, ctx);
-        const filesPromise = listReportFiles(r.reportToken, env);
-
-        const reporterData = await reporterDataPromise;
-        const reportedData = await reportedDataPromise;
-        const files = await filesPromise;
-        return {
-          reportToken: r.reportToken,
-          steamId: r.steamId,
-          reportedSteamId: r.reportedSteamId,
-          reporterUsername: reporterData?.username || r.steamId,
-          reporterAvatarUrl: reporterData?.avatarUrl || null,
-          reportedUsername: reportedData?.username || r.reportedSteamId,
-          reportedAvatarUrl: reportedData?.avatarUrl || null,
-          description: r.description,
-          fileCount: r.fileCount,
-          files,
-          createdAt: r.createdAt,
-          cedmodReason: r.cedmodReason ?? null,
-        };
-      }),
-    );
-
-    return createResponse({ reports: reportsWithUsers }, 200, origin);
-  } catch (error) {
-    console.error('Error fetching reports by case:', error);
-    return createResponse({ error: 'Fehler beim Abrufen der Reports' }, 500, origin);
-  }
+export async function handleGetReports(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const cedModReports = await getCedModLastReports(env);
+
+  const reporterData = await Promise.all(
+    cedModReports.map((report) => fetchSteamUserData(report.reporterId, env, ctx)),
+  );
+
+  const reportedData = await Promise.all(
+    cedModReports.map((report) => fetchSteamUserData(report.reportedId, env, ctx)),
+  );
+
+  const responseData: GetReportsResponse = {
+    reports: cedModReports.map((report, index) => ({
+      id: report.id,
+      reporter: {
+        id: report.reporterId,
+        username: reporterData[index]?.username ?? 'Unknown',
+        avatarUrl: reporterData[index]?.avatarUrl ?? '',
+      },
+      reported: {
+        id: report.reportedId,
+        username: reportedData[index]?.username ?? 'Unknown',
+        avatarUrl: reportedData[index]?.avatarUrl ?? '',
+      },
+      reason: report.reason,
+      createdAt: report.reportedAt,
+    })),
+  };
+  return createResponse(responseData);
 }
