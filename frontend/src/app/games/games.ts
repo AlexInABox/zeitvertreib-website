@@ -653,6 +653,15 @@ export class GamesComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
+  checkForAutoSpin(): void {
+    const delay = this.fastModeEnabled ? 100 : 1000; 
+    setTimeout(() => {
+      if (this.autoSpinEnabled) {
+        this.testSlotMachine();
+      }
+    }, delay);
+  }
+
   togglePayoutInfo(): void {
     this.showPayoutInfo = !this.showPayoutInfo;
   }
@@ -673,6 +682,7 @@ export class GamesComponent implements OnInit, OnDestroy {
     const currentBalance = this.userStatistics.experience || 0;
     if (currentBalance < cost) {
       this.slotMachineError = `Nicht genügend ZVC! Du brauchst mindestens ${cost} ZVC.`;
+      this.autoSpinEnabled = false;
       setTimeout(() => {
         this.slotMachineError = '';
       }, 3000);
@@ -753,6 +763,10 @@ export class GamesComponent implements OnInit, OnDestroy {
               this.userStatistics.experience = (this.userStatistics.experience || 0) + payout;
               this.zvcService.setBalance(this.userStatistics.experience);
             }
+
+            if (this.autoSpinEnabled) {
+              this.checkForAutoSpin();
+            }
           }, spinDuration);
         },
         error: (error) => {
@@ -770,6 +784,10 @@ export class GamesComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             this.slotMachineError = '';
           }, 3000);
+
+          if (this.autoSpinEnabled) {
+            this.checkForAutoSpin();
+          }
         },
       });
   }
