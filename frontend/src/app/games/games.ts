@@ -377,7 +377,7 @@ export class GamesComponent implements OnInit, OnDestroy {
       if (!symbolsDiv) return;
 
       symbolsDiv.innerHTML = '';
-      
+
       symbolsDiv.style.transition = 'none';
       symbolsDiv.style.top = '0px';
       // Ensure we have at least one question mark at the start, then slotSymbols
@@ -423,7 +423,7 @@ export class GamesComponent implements OnInit, OnDestroy {
 
       // Delay each slot slightly for flair
       const delay = index * 0.15;
-      
+
       // Force repaint to ensure transition reset takes effect
       void symbolsDiv.offsetHeight;
       
