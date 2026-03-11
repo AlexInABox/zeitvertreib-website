@@ -426,9 +426,9 @@ export class GamesComponent implements OnInit, OnDestroy {
 
       // Force repaint to ensure transition reset takes effect
       void symbolsDiv.offsetHeight;
-      
+
       const delayAmount = this.fastModeEnabled ? delay * 100 : delay * 1000;
-      
+
       setTimeout(() => {
         symbolsDiv.style.transition = `top ${spinDurationSec}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
         symbolsDiv.style.top = `${topValue}px`;
