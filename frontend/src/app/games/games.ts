@@ -654,7 +654,7 @@ export class GamesComponent implements OnInit, OnDestroy {
   }
 
   checkForAutoSpin(): void {
-    const delay = this.fastModeEnabled ? 100 : 1000; 
+    const delay = this.fastModeEnabled ? 100 : 1000;
     setTimeout(() => {
       if (this.autoSpinEnabled) {
         this.testSlotMachine();
