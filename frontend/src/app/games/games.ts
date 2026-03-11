@@ -350,10 +350,11 @@ export class GamesComponent implements OnInit, OnDestroy {
       for (let i = 0; i < 100; i++) {
         const symbol = document.createElement('span');
         symbol.textContent = questionMark;
-        symbol.style.fontSize = '120px';
-        symbol.style.lineHeight = '150px';
+        symbol.style.fontSize = '80px';
+        symbol.style.display = 'flex';
+        symbol.style.alignItems = 'center';
+        symbol.style.justifyContent = 'center';
         symbol.style.height = '150px';
-        symbol.style.display = 'block';
         symbolsDiv.appendChild(symbol);
       }
     });
@@ -373,18 +374,36 @@ export class GamesComponent implements OnInit, OnDestroy {
       if (!symbolsDiv) return;
 
       symbolsDiv.innerHTML = '';
-
+      
+      symbolsDiv.style.transition = 'none';
+      symbolsDiv.style.top = '0px';
       // Ensure we have at least one question mark at the start, then slotSymbols
       const questionMark = '❓';
-      slotSymbols.forEach((sym) => {
+      // Append a couple question marks to cover initial view
+      for (let i = 0; i < 3; i++) {
         const symbol = document.createElement('span');
-        symbol.textContent = sym;
-        symbol.style.fontSize = '120px';
-        symbol.style.lineHeight = '150px';
+        symbol.textContent = questionMark;
+        symbol.style.fontSize = '80px';
+        symbol.style.display = 'flex';
+        symbol.style.alignItems = 'center';
+        symbol.style.justifyContent = 'center';
         symbol.style.height = '150px';
-        symbol.style.display = 'block';
         symbolsDiv.appendChild(symbol);
-      });
+      }
+
+      const totalSets = 10;
+      for (let i = 0; i < totalSets; i++) {
+        slotSymbols.forEach((sym) => {
+          const symbol = document.createElement('span');
+          symbol.textContent = sym;
+          symbol.style.fontSize = '80px';
+          symbol.style.display = 'flex';
+          symbol.style.alignItems = 'center';
+          symbol.style.justifyContent = 'center';
+          symbol.style.height = '150px';
+          symbolsDiv.appendChild(symbol);
+        });
+      }
 
       let targetSymbol = targetSymbol1;
       if (index === 1) targetSymbol = targetSymbol2;
@@ -396,10 +415,15 @@ export class GamesComponent implements OnInit, OnDestroy {
       // Calculate random number of spins (at least 3 full cycles)
       const cycles = 3 + Math.random() * 2;
       const symbolHeight = 150;
-      const topValue = -(symbolHeight * (targetIndex + 1 + cycles * slotSymbols.length) + 75 / 2);
+      const destinationIndex = 3 + Math.floor(cycles) * slotSymbols.length + targetIndex;
+      const topValue = -(symbolHeight * destinationIndex) - 10;
 
       // Delay each slot slightly for flair
       const delay = index * 0.15;
+      
+      // Force repaint to ensure transition reset takes effect
+      void symbolsDiv.offsetHeight;
+      
       setTimeout(() => {
         symbolsDiv.style.transition = 'top 10s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
         symbolsDiv.style.top = `${topValue}px`;
@@ -424,10 +448,10 @@ export class GamesComponent implements OnInit, OnDestroy {
       if (!symbolsDiv) return;
 
       const symbolHeight = 150;
-      const topValue = Math.abs(parseFloat(symbolsDiv.style.top));
+      const topValue = Math.abs(parseFloat(symbolsDiv.style.top) + 20);
 
       // Account for the question mark at the beginning
-      const symbolIndex = (Math.floor(topValue / symbolHeight) - 1) % slotSymbols.length;
+      const symbolIndex = (Math.round(topValue / symbolHeight) - 3) % slotSymbols.length;
       const displayedSymbol = slotSymbols[symbolIndex];
       if (displayedSymbol) {
         displayedSymbols.push(displayedSymbol);
