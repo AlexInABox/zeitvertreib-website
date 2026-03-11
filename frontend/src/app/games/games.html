@@ -54,13 +54,13 @@
           <span class="btn-cost">🪙 {{ slotMachineInfo?.cost || 10 }} ZVC</span>
         </button>
 
-        <div style="display: flex; gap: 0.5rem; width: 100%;">
+        <div style="display: flex; gap: 0.5rem; width: 100%">
           <button
             (click)="toggleAutoSpin()"
             class="wheel-autospin-btn slot-autospin-btn"
             [class.active]="autoSpinEnabled"
             [disabled]="!canAffordSlotMachine()"
-            style="flex: 1;"
+            style="flex: 1"
           >
             <span *ngIf="!autoSpinEnabled">🔄 Auto</span>
             <span *ngIf="autoSpinEnabled">⏹️ Stoppen</span>
@@ -70,7 +70,7 @@
             (click)="toggleFastMode()"
             class="wheel-autospin-btn slot-autospin-btn"
             [class.active]="fastModeEnabled"
-            style="flex: 1;"
+            style="flex: 1"
           >
             <span *ngIf="!fastModeEnabled">⚡ Schneller Modus</span>
             <span *ngIf="fastModeEnabled">⚡ Schneller Modus</span>
