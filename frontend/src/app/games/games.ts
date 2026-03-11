@@ -136,6 +136,7 @@ export class GamesComponent implements OnInit, OnDestroy {
   } | null = null;
   showPayoutInfo = false;
   autoSpinEnabled = false;
+  fastModeEnabled = false;
 
   // Win log properties
   slotWinLog: SlotWinLogEntry[] = [];
@@ -368,6 +369,8 @@ export class GamesComponent implements OnInit, OnDestroy {
     onComplete: () => void,
   ): void {
     const slots = document.querySelectorAll('.slot');
+    const spinDurationMS = this.fastModeEnabled ? 1000 : 10000;
+    const spinDurationSec = spinDurationMS / 1000;
 
     slots.forEach((slot, index) => {
       const symbolsDiv = slot.querySelector('.symbols') as HTMLElement;
@@ -424,19 +427,21 @@ export class GamesComponent implements OnInit, OnDestroy {
       // Force repaint to ensure transition reset takes effect
       void symbolsDiv.offsetHeight;
       
+      const delayAmount = this.fastModeEnabled ? delay * 100 : delay * 1000;
+      
       setTimeout(() => {
-        symbolsDiv.style.transition = 'top 10s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+        symbolsDiv.style.transition = `top ${spinDurationSec}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
         symbolsDiv.style.top = `${topValue}px`;
-      }, delay * 1000);
+      }, delayAmount);
     });
 
     // Call onComplete after animation finishes
-    setTimeout(onComplete, 10000);
+    setTimeout(onComplete, spinDurationMS);
 
     // Log the final displayed symbols (for debugging)
     setTimeout(() => {
       this.displayedSymbols(slotSymbols);
-    }, 10000);
+    }, spinDurationMS);
   }
 
   displayedSymbols(slotSymbols: string[]): void {
@@ -680,8 +685,10 @@ export class GamesComponent implements OnInit, OnDestroy {
     this.slotMachineMessage = '';
     this.showWinningAnimation = false;
 
-    // Pause ZVC polling during 10s slot animation
-    this.zvcService.pausePolling(10500);
+    const spinDuration = this.fastModeEnabled ? 1000 : 10000;
+
+    // Pause ZVC polling during slot animation
+    this.zvcService.pausePolling(spinDuration + 500);
 
     this.userStatistics.experience = (this.userStatistics.experience || 0) - cost;
     this.zvcService.setBalance(this.userStatistics.experience);
@@ -719,10 +726,14 @@ export class GamesComponent implements OnInit, OnDestroy {
             '🍍',
           ];
 
-          void this.audioService.play('slot.spin');
+          if (!this.fastModeEnabled) {
+            void this.audioService.play('slot.spin');
+          }
 
           this.spin(mySymbols, slot1, slot2, slot3, () => {
-            this.audioService.stop('slot.spin');
+            if (!this.fastModeEnabled) {
+              this.audioService.stop('slot.spin');
+            }
 
             if (payout > 0) {
               void this.audioService.play('slot.win');
@@ -742,10 +753,12 @@ export class GamesComponent implements OnInit, OnDestroy {
               this.userStatistics.experience = (this.userStatistics.experience || 0) + payout;
               this.zvcService.setBalance(this.userStatistics.experience);
             }
-          }, 10000);
+          }, spinDuration);
         },
         error: (error) => {
-          this.audioService.stop('slot.spin');
+          if (!this.fastModeEnabled) {
+            this.audioService.stop('slot.spin');
+          }
 
           this.isSpinning = false;
           this.slotMachineLoading = false;
@@ -767,6 +780,10 @@ export class GamesComponent implements OnInit, OnDestroy {
     if (this.autoSpinEnabled) {
       this.testSlotMachine();
     }
+  }
+
+  toggleFastMode(): void {
+    this.fastModeEnabled = !this.fastModeEnabled;
   }
 
   trackByWinLogId(index: number, entry: SlotWinLogEntry): number {
