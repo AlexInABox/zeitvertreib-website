@@ -9,7 +9,7 @@ import {
 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, asc, inArray, sql, and } from 'drizzle-orm';
-import { cases, casesRelatedUsers, discordInfo, playerdata } from '../db/schema.js';
+import { cases, casesRelatedUsers, discordInfo, playerdata, caseToCedModReportLinks } from '../db/schema.js';
 import typia from 'typia';
 import {
   CaseFileUploadGetResponse,
@@ -24,6 +24,7 @@ import {
 } from '@zeitvertreib/types';
 
 const BUCKET = 'zeitvertreib-tickets';
+const REPORTS_BUCKET = 'zeitvertreib-reports';
 
 // Allowed file extensions
 const ALLOWED_EXTENSIONS = [
@@ -220,6 +221,26 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         }
       }
 
+      const allLinkedReports = await db
+        .select({
+          caseId: caseToCedModReportLinks.caseId,
+          reportId: caseToCedModReportLinks.reportId,
+        })
+        .from(caseToCedModReportLinks)
+        .where(inArray(caseToCedModReportLinks.caseId, linkedCaseIds));
+
+      const linkedReportIdsMap: Record<string, number[]> = {};
+      for (const link of allLinkedReports) {
+        if (link.caseId) {
+          const existingList = linkedReportIdsMap[link.caseId];
+          if (existingList) {
+            existingList.push(link.reportId);
+          } else {
+            linkedReportIdsMap[link.caseId] = [link.reportId];
+          }
+        }
+      }
+
       const createdByList = await Promise.all(
         casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)),
       );
@@ -238,6 +259,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
         createdAt: c.createdAt,
         lastUpdatedAt: c.lastUpdatedAt,
         linkedSteamIds: linkedUsersMap[c.id] || [],
+        linkedReportIds: linkedReportIdsMap[c.id] || [],
       }));
 
       const steamIdResponse: ListCasesBySteamIdGetResponse = { cases: casesWithLinkedUsers };
@@ -313,6 +335,30 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       }
     }
 
+    // Get linked report IDs for all cases in one query
+    let linkedReportIdsMap: Record<string, number[]> = {};
+
+    if (caseIds.length > 0) {
+      const linkedReports = await db
+        .select({
+          caseId: caseToCedModReportLinks.caseId,
+          reportId: caseToCedModReportLinks.reportId,
+        })
+        .from(caseToCedModReportLinks)
+        .where(inArray(caseToCedModReportLinks.caseId, caseIds));
+
+      for (const link of linkedReports) {
+        if (link.caseId) {
+          const existingList = linkedReportIdsMap[link.caseId];
+          if (existingList) {
+            existingList.push(link.reportId);
+          } else {
+            linkedReportIdsMap[link.caseId] = [link.reportId];
+          }
+        }
+      }
+    }
+
     // Fetch creator data for all cases
     const createdByList = await Promise.all(casesList.map((c) => fetchDiscordUserData(c.createdByDiscordId, env, ctx)));
 
@@ -331,6 +377,7 @@ export async function handleListCases(request: Request, env: Env, ctx: Execution
       createdAt: c.createdAt,
       lastUpdatedAt: c.lastUpdatedAt,
       linkedSteamIds: linkedUsersMap[c.id] || [],
+      linkedReportIds: linkedReportIdsMap[c.id] || [],
     }));
 
     const totalPages = Math.ceil(totalCount / limit);
@@ -465,6 +512,13 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
 
     const createdBy = await fetchDiscordUserData(caseRow.createdByDiscordId, env, ctx);
 
+    const linkedReportRows = await db
+      .select({ reportId: caseToCedModReportLinks.reportId })
+      .from(caseToCedModReportLinks)
+      .where(eq(caseToCedModReportLinks.caseId, caseId));
+
+    const linkedReportIds = linkedReportRows.map((r) => r.reportId);
+
     const metadataResponse: GetCaseMetadataGetResponse = {
       id: caseRow.id,
       caseId,
@@ -485,6 +539,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
         avatarUrl: u.avatarUrl || '',
       })),
       files,
+      linkedReportIds,
     };
     return createResponse(metadataResponse, 200, origin);
   } catch (error) {
@@ -676,6 +731,178 @@ export async function handleUpdateCaseMetadata(request: Request, env: Env): Prom
     return createResponse(
       {
         error: 'Failed to update case metadata',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/**  POST /cases/link?caseId={caseId}&reportId={reportId} */
+export async function handleLinkCaseToReport(request: Request, env: Env): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const origin = request.headers.get('Origin');
+
+  try {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+    const userid = sessionValidation.steamId;
+
+    if (!(await isTeam(userid, env))) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const url = new URL(request.url);
+    const caseIdParam = url.searchParams.get('caseId');
+    const reportIdParam = url.searchParams.get('reportId');
+
+    if (!caseIdParam || !reportIdParam) {
+      return createResponse({ error: 'Missing required parameters: case and report' }, 400, origin);
+    }
+
+    // Verify case exists in DB
+    const caseResult = await db.select({ id: cases.id }).from(cases).where(eq(cases.id, caseIdParam)).limit(1);
+    if (caseResult.length === 0) {
+      return createResponse({ error: 'Case not found' }, 404, origin);
+    }
+
+    const reportId = parseInt(reportIdParam, 10);
+    if (isNaN(reportId)) {
+      return createResponse({ error: 'Invalid report ID: must be a number' }, 400, origin);
+    }
+
+    // Check if report is already linked to a case
+    const existingLink = await db
+      .select({ caseId: caseToCedModReportLinks.caseId })
+      .from(caseToCedModReportLinks)
+      .where(eq(caseToCedModReportLinks.reportId, reportId))
+      .limit(1);
+
+    if (existingLink.length > 0) {
+      return createResponse(
+        { error: 'Der Report ist bereits mit Fall ' + existingLink[0]!.caseId + ' verknüpft!!' },
+        400,
+        origin,
+      );
+    }
+
+    // We can not verify the existance of the report on CedMods site, reliably since theres no direct report lookup by id. https://cedmod.zeitvertreib.vip/swagger/
+
+    // Insert the link between case and report
+    await db.insert(caseToCedModReportLinks).values({
+      caseId: caseIdParam,
+      reportId,
+    });
+
+    // After linking, move all files from the reports folder to the root of the cases folder using the S3 copy and delete methods
+    const listReportUrl = `https://s3.zeitvertreib.vip/${REPORTS_BUCKET}/?list-type=2&prefix=${reportId}/`;
+    const listReportRequest = await aws(env).sign(listReportUrl, { method: 'GET' });
+    const listReportResponse = await fetch(listReportRequest);
+
+    if (listReportResponse.ok) {
+      const listReportXml = await listReportResponse.text();
+      const reportContentsMatches = Array.from(listReportXml.matchAll(/<Contents>(.*?)<\/Contents>/gs));
+
+      for (const match of reportContentsMatches) {
+        const content = match[1] || '';
+        const keyMatch = content.match(/<Key>([^<]+)<\/Key>/);
+        const key = keyMatch ? keyMatch[1] : '';
+
+        if (!key || key === `${reportId}/`) {
+          continue;
+        }
+
+        const fileName = key.replace(`${reportId}/`, '');
+
+        // Copy from reports bucket to cases bucket
+        const copyRequest = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${caseIdParam}/${fileName}`, {
+          method: 'PUT',
+          headers: { 'x-amz-copy-source': `/${REPORTS_BUCKET}/${key}` },
+        });
+        await fetch(copyRequest);
+
+        // Delete original from reports bucket
+        const deleteRequest = await aws(env).sign(`https://s3.zeitvertreib.vip/${REPORTS_BUCKET}/${key}`, {
+          method: 'DELETE',
+        });
+        await fetch(deleteRequest);
+      }
+    }
+
+    return createResponse({ success: true, caseId: caseIdParam, reportId }, 200, origin);
+  } catch (error) {
+    console.error('Link case to report error:', error);
+    return createResponse(
+      {
+        error: 'Failed to link case to report',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500,
+      origin,
+    );
+  }
+}
+
+/** DELETE /cases/link?caseId={caseId}&reportId={reportId} */
+export async function handleUnlinkCaseFromReport(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const origin = request.headers.get('Origin');
+
+  try {
+    const sessionValidation = await validateSession(request, env);
+    if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+      return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+    }
+    const userid = sessionValidation.steamId;
+
+    if (!(await isTeam(userid, env))) {
+      return createResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const url = new URL(request.url);
+    const caseIdParam = url.searchParams.get('caseId');
+    const reportIdParam = url.searchParams.get('reportId');
+
+    if (!caseIdParam || !reportIdParam) {
+      return createResponse({ error: 'Missing required parameters: case and report' }, 400, origin);
+    }
+
+    // Verify case exists in DB
+    const caseResult = await db.select({ id: cases.id }).from(cases).where(eq(cases.id, caseIdParam)).limit(1);
+    if (caseResult.length === 0) {
+      return createResponse({ error: 'Case not found' }, 404, origin);
+    }
+
+    const reportId = parseInt(reportIdParam, 10);
+    if (isNaN(reportId)) {
+      return createResponse({ error: 'Invalid report ID: must be a number' }, 400, origin);
+    }
+
+    // Check if the link exists
+    const existingLink = await db
+      .select({ caseId: caseToCedModReportLinks.caseId })
+      .from(caseToCedModReportLinks)
+      .where(and(eq(caseToCedModReportLinks.caseId, caseIdParam), eq(caseToCedModReportLinks.reportId, reportId)))
+      .limit(1);
+
+    if (existingLink.length === 0) {
+      return createResponse({ error: 'Link between case and report not found' }, 404, origin);
+    }
+
+    // Delete the link between case and report
+    await db
+      .delete(caseToCedModReportLinks)
+      .where(and(eq(caseToCedModReportLinks.caseId, caseIdParam), eq(caseToCedModReportLinks.reportId, reportId)));
+
+    return createResponse({ success: true, caseId: caseIdParam, reportId }, 200, origin);
+  } catch (error) {
+    console.error('Unlink case from report error:', error);
+    return createResponse(
+      {
+        error: 'Failed to unlink case from report',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       500,

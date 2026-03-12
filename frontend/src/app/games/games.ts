@@ -136,6 +136,7 @@ export class GamesComponent implements OnInit, OnDestroy {
   } | null = null;
   showPayoutInfo = false;
   autoSpinEnabled = false;
+  fastModeEnabled = false;
 
   // Win log properties
   slotWinLog: SlotWinLogEntry[] = [];
@@ -350,10 +351,11 @@ export class GamesComponent implements OnInit, OnDestroy {
       for (let i = 0; i < 100; i++) {
         const symbol = document.createElement('span');
         symbol.textContent = questionMark;
-        symbol.style.fontSize = '120px';
-        symbol.style.lineHeight = '150px';
+        symbol.style.fontSize = '80px';
+        symbol.style.display = 'flex';
+        symbol.style.alignItems = 'center';
+        symbol.style.justifyContent = 'center';
         symbol.style.height = '150px';
-        symbol.style.display = 'block';
         symbolsDiv.appendChild(symbol);
       }
     });
@@ -367,6 +369,8 @@ export class GamesComponent implements OnInit, OnDestroy {
     onComplete: () => void,
   ): void {
     const slots = document.querySelectorAll('.slot');
+    const spinDurationMS = this.fastModeEnabled ? 1000 : 10000;
+    const spinDurationSec = spinDurationMS / 1000;
 
     slots.forEach((slot, index) => {
       const symbolsDiv = slot.querySelector('.symbols') as HTMLElement;
@@ -374,17 +378,35 @@ export class GamesComponent implements OnInit, OnDestroy {
 
       symbolsDiv.innerHTML = '';
 
+      symbolsDiv.style.transition = 'none';
+      symbolsDiv.style.top = '0px';
       // Ensure we have at least one question mark at the start, then slotSymbols
       const questionMark = '❓';
-      slotSymbols.forEach((sym) => {
+      // Append a couple question marks to cover initial view
+      for (let i = 0; i < 3; i++) {
         const symbol = document.createElement('span');
-        symbol.textContent = sym;
-        symbol.style.fontSize = '120px';
-        symbol.style.lineHeight = '150px';
+        symbol.textContent = questionMark;
+        symbol.style.fontSize = '80px';
+        symbol.style.display = 'flex';
+        symbol.style.alignItems = 'center';
+        symbol.style.justifyContent = 'center';
         symbol.style.height = '150px';
-        symbol.style.display = 'block';
         symbolsDiv.appendChild(symbol);
-      });
+      }
+
+      const totalSets = 10;
+      for (let i = 0; i < totalSets; i++) {
+        slotSymbols.forEach((sym) => {
+          const symbol = document.createElement('span');
+          symbol.textContent = sym;
+          symbol.style.fontSize = '80px';
+          symbol.style.display = 'flex';
+          symbol.style.alignItems = 'center';
+          symbol.style.justifyContent = 'center';
+          symbol.style.height = '150px';
+          symbolsDiv.appendChild(symbol);
+        });
+      }
 
       let targetSymbol = targetSymbol1;
       if (index === 1) targetSymbol = targetSymbol2;
@@ -396,23 +418,30 @@ export class GamesComponent implements OnInit, OnDestroy {
       // Calculate random number of spins (at least 3 full cycles)
       const cycles = 3 + Math.random() * 2;
       const symbolHeight = 150;
-      const topValue = -(symbolHeight * (targetIndex + 1 + cycles * slotSymbols.length) + 75 / 2);
+      const destinationIndex = 3 + Math.floor(cycles) * slotSymbols.length + targetIndex;
+      const topValue = -(symbolHeight * destinationIndex) - 10;
 
       // Delay each slot slightly for flair
       const delay = index * 0.15;
+
+      // Force repaint to ensure transition reset takes effect
+      void symbolsDiv.offsetHeight;
+
+      const delayAmount = this.fastModeEnabled ? delay * 100 : delay * 1000;
+
       setTimeout(() => {
-        symbolsDiv.style.transition = 'top 10s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+        symbolsDiv.style.transition = `top ${spinDurationSec}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
         symbolsDiv.style.top = `${topValue}px`;
-      }, delay * 1000);
+      }, delayAmount);
     });
 
     // Call onComplete after animation finishes
-    setTimeout(onComplete, 10000);
+    setTimeout(onComplete, spinDurationMS);
 
     // Log the final displayed symbols (for debugging)
     setTimeout(() => {
       this.displayedSymbols(slotSymbols);
-    }, 10000);
+    }, spinDurationMS);
   }
 
   displayedSymbols(slotSymbols: string[]): void {
@@ -424,10 +453,10 @@ export class GamesComponent implements OnInit, OnDestroy {
       if (!symbolsDiv) return;
 
       const symbolHeight = 150;
-      const topValue = Math.abs(parseFloat(symbolsDiv.style.top));
+      const topValue = Math.abs(parseFloat(symbolsDiv.style.top) + 20);
 
       // Account for the question mark at the beginning
-      const symbolIndex = (Math.floor(topValue / symbolHeight) - 1) % slotSymbols.length;
+      const symbolIndex = (Math.round(topValue / symbolHeight) - 3) % slotSymbols.length;
       const displayedSymbol = slotSymbols[symbolIndex];
       if (displayedSymbol) {
         displayedSymbols.push(displayedSymbol);
@@ -624,6 +653,15 @@ export class GamesComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
+  checkForAutoSpin(): void {
+    const delay = this.fastModeEnabled ? 100 : 1000;
+    setTimeout(() => {
+      if (this.autoSpinEnabled) {
+        this.testSlotMachine();
+      }
+    }, delay);
+  }
+
   togglePayoutInfo(): void {
     this.showPayoutInfo = !this.showPayoutInfo;
   }
@@ -644,6 +682,7 @@ export class GamesComponent implements OnInit, OnDestroy {
     const currentBalance = this.userStatistics.experience || 0;
     if (currentBalance < cost) {
       this.slotMachineError = `Nicht genügend ZVC! Du brauchst mindestens ${cost} ZVC.`;
+      this.autoSpinEnabled = false;
       setTimeout(() => {
         this.slotMachineError = '';
       }, 3000);
@@ -656,8 +695,10 @@ export class GamesComponent implements OnInit, OnDestroy {
     this.slotMachineMessage = '';
     this.showWinningAnimation = false;
 
-    // Pause ZVC polling during 10s slot animation
-    this.zvcService.pausePolling(10500);
+    const spinDuration = this.fastModeEnabled ? 1000 : 10000;
+
+    // Pause ZVC polling during slot animation
+    this.zvcService.pausePolling(spinDuration + 500);
 
     this.userStatistics.experience = (this.userStatistics.experience || 0) - cost;
     this.zvcService.setBalance(this.userStatistics.experience);
@@ -695,10 +736,14 @@ export class GamesComponent implements OnInit, OnDestroy {
             '🍍',
           ];
 
-          void this.audioService.play('slot.spin');
+          if (!this.fastModeEnabled) {
+            void this.audioService.play('slot.spin');
+          }
 
           this.spin(mySymbols, slot1, slot2, slot3, () => {
-            this.audioService.stop('slot.spin');
+            if (!this.fastModeEnabled) {
+              this.audioService.stop('slot.spin');
+            }
 
             if (payout > 0) {
               void this.audioService.play('slot.win');
@@ -718,10 +763,16 @@ export class GamesComponent implements OnInit, OnDestroy {
               this.userStatistics.experience = (this.userStatistics.experience || 0) + payout;
               this.zvcService.setBalance(this.userStatistics.experience);
             }
-          }, 10000);
+
+            if (this.autoSpinEnabled) {
+              this.checkForAutoSpin();
+            }
+          }, spinDuration);
         },
         error: (error) => {
-          this.audioService.stop('slot.spin');
+          if (!this.fastModeEnabled) {
+            this.audioService.stop('slot.spin');
+          }
 
           this.isSpinning = false;
           this.slotMachineLoading = false;
@@ -733,6 +784,10 @@ export class GamesComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             this.slotMachineError = '';
           }, 3000);
+
+          if (this.autoSpinEnabled) {
+            this.checkForAutoSpin();
+          }
         },
       });
   }
@@ -743,6 +798,10 @@ export class GamesComponent implements OnInit, OnDestroy {
     if (this.autoSpinEnabled) {
       this.testSlotMachine();
     }
+  }
+
+  toggleFastMode(): void {
+    this.fastModeEnabled = !this.fastModeEnabled;
   }
 
   trackByWinLogId(index: number, entry: SlotWinLogEntry): number {

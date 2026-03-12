@@ -806,6 +806,7 @@ export interface CaseListItem {
   createdAt: number;
   lastUpdatedAt: number;
   linkedSteamIds: string[];
+  linkedReportIds: number[];
 }
 
 /** GET /cases/upload?case={caseId}&extension={ext} request params */
@@ -884,6 +885,7 @@ export interface GetCaseMetadataGetResponse {
     createdAt: number;
     url: string;
   }[];
+  linkedReportIds: number[];
 }
 
 /** POST /cases — no request body */
@@ -911,6 +913,12 @@ export interface UpdateCaseMetadataPutRequest {
 export interface UpdateCaseMetadataPutResponse {
   success: boolean;
   caseId: string;
+}
+
+/** POST /cases/link request params */
+export interface LinkCaseToReportPostRequest {
+  caseId: string;
+  reportId: number;
 }
 
 // ============================================================================
@@ -1042,4 +1050,43 @@ export interface ClaimQuestRewardResponse {
   success: boolean;
   coinsAwarded: number;
   message: string;
+}
+
+// ============================================================================
+// Public report clip submission endpoint types
+// ============================================================================
+
+// Every user landing on /reports, will see a list of open/recent reports. (All reports from the last 30 minutes or something)
+// They can then select any of the reports, and upload any media (maybe only photos and videos) as evidence for that report.
+/** GET /reports response*/
+export interface GetReportsResponse {
+  reports: {
+    id: number;
+    reporter: {
+      id: string;
+      username: string;
+      avatarUrl: string;
+    };
+    reported: {
+      id: string;
+      username: string;
+      avatarUrl: string;
+    };
+    reason: string;
+    createdAt: number;
+  }[];
+}
+
+//When uploading evidence, the client should first call GET /reports to get a pre-signed URL for the upload, then upload the file directly to S3 using that URL.
+// After generating this pre-signed URL, the backend will notify team members about a new incomming upload for a given case via discord!
+/** GET /reports/upload?reportId={reportId}&extension={ext} request params */
+export interface ReportFileUploadGetRequest {
+  reportId: number;
+  extension: string;
+}
+
+/** GET /reports/upload response */
+export interface ReportFileUploadGetResponse {
+  url: string;
+  method: 'PUT';
 }

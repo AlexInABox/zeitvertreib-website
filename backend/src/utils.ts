@@ -910,3 +910,50 @@ export async function getCedModWarns(
     return [];
   }
 }
+
+/**
+ * Fetch all latest in-game reports from cedmod.
+ */
+export async function getCedModLastReports(
+  env: Env,
+): Promise<{ id: number; reporterId: string; reportedId: string; reason: string; reportedAt: number }[]> {
+  try {
+    const headers = {
+      Authorization: `Bearer ${env.CEDMOD_API_KEY_REPORTS}`,
+      'Content-Type': 'application/json',
+    };
+
+    const userUrl = new URL('https://cedmod.zeitvertreib.vip/Api/Report/Query');
+    userUrl.searchParams.set('page', '0');
+    userUrl.searchParams.set('q', 'none@custom'); // CedMod needs this to get ALL reports
+    userUrl.searchParams.set('max', '10');
+
+    const reportsResponse = await proxyFetch(userUrl.toString(), { method: 'GET', headers }, env);
+
+    if (!reportsResponse.ok) {
+      console.error(`Failed to fetch CedMod last reports: ${reportsResponse.status} ${reportsResponse.statusText}`);
+      return [];
+    }
+
+    const data: any = await reportsResponse.json();
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+
+    return data.players
+      .map((report: any) => ({
+        id: report.id,
+        reporterId: report.reporterId || 'Unknown reporter',
+        reportedId: report.reportedId || 'Unknown reported',
+        reason: report.reason || 'Unknown reason',
+        reportedAt: new Date(`${report.created}Z`).getTime(),
+      }))
+      .filter((report: { reportedAt: number }) => report.reportedAt >= oneHourAgo);
+  } catch (error) {
+    console.error(`Error fetching CedMod last reports:`, error);
+    return [];
+  }
+}

@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../services/auth.service';
+import { FileUploader, FileUploadModule } from 'ng2-file-upload';
 import type {
   GetCaseMetadataGetResponse,
   CaseFileUploadGetResponse,
@@ -17,7 +18,7 @@ import type {
 
 @Component({
   selector: 'app-case-detail',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, FileUploadModule],
   templateUrl: './case-detail.component.html',
   styleUrls: ['./case-detail.component.css'],
 })
@@ -90,6 +91,12 @@ export class CaseDetailComponent implements OnInit {
   isManagingLinkedUsers = false;
   linkedUserError = '';
 
+  // Linked report management state
+  newLinkedReportId = '';
+  isLinkingReport = false;
+  reportLinkError = '';
+  reportLinkSuccess = '';
+
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
     { label: 'Name (Z-A)', value: 'name-desc' },
@@ -98,6 +105,15 @@ export class CaseDetailComponent implements OnInit {
     { label: 'Größte zuerst', value: 'largest' },
     { label: 'Kleinste zuerst', value: 'smallest' },
   ];
+
+  // ng2-file-upload uploader for reliable S3 presigned URL uploads
+  fileUploader = new FileUploader({
+    url: '',
+    method: 'PUT',
+    disableMultipart: true,
+    autoUpload: false,
+    removeAfterUpload: true,
+  });
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
@@ -236,6 +252,11 @@ export class CaseDetailComponent implements OnInit {
     );
   }
 
+  copyReportIdToClipboard(reportId: number, event?: Event) {
+    if (event) event.stopPropagation();
+    navigator.clipboard.writeText(String(reportId));
+  }
+
   navigateToUserProfile(steamId: string) {
     if (this.isTeam) {
       this.router.navigate(['/zeit'], { queryParams: { steamId } });
@@ -345,6 +366,16 @@ export class CaseDetailComponent implements OnInit {
   isViewableFile(filename: string): boolean {
     const ext = this.getFileExtension(filename);
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'mp4', 'webm', 'mov', 'mp3', 'wav', 'ogg'].includes(ext);
+  }
+
+  isImageFile(filename: string): boolean {
+    const ext = this.getFileExtension(filename);
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+  }
+
+  isVideoFile(filename: string): boolean {
+    const ext = this.getFileExtension(filename);
+    return ['mp4', 'webm', 'mov'].includes(ext);
   }
 
   getMediaType(filename: string): 'image' | 'video' | 'audio' | null {
@@ -466,6 +497,69 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
+  removeLinkedReport(reportId: number, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isLinkingReport = true;
+    this.reportLinkError = '';
+    this.reportLinkSuccess = '';
+    this.http
+      .delete(`${environment.apiUrl}/cases/link?caseId=${this.caseId}&reportId=${reportId}`, {
+        headers: this.getAuthHeaders(),
+        withCredentials: true,
+      })
+      .subscribe({
+        next: () => {
+          this.isLinkingReport = false;
+          this.loadCaseData();
+        },
+        error: (error) => {
+          this.isLinkingReport = false;
+          this.reportLinkError = error.error?.error || 'Fehler beim Entfernen des Reports';
+        },
+      });
+  }
+
+  linkReport() {
+    this.reportLinkError = '';
+    this.reportLinkSuccess = '';
+    const raw = this.newLinkedReportId.trim();
+    if (!raw) {
+      this.reportLinkError = 'Bitte gib eine Report-ID ein';
+      return;
+    }
+    const reportId = parseInt(raw, 10);
+    if (isNaN(reportId) || reportId <= 0) {
+      this.reportLinkError = 'Report-ID muss eine positive Zahl sein';
+      return;
+    }
+    if ((this.caseData?.linkedReportIds ?? []).includes(reportId)) {
+      this.reportLinkError = 'Report ist bereits mit diesem Fall verknüpft';
+      return;
+    }
+
+    this.isLinkingReport = true;
+    this.http
+      .post(
+        `${environment.apiUrl}/cases/link?caseId=${this.caseId}&reportId=${reportId}`,
+        {},
+        { headers: this.getAuthHeaders(), withCredentials: true },
+      )
+      .subscribe({
+        next: () => {
+          this.isLinkingReport = false;
+          this.newLinkedReportId = '';
+          this.reportLinkSuccess = `Report #${reportId} wurde erfolgreich verknüpft`;
+          this.loadCaseData();
+        },
+        error: (error) => {
+          this.isLinkingReport = false;
+          this.reportLinkError = error.error?.error || 'Fehler beim Verknüpfen des Reports';
+        },
+      });
+  }
+
   removeLinkedUser(steamId: string, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -543,24 +637,12 @@ export class CaseDetailComponent implements OnInit {
       this.uploadStatusMessage = 'Datei wird hochgeladen...';
       this.uploadStartTime = Date.now();
 
-      const file = this.selectedFile;
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadInfo.url, true);
-        xhr.setRequestHeader('Content-Type', contentType);
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            this.uploadProgress = Math.round((event.loaded / event.total) * 100);
-            this.uploadETA = this.calculateETA(this.uploadStartTime, this.uploadProgress);
-            this.uploadStatusMessage = `Datei wird hochgeladen... (${this.uploadProgress}%)`;
-          }
-        };
-
-        xhr.onload = () =>
-          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
-        xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
-        xhr.send(file);
+      await this.uploadFileToPresignedUrl(this.selectedFile, uploadInfo.url, contentType, {
+        onProgress: (progress) => {
+          this.uploadProgress = progress;
+          this.uploadETA = this.calculateETA(this.uploadStartTime, progress);
+          this.uploadStatusMessage = `Datei wird hochgeladen... (${progress}%)`;
+        },
       });
 
       this.isUploading = false;
@@ -673,12 +755,8 @@ export class CaseDetailComponent implements OnInit {
         }
       }
 
-      const videoData = new Uint8Array(receivedLength);
-      let position = 0;
-      for (const chunk of chunks) {
-        videoData.set(chunk, position);
-        position += chunk.length;
-      }
+      // Use Blob directly from chunks to avoid corruption from manual Uint8Array assembly
+      const videoBlob = new Blob(chunks as BlobPart[], { type: mimeType });
 
       this.medalDownloadProgress = 100;
       this.medalUploadProgress = 0;
@@ -696,23 +774,14 @@ export class CaseDetailComponent implements OnInit {
       this.medalStatusMessage = 'Video wird hochgeladen...';
       this.medalStartTime = Date.now();
 
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadInfo.url, true);
-        xhr.setRequestHeader('Content-Type', mimeType);
+      const videoFile = new File([videoBlob], fileNameWithExt, { type: mimeType });
 
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            this.medalUploadProgress = Math.round((event.loaded / event.total) * 100);
-            this.medalETA = this.calculateETA(this.medalStartTime, this.medalUploadProgress);
-            this.medalStatusMessage = `Video wird hochgeladen... (${this.medalUploadProgress}%)`;
-          }
-        };
-
-        xhr.onload = () =>
-          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload fehlgeschlagen: ${xhr.status}`));
-        xhr.onerror = () => reject(new Error('Netzwerkfehler beim Upload'));
-        xhr.send(videoData);
+      await this.uploadFileToPresignedUrl(videoFile, uploadInfo.url, mimeType, {
+        onProgress: (progress) => {
+          this.medalUploadProgress = progress;
+          this.medalETA = this.calculateETA(this.medalStartTime, progress);
+          this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
+        },
       });
 
       this.isFetchingMedalClip = false;
@@ -733,5 +802,60 @@ export class CaseDetailComponent implements OnInit {
       console.error('Medal clip upload failed:', error);
       alert(error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips');
     }
+  }
+
+  /**
+   * Uploads a File to a presigned S3 URL using ng2-file-upload's FileUploader
+   * for reliable, corruption-free uploads with progress tracking.
+   */
+  private uploadFileToPresignedUrl(
+    file: File,
+    presignedUrl: string,
+    contentType: string,
+    callbacks: { onProgress: (progress: number) => void },
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Clear any previous items from the queue
+      this.fileUploader.clearQueue();
+
+      // Configure the uploader for this specific upload
+      this.fileUploader.options.url = presignedUrl;
+      this.fileUploader.options.method = 'PUT';
+      this.fileUploader.options.disableMultipart = true;
+      this.fileUploader.options.headers = [{ name: 'Content-Type', value: contentType }];
+
+      // Set up callbacks
+      this.fileUploader.onBeforeUploadItem = (item) => {
+        item.url = presignedUrl;
+        item.method = 'PUT';
+        item.withCredentials = false;
+        item.headers = [{ name: 'Content-Type', value: contentType }];
+      };
+
+      this.fileUploader.onProgressItem = (_item, progress) => {
+        callbacks.onProgress(progress);
+      };
+
+      this.fileUploader.onSuccessItem = () => {
+        this.cleanupUploaderCallbacks();
+        resolve();
+      };
+
+      this.fileUploader.onErrorItem = (_item, response, status) => {
+        this.cleanupUploaderCallbacks();
+        reject(new Error(`Upload fehlgeschlagen: ${status} ${response}`));
+      };
+
+      // Add file to queue and trigger upload
+      this.fileUploader.addToQueue([file]);
+      this.fileUploader.uploadAll();
+    });
+  }
+
+  private cleanupUploaderCallbacks() {
+    this.fileUploader.onBeforeUploadItem = () => {};
+    this.fileUploader.onProgressItem = () => {};
+    this.fileUploader.onSuccessItem = () => {};
+    this.fileUploader.onErrorItem = () => {};
   }
 }

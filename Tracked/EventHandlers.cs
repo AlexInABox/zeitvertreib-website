@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -184,17 +185,19 @@ public static class EventHandlers
             SyncSpeed = HintSyncSpeed.Fast
         };
         playerDisplay.AddHint(killFeed);
-        
+
         Hint tpsInfo = new()
         {
             Alignment = HintAlignment.Left,
             AutoText = _ =>
             {
-                // ReSharper disable once ConvertToLambdaExpression
-                return "<size=23><b>" + Server.Tps + "/" + Server.MaxTps + " TPS</b></size>";
+                Color roleColor = ev.Player.Role.GetRoleColor();
+                string hexColor = ColorUtility.ToHtmlStringRGB(roleColor);
+
+                return $"<size=22><b><color=#{hexColor}>{Server.Tps}/{Server.MaxTps} TPS</color></b></size>";
             },
             YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = 5,
+            YCoordinate = 6,
             XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 80,
             SyncSpeed = HintSyncSpeed.Slow
         };
@@ -615,7 +618,7 @@ public static class EventHandlers
             {
                 Content = content
             };
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Config.Apikey);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Config.Apikey);
 
             HttpResponseMessage response = await Utils.HttpClient.SendAsync(request);
 

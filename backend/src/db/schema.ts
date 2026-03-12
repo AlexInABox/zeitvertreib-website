@@ -329,3 +329,8 @@ export const weeklyQuestProgress = sqliteTable('weekly_quest_progress', {
   progress: integer('progress').notNull().default(0),
   claimedAt: integer('claimed_at').notNull().default(0),
 });
+
+export const caseToCedModReportLinks = sqliteTable('case_to_ced_mod_report_links', {
+  caseId: text('case_id').references(() => cases.id),
+  reportId: integer('report_id').notNull(),
+});

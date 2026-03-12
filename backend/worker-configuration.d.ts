@@ -27,6 +27,7 @@ declare namespace Cloudflare {
     CEDMOD_API_KEY: string;
     CEDMOD_API_KEY_BANS: string;
     CEDMOD_API_KEY_WARNS: string;
+    CEDMOD_API_KEY_REPORTS: string;
     PLAYERLIST_API_KEY: string;
     MINIO_ACCESS_KEY: string;
     MINIO_SECRET_KEY: string;
@@ -42,6 +43,7 @@ declare namespace Cloudflare {
     EMAIL_PASSWORD: string;
     PLAYERLIST_STORAGE: DurableObjectNamespace<import('./src/index').PlayerlistStorage>;
     ZEITVERTREIB_DATA: D1Database;
+    REPORT_UPLOADS_LIMITER: RateLimit;
   }
 }
 interface Env extends Cloudflare.Env {}

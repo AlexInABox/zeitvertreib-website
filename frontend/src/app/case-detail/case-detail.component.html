@@ -126,6 +126,65 @@
               <i class="pi pi-exclamation-circle"></i> {{ linkedUserError }}
             </div>
 
+            <!-- Linked Reports -->
+            <div *ngIf="isTeam" class="header-linked-users">
+              <div class="header-chips" *ngIf="caseData?.linkedReportIds?.length">
+                <div
+                  class="header-chip report-chip"
+                  *ngFor="let reportId of caseData?.linkedReportIds"
+                  (click)="copyReportIdToClipboard(reportId)"
+                  title="ID kopieren"
+                >
+                  <i class="pi pi-flag chip-report-icon"></i>
+                  <span class="chip-name">Report #{{ reportId }}</span>
+                  <button
+                    class="chip-remove"
+                    (click)="removeLinkedReport(reportId, $event)"
+                    [disabled]="isLinkingReport"
+                    title="Verknüpfung entfernen"
+                  >
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="header-add-user">
+                <i class="pi pi-flag-fill header-add-icon"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="newLinkedReportId"
+                  placeholder="Report-ID verknüpfen…"
+                  class="header-steamid-input"
+                  (keydown.enter)="linkReport()"
+                  [disabled]="isLinkingReport"
+                  autocomplete="off"
+                  inputmode="numeric"
+                />
+                <button
+                  class="header-add-btn"
+                  (click)="linkReport()"
+                  [disabled]="isLinkingReport || !newLinkedReportId.trim()"
+                >
+                  <i class="pi" [ngClass]="isLinkingReport ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
+                </button>
+              </div>
+              <div class="header-linked-error" *ngIf="reportLinkError">
+                <i class="pi pi-exclamation-circle"></i> {{ reportLinkError }}
+              </div>
+              <div class="header-linked-success" *ngIf="reportLinkSuccess">
+                <i class="pi pi-check-circle"></i> {{ reportLinkSuccess }}
+              </div>
+            </div>
+
+            <!-- Non-team: read-only report IDs -->
+            <div *ngIf="!isTeam && caseData?.linkedReportIds?.length" class="header-linked-users">
+              <div class="header-chips">
+                <div class="header-chip report-chip" *ngFor="let reportId of caseData?.linkedReportIds">
+                  <i class="pi pi-flag chip-report-icon"></i>
+                  <span class="chip-name">Report #{{ reportId }}</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Header meta strip -->
             <div class="header-meta-row" *ngIf="caseData">
               <span class="header-meta-item">
@@ -392,6 +451,25 @@
           class="file-card"
           [style.animation-delay]="i * 0.05 + 's'"
         >
+          <!-- Thumbnail Preview (images & videos only) -->
+          <div class="file-thumbnail" *ngIf="isImageFile(file.name) || isVideoFile(file.name)">
+            <img
+              *ngIf="isImageFile(file.name)"
+              [src]="file.url"
+              [alt]="file.name"
+              loading="lazy"
+              class="file-thumbnail-media"
+            />
+            <video
+              *ngIf="isVideoFile(file.name)"
+              [src]="file.url + '#t=0.1'"
+              preload="metadata"
+              muted
+              playsinline
+              class="file-thumbnail-media"
+            ></video>
+          </div>
+
           <div class="file-card-header">
             <div class="file-icon-wrapper">
               <i class="pi" [ngClass]="getFileIcon(file.name)"></i>

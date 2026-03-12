@@ -1,12 +1,12 @@
 using System.Collections.Concurrent;
+using HintServiceMeow.Core.Enum;
+using HintServiceMeow.Core.Models.Hints;
+using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
 
 namespace Protected;
 
@@ -20,7 +20,7 @@ public static class EventHandlers
         PlayerEvents.Hurting += OnHurting;
         PlayerEvents.ShootingWeapon += OnShooting;
         PlayerEvents.ThrowingProjectile += ThrowingProjectile;
-        
+
         PlayerEvents.Joined += OnJoined; // Here we register the HUD!
     }
 
@@ -30,7 +30,7 @@ public static class EventHandlers
         PlayerEvents.Hurting -= OnHurting;
         PlayerEvents.ShootingWeapon -= OnShooting;
         PlayerEvents.ThrowingProjectile -= ThrowingProjectile;
-        
+
         PlayerEvents.Joined -= OnJoined;
     }
 
@@ -39,13 +39,13 @@ public static class EventHandlers
         if (ev.Player.Role == RoleTypeId.Tutorial || !ev.Player.IsHuman) return;
 
         SpawnProtectedPlayers.TryAdd(ev.Player, 0);
-        Timing.CallDelayed(20f, () =>  SpawnProtectedPlayers.TryRemove(ev.Player, out _));
+        Timing.CallDelayed(20f, () => SpawnProtectedPlayers.TryRemove(ev.Player, out _));
     }
 
     private static void OnHurting(PlayerHurtingEventArgs ev)
     {
         if (!SpawnProtectedPlayers.ContainsKey(ev.Player)) return;
-        
+
         ev.IsAllowed = false;
 
         // TODO: Notify the attacker with a hint, that the user they are attacking is spawn protected!
@@ -55,7 +55,7 @@ public static class EventHandlers
     {
         SpawnProtectedPlayers.TryRemove(ev.Player, out _);
     }
-    
+
     private static void ThrowingProjectile(PlayerThrowingProjectileEventArgs ev)
     {
         SpawnProtectedPlayers.TryRemove(ev.Player, out _);
@@ -70,20 +70,16 @@ public static class EventHandlers
             {
                 string hint = string.Empty;
                 if (SpawnProtectedPlayers.ContainsKey(ev.Player))
-                {
-                    hint = $"<size=25><b><color=green>SPAWNSCHUTZ AKTIV</color=green></b></size>\n";
-                }
+                    hint = "<size=25><b><color=green>SPAWNSCHUTZ AKTIV</color=green></b></size>\n";
 
                 if (ev.Player.IsGodModeEnabled)
-                {
-                    hint = $"<size=25><b><color=green>⚠ GODMODE AKTIV ⚠</color=green></b></size>\n";
-                }
-               
+                    hint = "<size=25><b><color=green>⚠ GODMODE AKTIV ⚠</color=green></b></size>\n";
+
                 return hint;
             },
             YCoordinateAlign = HintVerticalAlign.Top,
             YCoordinate = 30,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f),
+            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 5,
             SyncSpeed = HintSyncSpeed.Slowest
         };
         PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);

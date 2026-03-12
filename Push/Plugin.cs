@@ -12,7 +12,7 @@ public class Plugin : Plugin<Config>
     public override string Name { get; } = "Push";
     public override string Description { get; } = "A plugin that allows you to push players around using a keybind.";
     public override string Author { get; } = "AlexInABox";
-    public override Version Version { get; } = new(1, 8, 0);
+    public override Version Version { get; } = new(1, 10, 0);
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
     public Translation Translation { get; private set; }
 

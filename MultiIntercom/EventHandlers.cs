@@ -5,26 +5,18 @@ using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
 using PlayerRoles.Voice;
-using UnityEngine;
-using Logger = LabApi.Features.Console.Logger;
-using PrimitiveObjectToy = AdminToys.PrimitiveObjectToy;
 
 namespace MultiIntercom;
 
 public static class EventHandlers
 {
     private static CoroutineHandle _intercomLogicCoroutine;
+
     public static void RegisterEvents()
     {
-        ServerEvents.MapGenerated += (_) =>
-        {
-            _intercomLogicCoroutine = Timing.RunCoroutine(IntercomLogicLoop());
-        };
-        
-        ServerEvents.RoundRestarted += () =>
-        {
-            Timing.KillCoroutines(_intercomLogicCoroutine);
-        };
+        ServerEvents.MapGenerated += _ => { _intercomLogicCoroutine = Timing.RunCoroutine(IntercomLogicLoop()); };
+
+        ServerEvents.RoundRestarted += () => { Timing.KillCoroutines(_intercomLogicCoroutine); };
     }
 
     public static void UnregisterEvents()
@@ -36,8 +28,8 @@ public static class EventHandlers
     {
         Room intercomRoom = Room.Get(RoomName.EzIntercom).First();
         bool intercomWasInUse = false;
-        
-        
+
+
         while (true)
         {
             bool isInUse = Intercom.State == IntercomState.InUse;

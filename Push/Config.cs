@@ -12,7 +12,6 @@ public class Config
 
     public float PushForce { get; set; } = 8.0f;
 
-
     [Description("The unique id of the setting.")]
     public int KeybindId { get; set; } = 202;
 

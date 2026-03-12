@@ -37,6 +37,8 @@ import {
   handleCreateCase,
   handleGetCaseMetadata,
   handleUpdateCaseMetadata,
+  handleLinkCaseToReport,
+  handleUnlinkCaseFromReport,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
@@ -54,6 +56,7 @@ import {
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
+import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -91,6 +94,8 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'POST:/cases': handleCreateCase,
   'GET:/cases/metadata': handleGetCaseMetadata,
   'PUT:/cases/metadata': handleUpdateCaseMetadata,
+  'POST:/cases/link': handleLinkCaseToReport,
+  'DELETE:/cases/link': handleUnlinkCaseFromReport,
 
   // Spray routes
   'POST:/spray': handlePostSpray,
@@ -182,6 +187,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Z.E.I.T. routes
   'GET:/zeit': getUserData,
+
+  // Reporting routes
+  'GET:/reports/upload': handleReportFileUpload,
+  'GET:/reports': handleGetReports,
 };
 
 export default {
@@ -284,7 +293,7 @@ export default {
     }
 
     // Purge weekly quest progress every Monday at midnight UTC
-    if (controller.cron === '0 0 * * 1') {
+    if (controller.cron === '0 0 * * MON') {
       await db.delete(schema.weeklyQuestProgress);
     }
 

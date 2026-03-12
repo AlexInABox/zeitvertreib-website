@@ -10,10 +10,4 @@ public class Translation
 
     public string PlayerPushCooldownHint { get; set; } =
         "You cannot push yet! <color=yellow>Cooldown is active.</color> $remainingCooldown$ seconds remaining...";
-
-    public string PlayerPushSuccessfulHint { get; set; } =
-        "You <color=green>pushed</color> $player$!";
-
-    public string PlayerGotPushedHint { get; set; } =
-        "You have been <color=yellow>pushed</color> by $player$!!";
 }

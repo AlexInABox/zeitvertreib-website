@@ -57,6 +57,16 @@
     "FRONTEND_URL": "http://localhost:4200",
     "BACKEND_URL": "http://localhost:8787/api",
   },
+  "ratelimits": [
+    {
+      "name": "REPORT_UPLOADS_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 1,
+        "period": 60,
+      },
+    },
+  ],
   "workers_dev": false,
   "env": {
     "production": {
@@ -109,9 +119,19 @@
           "0 3 2 1 *", // Added for yearly advent calendar reset
           "0 0 * * *", // Added for daily tax calculation
           "0 6 * * *", // Added for daily birthday check
-          "0 0 * * 1", // Added for weekly quest progress purge (every Monday midnight)
+          "0 0 * * MON", // Added for weekly quest progress purge (every Monday)
         ],
       },
+      "ratelimits": [
+        {
+          "name": "REPORT_UPLOADS_LIMITER",
+          "namespace_id": "1001",
+          "simple": {
+            "limit": 1,
+            "period": 60,
+          },
+        },
+      ],
     },
     "dev": {
       "name": "zeitvertreib-backend-dev",
@@ -157,6 +177,16 @@
         "FRONTEND_URL": "https://dev.zeitvertreib.vip",
         "BACKEND_URL": "https://dev.zeitvertreib.vip/api",
       },
+      "ratelimits": [
+        {
+          "name": "REPORT_UPLOADS_LIMITER",
+          "namespace_id": "1001",
+          "simple": {
+            "limit": 1,
+            "period": 60,
+          },
+        },
+      ],
     },
   },
   /**

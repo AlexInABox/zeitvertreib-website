@@ -1,7 +1,6 @@
 using System;
 using LabApi.Features;
 using LabApi.Features.Console;
-using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 
 namespace Protected;
