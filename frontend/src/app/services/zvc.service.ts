@@ -83,8 +83,9 @@ export class ZvcService implements OnDestroy {
 
     this.http
       .get<ZvcGetResponse>(url, {
-        params: { userId: this.currentSteamId, _: Date.now() },
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+       .get<ZvcGetResponse>(url, {
+         params: { userId: this.currentSteamId, _: Date.now() },
+       })
       })
       .subscribe({
         next: (response) => {
