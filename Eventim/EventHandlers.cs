@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Eventim.Events;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
@@ -44,7 +43,7 @@ public static class EventHandlers
 
         if (_passedRoundsCounter % EventInterval != 0) return;
 
-        List<IEvent> events = typeof(LightsOut).Assembly
+        List<IEvent> events = typeof(IEvent).Assembly
             .GetTypes()
             .Where(t =>
                 t.IsClass &&
