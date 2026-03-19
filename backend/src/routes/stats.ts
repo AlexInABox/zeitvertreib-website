@@ -137,7 +137,10 @@ export async function handlePostStats(request: Request, env: Env, ctx: Execution
     });
 
     // Notify player about their completed session (non-blocking)
-    if ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0 || sessionDeaths > 0) {
+    if (
+      player.userid !== 'anonymous' &&
+      ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0 || sessionDeaths > 0)
+    ) {
       ctx.waitUntil(
         appendNotification(env, player.userid, {
           type: 'session_completed',
