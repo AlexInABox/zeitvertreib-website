@@ -9,6 +9,7 @@ import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
 import { AwsClient } from 'aws4fetch';
 import { createResponse, increment } from '../utils.js';
+import { appendNotification } from '../notifications.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
@@ -212,6 +213,7 @@ export async function handleDiscordBotInteractions(
                   .select({
                     experience: playerdata.experience,
                     discordId: playerdata.discordId,
+                    id: playerdata.id,
                   })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, challengerId))
@@ -221,6 +223,7 @@ export async function handleDiscordBotInteractions(
                   .select({
                     experience: playerdata.experience,
                     discordId: playerdata.discordId,
+                    id: playerdata.id,
                   })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, participantId))
@@ -325,6 +328,28 @@ export async function handleDiscordBotInteractions(
 
                 const winnerData = winnerDataResult[0];
                 const loserData = loserDataResult[0];
+
+                // Notify the player about the coinflip result (non-blocking, tracked by waitUntil)
+                const winnerSteamId = isParticipantWinner ? participantBalance.id : challengerBalance.id;
+                const loserSteamId = isParticipantWinner ? challengerBalance.id : participantBalance.id;
+                if (winnerSteamId) {
+                  ctx.waitUntil(
+                    appendNotification(env, winnerSteamId, {
+                      type: 'coinflip_won',
+                      title: 'Münzwurf gewonnen! 🪙',
+                      message: `Du hast ${winnerReceives} ZVC gewonnen (Einsatz: ${amount} ZVC, Steuer: ${tax} ZVC).`,
+                    }).catch((error) => console.error('❌ Failed to send coinflip_won notification:', error)),
+                  );
+                }
+                if (loserSteamId) {
+                  ctx.waitUntil(
+                    appendNotification(env, loserSteamId, {
+                      type: 'coinflip_lost',
+                      title: 'Münzwurf verloren',
+                      message: `Du hast ${amount} ZVC beim Münzwurf verloren.`,
+                    }).catch((error) => console.error('❌ Failed to send coinflip_lost notification:', error)),
+                  );
+                }
 
                 const winnerUser =
                   winnerId === participantId
@@ -1066,6 +1091,15 @@ export async function handleDiscordBotInteractions(
                     },
                   });
 
+                // Notify the user about their spray deletion (non-blocking, tracked by waitUntil)
+                ctx.waitUntil(
+                  appendNotification(env, userId, {
+                    type: 'spray_deleted',
+                    title: 'Spray gelöscht',
+                    message: `Dein Spray wurde von der Moderation gelöscht. Grund: ${deleteReason}`,
+                  }).catch((error) => console.error('❌ Failed to send spray_deleted notification:', error)),
+                );
+
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {
                   console.error('Missing channel or message ID');
@@ -1641,6 +1675,15 @@ export async function handleDiscordBotInteractions(
                       reason: deleteReason,
                     },
                   });
+
+                // Notify the user about their fakerank deletion (non-blocking, tracked by waitUntil)
+                ctx.waitUntil(
+                  appendNotification(env, userId, {
+                    type: 'fakerank_deleted',
+                    title: 'FakeRank gelöscht',
+                    message: `Dein FakeRank wurde von der Moderation gelöscht. Grund: ${deleteReason}`,
+                  }).catch((error) => console.error('❌ Failed to send fakerank_deleted notification:', error)),
+                );
 
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {

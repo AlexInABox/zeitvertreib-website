@@ -1,4 +1,5 @@
 import { validateSession, createResponse, isTeam, isVip, isDonator, isBooster, increment } from '../utils.js';
+import { appendNotification } from '../notifications.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, inArray } from 'drizzle-orm';
 import { fakeranks, fakerankBans, deletedFakeranks, playerdata } from '../db/schema.js';
@@ -340,11 +341,18 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
       return createResponse({ error: 'Failed to create fakerank' }, 500, origin);
     }
 
-    // Send Discord moderation notification (non-blocking)
+    // Send Discord moderation notification and create user notification (non-blocking)
     ctx.waitUntil(
-      sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch(
-        (error) => console.error('❌ Failed to send Discord notification:', error),
-      ),
+      Promise.all([
+        sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch(
+          (error) => console.error('❌ Failed to send Discord moderation notification:', error),
+        ),
+        appendNotification(env, userid, {
+          type: 'fakerank_billing',
+          title: 'FakeRank gesetzt',
+          message: `Dein FakeRank "${body.text}" wurde gesetzt. ${FAKERANK_COST} ZVC wurden abgezogen.`,
+        }).catch((error) => console.error('❌ Failed to send fakerank billing notification:', error)),
+      ]),
     );
 
     return createResponse(

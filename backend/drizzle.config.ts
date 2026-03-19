@@ -1,6 +1,6 @@
 import type { Config } from 'drizzle-kit';
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ override: false });
 
 import fs from 'fs';
 import path from 'path';

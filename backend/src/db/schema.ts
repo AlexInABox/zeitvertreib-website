@@ -1,4 +1,4 @@
-import { sqliteTable, check, text, integer, real, numeric } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, check, text, integer, real, numeric, index } from 'drizzle-orm/sqlite-core';
 import { desc, sql } from 'drizzle-orm';
 
 export const playerdata = sqliteTable('playerdata', {
@@ -334,3 +334,29 @@ export const caseToCedModReportLinks = sqliteTable('case_to_ced_mod_report_links
   caseId: text('case_id').references(() => cases.id),
   reportId: integer('report_id').notNull(),
 });
+
+export const notifications = sqliteTable(
+  'notifications',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: text('user_id').notNull(),
+    type: text('type', {
+      enum: [
+        'fakerank_billing',
+        'fakerank_deleted',
+        'spray_deleted',
+        'coinflip_won',
+        'coinflip_lost',
+        'session_completed',
+      ],
+    }).notNull(),
+    title: text('title').notNull(),
+    message: text('message').notNull(),
+    createdAt: integer('created_at').notNull().default(0),
+    readAt: integer('read_at'),
+  },
+  (table) => [
+    index('idx_notifications_user_id_created_at').on(table.userId, table.createdAt),
+    index('idx_notifications_user_id_read_at').on(table.userId, table.readAt),
+  ],
+);

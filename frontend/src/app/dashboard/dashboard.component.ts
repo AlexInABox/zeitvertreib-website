@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { NotificationCenterService } from '../services/notification-center.service';
 import { ThemeService } from '../services/theme.service';
 import { EasterEggService } from '../services/easter-egg.service';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
@@ -225,6 +226,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private elementRef = inject(ElementRef);
   private themeService = inject(ThemeService);
   private easterEggService = inject(EasterEggService);
+  private notificationCenter = inject(NotificationCenterService);
 
   constructor(public authService: AuthService) {
     this.generateRandomColors();
@@ -1027,6 +1029,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.fakerankModalOpen = false;
       this.toggleBodyScroll(false);
       this.loadFakerank();
+      this.notificationCenter.refreshAfterAction();
 
       setTimeout(() => (this.fakerankSuccess = ''), 3000);
     } catch (error: any) {
