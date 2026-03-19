@@ -1,6 +1,6 @@
 import { validateSession, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, inArray, desc } from 'drizzle-orm';
+import { eq, and, inArray, desc, count, isNull } from 'drizzle-orm';
 import { notifications } from '../db/schema.js';
 import typia from 'typia';
 import type { GetNotificationsResponse, MarkNotificationsReadRequest } from '@zeitvertreib/types';
@@ -19,12 +19,19 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
   }
 
   try {
-    const rows = await db
+    const rowsPromise = db
       .select()
       .from(notifications)
       .where(eq(notifications.userId, sessionResult.steamId))
       .orderBy(desc(notifications.createdAt))
       .limit(50);
+
+    const unreadCountPromise = db
+      .select({ unreadCount: count() })
+      .from(notifications)
+      .where(and(eq(notifications.userId, sessionResult.steamId), isNull(notifications.readAt)));
+
+    const [rows, unreadCountRows] = await Promise.all([rowsPromise, unreadCountPromise]);
 
     const mapped = rows.map((row) => ({
       id: row.id,
@@ -37,7 +44,7 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
 
     const response: GetNotificationsResponse = {
       notifications: mapped,
-      unreadCount: mapped.filter((n) => !n.read).length,
+      unreadCount: unreadCountRows[0]?.unreadCount ?? 0,
     };
 
     return createResponse(response, 200, origin);

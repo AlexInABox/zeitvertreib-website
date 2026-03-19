@@ -1,5 +1,4 @@
-import { Injectable, OnDestroy, signal, computed, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, OnDestroy, signal, inject } from '@angular/core';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import type { GetNotificationsResponse, UserNotification, MarkNotificationsReadRequest } from '@zeitvertreib/types';
@@ -7,10 +6,9 @@ import type { GetNotificationsResponse, UserNotification, MarkNotificationsReadR
 @Injectable({ providedIn: 'root' })
 export class NotificationCenterService implements OnDestroy {
   private authService = inject(AuthService);
-  private http = inject(HttpClient);
 
   notifications = signal<UserNotification[]>([]);
-  unreadCount = computed(() => this.notifications().filter((n) => !n.read).length);
+  unreadCount = signal<number>(0);
 
   private pollInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -22,6 +20,7 @@ export class NotificationCenterService implements OnDestroy {
       } else {
         this.stopPolling();
         this.notifications.set([]);
+        this.unreadCount.set(0);
       }
     });
   }
@@ -30,6 +29,7 @@ export class NotificationCenterService implements OnDestroy {
     this.authService.authenticatedGet<GetNotificationsResponse>(`${environment.apiUrl}/notifications`).subscribe({
       next: (response) => {
         this.notifications.set(response.notifications);
+        this.unreadCount.set(response.unreadCount);
       },
       error: (err) => {
         console.error('[NotificationCenter] Error fetching notifications:', err);
@@ -56,6 +56,7 @@ export class NotificationCenterService implements OnDestroy {
   markAllRead(): void {
     // Optimistic update
     this.notifications.update((ns) => ns.map((n) => ({ ...n, read: true })));
+    this.unreadCount.set(0);
 
     const body: MarkNotificationsReadRequest = {};
     this.authService

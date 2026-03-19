@@ -74,10 +74,26 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     return createResponse({ error: 'Missing required fields' }, 400);
   }
 
+  const normalizeUserId = (userId: string): string => (userId.endsWith('@steam') ? userId : `${userId}@steam`);
+  const killCounts = new Map<string, number>();
+  const deathCounts = new Map<string, number>();
+
+  for (const kill of body.kills) {
+    const attackerId = normalizeUserId(kill.Attacker);
+    const targetId = normalizeUserId(kill.Target);
+
+    killCounts.set(attackerId, (killCounts.get(attackerId) || 0) + 1);
+    deathCounts.set(targetId, (deathCounts.get(targetId) || 0) + 1);
+  }
+
   for (const player of body.players) {
     if (!player.userid.endsWith('@steam')) {
       player.userid = `${player.userid}@steam`;
     }
+
+    const sessionKills = killCounts.get(player.userid) || 0;
+    const sessionDeaths = deathCounts.get(player.userid) || 0;
+
     // Check if userId already exists in the database. If not create with userId and default values
     const existingPlayer = await db.select().from(playerdata).where(eq(playerdata.id, player.userid)).limit(1);
     if (existingPlayer.length === 0) {
@@ -97,8 +113,8 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
         pocketescapes: increment(playerdata.pocketescapes, player.pocketEscapes || 0),
         usedadrenaline: increment(playerdata.usedadrenaline, player.adrenaline || 0),
         snakehighscore: greatest(playerdata.snakehighscore, player.snakeScore || 0),
-        killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === player.userid).length),
-        deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === player.userid).length),
+        killcount: increment(playerdata.killcount, sessionKills),
+        deathcount: increment(playerdata.deathcount, sessionDeaths),
         fakerankUntil: player.fakeRankAllowed
           ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
           : playerdata.fakerankUntil,
@@ -115,20 +131,18 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
       medipacks: player.medkits,
       colas: player.colas,
       playtime: player.timePlayed,
-      kills: body.kills.filter((kill) => kill.Attacker === player.userid).length,
+      kills: sessionKills,
       rounds: player.roundsPlayed,
       pocketescapes: player.pocketEscapes,
       adrenaline: player.adrenaline,
     });
 
     // Notify player about their completed session
-    const sessionKills = body.kills.filter((kill) => kill.Attacker === player.userid).length;
-    const sessionDeaths = body.kills.filter((kill) => kill.Target === player.userid).length;
-    if ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0) {
+    if ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0 || sessionDeaths > 0) {
       await appendNotification(env, player.userid, {
         type: 'session_completed',
         title: 'Session abgeschlossen',
-        message: `${Math.floor((player.timePlayed || 0) / 60)} Min. gespielt · ${sessionKills} Kills · ${player.zvc || 0} ZVC verdient`,
+        message: `${Math.floor((player.timePlayed || 0) / 60)} Min. gespielt · ${sessionKills} Kills · ${sessionDeaths} Tode · ${player.zvc || 0} ZVC verdient`,
       });
     }
   }
