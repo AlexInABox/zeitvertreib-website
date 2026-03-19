@@ -8,7 +8,9 @@
   >
     <i class="pi pi-bell notification-bell-icon"></i>
     @if (notificationCenter.unreadCount() > 0) {
-      <span class="notification-badge">{{ notificationCenter.unreadCount() > 99 ? '99+' : notificationCenter.unreadCount() }}</span>
+      <span class="notification-badge">{{
+        notificationCenter.unreadCount() > 99 ? '99+' : notificationCenter.unreadCount()
+      }}</span>
     }
   </button>
 
@@ -25,7 +27,7 @@
       <div class="notification-list">
         @if (notificationCenter.notifications().length === 0) {
           <div class="notification-empty">
-            <i class="pi pi-inbox" style="font-size: 1.5rem; opacity: 0.4;"></i>
+            <i class="pi pi-inbox" style="font-size: 1.5rem; opacity: 0.4"></i>
             <span>Keine Benachrichtigungen</span>
           </div>
         }

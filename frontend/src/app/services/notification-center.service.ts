@@ -27,16 +27,14 @@ export class NotificationCenterService implements OnDestroy {
   }
 
   fetchNotifications(): void {
-    this.authService
-      .authenticatedGet<GetNotificationsResponse>(`${environment.apiUrl}/notifications`)
-      .subscribe({
-        next: (response) => {
-          this.notifications.set(response.notifications);
-        },
-        error: (err) => {
-          console.error('[NotificationCenter] Error fetching notifications:', err);
-        },
-      });
+    this.authService.authenticatedGet<GetNotificationsResponse>(`${environment.apiUrl}/notifications`).subscribe({
+      next: (response) => {
+        this.notifications.set(response.notifications);
+      },
+      error: (err) => {
+        console.error('[NotificationCenter] Error fetching notifications:', err);
+      },
+    });
   }
 
   private startPolling(): void {

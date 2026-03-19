@@ -18,7 +18,16 @@ import { NotificationCenterComponent } from '../notification-center/notification
 
 @Component({
   selector: 'app-header',
-  imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, FormsModule, NotificationCenterComponent],
+  imports: [
+    Menubar,
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    AvatarModule,
+    AvatarGroupModule,
+    FormsModule,
+    NotificationCenterComponent,
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })

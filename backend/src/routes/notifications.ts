@@ -82,17 +82,9 @@ export async function handleMarkNotificationsRead(
       await db
         .update(notifications)
         .set({ readAt: now })
-        .where(
-          and(
-            eq(notifications.userId, sessionResult.steamId),
-            inArray(notifications.id, body.ids),
-          ),
-        );
+        .where(and(eq(notifications.userId, sessionResult.steamId), inArray(notifications.id, body.ids)));
     } else {
-      await db
-        .update(notifications)
-        .set({ readAt: now })
-        .where(eq(notifications.userId, sessionResult.steamId));
+      await db.update(notifications).set({ readAt: now }).where(eq(notifications.userId, sessionResult.steamId));
     }
 
     return createResponse({ success: true }, 200, origin);
