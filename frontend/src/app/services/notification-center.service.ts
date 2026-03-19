@@ -11,6 +11,7 @@ export class NotificationCenterService implements OnDestroy {
   unreadCount = signal<number>(0);
 
   private pollInterval: ReturnType<typeof setInterval> | null = null;
+  private refreshTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.authService.currentUser$.subscribe((user) => {
@@ -19,6 +20,7 @@ export class NotificationCenterService implements OnDestroy {
         this.startPolling();
       } else {
         this.stopPolling();
+        this.cancelRefreshTimeout();
         this.notifications.set([]);
         this.unreadCount.set(0);
       }
@@ -50,7 +52,20 @@ export class NotificationCenterService implements OnDestroy {
   }
 
   refreshAfterAction(delayMs = 2000): void {
-    setTimeout(() => this.fetchNotifications(), delayMs);
+    this.cancelRefreshTimeout();
+    this.refreshTimeout = setTimeout(() => {
+      this.refreshTimeout = null;
+      if (this.authService.isLoggedIn()) {
+        this.fetchNotifications();
+      }
+    }, delayMs);
+  }
+
+  private cancelRefreshTimeout(): void {
+    if (this.refreshTimeout !== null) {
+      clearTimeout(this.refreshTimeout);
+      this.refreshTimeout = null;
+    }
   }
 
   markAllRead(): void {
@@ -72,5 +87,6 @@ export class NotificationCenterService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+    this.cancelRefreshTimeout();
   }
 }

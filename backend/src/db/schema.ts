@@ -355,5 +355,8 @@ export const notifications = sqliteTable(
     createdAt: integer('created_at').notNull().default(0),
     readAt: integer('read_at'),
   },
-  (table) => [index('idx_notifications_user_id').on(table.userId), index('idx_notifications_read_at').on(table.readAt)],
+  (table) => [
+    index('idx_notifications_user_id_created_at').on(table.userId, table.createdAt),
+    index('idx_notifications_user_id_read_at').on(table.userId, table.readAt),
+  ],
 );

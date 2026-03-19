@@ -74,7 +74,8 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     return createResponse({ error: 'Missing required fields' }, 400);
   }
 
-  const normalizeUserId = (userId: string): string => (userId.endsWith('@steam') ? userId : `${userId}@steam`);
+  const normalizeUserId = (userId: string): string =>
+    userId === 'anonymous' || userId.endsWith('@steam') ? userId : `${userId}@steam`;
   const killCounts = new Map<string, number>();
   const deathCounts = new Map<string, number>();
 
@@ -147,11 +148,11 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     }
   }
 
-  // Add all kill records to the kills table
+  // Add all kill records to the kills table (IDs normalized for consistent DB queries)
   for (const kill of body.kills) {
     await db.insert(kills).values({
-      attacker: kill.Attacker,
-      target: kill.Target,
+      attacker: normalizeUserId(kill.Attacker),
+      target: normalizeUserId(kill.Target),
       timestamp: kill.Timestamp,
     });
   }

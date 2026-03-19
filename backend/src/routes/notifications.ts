@@ -85,7 +85,10 @@ export async function handleMarkNotificationsRead(
 
     const now = Date.now();
 
-    if (body.ids && body.ids.length > 0) {
+    if (body.ids !== undefined) {
+      if (body.ids.length === 0) {
+        return createResponse({ success: true }, 200, origin);
+      }
       await db
         .update(notifications)
         .set({ readAt: now })
