@@ -3,8 +3,16 @@
   <button
     class="notification-bell-btn"
     (click)="togglePanel($event)"
-    [attr.aria-label]="notificationCenter.unreadCount() > 0 ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)' : 'Benachrichtigungen'"
-    [attr.title]="notificationCenter.unreadCount() > 0 ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)' : 'Benachrichtigungen'"
+    [attr.aria-label]="
+      notificationCenter.unreadCount() > 0
+        ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)'
+        : 'Benachrichtigungen'
+    "
+    [attr.title]="
+      notificationCenter.unreadCount() > 0
+        ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)'
+        : 'Benachrichtigungen'
+    "
   >
     <i class="pi pi-bell notification-bell-icon"></i>
     @if (notificationCenter.unreadCount() > 0) {
