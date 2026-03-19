@@ -329,22 +329,22 @@ export async function handleDiscordBotInteractions(
                 const winnerData = winnerDataResult[0];
                 const loserData = loserDataResult[0];
 
-                // Notify the player about the coinflip result
+                // Notify the player about the coinflip result (non-blocking)
                 const winnerSteamId = isParticipantWinner ? participantBalance.id : challengerBalance.id;
                 const loserSteamId = isParticipantWinner ? challengerBalance.id : participantBalance.id;
                 if (winnerSteamId) {
-                  await appendNotification(env, winnerSteamId, {
+                  appendNotification(env, winnerSteamId, {
                     type: 'coinflip_won',
                     title: 'Münzwurf gewonnen! 🪙',
                     message: `Du hast ${winnerReceives} ZVC gewonnen (Einsatz: ${amount} ZVC, Steuer: ${tax} ZVC).`,
-                  });
+                  }).catch((error) => console.error('❌ Failed to send coinflip_won notification:', error));
                 }
                 if (loserSteamId) {
-                  await appendNotification(env, loserSteamId, {
+                  appendNotification(env, loserSteamId, {
                     type: 'coinflip_lost',
                     title: 'Münzwurf verloren',
                     message: `Du hast ${amount} ZVC beim Münzwurf verloren.`,
-                  });
+                  }).catch((error) => console.error('❌ Failed to send coinflip_lost notification:', error));
                 }
 
                 const winnerUser =
@@ -1087,12 +1087,12 @@ export async function handleDiscordBotInteractions(
                     },
                   });
 
-                // Notify the user about their spray deletion
-                await appendNotification(env, userId, {
+                // Notify the user about their spray deletion (non-blocking)
+                appendNotification(env, userId, {
                   type: 'spray_deleted',
                   title: 'Spray gelöscht',
                   message: `Dein Spray wurde von der Moderation gelöscht. Grund: ${deleteReason}`,
-                });
+                }).catch((error) => console.error('❌ Failed to send spray_deleted notification:', error));
 
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {
@@ -1670,12 +1670,12 @@ export async function handleDiscordBotInteractions(
                     },
                   });
 
-                // Notify the user about their fakerank deletion
-                await appendNotification(env, userId, {
+                // Notify the user about their fakerank deletion (non-blocking)
+                appendNotification(env, userId, {
                   type: 'fakerank_deleted',
                   title: 'FakeRank gelöscht',
                   message: `Dein FakeRank wurde von der Moderation gelöscht. Grund: ${deleteReason}`,
-                });
+                }).catch((error) => console.error('❌ Failed to send fakerank_deleted notification:', error));
 
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {

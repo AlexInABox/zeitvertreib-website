@@ -344,13 +344,15 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
     // Send Discord moderation notification and create user notification (non-blocking)
     ctx.waitUntil(
       Promise.all([
-        sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText),
+        sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch(
+          (error) => console.error('❌ Failed to send Discord moderation notification:', error),
+        ),
         appendNotification(env, userid, {
           type: 'fakerank_billing',
           title: 'FakeRank gesetzt',
           message: `Dein FakeRank "${body.text}" wurde gesetzt. ${FAKERANK_COST} ZVC wurden abgezogen.`,
-        }),
-      ]).catch((error) => console.error('❌ Failed to send Discord notification:', error)),
+        }).catch((error) => console.error('❌ Failed to send fakerank billing notification:', error)),
+      ]),
     );
 
     return createResponse(

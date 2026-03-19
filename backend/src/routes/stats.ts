@@ -52,7 +52,7 @@ export async function handleGetStats(request: Request, env: Env, ctx: ExecutionC
   }
 }
 
-export async function handlePostStats(request: Request, env: Env): Promise<Response> {
+export async function handlePostStats(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   // Verify the validity of the request
@@ -136,13 +136,15 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
       adrenaline: player.adrenaline,
     });
 
-    // Notify player about their completed session
+    // Notify player about their completed session (non-blocking)
     if ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0 || sessionDeaths > 0) {
-      await appendNotification(env, player.userid, {
-        type: 'session_completed',
-        title: 'Session abgeschlossen',
-        message: `${Math.floor((player.timePlayed || 0) / 60)} Min. gespielt · ${sessionKills} Kills · ${sessionDeaths} Tode · ${player.zvc || 0} ZVC verdient`,
-      });
+      ctx.waitUntil(
+        appendNotification(env, player.userid, {
+          type: 'session_completed',
+          title: 'Session abgeschlossen',
+          message: `${Math.floor((player.timePlayed || 0) / 60)} Min. gespielt · ${sessionKills} Kills · ${sessionDeaths} Tode · ${player.zvc || 0} ZVC verdient`,
+        }).catch((error) => console.error('❌ Failed to send session_completed notification:', error)),
+      );
     }
   }
 
