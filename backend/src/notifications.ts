@@ -9,17 +9,13 @@ interface NotificationInput {
 }
 
 export async function appendNotification(env: Env, userId: string, input: NotificationInput): Promise<void> {
-  try {
-    const db = drizzle(env.ZEITVERTREIB_DATA);
-    await db.insert(notifications).values({
-      userId,
-      type: input.type,
-      title: input.title,
-      message: input.message,
-      createdAt: Date.now(),
-      readAt: null,
-    });
-  } catch (error) {
-    console.error('Failed to append notification for user', userId, ':', error);
-  }
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  await db.insert(notifications).values({
+    userId,
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    createdAt: Date.now(),
+    readAt: null,
+  });
 }
