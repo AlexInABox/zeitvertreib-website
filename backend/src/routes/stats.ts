@@ -13,6 +13,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 
 import { logProgress } from './quests.js';
+import { appendNotification } from '../notifications.js';
 
 import type { StatsPostRequest } from '@zeitvertreib/types';
 
@@ -119,6 +120,17 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
       pocketescapes: player.pocketEscapes,
       adrenaline: player.adrenaline,
     });
+
+    // Notify player about their completed session
+    const sessionKills = body.kills.filter((kill) => kill.Attacker === player.userid).length;
+    const sessionDeaths = body.kills.filter((kill) => kill.Target === player.userid).length;
+    if ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0) {
+      await appendNotification(env, player.userid, {
+        type: 'session_completed',
+        title: 'Session abgeschlossen',
+        message: `${Math.floor((player.timePlayed || 0) / 60)} Min. gespielt · ${sessionKills} Kills · ${player.zvc || 0} ZVC verdient`,
+      });
+    }
   }
 
   // Add all kill records to the kills table

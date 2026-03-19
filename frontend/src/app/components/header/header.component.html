@@ -145,6 +145,9 @@
           <!-- Mobile version with icon only -->
           <p-button icon="pi pi-discord" styleClass="p-button-outlined discord-btn-icon-only sm:hidden"></p-button>
         </a>
+        @if (userLoggedIn) {
+          <app-notification-center />
+        }
         <div class="relative profile-button-container">
           <a
             [routerLink]="userLoggedIn ? '/profile' : '/login'"

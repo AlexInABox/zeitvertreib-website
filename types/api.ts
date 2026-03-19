@@ -1090,3 +1090,35 @@ export interface ReportFileUploadGetResponse {
   url: string;
   method: 'PUT';
 }
+
+// ============================================================================
+// Notification Types
+// ============================================================================
+
+export type UserNotificationType =
+  | 'fakerank_billing'
+  | 'fakerank_deleted'
+  | 'spray_deleted'
+  | 'coinflip_won'
+  | 'coinflip_lost'
+  | 'session_completed';
+
+export interface UserNotification {
+  id: number;
+  type: UserNotificationType;
+  title: string;
+  message: string;
+  createdAt: number;
+  read: boolean;
+}
+
+/** GET /notifications response */
+export interface GetNotificationsResponse {
+  notifications: UserNotification[];
+  unreadCount: number;
+}
+
+/** POST /notifications/read request */
+export interface MarkNotificationsReadRequest {
+  ids?: number[];
+}

@@ -57,6 +57,8 @@ import {
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
+import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
+import { and, isNull, lt, or } from 'drizzle-orm';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -135,6 +137,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Quests routes
   'GET:/quests': handleGetQuests,
   'POST:/quests/claim-reward': handleClaimQuestReward,
+
+  // Notification routes
+  'GET:/notifications': handleGetNotifications,
+  'POST:/notifications/read': handleMarkNotificationsRead,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
@@ -290,6 +296,18 @@ export default {
 
       // Delete daily quest progress (non-weekly categories)
       await db.delete(schema.dailyQuestProgress);
+
+      // Delete read notifications after 14 days, or unread notifications after 30 days
+      const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      await db
+        .delete(schema.notifications)
+        .where(
+          or(
+            lt(schema.notifications.readAt, fourteenDaysAgo),
+            and(isNull(schema.notifications.readAt), lt(schema.notifications.createdAt, thirtyDaysAgo)),
+          ),
+        );
     }
 
     // Purge weekly quest progress every Monday at midnight UTC
