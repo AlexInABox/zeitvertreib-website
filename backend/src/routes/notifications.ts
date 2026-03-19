@@ -31,7 +31,9 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
       .from(notifications)
       .where(and(eq(notifications.userId, sessionResult.steamId), isNull(notifications.readAt)));
 
-    const [rows, unreadCountRows] = await Promise.all([rowsPromise, unreadCountPromise]);
+    const results = await Promise.all([rowsPromise, unreadCountPromise]);
+    const rows = results[0];
+    const unreadCountRows = results[1];
 
     const mapped = rows.map((row) => ({
       id: row.id,
@@ -76,7 +78,7 @@ export async function handleMarkNotificationsRead(
     try {
       body = await request.json();
     } catch {
-      body = {};
+      return createResponse({ error: 'Invalid JSON' }, 400, origin);
     }
 
     if (!typia.is<MarkNotificationsReadRequest>(body)) {

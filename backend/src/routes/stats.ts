@@ -88,9 +88,7 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
   }
 
   for (const player of body.players) {
-    if (!player.userid.endsWith('@steam')) {
-      player.userid = `${player.userid}@steam`;
-    }
+    player.userid = normalizeUserId(player.userid);
 
     const sessionKills = killCounts.get(player.userid) || 0;
     const sessionDeaths = deathCounts.get(player.userid) || 0;
