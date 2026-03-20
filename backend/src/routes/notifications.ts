@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, inArray, desc, count, isNull } from 'drizzle-orm';
 import { notifications } from '../db/schema.js';
 import typia from 'typia';
-import type { GetNotificationsResponse, MarkNotificationsReadRequest, UserNotification } from '@zeitvertreib/types';
+import type { GetNotificationsResponse, MarkNotificationsReadRequest, UserNotification, UserNotificationType } from '@zeitvertreib/types';
 
 export async function handleGetNotifications(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -27,7 +27,7 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
 
   const notificationsMapped: UserNotification[] = notificationsResult.map((row) => ({
     id: row.id,
-    type: row.type,
+    type: row.type as UserNotificationType,
     title: row.title,
     message: row.message,
     createdAt: row.createdAt,
