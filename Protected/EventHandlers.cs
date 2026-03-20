@@ -7,6 +7,7 @@ using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
+using PlayerStatsSystem;
 
 namespace Protected;
 
@@ -45,6 +46,11 @@ public static class EventHandlers
     private static void OnHurting(PlayerHurtingEventArgs ev)
     {
         if (!SpawnProtectedPlayers.ContainsKey(ev.Player)) return;
+
+        // SpawnProtectedPlayers tank everything BUT the warhead and SCP173 necksnap.
+        if (ev.DamageHandler is UniversalDamageHandler universalDamageHandler && (
+                universalDamageHandler.TranslationId == DeathTranslations.Warhead.Id
+                || universalDamageHandler.TranslationId == DeathTranslations.Scp173.Id)) return;
 
         ev.IsAllowed = false;
 
