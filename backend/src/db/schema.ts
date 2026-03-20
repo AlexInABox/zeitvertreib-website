@@ -339,12 +339,7 @@ export const notifications = sqliteTable('notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull(),
   type: text('type', {
-    enum: [
-      'fakerank_billing',
-      'fakerank_deleted',
-      'spray_deleted',
-      'session_completed',
-    ],
+    enum: ['fakerank_billing', 'fakerank_deleted', 'spray_deleted', 'session_completed'],
   }).notNull(),
   title: text('title').notNull(),
   message: text('message').notNull(),

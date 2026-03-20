@@ -14,7 +14,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   notificationCenter = inject(NotificationCenterService);
   isPanelOpen = false;
 
-  private boundClosePanel: (event: MouseEvent) => void = () => { };
+  private boundClosePanel: (event: MouseEvent) => void = () => {};
 
   ngOnInit(): void {
     this.boundClosePanel = () => {

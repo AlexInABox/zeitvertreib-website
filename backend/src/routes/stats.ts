@@ -129,7 +129,7 @@ export async function handlePostStats(request: Request, env: Env, ctx: Execution
         rounds: player.roundsPlayed,
         pocketescapes: player.pocketEscapes,
         adrenaline: player.adrenaline,
-      })
+      }),
     );
 
     // Notify player about their completed session
