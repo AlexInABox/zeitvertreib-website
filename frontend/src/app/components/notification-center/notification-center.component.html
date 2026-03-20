@@ -40,7 +40,7 @@
           </div>
         }
         @for (notification of notificationCenter.notifications(); track notification.id) {
-          <div class="notification-item" [class.unread]="!notification.read">
+          <div class="notification-item" [class.unread]="notification.readAt === null">
             <div class="notification-icon-col">{{ getIcon(notification.type) }}</div>
             <div class="notification-content-col">
               <div class="notification-title">{{ notification.title }}</div>

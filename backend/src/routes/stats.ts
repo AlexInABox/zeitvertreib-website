@@ -114,29 +114,25 @@ export async function handlePostStats(request: Request, env: Env, ctx: Execution
         snakehighscore: greatest(playerdata.snakehighscore, player.snakeScore || 0),
         killcount: increment(playerdata.killcount, sessionKills),
         deathcount: increment(playerdata.deathcount, sessionDeaths),
-        fakerankUntil: player.fakeRankAllowed
-          ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          : playerdata.fakerankUntil,
-        fakerankadminUntil: player.fakeRankAdmin
-          ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          : playerdata.fakerankadminUntil,
         username: player.username || playerdata.username,
       })
       .where(eq(playerdata.id, player.userid));
 
     // Log quest progress for relevant quests
-    await logProgress(env, {
-      userId: player.userid,
-      medipacks: player.medkits,
-      colas: player.colas,
-      playtime: player.timePlayed,
-      kills: sessionKills,
-      rounds: player.roundsPlayed,
-      pocketescapes: player.pocketEscapes,
-      adrenaline: player.adrenaline,
-    });
+    ctx.waitUntil(
+      logProgress(env, {
+        userId: player.userid,
+        medipacks: player.medkits,
+        colas: player.colas,
+        playtime: player.timePlayed,
+        kills: sessionKills,
+        rounds: player.roundsPlayed,
+        pocketescapes: player.pocketEscapes,
+        adrenaline: player.adrenaline,
+      })
+    );
 
-    // Notify player about their completed session (non-blocking)
+    // Notify player about their completed session
     if (
       player.userid !== 'anonymous' &&
       ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0 || sessionDeaths > 0)

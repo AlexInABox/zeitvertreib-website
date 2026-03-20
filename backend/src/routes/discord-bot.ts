@@ -213,7 +213,6 @@ export async function handleDiscordBotInteractions(
                   .select({
                     experience: playerdata.experience,
                     discordId: playerdata.discordId,
-                    id: playerdata.id,
                   })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, challengerId))
@@ -223,7 +222,6 @@ export async function handleDiscordBotInteractions(
                   .select({
                     experience: playerdata.experience,
                     discordId: playerdata.discordId,
-                    id: playerdata.id,
                   })
                   .from(playerdata)
                   .where(eq(playerdata.discordId, participantId))
@@ -328,28 +326,6 @@ export async function handleDiscordBotInteractions(
 
                 const winnerData = winnerDataResult[0];
                 const loserData = loserDataResult[0];
-
-                // Notify the player about the coinflip result (non-blocking, tracked by waitUntil)
-                const winnerSteamId = isParticipantWinner ? participantBalance.id : challengerBalance.id;
-                const loserSteamId = isParticipantWinner ? challengerBalance.id : participantBalance.id;
-                if (winnerSteamId) {
-                  ctx.waitUntil(
-                    appendNotification(env, winnerSteamId, {
-                      type: 'coinflip_won',
-                      title: 'Münzwurf gewonnen! 🪙',
-                      message: `Du hast ${winnerReceives} ZVC gewonnen (Einsatz: ${amount} ZVC, Steuer: ${tax} ZVC).`,
-                    }).catch((error) => console.error('❌ Failed to send coinflip_won notification:', error)),
-                  );
-                }
-                if (loserSteamId) {
-                  ctx.waitUntil(
-                    appendNotification(env, loserSteamId, {
-                      type: 'coinflip_lost',
-                      title: 'Münzwurf verloren',
-                      message: `Du hast ${amount} ZVC beim Münzwurf verloren.`,
-                    }).catch((error) => console.error('❌ Failed to send coinflip_lost notification:', error)),
-                  );
-                }
 
                 const winnerUser =
                   winnerId === participantId
@@ -1091,7 +1067,7 @@ export async function handleDiscordBotInteractions(
                     },
                   });
 
-                // Notify the user about their spray deletion (non-blocking, tracked by waitUntil)
+                // Notify the user about their spray deletion
                 ctx.waitUntil(
                   appendNotification(env, userId, {
                     type: 'spray_deleted',
@@ -1542,30 +1518,30 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: sha256Hash
                       ? [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 3, // Green
-                                label: 'Unblock Hash',
-                                custom_id: `spray_undelete:${sha256Hash}:${userId}`,
-                              },
-                              {
-                                type: 2,
-                                style: 4, // Red
-                                label: 'Ban User',
-                                custom_id: `spray_ban:${sha256Hash}:${userId}`,
-                              },
-                              {
-                                type: 2,
-                                style: 4,
-                                label: 'CSAM REPORT',
-                                custom_id: `csam_report:${sha256Hash}:${userId}`,
-                              },
-                            ],
-                          },
-                        ]
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 3, // Green
+                              label: 'Unblock Hash',
+                              custom_id: `spray_undelete:${sha256Hash}:${userId}`,
+                            },
+                            {
+                              type: 2,
+                              style: 4, // Red
+                              label: 'Ban User',
+                              custom_id: `spray_ban:${sha256Hash}:${userId}`,
+                            },
+                            {
+                              type: 2,
+                              style: 4,
+                              label: 'CSAM REPORT',
+                              custom_id: `csam_report:${sha256Hash}:${userId}`,
+                            },
+                          ],
+                        },
+                      ]
                       : [],
                   },
                 });
@@ -1676,7 +1652,7 @@ export async function handleDiscordBotInteractions(
                     },
                   });
 
-                // Notify the user about their fakerank deletion (non-blocking, tracked by waitUntil)
+                // Notify the user about their fakerank deletion
                 ctx.waitUntil(
                   appendNotification(env, userId, {
                     type: 'fakerank_deleted',
@@ -2088,24 +2064,24 @@ export async function handleDiscordBotInteractions(
                     embeds: [updatedEmbed],
                     components: normalizedText
                       ? [
-                          {
-                            type: 1,
-                            components: [
-                              {
-                                type: 2,
-                                style: 3, // Green
-                                label: 'Unblock Text',
-                                custom_id: `fakerank_undelete:${normalizedText}:${userId}`,
-                              },
-                              {
-                                type: 2,
-                                style: 4, // Red
-                                label: 'Ban User',
-                                custom_id: `fakerank_ban:${normalizedText}:${userId}`,
-                              },
-                            ],
-                          },
-                        ]
+                        {
+                          type: 1,
+                          components: [
+                            {
+                              type: 2,
+                              style: 3, // Green
+                              label: 'Unblock Text',
+                              custom_id: `fakerank_undelete:${normalizedText}:${userId}`,
+                            },
+                            {
+                              type: 2,
+                              style: 4, // Red
+                              label: 'Ban User',
+                              custom_id: `fakerank_ban:${normalizedText}:${userId}`,
+                            },
+                          ],
+                        },
+                      ]
                       : [],
                   },
                 });

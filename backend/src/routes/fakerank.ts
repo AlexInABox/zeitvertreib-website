@@ -341,18 +341,11 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
       return createResponse({ error: 'Failed to create fakerank' }, 500, origin);
     }
 
-    // Send Discord moderation notification and create user notification (non-blocking)
+    // Send Discord moderation notification
     ctx.waitUntil(
-      Promise.all([
-        sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch(
-          (error) => console.error('❌ Failed to send Discord moderation notification:', error),
-        ),
-        appendNotification(env, userid, {
-          type: 'fakerank_billing',
-          title: 'FakeRank gesetzt',
-          message: `Dein FakeRank "${body.text}" wurde gesetzt. ${FAKERANK_COST} ZVC wurden abgezogen.`,
-        }).catch((error) => console.error('❌ Failed to send fakerank billing notification:', error)),
-      ]),
+      sendFakerankModerationNotification(env, newFakerank.id, userid, body.text, body.color, normalizedText).catch(
+        (error) => console.error('❌ Failed to send Discord notification:', error),
+      ),
     );
 
     return createResponse(
@@ -492,6 +485,16 @@ export async function collectZvcForFakeranksAndValidateColors(
               .set({ experience: increment(playerdata.experience, -FAKERANK_COST) })
               .where(eq(playerdata.id, fakerank.userid));
 
+            ctx.waitUntil(
+              appendNotification(env, fakerank.userid, {
+                type: 'fakerank_billing',
+                title: 'FakeRank verlängert',
+                message: `${FAKERANK_COST} ZVC wurden für die Verlängerung deines FakeRanks abgezogen.`,
+              }).catch((error) =>
+                console.error(`❌ Failed to send fakerank_billing notification for ${fakerank.userid}:`, error),
+              ),
+            );
+
             // Update the uploadedAt timestamp to current time
             await db
               .update(fakeranks)
@@ -503,6 +506,17 @@ export async function collectZvcForFakeranksAndValidateColors(
           } else {
             // Not enough ZVC - delete the fakerank
             await db.delete(fakeranks).where(eq(fakeranks.id, fakerank.id));
+
+            ctx.waitUntil(
+              appendNotification(env, fakerank.userid, {
+                type: 'fakerank_deleted',
+                title: 'FakeRank entfernt',
+                message: `Dein FakeRank wurde entfernt, weil für die Verlängerung ${FAKERANK_COST} ZVC benötigt werden (du hattest ${currentBalance} ZVC).`,
+              }).catch((error) =>
+                console.error(`❌ Failed to send fakerank_deleted notification for ${fakerank.userid}:`, error),
+              ),
+            );
+
             deletedCount++;
             console.log(
               `🗑️ Deleted fakerank for ${fakerank.userid} (ID: ${fakerank.id}) due to insufficient ZVC (had ${currentBalance}, needed ${FAKERANK_COST})`,

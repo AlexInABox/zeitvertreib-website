@@ -31,7 +31,7 @@ export class NotificationCenterService implements OnDestroy {
     this.authService.authenticatedGet<GetNotificationsResponse>(`${environment.apiUrl}/notifications`).subscribe({
       next: (response) => {
         this.notifications.set(response.notifications);
-        this.unreadCount.set(response.unreadCount);
+        this.unreadCount.set(this.calculateUnreadCount(response.notifications));
       },
       error: (err) => {
         console.error('[NotificationCenter] Error fetching notifications:', err);
@@ -70,7 +70,8 @@ export class NotificationCenterService implements OnDestroy {
 
   markAllRead(): void {
     // Optimistic update
-    this.notifications.update((ns) => ns.map((n) => ({ ...n, read: true })));
+    const now = Date.now();
+    this.notifications.update((ns) => ns.map((n) => ({ ...n, readAt: now })));
     this.unreadCount.set(0);
 
     const body: MarkNotificationsReadRequest = {};
@@ -83,6 +84,10 @@ export class NotificationCenterService implements OnDestroy {
           this.fetchNotifications();
         },
       });
+  }
+
+  private calculateUnreadCount(notifications: UserNotification[]): number {
+    return notifications.filter((notification) => notification.readAt === null).length;
   }
 
   ngOnDestroy(): void {

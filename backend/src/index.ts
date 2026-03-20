@@ -297,14 +297,14 @@ export default {
       // Delete daily quest progress (non-weekly categories)
       await db.delete(schema.dailyQuestProgress);
 
-      // Delete read notifications after 14 days, or unread notifications after 30 days
-      const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      // Delete read notifications after 5 days, or unread notifications after 30 days
+      const fiveDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000;
       const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
       await db
         .delete(schema.notifications)
         .where(
           or(
-            lt(schema.notifications.readAt, fourteenDaysAgo),
+            lt(schema.notifications.readAt, fiveDaysAgo),
             and(isNull(schema.notifications.readAt), lt(schema.notifications.createdAt, thirtyDaysAgo)),
           ),
         );
