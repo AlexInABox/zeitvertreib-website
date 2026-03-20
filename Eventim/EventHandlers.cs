@@ -5,6 +5,7 @@ using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
@@ -19,6 +20,7 @@ public static class EventHandlers
     private static readonly Random Rng = new();
 
     private static IEvent _currentEvent;
+    private static IEvent _queuedEvent;
 
 
     public static void RegisterEvents()
@@ -26,6 +28,7 @@ public static class EventHandlers
         ServerEvents.WaitingForPlayers += OnWaitingForPlayers;
         ServerEvents.RoundStarted += OnRoundStarted;
         ServerEvents.RoundRestarted += OnRoundRestarted;
+        ServerEvents.RoundEnding += OnRoundEnding;
         PlayerEvents.Joined += OnPlayerJoined;
     }
 
@@ -34,30 +37,17 @@ public static class EventHandlers
         ServerEvents.WaitingForPlayers -= OnWaitingForPlayers;
         ServerEvents.RoundStarted -= OnRoundStarted;
         ServerEvents.RoundRestarted -= OnRoundRestarted;
+        ServerEvents.RoundEnding -= OnRoundEnding;
         PlayerEvents.Joined -= OnPlayerJoined;
     }
 
     private static void OnWaitingForPlayers()
     {
-        _passedRoundsCounter++;
-
-        if (_passedRoundsCounter % EventInterval != 0) return;
-
-        List<IEvent> events = typeof(IEvent).Assembly
-            .GetTypes()
-            .Where(t =>
-                t.IsClass &&
-                !t.IsAbstract &&
-                t.Namespace == "Eventim.Events" &&
-                typeof(IEvent).IsAssignableFrom(t))
-            .Select(t => (IEvent)Activator.CreateInstance(t)!)
-            .ToList();
-
-        _currentEvent = events[Rng.Next(events.Count)];
-
+        if (_queuedEvent is null) return;
+        _currentEvent = _queuedEvent;
+        _queuedEvent = null;
 
         _currentEvent.RegisterEvents();
-
         Logger.Debug($"Registered events for event {_currentEvent.Name}");
     }
 
@@ -72,6 +62,12 @@ public static class EventHandlers
                     "<size=40><color=yellow><b>⚠ Nächste Runde findet ein automatisiertes Event statt</b></color></size>",
                     20, Broadcast.BroadcastFlags.Normal, true);
         });
+    }
+
+    private static void OnRoundEnding(RoundEndingEventArgs ev)
+    {
+        if ((_passedRoundsCounter + 1) % EventInterval != 0) return;
+        QueueEvent(GetAvailableEvents()[Rng.Next(GetAvailableEvents().Count)]);
     }
 
     private static void OnRoundRestarted()
@@ -144,6 +140,29 @@ public static class EventHandlers
             result.Add(line);
 
         return string.Join("\n", result);
+    }
+
+    public static void QueueEvent(IEvent ev)
+    {
+        _queuedEvent = ev;
+
+        foreach (Player player in Player.ReadyList)
+            player.SendBroadcast(
+                $"<size=40><color=yellow><b>⚠ Nächste Runde findet das Event \"{ev.Name}\" statt!</b></color></size>",
+                30, Broadcast.BroadcastFlags.Normal, true);
+    }
+
+    public static List<IEvent> GetAvailableEvents()
+    {
+        return typeof(IEvent).Assembly
+            .GetTypes()
+            .Where(t =>
+                t.IsClass &&
+                !t.IsAbstract &&
+                t.Namespace == "Eventim.Events" &&
+                typeof(IEvent).IsAssignableFrom(t))
+            .Select(t => (IEvent)Activator.CreateInstance(t)!)
+            .ToList();
     }
 }
 
