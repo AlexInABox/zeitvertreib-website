@@ -1,5 +1,5 @@
 {
-  "name": "zeitvertreib-website",
+  "name": "frontend",
   "version": "0.0.0",
   "scripts": {
     "start": "ng serve --configuration local",

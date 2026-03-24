@@ -7,3 +7,4 @@
 */.editorconfig
 zeitvertreibplugins.sln.DotSettings.user
 */.DS_Store
+node_modules/
