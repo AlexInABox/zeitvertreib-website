@@ -43,6 +43,7 @@ public static class EventHandlers
 
     private static void OnWaitingForPlayers()
     {
+        _passedRoundsCounter++;
         if (_queuedEvent is null) return;
         _currentEvent = _queuedEvent;
         _queuedEvent = null;
