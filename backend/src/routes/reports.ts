@@ -1,6 +1,6 @@
 import { AwsClient } from 'aws4fetch';
 import { createResponse, getCedModLastReports, fetchSteamUserData } from '../utils.js';
-import { GetReportsResponse, ReportFileUploadGetRequest, ReportFileUploadGetResponse } from '@zeitvertreib/types';
+import type { GetReportsResponse, ReportFileUploadGetRequest, ReportFileUploadGetResponse } from '@zeitvertreib/types';
 import { caseToCedModReportLinks } from '../db/schema.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';

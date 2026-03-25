@@ -13,7 +13,7 @@ import {
   getCedModWarns,
 } from '../utils.js';
 import { eq, inArray } from 'drizzle-orm';
-import { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib/types';
+import type { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib/types';
 
 export async function getUserData(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');

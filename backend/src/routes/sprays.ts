@@ -19,9 +19,17 @@ const MODERATION_CHANNEL_ID = '1401609093633933324';
 const SPRAY_RULES = [
   'No flags or political symbols of any kind',
   'No political content or messaging',
-  'No NSFW, sexual, or romantic content',
+  'No NSFW, sexual, or indecent content',
   'No extremism, hate speech, or discrimination',
   'No depictions of children',
+];
+
+const SPRAY_RULES_DE = [
+  'Keine Flaggen oder politischen Symbole jeglicher Art',
+  'Keine politischen Inhalte oder Botschaften',
+  'Keine NSFW-, sexuelle oder anstößige Inhalte',
+  'Kein Extremismus, Hassrede oder Diskriminierung',
+  'Keine Darstellungen von Kindern',
 ];
 
 const aws = (env: Env): AwsClient =>
@@ -606,13 +614,7 @@ export async function handleGetSprayRules(request: Request, env: Env, ctx: Execu
 
   const response: SprayRulesGetResponse = {
     rules_en: SPRAY_RULES,
-    rules_de: [
-      'Keine Flaggen oder politischen Symbole jeglicher Art',
-      'Keine politischen Inhalte oder Botschaften',
-      'Keine NSFW-, Sexual- oder Liebesinhalte',
-      'Kein Extremismus, Hassrede oder Diskriminierung',
-      'Keine Darstellungen von Kindern',
-    ],
+    rules_de: SPRAY_RULES_DE,
   };
 
   return createResponse(response, 200, origin);

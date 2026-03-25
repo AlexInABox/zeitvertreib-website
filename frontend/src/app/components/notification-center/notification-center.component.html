@@ -1,0 +1,55 @@
+<div class="notification-center-wrapper" (click)="stopPropagation($event)">
+  <!-- Bell button -->
+  <button
+    class="notification-bell-btn"
+    (click)="togglePanel($event)"
+    [attr.aria-label]="
+      notificationCenter.unreadCount() > 0
+        ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)'
+        : 'Benachrichtigungen'
+    "
+    [attr.title]="
+      notificationCenter.unreadCount() > 0
+        ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)'
+        : 'Benachrichtigungen'
+    "
+  >
+    <i class="pi pi-bell notification-bell-icon"></i>
+    @if (notificationCenter.unreadCount() > 0) {
+      <span class="notification-badge">{{
+        notificationCenter.unreadCount() > 99 ? '99+' : notificationCenter.unreadCount()
+      }}</span>
+    }
+  </button>
+
+  <!-- Dropdown panel -->
+  @if (isPanelOpen) {
+    <div class="notification-panel">
+      <div class="notification-panel-header">
+        <span class="notification-panel-title">Benachrichtigungen</span>
+        @if (notificationCenter.unreadCount() > 0) {
+          <button class="mark-read-btn" (click)="markAllRead()">Alle gelesen</button>
+        }
+      </div>
+
+      <div class="notification-list">
+        @if (notificationCenter.notifications().length === 0) {
+          <div class="notification-empty">
+            <i class="pi pi-inbox" style="font-size: 1.5rem; opacity: 0.4"></i>
+            <span>Keine Benachrichtigungen</span>
+          </div>
+        }
+        @for (notification of notificationCenter.notifications(); track notification.id) {
+          <div class="notification-item" [class.unread]="notification.readAt === null">
+            <div class="notification-icon-col">{{ getIcon(notification.type) }}</div>
+            <div class="notification-content-col">
+              <div class="notification-title">{{ notification.title }}</div>
+              <div class="notification-message">{{ notification.message }}</div>
+              <div class="notification-time">{{ getRelativeTime(notification.createdAt) }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

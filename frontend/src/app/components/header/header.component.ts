@@ -14,10 +14,20 @@ import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { NotificationCenterComponent } from '../notification-center/notification-center.component';
 
 @Component({
   selector: 'app-header',
-  imports: [Menubar, CommonModule, RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, FormsModule],
+  imports: [
+    Menubar,
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    AvatarModule,
+    AvatarGroupModule,
+    FormsModule,
+    NotificationCenterComponent,
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })

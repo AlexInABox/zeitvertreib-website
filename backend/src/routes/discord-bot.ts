@@ -9,6 +9,7 @@ import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
 import { AwsClient } from 'aws4fetch';
 import { createResponse, increment } from '../utils.js';
+import { appendNotification } from '../notifications.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
@@ -1066,6 +1067,15 @@ export async function handleDiscordBotInteractions(
                     },
                   });
 
+                // Notify the user about their spray deletion
+                ctx.waitUntil(
+                  appendNotification(env, userId, {
+                    type: 'spray_deleted',
+                    title: 'Spray gelöscht',
+                    message: `Dein Spray wurde von der Moderation gelöscht. Grund: ${deleteReason}`,
+                  }).catch((error) => console.error('❌ Failed to send spray_deleted notification:', error)),
+                );
+
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {
                   console.error('Missing channel or message ID');
@@ -1641,6 +1651,15 @@ export async function handleDiscordBotInteractions(
                       reason: deleteReason,
                     },
                   });
+
+                // Notify the user about their fakerank deletion
+                ctx.waitUntil(
+                  appendNotification(env, userId, {
+                    type: 'fakerank_deleted',
+                    title: 'FakeRank gelöscht',
+                    message: `Dein FakeRank wurde von der Moderation gelöscht. Grund: ${deleteReason}`,
+                  }).catch((error) => console.error('❌ Failed to send fakerank_deleted notification:', error)),
+                );
 
                 // Update Discord message
                 if (!interaction.channel?.id || !interaction.message?.id) {

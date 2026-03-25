@@ -13,6 +13,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 
 import { logProgress } from './quests.js';
+import { appendNotification } from '../notifications.js';
 
 import type { StatsPostRequest } from '@zeitvertreib/types';
 
@@ -51,7 +52,7 @@ export async function handleGetStats(request: Request, env: Env, ctx: ExecutionC
   }
 }
 
-export async function handlePostStats(request: Request, env: Env): Promise<Response> {
+export async function handlePostStats(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
 
   // Verify the validity of the request
@@ -73,10 +74,25 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
     return createResponse({ error: 'Missing required fields' }, 400);
   }
 
+  const normalizeUserId = (userId: string): string =>
+    userId === 'anonymous' || userId.endsWith('@steam') ? userId : `${userId}@steam`;
+  const killCounts = new Map<string, number>();
+  const deathCounts = new Map<string, number>();
+
+  for (const kill of body.kills) {
+    const attackerId = normalizeUserId(kill.Attacker);
+    const targetId = normalizeUserId(kill.Target);
+
+    killCounts.set(attackerId, (killCounts.get(attackerId) || 0) + 1);
+    deathCounts.set(targetId, (deathCounts.get(targetId) || 0) + 1);
+  }
+
   for (const player of body.players) {
-    if (!player.userid.endsWith('@steam')) {
-      player.userid = `${player.userid}@steam`;
-    }
+    player.userid = normalizeUserId(player.userid);
+
+    const sessionKills = killCounts.get(player.userid) || 0;
+    const sessionDeaths = deathCounts.get(player.userid) || 0;
+
     // Check if userId already exists in the database. If not create with userId and default values
     const existingPlayer = await db.select().from(playerdata).where(eq(playerdata.id, player.userid)).limit(1);
     if (existingPlayer.length === 0) {
@@ -96,36 +112,46 @@ export async function handlePostStats(request: Request, env: Env): Promise<Respo
         pocketescapes: increment(playerdata.pocketescapes, player.pocketEscapes || 0),
         usedadrenaline: increment(playerdata.usedadrenaline, player.adrenaline || 0),
         snakehighscore: greatest(playerdata.snakehighscore, player.snakeScore || 0),
-        killcount: increment(playerdata.killcount, body.kills.filter((kill) => kill.Attacker === player.userid).length),
-        deathcount: increment(playerdata.deathcount, body.kills.filter((kill) => kill.Target === player.userid).length),
-        fakerankUntil: player.fakeRankAllowed
-          ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          : playerdata.fakerankUntil,
-        fakerankadminUntil: player.fakeRankAdmin
-          ? Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000)
-          : playerdata.fakerankadminUntil,
+        killcount: increment(playerdata.killcount, sessionKills),
+        deathcount: increment(playerdata.deathcount, sessionDeaths),
         username: player.username || playerdata.username,
       })
       .where(eq(playerdata.id, player.userid));
 
     // Log quest progress for relevant quests
-    await logProgress(env, {
-      userId: player.userid,
-      medipacks: player.medkits,
-      colas: player.colas,
-      playtime: player.timePlayed,
-      kills: body.kills.filter((kill) => kill.Attacker === player.userid).length,
-      rounds: player.roundsPlayed,
-      pocketescapes: player.pocketEscapes,
-      adrenaline: player.adrenaline,
-    });
+    ctx.waitUntil(
+      logProgress(env, {
+        userId: player.userid,
+        medipacks: player.medkits,
+        colas: player.colas,
+        playtime: player.timePlayed,
+        kills: sessionKills,
+        rounds: player.roundsPlayed,
+        pocketescapes: player.pocketEscapes,
+        adrenaline: player.adrenaline,
+      }),
+    );
+
+    // Notify player about their completed session
+    if (
+      player.userid !== 'anonymous' &&
+      ((player.zvc || 0) > 0 || (player.timePlayed || 0) > 60 || sessionKills > 0 || sessionDeaths > 0)
+    ) {
+      ctx.waitUntil(
+        appendNotification(env, player.userid, {
+          type: 'session_completed',
+          title: 'Session abgeschlossen',
+          message: `${Math.floor((player.timePlayed || 0) / 60)} Min. gespielt · ${sessionKills} Kills · ${sessionDeaths} Tode · ${player.zvc || 0} ZVC verdient`,
+        }).catch((error) => console.error('❌ Failed to send session_completed notification:', error)),
+      );
+    }
   }
 
-  // Add all kill records to the kills table
+  // Add all kill records to the kills table (IDs normalized for consistent DB queries)
   for (const kill of body.kills) {
     await db.insert(kills).values({
-      attacker: kill.Attacker,
-      target: kill.Target,
+      attacker: normalizeUserId(kill.Attacker),
+      target: normalizeUserId(kill.Target),
       timestamp: kill.Timestamp,
     });
   }
