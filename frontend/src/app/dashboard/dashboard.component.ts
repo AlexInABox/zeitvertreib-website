@@ -509,10 +509,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sprayError = '';
     this.spraySuccess = '';
     this.authService
-      .authenticatedPost<{ success: boolean; message: string; expiresAt: number }>(
-        `${environment.apiUrl}/spray/slot/purchase`,
-        {},
-      )
+      .authenticatedPost<{
+        success: boolean;
+        message: string;
+        expiresAt: number;
+      }>(`${environment.apiUrl}/spray/slot/purchase`, {})
       .subscribe({
         next: (response) => {
           this.isSlot2Purchasing = false;

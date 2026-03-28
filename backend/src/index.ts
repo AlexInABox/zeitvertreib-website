@@ -11,7 +11,15 @@ import {
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
-import { handlePostSpray, handleGetSpray, handleDeleteSpray, handleGetSprayRules, handleGetSpraySlot, handlePurchaseSpraySlot, collectZvcForSpraySlots } from './routes/sprays.js';
+import {
+  handlePostSpray,
+  handleGetSpray,
+  handleDeleteSpray,
+  handleGetSprayRules,
+  handleGetSpraySlot,
+  handlePurchaseSpraySlot,
+  collectZvcForSpraySlots,
+} from './routes/sprays.js';
 import {
   getFakerank,
   updateFakerank,

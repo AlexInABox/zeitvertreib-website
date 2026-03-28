@@ -1,5 +1,14 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isDonator, isVip, isBooster, increment, computeSpraySha256, getSupporterAndZvcIndex } from '../utils.js';
+import {
+  createResponse,
+  validateSession,
+  isDonator,
+  isVip,
+  isBooster,
+  increment,
+  computeSpraySha256,
+  getSupporterAndZvcIndex,
+} from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -854,7 +863,6 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
   }
 }
 
-
 // Return whether user has an active ZVC-paid slot 2 and when it expires.
 export async function handleGetSpraySlot(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -938,11 +946,7 @@ export async function handlePurchaseSpraySlot(request: Request, env: Env, ctx: E
   });
 
   if (existingKv && existingKv.purchasedAt) {
-    return createResponse(
-      { error: 'Slot 2 wurde bereits freigeschaltet. Lade jetzt ein Bild hoch!' },
-      400,
-      origin,
-    );
+    return createResponse({ error: 'Slot 2 wurde bereits freigeschaltet. Lade jetzt ein Bild hoch!' }, 400, origin);
   }
 
   // Check ZVC balance
@@ -968,13 +972,9 @@ export async function handlePurchaseSpraySlot(request: Request, env: Env, ctx: E
     .where(eq(playerdata.id, userid));
 
   const purchasedAt = currentTime;
-  await env.ZEITVERTREIB_SESSIONS.put(
-    kvKey,
-    JSON.stringify({ purchasedAt, paidUploaded: false }),
-    {
-      expirationTtl: SPRAY_SLOT_DURATION,
-    },
-  );
+  await env.ZEITVERTREIB_SESSIONS.put(kvKey, JSON.stringify({ purchasedAt, paidUploaded: false }), {
+    expirationTtl: SPRAY_SLOT_DURATION,
+  });
 
   return createResponse(
     {

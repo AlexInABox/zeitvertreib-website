@@ -113,8 +113,7 @@ export async function getSupporterAndZvcIndex(
   steamId: string,
   env: Env,
 ): Promise<{ isSupporter: boolean; zvcIndex: number }> {
-  const isSupporter =
-    (await isDonator(steamId, env)) || (await isVip(steamId, env)) || (await isBooster(steamId, env));
+  const isSupporter = (await isDonator(steamId, env)) || (await isVip(steamId, env)) || (await isBooster(steamId, env));
   const zvcIndex = isSupporter ? 2 : 1;
   return { isSupporter, zvcIndex };
 }
