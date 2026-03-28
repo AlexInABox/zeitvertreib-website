@@ -4,14 +4,10 @@
   "version": "${mod_version}",
   "name": "${mod_name}",
   "description": "${mod_description}",
-  "authors": [
-    "Zeitvertreib"
-  ],
+  "authors": ["Zeitvertreib"],
   "environment": "*",
   "entrypoints": {
-    "main": [
-      "de.zeitvertreib.minecraft.${mod_name}.Main"
-    ]
+    "main": ["de.zeitvertreib.minecraft.${mod_name}.Main"]
   },
   "depends": {
     "fabricloader": ">=${loader_version}",
