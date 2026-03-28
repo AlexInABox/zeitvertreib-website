@@ -2643,6 +2643,34 @@
   filter: brightness(1.1);
 }
 
+.spray-unlock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.9));
+  color: #0f172a;
+  font-weight: 900;
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.35);
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.spray-unlock-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
+  filter: brightness(1.1);
+}
+
+.spray-unlock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Uploaded Spray */
 .spray-uploaded {
   height: 100%;

@@ -1,5 +1,14 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isDonator } from '../utils.js';
+import {
+  createResponse,
+  validateSession,
+  isDonator,
+  isVip,
+  isBooster,
+  increment,
+  computeSpraySha256,
+  getSupporterAndZvcIndex,
+} from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -32,6 +41,10 @@ const SPRAY_RULES_DE = [
   'Keine Darstellungen von Kindern',
 ];
 
+const SPRAY_SLOT_COST = 100;
+const SPRAY_SLOT_DURATION = 7 * 24 * 60 * 60; // 7 days in seconds
+const SPRAY_SLOT_RENEWAL_BACKDATE = 60 * 60; // 1 hour backdate after successful renewal, to avoid race conditions and allow immediate re-checks
+
 const aws = (env: Env): AwsClient =>
   new AwsClient({
     accessKeyId: env.MINIO_ACCESS_KEY,
@@ -39,6 +52,71 @@ const aws = (env: Env): AwsClient =>
     service: 's3',
     region: 'us-east-1',
   });
+
+async function getPurchasedSpraySlotState(
+  env: Env,
+  userid: string,
+): Promise<{ purchasedAt: number; paidUploaded: boolean } | null> {
+  const kvData = await env.ZEITVERTREIB_SESSIONS.get<{ purchasedAt: number; paidUploaded?: boolean }>(
+    `spray_slot:${userid}`,
+    {
+      type: 'json',
+    },
+  );
+
+  if (!kvData || !kvData.purchasedAt) {
+    return null;
+  }
+
+  return {
+    purchasedAt: kvData.purchasedAt,
+    paidUploaded: kvData.paidUploaded === true,
+  };
+}
+
+async function hasActivePurchasedSlot(
+  db: ReturnType<typeof drizzle>,
+  userid: string,
+  isSupporter: boolean,
+  env: Env,
+): Promise<boolean> {
+  const currentTime = Math.floor(Date.now() / 1000);
+
+  const slotState = await getPurchasedSpraySlotState(env, userid);
+  if (slotState) {
+    const expiresAt = slotState.purchasedAt + SPRAY_SLOT_DURATION;
+    if (expiresAt > currentTime) return true;
+  }
+
+  const userSprays = await db
+    .select({ id: sprays.id, uploadedAt: sprays.uploadedAt })
+    .from(sprays)
+    .where(eq(sprays.userid, userid))
+    .orderBy(sprays.id);
+
+  const zvcIndex = isSupporter ? 2 : 1;
+  if (userSprays.length <= zvcIndex) return false;
+
+  const zvcSpray = userSprays[zvcIndex];
+  if (!zvcSpray) return false;
+  return zvcSpray.uploadedAt + SPRAY_SLOT_DURATION > currentTime;
+}
+
+async function getMaxSpraysForUser(
+  db: ReturnType<typeof drizzle>,
+  steamId: string,
+  env: Env,
+): Promise<{ maxSprays: number; isSupporter: boolean }> {
+  const { isSupporter } = await getSupporterAndZvcIndex(steamId, env);
+  const userid = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
+  const hasPurchasedZvcSlot = await hasActivePurchasedSlot(db, userid, isSupporter, env);
+
+  let maxSprays = 1; // Slot 1: free
+  if (isSupporter) maxSprays += 1; // Slot 3: supporter perk (independent of slot 2)
+  if (hasPurchasedZvcSlot) maxSprays += 1; // Slot 2: ZVC-paid (independent of slot 3)
+
+  return { maxSprays, isSupporter };
+}
 
 /**
  * Determine the spray folder based on the request origin
@@ -173,6 +251,121 @@ async function sendSprayModerationNotification(
   }
 }
 
+export async function collectZvcForSpraySlots(
+  db: ReturnType<typeof drizzle>,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<void> {
+  try {
+    const currentTime = Math.floor(Date.now() / 1000);
+    let renewedCount = 0;
+    let deletedCount = 0;
+
+    const allSprays = await db
+      .select({ userid: sprays.userid, id: sprays.id, uploadedAt: sprays.uploadedAt })
+      .from(sprays)
+      .orderBy(sprays.userid, sprays.id);
+
+    if (allSprays.length === 0) {
+      console.log('No sprays to process');
+      return;
+    }
+
+    const spraysByUser = new Map<string, Array<{ id: number; uploadedAt: number }>>();
+    for (const spray of allSprays) {
+      if (!spraysByUser.has(spray.userid)) {
+        spraysByUser.set(spray.userid, []);
+      }
+      spraysByUser.get(spray.userid)!.push({ id: spray.id, uploadedAt: spray.uploadedAt });
+    }
+
+    for (const entry of spraysByUser) {
+      const userid = entry[0];
+      const userSprays = entry[1];
+
+      if (userSprays.length < 2) continue;
+
+      // Check supporter status to determine which DB index is the ZVC slot
+      const { isSupporter: sprayUserIsSupporter, zvcIndex } = await getSupporterAndZvcIndex(userid, env);
+
+      if (sprayUserIsSupporter && userSprays.length < 2) continue;
+
+      // Determine which spray is the paid slot (slot 2) for this user.
+      let paidSlotSpray: { id: number; uploadedAt: number } | null = null;
+      const slotState = await getPurchasedSpraySlotState(env, userid);
+
+      if (!sprayUserIsSupporter) {
+        if (userSprays.length > 1) {
+          paidSlotSpray = userSprays[1]!;
+        }
+      } else {
+        if (userSprays.length > 2) {
+          paidSlotSpray = userSprays[2]!;
+        } else if (userSprays.length === 2 && slotState?.paidUploaded) {
+          // If supporter uploaded paid slot earlier but currently has only two saved sprays,
+          // assume the newer of the two is the paid spray for renewals.
+          paidSlotSpray = userSprays[0]!.uploadedAt >= userSprays[1]!.uploadedAt ? userSprays[0]! : userSprays[1]!;
+        }
+      }
+
+      if (!paidSlotSpray) continue;
+
+      const needsRenewal = currentTime - paidSlotSpray.uploadedAt > SPRAY_SLOT_DURATION;
+
+      if (!needsRenewal) continue;
+
+      try {
+        const userBalance = await db
+          .select({ experience: playerdata.experience })
+          .from(playerdata)
+          .where(eq(playerdata.id, userid))
+          .limit(1);
+
+        const currentBalance = userBalance[0]?.experience || 0;
+
+        if (currentBalance >= SPRAY_SLOT_COST) {
+          await db
+            .update(playerdata)
+            .set({ experience: increment(playerdata.experience, -SPRAY_SLOT_COST) })
+            .where(eq(playerdata.id, userid));
+
+          await db
+            .update(sprays)
+            .set({ uploadedAt: currentTime - SPRAY_SLOT_RENEWAL_BACKDATE })
+            .where(eq(sprays.id, paidSlotSpray.id));
+
+          renewedCount++;
+          console.log(`Renewed spray slot for ${userid} (cost: ${SPRAY_SLOT_COST} ZVC, spray id: ${paidSlotSpray.id})`);
+        } else {
+          // Insufficient ZVC — delete only the ZVC spray (keep other slots intact)
+          await db.delete(sprays).where(eq(sprays.id, paidSlotSpray.id));
+
+          const basePath = `${SPRAY_FOLDER}/${paidSlotSpray.id}`;
+          const txtRequest = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${basePath}.txt`, {
+            method: 'DELETE',
+          });
+          const base64Request = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${basePath}.base64`, {
+            method: 'DELETE',
+          });
+          await fetch(txtRequest);
+          await fetch(base64Request);
+
+          deletedCount++;
+          console.log(
+            `Deleted ZVC spray slot for ${userid} due to insufficient ZVC (had ${currentBalance}, needed ${SPRAY_SLOT_COST}). Spray id: ${paidSlotSpray.id}`,
+          );
+        }
+      } catch (error) {
+        console.error(`Error processing spray slot for ${userid}:`, error);
+      }
+    }
+
+    console.log(`Spray slot maintenance complete: ${renewedCount} renewed, ${deletedCount} deleted`);
+  } catch (error) {
+    console.error('Error in collectZvcForSpraySlots:', error);
+  }
+}
+
 /**
  * POST /spray
  * Upload a new spray
@@ -288,29 +481,49 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     }
 
     // Check spray limit
-    const userIsDonator = await isDonator(userid, env);
-    const maxSprays = userIsDonator ? 3 : 2;
+    const maxSpraysResult = await getMaxSpraysForUser(db, sessionValidation.steamId, env);
+    const maxSprays = maxSpraysResult.maxSprays;
+    const userIsSupporter = maxSpraysResult.isSupporter;
 
     const existingSprays = await db.select().from(sprays).where(eq(sprays.userid, userid));
 
-    if (existingSprays.length >= maxSprays) {
+    const slotKvKey = `spray_slot:${userid}`;
+    const slotKvData = await getPurchasedSpraySlotState(env, userid);
+    const hasPurchaseSlotOpen = slotKvData !== null;
+    const hasPurchaseSlotUsed = slotKvData?.paidUploaded === true;
+
+    // Decide whether this upload should consume/list as ZVC slot (slot 2):
+    let isZvcSlotUpload = false;
+    if (!userIsSupporter) {
+      isZvcSlotUpload = existingSprays.length === 1;
+    } else {
+      if (existingSprays.length === 2) {
+        // supporters can have 2 free slots; the 3rd slot is paid
+        isZvcSlotUpload = hasPurchaseSlotOpen && !hasPurchaseSlotUsed;
+      }
+    }
+
+    if (existingSprays.length >= maxSprays && !isZvcSlotUpload) {
       return createResponse(
         {
-          error: `Spray-Limit erreicht. ${userIsDonator ? 'Donatoren' : 'Nutzer'} können bis zu ${maxSprays} Sprays haben.`,
+          error: `Spray-Limit erreicht. Du kannst maximal ${maxSprays} Sprays haben.`,
         },
         400,
         origin,
       );
     }
 
-    // Compute SHA-256 hash of the raw image data (truncate to first 10 chars)
-    const base64Data = full_res.replace(/^data:image\/\w+;base64,/, '');
-    const imageBuffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-    const hashBuffer = await crypto.subtle.digest('SHA-256', imageBuffer);
-    const fullHash = Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-    const sha256 = fullHash.substring(0, 10); // Truncate to first 10 chars (5 bytes)
+    // For the ZVC slot, require the slot to have been pre-purchased
+    if (isZvcSlotUpload && !hasPurchaseSlotOpen) {
+      return createResponse(
+        { error: 'Slot 2 ist nicht freigeschaltet. Bitte zuerst über den Freischalten-Button kaufen.' },
+        403,
+        origin,
+      );
+    }
+
+    // Compute truncated SHA-256 hash from full_res data
+    const sha256 = await computeSpraySha256(full_res);
 
     // Check if hash is blocked
     const blockedSpray = await db.select().from(deletedSprays).where(eq(deletedSprays.sha256, sha256)).limit(1);
@@ -322,7 +535,6 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       );
     }
 
-    // Insert into database
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const result = await db
       .insert(sprays)
@@ -375,6 +587,24 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       return createResponse({ error: 'Fehler beim Hochladen der full_res-Datei' }, 500, origin);
     }
 
+    // Mark the paid slot as used when ZVC slot is uploaded,
+    // while preserving the original purchase time for slot duration.
+    if (isZvcSlotUpload) {
+      const purchaseInfo = await getPurchasedSpraySlotState(env, userid);
+      if (purchaseInfo) {
+        const now = Math.floor(Date.now() / 1000);
+        const durationSeconds = SPRAY_SLOT_DURATION;
+        const elapsedSeconds = now - purchaseInfo.purchasedAt;
+        const remainingSeconds = Math.max(durationSeconds - elapsedSeconds, 0);
+
+        await env.ZEITVERTREIB_SESSIONS.put(
+          `spray_slot:${userid}`,
+          JSON.stringify({ purchasedAt: purchaseInfo.purchasedAt, paidUploaded: true }),
+          { expirationTtl: remainingSeconds || 1 },
+        );
+      }
+    }
+
     // Send Discord moderation notification (non-blocking)
     ctx.waitUntil(
       sendSprayModerationNotification(env, sprayId, userid, name, full_res, sha256).catch((error) =>
@@ -386,7 +616,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       {
         success: true,
         id: sprayId,
-        message: 'Spray erfolgreich hochgeladen',
+        message: isZvcSlotUpload ? 'Spray für Slot 2 erfolgreich hochgeladen!' : 'Spray erfolgreich hochgeladen',
       },
       200,
       origin,
@@ -466,6 +696,33 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
     const base64Response = await fetch(base64Request);
     if (!base64Response.ok) {
       console.warn(`Failed to delete .base64 file for spray ${id}:`, await base64Response.text());
+    }
+
+    // If the deleted spray was the ZVC slot, restore a KV pre-purchase flag for
+    // the remaining paid time so the user can re-upload without paying again.
+    const allUserSprays = await db
+      .select({ id: sprays.id, uploadedAt: sprays.uploadedAt })
+      .from(sprays)
+      .where(eq(sprays.userid, userid))
+      .orderBy(sprays.id);
+
+    const deletedIsSupporter =
+      (await isDonator(userid, env)) || (await isVip(userid, env)) || (await isBooster(userid, env));
+    const deletedZvcIndex = deletedIsSupporter ? 2 : 1;
+    const zvcSlotSprayBeforeDelete = allUserSprays[deletedZvcIndex];
+    const currentSlotState = await getPurchasedSpraySlotState(env, userid);
+
+    if (zvcSlotSprayBeforeDelete && zvcSlotSprayBeforeDelete.id === id) {
+      const now = Math.floor(Date.now() / 1000);
+      const sourcePurchasedAt = currentSlotState?.purchasedAt || zvcSlotSprayBeforeDelete.uploadedAt;
+      const remainingSeconds = sourcePurchasedAt + SPRAY_SLOT_DURATION - now;
+      if (remainingSeconds > 0) {
+        await env.ZEITVERTREIB_SESSIONS.put(
+          `spray_slot:${userid}`,
+          JSON.stringify({ purchasedAt: sourcePurchasedAt, paidUploaded: true }),
+          { expirationTtl: remainingSeconds },
+        );
+      }
     }
 
     // Permanently delete from database
@@ -604,6 +861,130 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
       origin,
     );
   }
+}
+
+// Return whether user has an active ZVC-paid slot 2 and when it expires.
+export async function handleGetSpraySlot(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const origin = request.headers.get('Origin');
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  const sessionValidation = await validateSession(request, env);
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+    return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+  }
+
+  const userid = sessionValidation.steamId.endsWith('@steam')
+    ? sessionValidation.steamId
+    : `${sessionValidation.steamId}@steam`;
+
+  const { isSupporter: userIsSupporter } = await getSupporterAndZvcIndex(userid, env);
+
+  const currentTime = Math.floor(Date.now() / 1000);
+
+  const slotState = await getPurchasedSpraySlotState(env, userid);
+  if (slotState) {
+    const expiresAt = slotState.purchasedAt + SPRAY_SLOT_DURATION;
+    if (expiresAt > currentTime) {
+      return createResponse({ hasPurchasedSlot: true, expiresAt }, 200, origin);
+    }
+  }
+
+  const userSprays = await db
+    .select({ id: sprays.id, uploadedAt: sprays.uploadedAt })
+    .from(sprays)
+    .where(eq(sprays.userid, userid))
+    .orderBy(sprays.id);
+
+  // ZVC slot index: 2 for supporters, 1 for non-supporters
+  const zvcSlotIndex = userIsSupporter ? 2 : 1;
+  if (userSprays.length > zvcSlotIndex) {
+    const zvcSpray = userSprays[zvcSlotIndex];
+    if (zvcSpray) {
+      const expiresAt = zvcSpray.uploadedAt + SPRAY_SLOT_DURATION;
+      if (expiresAt > currentTime) {
+        return createResponse({ hasPurchasedSlot: true, expiresAt }, 200, origin);
+      }
+    }
+  }
+
+  return createResponse({ hasPurchasedSlot: false, expiresAt: null }, 200, origin);
+}
+
+export async function handlePurchaseSpraySlot(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const origin = request.headers.get('Origin');
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+
+  const sessionValidation = await validateSession(request, env);
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+    return createResponse({ error: 'Authentifizierung erforderlich' }, 401, origin);
+  }
+
+  const userid = sessionValidation.steamId.endsWith('@steam')
+    ? sessionValidation.steamId
+    : `${sessionValidation.steamId}@steam`;
+
+  const { isSupporter: userIsSupporter, zvcIndex } = await getSupporterAndZvcIndex(userid, env);
+
+  const currentTime = Math.floor(Date.now() / 1000);
+
+  const userSprays = await db
+    .select({ id: sprays.id, uploadedAt: sprays.uploadedAt })
+    .from(sprays)
+    .where(eq(sprays.userid, userid))
+    .orderBy(sprays.id);
+
+  if (userSprays.length > zvcIndex) {
+    const zvcSpray = userSprays[zvcIndex];
+    if (zvcSpray && zvcSpray.uploadedAt + SPRAY_SLOT_DURATION > currentTime) {
+      return createResponse({ error: 'Slot 2 ist bereits aktiv.' }, 400, origin);
+    }
+  }
+
+  const kvKey = `spray_slot:${userid}`;
+  const existingKv = await env.ZEITVERTREIB_SESSIONS.get<{ purchasedAt: number; paidUploaded?: boolean }>(kvKey, {
+    type: 'json',
+  });
+
+  if (existingKv && existingKv.purchasedAt) {
+    return createResponse({ error: 'Slot 2 wurde bereits freigeschaltet. Lade jetzt ein Bild hoch!' }, 400, origin);
+  }
+
+  // Check ZVC balance
+  const userBalance = await db
+    .select({ experience: playerdata.experience })
+    .from(playerdata)
+    .where(eq(playerdata.id, userid))
+    .limit(1);
+
+  const currentBalance = userBalance[0]?.experience || 0;
+  if (currentBalance < SPRAY_SLOT_COST) {
+    return createResponse(
+      { error: `Nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${SPRAY_SLOT_COST} ZVC.` },
+      403,
+      origin,
+    );
+  }
+
+  // Deduct ZVC
+  await db
+    .update(playerdata)
+    .set({ experience: increment(playerdata.experience, -SPRAY_SLOT_COST) })
+    .where(eq(playerdata.id, userid));
+
+  const purchasedAt = currentTime;
+  await env.ZEITVERTREIB_SESSIONS.put(kvKey, JSON.stringify({ purchasedAt, paidUploaded: false }), {
+    expirationTtl: SPRAY_SLOT_DURATION,
+  });
+
+  return createResponse(
+    {
+      success: true,
+      message: `Slot 2 freigeschaltet! ${SPRAY_SLOT_COST} ZVC wurden abgezogen. Lade jetzt ein Bild hoch.`,
+      expiresAt: purchasedAt + SPRAY_SLOT_DURATION,
+    },
+    200,
+    origin,
+  );
 }
 
 /**

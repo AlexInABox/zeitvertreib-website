@@ -11,7 +11,15 @@ import {
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
-import { handlePostSpray, handleGetSpray, handleDeleteSpray, handleGetSprayRules } from './routes/sprays.js';
+import {
+  handlePostSpray,
+  handleGetSpray,
+  handleDeleteSpray,
+  handleGetSprayRules,
+  handleGetSpraySlot,
+  handlePurchaseSpraySlot,
+  collectZvcForSpraySlots,
+} from './routes/sprays.js';
 import {
   getFakerank,
   updateFakerank,
@@ -104,6 +112,8 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/spray': handleGetSpray,
   'DELETE:/spray': handleDeleteSpray,
   'GET:/spray/rules': handleGetSprayRules,
+  'GET:/spray/slot': handleGetSpraySlot,
+  'POST:/spray/slot/purchase': handlePurchaseSpraySlot,
 
   // Fakerank routes
   'GET:/fakerank': getFakerank,
@@ -290,9 +300,10 @@ export default {
       ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
     }
 
-    // Collect fakerank zvc fees every day at midnight UTC
+    // Collect fakerank and spray slot zvc fees every day at midnight UTC
     if (controller.cron === '0 0 * * *') {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
+      ctx.waitUntil(collectZvcForSpraySlots(db, env, ctx));
 
       // Delete daily quest progress (non-weekly categories)
       await db.delete(schema.dailyQuestProgress);
