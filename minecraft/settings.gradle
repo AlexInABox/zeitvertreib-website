@@ -1,0 +1,14 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+file(".").listFiles()
+        .findAll { it.isDirectory() && Character.isUpperCase(it.name.charAt(0)) }
+        .each { include(it.name) }
