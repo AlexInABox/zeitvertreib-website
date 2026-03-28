@@ -631,6 +631,16 @@ export interface SprayRulesGetResponse {
   rules_de: string[];
 }
 
+/** POST /spray/slot request */
+export interface SpraySlotPurchaseRequest {}
+
+/** POST /spray/slot response */
+export interface SpraySlotPurchaseResponse {
+  success: boolean;
+  message: string;
+  expiresAt: number;
+}
+
 // ============================================================================
 // Paysafe Card Submission Types
 // ============================================================================

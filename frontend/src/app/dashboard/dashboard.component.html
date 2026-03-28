@@ -83,7 +83,7 @@
             <div class="stats-card p-6 rounded-2xl">
               <div class="spray-header" *ngIf="!isSprayBanned">
                 <h3 class="spray-title">🎨 Custom Sprays</h3>
-                <p class="spray-subtitle">Bis zu {{ isDonator ? '3' : '2' }} Sprays hochladen</p>
+                <p class="spray-subtitle">Bis zu {{ 1 + (hasSupporterSlot ? 1 : 0) + (hasPurchasedSlot ? 1 : 0) }} Sprays hochladen</p>
               </div>
 
               <!-- Spray Ban Warning -->
@@ -104,13 +104,25 @@
 
               <div class="spray-grid" *ngIf="!isSprayBanned">
                 <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
-                  <!-- Locked Slot -->
-                  <div *ngIf="i === 2 && !isDonator" class="spray-locked">
+                  <!-- ZVC Purchase Slot (2nd slot) -->
+                  <div *ngIf="i === 1 && !hasPurchasedSlot" class="spray-locked">
+                    <p class="spray-locked-title">🔒 Extra Slot</p>
+                    <p class="spray-locked-text">100ZVC/Woche</p>
+                    <button
+                      (click)="purchaseSpraySlot()"
+                      [disabled]="isSlot2Purchasing"
+                      class="spray-unlock-btn"
+                    >
+                      <span *ngIf="!isSlot2Purchasing">freischalten</span>
+                      <span *ngIf="isSlot2Purchasing" class="spray-spinner"></span>
+                    </button>
+                  </div>
+
+                  <!-- Supporter slot (3rd slot) — free for supporters, independent of slot 2 -->
+                  <div *ngIf="i === 2 && !hasSupporterSlot" class="spray-locked">
                     <p class="spray-locked-title">🔒 Extra Slot</p>
                     <p class="spray-locked-text">Exklusiv für Unterstützer!</p>
-                    <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link">
-                      Freischalten
-                    </a>
+                    <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link">Unterstützen</a>
                   </div>
 
                   <!-- Uploaded Spray -->
@@ -140,7 +152,7 @@
 
                   <!-- Preview & Upload (opens modal for better UX) -->
                   <div
-                    *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
+                    *ngIf="canUploadToSlot(i) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
                     class="spray-preview"
                   >
                     <div class="spray-preview-compact">
@@ -155,7 +167,7 @@
                   </div>
 
                   <!-- Empty Slot -->
-                  <div *ngIf="(i < 2 || isDonator) && !slot.id && !slot.selectedFile" class="spray-empty">
+                  <div *ngIf="canUploadToSlot(i) && !slot.id && !slot.selectedFile" class="spray-empty">
                     <input
                       type="file"
                       [id]="'spray' + i"

@@ -3,12 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "rimraf node_modules/ && npm i && rimraf dist/ && npm run db:init && NODE_ENV=production npx drizzle-kit pull && npx tsc",
-    "build:dev": "rimraf node_modules/ && npm i && rimraf dist/ && npm run db:init && npx tsc",
+    "build": "rimraf node_modules/ && npm i && rimraf dist/ && NODE_ENV=production npx drizzle-kit push --force && npx tsc",
+    "build:dev": "rimraf dist/ && npx tsc",
     "start": "npm run build:dev && npm-run-all --parallel watch:dev wrangler:dev",
     "wrangler:dev": "wrangler dev --ip 127.0.0.1",
     "watch:dev": "tsc --watch --project tsconfig.json",
-    "db:init": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --command 'SELECT 1;' && npx drizzle-kit push",
     "db:devscript": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --file ./devscripts/giveallfakerankadmin.sql",
     "prepare": "ts-patch install"
   },
