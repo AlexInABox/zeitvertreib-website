@@ -1,11 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
   "category": "misc",
-  "pattern": [
-    "aaa",
-    "aaa",
-    "aaa"
-  ],
+  "pattern": ["aaa", "aaa", "aaa"],
   "key": {
     "a": "minecraft:netherite_scrap"
   },
