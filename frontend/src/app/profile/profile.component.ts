@@ -106,7 +106,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private birthdayService: BirthdayService,
     private minecraftLinkService: MinecraftLinkService,
     private http: HttpClient,
-  ) { }
+  ) {}
 
   ngOnInit() {
     // Watch for optional :id param (viewing other users)
