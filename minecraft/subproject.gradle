@@ -14,9 +14,14 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.findProperty('minecraft_version')}"
-    mappings loom.officialMojangMappings()
+    mappings "net.fabricmc:yarn:${project.findProperty('yarn_mappings')}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.findProperty('loader_version')}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.findProperty('fabric_api_version')}"
+    modImplementation "com.google.code.gson:gson:2.10.1"
+    implementation "com.electronwill.night-config:core:3.8.1"
+    implementation "com.electronwill.night-config:toml:3.8.1"
+    include "com.electronwill.night-config:core:3.8.1"
+    include "com.electronwill.night-config:toml:3.8.1"
 }
 
 processResources {
