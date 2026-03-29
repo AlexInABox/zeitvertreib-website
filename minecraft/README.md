@@ -23,6 +23,4 @@ On Windows:
 
 ## Output
 
-Compiled plugin binaries are generated in:
-
-`Plugin/build/libs/plugin.jar`
+All plugin .jar files will be located in the **same** `output` folder.

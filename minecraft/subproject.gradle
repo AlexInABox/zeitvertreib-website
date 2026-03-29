@@ -43,6 +43,11 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
 }
 
+//Make sure the .jar file of all plugins always goes to the same output folder!
+tasks.named('remapJar') {
+    destinationDirectory = file('../output')
+}
+
 java {
     withSourcesJar()
 
