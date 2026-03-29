@@ -1,11 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
   "category": "misc",
-  "pattern": [
-    "aaa",
-    "aba",
-    "aaa"
-  ],
+  "pattern": ["aaa", "aba", "aaa"],
   "key": {
     "a": "minecraft:netherite_ingot",
     "b": "minecraft:netherite_upgrade_smithing_template"
