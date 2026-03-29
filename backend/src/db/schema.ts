@@ -348,7 +348,10 @@ export const notifications = sqliteTable('notifications', {
 });
 
 export const minecraftStats = sqliteTable('minecraft_stats', {
-  userId: text('user_id').references(() => playerdata.id).primaryKey().notNull(),
+  userId: text('user_id')
+    .references(() => playerdata.id)
+    .primaryKey()
+    .notNull(),
   minecraftUuid: text('minecraft_uuid').notNull(),
 });
 
