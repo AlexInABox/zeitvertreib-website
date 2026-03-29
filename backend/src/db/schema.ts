@@ -346,3 +346,14 @@ export const notifications = sqliteTable('notifications', {
   createdAt: integer('created_at').notNull().default(0),
   readAt: integer('read_at'),
 });
+
+export const minecraftStats = sqliteTable('minecraft_stats', {
+  userId: text('user_id').references(() => playerdata.id).primaryKey().notNull(),
+  minecraftUuid: text('minecraft_uuid').notNull(),
+});
+
+export const minecraftLinkCodes = sqliteTable('minecraft_link_codes', {
+  minecraftUuid: text('minecraft_uuid').notNull().primaryKey(),
+  code: text('code').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+});
