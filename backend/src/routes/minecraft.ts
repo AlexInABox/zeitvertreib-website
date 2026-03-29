@@ -46,9 +46,9 @@ export async function handleGetMinecraftStats(request: Request, env: Env): Promi
 
   let statsRecord:
     | {
-        userId: string;
-        minecraftUuid: string;
-      }
+      userId: string;
+      minecraftUuid: string;
+    }
     | undefined;
 
   if (minecraftUuid) {
@@ -219,4 +219,34 @@ export async function handlePostMinecraftLink(request: Request, env: Env): Promi
     });
 
   return createResponse({ success: true, minecraftUuid: linkCodeEntry.minecraftUuid }, 200, origin);
+}
+
+export async function handleDeleteMinecraftLink(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get('Origin');
+  const sessionValidation = await validateSession(request, env);
+
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+    return createResponse(
+      { error: sessionValidation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
+  }
+
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const currentLink = await db
+    .select({
+      minecraftUuid: minecraftStats.minecraftUuid,
+    })
+    .from(minecraftStats)
+    .where(eq(minecraftStats.userId, sessionValidation.steamId))
+    .get();
+
+  await db.delete(minecraftStats).where(eq(minecraftStats.userId, sessionValidation.steamId));
+
+  if (currentLink?.minecraftUuid) {
+    await db.delete(minecraftLinkCodes).where(eq(minecraftLinkCodes.minecraftUuid, currentLink.minecraftUuid));
+  }
+
+  return createResponse({ success: true }, 200, origin);
 }

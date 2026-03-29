@@ -4,7 +4,6 @@
       <!-- Profile Card -->
       <div class="card profile-card">
         <div class="card-header">
-          <span class="card-icon"><i class="pi pi-user"></i></span>
           <div class="card-title-group">
             <h2>Profil</h2>
             <span class="card-subtitle">Benutzerprofil</span>
@@ -227,7 +226,6 @@
       <!-- Profile Card -->
       <div class="card profile-card">
         <div class="card-header">
-          <span class="card-icon"><i class="pi pi-user"></i></span>
           <div class="card-title-group">
             <h2>Profil</h2>
             <span class="card-subtitle">Deine Account-Informationen</span>
@@ -245,10 +243,64 @@
         </div>
       </div>
 
+      <!-- Minecraft Link Card -->
+      <div class="card minecraft-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Minecraft</h2>
+            <span class="card-subtitle">Verknüpfe deinen Minecraft-Account</span>
+          </div>
+        </div>
+
+        <div *ngIf="loadingMinecraftLink" class="card-loading">
+          <div class="loading-spinner small"></div>
+          <span>Lade Minecraft-Status...</span>
+        </div>
+
+        <div *ngIf="!loadingMinecraftLink" class="minecraft-body">
+          <div *ngIf="minecraftLinked" class="minecraft-linked-state">
+            <span class="tag tag-current">Verlinkt</span>
+            <div class="minecraft-uuid-row">
+              <span class="stat-label">UUID</span>
+              <span class="minecraft-uuid">{{ minecraftUuid }}</span>
+            </div>
+            <button class="btn btn-danger btn-small" (click)="unlinkMinecraft()" [disabled]="minecraftUnlinkLoading">
+              <span *ngIf="!minecraftUnlinkLoading"><i class="pi pi-times"></i> Verknuepfung entfernen</span>
+              <span *ngIf="minecraftUnlinkLoading">Entknuepfe...</span>
+            </button>
+          </div>
+
+          <div *ngIf="!minecraftLinked" class="minecraft-unlinked-state">
+            <p class="muted">Noch nicht verlinkt. Gib hier deinen Link-Code ein.</p>
+            <div class="minecraft-input-row">
+              <input
+                type="text"
+                [(ngModel)]="minecraftLinkCode"
+                placeholder="XXXX-XXXX"
+                maxlength="9"
+                [disabled]="minecraftLinkLoading"
+                (input)="onMinecraftCodeInput($event)"
+                (keyup.enter)="submitMinecraftLinkCode()"
+              />
+              <button
+                class="btn btn-primary btn-small"
+                (click)="submitMinecraftLinkCode()"
+                [disabled]="minecraftLinkLoading"
+              >
+                <span *ngIf="!minecraftLinkLoading">Verknüpfen</span>
+                <span *ngIf="minecraftLinkLoading">Pruefe...</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-error" *ngIf="minecraftLinkError">{{ minecraftLinkError }}</div>
+          <div class="minecraft-success" *ngIf="minecraftLinkSuccess">{{ minecraftLinkSuccess }}</div>
+        </div>
+      </div>
+
       <!-- Birthday Card -->
       <div class="card birthday-card">
         <div class="card-header">
-          <span class="card-icon"><i class="pi pi-calendar"></i></span>
           <div class="card-title-group">
             <h2>Geburtstag</h2>
             <span class="card-subtitle">Erhalte an deinem Geburtstag besondere Belohnungen</span>
@@ -391,7 +443,6 @@
       <!-- Sessions Card -->
       <div class="card sessions-card">
         <div class="card-header">
-          <span class="card-icon"><i class="pi pi-lock"></i></span>
           <div class="card-title-group">
             <h2>Aktive Sitzungen</h2>
             <span class="card-subtitle">Verwalte deine aktiven Geräte</span>
@@ -460,7 +511,6 @@
       <!-- Data Management Card -->
       <div class="card data-card">
         <div class="card-header">
-          <span class="card-icon"><i class="pi pi-database"></i></span>
           <div class="card-title-group">
             <h2>Datenverwaltung</h2>
             <span class="card-subtitle">Kontrolliere deine persönlichen Daten</span>

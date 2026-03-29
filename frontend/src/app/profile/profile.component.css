@@ -831,6 +831,75 @@
   /* reuse base card look */
 }
 
+.minecraft-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.minecraft-linked-state,
+.minecraft-unlinked-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.minecraft-uuid-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.minecraft-uuid {
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  word-break: break-all;
+}
+
+.minecraft-input-row {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.minecraft-input-row input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-family: ui-monospace, monospace;
+}
+
+.minecraft-input-row input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.minecraft-input-row input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.minecraft-success {
+  margin-top: 0.5rem;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
 .birthday-body {
   padding: 1.25rem 1.5rem;
 }

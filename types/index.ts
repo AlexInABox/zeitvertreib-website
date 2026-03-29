@@ -244,7 +244,7 @@ export interface UserFakerank {
 }
 
 /** GET /fakerank-admin/user response */
-export interface GetUserFakerankResponse extends UserFakerank {}
+export interface GetUserFakerankResponse extends UserFakerank { }
 
 /** POST /fakerank-admin/user request */
 export interface SetUserFakerankRequest {
@@ -632,7 +632,7 @@ export interface SprayRulesGetResponse {
 }
 
 /** POST /spray/slot request */
-export interface SpraySlotPurchaseRequest {}
+export interface SpraySlotPurchaseRequest { }
 
 /** POST /spray/slot response */
 export interface SpraySlotPurchaseResponse {
@@ -735,7 +735,7 @@ export interface BirthdayPostRequest {
 }
 
 /** DELETE /birthday request */
-export interface BirthdayDeleteRequest {}
+export interface BirthdayDeleteRequest { }
 
 // ============================================================================
 // Chicken Cross Types
@@ -771,9 +771,26 @@ export interface MinecraftCreateLinkCodeRequest {
   minecraftUuid: string;
 }
 
+/** GET /minecraft/stats response */
+export interface MinecraftStatsResponse {
+  userId: string;
+  minecraftUuid: string;
+}
+
 /** POST /minecraft/link request */
 export interface MinecraftLinkCodeRedeemRequest {
   code: string;
+}
+
+/** POST /minecraft/link response */
+export interface MinecraftLinkCodeRedeemResponse {
+  success: boolean;
+  minecraftUuid: string;
+}
+
+/** DELETE /minecraft/link response */
+export interface MinecraftLinkDeleteResponse {
+  success: boolean;
 }
 
 /** POST /chickencross request */
@@ -913,7 +930,7 @@ export interface GetCaseMetadataGetResponse {
 }
 
 /** POST /cases — no request body */
-export interface CreateCasePostRequest {}
+export interface CreateCasePostRequest { }
 
 /** POST /cases response */
 export interface CreateCasePostResponse {

@@ -8,6 +8,7 @@ import { SessionsService, SessionInfo } from '../services/sessions.service';
 import { TakeoutService } from '../services/takeout.service';
 import { DeletionService } from '../services/deletion.service';
 import { BirthdayService } from '../services/birthday.service';
+import { MinecraftLinkService } from '../services/minecraft-link.service';
 import { Subscription } from 'rxjs';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 
@@ -81,6 +82,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
   editYear: number | null = null;
   showDeleteConfirm = false;
 
+  // Minecraft link state
+  loadingMinecraftLink = true;
+  minecraftLinked = false;
+  minecraftUuid = '';
+  minecraftLinkCode = '';
+  minecraftLinkLoading = false;
+  minecraftUnlinkLoading = false;
+  minecraftLinkError = '';
+  minecraftLinkSuccess = '';
+
   private readonly THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
   // Router is injected via `inject()` so standalone/component-level DI is stable
@@ -93,8 +104,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private takeoutService: TakeoutService,
     private deletionService: DeletionService,
     private birthdayService: BirthdayService,
+    private minecraftLinkService: MinecraftLinkService,
     private http: HttpClient,
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Watch for optional :id param (viewing other users)
@@ -123,6 +135,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.loadTakeoutStatus();
         this.loadDeletionStatus();
         this.loadBirthday();
+        this.loadMinecraftLinkStatus();
 
         // If we're viewing our own profile but username/avatar were missing earlier, fill them now
         if (this.viewedSteamId) {
@@ -507,6 +520,133 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   getUserId(): string {
     return this.currentUser?.steamId || 'FEHLER. KEINE USER ID. KONTAKTIERE DEN SUPPORT.';
+  }
+
+  loadMinecraftLinkStatus() {
+    this.loadingMinecraftLink = true;
+    this.minecraftLinkError = '';
+    this.minecraftLinkSuccess = '';
+
+    if (!this.currentUser?.steamId) {
+      this.minecraftLinked = false;
+      this.minecraftUuid = '';
+      this.loadingMinecraftLink = false;
+      return;
+    }
+
+    this.minecraftLinkService.getMinecraftLinkByUserId(this.currentUser.steamId).subscribe({
+      next: (response) => {
+        this.minecraftLinked = true;
+        this.minecraftUuid = response.minecraftUuid;
+        this.loadingMinecraftLink = false;
+      },
+      error: (error) => {
+        this.minecraftLinked = false;
+        this.minecraftUuid = '';
+        this.loadingMinecraftLink = false;
+
+        if (error.status !== 404) {
+          this.minecraftLinkError = 'Minecraft-Linkstatus konnte nicht geladen werden.';
+        }
+      },
+    });
+  }
+
+  submitMinecraftLinkCode() {
+    if (this.minecraftLinkLoading || this.minecraftUnlinkLoading) {
+      return;
+    }
+
+    const normalizedCode = this.normalizeMinecraftLinkCode(this.minecraftLinkCode);
+    if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(normalizedCode)) {
+      this.minecraftLinkError = 'Bitte gib einen gueltigen Code im Format XXXX-XXXX ein.';
+      this.minecraftLinkSuccess = '';
+      return;
+    }
+
+    this.minecraftLinkLoading = true;
+    this.minecraftLinkError = '';
+    this.minecraftLinkSuccess = '';
+
+    this.minecraftLinkService.redeemLinkCode(normalizedCode).subscribe({
+      next: (response) => {
+        this.minecraftLinkLoading = false;
+        this.minecraftLinked = true;
+        this.minecraftUuid = response.minecraftUuid;
+        this.minecraftLinkCode = '';
+        this.minecraftLinkSuccess = 'Minecraft-Account erfolgreich verlinkt.';
+      },
+      error: (error) => {
+        this.minecraftLinkLoading = false;
+
+        if (error?.error?.error) {
+          this.minecraftLinkError = error.error.error;
+          return;
+        }
+
+        if (error.status === 404) {
+          this.minecraftLinkError = 'Code nicht gefunden.';
+          return;
+        }
+
+        this.minecraftLinkError = 'Verknuepfung fehlgeschlagen. Bitte versuche es spaeter erneut.';
+      },
+    });
+  }
+
+  unlinkMinecraft() {
+    if (this.minecraftUnlinkLoading || this.minecraftLinkLoading) {
+      return;
+    }
+
+    this.minecraftUnlinkLoading = true;
+    this.minecraftLinkError = '';
+    this.minecraftLinkSuccess = '';
+
+    this.minecraftLinkService.unlinkMinecraft().subscribe({
+      next: () => {
+        this.minecraftUnlinkLoading = false;
+        this.minecraftLinked = false;
+        this.minecraftUuid = '';
+        this.minecraftLinkCode = '';
+        this.minecraftLinkSuccess = 'Minecraft-Verknuepfung wurde entfernt.';
+      },
+      error: () => {
+        this.minecraftUnlinkLoading = false;
+        this.minecraftLinkError = 'Entknuepfung fehlgeschlagen. Bitte versuche es spaeter erneut.';
+      },
+    });
+  }
+
+  onMinecraftCodeInput(event: Event) {
+    const input = event.target as HTMLInputElement | null;
+    const formattedCode = this.normalizeMinecraftLinkCode(input?.value || '', true);
+
+    this.minecraftLinkCode = formattedCode;
+
+    if (input && input.value !== formattedCode) {
+      input.value = formattedCode;
+    }
+  }
+
+  private normalizeMinecraftLinkCode(rawValue: string, keepManualTrailingDash = false): string {
+    const upperValue = (rawValue || '').toUpperCase();
+    const hasDashInRawValue = upperValue.includes('-');
+    const allowedCharactersOnly = upperValue.replace(/[^A-Z0-9-]/g, '');
+    const alphanumericOnly = allowedCharactersOnly.replace(/-/g, '').slice(0, 8);
+
+    const firstPart = alphanumericOnly.slice(0, 4);
+    const secondPart = alphanumericOnly.slice(4, 8);
+
+    if (secondPart.length > 0) {
+      return `${firstPart}-${secondPart}`;
+    }
+
+    if (keepManualTrailingDash && hasDashInRawValue && alphanumericOnly.length >= 4) {
+      return `${firstPart}-`;
+    }
+
+    return firstPart;
   }
 
   // Birthday methods

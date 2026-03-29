@@ -66,7 +66,12 @@ import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
 import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
-import { handleGetMinecraftStats, handlePostMinecraftLink, handlePutMinecraftLink } from './routes/minecraft.js';
+import {
+  handleGetMinecraftStats,
+  handlePostMinecraftLink,
+  handlePutMinecraftLink,
+  handleDeleteMinecraftLink,
+} from './routes/minecraft.js';
 import { and, isNull, lt, or } from 'drizzle-orm';
 
 // Simple response helper for internal use
@@ -157,6 +162,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/minecraft/stats': handleGetMinecraftStats,
   'POST:/minecraft/link': handlePostMinecraftLink,
   'PUT:/minecraft/link': handlePutMinecraftLink,
+  'DELETE:/minecraft/link': handleDeleteMinecraftLink,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
