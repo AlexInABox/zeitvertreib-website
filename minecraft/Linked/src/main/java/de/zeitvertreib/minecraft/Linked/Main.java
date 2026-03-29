@@ -119,9 +119,8 @@ public final class Main implements ModInitializer {
                     server.execute(() -> handler.player.networkHandler.disconnect(Text.literal(
                             "§cZugriff verweigert\n"
                                     + "§7Dein Account ist nicht verlinkt.\n"
-                                    + "§7Gehe auf §fzeitvertreib.vip/minecraft§7 und gib diesen Code ein:\n"
-                                    + "§e" + code + "\n"
-                                    + "§8UUID: " + uuid
+                                    + "§7Gehe auf §fzeitvertreib.vip/profile§7 und gebe diesen Code ein:\n\n"
+                                    + "§e" + code + "\n\n"
                     )));
                 })
                 .exceptionally(ex -> {
