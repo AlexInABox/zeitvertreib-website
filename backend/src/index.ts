@@ -16,7 +16,7 @@ import {
   handleGetSpray,
   handleDeleteSpray,
   handleGetSprayRules,
-  collectZvcForSpraySlotsAndCleanup
+  collectZvcForSpraySlotsAndCleanup,
 } from './routes/sprays.js';
 import {
   getFakerank,
@@ -320,12 +320,7 @@ export default {
       const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
       await db
         .delete(schema.notifications)
-        .where(
-          or(
-            lt(schema.notifications.createdAt, thirtyDaysAgo),
-            isNotNull(schema.notifications.readAt),
-          ),
-        );
+        .where(or(lt(schema.notifications.createdAt, thirtyDaysAgo), isNotNull(schema.notifications.readAt)));
     }
 
     // Purge weekly quest progress every Monday at midnight UTC

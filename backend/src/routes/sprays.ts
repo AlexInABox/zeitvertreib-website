@@ -1,11 +1,5 @@
 import { AwsClient } from 'aws4fetch';
-import {
-  createResponse,
-  validateSession,
-  isDonator,
-  increment,
-  computeSpraySha256,
-} from '../utils.js';
+import { createResponse, validateSession, isDonator, increment, computeSpraySha256 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -49,7 +43,6 @@ const aws = (env: Env): AwsClient =>
     service: 's3',
     region: 'us-east-1',
   });
-
 
 /**
  * Determine the spray folder based on the request origin
@@ -410,7 +403,11 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
 
     if (collectPayment) {
       // Subtract ZVC cost for paid slot
-      await db.update(playerdata).set({ experience: increment(playerdata.experience, -SPRAY_SLOT_COST) }).where(eq(playerdata.id, userid)).run();
+      await db
+        .update(playerdata)
+        .set({ experience: increment(playerdata.experience, -SPRAY_SLOT_COST) })
+        .where(eq(playerdata.id, userid))
+        .run();
     }
 
     return createResponse(
@@ -651,12 +648,8 @@ export async function handleGetSprayRules(request: Request, env: Env, ctx: Execu
   return createResponse(response, 200, origin);
 }
 
-export async function collectZvcForSpraySlotsAndCleanup(
-  db: any,
-  env: Env,
-  ctx: ExecutionContext
-): Promise<void> {
-  console.log("Collecting ZVC for spray slots...");
+export async function collectZvcForSpraySlotsAndCleanup(db: any, env: Env, ctx: ExecutionContext): Promise<void> {
+  console.log('Collecting ZVC for spray slots...');
 
   // 1. Fetch all sprays
   const allSprays = await db.select().from(sprays).run();
@@ -682,7 +675,7 @@ export async function collectZvcForSpraySlotsAndCleanup(
       if (userSprays.length > maxAllowed) {
         // delete extra sprays
         const spraysToDelete = userSprays
-          .sort((a: { createdAt: number; }, b: { createdAt: number; }) => a.createdAt - b.createdAt)
+          .sort((a: { createdAt: number }, b: { createdAt: number }) => a.createdAt - b.createdAt)
           .slice(maxAllowed);
 
         for (const spray of spraysToDelete) {
@@ -700,7 +693,9 @@ export async function collectZvcForSpraySlotsAndCleanup(
 
       // Find sprays that are in paid slots (beyond free slots)
       // Sort by createdAt descending to check youngest paid spray first
-      const sortedSprays = userSprays.sort((a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt);
+      const sortedSprays = userSprays.sort(
+        (a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt,
+      );
       const paidSprays = sortedSprays.slice(0, Math.max(0, userSprays.length - freeSlots));
 
       for (const spray of paidSprays) {
@@ -733,7 +728,9 @@ export async function collectZvcForSpraySlotsAndCleanup(
             console.log(`Charged ${SPRAY_SLOT_COST} ZVC for paid spray slot to user ${userid}`);
           } else {
             // cannot pay → delete the paid spray
-            console.log(`User ${userid} cannot pay ${SPRAY_SLOT_COST} ZVC for paid spray slot. Deleting spray ${spray.id}.`);
+            console.log(
+              `User ${userid} cannot pay ${SPRAY_SLOT_COST} ZVC for paid spray slot. Deleting spray ${spray.id}.`,
+            );
             await db.delete(sprays).where(eq(sprays.id, spray.id));
           }
         }
