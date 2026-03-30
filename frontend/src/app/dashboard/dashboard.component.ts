@@ -122,9 +122,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isDonator = false;
   isVip = false;
   isBooster = false;
-  hasPurchasedSlot = false;
-  spraySlotExpiresAt: number | null = null;
-  isSlot2Purchasing = false;
+
   // Spray ban information
   isSprayBanned = false;
   sprayBanReason: string | null = null;
@@ -167,12 +165,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     boosterColors: FakerankColor[];
     otherColors: FakerankColor[];
   } = {
-    teamColors: [],
-    vipColors: [],
-    donatorColors: [],
-    boosterColors: [],
-    otherColors: [],
-  };
+      teamColors: [],
+      vipColors: [],
+      donatorColors: [],
+      boosterColors: [],
+      otherColors: [],
+    };
   allowedFakerankColors: FakerankColor[] = [];
 
   // Fakerank ban information
@@ -289,13 +287,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     if (slotIndex === 0) {
+      // Slot 0 is always available and free
       return true;
     }
     if (slotIndex === 1) {
-      return this.hasPurchasedSlot;
+      // Slot 1 is always available (free for donators, paid weekly for non-donators)
+      return true;
     }
     if (slotIndex === 2) {
-      return this.hasSupporterSlot;
+      // Slot 2 is only available for donators
+      return this.isDonator;
     }
 
     return false;
@@ -307,12 +308,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return true;
     }
     if (slotIndex === 1) {
-      return this.hasPurchasedSlot;
+      // Slot 1 is always available (free for donators, paid weekly for non-donators)
+      return true;
     }
     if (slotIndex === 2) {
-      return this.hasSupporterSlot;
+      // Slot 2 is only available for donators
+      return this.isDonator;
     }
 
+    return false;
+  }
+
+  // Check if a slot requires a weekly fee
+  isSlotPaidButAvailable(slotIndex: number): boolean {
+    if (slotIndex === 1) {
+      // Slot 1 is paid for non-donators, free for donators
+      return !this.isDonator;
+    }
+    if (slotIndex === 2) {
+      // Slot 2 is paid for donators (because they have two free slots)
+      return this.isDonator;
+    }
     return false;
   }
 
@@ -481,48 +497,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (error.status !== 404) {
             console.error('Error loading sprays:', error);
           }
-        },
-      });
-
-    this.checkSpraySlotPurchase();
-  }
-
-  // Check if user has an active purchased spray slot
-  private checkSpraySlotPurchase(): void {
-    this.authService
-      .authenticatedGet<{ hasPurchasedSlot: boolean; expiresAt: number | null }>(`${environment.apiUrl}/spray/slot`)
-      .subscribe({
-        next: (response) => {
-          this.hasPurchasedSlot = response.hasPurchasedSlot;
-          this.spraySlotExpiresAt = response.expiresAt;
-        },
-        error: (error) => {
-          this.hasPurchasedSlot = false;
-          this.spraySlotExpiresAt = null;
-        },
-      });
-  }
-
-  purchaseSpraySlot(): void {
-    if (this.isSlot2Purchasing) return;
-    this.isSlot2Purchasing = true;
-    this.sprayError = '';
-    this.spraySuccess = '';
-    this.authService
-      .authenticatedPost<{
-        success: boolean;
-        message: string;
-        expiresAt: number;
-      }>(`${environment.apiUrl}/spray/slot/purchase`, {})
-      .subscribe({
-        next: (response) => {
-          this.isSlot2Purchasing = false;
-          this.spraySuccess = response.message;
-          this.checkSpraySlotPurchase();
-        },
-        error: (error) => {
-          this.isSlot2Purchasing = false;
-          this.sprayError = error?.error?.error || error?.message || 'Fehler beim Freischalten';
         },
       });
   }

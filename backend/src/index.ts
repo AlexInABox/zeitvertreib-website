@@ -16,9 +16,7 @@ import {
   handleGetSpray,
   handleDeleteSpray,
   handleGetSprayRules,
-  handleGetSpraySlot,
-  handlePurchaseSpraySlot,
-  collectZvcForSpraySlots,
+  collectZvcForSpraySlotsAndCleanup
 } from './routes/sprays.js';
 import {
   getFakerank,
@@ -72,7 +70,7 @@ import {
   handlePutMinecraftLink,
   handleDeleteMinecraftLink,
 } from './routes/minecraft.js';
-import { and, isNull, lt, or } from 'drizzle-orm';
+import { isNotNull, lt, or } from 'drizzle-orm';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -118,8 +116,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/spray': handleGetSpray,
   'DELETE:/spray': handleDeleteSpray,
   'GET:/spray/rules': handleGetSprayRules,
-  'GET:/spray/slot': handleGetSpraySlot,
-  'POST:/spray/slot/purchase': handlePurchaseSpraySlot,
 
   // Fakerank routes
   'GET:/fakerank': getFakerank,
@@ -315,20 +311,19 @@ export default {
     // Collect fakerank and spray slot zvc fees every day at midnight UTC
     if (controller.cron === '0 0 * * *') {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
-      ctx.waitUntil(collectZvcForSpraySlots(db, env, ctx));
+      ctx.waitUntil(collectZvcForSpraySlotsAndCleanup(db, env, ctx));
 
       // Delete daily quest progress (non-weekly categories)
       await db.delete(schema.dailyQuestProgress);
 
-      // Delete read notifications after 5 days, or unread notifications after 30 days
-      const fiveDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000;
+      // Delete read notifications ASAP, and unread notifications after 30 days
       const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
       await db
         .delete(schema.notifications)
         .where(
           or(
-            lt(schema.notifications.readAt, fiveDaysAgo),
-            and(isNull(schema.notifications.readAt), lt(schema.notifications.createdAt, thirtyDaysAgo)),
+            lt(schema.notifications.createdAt, thirtyDaysAgo),
+            isNotNull(schema.notifications.readAt),
           ),
         );
     }

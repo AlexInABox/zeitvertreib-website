@@ -109,15 +109,6 @@ export async function validateSession(
   return { status: 'valid', steamId: session.userid };
 }
 
-export async function getSupporterAndZvcIndex(
-  steamId: string,
-  env: Env,
-): Promise<{ isSupporter: boolean; zvcIndex: number }> {
-  const isSupporter = (await isDonator(steamId, env)) || (await isVip(steamId, env)) || (await isBooster(steamId, env));
-  const zvcIndex = isSupporter ? 2 : 1;
-  return { isSupporter, zvcIndex };
-}
-
 export async function createSession(
   steamId: string,
   _steamUser: SteamUser,

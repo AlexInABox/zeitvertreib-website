@@ -83,9 +83,7 @@
             <div class="stats-card p-6 rounded-2xl">
               <div class="spray-header" *ngIf="!isSprayBanned">
                 <h3 class="spray-title">🎨 Custom Sprays</h3>
-                <p class="spray-subtitle">
-                  Bis zu {{ 1 + (hasSupporterSlot ? 1 : 0) + (hasPurchasedSlot ? 1 : 0) }} Sprays hochladen
-                </p>
+                <p class="spray-subtitle">Bis zu {{ isDonator ? 3 : 2 }} Sprays hochladen</p>
               </div>
 
               <!-- Spray Ban Warning -->
@@ -106,18 +104,8 @@
 
               <div class="spray-grid" *ngIf="!isSprayBanned">
                 <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
-                  <!-- ZVC Purchase Slot (2nd slot) -->
-                  <div *ngIf="i === 1 && !hasPurchasedSlot" class="spray-locked">
-                    <p class="spray-locked-title">🔒 Extra Slot</p>
-                    <p class="spray-locked-text">100ZVC/Woche</p>
-                    <button (click)="purchaseSpraySlot()" [disabled]="isSlot2Purchasing" class="spray-unlock-btn">
-                      <span *ngIf="!isSlot2Purchasing">freischalten</span>
-                      <span *ngIf="isSlot2Purchasing" class="spray-spinner"></span>
-                    </button>
-                  </div>
-
-                  <!-- Supporter slot (3rd slot) — free for supporters, independent of slot 2 -->
-                  <div *ngIf="i === 2 && !hasSupporterSlot" class="spray-locked">
+                  <!-- Supporter slot (3rd slot) — free for donators, paid for donators otherwise locked for non-donators -->
+                  <div *ngIf="i === 2 && !isDonator" class="spray-locked">
                     <p class="spray-locked-title">🔒 Extra Slot</p>
                     <p class="spray-locked-text">Exklusiv für Unterstützer!</p>
                     <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link">Unterstützen</a>
@@ -133,7 +121,10 @@
                   >
                     <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
                     <div class="spray-info">
-                      <span class="spray-name">{{ slot.name }}</span>
+                      <div class="spray-name-container">
+                        <span class="spray-name">{{ slot.name }}</span>
+                        <span *ngIf="isSlotPaidButAvailable(i)" class="spray-fee-badge">💰 100 ZVC/Woche</span>
+                      </div>
                       <button
                         (click)="deleteSprayForSlot(i)"
                         class="spray-delete-btn"
@@ -164,8 +155,26 @@
                     <div class="spray-uploading-text">Wird hochgeladen...</div>
                   </div>
 
-                  <!-- Empty Slot -->
-                  <div *ngIf="canUploadToSlot(i) && !slot.id && !slot.selectedFile" class="spray-empty">
+                  <!-- Empty Paid Slot (styled like locked slot) -->
+                  <div *ngIf="isSlotPaidButAvailable(i) && !slot.id && !slot.selectedFile" class="spray-locked">
+                    <p class="spray-locked-title">💰 Extra Slot</p>
+                    <p class="spray-locked-text">100 ZVC / Woche</p>
+                    <input
+                      type="file"
+                      [id]="'spray' + i"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      (change)="onSprayFileSelected($event, i)"
+                      class="spray-file-input"
+                      style="display: none"
+                    />
+                    <label [for]="'spray' + i" class="spray-unlock-link" style="cursor: pointer">Hochladen</label>
+                  </div>
+
+                  <!-- Empty Free Slot -->
+                  <div
+                    *ngIf="canUploadToSlot(i) && !isSlotPaidButAvailable(i) && !slot.id && !slot.selectedFile"
+                    class="spray-empty"
+                  >
                     <input
                       type="file"
                       [id]="'spray' + i"

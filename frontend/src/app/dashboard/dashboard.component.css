@@ -2709,6 +2709,29 @@
   text-overflow: ellipsis;
 }
 
+.spray-name-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.spray-fee-badge {
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 6px;
+  color: #fcd34d;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .spray-delete-btn {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   border: none;
