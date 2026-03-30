@@ -24,7 +24,18 @@ const DONATOR_COLORS: FakerankColor[] = ['emerald', 'lime', 'blue_green', 'silve
 const BOOSTER_COLORS: FakerankColor[] = ['orange', 'cyan', 'pink'];
 const OTHER_COLORS: FakerankColor[] = ['brown', 'nickel', 'mint', 'yellow', 'army_green', 'default'];
 
-const FAKERANK_COST = 100;
+const FAKERANK_INITIAL_COST = 100;
+const FAKERANK_WEEKLY_COST = 100;
+const FAKERANK_WEEKLY_DONATOR_COST = 10;
+
+async function getWeeklyFakerankCostForUser(userid: string, env: Env): Promise<number> {
+  const isDonatorUser = await isDonator(userid, env);
+  if (isDonatorUser) {
+    return FAKERANK_WEEKLY_DONATOR_COST;
+  }
+
+  return FAKERANK_WEEKLY_COST;
+}
 
 /**
  * Determines which colors a user is allowed to use based on their role
@@ -305,10 +316,10 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
 
     const currentBalance = userBalanceResult[0]?.experience || 0;
 
-    if (currentBalance < FAKERANK_COST) {
+    if (currentBalance < FAKERANK_INITIAL_COST) {
       return createResponse(
         {
-          error: `Du hast nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${FAKERANK_COST} ZVC.`,
+          error: `Du hast nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${FAKERANK_INITIAL_COST} ZVC.`,
         },
         403,
         origin,
@@ -333,7 +344,7 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
     // Deduct 100 ZVC from user's balance
     await db
       .update(playerdata)
-      .set({ experience: increment(playerdata.experience, -FAKERANK_COST) })
+      .set({ experience: increment(playerdata.experience, -FAKERANK_INITIAL_COST) })
       .where(eq(playerdata.id, userid));
 
     const newFakerank = result[0];
@@ -469,6 +480,8 @@ export async function collectZvcForFakeranksAndValidateColors(
 
         // Handle ZVC collection if renewal is needed
         if (needsRenewal) {
+          const weeklyCost = await getWeeklyFakerankCostForUser(fakerank.userid, env);
+
           // Get user's current balance
           const userBalance = await db
             .select({ experience: playerdata.experience })
@@ -478,18 +491,18 @@ export async function collectZvcForFakeranksAndValidateColors(
 
           const currentBalance = userBalance[0]?.experience || 0;
 
-          if (currentBalance >= FAKERANK_COST) {
+          if (currentBalance >= weeklyCost) {
             // Deduct the cost and update the uploadedAt timestamp
             await db
               .update(playerdata)
-              .set({ experience: increment(playerdata.experience, -FAKERANK_COST) })
+              .set({ experience: increment(playerdata.experience, -weeklyCost) })
               .where(eq(playerdata.id, fakerank.userid));
 
             ctx.waitUntil(
               appendNotification(env, fakerank.userid, {
                 type: 'fakerank_billing',
                 title: 'FakeRank verlängert',
-                message: `${FAKERANK_COST} ZVC wurden für die Verlängerung deines FakeRanks abgezogen.`,
+                message: `${weeklyCost} ZVC wurden für die Verlängerung deines FakeRanks abgezogen.`,
               }).catch((error) =>
                 console.error(`❌ Failed to send fakerank_billing notification for ${fakerank.userid}:`, error),
               ),
@@ -502,7 +515,9 @@ export async function collectZvcForFakeranksAndValidateColors(
               .where(eq(fakeranks.id, fakerank.id));
 
             collectedCount++;
-            console.log(`✅ Collected 100 ZVC from ${fakerank.userid} for fakerank renewal (ID: ${fakerank.id})`);
+            console.log(
+              `✅ Collected ${weeklyCost} ZVC from ${fakerank.userid} for fakerank renewal (ID: ${fakerank.id})`,
+            );
           } else {
             // Not enough ZVC - delete the fakerank
             await db.delete(fakeranks).where(eq(fakeranks.id, fakerank.id));
@@ -511,7 +526,7 @@ export async function collectZvcForFakeranksAndValidateColors(
               appendNotification(env, fakerank.userid, {
                 type: 'fakerank_deleted',
                 title: 'FakeRank entfernt',
-                message: `Dein FakeRank wurde entfernt, weil für die Verlängerung ${FAKERANK_COST} ZVC benötigt werden (du hattest ${currentBalance} ZVC).`,
+                message: `Dein FakeRank wurde entfernt, weil für die Verlängerung ${weeklyCost} ZVC benötigt werden (du hattest ${currentBalance} ZVC).`,
               }).catch((error) =>
                 console.error(`❌ Failed to send fakerank_deleted notification for ${fakerank.userid}:`, error),
               ),
@@ -519,7 +534,7 @@ export async function collectZvcForFakeranksAndValidateColors(
 
             deletedCount++;
             console.log(
-              `🗑️ Deleted fakerank for ${fakerank.userid} (ID: ${fakerank.id}) due to insufficient ZVC (had ${currentBalance}, needed ${FAKERANK_COST})`,
+              `🗑️ Deleted fakerank for ${fakerank.userid} (ID: ${fakerank.id}) due to insufficient ZVC (had ${currentBalance}, needed ${weeklyCost})`,
             );
           }
         }

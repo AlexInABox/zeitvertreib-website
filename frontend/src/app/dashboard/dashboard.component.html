@@ -201,7 +201,8 @@
               <div class="spray-header">
                 <h3 class="spray-title">✨ Fakerank</h3>
                 <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
-                <span class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
+                <span *ngIf="isDonator" class="fakerank-cost-badge">🪙 <s>100</s> 10 ZVC / Woche</span>
+                <span *ngIf="!isDonator" class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
               </div>
 
               <!-- Ban Warning -->
@@ -274,9 +275,17 @@
                   <div class="fakerank-cost-disclaimer">
                     <div class="cost-disclaimer-icon">💰</div>
                     <div class="cost-disclaimer-text">
-                      <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
-                      <strong>100 ZVC</strong>. Die Gebühr wird wöchentlich erneuert, solange dein Fakerank nicht von
-                      dir oder einem Teammitglied gelöscht wurde.
+                      <span *ngIf="!isDonator">
+                        <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
+                        <strong>100 ZVC</strong>.</span
+                      >
+                      <span *ngIf="isDonator">
+                        <b>
+                          Die wöchentliche Gebühr ist für Donators reduziert: <strong><s>100</s> 10 ZVC </strong></b
+                        > </span
+                      ><br />
+                      <span *ngIf="!isDonator"> Die Gebühr wird wöchentlich erneuert. </span><br />
+                      Das gilt, solange dein Fakerank nicht von dir oder einem Teammitglied gelöscht wurde.
                     </div>
                   </div>
                 </div>
