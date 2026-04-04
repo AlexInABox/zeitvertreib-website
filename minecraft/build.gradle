@@ -1,0 +1,3 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
+}

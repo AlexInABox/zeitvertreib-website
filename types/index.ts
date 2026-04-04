@@ -752,6 +752,37 @@ export interface ChickenCrossGetResponse {
   lastUpdatedAt: number;
 }
 
+// ============================================================================
+// Minecraft Link Types
+// ============================================================================
+
+/** PUT /minecraft/link request */
+export interface MinecraftCreateLinkCodeRequest {
+  minecraftUuid: string;
+}
+
+/** GET /minecraft/stats response */
+export interface MinecraftStatsResponse {
+  userId: string;
+  minecraftUuid: string;
+}
+
+/** POST /minecraft/link request */
+export interface MinecraftLinkCodeRedeemRequest {
+  code: string;
+}
+
+/** POST /minecraft/link response */
+export interface MinecraftLinkCodeRedeemResponse {
+  success: boolean;
+  minecraftUuid: string;
+}
+
+/** DELETE /minecraft/link response */
+export interface MinecraftLinkDeleteResponse {
+  success: boolean;
+}
+
 /** POST /chickencross request */
 // Send intent here to play chicken cross game
 export interface ChickenCrossPostRequest {

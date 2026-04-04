@@ -120,6 +120,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   sprayError = '';
   spraySuccess = '';
   isDonator = false;
+  isVip = false;
+  isBooster = false;
+
   // Spray ban information
   isSprayBanned = false;
   sprayBanReason: string | null = null;
@@ -245,10 +248,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Check if user is a donator
+    // Check if user is a donor/supporter
     this.isDonator = this.authService.isDonator();
+    this.isVip = this.authService.isVip();
+    this.isBooster = this.authService.isBooster();
 
-    // Load sprays AFTER isDonator is set to avoid race condition
+    // Load sprays AFTER supporter flags are set to avoid race condition
     this.loadSprays();
 
     // Check spray ban status
@@ -271,9 +276,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // Helper for spray slot visibility
+  get hasSupporterSlot(): boolean {
+    return this.isDonator || this.isVip || this.isBooster;
+  }
+
   shouldShowSpraySlot(slotIndex: number): boolean {
     const slot = this.spraySlots[slotIndex];
-    return (slotIndex < 2 || this.isDonator) && !!slot.id && !slot.selectedFile;
+    if (!slot || !slot.id || slot.selectedFile) {
+      return false;
+    }
+
+    if (slotIndex === 0) {
+      // Slot 0 is always available and free
+      return true;
+    }
+    if (slotIndex === 1) {
+      // Slot 1 is always available (free for donators, paid weekly for non-donators)
+      return true;
+    }
+    if (slotIndex === 2) {
+      // Slot 2 is only available for donators
+      return this.isDonator;
+    }
+
+    return false;
+  }
+
+  // Check if slot should be available for upload
+  canUploadToSlot(slotIndex: number): boolean {
+    if (slotIndex === 0) {
+      return true;
+    }
+    if (slotIndex === 1) {
+      // Slot 1 is always available (free for donators, paid weekly for non-donators)
+      return true;
+    }
+    if (slotIndex === 2) {
+      // Slot 2 is only available for donators
+      return this.isDonator;
+    }
+
+    return false;
+  }
+
+  // Check if a slot requires a weekly fee
+  isSlotPaidButAvailable(slotIndex: number): boolean {
+    if (slotIndex === 1) {
+      // Slot 1 is paid for non-donators, free for donators
+      return !this.isDonator;
+    }
+    if (slotIndex === 2) {
+      // Slot 2 is paid for donators (because they have two free slots)
+      return this.isDonator;
+    }
+    return false;
   }
 
   // Safe getter methods for template usage
@@ -415,13 +471,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
           });
 
           // Load spray data into slots
-          sprayData.forEach((spray, index) => {
-            if (index < 3 && spray.id) {
-              this.spraySlots[index].id = spray.id;
-              this.spraySlots[index].name = spray.name;
-              // Only set imageUrl if full_res is available
+          sprayData.forEach((spray, dbIndex) => {
+            let visualIndex = dbIndex;
+            if (this.hasSupporterSlot) {
+              if (sprayData.length === 2 && dbIndex === 1) {
+                visualIndex = 2;
+              } else if (sprayData.length === 3) {
+                if (dbIndex === 1) {
+                  visualIndex = 2;
+                } else if (dbIndex === 2) {
+                  visualIndex = 1;
+                }
+              }
+            }
+            if (visualIndex < 3 && spray.id) {
+              this.spraySlots[visualIndex].id = spray.id;
+              this.spraySlots[visualIndex].name = spray.name;
               if (spray.full_res) {
-                this.spraySlots[index].imageUrl = spray.full_res;
+                this.spraySlots[visualIndex].imageUrl = spray.full_res;
               }
             }
           });

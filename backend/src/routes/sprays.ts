@@ -1,8 +1,9 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isDonator } from '../utils.js';
+import { createResponse, validateSession, isDonator, increment, computeSpraySha256 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
+
 import { proxyFetch } from '../proxy.js';
 import type {
   SprayPostRequest,
@@ -31,6 +32,9 @@ const SPRAY_RULES_DE = [
   'Kein Extremismus, Hassrede oder Diskriminierung',
   'Keine Darstellungen von Kindern',
 ];
+
+const SPRAY_SLOT_COST = 100;
+const SPRAY_SLOT_DURATION = 7 * 24 * 60 * 60; // 7 days in seconds
 
 const aws = (env: Env): AwsClient =>
   new AwsClient({
@@ -287,30 +291,46 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       return createResponse({ error: 'Fehler bei der Bildüberprüfung' }, 500, origin);
     }
 
-    // Check spray limit
-    const userIsDonator = await isDonator(userid, env);
-    const maxSprays = userIsDonator ? 3 : 2;
-
     const existingSprays = await db.select().from(sprays).where(eq(sprays.userid, userid));
 
-    if (existingSprays.length >= maxSprays) {
+    // A normal user has one free slot and one paid slot. Donators have two free slots and one paid slot.
+    const userIsDonator = await isDonator(userid, env);
+    const isAllowed = existingSprays.length < (userIsDonator ? 3 : 2);
+    const collectPayment = existingSprays.length === (userIsDonator ? 2 : 1);
+    let canPay = true;
+    if (collectPayment) {
+      const [user] = await db
+        .select({ experience: playerdata.experience })
+        .from(playerdata)
+        .where(eq(playerdata.id, userid))
+        .limit(1);
+
+      const currentBalance = user?.experience ?? 0;
+      canPay = currentBalance >= SPRAY_SLOT_COST;
+    }
+
+    if (!isAllowed) {
       return createResponse(
         {
-          error: `Spray-Limit erreicht. ${userIsDonator ? 'Donatoren' : 'Nutzer'} können bis zu ${maxSprays} Sprays haben.`,
+          error: `Du hast bereits ${existingSprays.length} Sprays hochgeladen, was das Maximum für deinen Account ist. Bitte lösche einen bestehenden Spray, um einen neuen hochzuladen.`,
         },
-        400,
+        403,
         origin,
       );
     }
 
-    // Compute SHA-256 hash of the raw image data (truncate to first 10 chars)
-    const base64Data = full_res.replace(/^data:image\/\w+;base64,/, '');
-    const imageBuffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-    const hashBuffer = await crypto.subtle.digest('SHA-256', imageBuffer);
-    const fullHash = Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-    const sha256 = fullHash.substring(0, 10); // Truncate to first 10 chars (5 bytes)
+    if (!canPay) {
+      return createResponse(
+        {
+          error: `Du hast ${existingSprays.length} Sprays hochgeladen und benötigst ${SPRAY_SLOT_COST} ZVC, um einen weiteren hochzuladen. Bitte erwerbe mehr ZVC oder lösche einen bestehenden Spray.`,
+        },
+        403,
+        origin,
+      );
+    }
+
+    // Compute truncated SHA-256 hash from full_res data
+    const sha256 = await computeSpraySha256(full_res);
 
     // Check if hash is blocked
     const blockedSpray = await db.select().from(deletedSprays).where(eq(deletedSprays.sha256, sha256)).limit(1);
@@ -322,7 +342,6 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       );
     }
 
-    // Insert into database
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const result = await db
       .insert(sprays)
@@ -381,6 +400,15 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
         console.error('❌ Failed to send Discord notification:', error),
       ),
     );
+
+    if (collectPayment) {
+      // Subtract ZVC cost for paid slot
+      await db
+        .update(playerdata)
+        .set({ experience: increment(playerdata.experience, -SPRAY_SLOT_COST) })
+        .where(eq(playerdata.id, userid))
+        .run();
+    }
 
     return createResponse(
       {
@@ -618,4 +646,97 @@ export async function handleGetSprayRules(request: Request, env: Env, ctx: Execu
   };
 
   return createResponse(response, 200, origin);
+}
+
+export async function collectZvcForSpraySlotsAndCleanup(db: any, env: Env, ctx: ExecutionContext): Promise<void> {
+  console.log('Collecting ZVC for spray slots...');
+
+  // 1. Fetch all sprays
+  const allSprays = await db.select().from(sprays).run();
+
+  // 2. Group sprays by userid
+  const spraysByUser: Record<string, typeof allSprays> = {};
+
+  for (const spray of allSprays) {
+    if (!spraysByUser[spray.userid]) {
+      spraysByUser[spray.userid] = [];
+    }
+    spraysByUser[spray.userid].push(spray);
+  }
+
+  // 3. Process each user
+  for (const [userid, userSprays] of Object.entries(spraysByUser)) {
+    try {
+      const isUserDonator = await isDonator(userid, env);
+
+      const maxAllowed = isUserDonator ? 3 : 2;
+
+      // ---- Phase 1: Enforce limits ----
+      if (userSprays.length > maxAllowed) {
+        // delete extra sprays
+        const spraysToDelete = userSprays
+          .sort((a: { createdAt: number }, b: { createdAt: number }) => a.createdAt - b.createdAt)
+          .slice(maxAllowed);
+
+        for (const spray of spraysToDelete) {
+          //TODO: Delete sprays like we do in DELETE /spray, we might need a common helper function for this
+          await db.delete(sprays).where(eq(sprays.id, spray.id));
+        }
+      }
+
+      // ---- Phase 2: Taxation ----
+      const now = Math.floor(Date.now() / 1000);
+      const oneWeekAgo = now - SPRAY_SLOT_DURATION; // 7 days in seconds
+
+      // Determine how many free slots this user has
+      const freeSlots = isUserDonator ? 2 : 1;
+
+      // Find sprays that are in paid slots (beyond free slots)
+      // Sort by createdAt descending to check youngest paid spray first
+      const sortedSprays = userSprays.sort(
+        (a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt,
+      );
+      const paidSprays = sortedSprays.slice(0, Math.max(0, userSprays.length - freeSlots));
+
+      for (const spray of paidSprays) {
+        if (spray.createdAt <= oneWeekAgo) {
+          // This spray is due for tax (older than 1 week)
+          const [user] = await db
+            .select({ experience: playerdata.experience })
+            .from(playerdata)
+            .where(eq(playerdata.id, userid))
+            .limit(1);
+
+          const balance = user?.experience ?? 0;
+
+          if (balance >= SPRAY_SLOT_COST) {
+            // Charge tax and reset createdAt to now
+            await db
+              .update(playerdata)
+              .set({
+                experience: increment(playerdata.experience, -SPRAY_SLOT_COST),
+              })
+              .where(eq(playerdata.id, userid));
+
+            await db
+              .update(sprays)
+              .set({
+                createdAt: now,
+              })
+              .where(eq(sprays.id, spray.id));
+
+            console.log(`Charged ${SPRAY_SLOT_COST} ZVC for paid spray slot to user ${userid}`);
+          } else {
+            // cannot pay → delete the paid spray
+            console.log(
+              `User ${userid} cannot pay ${SPRAY_SLOT_COST} ZVC for paid spray slot. Deleting spray ${spray.id}.`,
+            );
+            await db.delete(sprays).where(eq(sprays.id, spray.id));
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Error processing user ${userid}:`, err);
+    }
+  }
 }

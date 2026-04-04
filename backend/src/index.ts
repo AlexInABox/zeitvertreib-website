@@ -11,7 +11,13 @@ import {
 import { handleGetStats, handlePostStats } from './routes/stats.js';
 import { handleGetPublicStats } from './routes/public-stats.js';
 import { handleGetZeitvertreibCoins, handleTransferZVC } from './routes/zvc.js';
-import { handlePostSpray, handleGetSpray, handleDeleteSpray, handleGetSprayRules } from './routes/sprays.js';
+import {
+  handlePostSpray,
+  handleGetSpray,
+  handleDeleteSpray,
+  handleGetSprayRules,
+  collectZvcForSpraySlotsAndCleanup,
+} from './routes/sprays.js';
 import {
   getFakerank,
   updateFakerank,
@@ -58,7 +64,13 @@ import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
 import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
-import { and, isNull, lt, or } from 'drizzle-orm';
+import {
+  handleGetMinecraftStats,
+  handlePostMinecraftLink,
+  handlePutMinecraftLink,
+  handleDeleteMinecraftLink,
+} from './routes/minecraft.js';
+import { isNotNull, lt, or } from 'drizzle-orm';
 
 // Simple response helper for internal use
 function createResponse(data: any, status = 200, origin?: string | null): Response {
@@ -141,6 +153,12 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   // Notification routes
   'GET:/notifications': handleGetNotifications,
   'POST:/notifications/read': handleMarkNotificationsRead,
+
+  // Minecraft linking routes
+  'GET:/minecraft/stats': handleGetMinecraftStats,
+  'POST:/minecraft/link': handlePostMinecraftLink,
+  'PUT:/minecraft/link': handlePutMinecraftLink,
+  'DELETE:/minecraft/link': handleDeleteMinecraftLink,
 
   // Other routes
   'POST:/transfer-zvc': handleTransferZVC,
@@ -290,24 +308,19 @@ export default {
       ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
     }
 
-    // Collect fakerank zvc fees every day at midnight UTC
+    // Collect fakerank and spray slot zvc fees every day at midnight UTC
     if (controller.cron === '0 0 * * *') {
       ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
+      ctx.waitUntil(collectZvcForSpraySlotsAndCleanup(db, env, ctx));
 
       // Delete daily quest progress (non-weekly categories)
       await db.delete(schema.dailyQuestProgress);
 
-      // Delete read notifications after 5 days, or unread notifications after 30 days
-      const fiveDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000;
+      // Delete read notifications ASAP, and unread notifications after 30 days
       const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
       await db
         .delete(schema.notifications)
-        .where(
-          or(
-            lt(schema.notifications.readAt, fiveDaysAgo),
-            and(isNull(schema.notifications.readAt), lt(schema.notifications.createdAt, thirtyDaysAgo)),
-          ),
-        );
+        .where(or(lt(schema.notifications.createdAt, thirtyDaysAgo), isNotNull(schema.notifications.readAt)));
     }
 
     // Purge weekly quest progress every Monday at midnight UTC

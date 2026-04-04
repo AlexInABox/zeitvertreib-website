@@ -69,6 +69,17 @@ export function createResponse(data: any, status = 200, origin?: string | null):
   return new Response(JSON.stringify(data), { status, headers });
 }
 
+// Compute canonical truncated SHA256 hash for spray image base64 data
+export async function computeSpraySha256(full_res: string): Promise<string> {
+  const base64Data = full_res.replace(/^data:image\/\w+;base64,/, '');
+  const imageBuffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+  const hashBuffer = await crypto.subtle.digest('SHA-256', imageBuffer);
+  const fullHash = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return fullHash.substring(0, 10); // First 10 hex chars (5 bytes)
+}
+
 // Extract steamId from a request's session and return session status
 export async function validateSession(
   request: Request,

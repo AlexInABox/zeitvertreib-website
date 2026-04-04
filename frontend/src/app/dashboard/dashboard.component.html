@@ -83,7 +83,7 @@
             <div class="stats-card p-6 rounded-2xl">
               <div class="spray-header" *ngIf="!isSprayBanned">
                 <h3 class="spray-title">🎨 Custom Sprays</h3>
-                <p class="spray-subtitle">Bis zu {{ isDonator ? '3' : '2' }} Sprays hochladen</p>
+                <p class="spray-subtitle">Bis zu {{ isDonator ? 3 : 2 }} Sprays hochladen</p>
               </div>
 
               <!-- Spray Ban Warning -->
@@ -104,13 +104,11 @@
 
               <div class="spray-grid" *ngIf="!isSprayBanned">
                 <div *ngFor="let slot of spraySlots; let i = index" class="spray-item">
-                  <!-- Locked Slot -->
+                  <!-- Supporter slot (3rd slot) — free for donators, paid for donators otherwise locked for non-donators -->
                   <div *ngIf="i === 2 && !isDonator" class="spray-locked">
                     <p class="spray-locked-title">🔒 Extra Slot</p>
                     <p class="spray-locked-text">Exklusiv für Unterstützer!</p>
-                    <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link">
-                      Freischalten
-                    </a>
+                    <a href="https://ko-fi.com/zeitvertreib" target="_blank" class="spray-unlock-link">Unterstützen</a>
                   </div>
 
                   <!-- Uploaded Spray -->
@@ -123,7 +121,10 @@
                   >
                     <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image" />
                     <div class="spray-info">
-                      <span class="spray-name">{{ slot.name }}</span>
+                      <div class="spray-name-container">
+                        <span class="spray-name">{{ slot.name }}</span>
+                        <span *ngIf="isSlotPaidButAvailable(i)" class="spray-fee-badge">💰 100 ZVC/Woche</span>
+                      </div>
                       <button
                         (click)="deleteSprayForSlot(i)"
                         class="spray-delete-btn"
@@ -140,7 +141,7 @@
 
                   <!-- Preview & Upload (opens modal for better UX) -->
                   <div
-                    *ngIf="(i < 2 || isDonator) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
+                    *ngIf="canUploadToSlot(i) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
                     class="spray-preview"
                   >
                     <div class="spray-preview-compact">
@@ -154,8 +155,26 @@
                     <div class="spray-uploading-text">Wird hochgeladen...</div>
                   </div>
 
-                  <!-- Empty Slot -->
-                  <div *ngIf="(i < 2 || isDonator) && !slot.id && !slot.selectedFile" class="spray-empty">
+                  <!-- Empty Paid Slot (styled like locked slot) -->
+                  <div *ngIf="isSlotPaidButAvailable(i) && !slot.id && !slot.selectedFile" class="spray-locked">
+                    <p class="spray-locked-title">💰 Extra Slot</p>
+                    <p class="spray-locked-text">100 ZVC / Woche</p>
+                    <input
+                      type="file"
+                      [id]="'spray' + i"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      (change)="onSprayFileSelected($event, i)"
+                      class="spray-file-input"
+                      style="display: none"
+                    />
+                    <label [for]="'spray' + i" class="spray-unlock-link" style="cursor: pointer">Hochladen</label>
+                  </div>
+
+                  <!-- Empty Free Slot -->
+                  <div
+                    *ngIf="canUploadToSlot(i) && !isSlotPaidButAvailable(i) && !slot.id && !slot.selectedFile"
+                    class="spray-empty"
+                  >
                     <input
                       type="file"
                       [id]="'spray' + i"
@@ -182,7 +201,8 @@
               <div class="spray-header">
                 <h3 class="spray-title">✨ Fakerank</h3>
                 <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
-                <span class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
+                <span *ngIf="isDonator" class="fakerank-cost-badge">🪙 <s>100</s> 10 ZVC / Woche</span>
+                <span *ngIf="!isDonator" class="fakerank-cost-badge">🪙 100 ZVC / Woche</span>
               </div>
 
               <!-- Ban Warning -->
@@ -255,9 +275,17 @@
                   <div class="fakerank-cost-disclaimer">
                     <div class="cost-disclaimer-icon">💰</div>
                     <div class="cost-disclaimer-text">
-                      <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
-                      <strong>100 ZVC</strong>. Die Gebühr wird wöchentlich erneuert, solange dein Fakerank nicht von
-                      dir oder einem Teammitglied gelöscht wurde.
+                      <span *ngIf="!isDonator">
+                        <strong>Kosten:</strong> Das Erstellen oder Bearbeiten eines Fakeranks kostet
+                        <strong>100 ZVC</strong>.</span
+                      >
+                      <span *ngIf="isDonator">
+                        <b>
+                          Die wöchentliche Gebühr ist für Donators reduziert: <strong><s>100</s> 10 ZVC </strong></b
+                        > </span
+                      ><br />
+                      <span *ngIf="!isDonator"> Die Gebühr wird wöchentlich erneuert. </span><br />
+                      Das gilt, solange dein Fakerank nicht von dir oder einem Teammitglied gelöscht wurde.
                     </div>
                   </div>
                 </div>
