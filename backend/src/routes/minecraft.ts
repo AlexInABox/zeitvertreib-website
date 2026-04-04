@@ -46,9 +46,9 @@ export async function handleGetMinecraftStats(request: Request, env: Env): Promi
 
   let statsRecord:
     | {
-      userId: string;
-      minecraftUuid: string;
-    }
+        userId: string;
+        minecraftUuid: string;
+      }
     | undefined;
 
   if (minecraftUuid) {
