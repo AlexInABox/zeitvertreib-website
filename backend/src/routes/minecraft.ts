@@ -6,7 +6,7 @@ import { checkApiKey, createResponse, validateSession } from '../utils.js';
 import type { MinecraftCreateLinkCodeRequest, MinecraftLinkCodeRedeemRequest } from '@zeitvertreib/types';
 
 const CODE_EXPIRY_MS = 10 * 60 * 1000;
-const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generateRandomCodePart(length: number): string {
   let result = '';
@@ -46,9 +46,9 @@ export async function handleGetMinecraftStats(request: Request, env: Env): Promi
 
   let statsRecord:
     | {
-        userId: string;
-        minecraftUuid: string;
-      }
+      userId: string;
+      minecraftUuid: string;
+    }
     | undefined;
 
   if (minecraftUuid) {
