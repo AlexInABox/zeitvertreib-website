@@ -24,7 +24,6 @@ const DONATOR_COLORS: FakerankColor[] = ['emerald', 'lime', 'blue_green', 'silve
 const BOOSTER_COLORS: FakerankColor[] = ['orange', 'cyan', 'pink'];
 const OTHER_COLORS: FakerankColor[] = ['brown', 'nickel', 'mint', 'yellow', 'army_green', 'default'];
 
-const FAKERANK_INITIAL_COST = 100;
 const FAKERANK_WEEKLY_COST = 100;
 const FAKERANK_WEEKLY_DONATOR_COST = 10;
 
@@ -315,11 +314,12 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
       .limit(1);
 
     const currentBalance = userBalanceResult[0]?.experience || 0;
+    const COST_FOR_THIS_USER = await getWeeklyFakerankCostForUser(userid, env);
 
-    if (currentBalance < FAKERANK_INITIAL_COST) {
+    if (currentBalance < COST_FOR_THIS_USER) {
       return createResponse(
         {
-          error: `Du hast nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${FAKERANK_INITIAL_COST} ZVC.`,
+          error: `Du hast nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${COST_FOR_THIS_USER} ZVC.`,
         },
         403,
         origin,
@@ -344,7 +344,7 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
     // Deduct 100 ZVC from user's balance
     await db
       .update(playerdata)
-      .set({ experience: increment(playerdata.experience, -FAKERANK_INITIAL_COST) })
+      .set({ experience: increment(playerdata.experience, -COST_FOR_THIS_USER) })
       .where(eq(playerdata.id, userid));
 
     const newFakerank = result[0];
