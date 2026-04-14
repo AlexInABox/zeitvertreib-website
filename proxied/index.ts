@@ -3,7 +3,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const app = express();
 const port = 3000;
-const allowedOrigins = new Set(['https://dev.zeitvertreib.vip', 'https://zeitvertreib.vip']);
+const allowedOrigins = new Set(['https://dev.zeitvertreib.vip', 'https://zeitvertreib.vip', 'http://localhost:4200']);
 const allowedMedalOrigin = 'https://cdn.medal.tv';
 
 const limiter = rateLimit({
