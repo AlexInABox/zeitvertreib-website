@@ -9,12 +9,90 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../services/auth.service';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
+import { md5 } from 'hash-wasm';
 import type {
   GetCaseMetadataGetResponse,
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
   CaseCategory,
 } from '@zeitvertreib/types';
+
+const MEDAL_CORS_PROXY_URL = 'https://cors.zeitvertreib.vip/?url=';
+
+class MedalIntegrityError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MedalIntegrityError';
+  }
+}
+
+const CRC32C_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let index = 0; index < 256; index += 1) {
+    let crc = index;
+    for (let bit = 0; bit < 8; bit += 1) {
+      if ((crc & 1) !== 0) {
+        crc = (crc >>> 1) ^ 0x82f63b78;
+      } else {
+        crc >>>= 1;
+      }
+    }
+    table[index] = crc >>> 0;
+  }
+  return table;
+})();
+
+function normalizeEtag(etag: string): string {
+  let normalized = etag.trim();
+  if (normalized.startsWith('W/')) {
+    normalized = normalized.slice(2).trim();
+  }
+  if (normalized.startsWith('"') && normalized.endsWith('"')) {
+    normalized = normalized.slice(1, -1);
+  }
+  return normalized.toLowerCase();
+}
+
+function normalizeHeaderValue(value: string): string {
+  let normalized = value.trim();
+  if (normalized.startsWith('"') && normalized.endsWith('"')) {
+    normalized = normalized.slice(1, -1);
+  }
+  return normalized;
+}
+
+function concatUint8Arrays(chunks: Uint8Array[]): Uint8Array {
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
+}
+
+function calculateCrc32c(bytes: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (let index = 0; index < bytes.length; index += 1) {
+    const tableIndex = (crc ^ bytes[index]) & 0xff;
+    crc = (crc >>> 8) ^ CRC32C_TABLE[tableIndex];
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function crc32cToBase64(checksum: number): string {
+  const bytes = new Uint8Array(4);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, checksum >>> 0, false);
+
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary);
+}
 
 @Component({
   selector: 'app-case-detail',
@@ -121,7 +199,7 @@ export class CaseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -698,101 +776,68 @@ export class CaseDetailComponent implements OnInit {
     this.medalStartTime = Date.now();
 
     try {
-      const bypassUrl = `https://medalbypass.vercel.app/api/clip?url=${encodeURIComponent(this.medalClipUrl)}`;
-      const bypassResponse = await fetch(bypassUrl);
-      if (!bypassResponse.ok) throw new Error('Fehler beim Abrufen des Medal Clips');
-
-      const bypassData = (await bypassResponse.json()) as { valid: boolean; src?: string; reasoning?: string };
-      if (!bypassData.valid) throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
-      if (!bypassData.src) throw new Error('Keine Video-URL erhalten');
-
-      const urlPath = bypassData.src.split('?')[0];
-      const fileNameWithExt = urlPath.split('/').pop() ?? 'clip.mp4';
-      const fileExtension = fileNameWithExt.includes('.') ? fileNameWithExt.split('.').pop()!.toLowerCase() : 'mp4';
-      const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
-
-      this.medalStatusMessage = 'Video wird heruntergeladen...';
-      this.medalStartTime = Date.now();
-
-      const corsProxies = [
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(bypassData.src)}`,
-        `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`,
-        bypassData.src,
-      ];
-
-      let videoResponse: Response | null = null;
-      for (const proxyUrl of corsProxies) {
-        try {
-          const resp = await fetch(proxyUrl);
-          if (resp.ok) {
-            videoResponse = resp;
-            break;
-          }
-        } catch {
-          continue;
-        }
-      }
-
-      if (!videoResponse) throw new Error('Fehler beim Herunterladen des Videos');
-
-      const contentLength = videoResponse.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      const reader = videoResponse.body?.getReader();
-      if (!reader) throw new Error('Fehler beim Lesen des Videos');
-
-      const chunks: Uint8Array[] = [];
-      let receivedLength = 0;
-
       while (true) {
-        const readResult = await reader.read();
-        if (readResult.done) break;
-        chunks.push(readResult.value);
-        receivedLength += readResult.value.length;
-        if (total > 0) {
-          this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
-          this.medalETA = this.calculateETA(this.medalStartTime, this.medalDownloadProgress);
-          this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
+        try {
+          const medalSourceUrl = await this.resolveMedalSourceUrl(this.medalClipUrl);
+          const medalFile = await this.downloadMedalClipFromCorsProxy(medalSourceUrl);
+
+          this.medalDownloadProgress = 100;
+          this.medalUploadProgress = 0;
+          this.medalStatusMessage = 'Upload-URL wird angefordert...';
+
+          const uploadInfo = await this.http
+            .get<CaseFileUploadGetResponse>(
+              `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${medalFile.extension}`,
+              { headers: this.getAuthHeaders(), withCredentials: true },
+            )
+            .toPromise();
+
+          if (!uploadInfo?.url) throw new Error('Fehler beim Abrufen der Upload-URL');
+
+          this.medalStatusMessage = 'Video wird hochgeladen...';
+          this.medalStartTime = Date.now();
+
+          await this.uploadFileToPresignedUrl(medalFile.file, uploadInfo.url, medalFile.mimeType, {
+            onProgress: (progress) => {
+              this.medalUploadProgress = progress;
+              this.medalETA = this.calculateETA(this.medalStartTime, progress);
+              this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
+            },
+          });
+
+          this.isFetchingMedalClip = false;
+          this.medalDownloadProgress = 0;
+          this.medalUploadProgress = 0;
+          this.medalClipUrl = '';
+          this.medalStatusMessage = '';
+          this.medalETA = '';
+
+          this.loadCaseData();
+          alert('Medal Clip erfolgreich hochgeladen!');
+          return;
+        } catch (error) {
+          if (error instanceof MedalIntegrityError) {
+            const retry = window.confirm(`${error.message}\n\nMöchtest du es erneut versuchen?`);
+            if (retry) {
+              this.medalDownloadProgress = 0;
+              this.medalUploadProgress = 0;
+              this.medalStatusMessage = 'Erneuter Download wird vorbereitet...';
+              this.medalETA = '';
+              this.medalStartTime = Date.now();
+              continue;
+            }
+
+            this.isFetchingMedalClip = false;
+            this.medalDownloadProgress = 0;
+            this.medalUploadProgress = 0;
+            this.medalStatusMessage = '';
+            this.medalETA = '';
+            return;
+          }
+
+          throw error;
         }
       }
-
-      // Use Blob directly from chunks to avoid corruption from manual Uint8Array assembly
-      const videoBlob = new Blob(chunks as BlobPart[], { type: mimeType });
-
-      this.medalDownloadProgress = 100;
-      this.medalUploadProgress = 0;
-      this.medalStatusMessage = 'Upload-URL wird angefordert...';
-
-      const uploadInfo = await this.http
-        .get<CaseFileUploadGetResponse>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
-          { headers: this.getAuthHeaders(), withCredentials: true },
-        )
-        .toPromise();
-
-      if (!uploadInfo?.url) throw new Error('Fehler beim Abrufen der Upload-URL');
-
-      this.medalStatusMessage = 'Video wird hochgeladen...';
-      this.medalStartTime = Date.now();
-
-      const videoFile = new File([videoBlob], fileNameWithExt, { type: mimeType });
-
-      await this.uploadFileToPresignedUrl(videoFile, uploadInfo.url, mimeType, {
-        onProgress: (progress) => {
-          this.medalUploadProgress = progress;
-          this.medalETA = this.calculateETA(this.medalStartTime, progress);
-          this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
-        },
-      });
-
-      this.isFetchingMedalClip = false;
-      this.medalDownloadProgress = 0;
-      this.medalUploadProgress = 0;
-      this.medalClipUrl = '';
-      this.medalStatusMessage = '';
-      this.medalETA = '';
-
-      this.loadCaseData();
-      alert('Medal Clip erfolgreich hochgeladen!');
     } catch (error) {
       this.isFetchingMedalClip = false;
       this.medalDownloadProgress = 0;
@@ -802,6 +847,90 @@ export class CaseDetailComponent implements OnInit {
       console.error('Medal clip upload failed:', error);
       alert(error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips');
     }
+  }
+
+  private async downloadMedalClipFromCorsProxy(targetUrl: string): Promise<{ file: File; extension: string; mimeType: string }> {
+    const normalizedTargetUrl = targetUrl.trim();
+    const corsProxyUrl = `${MEDAL_CORS_PROXY_URL}${encodeURIComponent(normalizedTargetUrl)}`;
+    const response = await fetch(corsProxyUrl);
+    if (!response.ok) {
+      throw new Error('Fehler beim Abrufen des Medal Clips');
+    }
+
+    const pathName = new URL(normalizedTargetUrl).pathname;
+    const fileNameWithExt = pathName.split('/').pop() || 'clip.mp4';
+    const fileExtension = fileNameWithExt.includes('.') ? fileNameWithExt.split('.').pop()!.toLowerCase() : 'mp4';
+    const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
+
+    this.medalStatusMessage = 'Video wird heruntergeladen...';
+    this.medalStartTime = Date.now();
+
+    const contentLength = response.headers.get('content-length');
+    const total = contentLength ? parseInt(contentLength, 10) : 0;
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Fehler beim Lesen des Videos');
+    }
+
+    const chunks: Uint8Array[] = [];
+    let receivedLength = 0;
+
+    while (true) {
+      const readResult = await reader.read();
+      if (readResult.done) break;
+      chunks.push(readResult.value);
+      receivedLength += readResult.value.length;
+      if (total > 0) {
+        this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
+        this.medalETA = this.calculateETA(this.medalStartTime, this.medalDownloadProgress);
+        this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
+      }
+    }
+
+    const downloadedBytes = concatUint8Arrays(chunks);
+    const etagHeader = response.headers.get('etag');
+    const checksumHeader = response.headers.get('x-amz-checksum-crc32c');
+
+    if (etagHeader) {
+      const expectedEtag = normalizeEtag(etagHeader);
+      const actualMd5 = await md5(downloadedBytes);
+      if (expectedEtag !== actualMd5.toLowerCase()) {
+        throw new MedalIntegrityError('Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.');
+      }
+    }
+
+    if (checksumHeader) {
+      const expectedChecksum = normalizeHeaderValue(checksumHeader);
+      const actualChecksum = crc32cToBase64(calculateCrc32c(downloadedBytes));
+      if (expectedChecksum !== actualChecksum) {
+        throw new MedalIntegrityError('Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: x-amz-checksum-crc32c stimmt nicht mit dem heruntergeladenen Inhalt überein.');
+      }
+    }
+
+    const videoFile = new File([downloadedBytes as unknown as BlobPart], fileNameWithExt, { type: mimeType });
+    return {
+      file: videoFile,
+      extension: fileExtension,
+      mimeType,
+    };
+  }
+
+  private async resolveMedalSourceUrl(targetUrl: string): Promise<string> {
+    const bypassUrl = `https://medalbypass.vercel.app/api/clip?url=${encodeURIComponent(targetUrl)}`;
+    const bypassResponse = await fetch(bypassUrl);
+    if (!bypassResponse.ok) {
+      throw new Error('Fehler beim Abrufen des Medal Clips');
+    }
+
+    const bypassData = (await bypassResponse.json()) as { valid: boolean; src?: string; reasoning?: string };
+    if (!bypassData.valid) {
+      throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
+    }
+    if (!bypassData.src) {
+      throw new Error('Keine Video-URL erhalten');
+    }
+
+    return bypassData.src;
   }
 
   /**
@@ -853,9 +982,9 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private cleanupUploaderCallbacks() {
-    this.fileUploader.onBeforeUploadItem = () => {};
-    this.fileUploader.onProgressItem = () => {};
-    this.fileUploader.onSuccessItem = () => {};
-    this.fileUploader.onErrorItem = () => {};
+    this.fileUploader.onBeforeUploadItem = () => { };
+    this.fileUploader.onProgressItem = () => { };
+    this.fileUploader.onSuccessItem = () => { };
+    this.fileUploader.onErrorItem = () => { };
   }
 }
