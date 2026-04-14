@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - dev # remvoe that later
+      - dev
     paths:
       - "proxied/**"
 
