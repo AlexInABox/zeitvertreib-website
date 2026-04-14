@@ -37,7 +37,7 @@ jobs:
       - id: tags
         run: |
           OWNER=${{ steps.downcase.outputs.REPO_OWNER }}
-          IMG="ghcr.io/${OWNER}/blogslopbot"
+          IMG="ghcr.io/${OWNER}/zeitvertreib-proxied"
 
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
             echo "tags=$IMG:latest" >> $GITHUB_OUTPUT
