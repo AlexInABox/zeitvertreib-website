@@ -3,8 +3,30 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const app = express();
 const port = 3000;
-const allowedOrigins = new Set(['https://dev.zeitvertreib.vip', 'https://zeitvertreib.vip', 'http://localhost:4200']);
+const allowedOrigins = new Set([
+  'https://dev.zeitvertreib.vip',
+  'https://zeitvertreib.vip',
+  'https://www.zeitvertreib.vip',
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+]);
 const allowedMedalOrigin = 'https://cdn.medal.tv';
+
+function applyCorsHeaders(req: express.Request, res: express.Response): string | null {
+  const origin = req.get('origin');
+  if (!origin || !allowedOrigins.has(origin)) {
+    return null;
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Vary', 'Origin');
+
+  return origin;
+}
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
@@ -18,14 +40,20 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-app.get('/', async (req, res) => {
-  const origin = req.get('origin');
-  if (!origin || !allowedOrigins.has(origin)) {
-    return res.status(403).send('Forbidden origin');
+app.options('/', (req, res) => {
+  const allowedOrigin = applyCorsHeaders(req, res);
+  if (!allowedOrigin) {
+    return res.status(403).json({ error: 'Forbidden origin' });
   }
 
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Vary', 'Origin');
+  return res.status(204).send();
+});
+
+app.get('/', async (req, res) => {
+  const allowedOrigin = applyCorsHeaders(req, res);
+  if (!allowedOrigin) {
+    return res.status(403).json({ error: 'Forbidden origin' });
+  }
 
   const url = req.query.url;
   if (typeof url !== 'string' || !url) {
