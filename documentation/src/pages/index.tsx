@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -25,8 +25,7 @@ function HomepageHeader() {
     },
     {
       title: 'Entwicklungsleitfaden',
-      description:
-        'Entwicklungsleitfaden ist in Vorbereitung und wird bald verfügbar sein.',
+      description: 'Entwicklungsleitfaden ist in Vorbereitung und wird bald verfügbar sein.',
       disabled: true,
       className: clsx(styles.card, styles.cardLower),
     },
@@ -43,12 +42,13 @@ function HomepageHeader() {
           Zentrale Dokumentation für alle Projekte, Systeme und Entwicklungsablaufe von Zeitvertreib.
         </p>
         <div className={styles.cardLayout}>
-          {featureCards.map((card) => (
+          {featureCards.map((card) =>
             card.disabled ? (
               <article
                 key={card.title}
                 className={clsx(card.className, styles.cardButton, styles.cardButtonDisabled)}
-                aria-disabled="true">
+                aria-disabled="true"
+              >
                 <h3 className={styles.cardTitle}>{card.title}</h3>
                 <p className={styles.cardText}>{card.description}</p>
               </article>
@@ -57,8 +57,8 @@ function HomepageHeader() {
                 <h3 className={styles.cardTitle}>{card.title}</h3>
                 <p className={styles.cardText}>{card.description}</p>
               </Link>
-            )
-          ))}
+            ),
+          )}
         </div>
       </div>
     </header>
@@ -70,9 +70,7 @@ export default function Home(): ReactNode {
   const siteConfig = context.siteConfig;
 
   return (
-    <Layout
-      title={siteConfig.title}
-      description="Die offizielle Dokumentation für alle Projekte von Zeitvertreib.">
+    <Layout title={siteConfig.title} description="Die offizielle Dokumentation für alle Projekte von Zeitvertreib.">
       <HomepageHeader />
       <main />
     </Layout>

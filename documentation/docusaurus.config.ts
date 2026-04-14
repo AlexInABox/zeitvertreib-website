@@ -34,8 +34,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl:
-            'https://github.com/alexinabox/zeitvertreib-website/tree/dev/documentation/',
+          editUrl: 'https://github.com/alexinabox/zeitvertreib-website/tree/dev/documentation/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -83,7 +82,7 @@ const config: Config = {
           href: 'https://ko-fi.com/zeitvertreib',
           label: 'Ko-fi',
           position: 'right',
-        }
+        },
       ],
     },
     footer: {
