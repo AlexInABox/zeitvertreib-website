@@ -199,7 +199,7 @@ export class CaseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -849,7 +849,9 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  private async downloadMedalClipFromCorsProxy(targetUrl: string): Promise<{ file: File; extension: string; mimeType: string }> {
+  private async downloadMedalClipFromCorsProxy(
+    targetUrl: string,
+  ): Promise<{ file: File; extension: string; mimeType: string }> {
     const normalizedTargetUrl = targetUrl.trim();
     const corsProxyUrl = `${MEDAL_CORS_PROXY_URL}${encodeURIComponent(normalizedTargetUrl)}`;
     const response = await fetch(corsProxyUrl);
@@ -895,7 +897,9 @@ export class CaseDetailComponent implements OnInit {
       const expectedEtag = normalizeEtag(etagHeader);
       const actualMd5 = await md5(downloadedBytes);
       if (expectedEtag !== actualMd5.toLowerCase()) {
-        throw new MedalIntegrityError('Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.');
+        throw new MedalIntegrityError(
+          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
+        );
       }
     }
 
@@ -903,7 +907,9 @@ export class CaseDetailComponent implements OnInit {
       const expectedChecksum = normalizeHeaderValue(checksumHeader);
       const actualChecksum = crc32cToBase64(calculateCrc32c(downloadedBytes));
       if (expectedChecksum !== actualChecksum) {
-        throw new MedalIntegrityError('Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: x-amz-checksum-crc32c stimmt nicht mit dem heruntergeladenen Inhalt überein.');
+        throw new MedalIntegrityError(
+          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: x-amz-checksum-crc32c stimmt nicht mit dem heruntergeladenen Inhalt überein.',
+        );
       }
     }
 
@@ -982,9 +988,9 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private cleanupUploaderCallbacks() {
-    this.fileUploader.onBeforeUploadItem = () => { };
-    this.fileUploader.onProgressItem = () => { };
-    this.fileUploader.onSuccessItem = () => { };
-    this.fileUploader.onErrorItem = () => { };
+    this.fileUploader.onBeforeUploadItem = () => {};
+    this.fileUploader.onProgressItem = () => {};
+    this.fileUploader.onSuccessItem = () => {};
+    this.fileUploader.onErrorItem = () => {};
   }
 }
