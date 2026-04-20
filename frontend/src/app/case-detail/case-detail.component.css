@@ -2860,3 +2860,144 @@
   font-size: 1.5rem;
   opacity: 0.6;
 }
+
+/* ============================================
+   REPORT SEARCH BY STEAM ID
+============================================ */
+
+.report-search-section {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.report-search-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.report-search-user-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  flex-shrink: 0;
+}
+
+.report-search-user-btn img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: block;
+}
+
+.report-search-user-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+.report-search-user-btn.active {
+  border-color: #a78bfa;
+  background: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.report-search-dropdown {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 260px;
+  overflow-y: auto;
+  background: rgba(15, 15, 30, 0.95);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 10px;
+  padding: 0.4rem;
+}
+
+.report-search-dropdown::-webkit-scrollbar {
+  width: 5px;
+}
+
+.report-search-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.report-search-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 10px;
+}
+
+.report-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.report-search-item:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.report-search-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.report-search-id {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a78bfa;
+  flex-shrink: 0;
+}
+
+.report-search-sep {
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+.report-search-reason {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.report-search-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.report-search-users {
+  font-size: 0.7rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-search-date {
+  font-size: 0.7rem;
+  color: #475569;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

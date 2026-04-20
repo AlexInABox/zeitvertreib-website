@@ -62,7 +62,7 @@ import {
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
-import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
+import { handleGetReports, handleReportFileUpload, handleSearchReportsBySteamId } from './routes/reports.js';
 import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
 import {
   handleGetMinecraftStats,
@@ -213,6 +213,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/zeit': getUserData,
 
   // Reporting routes
+  'GET:/reports/search': handleSearchReportsBySteamId,
   'GET:/reports/upload': handleReportFileUpload,
   'GET:/reports': handleGetReports,
 };

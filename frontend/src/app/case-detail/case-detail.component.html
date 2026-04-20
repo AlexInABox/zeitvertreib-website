@@ -173,6 +173,68 @@
               <div class="header-linked-success" *ngIf="reportLinkSuccess">
                 <i class="pi pi-check-circle"></i> {{ reportLinkSuccess }}
               </div>
+
+              <!-- Report search by Steam ID -->
+              <div class="report-search-section">
+                <div class="report-search-row">
+                  <i class="pi pi-search header-add-icon"></i>
+                  <button
+                    *ngFor="let user of caseData?.linkedUsers"
+                    class="report-search-user-btn"
+                    [class.active]="reportSearchSteamId === user.steamId"
+                    (click)="setReportSearchSteamId(user.steamId)"
+                    [title]="user.steamId"
+                    type="button"
+                  >
+                    <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
+                  </button>
+                  <input
+                    type="text"
+                    [(ngModel)]="reportSearchSteamId"
+                    placeholder="Steam-ID für Report-Suche…"
+                    class="header-steamid-input"
+                    (keydown.enter)="searchReportsBySteamId()"
+                    [disabled]="isSearchingReports"
+                    autocomplete="off"
+                  />
+                  <button
+                    class="header-add-btn"
+                    (click)="searchReportsBySteamId()"
+                    [disabled]="isSearchingReports || !reportSearchSteamId.trim()"
+                    type="button"
+                    title="Reports suchen"
+                  >
+                    <i class="pi" [ngClass]="isSearchingReports ? 'pi-spinner pi-spin' : 'pi-search'"></i>
+                  </button>
+                </div>
+                <div class="header-linked-error" *ngIf="reportSearchError">
+                  <i class="pi pi-exclamation-circle"></i> {{ reportSearchError }}
+                </div>
+                <div class="report-search-dropdown" *ngIf="reportSearchDropdownOpen && reportSearchResults.length">
+                  <div
+                    *ngFor="let report of reportSearchResults"
+                    class="report-search-item"
+                    (click)="selectReportFromSearch(report.id)"
+                    (keydown.enter)="selectReportFromSearch(report.id)"
+                    (keydown.space)="selectReportFromSearch(report.id)"
+                    role="button"
+                    tabindex="0"
+                    title="Report #{{ report.id }} verknüpfen"
+                  >
+                    <div class="report-search-item-main">
+                      <span class="report-search-id">#{{ report.id }}</span>
+                      <span class="report-search-sep">·</span>
+                      <span class="report-search-reason">{{ report.reason }}</span>
+                    </div>
+                    <div class="report-search-item-meta">
+                      <span class="report-search-users"
+                        >{{ report.reporter.username }} → {{ report.reported.username }}</span
+                      >
+                      <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Non-team: read-only report IDs -->
