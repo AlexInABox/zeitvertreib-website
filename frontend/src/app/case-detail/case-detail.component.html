@@ -153,7 +153,7 @@
                 <div class="report-search-row" *ngIf="caseData?.linkedUsers?.length || !caseData?.linkedUsers?.length">
                   <i class="pi pi-search header-add-icon" *ngIf="caseData?.linkedUsers?.length"></i>
                   <span class="search-hint" *ngIf="caseData?.linkedUsers?.length">Report suchen:</span>
-                  
+
                   <button
                     *ngFor="let user of caseData?.linkedUsers"
                     class="report-search-user-quick-btn"
@@ -226,7 +226,10 @@
                 </div>
 
                 <!-- Search error message -->
-                <div class="header-linked-error report-search-error-msg" *ngIf="reportSearchError && reportSearchDropdownOpen">
+                <div
+                  class="header-linked-error report-search-error-msg"
+                  *ngIf="reportSearchError && reportSearchDropdownOpen"
+                >
                   <i class="pi pi-exclamation-circle"></i> {{ reportSearchError }}
                 </div>
               </div>
