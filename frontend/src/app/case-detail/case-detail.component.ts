@@ -177,12 +177,12 @@ export class CaseDetailComponent implements OnInit {
   reportLinkError = '';
   reportLinkSuccess = '';
 
-  // Report search by Steam ID
-  reportSearchSteamId = '';
+  // Report search results and UI state
   isSearchingReports = false;
   reportSearchResults: SearchReportsBySteamIdGetResponse['reports'] = [];
   reportSearchDropdownOpen = false;
   reportSearchError = '';
+  showManualReportEntry = false;
 
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
@@ -587,17 +587,16 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
-  setReportSearchSteamId(steamId: string): void {
-    this.reportSearchSteamId = steamId;
-    this.reportSearchDropdownOpen = false;
-    this.reportSearchResults = [];
-    this.reportSearchError = '';
+  toggleManualReportEntry(): void {
+    this.showManualReportEntry = !this.showManualReportEntry;
+    if (!this.showManualReportEntry) {
+      this.newLinkedReportId = '';
+    }
   }
 
-  async searchReportsBySteamId(): Promise<void> {
-    const raw = this.reportSearchSteamId.trim();
-    if (!raw) {
-      this.reportSearchError = 'Bitte wähle oder gib eine Steam-ID ein';
+  async searchReportsBySteamId(steamId: string): Promise<void> {
+    if (!steamId || !steamId.trim()) {
+      this.reportSearchError = 'Steam-ID ist erforderlich';
       return;
     }
 
@@ -609,7 +608,7 @@ export class CaseDetailComponent implements OnInit {
     try {
       const data = await firstValueFrom(
         this.http.get<SearchReportsBySteamIdGetResponse>(
-          `${environment.apiUrl}/reports/search?steamId=${encodeURIComponent(raw)}`,
+          `${environment.apiUrl}/reports/search?steamId=${encodeURIComponent(steamId)}`,
           { headers: this.getAuthHeaders(), withCredentials: true },
         ),
       );
@@ -631,6 +630,7 @@ export class CaseDetailComponent implements OnInit {
   selectReportFromSearch(reportId: number): void {
     this.reportSearchDropdownOpen = false;
     this.newLinkedReportId = String(reportId);
+    this.showManualReportEntry = false;
     this.linkReport();
   }
 
