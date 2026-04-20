@@ -1,6 +1,19 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, getCedModLastReports, getCedModReportsBySteamId, fetchSteamUserData, validateSession, isTeam, validateSteamId } from '../utils.js';
-import type { GetReportsResponse, ReportFileUploadGetRequest, ReportFileUploadGetResponse, SearchReportsBySteamIdGetResponse } from '@zeitvertreib/types';
+import {
+  createResponse,
+  getCedModLastReports,
+  getCedModReportsBySteamId,
+  fetchSteamUserData,
+  validateSession,
+  isTeam,
+  validateSteamId,
+} from '../utils.js';
+import type {
+  GetReportsResponse,
+  ReportFileUploadGetRequest,
+  ReportFileUploadGetResponse,
+  SearchReportsBySteamIdGetResponse,
+} from '@zeitvertreib/types';
 import { caseToCedModReportLinks } from '../db/schema.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -91,7 +104,11 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
 }
 
 /// GET /reports/search?steamId={steamId}
-export async function handleSearchReportsBySteamId(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+export async function handleSearchReportsBySteamId(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
   const origin = request.headers.get('Origin');
 
   const sessionValidation = await validateSession(request, env);
