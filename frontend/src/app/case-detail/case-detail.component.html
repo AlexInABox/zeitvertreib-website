@@ -223,7 +223,9 @@
                       <span class="report-search-reason">{{ report.reason }}</span>
                     </div>
                     <div class="report-search-item-meta">
-                      <span class="report-search-users">{{ report.reporter.username }} → {{ report.reported.username }}</span>
+                      <span class="report-search-users"
+                        >{{ report.reporter.username }} → {{ report.reported.username }}</span
+                      >
                       <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
                     </div>
                   </div>
