@@ -929,6 +929,8 @@ export async function getCedModReportsBySteamId(
   steamId: string,
   env: Env,
 ): Promise<{ id: number; reporterId: string; reportedId: string; reason: string; reportedAt: number }[]> {
+  // Normalize to @steam form for consistency with CedMod API and other utility functions
+  const normalizedSteamId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
   const bare = steamId.replace(/@steam/g, '');
 
   try {
@@ -939,13 +941,13 @@ export async function getCedModReportsBySteamId(
 
     const url = new URL('https://cedmod.zeitvertreib.vip/Api/Report/Query');
     url.searchParams.set('page', '0');
-    url.searchParams.set('q', bare);
+    url.searchParams.set('q', normalizedSteamId);
     url.searchParams.set('max', '50');
 
     const response = await proxyFetch(url.toString(), { method: 'GET', headers }, env);
 
     if (!response.ok) {
-      console.error(`Failed to fetch CedMod reports for ${bare}: ${response.status} ${response.statusText}`);
+      console.error(`Failed to fetch CedMod reports for ${normalizedSteamId}: ${response.status} ${response.statusText}`);
       return [];
     }
 
@@ -962,7 +964,11 @@ export async function getCedModReportsBySteamId(
         reason: (report.reason ?? '') as string,
         reportedAt: new Date(`${report.created}Z`).getTime(),
       }))
-      .filter((report) => report.reportedId === bare || report.reporterId === bare)
+      .filter((report) => {
+        const normalizedReporterId = report.reporterId.endsWith('@steam') ? report.reporterId : `${report.reporterId}@steam`;
+        const normalizedReportedId = report.reportedId.endsWith('@steam') ? report.reportedId : `${report.reportedId}@steam`;
+        return normalizedReportedId === normalizedSteamId || normalizedReporterId === normalizedSteamId;
+      })
       .sort((a, b) => b.reportedAt - a.reportedAt);
   } catch (error) {
     console.error(`Error fetching CedMod reports for ${steamId}:`, error);
