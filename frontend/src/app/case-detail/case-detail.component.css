@@ -3066,3 +3066,24 @@
 .toggle-fallback-btn i {
   font-size: 1rem;
 }
+
+.manual-report-entry {
+  margin-top: 0.5rem;
+  padding-left: 0.2rem;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+.report-search-error-msg {
+  margin-top: 0.5rem;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

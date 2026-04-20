@@ -149,50 +149,86 @@
               </div>
 
               <!-- Primary: Search reports from linked users -->
-              <div class="header-add-user" *ngIf="caseData?.linkedUsers?.length">
-                <i class="pi pi-search header-add-icon"></i>
-                <span class="search-hint">Reports von:</span>
-                <button
-                  *ngFor="let user of caseData?.linkedUsers"
-                  class="report-search-user-quick-btn"
-                  (click)="searchReportsBySteamId(user.steamId)"
-                  [disabled]="isSearchingReports || isLinkingReport"
-                  [title]="user.steamId"
-                  type="button"
-                >
-                  <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
-                  <span>{{ user.username }}</span>
-                </button>
-                <button
-                  class="toggle-fallback-btn"
-                  (click)="toggleManualReportEntry()"
-                  type="button"
-                  [title]="showManualReportEntry ? 'Manuelle Eingabe ausblenden' : 'Report-ID manuell eingeben'"
-                >
-                  <i class="pi" [ngClass]="showManualReportEntry ? 'pi-chevron-up' : 'pi-ellipsis-h'"></i>
-                </button>
-              </div>
+              <div class="report-search-section">
+                <div class="report-search-row" *ngIf="caseData?.linkedUsers?.length || !caseData?.linkedUsers?.length">
+                  <i class="pi pi-search header-add-icon" *ngIf="caseData?.linkedUsers?.length"></i>
+                  <span class="search-hint" *ngIf="caseData?.linkedUsers?.length">Report suchen:</span>
+                  
+                  <button
+                    *ngFor="let user of caseData?.linkedUsers"
+                    class="report-search-user-quick-btn"
+                    (click)="searchReportsBySteamId(user.steamId)"
+                    [disabled]="isSearchingReports || isLinkingReport"
+                    [title]="'Reports für ' + user.username + ' suchen'"
+                    type="button"
+                  >
+                    <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
+                    <span>{{ user.username }}</span>
+                  </button>
 
-              <!-- Fallback: Manual report ID input (hidden by default) -->
-              <div class="header-add-user" *ngIf="showManualReportEntry">
-                <i class="pi pi-flag-fill header-add-icon"></i>
-                <input
-                  type="text"
-                  [(ngModel)]="newLinkedReportId"
-                  placeholder="Report-ID manuell eingeben…"
-                  class="header-steamid-input"
-                  (keydown.enter)="linkReport()"
-                  [disabled]="isLinkingReport"
-                  autocomplete="off"
-                  inputmode="numeric"
-                />
-                <button
-                  class="header-add-btn"
-                  (click)="linkReport()"
-                  [disabled]="isLinkingReport || !newLinkedReportId.trim()"
-                >
-                  <i class="pi" [ngClass]="isLinkingReport ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
-                </button>
+                  <button
+                    class="toggle-fallback-btn"
+                    (click)="toggleManualReportEntry()"
+                    type="button"
+                    [title]="showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report über ID hinzufügen'"
+                  >
+                    <i class="pi" [ngClass]="showManualReportEntry ? 'pi-times' : 'pi-plus'"></i>
+                  </button>
+                </div>
+
+                <!-- Fallback: Manual report ID input -->
+                <div class="header-add-user manual-report-entry" *ngIf="showManualReportEntry">
+                  <i class="pi pi-flag-fill header-add-icon"></i>
+                  <input
+                    type="text"
+                    [(ngModel)]="newLinkedReportId"
+                    placeholder="Report-ID eingeben…"
+                    class="header-steamid-input"
+                    (keydown.enter)="linkReport()"
+                    [disabled]="isLinkingReport"
+                    autocomplete="off"
+                    inputmode="numeric"
+                    #reportIdInput
+                  />
+                  <button
+                    class="header-add-btn"
+                    (click)="linkReport()"
+                    [disabled]="isLinkingReport || !newLinkedReportId.trim()"
+                  >
+                    <i class="pi" [ngClass]="isLinkingReport ? 'pi-spinner pi-spin' : 'pi-check'"></i>
+                  </button>
+                </div>
+
+                <!-- Report search dropdown (appears after search) -->
+                <div class="report-search-dropdown" *ngIf="reportSearchDropdownOpen && reportSearchResults.length">
+                  <div
+                    *ngFor="let report of reportSearchResults"
+                    class="report-search-item"
+                    (click)="selectReportFromSearch(report.id)"
+                    (keydown.enter)="selectReportFromSearch(report.id)"
+                    (keydown.space)="selectReportFromSearch(report.id)"
+                    role="button"
+                    tabindex="0"
+                    title="Report #{{ report.id }} verknüpfen"
+                  >
+                    <div class="report-search-item-main">
+                      <span class="report-search-id">#{{ report.id }}</span>
+                      <span class="report-search-sep">·</span>
+                      <span class="report-search-reason">{{ report.reason }}</span>
+                    </div>
+                    <div class="report-search-item-meta">
+                      <span class="report-search-users"
+                        >{{ report.reporter.username }} → {{ report.reported.username }}</span
+                      >
+                      <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Search error message -->
+                <div class="header-linked-error report-search-error-msg" *ngIf="reportSearchError && reportSearchDropdownOpen">
+                  <i class="pi pi-exclamation-circle"></i> {{ reportSearchError }}
+                </div>
               </div>
 
               <!-- Error/Success messages -->
@@ -201,37 +237,6 @@
               </div>
               <div class="header-linked-success" *ngIf="reportLinkSuccess">
                 <i class="pi pi-check-circle"></i> {{ reportLinkSuccess }}
-              </div>
-
-              <!-- Report search dropdown (appears after search) -->
-              <div class="report-search-dropdown" *ngIf="reportSearchDropdownOpen && reportSearchResults.length">
-                <div
-                  *ngFor="let report of reportSearchResults"
-                  class="report-search-item"
-                  (click)="selectReportFromSearch(report.id)"
-                  (keydown.enter)="selectReportFromSearch(report.id)"
-                  (keydown.space)="selectReportFromSearch(report.id)"
-                  role="button"
-                  tabindex="0"
-                  title="Report #{{ report.id }} verknüpfen"
-                >
-                  <div class="report-search-item-main">
-                    <span class="report-search-id">#{{ report.id }}</span>
-                    <span class="report-search-sep">·</span>
-                    <span class="report-search-reason">{{ report.reason }}</span>
-                  </div>
-                  <div class="report-search-item-meta">
-                    <span class="report-search-users"
-                      >{{ report.reporter.username }} → {{ report.reported.username }}</span
-                    >
-                    <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Search error message -->
-              <div class="header-linked-error" *ngIf="reportSearchError && reportSearchDropdownOpen">
-                <i class="pi pi-exclamation-circle"></i> {{ reportSearchError }}
               </div>
             </div>
 
