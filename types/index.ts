@@ -1108,6 +1108,11 @@ export interface GetReportsResponse {
   }[];
 }
 
+/** GET /reports/search?steamId={steamId} response (staff-only) */
+export interface SearchReportsBySteamIdGetResponse {
+  reports: GetReportsResponse['reports'];
+}
+
 //When uploading evidence, the client should first call GET /reports to get a pre-signed URL for the upload, then upload the file directly to S3 using that URL.
 // After generating this pre-signed URL, the backend will notify team members about a new incomming upload for a given case via discord!
 /** GET /reports/upload?reportId={reportId}&extension={ext} request params */

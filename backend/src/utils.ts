@@ -923,6 +923,54 @@ export async function getCedModWarns(
 }
 
 /**
+ * Fetch CedMod reports involving a specific Steam ID (as reporter or reported), sorted newest first.
+ */
+export async function getCedModReportsBySteamId(
+  steamId: string,
+  env: Env,
+): Promise<{ id: number; reporterId: string; reportedId: string; reason: string; reportedAt: number }[]> {
+  const bare = steamId.replace(/@steam/g, '');
+
+  try {
+    const headers = {
+      Authorization: `Bearer ${env.CEDMOD_API_KEY_REPORTS}`,
+      'Content-Type': 'application/json',
+    };
+
+    const url = new URL('https://cedmod.zeitvertreib.vip/Api/Report/Query');
+    url.searchParams.set('page', '0');
+    url.searchParams.set('q', bare);
+    url.searchParams.set('max', '50');
+
+    const response = await proxyFetch(url.toString(), { method: 'GET', headers }, env);
+
+    if (!response.ok) {
+      console.error(`Failed to fetch CedMod reports for ${bare}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const data: any = await response.json();
+    if (!data.players || !Array.isArray(data.players)) {
+      return [];
+    }
+
+    return (data.players as any[])
+      .map((report) => ({
+        id: report.id as number,
+        reporterId: (report.reporterId ?? '') as string,
+        reportedId: (report.reportedId ?? '') as string,
+        reason: (report.reason ?? '') as string,
+        reportedAt: new Date(`${report.created}Z`).getTime(),
+      }))
+      .filter((report) => report.reportedId === bare || report.reporterId === bare)
+      .sort((a, b) => b.reportedAt - a.reportedAt);
+  } catch (error) {
+    console.error(`Error fetching CedMod reports for ${steamId}:`, error);
+    return [];
+  }
+}
+
+/**
  * Fetch all latest in-game reports from cedmod.
  */
 export async function getCedModLastReports(

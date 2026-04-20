@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,6 +16,7 @@ import type {
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
   CaseCategory,
+  SearchReportsBySteamIdGetResponse,
 } from '@zeitvertreib/types';
 
 const MEDAL_CORS_PROXY_URL = 'https://cors.zeitvertreib.vip/?url=';
@@ -175,6 +177,13 @@ export class CaseDetailComponent implements OnInit {
   reportLinkError = '';
   reportLinkSuccess = '';
 
+  // Report search by Steam ID
+  reportSearchSteamId = '';
+  isSearchingReports = false;
+  reportSearchResults: SearchReportsBySteamIdGetResponse['reports'] = [];
+  reportSearchDropdownOpen = false;
+  reportSearchError = '';
+
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
     { label: 'Name (Z-A)', value: 'name-desc' },
@@ -206,6 +215,9 @@ export class CaseDetailComponent implements OnInit {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
       this.sortDropdownOpen = false;
+    }
+    if (!target.closest('.report-search-section') && this.reportSearchDropdownOpen) {
+      this.reportSearchDropdownOpen = false;
     }
   }
 
@@ -573,6 +585,53 @@ export class CaseDetailComponent implements OnInit {
           this.linkedUserError = error.error?.error || 'Fehler beim Hinzufügen des Benutzers';
         },
       });
+  }
+
+  setReportSearchSteamId(steamId: string): void {
+    this.reportSearchSteamId = steamId;
+    this.reportSearchDropdownOpen = false;
+    this.reportSearchResults = [];
+    this.reportSearchError = '';
+  }
+
+  async searchReportsBySteamId(): Promise<void> {
+    const raw = this.reportSearchSteamId.trim();
+    if (!raw) {
+      this.reportSearchError = 'Bitte wähle oder gib eine Steam-ID ein';
+      return;
+    }
+
+    this.isSearchingReports = true;
+    this.reportSearchDropdownOpen = false;
+    this.reportSearchError = '';
+    this.reportSearchResults = [];
+
+    try {
+      const data = await firstValueFrom(
+        this.http.get<SearchReportsBySteamIdGetResponse>(
+          `${environment.apiUrl}/reports/search?steamId=${encodeURIComponent(raw)}`,
+          { headers: this.getAuthHeaders(), withCredentials: true },
+        ),
+      );
+
+      const alreadyLinked = this.caseData?.linkedReportIds ?? [];
+      this.reportSearchResults = (data?.reports ?? []).filter((r) => !alreadyLinked.includes(r.id));
+      if (this.reportSearchResults.length > 0) {
+        this.reportSearchDropdownOpen = true;
+      } else {
+        this.reportSearchError = 'Keine (nicht verknüpften) Reports für diese Steam-ID gefunden';
+      }
+    } catch (error: any) {
+      this.reportSearchError = error?.error?.error || 'Fehler beim Suchen der Reports';
+    } finally {
+      this.isSearchingReports = false;
+    }
+  }
+
+  selectReportFromSearch(reportId: number): void {
+    this.reportSearchDropdownOpen = false;
+    this.newLinkedReportId = String(reportId);
+    this.linkReport();
   }
 
   removeLinkedReport(reportId: number, event?: Event) {
