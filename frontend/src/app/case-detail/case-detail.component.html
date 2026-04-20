@@ -215,6 +215,10 @@
                     *ngFor="let report of reportSearchResults"
                     class="report-search-item"
                     (click)="selectReportFromSearch(report.id)"
+                    (keydown.enter)="selectReportFromSearch(report.id)"
+                    (keydown.space)="selectReportFromSearch(report.id)"
+                    role="button"
+                    tabindex="0"
                     title="Report #{{ report.id }} verknüpfen"
                   >
                     <div class="report-search-item-main">
