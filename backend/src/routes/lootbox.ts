@@ -4,7 +4,7 @@ import * as schema from '../db/schema.js';
 import { createResponse, validateSession, isDonator } from '../utils.js';
 import type { LootboxPurchaseResponse, LootboxStatusResponse, LootboxReward, LootboxRarity } from '@zeitvertreib/types';
 
-const LOOTBOX_COST = 100;
+const LOOTBOX_COST = 1;
 
 interface RewardDefinition {
   id: string;
@@ -17,20 +17,20 @@ interface RewardDefinition {
 
 const REWARD_POOL: RewardDefinition[] = [
   // Common (60% combined)
-  { id: 'zvc_50', name: '50 ZVC', emoji: '🪙', rarity: 'common', zvcValue: 67, weight: 25 },
-  { id: 'zvc_75', name: '75 ZVC', emoji: '💰', rarity: 'common', zvcValue: 67, weight: 20 },
-  { id: 'zvc_100', name: '100 ZVC', emoji: '💵', rarity: 'common', zvcValue: 67, weight: 15 },
+  { id: 'zvc_50', name: '1 ZVC', emoji: '🪙', rarity: 'common', zvcValue: 1, weight: 25 },
+  { id: 'zvc_75', name: '1 ZVC', emoji: '💰', rarity: 'common', zvcValue: 1, weight: 20 },
+  { id: 'zvc_100', name: '1 ZVC', emoji: '💵', rarity: 'common', zvcValue: 1, weight: 15 },
   // Uncommon (25% combined)
-  { id: 'zvc_150', name: '150 ZVC', emoji: '💎', rarity: 'uncommon', zvcValue: 67, weight: 15 },
-  { id: 'zvc_200', name: '200 ZVC', emoji: '🔷', rarity: 'uncommon', zvcValue: 67, weight: 10 },
+  { id: 'zvc_150', name: '1 ZVC', emoji: '💎', rarity: 'uncommon', zvcValue: 1, weight: 15 },
+  { id: 'zvc_200', name: '1 ZVC', emoji: '🔷', rarity: 'uncommon', zvcValue: 1, weight: 10 },
   // Rare (10% combined)
-  { id: 'zvc_350', name: '350 ZVC', emoji: '✨', rarity: 'rare', zvcValue: 67, weight: 6 },
-  { id: 'zvc_500', name: '500 ZVC', emoji: '🌟', rarity: 'rare', zvcValue: 67, weight: 4 },
+  { id: 'zvc_350', name: '1 ZVC', emoji: '✨', rarity: 'rare', zvcValue: 1, weight: 6 },
+  { id: 'zvc_500', name: '1 ZVC', emoji: '🌟', rarity: 'rare', zvcValue: 1, weight: 4 },
   // Epic (4% combined)
-  { id: 'zvc_750', name: '750 ZVC', emoji: '🔥', rarity: 'epic', zvcValue: 67, weight: 3 },
-  { id: 'zvc_1000', name: '1.000 ZVC', emoji: '💫', rarity: 'epic', zvcValue: 67, weight: 1 },
+  { id: 'zvc_750', name: '1 ZVC', emoji: '🔥', rarity: 'epic', zvcValue: 1, weight: 3 },
+  { id: 'zvc_1000', name: '1 ZVC', emoji: '💫', rarity: 'epic', zvcValue: 1, weight: 1 },
   // Legendary (1%)
-  { id: 'zvc_2500', name: '2.500 ZVC', emoji: '🏆', rarity: 'legendary', zvcValue: 67, weight: 1 },
+  { id: 'zvc_2500', name: '1 ZVC', emoji: '🏆', rarity: 'legendary', zvcValue: 1, weight: 1 },
 ];
 
 const TOTAL_WEIGHT = REWARD_POOL.reduce((sum, entry) => sum + entry.weight, 0);

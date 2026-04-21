@@ -229,7 +229,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   };
 
   // Lootbox properties
-  readonly lootboxCost = 100;
+  readonly lootboxCost = 1;
   lootboxSpinning = false;
   lootboxLoading = false;
   lootboxError = '';
