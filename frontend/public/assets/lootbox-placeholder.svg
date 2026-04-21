@@ -1,0 +1,52 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lid" x1="30" y1="42" x2="130" y2="68" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="front" x1="30" y1="66" x2="130" y2="122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="stripe" x1="76" y1="66" x2="84" y2="122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#92400E"/>
+      <stop offset="1" stop-color="#78350F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Lid shadow -->
+  <rect x="32" y="64" width="96" height="6" rx="4" fill="rgba(0,0,0,0.35)"/>
+
+  <!-- Chest body -->
+  <rect x="30" y="66" width="100" height="56" rx="10" fill="url(#front)"/>
+
+  <!-- Center strap -->
+  <rect x="76" y="66" width="8" height="56" rx="2" fill="url(#stripe)"/>
+
+  <!-- Bottom trim -->
+  <rect x="32" y="112" width="96" height="8" rx="4" fill="rgba(0,0,0,0.18)"/>
+
+  <!-- Lock plate -->
+  <rect x="70" y="85" width="20" height="16" rx="4" fill="#FDE68A" opacity="0.95"/>
+
+  <!-- Lock shackle -->
+  <path d="M75 85 Q75 78 80 78 Q85 78 85 85" stroke="#A16207" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Lock keyhole -->
+  <circle cx="80" cy="92" r="2.5" fill="#A16207"/>
+
+  <!-- Lid -->
+  <rect x="30" y="42" width="100" height="26" rx="8" fill="url(#lid)"/>
+  <rect x="32" y="65" width="96" height="4" rx="2" fill="rgba(0,0,0,0.2)"/>
+
+  <!-- Lid top shine -->
+  <rect x="38" y="46" width="60" height="4" rx="2" fill="rgba(255,255,255,0.22)"/>
+
+  <!-- Corner brackets -->
+  <rect x="30" y="42" width="8" height="48" rx="3" fill="#92400E" opacity="0.6"/>
+  <rect x="122" y="42" width="8" height="48" rx="3" fill="#92400E" opacity="0.6"/>
+
+  <!-- Stars / sparkles for flair -->
+  <path d="M22 36 L24 30 L26 36 L32 38 L26 40 L24 46 L22 40 L16 38 Z" fill="#FCD34D" opacity="0.9"/>
+  <path d="M134 26 L135.5 22 L137 26 L141 27.5 L137 29 L135.5 33 L134 29 L130 27.5 Z" fill="#FCD34D" opacity="0.7"/>
+</svg>

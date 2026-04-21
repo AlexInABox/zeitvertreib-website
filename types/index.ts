@@ -1151,3 +1151,36 @@ export interface GetNotificationsResponse {
 export interface MarkNotificationsReadRequest {
   ids?: number[];
 }
+
+// ============================================================================
+// Lootbox Types
+// ============================================================================
+
+/** Rarity tiers for lootbox rewards */
+export type LootboxRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+/** A single lootbox reward item */
+export interface LootboxReward {
+  id: string;
+  name: string;
+  emoji: string;
+  rarity: LootboxRarity;
+  zvcValue: number;
+}
+
+/** GET /lootbox response */
+export interface LootboxStatusResponse {
+  isDonator: boolean;
+  /** True when the user is a donator and hasn't claimed their free daily lootbox yet */
+  freeLootboxAvailable: boolean;
+}
+
+/** POST /lootbox response */
+export interface LootboxPurchaseResponse {
+  success: boolean;
+  message: string;
+  reward: LootboxReward;
+  newBalance: number;
+  /** Whether a free daily lootbox is still available after this purchase */
+  freeLootboxAvailable: boolean;
+}
