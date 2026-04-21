@@ -236,7 +236,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   lootboxSuccess = '';
   lootboxResult: LootboxReward | null = null;
   lootboxSpinItems: { emoji: string; name: string; rarity: string }[] = [];
-  lootboxSpinOffset = 0;
   lootboxAnimating = false;
   lootboxSnapping = false;
   lootboxAtRest = false;
