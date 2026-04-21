@@ -1151,3 +1151,27 @@ export interface GetNotificationsResponse {
 export interface MarkNotificationsReadRequest {
   ids?: number[];
 }
+
+// ============================================================================
+// Lootbox Types
+// ============================================================================
+
+/** Rarity tiers for lootbox rewards */
+export type LootboxRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+/** A single lootbox reward item */
+export interface LootboxReward {
+  id: string;
+  name: string;
+  emoji: string;
+  rarity: LootboxRarity;
+  zvcValue: number;
+}
+
+/** POST /lootbox response */
+export interface LootboxPurchaseResponse {
+  success: boolean;
+  message: string;
+  reward: LootboxReward;
+  newBalance: number;
+}

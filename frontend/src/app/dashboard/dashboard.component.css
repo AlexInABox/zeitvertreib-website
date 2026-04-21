@@ -2427,6 +2427,371 @@
   }
 }
 
+/* ============ LOOTBOX CARD STYLES ============ */
+
+.lootbox-card-wrapper {
+  /* inherits stats-card glass style */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.lootbox-card-wrapper::before {
+  background: linear-gradient(90deg, transparent, #f59e0b 25%, #fbbf24 50%, #f59e0b 75%, transparent) !important;
+}
+
+.lootbox-header {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+/* CS-style spin stage */
+.lootbox-stage {
+  position: relative;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.65);
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  height: 110px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  --lootbox-item-width: 88px;
+  --lootbox-item-margin-x: 4px;
+  --lootbox-item-total-width: calc(var(--lootbox-item-width) + var(--lootbox-item-margin-x) * 2);
+  --lootbox-center-offset: calc(var(--lootbox-item-total-width) / 2);
+  --lootbox-animation-offset: 20px;
+  --lootbox-animation-center-offset: calc(var(--lootbox-center-offset) + var(--lootbox-animation-offset));
+}
+
+.lootbox-center-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(245, 158, 11, 0), #f59e0b, rgba(245, 158, 11, 0));
+  transform: translateX(-50%);
+  z-index: 9;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+/* pointer triangles on top/bottom */
+.lootbox-pointer-top,
+.lootbox-pointer-bottom {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  z-index: 10;
+}
+
+.lootbox-pointer-top {
+  top: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 14px solid #f59e0b;
+}
+
+.lootbox-pointer-bottom {
+  bottom: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 14px solid #f59e0b;
+}
+
+.lootbox-track-viewport {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* The scrolling strip */
+.lootbox-track {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  will-change: transform;
+  /* Fast initially, slows to a stop */
+  transition: none;
+}
+
+/* When animating, apply the deceleration transition */
+.lootbox-stage.is-animating .lootbox-track {
+  /* slightly faster launch, long duration, hard deceleration at end */
+  transition: transform 9s cubic-bezier(0.35, 0, 0.1, 1);
+}
+
+/* Snap-to-center phase: slightly bouncy settle */
+.lootbox-stage.is-snapping .lootbox-track {
+  transition: transform 550ms cubic-bezier(0.22, 0.9, 0.32, 1);
+}
+
+.lootbox-item {
+  flex-shrink: 0;
+  width: var(--lootbox-item-width);
+  height: var(--lootbox-item-width);
+  margin: 0 var(--lootbox-item-margin-x);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.07);
+  transition: border-color 0.2s;
+}
+
+.lootbox-item-emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.lootbox-item-name {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  text-align: center;
+  padding: 0 2px;
+}
+
+/* Rarity borders */
+.lootbox-item.rarity-common {
+  border-color: rgba(156, 163, 175, 0.6);
+  background: rgba(156, 163, 175, 0.08);
+}
+.lootbox-item.rarity-uncommon {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.08);
+}
+.lootbox-item.rarity-rare {
+  border-color: rgba(96, 165, 250, 0.7);
+  background: rgba(96, 165, 250, 0.08);
+}
+.lootbox-item.rarity-epic {
+  border-color: rgba(167, 139, 250, 0.8);
+  background: rgba(167, 139, 250, 0.1);
+}
+.lootbox-item.rarity-legendary {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+}
+
+/* Idle placeholder — absolute overlay so track stays in DOM for CSS transitions */
+.lootbox-idle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+@keyframes lootbox-idle-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  }
+  50% {
+    transform: translateY(-5px) scale(1.06);
+    filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.45)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  }
+}
+
+.lootbox-idle-image {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  animation: lootbox-idle-float 2.8s ease-in-out infinite;
+}
+
+.lootbox-idle-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Result banner */
+.lootbox-result {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  animation: lootbox-result-pop 0.4s cubic-bezier(0.2, 1.5, 0.5, 1);
+}
+
+.lootbox-result.rarity-common {
+  border-color: rgba(156, 163, 175, 0.6);
+}
+.lootbox-result.rarity-uncommon {
+  border-color: rgba(52, 211, 153, 0.6);
+}
+.lootbox-result.rarity-rare {
+  border-color: rgba(96, 165, 250, 0.7);
+}
+.lootbox-result.rarity-epic {
+  border-color: rgba(167, 139, 250, 0.8);
+}
+.lootbox-result.rarity-legendary {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes lootbox-result-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lootbox-result-emoji {
+  font-size: 2.25rem;
+  flex-shrink: 0;
+}
+
+.lootbox-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.lootbox-result-name {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.lootbox-result-rarity {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.lootbox-rarity-common {
+  color: #9ca3af;
+}
+.lootbox-rarity-uncommon {
+  color: #34d399;
+}
+.lootbox-rarity-rare {
+  color: #60a5fa;
+}
+.lootbox-rarity-epic {
+  color: #a78bfa;
+}
+.lootbox-rarity-legendary {
+  color: #f59e0b;
+}
+
+/* Loading bar */
+.lootbox-loading-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.lootbox-loading-fill {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, #f59e0b, #fcd34d);
+  border-radius: 2px;
+  animation: lootbox-loading-sweep 1s ease-in-out infinite;
+}
+
+@keyframes lootbox-loading-sweep {
+  0% {
+    transform: translateX(-200%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* Buy button */
+.lootbox-action {
+  text-align: center;
+}
+
+.lootbox-buy-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  width: 100%;
+}
+
+.lootbox-buy-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+}
+
+.lootbox-buy-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.lootbox-insufficient {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: #f87171;
+  font-weight: 600;
+}
+
+/* Zvcoins subgrid: custom sprays top-left, lootbox below sprays, fakerank right side */
+@media (min-width: 768px) {
+  .zvcoins-subgrid {
+    grid-template-rows: auto auto;
+  }
+  .zvcoins-subgrid .spray-card-container {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+  }
+  .zvcoins-subgrid .lootbox-grid-item {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .zvcoins-subgrid .fakerank-container {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: stretch;
+  }
+}
+
 /* Timer Badge Styles */
 .fakerank-timer-badge {
   background: linear-gradient(135deg, #10b981, #059669);
