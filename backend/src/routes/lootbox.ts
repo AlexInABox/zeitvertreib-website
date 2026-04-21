@@ -36,8 +36,26 @@ const REWARD_POOL: RewardDefinition[] = [
 
 const TOTAL_WEIGHT = REWARD_POOL.reduce((sum, entry) => sum + entry.weight, 0);
 
+function getSecureRandomInt(maxExclusive: number): number {
+  if (maxExclusive <= 0) {
+    throw new Error('maxExclusive must be greater than 0');
+  }
+
+  const randomValues = new Uint32Array(1);
+  const maxUint32 = 0x100000000;
+  const limit = maxUint32 - (maxUint32 % maxExclusive);
+
+  while (true) {
+    crypto.getRandomValues(randomValues);
+    const randomValue = randomValues[0]!;
+    if (randomValue < limit) {
+      return randomValue % maxExclusive;
+    }
+  }
+}
+
 function pickReward(): RewardDefinition {
-  const roll = Math.random() * TOTAL_WEIGHT;
+  const roll = getSecureRandomInt(TOTAL_WEIGHT);
   let accumulated = 0;
   for (const entry of REWARD_POOL) {
     accumulated += entry.weight;
