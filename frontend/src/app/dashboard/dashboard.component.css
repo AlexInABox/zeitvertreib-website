@@ -2557,11 +2557,27 @@
 }
 
 /* Rarity borders */
-.lootbox-item.rarity-common    { border-color: rgba(156, 163, 175, 0.6); background: rgba(156, 163, 175, 0.08); }
-.lootbox-item.rarity-uncommon  { border-color: rgba(52, 211, 153, 0.6);  background: rgba(52, 211, 153, 0.08); }
-.lootbox-item.rarity-rare      { border-color: rgba(96, 165, 250, 0.7);  background: rgba(96, 165, 250, 0.08); }
-.lootbox-item.rarity-epic      { border-color: rgba(167, 139, 250, 0.8); background: rgba(167, 139, 250, 0.1); }
-.lootbox-item.rarity-legendary { border-color: #f59e0b; background: rgba(245, 158, 11, 0.12); box-shadow: 0 0 14px rgba(245, 158, 11, 0.35); }
+.lootbox-item.rarity-common {
+  border-color: rgba(156, 163, 175, 0.6);
+  background: rgba(156, 163, 175, 0.08);
+}
+.lootbox-item.rarity-uncommon {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.08);
+}
+.lootbox-item.rarity-rare {
+  border-color: rgba(96, 165, 250, 0.7);
+  background: rgba(96, 165, 250, 0.08);
+}
+.lootbox-item.rarity-epic {
+  border-color: rgba(167, 139, 250, 0.8);
+  background: rgba(167, 139, 250, 0.1);
+}
+.lootbox-item.rarity-legendary {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+}
 
 /* Idle placeholder — absolute overlay so track stays in DOM for CSS transitions */
 .lootbox-idle {
@@ -2580,8 +2596,15 @@
 }
 
 @keyframes lootbox-idle-float {
-  0%, 100% { transform: translateY(0) scale(1);    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)); }
-  50%       { transform: translateY(-5px) scale(1.06); filter: drop-shadow(0 0 20px rgba(245,158,11,0.45)) drop-shadow(0 6px 14px rgba(0,0,0,0.5)); }
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  }
+  50% {
+    transform: translateY(-5px) scale(1.06);
+    filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.45)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  }
 }
 
 .lootbox-idle-image {
@@ -2609,15 +2632,32 @@
   animation: lootbox-result-pop 0.4s cubic-bezier(0.2, 1.5, 0.5, 1);
 }
 
-.lootbox-result.rarity-common    { border-color: rgba(156, 163, 175, 0.6); }
-.lootbox-result.rarity-uncommon  { border-color: rgba(52, 211, 153, 0.6);  }
-.lootbox-result.rarity-rare      { border-color: rgba(96, 165, 250, 0.7);  }
-.lootbox-result.rarity-epic      { border-color: rgba(167, 139, 250, 0.8); }
-.lootbox-result.rarity-legendary { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+.lootbox-result.rarity-common {
+  border-color: rgba(156, 163, 175, 0.6);
+}
+.lootbox-result.rarity-uncommon {
+  border-color: rgba(52, 211, 153, 0.6);
+}
+.lootbox-result.rarity-rare {
+  border-color: rgba(96, 165, 250, 0.7);
+}
+.lootbox-result.rarity-epic {
+  border-color: rgba(167, 139, 250, 0.8);
+}
+.lootbox-result.rarity-legendary {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
 
 @keyframes lootbox-result-pop {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .lootbox-result-emoji {
@@ -2643,11 +2683,21 @@
   letter-spacing: 0.08em;
 }
 
-.lootbox-rarity-common    { color: #9ca3af; }
-.lootbox-rarity-uncommon  { color: #34d399; }
-.lootbox-rarity-rare      { color: #60a5fa; }
-.lootbox-rarity-epic      { color: #a78bfa; }
-.lootbox-rarity-legendary { color: #f59e0b; }
+.lootbox-rarity-common {
+  color: #9ca3af;
+}
+.lootbox-rarity-uncommon {
+  color: #34d399;
+}
+.lootbox-rarity-rare {
+  color: #60a5fa;
+}
+.lootbox-rarity-epic {
+  color: #a78bfa;
+}
+.lootbox-rarity-legendary {
+  color: #f59e0b;
+}
 
 /* Loading bar */
 .lootbox-loading-bar {
@@ -2667,8 +2717,12 @@
 }
 
 @keyframes lootbox-loading-sweep {
-  0%   { transform: translateX(-200%); }
-  100% { transform: translateX(400%); }
+  0% {
+    transform: translateX(-200%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }
 
 /* Buy button */

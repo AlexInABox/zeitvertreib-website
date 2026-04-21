@@ -200,14 +200,13 @@
             <div class="stats-card p-6 rounded-2xl lootbox-card-wrapper">
               <div class="lootbox-header">
                 <h3 class="spray-title">🎁 Lootbox</h3>
-                <p class="spray-subtitle">Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong></p>
+                <p class="spray-subtitle">
+                  Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong>
+                </p>
               </div>
 
               <!-- Spin animation area -->
-              <div class="lootbox-stage"
-                [class.is-animating]="lootboxAnimating"
-                [class.is-snapping]="lootboxSnapping"
-              >
+              <div class="lootbox-stage" [class.is-animating]="lootboxAnimating" [class.is-snapping]="lootboxSnapping">
                 <div class="lootbox-pointer-top"></div>
                 <div class="lootbox-center-line"></div>
                 <div class="lootbox-track-viewport">
@@ -216,7 +215,7 @@
                     [style.transform]="
                       lootboxAnimating
                         ? 'translateX(calc(-36 * 96px + 50% - 68px))'
-                        : (lootboxSnapping || lootboxAtRest)
+                        : lootboxSnapping || lootboxAtRest
                           ? 'translateX(calc(-36 * 96px + 50% - 48px))'
                           : 'translateX(0)'
                     "
@@ -238,7 +237,10 @@
                 <div class="lootbox-pointer-bottom"></div>
 
                 <!-- Idle placeholder — absolute overlay keeps track in DOM -->
-                <div *ngIf="!lootboxAnimating && !lootboxSnapping && !lootboxAtRest && lootboxSpinItems.length === 0" class="lootbox-idle">
+                <div
+                  *ngIf="!lootboxAnimating && !lootboxSnapping && !lootboxAtRest && lootboxSpinItems.length === 0"
+                  class="lootbox-idle"
+                >
                   <img src="assets/lootbox-placeholder.svg" alt="Geschlossene Lootbox" class="lootbox-idle-image" />
                   <span class="lootbox-idle-label">Bereit zum Öffnen</span>
                 </div>
@@ -270,7 +272,9 @@
 
               <!-- Messages -->
               <div *ngIf="lootboxError" class="spray-message spray-message-error mt-2">{{ lootboxError }}</div>
-              <div *ngIf="lootboxSuccess && !lootboxResult" class="spray-message spray-message-success mt-2">{{ lootboxSuccess }}</div>
+              <div *ngIf="lootboxSuccess && !lootboxResult" class="spray-message spray-message-success mt-2">
+                {{ lootboxSuccess }}
+              </div>
 
               <!-- Buy button -->
               <div class="lootbox-action">
@@ -283,9 +287,7 @@
                   <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
                   <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
                 </button>
-                <p *ngIf="!canAffordLootbox() && !lootboxSpinning" class="lootbox-insufficient">
-                  Nicht genügend ZVC
-                </p>
+                <p *ngIf="!canAffordLootbox() && !lootboxSpinning" class="lootbox-insufficient">Nicht genügend ZVC</p>
 
                 <!-- Daily free claim for donators -->
                 <button

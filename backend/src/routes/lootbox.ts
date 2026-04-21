@@ -122,7 +122,10 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
 
   const [playerResult, userIsDonator] = await Promise.all([
     db
-      .select({ experience: schema.playerdata.experience, lastFreeLootboxClaim: schema.playerdata.lastFreeLootboxClaim })
+      .select({
+        experience: schema.playerdata.experience,
+        lastFreeLootboxClaim: schema.playerdata.lastFreeLootboxClaim,
+      })
       .from(schema.playerdata)
       .where(eq(schema.playerdata.id, steamId)),
     isDonator(steamId, env),
@@ -173,14 +176,11 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
       .where(eq(schema.playerdata.id, steamId));
   } else {
     newBalance = currentBalance - LOOTBOX_COST + reward.zvcValue;
-    await db
-      .update(schema.playerdata)
-      .set({ experience: newBalance })
-      .where(eq(schema.playerdata.id, steamId));
+    await db.update(schema.playerdata).set({ experience: newBalance }).where(eq(schema.playerdata.id, steamId));
   }
 
   // After a paid purchase, the free claim state is unchanged; after a free purchase it's consumed for today
-  const freeLootboxAvailable = isFree ? false : (userIsDonator && lastClaim !== todayUTC);
+  const freeLootboxAvailable = isFree ? false : userIsDonator && lastClaim !== todayUTC;
 
   console.log(
     `🎁 Lootbox: ${steamId} ${isFree ? '(GRATIS)' : `paid ${LOOTBOX_COST} ZVC`}, won "${reward.name}" (${reward.rarity}, ${reward.zvcValue} ZVC). Balance: ${currentBalance} → ${newBalance}`,
