@@ -214,9 +214,9 @@
                     class="lootbox-track"
                     [style.transform]="
                       lootboxAnimating
-                        ? 'translateX(calc(-36 * 96px + 50% - 68px))'
+                        ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-animation-center-offset)))'
                         : lootboxSnapping || lootboxAtRest
-                          ? 'translateX(calc(-36 * 96px + 50% - 48px))'
+                          ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-center-offset)))'
                           : 'translateX(0)'
                     "
                   >

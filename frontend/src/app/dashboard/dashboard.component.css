@@ -2459,6 +2459,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  --lootbox-item-width: 88px;
+  --lootbox-item-margin-x: 4px;
+  --lootbox-item-total-width: calc(var(--lootbox-item-width) + var(--lootbox-item-margin-x) * 2);
+  --lootbox-center-offset: calc(var(--lootbox-item-total-width) / 2);
+  --lootbox-animation-offset: 20px;
+  --lootbox-animation-center-offset: calc(var(--lootbox-center-offset) + var(--lootbox-animation-offset));
 }
 
 .lootbox-center-line {
@@ -2529,9 +2536,9 @@
 
 .lootbox-item {
   flex-shrink: 0;
-  width: 88px;
-  height: 88px;
-  margin: 0 4px;
+  width: var(--lootbox-item-width);
+  height: var(--lootbox-item-width);
+  margin: 0 var(--lootbox-item-margin-x);
   border-radius: 8px;
   border: 2px solid rgba(255, 255, 255, 0.18);
   display: flex;
