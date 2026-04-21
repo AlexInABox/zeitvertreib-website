@@ -2,8 +2,8 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm/sql';
 import * as schema from '../db/schema.js';
-import { createResponse, validateSession, isDonator } from '../utils.js';
-import type { LootboxPurchaseResponse, LootboxStatusResponse, LootboxReward, LootboxRarity } from '@zeitvertreib/types';
+import { createResponse, validateSession } from '../utils.js';
+import type { LootboxPurchaseResponse, LootboxReward, LootboxRarity } from '@zeitvertreib/types';
 
 const LOOTBOX_COST = 1;
 
@@ -49,54 +49,9 @@ function pickReward(): RewardDefinition {
 }
 
 /**
- * GET /lootbox
- * Returns the current lootbox status for the authenticated player,
- * including whether a free daily claim is available (donators only).
- */
-export async function handleLootboxStatus(request: Request, env: Env): Promise<Response> {
-  const origin = request.headers.get('Origin');
-  const db = drizzle(env.ZEITVERTREIB_DATA);
-
-  const validation = await validateSession(request, env);
-  if (validation.status !== 'valid') {
-    return createResponse(
-      { error: validation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
-      401,
-      origin,
-    );
-  }
-
-  const steamId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId!}@steam`;
-
-  const [playerResult, userIsDonator] = await Promise.all([
-    db
-      .select({ lastFreeLootboxClaim: schema.playerdata.lastFreeLootboxClaim })
-      .from(schema.playerdata)
-      .where(eq(schema.playerdata.id, steamId)),
-    isDonator(steamId, env),
-  ]);
-
-  if (playerResult.length === 0) {
-    return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
-  }
-
-  const todayUTC = Math.floor(Date.now() / 86400000);
-  const lastClaim = playerResult[0]!.lastFreeLootboxClaim ?? 0;
-
-  const response: LootboxStatusResponse = {
-    isDonator: userIsDonator,
-    freeLootboxAvailable: userIsDonator && lastClaim !== todayUTC,
-  };
-
-  return createResponse(response, 200, origin);
-}
-
-/**
  * POST /lootbox
  * Opens a lootbox for the authenticated player.
- * - Default: deducts LOOTBOX_COST ZVC from the player's balance.
- * - Free: if body contains { free: true }, donators may skip the cost once per UTC day.
- * The reward ZVC is added directly to the player's balance.
+ * Deducts LOOTBOX_COST ZVC from the player's balance and awards a random reward.
  */
 export async function handleLootboxPurchase(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get('Origin');
@@ -113,50 +68,25 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
 
   const steamId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId!}@steam`;
 
-  let isFree = false;
-  try {
-    const body = (await request.json()) as { free?: boolean };
-    isFree = body.free === true;
-  } catch {
-    // empty or invalid body — treat as a normal paid purchase
-  }
-
-  const [playerResult, userIsDonator] = await Promise.all([
-    db
-      .select({
-        experience: schema.playerdata.experience,
-        lastFreeLootboxClaim: schema.playerdata.lastFreeLootboxClaim,
-      })
-      .from(schema.playerdata)
-      .where(eq(schema.playerdata.id, steamId)),
-    isDonator(steamId, env),
-  ]);
+  const playerResult = await db
+    .select({ experience: schema.playerdata.experience })
+    .from(schema.playerdata)
+    .where(eq(schema.playerdata.id, steamId));
 
   if (playerResult.length === 0) {
     return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
   }
 
   const currentBalance = playerResult[0]!.experience ?? 0;
-  const todayUTC = Math.floor(Date.now() / 86400000);
-  const lastClaim = playerResult[0]!.lastFreeLootboxClaim ?? 0;
 
-  if (isFree) {
-    if (!userIsDonator) {
-      return createResponse({ error: 'Nur Unterstützer können täglich gratis eine Lootbox öffnen.' }, 403, origin);
-    }
-    if (lastClaim === todayUTC) {
-      return createResponse({ error: 'Du hast deine tägliche Gratis-Lootbox bereits geöffnet.' }, 400, origin);
-    }
-  } else {
-    if (currentBalance < LOOTBOX_COST) {
-      return createResponse(
-        {
-          error: `Nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${LOOTBOX_COST} ZVC.`,
-        },
-        400,
-        origin,
-      );
-    }
+  if (currentBalance < LOOTBOX_COST) {
+    return createResponse(
+      {
+        error: `Nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${LOOTBOX_COST} ZVC.`,
+      },
+      400,
+      origin,
+    );
   }
 
   const pickedDefinition = pickReward();
@@ -168,51 +98,29 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
     zvcValue: pickedDefinition.zvcValue,
   };
 
-  let newBalance: number;
-  if (isFree) {
-    const updatedRows = await db
-      .update(schema.playerdata)
-      .set({
-        experience: sql`${schema.playerdata.experience} + ${reward.zvcValue}`,
-        lastFreeLootboxClaim: todayUTC,
-      })
-      .where(sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.lastFreeLootboxClaim} != ${todayUTC}`)
-      .returning({ experience: schema.playerdata.experience })
-      .run();
+  const updatedRows = await db
+    .update(schema.playerdata)
+    .set({
+      experience: sql`${schema.playerdata.experience} - ${LOOTBOX_COST} + ${reward.zvcValue}`,
+    })
+    .where(sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.experience} >= ${LOOTBOX_COST}`)
+    .returning({ experience: schema.playerdata.experience })
+    .run();
 
-    if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
-      return createResponse({ error: 'Du hast deine tägliche Gratis-Lootbox bereits geöffnet.' }, 400, origin);
-    }
-
-    newBalance = updatedRows[0]!.experience;
-  } else {
-    const updatedRows = await db
-      .update(schema.playerdata)
-      .set({
-        experience: sql`${schema.playerdata.experience} - ${LOOTBOX_COST} + ${reward.zvcValue}`,
-      })
-      .where(sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.experience} >= ${LOOTBOX_COST}`)
-      .returning({ experience: schema.playerdata.experience })
-      .run();
-
-    if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
-      return createResponse(
-        {
-          error: `Nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${LOOTBOX_COST} ZVC.`,
-        },
-        400,
-        origin,
-      );
-    }
-
-    newBalance = updatedRows[0]!.experience;
+  if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
+    return createResponse(
+      {
+        error: `Nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${LOOTBOX_COST} ZVC.`,
+      },
+      400,
+      origin,
+    );
   }
 
-  // After a paid purchase, the free claim state is unchanged; after a free purchase it's consumed for today
-  const freeLootboxAvailable = isFree ? false : userIsDonator && lastClaim !== todayUTC;
+  const newBalance = updatedRows[0]!.experience;
 
   console.log(
-    `🎁 Lootbox: ${steamId} ${isFree ? '(GRATIS)' : `paid ${LOOTBOX_COST} ZVC`}, won "${reward.name}" (${reward.rarity}, ${reward.zvcValue} ZVC). Balance: ${currentBalance} → ${newBalance}`,
+    `🎁 Lootbox: ${steamId} paid ${LOOTBOX_COST} ZVC, won "${reward.name}" (${reward.rarity}, ${reward.zvcValue} ZVC). Balance: ${currentBalance} → ${newBalance}`,
   );
 
   const response: LootboxPurchaseResponse = {
@@ -220,7 +128,6 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
     message: `Du hast "${reward.name}" gewonnen!`,
     reward,
     newBalance,
-    freeLootboxAvailable,
   };
 
   return createResponse(response, 200, origin);

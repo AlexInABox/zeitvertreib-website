@@ -59,7 +59,6 @@ export const playerdata = sqliteTable('playerdata', {
   migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
   firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
   lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
-  lastFreeLootboxClaim: integer('last_free_lootbox_claim').notNull().default(0),
 });
 
 export const discordInfo = sqliteTable('discord_info', {

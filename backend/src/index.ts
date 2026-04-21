@@ -64,7 +64,7 @@ import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 import { handleGetReports, handleReportFileUpload, handleSearchReportsBySteamId } from './routes/reports.js';
 import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
-import { handleLootboxPurchase, handleLootboxStatus } from './routes/lootbox.js';
+import { handleLootboxPurchase } from './routes/lootbox.js';
 import {
   handleGetMinecraftStats,
   handlePostMinecraftLink,
@@ -211,7 +211,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'POST:/chickencross': handleChickenCrossPost,
 
   // Lootbox routes
-  'GET:/lootbox': handleLootboxStatus,
   'POST:/lootbox': handleLootboxPurchase,
 
   // Z.E.I.T. routes

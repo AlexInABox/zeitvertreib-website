@@ -288,18 +288,6 @@
                   <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
                 </button>
                 <p *ngIf="!canAffordLootbox() && !lootboxSpinning" class="lootbox-insufficient">Nicht genügend ZVC</p>
-
-                <!-- Daily free claim for donators -->
-                <button
-                  *ngIf="isDonator"
-                  class="lootbox-free-btn"
-                  [class.lootbox-free-claimed]="!freeLootboxAvailable"
-                  (click)="buyLootbox(true)"
-                  [disabled]="lootboxSpinning || !freeLootboxAvailable"
-                >
-                  <span *ngIf="freeLootboxAvailable">🌟 Täglich Gratis öffnen</span>
-                  <span *ngIf="!freeLootboxAvailable">✓ Heute bereits geöffnet</span>
-                </button>
               </div>
             </div>
           </div>

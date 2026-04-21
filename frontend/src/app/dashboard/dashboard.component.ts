@@ -27,7 +27,6 @@ import type {
   FakerankColor,
   FakerankColorsResponse,
   LootboxPurchaseResponse,
-  LootboxStatusResponse,
   LootboxReward,
   LootboxRarity,
 } from '@zeitvertreib/types';
@@ -241,7 +240,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   lootboxAnimating = false;
   lootboxSnapping = false;
   lootboxAtRest = false;
-  freeLootboxAvailable = false;
 
   private http = inject(HttpClient);
   private audioService = inject(AudioService);
@@ -288,11 +286,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Load fakerank colors by role
     this.loadFakerankColorsByRole();
-
-    // Load free lootbox status for donators
-    if (this.isDonator) {
-      this.loadLootboxStatus();
-    }
   }
 
   // Check if current user is a fakerank admin
@@ -614,18 +607,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return (this.userStatistics.experience || 0) >= this.lootboxCost;
   }
 
-  loadLootboxStatus(): void {
-    this.authService.authenticatedGet<LootboxStatusResponse>(`${environment.apiUrl}/lootbox`).subscribe({
-      next: (status) => {
-        this.freeLootboxAvailable = status.freeLootboxAvailable;
-      },
-      error: () => {
-        // non-critical, ignore
-      },
-    });
-  }
-
-  buyLootbox(free = false): void {
+  buyLootbox(): void {
     if (this.lootboxSpinning || this.lootboxLoading) {
       return;
     }
@@ -634,13 +616,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const lootboxSnapDurationMs = 550;
     const lootboxSpinBufferMs = 800;
 
-    if (!free && !this.canAffordLootbox()) {
+    if (!this.canAffordLootbox()) {
       this.lootboxError = `Nicht genügend ZVC! Du brauchst ${this.lootboxCost} ZVC.`;
       setTimeout(() => (this.lootboxError = ''), 3000);
-      return;
-    }
-
-    if (free && (!this.isDonator || !this.freeLootboxAvailable)) {
       return;
     }
 
@@ -654,20 +632,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.lootboxAtRest = false;
     this.lootboxSpinItems = [];
 
-    if (!free) {
-      // Deduct cost immediately for responsive UI
-      this.userStatistics.experience = (this.userStatistics.experience || 0) - this.lootboxCost;
-      this.zvcService.setBalance(this.userStatistics.experience);
-    } else {
-      // Consume the free claim optimistically so the button disables immediately
-      this.freeLootboxAvailable = false;
-    }
+    // Deduct cost immediately for responsive UI
+    this.userStatistics.experience = (this.userStatistics.experience || 0) - this.lootboxCost;
+    this.zvcService.setBalance(this.userStatistics.experience);
 
     // Pause ZVC polling for the full animation duration plus a small post-settle buffer
     this.zvcService.pausePolling(lootboxSpinDurationMs + lootboxSnapDurationMs + lootboxSpinBufferMs);
 
     this.authService
-      .authenticatedPost<LootboxPurchaseResponse>(`${environment.apiUrl}/lootbox`, free ? { free: true } : {})
+      .authenticatedPost<LootboxPurchaseResponse>(`${environment.apiUrl}/lootbox`, {})
       .subscribe({
         next: (response) => {
           this.lootboxLoading = false;
@@ -696,7 +669,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
               this.lootboxSuccess = response.message;
               this.userStatistics.experience = response.newBalance;
               this.zvcService.setBalance(response.newBalance);
-              this.freeLootboxAvailable = response.freeLootboxAvailable;
               setTimeout(() => (this.lootboxSuccess = ''), 6000);
             }, lootboxSnapDurationMs);
           }, lootboxSpinDurationMs);
@@ -704,14 +676,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.lootboxLoading = false;
           this.lootboxSpinning = false;
-          if (!free) {
-            // Restore deducted balance
-            this.userStatistics.experience = (this.userStatistics.experience || 0) + this.lootboxCost;
-            this.zvcService.setBalance(this.userStatistics.experience);
-          } else {
-            // Restore free claim on error
-            this.freeLootboxAvailable = true;
-          }
+          // Restore deducted balance
+          this.userStatistics.experience = (this.userStatistics.experience || 0) + this.lootboxCost;
+          this.zvcService.setBalance(this.userStatistics.experience);
           this.lootboxError = err?.error?.error || 'Fehler beim Öffnen der Lootbox';
           setTimeout(() => (this.lootboxError = ''), 4000);
         },

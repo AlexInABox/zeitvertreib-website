@@ -2764,37 +2764,6 @@
   font-weight: 600;
 }
 
-.lootbox-free-btn {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.65rem 2rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-.lootbox-free-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #16a34a, #15803d);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45);
-}
-
-.lootbox-free-btn.lootbox-free-claimed,
-.lootbox-free-btn:disabled {
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(255, 255, 255, 0.35);
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 /* Zvcoins subgrid: custom sprays top-left, lootbox below sprays, fakerank right side */
 @media (min-width: 768px) {
   .zvcoins-subgrid {
