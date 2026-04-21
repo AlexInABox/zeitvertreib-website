@@ -639,50 +639,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Pause ZVC polling for the full animation duration plus a small post-settle buffer
     this.zvcService.pausePolling(lootboxSpinDurationMs + lootboxSnapDurationMs + lootboxSpinBufferMs);
 
-    this.authService
-      .authenticatedPost<LootboxPurchaseResponse>(`${environment.apiUrl}/lootbox`, {})
-      .subscribe({
-        next: (response) => {
-          this.lootboxLoading = false;
+    this.authService.authenticatedPost<LootboxPurchaseResponse>(`${environment.apiUrl}/lootbox`, {}).subscribe({
+      next: (response) => {
+        this.lootboxLoading = false;
 
-          const landingItem = {
-            emoji: response.reward.emoji,
-            name: response.reward.name,
-            rarity: response.reward.rarity,
-          };
-          this.buildLootboxSpinStrip(landingItem);
+        const landingItem = {
+          emoji: response.reward.emoji,
+          name: response.reward.name,
+          rarity: response.reward.rarity,
+        };
+        this.buildLootboxSpinStrip(landingItem);
 
-          // Start animation
-          this.lootboxAnimating = true;
+        // Start animation
+        this.lootboxAnimating = true;
 
-          // Phase 1: main spin ends → snap to exact center
+        // Phase 1: main spin ends → snap to exact center
+        setTimeout(() => {
+          this.lootboxAnimating = false;
+          this.lootboxSnapping = true;
+
+          // Phase 2: snap settles → freeze at winning position and reveal result
           setTimeout(() => {
-            this.lootboxAnimating = false;
-            this.lootboxSnapping = true;
-
-            // Phase 2: snap settles → freeze at winning position and reveal result
-            setTimeout(() => {
-              this.lootboxSnapping = false;
-              this.lootboxAtRest = true;
-              this.lootboxResult = response.reward;
-              this.lootboxSpinning = false;
-              this.lootboxSuccess = response.message;
-              this.userStatistics.experience = response.newBalance;
-              this.zvcService.setBalance(response.newBalance);
-              setTimeout(() => (this.lootboxSuccess = ''), 6000);
-            }, lootboxSnapDurationMs);
-          }, lootboxSpinDurationMs);
-        },
-        error: (err) => {
-          this.lootboxLoading = false;
-          this.lootboxSpinning = false;
-          // Restore deducted balance
-          this.userStatistics.experience = (this.userStatistics.experience || 0) + this.lootboxCost;
-          this.zvcService.setBalance(this.userStatistics.experience);
-          this.lootboxError = err?.error?.error || 'Fehler beim Öffnen der Lootbox';
-          setTimeout(() => (this.lootboxError = ''), 4000);
-        },
-      });
+            this.lootboxSnapping = false;
+            this.lootboxAtRest = true;
+            this.lootboxResult = response.reward;
+            this.lootboxSpinning = false;
+            this.lootboxSuccess = response.message;
+            this.userStatistics.experience = response.newBalance;
+            this.zvcService.setBalance(response.newBalance);
+            setTimeout(() => (this.lootboxSuccess = ''), 6000);
+          }, lootboxSnapDurationMs);
+        }, lootboxSpinDurationMs);
+      },
+      error: (err) => {
+        this.lootboxLoading = false;
+        this.lootboxSpinning = false;
+        // Restore deducted balance
+        this.userStatistics.experience = (this.userStatistics.experience || 0) + this.lootboxCost;
+        this.zvcService.setBalance(this.userStatistics.experience);
+        this.lootboxError = err?.error?.error || 'Fehler beim Öffnen der Lootbox';
+        setTimeout(() => (this.lootboxError = ''), 4000);
+      },
+    });
   }
 
   // Public method to regenerate colors only
