@@ -29,6 +29,7 @@ import type {
   LootboxPurchaseResponse,
   LootboxStatusResponse,
   LootboxReward,
+  LootboxRarity,
 } from '@zeitvertreib/types';
 
 interface PlayerEntry {
@@ -235,7 +236,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   lootboxError = '';
   lootboxSuccess = '';
   lootboxResult: LootboxReward | null = null;
-  lootboxSpinItems: { emoji: string; name: string; rarity: string }[] = [];
+  lootboxSpinItems: { emoji: string; name: string; rarity: LootboxRarity }[] = [];
   lootboxSpinOffset = 0;
   lootboxAnimating = false;
   lootboxSnapping = false;
@@ -582,7 +583,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
   ];
 
-  buildLootboxSpinStrip(landingItem: { emoji: string; name: string; rarity: string }): void {
+  buildLootboxSpinStrip(landingItem: { emoji: string; name: string; rarity: LootboxRarity }): void {
     // Build a deterministic visual strip and place the backend-provided winning item near the end
     const strip: { emoji: string; name: string; rarity: string }[] = [];
     const baseIndex = this.lootboxAllItems.findIndex(

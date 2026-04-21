@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm/sql';
 import * as schema from '../db/schema.js';
 import { createResponse, validateSession, isDonator } from '../utils.js';
 import type { LootboxPurchaseResponse, LootboxStatusResponse, LootboxReward, LootboxRarity } from '@zeitvertreib/types';
@@ -169,14 +170,42 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
 
   let newBalance: number;
   if (isFree) {
-    newBalance = currentBalance + reward.zvcValue;
-    await db
+    const updatedRows = await db
       .update(schema.playerdata)
-      .set({ experience: newBalance, lastFreeLootboxClaim: todayUTC })
-      .where(eq(schema.playerdata.id, steamId));
+      .set({
+        experience: sql`${schema.playerdata.experience} + ${reward.zvcValue}`,
+        lastFreeLootboxClaim: todayUTC,
+      })
+      .where(sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.lastFreeLootboxClaim} != ${todayUTC}`)
+      .returning({ experience: schema.playerdata.experience })
+      .run();
+
+    if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
+      return createResponse({ error: 'Du hast deine tägliche Gratis-Lootbox bereits geöffnet.' }, 400, origin);
+    }
+
+    newBalance = updatedRows[0]!.experience;
   } else {
-    newBalance = currentBalance - LOOTBOX_COST + reward.zvcValue;
-    await db.update(schema.playerdata).set({ experience: newBalance }).where(eq(schema.playerdata.id, steamId));
+    const updatedRows = await db
+      .update(schema.playerdata)
+      .set({
+        experience: sql`${schema.playerdata.experience} - ${LOOTBOX_COST} + ${reward.zvcValue}`,
+      })
+      .where(sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.experience} >= ${LOOTBOX_COST}`)
+      .returning({ experience: schema.playerdata.experience })
+      .run();
+
+    if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
+      return createResponse(
+        {
+          error: `Nicht genügend ZVC! Du hast ${currentBalance} ZVC, brauchst aber ${LOOTBOX_COST} ZVC.`,
+        },
+        400,
+        origin,
+      );
+    }
+
+    newBalance = updatedRows[0]!.experience;
   }
 
   // After a paid purchase, the free claim state is unchanged; after a free purchase it's consumed for today
