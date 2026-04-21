@@ -104,8 +104,7 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
       experience: sql`${schema.playerdata.experience} - ${LOOTBOX_COST} + ${reward.zvcValue}`,
     })
     .where(sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.experience} >= ${LOOTBOX_COST}`)
-    .returning({ experience: schema.playerdata.experience })
-    .run();
+    .returning({ experience: schema.playerdata.experience });
 
   if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
     return createResponse(
