@@ -11,7 +11,7 @@ export class DomainWarningComponent implements OnInit {
   showWarning = false;
   clickCount = 0;
   private readonly STORAGE_KEY = 'domain-warning-dismissed';
-  private readonly URL_FLAG = 'hideDev';
+  private readonly URL_FLAG = 'hiddev';
   private readonly PRODUCTION_DOMAIN = 'zeitvertreib.vip';
 
   ngOnInit(): void {

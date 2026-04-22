@@ -2362,9 +2362,10 @@
 }
 
 .header-add-icon {
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.95rem;
   flex-shrink: 0;
+  margin-left: 0.2rem;
 }
 
 .header-steamid-input {
@@ -2874,7 +2875,10 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.6rem;
+  padding: 0.4rem 0.2rem;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
 }
 
 .report-search-user-btn {
@@ -2914,13 +2918,14 @@
   margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.4rem;
   max-height: 260px;
   overflow-y: auto;
   background: rgba(15, 15, 30, 0.95);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 10px;
-  padding: 0.4rem;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .report-search-dropdown::-webkit-scrollbar {
@@ -2939,17 +2944,18 @@
 .report-search-item {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.5rem 0.65rem;
-  border-radius: 7px;
+  gap: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
   border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .report-search-item:hover {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.2);
 }
 
 .report-search-item-main {
@@ -3009,28 +3015,28 @@
 .search-hint {
   font-size: 0.85rem;
   color: #999;
-  margin-left: 0.5rem;
+  margin-left: 0.2rem;
   user-select: none;
 }
 
 .report-search-user-quick-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(168, 85, 247, 0.15);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  border-radius: 6px;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
   color: #c4b5fd;
   cursor: pointer;
   transition: all 150ms ease;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
 .report-search-user-quick-btn:hover:not(:disabled) {
-  background: rgba(168, 85, 247, 0.25);
-  border-color: rgba(168, 85, 247, 0.5);
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
 }
 
 .report-search-user-quick-btn:disabled {
@@ -3039,33 +3045,12 @@
 }
 
 .report-search-user-quick-btn img {
-  width: 24px;
-  height: 24px;
-  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
 }
 
-.toggle-fallback-btn {
-  padding: 0.5rem 0.75rem;
-  background: rgba(100, 100, 120, 0.2);
-  border: 1px solid rgba(150, 150, 170, 0.3);
-  border-radius: 6px;
-  color: #999;
-  cursor: pointer;
-  transition: all 150ms ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
-.toggle-fallback-btn:hover {
-  background: rgba(100, 100, 120, 0.3);
-  border-color: rgba(150, 150, 170, 0.5);
-  color: #c4b5fd;
-}
-
-.toggle-fallback-btn i {
-  font-size: 1rem;
-}
 
 .manual-report-entry {
   margin-top: 0.5rem;
