@@ -9,7 +9,7 @@ using MEC;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
-namespace CoinFlip;
+namespace Flipped;
 
 public enum CoinOutcome
 {

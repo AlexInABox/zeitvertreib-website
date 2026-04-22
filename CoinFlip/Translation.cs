@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace CoinFlip;
+namespace Flipped;
 
 public class Translation
 {

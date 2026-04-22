@@ -4,12 +4,12 @@ using LabApi.Features.Console;
 using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 
-namespace CoinFlip;
+namespace Flipped;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Plugin : Plugin<Config>
 {
-    public override string Name { get; } = "CoinFlip";
+    public override string Name { get; } = "Flipped";
 
     public override string Description { get; } =
         "Whenever a player flips a coin, a random (sometimes dangerous) event occurs.";
