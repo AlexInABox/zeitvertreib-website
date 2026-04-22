@@ -46,7 +46,7 @@ jobs:
         run: |
           all()     { find . -maxdepth 1 -type d -name '[A-Z]*' -printf '%f\n'; }
           changed() { git diff --name-only HEAD~1; }
-          to_json() { jq -Rcs '[split("\n")[:-1]]'; }
+          to_json() { jq -Rcs 'split("\n")[:-1]'; }
 
           if [ "${{ steps.get_last.outputs.status }}" != "success" ] \
           || [ "${{ github.event_name }}" != "push" ] \
@@ -64,7 +64,6 @@ jobs:
       matrix:
         plugin: ${{ fromJson(needs.check.outputs.folders) }}
     uses: ./.github/workflows/REUSABLE_build-c#-plugin.yml
-    secrets: inherit
     with:
       plugin: ${{ matrix.plugin }}/${{ matrix.plugin }}.csproj
     
