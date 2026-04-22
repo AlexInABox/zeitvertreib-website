@@ -65,5 +65,5 @@ jobs:
         plugin: ${{ fromJson(needs.check.outputs.folders) }}
     uses: ./.github/workflows/REUSABLE_build-c#-plugin.yml
     with:
-      plugin: ${{ matrix.plugin }}/${{ matrix.plugin }}.csproj
+      plugin: ${{ matrix.plugin }}
     
