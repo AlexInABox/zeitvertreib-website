@@ -136,6 +136,16 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
 
   const newBalance = updatedRows[0]!.experience;
 
+  if (newBalance === null) {
+    return createResponse(
+      {
+        error: 'Interner Fehler beim Aktualisieren des Kontostands.',
+      },
+      500,
+      origin,
+    );
+  }
+
   console.log(
     `🎁 Lootbox: ${steamId} paid ${LOOTBOX_COST} ZVC, won "${reward.name}" (${reward.rarity}, ${reward.zvcValue} ZVC). Balance: ${currentBalance} → ${newBalance}`,
   );

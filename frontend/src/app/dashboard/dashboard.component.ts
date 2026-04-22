@@ -66,6 +66,12 @@ interface SpraySlot {
   preview: string | null;
 }
 
+type LootboxSpinItem = {
+  emoji: string;
+  name: string;
+  rarity: LootboxRarity;
+};
+
 interface DiscordInviteResponse {
   approximate_member_count: number;
   approximate_presence_count: number;
@@ -235,7 +241,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   lootboxError = '';
   lootboxSuccess = '';
   lootboxResult: LootboxReward | null = null;
-  lootboxSpinItems: { emoji: string; name: string; rarity: LootboxRarity }[] = [];
+  lootboxSpinItems: LootboxSpinItem[] = [];
   lootboxSpinOffset = 0;
   lootboxAnimating = false;
   lootboxSnapping = false;
@@ -553,7 +559,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ===== LOOTBOX METHODS =====
 
-  private readonly lootboxAllItems = [
+  private readonly lootboxAllItems: LootboxSpinItem[] = [
     { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
     { emoji: '💰', name: '75 ZVC', rarity: 'common' },
     { emoji: '💵', name: '100 ZVC', rarity: 'common' },
@@ -576,9 +582,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
   ];
 
-  buildLootboxSpinStrip(landingItem: { emoji: string; name: string; rarity: LootboxRarity }): void {
+  buildLootboxSpinStrip(landingItem: LootboxSpinItem): void {
     // Build a deterministic visual strip and place the backend-provided winning item near the end
-    const strip: { emoji: string; name: string; rarity: string }[] = [];
+    const strip: LootboxSpinItem[] = [];
     const baseIndex = this.lootboxAllItems.findIndex(
       (item) =>
         item.emoji === landingItem.emoji && item.name === landingItem.name && item.rarity === landingItem.rarity,
