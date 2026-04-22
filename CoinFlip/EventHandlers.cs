@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using CustomPlayerEffects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
@@ -136,18 +135,7 @@ public static class EventHandlers
                 break;
 
             case CoinOutcome.LoseHp:
-                if (player.Health <= config.HpLossAmount + 1f)
-                {
-                    if (!TryKillPlayer(player))
-                        player.Health = -1f;
-
-                    player.SendHint(
-                        translation.LoseHpMessage.Replace("$amount$", config.HpLossAmount.ToString("0")),
-                        5f);
-                    break;
-                }
-
-                player.Health = Math.Max(1f, player.Health - config.HpLossAmount);
+                player.Damage(config.HpLossAmount, "", "");
                 player.SendHint(
                     translation.LoseHpMessage.Replace("$amount$", config.HpLossAmount.ToString("0")),
                     5f);
@@ -400,17 +388,4 @@ public static class EventHandlers
             5f);
     }
 
-    private static bool TryKillPlayer(Player player)
-    {
-        MethodInfo[] methods = player.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        MethodInfo killMethod = methods.FirstOrDefault(m => m.Name == "Kill" && m.GetParameters().Length == 0)
-            ?? methods.FirstOrDefault(m => m.Name == "Kill" && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(bool));
-
-        if (killMethod == null)
-            return false;
-
-        object[] parameters = killMethod.GetParameters().Length == 0 ? Array.Empty<object>() : new object[] { false };
-        killMethod.Invoke(player, parameters);
-        return true;
-    }
 }
