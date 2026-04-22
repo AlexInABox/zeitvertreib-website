@@ -51,7 +51,7 @@ jobs:
           if [ "${{ steps.get_last.outputs.status }}" != "success" ] \
           || [ "${{ github.event_name }}" != "push" ] \
           || changed | grep -qE '\.sln$|\.csproj$|^types/'; then
-            FOLDERS=$(all | to_json)
+            FOLDERS=$(all | sort -u | to_json)
           else
             FOLDERS=$(changed | grep -oP '^[A-Z][^/]+(?=/)' | sort -u | to_json)
           fi
@@ -64,6 +64,7 @@ jobs:
       matrix:
         plugin: ${{ fromJson(needs.check.outputs.folders) }}
     uses: ./.github/workflows/REUSABLE_build-c#-plugin.yml
+    secrets: inherit
     with:
       plugin: ${{ matrix.plugin }}/${{ matrix.plugin }}.csproj
     
