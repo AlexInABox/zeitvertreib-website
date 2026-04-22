@@ -20,7 +20,7 @@ public class CruelEffect : IEvent
         [
             () =>
             {
-                player.EnableEffect<Blindness>(90, 15f); // Barely blind. 10% visiblity left!
+                player.EnableEffect<Blindness>(90, 15f); // Barely blind. 10% visibility left!
             },
             () =>
             {

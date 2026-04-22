@@ -28,11 +28,7 @@ public class BadEffect : IEvent
             },
             () =>
             {
-                player.EnableEffect<Slowness>(30, 15f); // Deaf
-            },
-            () =>
-            {
-                player.EnableEffect<Slowness>(30, 15f); // Deaf
+                player.EnableEffect<Slowness>(30, 15f); // Slowww
             },
             () =>
             {

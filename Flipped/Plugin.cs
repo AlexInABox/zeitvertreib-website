@@ -26,6 +26,7 @@ public class Plugin : Plugin<Config>
     {
         Instance = this;
 
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (Config == null)
         {
             Logger.Error("Failed to load config. Using defaults.");
