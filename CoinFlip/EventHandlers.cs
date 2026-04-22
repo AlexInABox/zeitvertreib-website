@@ -7,7 +7,6 @@ using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
-using PlayerRoles.FirstPersonControl;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
@@ -223,8 +222,8 @@ public static class EventHandlers
     private static string ApplyRandomEffect(Player player, float duration)
     {
         // Cases 0-8 are negative effects (full duration).
-        // Cases 9-11 are positive effects (60% duration).
-        int index = Random.Next(12);
+        // Cases 9-10 are positive effects (60% duration).
+        int index = Random.Next(11);
         float goodDuration = duration * 0.6f;
 
         switch (index)
@@ -270,8 +269,9 @@ public static class EventHandlers
                 return "Vergiftung";
 
             case 8:
-                ApplyReverseInputEffect(player, duration);
-                return "Umgekehrte Steuerung";
+                player.EnableEffect<MovementBoost>(25);
+                Timing.CallDelayed(goodDuration, () => { if (player.IsAlive) player.DisableEffect<MovementBoost>(); });
+                return "Geschwindigkeitsschub";
 
             case 9:
                 player.EnableEffect<MovementBoost>(25);
@@ -283,62 +283,11 @@ public static class EventHandlers
                 Timing.CallDelayed(goodDuration, () => { if (player.IsAlive) player.DisableEffect<Lightweight>(); });
                 return "Leichtfüßigkeit";
 
-            default: // case 11
+            default: // case 10
                 player.EnableEffect<Invisible>(1);
                 Timing.CallDelayed(goodDuration, () => { if (player.IsAlive) player.DisableEffect<Invisible>(); });
                 return "Unsichtbarkeit";
         }
-    }
-
-    private static void ApplyReverseInputEffect(Player player, float duration)
-    {
-        if (player.RoleBase is not IFpcRole fpcRole)
-            return;
-
-        object fpcModule = fpcRole.FpcModule;
-        if (fpcModule == null)
-            return;
-
-        PropertyInfo moveDirectionProperty = fpcModule.GetType().GetProperty("MoveDirection");
-        PropertyInfo overrideDirectionProperty = fpcModule.GetType().GetProperty("MovementOverrideDirection");
-
-        if (moveDirectionProperty == null || overrideDirectionProperty == null)
-            return;
-
-        player.EnableEffect<Slowness>(200, duration);
-        Timing.RunCoroutine(ReverseInputCoroutine(player, fpcModule, moveDirectionProperty, overrideDirectionProperty, duration));
-    }
-
-    private static IEnumerator<float> ReverseInputCoroutine(Player player, object fpcModule, PropertyInfo moveDirectionProperty, PropertyInfo overrideDirectionProperty, float duration)
-    {
-        float endTime = Time.time + duration;
-        Type overrideType = overrideDirectionProperty.PropertyType;
-
-        while (player.IsAlive && Time.time < endTime)
-        {
-            object moveDirection = moveDirectionProperty.GetValue(fpcModule);
-            if (moveDirection is Vector2 move2)
-            {
-                if (overrideType == typeof(Vector2))
-                    overrideDirectionProperty.SetValue(fpcModule, -move2);
-                else if (overrideType == typeof(Vector3))
-                    overrideDirectionProperty.SetValue(fpcModule, new Vector3(-move2.x, 0f, -move2.y));
-            }
-            else if (moveDirection is Vector3 move3)
-            {
-                if (overrideType == typeof(Vector3))
-                    overrideDirectionProperty.SetValue(fpcModule, -move3);
-                else if (overrideType == typeof(Vector2))
-                    overrideDirectionProperty.SetValue(fpcModule, new Vector2(-move3.x, -move3.z));
-            }
-
-            yield return Timing.WaitForSeconds(0.05f);
-        }
-
-        if (overrideType == typeof(Vector2))
-            overrideDirectionProperty.SetValue(fpcModule, Vector2.zero);
-        else if (overrideType == typeof(Vector3))
-            overrideDirectionProperty.SetValue(fpcModule, Vector3.zero);
     }
 
     private static void ApplySwapPosition(Player player, Translation translation)
