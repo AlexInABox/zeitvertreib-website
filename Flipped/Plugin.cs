@@ -28,25 +28,25 @@ public class Plugin : Plugin<Config>
 
         if (Config == null)
         {
-            Logger.Error("[CoinFlip] Failed to load config. Using defaults.");
+            Logger.Error("Failed to load config. Using defaults.");
             Config = new Config();
         }
 
         if (!this.TryLoadConfig("translation.yml", out Translation translation))
         {
-            Logger.Warn("[CoinFlip] Failed to load translation. Using defaults.");
+            Logger.Warn("Failed to load translation. Using defaults.");
             translation = new Translation();
         }
 
         Translation = translation;
 
         EventHandlers.RegisterEvents();
-        Logger.Info("[CoinFlip] Plugin enabled.");
+        Logger.Info("Plugin enabled.");
     }
 
     public override void Disable()
     {
         EventHandlers.UnregisterEvents();
-        Logger.Info("[CoinFlip] Plugin disabled.");
+        Logger.Info("Plugin disabled.");
     }
 }

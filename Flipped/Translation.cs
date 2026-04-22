@@ -44,11 +44,13 @@ public class Translation
     public string GainHpMessage { get; set; } =
         "<color=green>Die Münze gibt dir <b>$amount$ HP</b> zurück – aber die Wunde blutet noch nach.</color>";
 
-    [Description("Nachricht beim 'Zu einem zufälligen Spieler teleportieren'-Ergebnis. $player$ wird durch den Spielernamen ersetzt.")]
+    [Description(
+        "Nachricht beim 'Zu einem zufälligen Spieler teleportieren'-Ergebnis. $player$ wird durch den Spielernamen ersetzt.")]
     public string TeleportRandomMessage { get; set; } =
         "<color=cyan>Puff! Du bist jetzt bei <b>$player$</b>. Überraschung!</color>";
 
-    [Description("Nachricht beim 'Zu einem zufälligen Spieler teleportieren'-Ergebnis wenn kein anderer Spieler verfügbar ist.")]
+    [Description(
+        "Nachricht beim 'Zu einem zufälligen Spieler teleportieren'-Ergebnis wenn kein anderer Spieler verfügbar ist.")]
     public string TeleportRandomNoTargetMessage { get; set; } =
         "<color=yellow>Die Münze wollte dich woanders hinschicken – aber es ist niemand da. Bleib halt.</color>";
 
