@@ -262,19 +262,17 @@ public static class EventHandlers
                 return "Geschwindigkeitsschub";
 
             case 9:
-                player.EnableEffect<MovementBoost>(25);
-                Timing.CallDelayed(goodDuration, () => { if (player.IsAlive) player.DisableEffect<MovementBoost>(); });
-                return "Geschwindigkeitsschub";
-
-            case 10:
                 player.EnableEffect<Lightweight>(1);
                 Timing.CallDelayed(goodDuration, () => { if (player.IsAlive) player.DisableEffect<Lightweight>(); });
                 return "Leichtfüßigkeit";
 
-            default: // case 10
+            case 10:
                 player.EnableEffect<Invisible>(1);
                 Timing.CallDelayed(goodDuration, () => { if (player.IsAlive) player.DisableEffect<Invisible>(); });
                 return "Unsichtbarkeit";
+
+            default:
+                return "Unbekannt";
         }
     }
 
@@ -346,45 +344,28 @@ public static class EventHandlers
 
     private static void ApplyGiveItem(Player player, Translation translation)
     {
-        ItemType[] pool = new[]
+        (ItemType Type, string Name)[] pool = new[]
         {
-            ItemType.Medkit,
-            ItemType.Adrenaline,
-            ItemType.Coin,
-            ItemType.Painkillers,
-            ItemType.Radio,
-            ItemType.KeycardMTFPrivate,
-            ItemType.KeycardMTFOperative,
-            ItemType.KeycardMTFCaptain,
-            ItemType.SCP330,
-            ItemType.SCP1507Tape,
-            ItemType.GunCOM15,
-            ItemType.GrenadeFlash,
-            ItemType.Flashlight,
-        };
-
-        string[] names = new[]
-        {
-            "Verbandskasten",
-            "Adrenalin",
-            "Münze",
-            "Schmerzmittel",
-            "Radio",
-            "MTF-Privat-Schlüsselkarte",
-            "MTF-Operative-Schlüsselkarte",
-            "MTF-Captain-Schlüsselkarte",
-            "SCP-330",
-            "SCP-1507 Tape",
-            "COM-15",
-            "Blendgranate",
-            "Taschenlampe",
+            (ItemType.Medkit,             "Verbandskasten"),
+            (ItemType.Adrenaline,         "Adrenalin"),
+            (ItemType.Coin,               "Münze"),
+            (ItemType.Painkillers,        "Schmerzmittel"),
+            (ItemType.Radio,              "Radio"),
+            (ItemType.KeycardMTFPrivate,  "MTF-Privat-Schlüsselkarte"),
+            (ItemType.KeycardMTFOperative,"MTF-Operative-Schlüsselkarte"),
+            (ItemType.KeycardMTFCaptain,  "MTF-Captain-Schlüsselkarte"),
+            (ItemType.SCP330,             "SCP-330"),
+            (ItemType.SCP1507Tape,        "SCP-1507 Tape"),
+            (ItemType.GunCOM15,           "COM-15"),
+            (ItemType.GrenadeFlash,       "Blendgranate"),
+            (ItemType.Flashlight,         "Taschenlampe"),
         };
 
         int index = Random.Next(pool.Length);
-        player.AddItem(pool[index]);
+        player.AddItem(pool[index].Type);
 
         player.SendHint(
-            translation.GiveItemMessage.Replace("$item$", names[index]),
+            translation.GiveItemMessage.Replace("$item$", pool[index].Name),
             5f);
     }
 
