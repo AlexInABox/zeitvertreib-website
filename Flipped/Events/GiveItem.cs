@@ -14,19 +14,19 @@ public class GiveItem : IEvent
 
     public void Run(Player player)
     {
-        List<(ItemType Type, string Name)> pool =
+        List<ItemType> pool =
         [
-            (ItemType.Medkit,            "Verbandskasten"),
-            (ItemType.Adrenaline,        "Adrenalin"),
-            (ItemType.Painkillers,       "Schmerzmittel"),
-            (ItemType.Flashlight,        "Taschenlampe"),
-            (ItemType.Radio,             "Radio"),
-            (ItemType.GrenadeFlash,      "Blendgranate"),
-            (ItemType.KeycardMTFPrivate, "MTF-Private-Schlüsselkarte"),
-            (ItemType.Coin,              "Münze"),
+            ItemType.Medkit,
+            ItemType.Adrenaline,
+            ItemType.Painkillers,
+            ItemType.Flashlight,
+            ItemType.Radio,
+            ItemType.GrenadeFlash,
+            ItemType.KeycardMTFPrivate,
+            ItemType.Coin,
         ];
 
         int index = EventHandlers.Random.Next(pool.Count);
-        player.AddItem(pool[index].Type);
+        player.AddItem(pool[index]);
     }
 }
