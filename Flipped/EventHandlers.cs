@@ -1,25 +1,49 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using HintServiceMeow.Core.Enum;
+using HintServiceMeow.Core.Models.Hints;
+using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
+using MEC;
 using Random = System.Random;
 
 namespace Flipped;
 
 public static class EventHandlers
 {
-    public static Random Random = new();
+    public static readonly Random Random = new();
+    private static readonly ConcurrentDictionary<int, string> PlayerMessage = new();
 
     public static void RegisterEvents()
     {
         PlayerEvents.FlippedCoin += OnFlippedCoin;
+        PlayerEvents.Joined += OnJoined;
     }
 
     public static void UnregisterEvents()
     {
         PlayerEvents.FlippedCoin -= OnFlippedCoin;
+        PlayerEvents.Joined -= OnJoined;
+    }
+
+    private static void OnJoined(PlayerJoinedEventArgs ev)
+    {
+        Hint hintHud = new()
+        {
+            Alignment = HintAlignment.Center,
+            //AutoText = _ => PlayerMessage[ev.Player.PlayerId],
+            AutoText = _ => PlayerMessage.TryGetValue(ev.Player.PlayerId, out string value) ? value : "",
+            YCoordinateAlign = HintVerticalAlign.Bottom,
+            YCoordinate = 900,
+            XCoordinate = 0,
+            SyncSpeed = HintSyncSpeed.Fast
+        };
+        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
+        playerDisplay.AddHint(hintHud);
     }
 
     private static void OnFlippedCoin(PlayerFlippedCoinEventArgs ev)
@@ -35,14 +59,12 @@ public static class EventHandlers
             _ => ev.IsTails ? EventType.Heavenly : EventType.Cruel
         };
 
-        List<IEvent> selectedEvents = GetAvailableEvents().Where(e => e.EventType == eventType).ToList();
+        List<IEvent> selectedEvents =
+            GetAvailableEvents().Where(e => e.EventType == eventType && e.CanRun(ev.Player)).ToList();
         IEvent selectedEvent = selectedEvents[Random.Next(selectedEvents.Count)];
 
-        if (selectedEvent.CanRun(ev.Player))
-        {
-            selectedEvent.Run(ev.Player);
-            ev.CoinItem.DropItem().Destroy();
-        }
+        selectedEvent.Run(ev.Player);
+        ev.CoinItem.DropItem().Destroy();
     }
 
     private static List<IEvent> GetAvailableEvents()
@@ -56,6 +78,16 @@ public static class EventHandlers
                 typeof(IEvent).IsAssignableFrom(t))
             .Select(t => (IEvent)Activator.CreateInstance(t)!)
             .ToList();
+    }
+
+    public static void PushUserMessage(Player player, string message)
+    {
+        PlayerMessage.AddOrUpdate(player.PlayerId, message, (_, _) => message);
+        Timing.CallDelayed(10f, () =>
+        {
+            // Reset the players message to nothing IF the current message still matches our "old" message at this point.
+            PlayerMessage.TryUpdate(player.PlayerId, string.Empty, message);
+        });
     }
 }
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LabApi.Features.Wrappers;
+using PlayerRoles;
 
 namespace Flipped.Events;
 
@@ -20,5 +21,8 @@ public class TeleportToScp : IEvent
         Player scpToTpTo = possibleScpsToTpTo[EventHandlers.Random.Next(0, possibleScpsToTpTo.Count)];
 
         player.Position = scpToTpTo.Position;
+        EventHandlers.PushUserMessage(player,
+            $"Die Münze teleportiert dich zu SCP-{scpToTpTo.Role.GetAbbreviatedRoleName()}");
+        EventHandlers.PushUserMessage(scpToTpTo, $"Ein Münzwurf teleportiert {player.Nickname} zu dir!!");
     }
 }

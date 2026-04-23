@@ -21,14 +21,17 @@ public class CruelEffect : IEvent
             () =>
             {
                 player.EnableEffect<Blindness>(90, 15f); // Barely blind. 10% visibility left!
+                EventHandlers.PushUserMessage(player, "Die Münze nimmt dir deine Augen...");
             },
             () =>
             {
                 player.EnableEffect<Slowness>(90, 15f); // 90% Slowdown!
+                EventHandlers.PushUserMessage(player, "Das Glück der Münze bricht dir deine Beine!");
             },
             () =>
             {
                 player.EnableEffect<Sinkhole>(1, 15f); // Scary!
+                EventHandlers.PushUserMessage(player, "Die Münze möchte dich leiden sehen!");
             }
         ];
         int index = EventHandlers.Random.Next(actions.Count);

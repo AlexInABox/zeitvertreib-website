@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using LabApi.Features.Wrappers;
 
@@ -23,10 +22,11 @@ public class GiveScpItem : IEvent
             ItemType.SCP1853,
             ItemType.SCP2176,
             ItemType.SCP1576,
-            ItemType.SCP330,
+            ItemType.SCP330
         ];
 
         int index = EventHandlers.Random.Next(pool.Count);
         player.AddItem(pool[index]);
+        EventHandlers.PushUserMessage(player, "Die Münze schenkt dir ein SCP-Item!! <3");
     }
 }

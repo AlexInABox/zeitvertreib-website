@@ -23,10 +23,12 @@ public class GiveItem : IEvent
             ItemType.Radio,
             ItemType.GrenadeFlash,
             ItemType.KeycardMTFPrivate,
-            ItemType.Coin,
+            ItemType.Coin
         ];
 
         int index = EventHandlers.Random.Next(pool.Count);
         player.AddItem(pool[index]);
+
+        EventHandlers.PushUserMessage(player, "Die Münze schenkt dir ein Item! <3");
     }
 }

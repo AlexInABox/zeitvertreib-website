@@ -14,5 +14,6 @@ public class RestoreHealth : IEvent
     public void Run(Player player)
     {
         player.Health = player.MaxHealth;
+        EventHandlers.PushUserMessage(player, "Die Münze heilt dich <3");
     }
 }

@@ -13,6 +13,7 @@ public class GainHp : IEvent
 
     public void Run(Player player)
     {
-        player.Heal(player.MaxHealth * 0.1f);
+        player.Heal(player.MaxHealth * 0.5f);
+        EventHandlers.PushUserMessage(player, $"Die Münze schenkt dir {player.MaxHealth * 0.5f} HP! <3");
     }
 }

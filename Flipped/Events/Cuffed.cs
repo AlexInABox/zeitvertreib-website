@@ -5,8 +5,6 @@ namespace Flipped.Events;
 
 public class Cuffed : IEvent
 {
-    private const float Duration = 30f;
-
     public EventType EventType { get; } = EventType.Bad;
 
     public bool CanRun(Player player)
@@ -18,10 +16,7 @@ public class Cuffed : IEvent
     {
         player.IsDisarmed = true;
 
-        Timing.CallDelayed(Duration, () =>
-        {
-            if (player.IsAlive && player.IsDisarmed)
-                player.IsDisarmed = false;
-        });
+        Timing.CallDelayed(30f, () => { player.IsDisarmed = false; });
+        EventHandlers.PushUserMessage(player, "Die Münze liebt es dich gefesselt zu sehen ^^");
     }
 }

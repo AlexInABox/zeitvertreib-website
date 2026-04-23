@@ -20,5 +20,6 @@ public class Cancer : IEvent
         player.EnableEffect<Disabled>(1, Duration);
         player.EnableEffect<Hemorrhage>(1, Duration);
         player.EnableEffect<Poisoned>(1, Duration);
+        EventHandlers.PushUserMessage(player, "Die Münze beschert dich mit Krebs. Wie schrecklich...");
     }
 }

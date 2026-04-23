@@ -21,6 +21,7 @@ public class HeavenlyEffect : IEvent
             () =>
             {
                 player.EnableEffect<MovementBoost>(50, 15f); // Superspeed!
+                EventHandlers.PushUserMessage(player, "Die Münze macht dich unglaublich schnell!!!!!");
             }
         ];
         int index = EventHandlers.Random.Next(actions.Count);
