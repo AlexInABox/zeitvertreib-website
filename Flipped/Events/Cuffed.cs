@@ -11,7 +11,7 @@ public class Cuffed : IEvent
 
     public bool CanRun(Player player)
     {
-        return !player.IsDisarmed;
+        return true;
     }
 
     public void Run(Player player)
