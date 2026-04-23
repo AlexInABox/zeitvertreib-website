@@ -48,6 +48,7 @@ public static class EventHandlers
 
     private static void OnFlippedCoin(PlayerFlippedCoinEventArgs ev)
     {
+        if (ev.CoinItem.LastFlipTime is not null) return; //If this coin already has a LastFlipTime it cant be reused!
         // Heads: 50% Neutral, 35% Bad,  15% Cruel
         // Tails: 50% Neutral, 35% Good, 15% Heavenly
         int roll = Random.Next(100);
@@ -63,8 +64,11 @@ public static class EventHandlers
             GetAvailableEvents().Where(e => e.EventType == eventType && e.CanRun(ev.Player)).ToList();
         IEvent selectedEvent = selectedEvents[Random.Next(selectedEvents.Count)];
 
-        selectedEvent.Run(ev.Player);
-        ev.CoinItem.DropItem().Destroy();
+        Timing.CallDelayed(2.2f, () => //2.2f is the sweetspot for the coinflip animation to play!
+        {
+            selectedEvent.Run(ev.Player);
+            ev.CoinItem.DropItem().Destroy();
+        });
     }
 
     private static List<IEvent> GetAvailableEvents()
