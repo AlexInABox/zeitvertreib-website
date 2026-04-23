@@ -15,18 +15,18 @@ public class GiveScpItem : IEvent
 
     public void Run(Player player)
     {
-        List<(ItemType Type, string Name)> pool =
+        List<ItemType> pool =
         [
-            (ItemType.SCP500,  "SCP-500"),
-            (ItemType.SCP207,  "SCP-207"),
-            (ItemType.SCP268,  "SCP-268"),
-            (ItemType.SCP1853, "SCP-1853"),
-            (ItemType.SCP2176, "SCP-2176"),
-            (ItemType.SCP1576, "SCP-1576"),
-            (ItemType.SCP330,  "SCP-330"),
+            ItemType.SCP500,
+            ItemType.SCP207,
+            ItemType.SCP268,
+            ItemType.SCP1853,
+            ItemType.SCP2176,
+            ItemType.SCP1576,
+            ItemType.SCP330,
         ];
 
         int index = EventHandlers.Random.Next(pool.Count);
-        player.AddItem(pool[index].Type);
+        player.AddItem(pool[index]);
     }
 }
