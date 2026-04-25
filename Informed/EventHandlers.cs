@@ -1,25 +1,67 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
+using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
+using MEC;
+using QRCoder;
 using UnityEngine;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
+using Logger = LabApi.Features.Console.Logger;
 
 namespace Informed;
 
 public static class EventHandlers
 {
+    private static ConcurrentBag<AbstractHint> _logoHints = [];
+    private static ConcurrentBag<AbstractHint> _qrCodeHints = [];
+    private static CoroutineHandle _logoSwitcher;
+
+
     public static void RegisterEvents()
     {
         PlayerEvents.Joined += OnJoined;
+        ServerEvents.RoundEnded += OnRoundEnded;
+
+        _logoSwitcher = Timing.RunCoroutine(SwitchLogoAndQrCode());
     }
 
     public static void UnregisterEvents()
     {
         PlayerEvents.Joined -= OnJoined;
+        ServerEvents.RoundEnded -= OnRoundEnded;
+        Timing.KillCoroutines(_logoSwitcher);
+    }
+
+    private static IEnumerator<float> SwitchLogoAndQrCode()
+    {
+        bool showLogo = true;
+        while (true)
+        {
+            foreach (AbstractHint hint in _logoHints) hint.Hide = !showLogo;
+
+            foreach (AbstractHint hint in _qrCodeHints) hint.Hide = showLogo;
+
+            showLogo = !showLogo;
+
+            yield return Timing.WaitForSeconds(5);
+        }
+    }
+
+    private static void OnRoundEnded(RoundEndedEventArgs ev)
+    {
+        foreach (AbstractHint hint in _logoHints) hint.Hide = false;
+        foreach (AbstractHint hint in _qrCodeHints) hint.Hide = true;
+
+        _logoHints = [];
+        _qrCodeHints = [];
     }
 
     private static void OnJoined(PlayerJoinedEventArgs ev)
@@ -93,22 +135,77 @@ public static class EventHandlers
         ];
 
         foreach (Vector2 point in points)
-            DrawPoint(playerDisplay, point,
-                (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 420f, 1015);
+            _logoHints.Add(DrawPoint(playerDisplay, point,
+                (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 420f, 1015, true, false,
+                2.75f));
+
+        const string chars =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{};:,.<>?";
+
+        StringBuilder result = new(24)
+        {
+            Capacity = 24
+        };
+
+        result.Append(DateTimeOffset.Now.ToUnixTimeSeconds() + "#");
+        Logger.Info(result + " " + result.Length);
+
+        using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+        {
+            byte[] buffer = new byte[4];
+            int restFill = result.Capacity - result.Length;
+
+            for (int i = 0; i < restFill; i++)
+            {
+                rng.GetBytes(buffer);
+                uint num = BitConverter.ToUInt32(buffer, 0);
+                result.Append(chars[(int)(num % (uint)chars.Length)]);
+            }
+        }
+
+        Logger.Warn($"User {ev.Player.Nickname} got identifier of: {result}");
+        DrawQrCode(playerDisplay, result.ToString(),
+            (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 405f, 1000);
     }
 
-    private static void DrawPoint(PlayerDisplay playerDisplay, Vector2 position, float xOffset, float yOffset)
+    private static void DrawQrCode(PlayerDisplay playerDisplay, string text, float xOffset, float yOffset,
+        float density = 1f)
+    {
+        using QRCodeGenerator generator = new();
+        QRCodeData data = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.L);
+
+        int size = data.ModuleMatrix.Count;
+
+        for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+            if (data.ModuleMatrix[y][x])
+                _qrCodeHints.Add(
+                    DrawPoint(
+                        playerDisplay,
+                        new Vector2(x * 2, y * 2),
+                        xOffset,
+                        yOffset,
+                        true,
+                        true,
+                        density
+                    ));
+    }
+
+    private static AbstractHint DrawPoint(PlayerDisplay playerDisplay, Vector2 position, float xOffset, float yOffset,
+        bool bold, bool hidden, float density = 1f)
     {
         Hint point = new()
         {
             Alignment = HintAlignment.Left,
-            Text = ".",
+            Text = bold ? "<b>." : ".",
             YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = yOffset + position.y / 2.75f,
-            XCoordinate = xOffset + position.x / 2.75f,
+            YCoordinate = yOffset + position.y / density,
+            XCoordinate = xOffset + position.x / density,
+            Hide = hidden,
             SyncSpeed = HintSyncSpeed.UnSync
         };
         playerDisplay.AddHint(point);
+        return point;
     }
 
     private static void DrawBox(PlayerDisplay playerDisplay, int height, int width, Color color, Vector2 position)
