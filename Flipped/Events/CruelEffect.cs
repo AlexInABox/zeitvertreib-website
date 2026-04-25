@@ -32,6 +32,11 @@ public class CruelEffect : IEvent
             {
                 player.EnableEffect<Sinkhole>(1, 15f); // Scary!
                 EventHandlers.PushUserMessage(player, "Die Münze möchte dich leiden sehen!");
+            },
+            () =>
+            {
+                player.EnableEffect<Slowness>(190, 15f); // Reversed controls!!
+                EventHandlers.PushUserMessage(player, "Die Münze invertiert deine Steuerung?! Lol.");
             }
         ];
         int index = EventHandlers.Random.Next(actions.Count);
