@@ -3,7 +3,13 @@ import { and, eq, gte, sql } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
 import { createResponse, validateSession } from '../utils.js';
 import typia from 'typia';
-import type { LootboxPurchaseResponse, LootboxPurchaseRequest, LootboxInfoResponse, LootboxReward, LootboxRarity } from '@zeitvertreib/types';
+import type {
+  LootboxPurchaseResponse,
+  LootboxPurchaseRequest,
+  LootboxInfoResponse,
+  LootboxReward,
+  LootboxRarity,
+} from '@zeitvertreib/types';
 
 const LOOTBOX_COST = 100;
 const VOUCHER_MAX = 3;
@@ -159,7 +165,7 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
   }
 
   // Pick a reward; if the player is at the voucher cap after this transaction, exclude vouchers
-  const atVoucherCap = (currentVouchers - (useVoucher ? 1 : 0)) >= VOUCHER_MAX;
+  const atVoucherCap = currentVouchers - (useVoucher ? 1 : 0) >= VOUCHER_MAX;
   const pickedDefinition = pickReward(atVoucherCap);
 
   const reward: LootboxReward = {

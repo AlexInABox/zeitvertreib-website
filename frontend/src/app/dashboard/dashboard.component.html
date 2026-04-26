@@ -297,7 +297,9 @@
                   [disabled]="lootboxSpinning || lootboxVoucherCount < 1"
                   [title]="lootboxVoucherCount < 1 ? 'Kein Gutschein vorhanden' : 'Gratis-Lootbox einlösen'"
                 >
-                  <span *ngIf="!lootboxSpinning">🎟️ Gutschein einlösen{{ lootboxVoucherCount > 0 ? ' (' + lootboxVoucherCount + ')' : '' }}</span>
+                  <span *ngIf="!lootboxSpinning"
+                    >🎟️ Gutschein einlösen{{ lootboxVoucherCount > 0 ? ' (' + lootboxVoucherCount + ')' : '' }}</span
+                  >
                   <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
                   <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
                 </button>
