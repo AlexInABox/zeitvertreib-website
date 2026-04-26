@@ -118,14 +118,18 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
   const steamId = validation.steamId!.endsWith('@steam') ? validation.steamId! : `${validation.steamId!}@steam`;
 
   let useVoucher = false;
-  try {
-    const parsed = await request.json();
+  const requestBody = await request.text();
+  if (requestBody.trim() !== '') {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(requestBody);
+    } catch {
+      return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
+    }
     if (!typia.is<LootboxPurchaseRequest>(parsed)) {
       return createResponse({ error: 'Ungültige Anfragedaten' }, 400, origin);
     }
     useVoucher = parsed.useVoucher === true;
-  } catch {
-    // empty body / JSON parse error — defaults to paid spin
   }
 
   const playerResult = await db
@@ -174,8 +178,8 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
   const updatedRows = await db
     .update(schema.playerdata)
     .set({
-      experience: sql`${schema.playerdata.experience} - ${zvcCost} + ${reward.zvcValue}`,
-      lootboxVouchers: sql`${schema.playerdata.lootboxVouchers} - ${voucherCost} + ${voucherGain}`,
+      experience: sql`COALESCE(${schema.playerdata.experience}, 0) - ${zvcCost} + ${reward.zvcValue}`,
+      lootboxVouchers: sql`MIN(${schema.playerdata.lootboxVouchers} - ${voucherCost} + ${voucherGain}, ${VOUCHER_MAX})`,
     })
     .where(
       useVoucher
@@ -196,8 +200,12 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
     );
   }
 
-  const newBalance = updatedRows[0]!.experience ?? 0;
+  const newBalance = updatedRows[0]!.experience;
   const newVoucherCount = updatedRows[0]!.lootboxVouchers;
+
+  if (newBalance === null) {
+    return createResponse({ error: 'Interner Fehler beim Aktualisieren des Kontostands.' }, 500, origin);
+  }
 
   console.log(
     `🎁 Lootbox: ${steamId} ${useVoucher ? 'used voucher' : `paid ${LOOTBOX_COST} ZVC`}, won "${reward.name}" (${reward.rarity}${reward.isVoucher ? ', VOUCHER' : `, ${reward.zvcValue} ZVC`}). Balance: ${currentBalance} → ${newBalance}, Vouchers: ${currentVouchers} → ${newVoucherCount}`,
