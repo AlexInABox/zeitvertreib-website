@@ -13,8 +13,9 @@ public class LooseHp : IEvent
 
     public void Run(Player player)
     {
-        player.Damage(player.Health * 0.5f, "Münzwurf");
+        float damage = player.Health * 0.5f;
+        player.Damage(damage, "Münzwurf");
         EventHandlers.PushUserMessage(player,
-            $"Die Münze bleibt dir im Hals stecken und verursacht {player.Health * 0.5f} Schaden...");
+            $"Die Münze bleibt dir im Hals stecken und verursacht {damage} Schaden...");
     }
 }
