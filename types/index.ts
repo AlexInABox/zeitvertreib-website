@@ -1166,6 +1166,14 @@ export interface LootboxReward {
   emoji: string;
   rarity: LootboxRarity;
   zvcValue: number;
+  /** True when this reward is a free-lootbox voucher instead of ZVC */
+  isVoucher?: boolean;
+}
+
+/** POST /lootbox request */
+export interface LootboxPurchaseRequest {
+  /** Set to true to spend one held voucher instead of paying ZVC */
+  useVoucher?: boolean;
 }
 
 /** POST /lootbox response */
@@ -1174,4 +1182,11 @@ export interface LootboxPurchaseResponse {
   message: string;
   reward: LootboxReward;
   newBalance: number;
+  /** Updated voucher count after this purchase */
+  newVoucherCount: number;
+}
+
+/** GET /lootbox response */
+export interface LootboxInfoResponse {
+  voucherCount: number;
 }
