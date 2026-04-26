@@ -49,13 +49,13 @@ public static class EventHandlers
     private static void OnFlippedCoin(PlayerFlippedCoinEventArgs ev)
     {
         if (ev.CoinItem.LastFlipTime is not null) return; //If this coin already has a LastFlipTime it cant be reused!
-        // Heads: 50% Neutral, 35% Bad,  15% Cruel
-        // Tails: 50% Neutral, 35% Good, 15% Heavenly
+        // Heads: 40% Neutral, 45% Bad,  15% Cruel
+        // Tails: 40% Neutral, 45% Good, 15% Heavenly
         int roll = Random.Next(100);
 
         EventType eventType = roll switch
         {
-            < 50 => EventType.Neutral,
+            < 40 => EventType.Neutral,
             < 85 => ev.IsTails ? EventType.Good : EventType.Bad,
             _ => ev.IsTails ? EventType.Heavenly : EventType.Cruel
         };
