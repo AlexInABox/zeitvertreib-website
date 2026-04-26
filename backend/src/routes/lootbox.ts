@@ -1,6 +1,5 @@
 import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm/sql';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
 import { createResponse, validateSession } from '../utils.js';
 import typia from 'typia';
@@ -98,7 +97,7 @@ export async function handleLootboxInfo(request: Request, env: Env): Promise<Res
     return createResponse({ error: 'Spieler nicht gefunden' }, 404, origin);
   }
 
-  const voucherCount = playerResult[0]!.lootboxVouchers ?? 0;
+  const voucherCount = playerResult[0]!.lootboxVouchers;
   const response: LootboxInfoResponse = { voucherCount };
   return createResponse(response, 200, origin);
 }
@@ -139,7 +138,7 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
   }
 
   const currentBalance = playerResult[0]!.experience ?? 0;
-  const currentVouchers = playerResult[0]!.lootboxVouchers ?? 0;
+  const currentVouchers = playerResult[0]!.lootboxVouchers;
 
   if (useVoucher) {
     if (currentVouchers < 1) {
@@ -180,12 +179,12 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
     })
     .where(
       useVoucher
-        ? sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.lootboxVouchers} >= 1`
-        : sql`${schema.playerdata.id} = ${steamId} AND ${schema.playerdata.experience} >= ${LOOTBOX_COST}`,
+        ? and(eq(schema.playerdata.id, steamId), gte(schema.playerdata.lootboxVouchers, 1))
+        : and(eq(schema.playerdata.id, steamId), gte(schema.playerdata.experience, LOOTBOX_COST)),
     )
     .returning({ experience: schema.playerdata.experience, lootboxVouchers: schema.playerdata.lootboxVouchers });
 
-  if (!updatedRows[0]) {
+  if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
     return createResponse(
       {
         error: useVoucher
@@ -197,8 +196,8 @@ export async function handleLootboxPurchase(request: Request, env: Env): Promise
     );
   }
 
-  const newBalance = updatedRows[0].experience ?? 0;
-  const newVoucherCount = updatedRows[0].lootboxVouchers ?? 0;
+  const newBalance = updatedRows[0]!.experience ?? 0;
+  const newVoucherCount = updatedRows[0]!.lootboxVouchers;
 
   console.log(
     `🎁 Lootbox: ${steamId} ${useVoucher ? 'used voucher' : `paid ${LOOTBOX_COST} ZVC`}, won "${reward.name}" (${reward.rarity}${reward.isVoucher ? ', VOUCHER' : `, ${reward.zvcValue} ZVC`}). Balance: ${currentBalance} → ${newBalance}, Vouchers: ${currentVouchers} → ${newVoucherCount}`,
