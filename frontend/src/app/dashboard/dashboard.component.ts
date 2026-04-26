@@ -296,16 +296,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadFakerankColorsByRole();
 
     // Fetch lootbox voucher count
-    this.authService
-      .authenticatedGet<LootboxInfoResponse>(`${environment.apiUrl}/lootbox`)
-      .subscribe({
-        next: (res) => {
-          this.lootboxVoucherCount = res.voucherCount ?? 0;
-        },
-        error: () => {
-          // non-critical — silently ignore
-        },
-      });
+    this.authService.authenticatedGet<LootboxInfoResponse>(`${environment.apiUrl}/lootbox`).subscribe({
+      next: (res) => {
+        this.lootboxVoucherCount = res.voucherCount ?? 0;
+      },
+      error: () => {
+        // non-critical — silently ignore
+      },
+    });
   }
 
   // Check if current user is a fakerank admin
@@ -620,7 +618,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Weighted pick: 75% chance of epic/legendary, 25% chance of rare-only (distinct visual step-down)
     const pickNearMissItem = (): LootboxSpinItem => {
       const useHigh = Math.random() < 0.75;
-      const src = useHigh && epicLegendaryItems.length > 0 ? epicLegendaryItems : rareOnlyItems.length > 0 ? rareOnlyItems : epicLegendaryItems;
+      const src =
+        useHigh && epicLegendaryItems.length > 0
+          ? epicLegendaryItems
+          : rareOnlyItems.length > 0
+            ? rareOnlyItems
+            : epicLegendaryItems;
       return src[Math.floor(Math.random() * src.length)]!;
     };
 
