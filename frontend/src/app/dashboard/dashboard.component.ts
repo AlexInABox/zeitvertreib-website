@@ -27,6 +27,7 @@ import type {
   FakerankColor,
   FakerankColorsResponse,
   LootboxPurchaseResponse,
+  LootboxInfoResponse,
   LootboxReward,
   LootboxRarity,
 } from '@zeitvertreib/types';
@@ -235,7 +236,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   };
 
   // Lootbox properties
-  readonly lootboxCost = 1;
+  readonly lootboxCost = 100;
+  lootboxVoucherCount = 0;
   lootboxSpinning = false;
   lootboxLoading = false;
   lootboxError = '';
@@ -292,6 +294,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Load fakerank colors by role
     this.loadFakerankColorsByRole();
+
+    // Fetch lootbox voucher count
+    this.authService.authenticatedGet<LootboxInfoResponse>(`${environment.apiUrl}/lootbox`).subscribe({
+      next: (res) => {
+        this.lootboxVoucherCount = res.voucherCount ?? 0;
+      },
+      error: () => {
+        // non-critical — silently ignore
+      },
+    });
   }
 
   // Check if current user is a fakerank admin
@@ -560,26 +572,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ===== LOOTBOX METHODS =====
 
   private readonly lootboxAllItems: LootboxSpinItem[] = [
-    { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
-    { emoji: '💰', name: '75 ZVC', rarity: 'common' },
-    { emoji: '💵', name: '100 ZVC', rarity: 'common' },
-    { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
-    { emoji: '💎', name: '150 ZVC', rarity: 'uncommon' },
-    { emoji: '💰', name: '75 ZVC', rarity: 'common' },
-    { emoji: '🔷', name: '200 ZVC', rarity: 'uncommon' },
-    { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
-    { emoji: '✨', name: '350 ZVC', rarity: 'rare' },
-    { emoji: '💵', name: '100 ZVC', rarity: 'common' },
-    { emoji: '🌟', name: '500 ZVC', rarity: 'rare' },
-    { emoji: '💰', name: '75 ZVC', rarity: 'common' },
-    { emoji: '🔥', name: '750 ZVC', rarity: 'epic' },
-    { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
+    { emoji: '🪙', name: '10 ZVC', rarity: 'common' },
+    { emoji: '💵', name: '30 ZVC', rarity: 'common' },
+    { emoji: '🪙', name: '10 ZVC', rarity: 'common' },
+    { emoji: '💎', name: '55 ZVC', rarity: 'uncommon' },
+    { emoji: '💰', name: '20 ZVC', rarity: 'common' },
+    { emoji: '🔷', name: '75 ZVC', rarity: 'uncommon' },
+    { emoji: '🪙', name: '10 ZVC', rarity: 'common' },
+    { emoji: '✨', name: '120 ZVC', rarity: 'rare' },
+    { emoji: '💰', name: '20 ZVC', rarity: 'common' },
+    { emoji: '💵', name: '30 ZVC', rarity: 'common' },
+    { emoji: '🌟', name: '200 ZVC', rarity: 'rare' },
+    { emoji: '🪙', name: '10 ZVC', rarity: 'common' },
+    { emoji: '🔥', name: '500 ZVC', rarity: 'epic' },
+    { emoji: '💰', name: '20 ZVC', rarity: 'common' },
     { emoji: '💫', name: '1.000 ZVC', rarity: 'epic' },
-    { emoji: '💎', name: '150 ZVC', rarity: 'uncommon' },
+    { emoji: '🎟️', name: 'Gratis-Lootbox', rarity: 'epic' },
+    { emoji: '💎', name: '55 ZVC', rarity: 'uncommon' },
     { emoji: '🏆', name: '2.500 ZVC', rarity: 'legendary' },
-    { emoji: '💰', name: '75 ZVC', rarity: 'common' },
-    { emoji: '🔷', name: '200 ZVC', rarity: 'uncommon' },
-    { emoji: '🪙', name: '50 ZVC', rarity: 'common' },
+    { emoji: '💵', name: '30 ZVC', rarity: 'common' },
+    { emoji: '🌈', name: '5.000 ZVC', rarity: 'legendary' },
+    { emoji: '🪙', name: '10 ZVC', rarity: 'common' },
   ];
 
   buildLootboxSpinStrip(landingItem: LootboxSpinItem): void {
@@ -595,14 +608,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
       strip.push(this.lootboxAllItems[(startIndex + i) % this.lootboxAllItems.length]!);
     }
 
-    // Add deterministic near misses (epic or legendary) to keep the visual presentation consistent
-    const highRarityItems = this.lootboxAllItems.filter(
+    // Build near-miss corridor: surround position 36 with weighted-random high-value items
+    // so it usually looks like a close call, but not robotically always the same
+    const epicLegendaryItems = this.lootboxAllItems.filter(
       (item) => item.rarity === 'epic' || item.rarity === 'legendary',
     );
-    if (highRarityItems.length > 0) {
-      const highRarityIndex = startIndex % highRarityItems.length;
-      strip[35] = highRarityItems[highRarityIndex]!;
-      strip[37] = highRarityItems[(highRarityIndex + 1) % highRarityItems.length]!;
+    const rareOnlyItems = this.lootboxAllItems.filter((item) => item.rarity === 'rare');
+
+    // Weighted pick: 75% chance of epic/legendary, 25% chance of rare-only (distinct visual step-down)
+    const pickNearMissItem = (): LootboxSpinItem => {
+      const useHigh = Math.random() < 0.75;
+      const src =
+        useHigh && epicLegendaryItems.length > 0
+          ? epicLegendaryItems
+          : rareOnlyItems.length > 0
+            ? rareOnlyItems
+            : epicLegendaryItems;
+      return src[Math.floor(Math.random() * src.length)]!;
+    };
+
+    if (epicLegendaryItems.length > 0) {
+      // Positions immediately adjacent to 36 — the "so close!" items
+      strip[35] = pickNearMissItem();
+      strip[37] = pickNearMissItem();
+      // Positions one step further — still impressive but slightly more variety
+      strip[34] = pickNearMissItem();
+      strip[38] = pickNearMissItem();
     }
     // Insert the winning item at position 36 (visible in center after animation)
     strip[36] = landingItem;
@@ -613,7 +644,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return (this.userStatistics.experience || 0) >= this.lootboxCost;
   }
 
-  buyLootbox(): void {
+  useVoucherForLootbox(): void {
+    this.buyLootbox(true);
+  }
+
+  buyLootbox(useVoucher = false): void {
     if (this.lootboxSpinning || this.lootboxLoading) {
       return;
     }
@@ -622,10 +657,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const lootboxSnapDurationMs = 550;
     const lootboxSpinBufferMs = 800;
 
-    if (!this.canAffordLootbox()) {
-      this.lootboxError = `Nicht genügend ZVC! Du brauchst ${this.lootboxCost} ZVC.`;
-      setTimeout(() => (this.lootboxError = ''), 3000);
-      return;
+    if (useVoucher) {
+      if (this.lootboxVoucherCount < 1) {
+        this.lootboxError = 'Kein Gutschein vorhanden!';
+        setTimeout(() => (this.lootboxError = ''), 3000);
+        return;
+      }
+    } else {
+      if (!this.canAffordLootbox()) {
+        this.lootboxError = `Nicht genügend ZVC! Du brauchst ${this.lootboxCost} ZVC.`;
+        setTimeout(() => (this.lootboxError = ''), 3000);
+        return;
+      }
     }
 
     this.lootboxSpinning = true;
@@ -638,55 +681,66 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.lootboxAtRest = false;
     this.lootboxSpinItems = [];
 
-    // Deduct cost immediately for responsive UI
-    this.userStatistics.experience = (this.userStatistics.experience || 0) - this.lootboxCost;
-    this.zvcService.setBalance(this.userStatistics.experience);
+    // Optimistic UI update
+    if (useVoucher) {
+      this.lootboxVoucherCount -= 1;
+    } else {
+      this.userStatistics.experience = (this.userStatistics.experience || 0) - this.lootboxCost;
+      this.zvcService.setBalance(this.userStatistics.experience);
+    }
 
     // Pause ZVC polling for the full animation duration plus a small post-settle buffer
     this.zvcService.pausePolling(lootboxSpinDurationMs + lootboxSnapDurationMs + lootboxSpinBufferMs);
 
-    this.authService.authenticatedPost<LootboxPurchaseResponse>(`${environment.apiUrl}/lootbox`, {}).subscribe({
-      next: (response) => {
-        this.lootboxLoading = false;
+    this.authService
+      .authenticatedPost<LootboxPurchaseResponse>(`${environment.apiUrl}/lootbox`, { useVoucher })
+      .subscribe({
+        next: (response) => {
+          this.lootboxLoading = false;
 
-        const landingItem = {
-          emoji: response.reward.emoji,
-          name: response.reward.name,
-          rarity: response.reward.rarity,
-        };
-        this.buildLootboxSpinStrip(landingItem);
+          const landingItem = {
+            emoji: response.reward.emoji,
+            name: response.reward.name,
+            rarity: response.reward.rarity,
+          };
+          this.buildLootboxSpinStrip(landingItem);
 
-        // Start animation
-        this.lootboxAnimating = true;
+          // Start animation
+          this.lootboxAnimating = true;
 
-        // Phase 1: main spin ends → snap to exact center
-        setTimeout(() => {
-          this.lootboxAnimating = false;
-          this.lootboxSnapping = true;
-
-          // Phase 2: snap settles → freeze at winning position and reveal result
+          // Phase 1: main spin ends → snap to exact center
           setTimeout(() => {
-            this.lootboxSnapping = false;
-            this.lootboxAtRest = true;
-            this.lootboxResult = response.reward;
-            this.lootboxSpinning = false;
-            this.lootboxSuccess = response.message;
-            this.userStatistics.experience = response.newBalance;
-            this.zvcService.setBalance(response.newBalance);
-            setTimeout(() => (this.lootboxSuccess = ''), 6000);
-          }, lootboxSnapDurationMs);
-        }, lootboxSpinDurationMs);
-      },
-      error: (err) => {
-        this.lootboxLoading = false;
-        this.lootboxSpinning = false;
-        // Restore deducted balance
-        this.userStatistics.experience = (this.userStatistics.experience || 0) + this.lootboxCost;
-        this.zvcService.setBalance(this.userStatistics.experience);
-        this.lootboxError = err?.error?.error || 'Fehler beim Öffnen der Lootbox';
-        setTimeout(() => (this.lootboxError = ''), 4000);
-      },
-    });
+            this.lootboxAnimating = false;
+            this.lootboxSnapping = true;
+
+            // Phase 2: snap settles → freeze at winning position and reveal result
+            setTimeout(() => {
+              this.lootboxSnapping = false;
+              this.lootboxAtRest = true;
+              this.lootboxResult = response.reward;
+              this.lootboxSpinning = false;
+              this.lootboxSuccess = response.message;
+              this.userStatistics.experience = response.newBalance;
+              this.zvcService.setBalance(response.newBalance);
+              this.lootboxVoucherCount = response.newVoucherCount;
+              setTimeout(() => (this.lootboxSuccess = ''), 6000);
+            }, lootboxSnapDurationMs);
+          }, lootboxSpinDurationMs);
+        },
+        error: (err) => {
+          this.lootboxLoading = false;
+          this.lootboxSpinning = false;
+          // Restore optimistic UI changes
+          if (useVoucher) {
+            this.lootboxVoucherCount += 1;
+          } else {
+            this.userStatistics.experience = (this.userStatistics.experience || 0) + this.lootboxCost;
+            this.zvcService.setBalance(this.userStatistics.experience);
+          }
+          this.lootboxError = err?.error?.error || 'Fehler beim Öffnen der Lootbox';
+          setTimeout(() => (this.lootboxError = ''), 4000);
+        },
+      });
   }
 
   // Public method to regenerate colors only

@@ -203,6 +203,10 @@
                 <p class="spray-subtitle">
                   Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong>
                 </p>
+                <!-- Voucher badge -->
+                <div class="lootbox-voucher-badge" [class.lootbox-voucher-badge-empty]="lootboxVoucherCount === 0">
+                  🎟️ {{ lootboxVoucherCount }} Gutschein{{ lootboxVoucherCount === 1 ? '' : 'e' }}
+                </div>
               </div>
 
               <!-- Spin animation area -->
@@ -284,6 +288,18 @@
                   [disabled]="lootboxSpinning || !canAffordLootbox()"
                 >
                   <span *ngIf="!lootboxSpinning">🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
+                  <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
+                  <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
+                </button>
+                <button
+                  class="lootbox-voucher-btn"
+                  (click)="useVoucherForLootbox()"
+                  [disabled]="lootboxSpinning || lootboxVoucherCount < 1"
+                  [title]="lootboxVoucherCount < 1 ? 'Kein Gutschein vorhanden' : 'Gratis-Lootbox einlösen'"
+                >
+                  <span *ngIf="!lootboxSpinning"
+                    >🎟️ Gutschein einlösen{{ lootboxVoucherCount > 0 ? ' (' + lootboxVoucherCount + ')' : '' }}</span
+                  >
                   <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
                   <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
                 </button>
