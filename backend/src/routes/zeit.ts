@@ -46,7 +46,6 @@ export async function getUserData(request: Request, env: Env, ctx: ExecutionCont
     return createResponse({ error: 'Ungültige SteamID' }, 400, origin);
   }
 
-
   // Lets start fetching all the data!
   let playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).limit(1);
   // If not found, return empty row instead of 404
