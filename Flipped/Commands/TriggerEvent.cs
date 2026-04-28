@@ -21,8 +21,8 @@ public class TriggerEvent : ICommand
             return false;
         }
 
-        string playerArg = arguments.Array![1];
-        string eventArg = arguments.Array[2];
+        string playerArg = arguments[0];
+        string eventArg = arguments[1];
 
         Player target = Player.ReadyList.FirstOrDefault(p =>
             p.Nickname.Equals(playerArg, StringComparison.OrdinalIgnoreCase) ||
