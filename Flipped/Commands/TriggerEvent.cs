@@ -21,8 +21,8 @@ public class TriggerEvent : ICommand
             return false;
         }
 
-        string playerArg = arguments[0];
-        string eventArg = arguments[1];
+        string playerArg = arguments.Array![1];
+        string eventArg = arguments.Array[2];
 
         Player target = Player.ReadyList.FirstOrDefault(p =>
             p.Nickname.Equals(playerArg, StringComparison.OrdinalIgnoreCase) ||
@@ -42,6 +42,12 @@ public class TriggerEvent : ICommand
         {
             string available = string.Join(", ", allEvents.Select(e => e.GetType().Name));
             response = $"Event '{eventArg}' nicht gefunden.\nVerfügbar: {available}";
+            return false;
+        }
+
+        if (!selectedEvent.CanRun(target))
+        {
+            response = $"Event '{selectedEvent.GetType().Name}' kann derzeit nicht auf {target.Nickname} angewendet werden.";
             return false;
         }
 
