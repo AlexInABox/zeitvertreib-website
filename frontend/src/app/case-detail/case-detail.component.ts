@@ -349,13 +349,15 @@ export class CaseDetailComponent implements OnInit {
 
   navigateToUserProfile(steamId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { steamId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { steamId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
   navigateToCreatorProfile(discordId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { discordId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { discordId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
