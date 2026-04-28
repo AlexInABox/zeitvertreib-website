@@ -32,7 +32,7 @@ import { NotificationCenterComponent } from '../notification-center/notification
   styleUrls: ['./header.component.css'],
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-  private boundCheckPortrait: () => void = () => { };
+  private boundCheckPortrait: () => void = () => {};
   isPortrait = false;
   scrollPaused = false;
   items: MenuItem[] | undefined;
@@ -73,7 +73,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private bgm: BackgroundMusicService,
     public themeService: ThemeService,
     private http: HttpClient,
-  ) { }
+  ) {}
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
