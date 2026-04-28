@@ -208,7 +208,7 @@ export class CaseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -349,13 +349,15 @@ export class CaseDetailComponent implements OnInit {
 
   navigateToUserProfile(steamId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { steamId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { steamId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
   navigateToCreatorProfile(discordId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { discordId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { discordId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -1047,9 +1049,9 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private cleanupUploaderCallbacks() {
-    this.fileUploader.onBeforeUploadItem = () => {};
-    this.fileUploader.onProgressItem = () => {};
-    this.fileUploader.onSuccessItem = () => {};
-    this.fileUploader.onErrorItem = () => {};
+    this.fileUploader.onBeforeUploadItem = () => { };
+    this.fileUploader.onProgressItem = () => { };
+    this.fileUploader.onSuccessItem = () => { };
+    this.fileUploader.onErrorItem = () => { };
   }
 }

@@ -96,7 +96,7 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -393,7 +393,8 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
 
   navigateToCreatorProfile(discordId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { discordId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { discordId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
