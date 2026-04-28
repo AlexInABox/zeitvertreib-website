@@ -1,6 +1,5 @@
 using CustomPlayerEffects;
 using LabApi.Features.Wrappers;
-using MEC;
 using PlayerStatsSystem;
 
 namespace Flipped.Events;
