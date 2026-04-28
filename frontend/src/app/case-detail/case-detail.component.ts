@@ -208,7 +208,7 @@ export class CaseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-  ) { }
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -1049,9 +1049,9 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private cleanupUploaderCallbacks() {
-    this.fileUploader.onBeforeUploadItem = () => { };
-    this.fileUploader.onProgressItem = () => { };
-    this.fileUploader.onSuccessItem = () => { };
-    this.fileUploader.onErrorItem = () => { };
+    this.fileUploader.onBeforeUploadItem = () => {};
+    this.fileUploader.onProgressItem = () => {};
+    this.fileUploader.onSuccessItem = () => {};
+    this.fileUploader.onErrorItem = () => {};
   }
 }
