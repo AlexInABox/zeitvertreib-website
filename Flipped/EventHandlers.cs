@@ -71,7 +71,7 @@ public static class EventHandlers
         });
     }
 
-    private static List<IEvent> GetAvailableEvents()
+    public static List<IEvent> GetAvailableEvents()
     {
         return typeof(IEvent).Assembly
             .GetTypes()
