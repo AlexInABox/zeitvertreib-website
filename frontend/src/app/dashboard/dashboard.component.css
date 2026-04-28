@@ -2838,6 +2838,39 @@
   }
 }
 
+/* === LOOTBOX: LIGHT MODE OVERRIDES === */
+:host-context(html:not(.my-app-dark)) .lootbox-stage {
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+:host-context(html:not(.my-app-dark)) .lootbox-idle {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+:host-context(html:not(.my-app-dark)) .lootbox-idle-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:host-context(html:not(.my-app-dark)) .lootbox-item {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+:host-context(html:not(.my-app-dark)) .lootbox-item-name {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+:host-context(html:not(.my-app-dark)) .lootbox-loading-bar {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+:host-context(html:not(.my-app-dark)) .lootbox-result {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* Timer Badge Styles */
 .fakerank-timer-badge {
   background: linear-gradient(135deg, #10b981, #059669);
