@@ -1115,12 +1115,10 @@ export interface SearchReportsBySteamIdGetResponse {
 
 //When uploading evidence, the client should first call GET /reports to get a pre-signed URL for the upload, then upload the file directly to S3 using that URL.
 // After generating this pre-signed URL, the backend will notify team members about a new incomming upload for a given case via discord!
-/** GET /reports/upload?reportId={reportId}&extension={ext}&captchaId={captchaId}&captchaAnswer={captchaAnswer}&honeypot={honeypot} request params */
+/** GET /reports/upload?reportId={reportId}&extension={ext} request params */
 export interface ReportFileUploadGetRequest {
   reportId: number;
   extension: string;
-  captchaId: string;
-  captchaAnswer: string;
 }
 
 /** GET /reports/upload response */
@@ -1197,21 +1195,4 @@ export interface LootboxPurchaseResponse {
 /** GET /lootbox response */
 export interface LootboxInfoResponse {
   voucherCount: number;
-}
-
-// ============================================================================
-// Captcha Types
-// ============================================================================
-
-/** GET /captcha response */
-export interface CaptchaResponse {
-  id: string;
-  svg: string;
-}
-
-/** Captcha verification fields to include in protected requests */
-export interface CaptchaVerification {
-  captchaId: string;
-  captchaAnswer: string;
-  honeypot?: string;
 }

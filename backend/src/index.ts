@@ -71,7 +71,6 @@ import {
   handlePutMinecraftLink,
   handleDeleteMinecraftLink,
 } from './routes/minecraft.js';
-import { handleGetCaptcha, handleCheckCaptcha } from './routes/captcha.js';
 import { isNotNull, lt, or } from 'drizzle-orm';
 
 // Simple response helper for internal use
@@ -222,10 +221,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/reports/search': handleSearchReportsBySteamId,
   'GET:/reports/upload': handleReportFileUpload,
   'GET:/reports': handleGetReports,
-
-  // Captcha routes (public, no auth required)
-  'GET:/captcha': handleGetCaptcha,
-  'GET:/captcha/check': handleCheckCaptcha,
 };
 
 export default {

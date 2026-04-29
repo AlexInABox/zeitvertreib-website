@@ -7,7 +7,6 @@ import {
   validateSession,
   isTeam,
   validateSteamId,
-  verifyCaptcha,
 } from '../utils.js';
 import type {
   GetReportsResponse,
@@ -52,9 +51,6 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
   const url = new URL(request.url);
   const reportIdParam = url.searchParams.get('reportId');
   const extension = url.searchParams.get('extension') || '';
-  const captchaId = url.searchParams.get('captchaId') || '';
-  const captchaAnswer = url.searchParams.get('captchaAnswer') || '';
-  const honeypot = url.searchParams.get('honeypot') || '';
 
   if (!reportIdParam) {
     return createResponse({ error: 'Missing required parameter: reportId' }, 400, origin);
@@ -67,14 +63,6 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
 
   if (!ALLOWED_EXTENSIONS.includes(extension.toLowerCase())) {
     return createResponse({ error: 'Invalid file extension', allowedExtensions: ALLOWED_EXTENSIONS }, 400, origin);
-  }
-
-  if (!captchaId || !captchaAnswer) {
-    return createResponse({ error: 'Captcha ist erforderlich' }, 400, origin);
-  }
-  const captchaValid = await verifyCaptcha(captchaId, captchaAnswer, env, honeypot);
-  if (!captchaValid) {
-    return createResponse({ error: 'Ungültige oder abgelaufene Captcha-Antwort' }, 400, origin);
   }
 
   // Rate limit uploads per report to prevent abuse

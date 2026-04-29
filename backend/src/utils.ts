@@ -69,42 +69,6 @@ export function createResponse(data: any, status = 200, origin?: string | null):
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-export async function verifyCaptcha(
-  captchaId: string,
-  captchaAnswer: string,
-  env: Env,
-  honeypot?: string,
-): Promise<boolean> {
-  // Honeypot: bots auto-fill hidden fields, humans never interact with them
-  if (honeypot) {
-    return false;
-  }
-
-  const storedValue = await env.SESSIONS.get(`captcha:${captchaId}`);
-  if (storedValue === null) {
-    return false;
-  }
-  // Always consume the token
-  await env.SESSIONS.delete(`captcha:${captchaId}`);
-
-  let storedAnswer: string;
-  let createdAt: number;
-  try {
-    const parsed = JSON.parse(storedValue) as { answer: string; createdAt: number };
-    storedAnswer = parsed.answer;
-    createdAt = parsed.createdAt;
-  } catch {
-    return false;
-  }
-
-  // Minimum solve time of 2.5 seconds
-  if (Date.now() - createdAt < 2500) {
-    return false;
-  }
-
-  return storedAnswer.toUpperCase() === captchaAnswer.toUpperCase();
-}
-
 // Compute canonical truncated SHA256 hash for spray image base64 data
 export async function computeSpraySha256(full_res: string): Promise<string> {
   const base64Data = full_res.replace(/^data:image\/\w+;base64,/, '');
