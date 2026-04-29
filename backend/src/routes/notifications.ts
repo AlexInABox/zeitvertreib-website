@@ -40,9 +40,7 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
     }
 
     const requestedTypes = typesParam.split(',');
-    const invalidTypes = requestedTypes.filter(
-      (t) => t !== '' && !VALID_TYPES.includes(t as UserNotificationType),
-    );
+    const invalidTypes = requestedTypes.filter((t) => t !== '' && !VALID_TYPES.includes(t as UserNotificationType));
 
     if (invalidTypes.length > 0) {
       return createResponse({ error: 'Invalid notification types' }, 400, origin);
