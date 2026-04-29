@@ -8,10 +8,7 @@ const CAPTCHA_RATELIMIT_MAX = 20; // max captcha requests per IP per minute
 const CAPTCHA_RATELIMIT_TTL = 60; // rate limit window in seconds
 
 // Colour palette — stands out on dark background
-const CHAR_COLORS = [
-  '#e5e5e5', '#c8b5ff', '#ffd86e', '#ff9eb5',
-  '#7effc4', '#7dd3fc', '#f97316', '#a78bfa', '#34d399',
-];
+const CHAR_COLORS = ['#e5e5e5', '#c8b5ff', '#ffd86e', '#ff9eb5', '#7effc4', '#7dd3fc', '#f97316', '#a78bfa', '#34d399'];
 
 // 5×7 pixel-art bitmap font.
 // Each entry is 7 numbers (one per row, top→bottom).
@@ -96,7 +93,9 @@ function buildSvg(answer: string, buf: Uint8Array): string {
         if (!((rowBits >> (CHAR_COLS - 1 - col)) & 1)) continue;
         const px = originX + col * PIXEL_STEP;
         const py = originY + row * PIXEL_STEP;
-        rects.push(`<rect x="${px}" y="${py}" width="${PIXEL_SIZE}" height="${PIXEL_SIZE}" fill="${color}" opacity="0.92"/>`);
+        rects.push(
+          `<rect x="${px}" y="${py}" width="${PIXEL_SIZE}" height="${PIXEL_SIZE}" fill="${color}" opacity="0.92"/>`,
+        );
       }
     }
   }

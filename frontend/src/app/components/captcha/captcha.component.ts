@@ -1,4 +1,14 @@
-import { Component, OnInit, OnChanges, OnDestroy, Input, Output, EventEmitter, inject, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnChanges,
+  OnDestroy,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CaptchaService } from '../../services/captcha.service';
@@ -147,4 +157,3 @@ export class CaptchaComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 }
-

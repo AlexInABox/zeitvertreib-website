@@ -14,7 +14,11 @@
       <i class="pi pi-exclamation-triangle"></i>
       <span>{{ captchaGateError }}</span>
     </div>
-    <button class="primary-btn" [disabled]="captchaAnswer.length < 5 || !captchaId || captchaUnlocking" (click)="unlockPage()">
+    <button
+      class="primary-btn"
+      [disabled]="captchaAnswer.length < 5 || !captchaId || captchaUnlocking"
+      (click)="unlockPage()"
+    >
       <i class="pi pi-spinner pi-spin" *ngIf="captchaUnlocking"></i>
       <i class="pi pi-arrow-right" *ngIf="!captchaUnlocking"></i>
       {{ captchaUnlocking ? 'Überprüfen…' : 'Weiter' }}

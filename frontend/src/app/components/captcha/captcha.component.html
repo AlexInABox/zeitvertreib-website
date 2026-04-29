@@ -39,9 +39,7 @@
           <div class="captcha-timer-fill" [style.width.%]="timePercent"></div>
         </div>
         <!-- Countdown label — only shown when under 60 s to avoid distracting users -->
-        <div class="captcha-timer-label" *ngIf="timePercent <= 20">
-          <i class="pi pi-clock"></i> {{ timeLabel }}
-        </div>
+        <div class="captcha-timer-label" *ngIf="timePercent <= 20"><i class="pi pi-clock"></i> {{ timeLabel }}</div>
       </div>
       <button class="refresh-btn" (click)="refresh()" type="button" title="Neues Captcha laden">
         <i class="pi pi-refresh"></i>
