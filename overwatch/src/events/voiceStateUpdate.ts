@@ -4,7 +4,6 @@ import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
 
 // Monitor voice channels and join the one with the most users
 export async function updateVoiceChannelConnection(client: Client<true>): Promise<void> {
-
   const guild = client.guilds.cache.get(ZEITVERTREIB_GUILD_ID);
   if (!guild) {
     console.error('Target guild not found for voice channel monitoring');
@@ -33,7 +32,7 @@ export async function updateVoiceChannelConnection(client: Client<true>): Promis
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
         selfDeaf: false,
-        selfMute: true
+        selfMute: true,
       });
     } else {
       // No users in any voice channel, leave if we're in one
