@@ -62,7 +62,14 @@ export class NotificationCenterService implements OnDestroy {
     this.hiddenTypes.update((hidden) => {
       const idx = hidden.indexOf(type);
       const newHidden = idx === -1 ? [...hidden, type] : hidden.filter((t) => t !== type);
-      localStorage.setItem(LS_KEY, JSON.stringify(newHidden));
+
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(LS_KEY, JSON.stringify(newHidden));
+        }
+      } catch {
+        // ignore storage write failures so the toggle still works
+      }
       return newHidden;
     });
     this.fetchNotifications();
