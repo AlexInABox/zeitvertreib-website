@@ -35,9 +35,23 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
 
   let visibleTypes: UserNotificationType[] | null = null;
   if (typesParam !== null) {
-    const parsed = typesParam
-      .split(',')
-      .filter((t): t is UserNotificationType => VALID_TYPES.includes(t as UserNotificationType));
+    if (typesParam === '') {
+      return createResponse({ notifications: [] }, 200, origin);
+    }
+
+    const requestedTypes = typesParam.split(',');
+    const invalidTypes = requestedTypes.filter(
+      (t) => t !== '' && !VALID_TYPES.includes(t as UserNotificationType),
+    );
+
+    if (invalidTypes.length > 0) {
+      return createResponse({ error: 'Invalid notification types' }, 400, origin);
+    }
+
+    const parsed = requestedTypes.filter((t): t is UserNotificationType =>
+      VALID_TYPES.includes(t as UserNotificationType),
+    );
+
     if (parsed.length === 0) {
       return createResponse({ notifications: [] }, 200, origin);
     }
