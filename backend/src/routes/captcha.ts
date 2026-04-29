@@ -4,8 +4,10 @@ import type { CaptchaResponse } from '@zeitvertreib/types';
 const CAPTCHA_CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const CAPTCHA_LENGTH = 5;
 const CAPTCHA_TTL_SECONDS = 300; // 5 minutes
-const CAPTCHA_RATELIMIT_MAX = 20; // max captcha requests per IP per minute
+const CAPTCHA_RATELIMIT_MAX = 20; // max captcha fetch requests per IP per minute
 const CAPTCHA_RATELIMIT_TTL = 60; // rate limit window in seconds
+const CAPTCHA_CHECK_RATELIMIT_MAX = 10; // max check attempts per IP per minute
+const CAPTCHA_MAX_WRONG_ATTEMPTS = 3; // wrong answers before the token is invalidated
 
 // Colour palette — stands out on dark background
 const CHAR_COLORS = [
@@ -179,6 +181,15 @@ export async function handleCheckCaptcha(request: Request, env: Env): Promise<Re
     return createResponse({ error: 'Fehlende Parameter.' }, 400, origin);
   }
 
+  const ip = request.headers.get('CF-Connecting-IP') ?? request.headers.get('X-Forwarded-For') ?? 'unknown';
+  const checkRateLimitKey = `captcha_check_ratelimit:${ip}`;
+  const checkCountStr = await env.SESSIONS.get(checkRateLimitKey);
+  const checkCount = checkCountStr ? parseInt(checkCountStr, 10) : 0;
+  if (checkCount >= CAPTCHA_CHECK_RATELIMIT_MAX) {
+    return createResponse({ error: 'Zu viele Anfragen. Bitte warte kurz.' }, 429, origin);
+  }
+  await env.SESSIONS.put(checkRateLimitKey, String(checkCount + 1), { expirationTtl: CAPTCHA_RATELIMIT_TTL });
+
   const storedValue = await env.SESSIONS.get(`captcha:${captchaId}`);
   if (storedValue === null) {
     return createResponse({ error: 'Captcha ungültig oder abgelaufen.' }, 400, origin);
@@ -193,8 +204,21 @@ export async function handleCheckCaptcha(request: Request, env: Env): Promise<Re
   }
 
   if (storedAnswer.toUpperCase() !== captchaAnswer.toUpperCase()) {
+    // Track wrong attempts per token — after CAPTCHA_MAX_WRONG_ATTEMPTS the token is burned
+    const attemptsKey = `captcha_attempts:${captchaId}`;
+    const attemptsStr = await env.SESSIONS.get(attemptsKey);
+    const attempts = attemptsStr ? parseInt(attemptsStr, 10) : 0;
+    if (attempts + 1 >= CAPTCHA_MAX_WRONG_ATTEMPTS) {
+      await env.SESSIONS.delete(`captcha:${captchaId}`);
+      await env.SESSIONS.delete(attemptsKey);
+      return createResponse({ error: 'Zu viele Fehlversuche. Bitte löse ein neues Captcha.' }, 400, origin);
+    }
+    await env.SESSIONS.put(attemptsKey, String(attempts + 1), { expirationTtl: CAPTCHA_TTL_SECONDS });
     return createResponse({ error: 'Falsche Antwort.' }, 400, origin);
   }
+
+  // Correct — clear the attempt counter (token itself stays for the upload step)
+  await env.SESSIONS.delete(`captcha_attempts:${captchaId}`);
 
   return createResponse({ ok: true }, 200, origin);
 }
