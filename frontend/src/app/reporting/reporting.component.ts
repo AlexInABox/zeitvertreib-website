@@ -54,10 +54,12 @@ export class ReportingComponent implements OnInit {
       if (response.ok) {
         this.captchaUnlocked = true;
       } else {
-        const data = await response.json().catch(() => ({})) as { error?: string };
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
         this.captchaGateError = data.error ?? 'Falsches Captcha. Bitte erneut versuchen.';
         this.captchaError = true;
-        setTimeout(() => { this.captchaError = false; }, 100);
+        setTimeout(() => {
+          this.captchaError = false;
+        }, 100);
       }
     } catch {
       this.captchaGateError = 'Netzwerkfehler. Bitte erneut versuchen.';
@@ -167,21 +169,26 @@ export class ReportingComponent implements OnInit {
         queryParams.set('captchaAnswer', this.captchaAnswer);
         queryParams.set('honeypot', this.honeypot);
 
-        const urlResponse = await fetch(
-          `${this.apiUrl}/reports/upload?${queryParams.toString()}`,
-        );
+        const urlResponse = await fetch(`${this.apiUrl}/reports/upload?${queryParams.toString()}`);
 
         if (!urlResponse.ok) {
-          const errData = await urlResponse.json().catch(() => ({})) as { error?: string };
-          const isCaptchaErr = urlResponse.status === 400 && typeof errData.error === 'string' && errData.error.toLowerCase().includes('captcha');
+          const errData = (await urlResponse.json().catch(() => ({}))) as { error?: string };
+          const isCaptchaErr =
+            urlResponse.status === 400 &&
+            typeof errData.error === 'string' &&
+            errData.error.toLowerCase().includes('captcha');
           fileItem.status = 'error';
-          fileItem.errorMessage = isCaptchaErr ? 'Captcha abgelaufen. Bitte erneut lösen.' : 'Fehler beim Generieren der Upload-URL.';
+          fileItem.errorMessage = isCaptchaErr
+            ? 'Captcha abgelaufen. Bitte erneut lösen.'
+            : 'Fehler beim Generieren der Upload-URL.';
           if (isCaptchaErr) {
             this.captchaUnlocked = false;
             this.captchaId = '';
             this.captchaAnswer = '';
             this.captchaError = true;
-            setTimeout(() => { this.captchaError = false; }, 100);
+            setTimeout(() => {
+              this.captchaError = false;
+            }, 100);
             break; // No point uploading remaining files — captcha is consumed
           }
           continue;

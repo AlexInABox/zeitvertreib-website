@@ -69,7 +69,12 @@ export function createResponse(data: any, status = 200, origin?: string | null):
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-export async function verifyCaptcha(captchaId: string, captchaAnswer: string, env: Env, honeypot?: string): Promise<boolean> {
+export async function verifyCaptcha(
+  captchaId: string,
+  captchaAnswer: string,
+  env: Env,
+  honeypot?: string,
+): Promise<boolean> {
   // Honeypot: bots auto-fill hidden fields, humans never interact with them
   if (honeypot) {
     return false;
@@ -92,7 +97,7 @@ export async function verifyCaptcha(captchaId: string, captchaAnswer: string, en
     return false;
   }
 
-  // Minimum solve time of 2.5 seconds 
+  // Minimum solve time of 2.5 seconds
   if (Date.now() - createdAt < 2500) {
     return false;
   }

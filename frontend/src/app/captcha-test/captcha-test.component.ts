@@ -7,12 +7,18 @@ import { CaptchaComponent, CaptchaChangeEvent } from '../components/captcha/capt
   standalone: true,
   imports: [CommonModule, CaptchaComponent],
   template: `
-    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;background:#0d0d1a;color:#fff;padding:2rem">
+    <div
+      style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;background:#0d0d1a;color:#fff;padding:2rem"
+    >
       <h2 style="margin:0">Captcha Test</h2>
-      <app-captcha [captchaError]="captchaError" (captchaChange)="onChange($event)" (captchaEnter)="onEnter()"></app-captcha>
+      <app-captcha
+        [captchaError]="captchaError"
+        (captchaChange)="onChange($event)"
+        (captchaEnter)="onEnter()"
+      ></app-captcha>
       <div *ngIf="last" style="font-family:monospace;font-size:.85rem;opacity:.6;text-align:center">
-        id: {{ last.captchaId || '(empty)' }}<br>
-        answer: {{ last.captchaAnswer || '(empty)' }}<br>
+        id: {{ last.captchaId || '(empty)' }}<br />
+        answer: {{ last.captchaAnswer || '(empty)' }}<br />
         honeypot: {{ last.honeypot || '(empty)' }}
       </div>
       <div *ngIf="submitted" style="color:#4ade80;font-weight:600">Enter gedrückt / bestätigt!</div>
@@ -42,6 +48,8 @@ export class CaptchaTestComponent {
 
   triggerError(): void {
     this.captchaError = true;
-    setTimeout(() => { this.captchaError = false; }, 100);
+    setTimeout(() => {
+      this.captchaError = false;
+    }, 100);
   }
 }
