@@ -1,4 +1,28 @@
-<div class="reporting-page">
+<div class="captcha-gate" *ngIf="!captchaUnlocked">
+  <div class="captcha-gate-card">
+    <div class="captcha-gate-header">
+      <i class="pi pi-shield"></i>
+      <h2>Sicherheitsüberprüfung</h2>
+      <p>Bitte löse das Captcha, um fortzufahren.</p>
+    </div>
+    <app-captcha
+      [captchaError]="captchaError"
+      (captchaChange)="onCaptchaChange($event)"
+      (captchaEnter)="unlockPage()"
+    ></app-captcha>
+    <div class="notice-banner notice-error" *ngIf="captchaGateError">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ captchaGateError }}</span>
+    </div>
+    <button class="primary-btn" [disabled]="captchaAnswer.length < 5 || !captchaId || captchaUnlocking" (click)="unlockPage()">
+      <i class="pi pi-spinner pi-spin" *ngIf="captchaUnlocking"></i>
+      <i class="pi pi-arrow-right" *ngIf="!captchaUnlocking"></i>
+      {{ captchaUnlocking ? 'Überprüfen…' : 'Weiter' }}
+    </button>
+  </div>
+</div>
+
+<div class="reporting-page" *ngIf="captchaUnlocked">
   <!-- ===== LIST VIEW ===== -->
   <ng-container *ngIf="!selectedReport">
     <div class="page-hero">

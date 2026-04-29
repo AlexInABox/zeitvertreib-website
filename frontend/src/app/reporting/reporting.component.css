@@ -1,4 +1,64 @@
 /* ================================================
+   CAPTCHA GATE OVERLAY
+   ================================================ */
+
+.captcha-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 7, 18, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.captcha-gate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+  padding: 2.5rem 2rem;
+  width: min(400px, 92vw);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+.captcha-gate-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.captcha-gate-header i {
+  font-size: 1.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.captcha-gate-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+}
+
+.captcha-gate-header p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ================================================
    REPORTING PAGE
    ================================================ */
 

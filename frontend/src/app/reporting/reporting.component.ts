@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
 import type { GetReportsResponse, ReportFileUploadGetResponse } from '@zeitvertreib/types';
+import { CaptchaComponent, CaptchaChangeEvent } from '../components/captcha/captcha.component';
 
 type Report = GetReportsResponse['reports'][number];
 
@@ -17,7 +18,7 @@ interface FileUploadItem {
 @Component({
   selector: 'app-reporting',
   standalone: true,
-  imports: [CommonModule, ButtonModule, FileUploadModule],
+  imports: [CommonModule, ButtonModule, FileUploadModule, CaptchaComponent],
   templateUrl: './reporting.component.html',
   styleUrls: ['./reporting.component.css'],
 })
@@ -33,6 +34,45 @@ export class ReportingComponent implements OnInit {
   errorMessage = '';
 
   fileUploader = new FileUploader({ url: '', autoUpload: false });
+
+  captchaUnlocked = false;
+  captchaUnlocking = false;
+  captchaGateError = '';
+  captchaId = '';
+  captchaAnswer = '';
+  honeypot = '';
+  captchaError = false;
+
+  async unlockPage(): Promise<void> {
+    if (this.captchaAnswer.length < 5 || !this.captchaId || this.captchaUnlocking) return;
+    this.captchaUnlocking = true;
+    this.captchaGateError = '';
+    try {
+      const response = await fetch(
+        `${this.apiUrl}/captcha/check?captchaId=${encodeURIComponent(this.captchaId)}&captchaAnswer=${encodeURIComponent(this.captchaAnswer)}`,
+      );
+      if (response.ok) {
+        this.captchaUnlocked = true;
+      } else {
+        const data = await response.json().catch(() => ({})) as { error?: string };
+        this.captchaGateError = data.error ?? 'Falsches Captcha. Bitte erneut versuchen.';
+        this.captchaError = true;
+        setTimeout(() => { this.captchaError = false; }, 100);
+      }
+    } catch {
+      this.captchaGateError = 'Netzwerkfehler. Bitte erneut versuchen.';
+    } finally {
+      this.captchaUnlocking = false;
+    }
+  }
+
+  onCaptchaChange(event: CaptchaChangeEvent): void {
+    this.captchaId = event.captchaId;
+    this.captchaAnswer = event.captchaAnswer;
+    this.honeypot = event.honeypot;
+    this.captchaError = false;
+    this.captchaGateError = '';
+  }
 
   private readonly apiUrl = environment.apiUrl;
   private readonly maxFileSize = 100 * 1024 * 1024; // 100 MB
@@ -108,6 +148,11 @@ export class ReportingComponent implements OnInit {
   async uploadAll(): Promise<void> {
     if (!this.selectedReport || this.files.length === 0) return;
 
+    if (!this.captchaUnlocked || !this.captchaId || !this.captchaAnswer) {
+      this.errorMessage = 'Bitte löse zuerst das Captcha.';
+      return;
+    }
+
     this.isUploading = true;
     this.errorMessage = '';
 
@@ -115,14 +160,30 @@ export class ReportingComponent implements OnInit {
       try {
         fileItem.status = 'uploading';
         const ext = fileItem.file.name.split('.').pop()?.toLowerCase() || '';
+        const queryParams = new URLSearchParams();
+        queryParams.set('reportId', String(this.selectedReport.id));
+        queryParams.set('extension', ext);
+        queryParams.set('captchaId', this.captchaId);
+        queryParams.set('captchaAnswer', this.captchaAnswer);
+        queryParams.set('honeypot', this.honeypot);
 
         const urlResponse = await fetch(
-          `${this.apiUrl}/reports/upload?reportId=${this.selectedReport.id}&extension=${encodeURIComponent(ext)}`,
+          `${this.apiUrl}/reports/upload?${queryParams.toString()}`,
         );
 
         if (!urlResponse.ok) {
+          const errData = await urlResponse.json().catch(() => ({})) as { error?: string };
+          const isCaptchaErr = urlResponse.status === 400 && typeof errData.error === 'string' && errData.error.toLowerCase().includes('captcha');
           fileItem.status = 'error';
-          fileItem.errorMessage = 'Fehler beim Generieren der Upload-URL.';
+          fileItem.errorMessage = isCaptchaErr ? 'Captcha abgelaufen. Bitte erneut lösen.' : 'Fehler beim Generieren der Upload-URL.';
+          if (isCaptchaErr) {
+            this.captchaUnlocked = false;
+            this.captchaId = '';
+            this.captchaAnswer = '';
+            this.captchaError = true;
+            setTimeout(() => { this.captchaError = false; }, 100);
+            break; // No point uploading remaining files — captcha is consumed
+          }
           continue;
         }
 
@@ -137,7 +198,8 @@ export class ReportingComponent implements OnInit {
     }
 
     this.isUploading = false;
-    this.uploadDone = true;
+    // Only show the upload-done state if the captcha wasn't invalidated mid-upload
+    this.uploadDone = this.captchaUnlocked;
   }
 
   private uploadFileToPresignedUrl(fileItem: FileUploadItem, presignedUrl: string): Promise<void> {
