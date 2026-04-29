@@ -1,9 +1,7 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NotificationCenterService } from '../../services/notification-center.service';
 import type { UserNotificationType } from '@zeitvertreib/types';
-
-const LS_KEY = 'notification-center-hidden-types';
 
 const ALL_NOTIFICATION_TYPES: { type: UserNotificationType; label: string; icon: string }[] = [
   { type: 'session_completed', label: 'Spiel-Session', icon: '🎮' },
@@ -24,30 +22,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   isPanelOpen = false;
   isFilterPanelOpen = false;
   allTypes = ALL_NOTIFICATION_TYPES;
-  hiddenTypes = signal<UserNotificationType[]>(this.loadHiddenTypes());
-
-  filteredNotifications = computed(() => {
-    const hidden = this.hiddenTypes();
-    return this.notificationCenter.notifications().filter((n) => !hidden.includes(n.type));
-  });
-
-  filteredUnreadCount = computed(() => {
-    return this.filteredNotifications().filter((n) => n.readAt === null).length;
-  });
 
   private boundClosePanel: (event: MouseEvent) => void = () => {};
-
-  private loadHiddenTypes(): UserNotificationType[] {
-    try {
-      const stored = localStorage.getItem(LS_KEY);
-      if (stored) {
-        return JSON.parse(stored) as UserNotificationType[];
-      }
-    } catch {
-      // ignore
-    }
-    return [];
-  }
 
   ngOnInit(): void {
     this.boundClosePanel = () => {
@@ -79,16 +55,11 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   }
 
   toggleType(type: UserNotificationType): void {
-    this.hiddenTypes.update((hidden) => {
-      const idx = hidden.indexOf(type);
-      const newHidden = idx === -1 ? [...hidden, type] : hidden.filter((t) => t !== type);
-      localStorage.setItem(LS_KEY, JSON.stringify(newHidden));
-      return newHidden;
-    });
+    this.notificationCenter.toggleType(type);
   }
 
   isTypeVisible(type: UserNotificationType): boolean {
-    return !this.hiddenTypes().includes(type);
+    return this.notificationCenter.isTypeVisible(type);
   }
 
   markAllRead(): void {

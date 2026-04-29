@@ -1142,6 +1142,11 @@ export interface UserNotification {
   readAt: number | null;
 }
 
+/** GET /notifications request params */
+export interface GetNotificationsRequest {
+  types?: string;
+}
+
 /** GET /notifications response */
 export interface GetNotificationsResponse {
   notifications: UserNotification[];
