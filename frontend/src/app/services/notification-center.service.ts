@@ -1,7 +1,12 @@
 import { Injectable, OnDestroy, signal, inject, computed } from '@angular/core';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
-import type { GetNotificationsResponse, UserNotification, MarkNotificationsReadRequest, UserNotificationType } from '@zeitvertreib/types';
+import type {
+  GetNotificationsResponse,
+  UserNotification,
+  MarkNotificationsReadRequest,
+  UserNotificationType,
+} from '@zeitvertreib/types';
 
 const LS_KEY = 'notification-center-hidden-types';
 
@@ -20,9 +25,7 @@ export class NotificationCenterService implements OnDestroy {
 
   hiddenTypes = signal<UserNotificationType[]>(this.loadHiddenTypes());
   visibleTypes = computed(() => ALL_TYPES.filter((t) => !this.hiddenTypes().includes(t)));
-  filteredUnreadCount = computed(() =>
-    this.notifications().filter((n) => n.readAt === null).length
-  );
+  filteredUnreadCount = computed(() => this.notifications().filter((n) => n.readAt === null).length);
 
   private pollInterval: ReturnType<typeof setInterval> | null = null;
   private refreshTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -59,7 +62,14 @@ export class NotificationCenterService implements OnDestroy {
     this.hiddenTypes.update((hidden) => {
       const idx = hidden.indexOf(type);
       const newHidden = idx === -1 ? [...hidden, type] : hidden.filter((t) => t !== type);
-      localStorage.setItem(LS_KEY, JSON.stringify(newHidden));
+
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(LS_KEY, JSON.stringify(newHidden));
+        }
+      } catch {
+        // ignore storage write failures so the toggle still works
+      }
       return newHidden;
     });
     this.fetchNotifications();
