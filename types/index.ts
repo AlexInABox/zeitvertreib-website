@@ -1144,7 +1144,8 @@ export interface UserNotification {
 
 /** GET /notifications request params */
 export interface GetNotificationsRequest {
-  types?: string;
+  /** Notification types to filter by, encoded in the query string as repeated `types` parameters. */
+  types?: UserNotificationType[];
 }
 
 /** GET /notifications response */
