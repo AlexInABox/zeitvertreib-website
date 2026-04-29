@@ -81,6 +81,12 @@
   flex-shrink: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .notification-panel-title {
   font-weight: 600;
   font-size: 1rem;
@@ -102,6 +108,122 @@
 
 .mark-read-btn:hover {
   background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+}
+
+.filter-dots-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--p-content-color);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease, color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.filter-dots-btn:hover {
+  background: color-mix(in srgb, var(--p-content-color) 8%, transparent);
+  opacity: 1;
+}
+
+.filter-dots-btn.active {
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  color: var(--p-primary-color);
+  opacity: 1;
+}
+
+@keyframes filter-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-panel {
+  padding: 12px 20px 14px;
+  border-bottom: 1px solid var(--p-content-border-color);
+  background: color-mix(in srgb, var(--p-content-background) 97%, var(--p-primary-color) 3%);
+  animation: filter-slide 0.15s ease forwards;
+  flex-shrink: 0;
+}
+
+.filter-panel-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-content-color);
+  opacity: 0.4;
+  margin-bottom: 10px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.filter-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-icon {
+  font-size: 1rem;
+  width: 22px;
+  text-align: center;
+  line-height: 1;
+}
+
+.filter-label {
+  font-size: 0.875rem;
+  color: var(--p-content-color);
+  font-weight: 500;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  background: color-mix(in srgb, var(--p-content-border-color) 120%, transparent);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toggle-switch.on {
+  background: var(--p-primary-color);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.on .toggle-thumb {
+  transform: translateX(16px);
 }
 
 .notification-list {

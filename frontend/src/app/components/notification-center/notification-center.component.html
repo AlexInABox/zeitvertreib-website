@@ -4,20 +4,20 @@
     class="notification-bell-btn"
     (click)="togglePanel($event)"
     [attr.aria-label]="
-      notificationCenter.unreadCount() > 0
-        ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)'
+      filteredUnreadCount() > 0
+        ? 'Benachrichtigungen (' + filteredUnreadCount() + ' ungelesen)'
         : 'Benachrichtigungen'
     "
     [attr.title]="
-      notificationCenter.unreadCount() > 0
-        ? 'Benachrichtigungen (' + notificationCenter.unreadCount() + ' ungelesen)'
+      filteredUnreadCount() > 0
+        ? 'Benachrichtigungen (' + filteredUnreadCount() + ' ungelesen)'
         : 'Benachrichtigungen'
     "
   >
     <i class="pi pi-bell notification-bell-icon"></i>
-    @if (notificationCenter.unreadCount() > 0) {
+    @if (filteredUnreadCount() > 0) {
       <span class="notification-badge">{{
-        notificationCenter.unreadCount() > 99 ? '99+' : notificationCenter.unreadCount()
+        filteredUnreadCount() > 99 ? '99+' : filteredUnreadCount()
       }}</span>
     }
   </button>
@@ -27,19 +27,56 @@
     <div class="notification-panel">
       <div class="notification-panel-header">
         <span class="notification-panel-title">Benachrichtigungen</span>
-        @if (notificationCenter.unreadCount() > 0) {
-          <button class="mark-read-btn" (click)="markAllRead()">Alle gelesen</button>
-        }
+        <div class="header-actions">
+          @if (filteredUnreadCount() > 0) {
+            <button class="mark-read-btn" (click)="markAllRead()">Alle gelesen</button>
+          }
+          <button
+            class="filter-dots-btn"
+            (click)="toggleFilterPanel($event)"
+            [class.active]="isFilterPanelOpen"
+            title="Filter"
+          >
+            <i class="pi pi-ellipsis-h"></i>
+          </button>
+        </div>
       </div>
 
+      @if (isFilterPanelOpen) {
+        <div class="filter-panel">
+          <div class="filter-panel-label">Anzeigefilter</div>
+          @for (typeConfig of allTypes; track typeConfig.type) {
+            <div class="filter-row">
+              <span class="filter-row-left">
+                <span class="filter-icon">{{ typeConfig.icon }}</span>
+                <span class="filter-label">{{ typeConfig.label }}</span>
+              </span>
+              <button
+                class="toggle-switch"
+                [class.on]="isTypeVisible(typeConfig.type)"
+                (click)="toggleType(typeConfig.type)"
+                [attr.aria-label]="typeConfig.label + (isTypeVisible(typeConfig.type) ? ' deaktivieren' : ' aktivieren')"
+              >
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
       <div class="notification-list">
-        @if (notificationCenter.notifications().length === 0) {
+        @if (filteredNotifications().length === 0) {
           <div class="notification-empty">
-            <i class="pi pi-inbox" style="font-size: 1.5rem; opacity: 0.4"></i>
-            <span>Keine Benachrichtigungen</span>
+            @if (notificationCenter.notifications().length > 0 && hiddenTypes().length > 0) {
+              <i class="pi pi-filter-slash" style="font-size: 1.5rem; opacity: 0.4"></i>
+              <span>Alle Typen ausgeblendet</span>
+            } @else {
+              <i class="pi pi-inbox" style="font-size: 1.5rem; opacity: 0.4"></i>
+              <span>Keine Benachrichtigungen</span>
+            }
           </div>
         }
-        @for (notification of notificationCenter.notifications(); track notification.id) {
+        @for (notification of filteredNotifications(); track notification.id) {
           <div class="notification-item" [class.unread]="notification.readAt === null">
             <div class="notification-icon-col">{{ getIcon(notification.type) }}</div>
             <div class="notification-content-col">
