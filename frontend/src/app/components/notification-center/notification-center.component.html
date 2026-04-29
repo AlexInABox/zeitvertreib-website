@@ -55,7 +55,9 @@
                 class="toggle-switch"
                 [class.on]="isTypeVisible(typeConfig.type)"
                 (click)="toggleType(typeConfig.type)"
-                [attr.aria-label]="typeConfig.label + (isTypeVisible(typeConfig.type) ? ' deaktivieren' : ' aktivieren')"
+                [attr.aria-label]="
+                  typeConfig.label + (isTypeVisible(typeConfig.type) ? ' deaktivieren' : ' aktivieren')
+                "
               >
                 <span class="toggle-thumb"></span>
               </button>
