@@ -1,0 +1,66 @@
+<div class="captcha-wrapper">
+  <!-- Honeypot: hidden from real users, caught bots auto-fill it -->
+  <input
+    name="email_confirm"
+    tabindex="-1"
+    aria-hidden="true"
+    autocomplete="off"
+    class="captcha-honeypot"
+    [value]="honeypotValue"
+    (input)="onHoneypotInput($event)"
+  />
+
+  <!-- Loading state -->
+  <div class="captcha-loading" *ngIf="captchaService.isLoading()">
+    <div class="spinner-ring"></div>
+    <span>Captcha wird geladen…</span>
+  </div>
+
+  <!-- Error state -->
+  <div class="captcha-error" *ngIf="captchaService.loadError() && !captchaService.isLoading()">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ captchaService.loadError() }}</span>
+    <button class="refresh-btn" (click)="refresh()" type="button">
+      <i class="pi pi-refresh"></i> Erneut versuchen
+    </button>
+  </div>
+
+  <!-- Captcha display -->
+  <ng-container *ngIf="!captchaService.isLoading() && !captchaService.loadError()">
+    <div class="captcha-image-row">
+      <div class="captcha-svg-outer">
+        <div class="captcha-svg-container" [innerHTML]="safeSvg" aria-hidden="true"></div>
+        <!-- Solved badge -->
+        <div class="captcha-solved-badge" *ngIf="isSolved">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <!-- Expiry timer bar -->
+        <div class="captcha-timer-bar" [title]="timeLabel + ' verbleibend'">
+          <div class="captcha-timer-fill" [style.width.%]="timePercent"></div>
+        </div>
+        <!-- Countdown label — only shown when under 60 s to avoid distracting users -->
+        <div class="captcha-timer-label" *ngIf="timePercent <= 20"><i class="pi pi-clock"></i> {{ timeLabel }}</div>
+      </div>
+      <button class="refresh-btn" (click)="refresh()" type="button" title="Neues Captcha laden">
+        <i class="pi pi-refresh"></i>
+      </button>
+    </div>
+
+    <label class="captcha-label" for="captcha-input">Zeichen eingeben</label>
+    <input
+      id="captcha-input"
+      class="captcha-input"
+      [class.shake]="isShaking"
+      type="text"
+      maxlength="5"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      placeholder="z.B. A7K3P"
+      [value]="answer"
+      (input)="onAnswerInput($event)"
+      (keyup.enter)="onEnter()"
+    />
+  </ng-container>
+</div>
