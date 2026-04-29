@@ -4,21 +4,15 @@
     class="notification-bell-btn"
     (click)="togglePanel($event)"
     [attr.aria-label]="
-      filteredUnreadCount() > 0
-        ? 'Benachrichtigungen (' + filteredUnreadCount() + ' ungelesen)'
-        : 'Benachrichtigungen'
+      filteredUnreadCount() > 0 ? 'Benachrichtigungen (' + filteredUnreadCount() + ' ungelesen)' : 'Benachrichtigungen'
     "
     [attr.title]="
-      filteredUnreadCount() > 0
-        ? 'Benachrichtigungen (' + filteredUnreadCount() + ' ungelesen)'
-        : 'Benachrichtigungen'
+      filteredUnreadCount() > 0 ? 'Benachrichtigungen (' + filteredUnreadCount() + ' ungelesen)' : 'Benachrichtigungen'
     "
   >
     <i class="pi pi-bell notification-bell-icon"></i>
     @if (filteredUnreadCount() > 0) {
-      <span class="notification-badge">{{
-        filteredUnreadCount() > 99 ? '99+' : filteredUnreadCount()
-      }}</span>
+      <span class="notification-badge">{{ filteredUnreadCount() > 99 ? '99+' : filteredUnreadCount() }}</span>
     }
   </button>
 
@@ -55,7 +49,9 @@
                 class="toggle-switch"
                 [class.on]="isTypeVisible(typeConfig.type)"
                 (click)="toggleType(typeConfig.type)"
-                [attr.aria-label]="typeConfig.label + (isTypeVisible(typeConfig.type) ? ' deaktivieren' : ' aktivieren')"
+                [attr.aria-label]="
+                  typeConfig.label + (isTypeVisible(typeConfig.type) ? ' deaktivieren' : ' aktivieren')
+                "
               >
                 <span class="toggle-thumb"></span>
               </button>

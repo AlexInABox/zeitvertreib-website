@@ -122,7 +122,10 @@
   color: var(--p-content-color);
   opacity: 0.45;
   cursor: pointer;
-  transition: background 0.2s ease, opacity 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease,
+    color 0.2s ease;
   font-size: 0.9rem;
 }
 
