@@ -52,7 +52,7 @@ public class CoinGluttony : IEvent
                 int coinCount = player.Items.Count(item => item.Base.ItemTypeId == ItemType.Coin);
 
                 if (coinCount > 0) continue;
-                
+
                 player.AddItem(ItemType.Coin);
             }
 
