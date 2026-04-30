@@ -68,7 +68,9 @@
   <!-- ===== UPLOAD VIEW ===== -->
   <ng-container *ngIf="selectedReport">
     <div class="upload-view">
-      <button class="ghost-btn" (click)="backToList()" [disabled]="isFetchingMedalClip || isUploading"><i class="pi pi-arrow-left"></i> Zurück zur Übersicht</button>
+      <button class="ghost-btn" (click)="backToList()" [disabled]="isFetchingMedalClip || isUploading">
+        <i class="pi pi-arrow-left"></i> Zurück zur Übersicht
+      </button>
 
       <!-- Report summary -->
       <div class="summary-card">
@@ -120,11 +122,21 @@
 
         <!-- Upload Mode Toggle -->
         <div class="upload-mode-toggle">
-          <button class="mode-btn" [class.active]="uploadMode === 'file'" (click)="uploadMode = 'file'; errorMessage = ''" [disabled]="isFetchingMedalClip || isUploading">
+          <button
+            class="mode-btn"
+            [class.active]="uploadMode === 'file'"
+            (click)="uploadMode = 'file'; errorMessage = ''"
+            [disabled]="isFetchingMedalClip || isUploading"
+          >
             <i class="pi pi-file"></i>
             <span>Datei</span>
           </button>
-          <button class="mode-btn" [class.active]="uploadMode === 'medal'" (click)="uploadMode = 'medal'; errorMessage = ''" [disabled]="isFetchingMedalClip || isUploading">
+          <button
+            class="mode-btn"
+            [class.active]="uploadMode === 'medal'"
+            (click)="uploadMode = 'medal'; errorMessage = ''"
+            [disabled]="isFetchingMedalClip || isUploading"
+          >
             <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
             <span>Medal Clip</span>
           </button>
@@ -199,9 +211,7 @@
 
         <!-- Medal Clip Upload Mode -->
         <ng-container *ngIf="uploadMode === 'medal'">
-          <p class="upload-hint">
-            Medal.tv Clip-URL einfügen und hochladen &middot; Max. 100 MB
-          </p>
+          <p class="upload-hint">Medal.tv Clip-URL einfügen und hochladen &middot; Max. 100 MB</p>
 
           <div class="medal-input-wrapper">
             <input

@@ -888,7 +888,7 @@ export class CaseDetailComponent implements OnInit {
       }
     }
 
-    const videoFile = new File([downloadedBytes as Uint8Array<ArrayBuffer>], fileNameWithExt, { type: mimeType });
+    const videoFile = new File([downloadedBytes], fileNameWithExt, { type: mimeType });
     return {
       file: videoFile,
       extension: fileExtension,
