@@ -31,8 +31,8 @@ export async function updateVoiceChannelConnection(client: Client<true>): Promis
         channelId: targetChannel.id,
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
-        selfDeaf: false,
-        selfMute: true,
+        selfDeaf: true,
+        selfMute: false,
       });
     } else {
       // No users in any voice channel, leave if we're in one
