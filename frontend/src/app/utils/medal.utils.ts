@@ -87,7 +87,7 @@ export function isValidUrl(urlString: string): boolean {
   if (!urlString?.trim()) return false;
   try {
     const url = new URL(urlString.trim());
-    return url.protocol.startsWith('http');
+    return url.protocol === 'http:' || url.protocol === 'https:';
   } catch {
     return false;
   }
