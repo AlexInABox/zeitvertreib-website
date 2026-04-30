@@ -10,7 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../services/auth.service';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
-import { md5 } from 'hash-wasm';
+
 import type {
   GetCaseMetadataGetResponse,
   CaseFileUploadGetResponse,
@@ -18,83 +18,18 @@ import type {
   CaseCategory,
   SearchReportsBySteamIdGetResponse,
 } from '@zeitvertreib/types';
-
-const MEDAL_CORS_PROXY_URL = 'https://cors.zeitvertreib.vip/?url=';
-
-class MedalIntegrityError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'MedalIntegrityError';
-  }
-}
-
-const CRC32C_TABLE = (() => {
-  const table = new Uint32Array(256);
-  for (let index = 0; index < 256; index += 1) {
-    let crc = index;
-    for (let bit = 0; bit < 8; bit += 1) {
-      if ((crc & 1) !== 0) {
-        crc = (crc >>> 1) ^ 0x82f63b78;
-      } else {
-        crc >>>= 1;
-      }
-    }
-    table[index] = crc >>> 0;
-  }
-  return table;
-})();
-
-function normalizeEtag(etag: string): string {
-  let normalized = etag.trim();
-  if (normalized.startsWith('W/')) {
-    normalized = normalized.slice(2).trim();
-  }
-  if (normalized.startsWith('"') && normalized.endsWith('"')) {
-    normalized = normalized.slice(1, -1);
-  }
-  return normalized.toLowerCase();
-}
-
-function normalizeHeaderValue(value: string): string {
-  let normalized = value.trim();
-  if (normalized.startsWith('"') && normalized.endsWith('"')) {
-    normalized = normalized.slice(1, -1);
-  }
-  return normalized;
-}
-
-function concatUint8Arrays(chunks: Uint8Array[]): Uint8Array {
-  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return result;
-}
-
-function calculateCrc32c(bytes: Uint8Array): number {
-  let crc = 0xffffffff;
-  for (let index = 0; index < bytes.length; index += 1) {
-    const tableIndex = (crc ^ bytes[index]) & 0xff;
-    crc = (crc >>> 8) ^ CRC32C_TABLE[tableIndex];
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function crc32cToBase64(checksum: number): string {
-  const bytes = new Uint8Array(4);
-  const view = new DataView(bytes.buffer);
-  view.setUint32(0, checksum >>> 0, false);
-
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-
-  return btoa(binary);
-}
+import {
+  MedalIntegrityError,
+  isMedalBypassResponse,
+  isValidUrl,
+  calculateETA,
+  calculateMd5,
+  normalizeEtag,
+  normalizeHeaderValue,
+  concatUint8Arrays,
+  calculateCrc32c,
+  crc32cToBase64,
+} from '../utils/medal.utils';
 
 @Component({
   selector: 'app-case-detail',
@@ -733,21 +668,6 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  private calculateETA(startTime: number, progress: number): string {
-    if (progress === 0) return 'Berechne...';
-    const elapsed = Date.now() - startTime;
-    const total = (elapsed / progress) * 100;
-    const remaining = total - elapsed;
-    const seconds = Math.ceil(remaining / 1000);
-    if (seconds < 10) return '<10s';
-    const roundedSeconds = Math.ceil(seconds / 10) * 10;
-    if (roundedSeconds < 60) return `~${roundedSeconds}s`;
-    const minutes = Math.floor(roundedSeconds / 60);
-    const secs = roundedSeconds % 60;
-    if (secs === 0) return `~${minutes}m`;
-    return `~${minutes}m ${secs}s`;
-  }
-
   async uploadFile() {
     if (!this.selectedFile) {
       alert('Bitte wähle eine Datei aus');
@@ -779,7 +699,7 @@ export class CaseDetailComponent implements OnInit {
       await this.uploadFileToPresignedUrl(this.selectedFile, uploadInfo.url, contentType, {
         onProgress: (progress) => {
           this.uploadProgress = progress;
-          this.uploadETA = this.calculateETA(this.uploadStartTime, progress);
+          this.uploadETA = calculateETA(this.uploadStartTime, progress);
           this.uploadStatusMessage = `Datei wird hochgeladen... (${progress}%)`;
         },
       });
@@ -806,17 +726,11 @@ export class CaseDetailComponent implements OnInit {
   }
 
   isValidUrl(urlString: string): boolean {
-    if (!urlString?.trim()) return false;
-    try {
-      const url = new URL(urlString.trim());
-      return url.protocol.startsWith('http');
-    } catch {
-      return false;
-    }
+    return isValidUrl(urlString);
   }
 
   onMedalUrlChange() {
-    this.medalUrlInvalid = this.medalClipUrl.trim() ? !this.isValidUrl(this.medalClipUrl) : false;
+    this.medalUrlInvalid = this.medalClipUrl.trim() ? !isValidUrl(this.medalClipUrl) : false;
   }
 
   async uploadMedalClip() {
@@ -824,7 +738,7 @@ export class CaseDetailComponent implements OnInit {
       alert('Bitte gib eine URL ein');
       return;
     }
-    if (!this.isValidUrl(this.medalClipUrl)) {
+    if (!isValidUrl(this.medalClipUrl)) {
       alert('Bitte gib eine gültige URL ein');
       return;
     }
@@ -861,7 +775,7 @@ export class CaseDetailComponent implements OnInit {
           await this.uploadFileToPresignedUrl(medalFile.file, uploadInfo.url, medalFile.mimeType, {
             onProgress: (progress) => {
               this.medalUploadProgress = progress;
-              this.medalETA = this.calculateETA(this.medalStartTime, progress);
+              this.medalETA = calculateETA(this.medalStartTime, progress);
               this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
             },
           });
@@ -914,7 +828,7 @@ export class CaseDetailComponent implements OnInit {
     targetUrl: string,
   ): Promise<{ file: File; extension: string; mimeType: string }> {
     const normalizedTargetUrl = targetUrl.trim();
-    const corsProxyUrl = `${MEDAL_CORS_PROXY_URL}${encodeURIComponent(normalizedTargetUrl)}`;
+    const corsProxyUrl = `${environment.medalCorsProxyUrl}${encodeURIComponent(normalizedTargetUrl)}`;
     const response = await fetch(corsProxyUrl);
     if (!response.ok) {
       throw new Error('Fehler beim Abrufen des Medal Clips');
@@ -945,7 +859,7 @@ export class CaseDetailComponent implements OnInit {
       receivedLength += readResult.value.length;
       if (total > 0) {
         this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
-        this.medalETA = this.calculateETA(this.medalStartTime, this.medalDownloadProgress);
+        this.medalETA = calculateETA(this.medalStartTime, this.medalDownloadProgress);
         this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
       }
     }
@@ -956,7 +870,7 @@ export class CaseDetailComponent implements OnInit {
 
     if (etagHeader) {
       const expectedEtag = normalizeEtag(etagHeader);
-      const actualMd5 = await md5(downloadedBytes);
+      const actualMd5 = await calculateMd5(chunks);
       if (expectedEtag !== actualMd5.toLowerCase()) {
         throw new MedalIntegrityError(
           'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
@@ -974,7 +888,7 @@ export class CaseDetailComponent implements OnInit {
       }
     }
 
-    const videoFile = new File([downloadedBytes as unknown as BlobPart], fileNameWithExt, { type: mimeType });
+    const videoFile = new File([downloadedBytes as Uint8Array<ArrayBuffer>], fileNameWithExt, { type: mimeType });
     return {
       file: videoFile,
       extension: fileExtension,
@@ -983,13 +897,16 @@ export class CaseDetailComponent implements OnInit {
   }
 
   private async resolveMedalSourceUrl(targetUrl: string): Promise<string> {
-    const bypassUrl = `https://medalbypass.vercel.app/api/clip?url=${encodeURIComponent(targetUrl)}`;
+    const bypassUrl = `${environment.medalBypassApiUrl}${encodeURIComponent(targetUrl)}`;
     const bypassResponse = await fetch(bypassUrl);
     if (!bypassResponse.ok) {
       throw new Error('Fehler beim Abrufen des Medal Clips');
     }
 
-    const bypassData = (await bypassResponse.json()) as { valid: boolean; src?: string; reasoning?: string };
+    const bypassData: unknown = await bypassResponse.json();
+    if (!isMedalBypassResponse(bypassData)) {
+      throw new Error('Ungültige Antwort vom Medal Bypass Service');
+    }
     if (!bypassData.valid) {
       throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
     }
@@ -1021,14 +938,14 @@ export class CaseDetailComponent implements OnInit {
       this.fileUploader.options.headers = [{ name: 'Content-Type', value: contentType }];
 
       // Set up callbacks
-      this.fileUploader.onBeforeUploadItem = (item) => {
+      this.fileUploader.onBeforeUploadItem = (item: any) => {
         item.url = presignedUrl;
         item.method = 'PUT';
         item.withCredentials = false;
         item.headers = [{ name: 'Content-Type', value: contentType }];
       };
 
-      this.fileUploader.onProgressItem = (_item, progress) => {
+      this.fileUploader.onProgressItem = (_item: any, progress: any) => {
         callbacks.onProgress(progress);
       };
 
@@ -1037,7 +954,7 @@ export class CaseDetailComponent implements OnInit {
         resolve();
       };
 
-      this.fileUploader.onErrorItem = (_item, response, status) => {
+      this.fileUploader.onErrorItem = (_item: any, response: any, status: any) => {
         this.cleanupUploaderCallbacks();
         reject(new Error(`Upload fehlgeschlagen: ${status} ${response}`));
       };

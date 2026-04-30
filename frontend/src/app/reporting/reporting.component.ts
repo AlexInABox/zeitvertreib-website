@@ -1,9 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
 import type { GetReportsResponse, ReportFileUploadGetResponse } from '@zeitvertreib/types';
+import {
+  MedalIntegrityError,
+  isMedalBypassResponse,
+  isValidUrl,
+  calculateETA,
+  calculateMd5,
+  normalizeEtag,
+  normalizeHeaderValue,
+  concatUint8Arrays,
+  calculateCrc32c,
+  crc32cToBase64,
+} from '../utils/medal.utils';
 
 type Report = GetReportsResponse['reports'][number];
 
@@ -17,7 +30,7 @@ interface FileUploadItem {
 @Component({
   selector: 'app-reporting',
   standalone: true,
-  imports: [CommonModule, ButtonModule, FileUploadModule],
+  imports: [CommonModule, FormsModule, ButtonModule, FileUploadModule],
   templateUrl: './reporting.component.html',
   styleUrls: ['./reporting.component.css'],
 })
@@ -32,9 +45,23 @@ export class ReportingComponent implements OnInit {
   uploadDone = false;
   errorMessage = '';
 
+  // Medal clip upload state
+  uploadMode: 'file' | 'medal' = 'file';
+  medalClipUrl = '';
+  isFetchingMedalClip = false;
+  medalDownloadProgress = 0;
+  medalUploadProgress = 0;
+  medalStatusMessage = '';
+  medalETA = '';
+  medalStartTime = 0;
+  medalUrlInvalid = false;
+  medalRetryPromptMessage = '';
+
   fileUploader = new FileUploader({ url: '', autoUpload: false });
 
   private readonly apiUrl = environment.apiUrl;
+  private readonly medalCorsProxyUrl = environment.medalCorsProxyUrl;
+  private readonly medalBypassApiUrl = environment.medalBypassApiUrl;
   private readonly maxFileSize = 100 * 1024 * 1024; // 100 MB
   private readonly allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov', 'avi', 'mkv'];
 
@@ -66,6 +93,15 @@ export class ReportingComponent implements OnInit {
     this.isUploading = false;
     this.uploadDone = false;
     this.errorMessage = '';
+    this.uploadMode = 'file';
+    this.medalClipUrl = '';
+    this.isFetchingMedalClip = false;
+    this.medalDownloadProgress = 0;
+    this.medalUploadProgress = 0;
+    this.medalStatusMessage = '';
+    this.medalETA = '';
+    this.medalUrlInvalid = false;
+    this.medalRetryPromptMessage = '';
   }
 
   backToList(): void {
@@ -74,6 +110,15 @@ export class ReportingComponent implements OnInit {
     this.isUploading = false;
     this.uploadDone = false;
     this.errorMessage = '';
+    this.uploadMode = 'file';
+    this.medalClipUrl = '';
+    this.isFetchingMedalClip = false;
+    this.medalDownloadProgress = 0;
+    this.medalUploadProgress = 0;
+    this.medalStatusMessage = '';
+    this.medalETA = '';
+    this.medalUrlInvalid = false;
+    this.medalRetryPromptMessage = '';
   }
 
   onFileSelect(event: Event): void {
@@ -148,14 +193,14 @@ export class ReportingComponent implements OnInit {
       this.fileUploader.options.disableMultipart = true;
       this.fileUploader.options.headers = [];
 
-      this.fileUploader.onBeforeUploadItem = (item) => {
+      this.fileUploader.onBeforeUploadItem = (item: any) => {
         item.url = presignedUrl;
         item.method = 'PUT';
         item.withCredentials = false;
         item.headers = [];
       };
 
-      this.fileUploader.onProgressItem = (_item, progress) => {
+      this.fileUploader.onProgressItem = (_item: any, progress: any) => {
         fileItem.progress = progress;
       };
 
@@ -164,7 +209,7 @@ export class ReportingComponent implements OnInit {
         resolve();
       };
 
-      this.fileUploader.onErrorItem = (_item, response, status) => {
+      this.fileUploader.onErrorItem = (_item: any, response: any, status: any) => {
         this.cleanupUploaderCallbacks();
         reject(new Error(`Upload fehlgeschlagen: ${status} ${response}`));
       };
@@ -179,6 +224,217 @@ export class ReportingComponent implements OnInit {
     this.fileUploader.onProgressItem = () => {};
     this.fileUploader.onSuccessItem = () => {};
     this.fileUploader.onErrorItem = () => {};
+  }
+
+  onMedalUrlChange(): void {
+    this.medalUrlInvalid = this.medalClipUrl.trim() ? !isValidUrl(this.medalClipUrl) : false;
+  }
+
+  async uploadMedalClip(): Promise<void> {
+    if (!this.selectedReport) return;
+    if (!this.medalClipUrl.trim()) {
+      this.errorMessage = 'Bitte gib eine URL ein';
+      return;
+    }
+    if (!isValidUrl(this.medalClipUrl)) {
+      this.errorMessage = 'Bitte gib eine gültige URL ein';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.medalRetryPromptMessage = '';
+    this.isFetchingMedalClip = true;
+    this.medalDownloadProgress = 0;
+    this.medalUploadProgress = 0;
+    this.medalStatusMessage = 'Medal Clip wird abgerufen...';
+    this.medalETA = '';
+    this.medalStartTime = Date.now();
+
+    try {
+      const medalSourceUrl = await this.resolveMedalSourceUrl(this.medalClipUrl);
+      const medalFile = await this.downloadMedalClipFromCorsProxy(medalSourceUrl);
+
+      this.medalDownloadProgress = 100;
+      this.medalUploadProgress = 0;
+      this.medalStatusMessage = 'Upload-URL wird angefordert...';
+
+      const urlResponse = await fetch(
+        `${this.apiUrl}/reports/upload?reportId=${this.selectedReport.id}&extension=${encodeURIComponent(medalFile.extension)}`,
+      );
+
+      if (!urlResponse.ok) throw new Error('Fehler beim Generieren der Upload-URL.');
+
+      const uploadData: ReportFileUploadGetResponse = await urlResponse.json();
+
+      this.medalStatusMessage = 'Video wird hochgeladen...';
+      this.medalStartTime = Date.now();
+
+      await this.uploadMedalFileToPresignedUrl(medalFile.file, uploadData.url, medalFile.mimeType);
+
+      this.isFetchingMedalClip = false;
+      this.medalDownloadProgress = 0;
+      this.medalUploadProgress = 0;
+      this.medalClipUrl = '';
+      this.medalStatusMessage = '';
+      this.medalETA = '';
+      this.uploadDone = true;
+    } catch (error) {
+      this.isFetchingMedalClip = false;
+      this.medalDownloadProgress = 0;
+      this.medalUploadProgress = 0;
+      this.medalStatusMessage = '';
+      this.medalETA = '';
+      if (error instanceof MedalIntegrityError) {
+        this.medalRetryPromptMessage = error.message;
+        return;
+      }
+      console.error('Medal clip upload failed:', error);
+      this.errorMessage = error instanceof Error ? error.message : 'Fehler beim Hochladen des Medal Clips';
+    }
+  }
+
+  retryMedalClip(): void {
+    this.medalRetryPromptMessage = '';
+    void this.uploadMedalClip();
+  }
+
+  cancelMedalRetry(): void {
+    this.medalRetryPromptMessage = '';
+  }
+
+  private async resolveMedalSourceUrl(targetUrl: string): Promise<string> {
+    const bypassUrl = `${this.medalBypassApiUrl}${encodeURIComponent(targetUrl)}`;
+    const bypassResponse = await fetch(bypassUrl);
+    if (!bypassResponse.ok) {
+      throw new Error('Fehler beim Abrufen des Medal Clips');
+    }
+
+    const bypassData: unknown = await bypassResponse.json();
+    if (!isMedalBypassResponse(bypassData)) {
+      throw new Error('Ungültige Antwort vom Medal Bypass Service');
+    }
+    if (!bypassData.valid) {
+      throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
+    }
+    if (!bypassData.src) {
+      throw new Error('Keine Video-URL erhalten');
+    }
+
+    return bypassData.src;
+  }
+
+  private async downloadMedalClipFromCorsProxy(
+    targetUrl: string,
+  ): Promise<{ file: File; extension: string; mimeType: string }> {
+    const normalizedTargetUrl = targetUrl.trim();
+    const corsProxyUrl = `${this.medalCorsProxyUrl}${encodeURIComponent(normalizedTargetUrl)}`;
+    const response = await fetch(corsProxyUrl);
+    if (!response.ok) {
+      throw new Error('Fehler beim Abrufen des Medal Clips');
+    }
+
+    const pathName = new URL(normalizedTargetUrl).pathname;
+    const fileNameWithExt = pathName.split('/').pop() || 'clip.mp4';
+    let fileExtension = 'mp4';
+    if (fileNameWithExt.includes('.')) {
+      const extractedExtension = fileNameWithExt.split('.').pop();
+      if (extractedExtension) {
+        fileExtension = extractedExtension.toLowerCase();
+      }
+    }
+    const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
+
+    this.medalStatusMessage = 'Video wird heruntergeladen...';
+    this.medalStartTime = Date.now();
+
+    const contentLength = response.headers.get('content-length');
+    const total = contentLength ? parseInt(contentLength, 10) : 0;
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Fehler beim Lesen des Videos');
+    }
+
+    const chunks: Uint8Array[] = [];
+    let receivedLength = 0;
+
+    while (true) {
+      const readResult = await reader.read();
+      if (readResult.done) break;
+      chunks.push(readResult.value);
+      receivedLength += readResult.value.length;
+      if (total > 0) {
+        this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
+        this.medalETA = calculateETA(this.medalStartTime, this.medalDownloadProgress);
+        this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
+      }
+    }
+
+    const downloadedBytes = concatUint8Arrays(chunks);
+    const etagHeader = response.headers.get('etag');
+    const checksumHeader = response.headers.get('x-amz-checksum-crc32c');
+
+    if (etagHeader) {
+      const expectedEtag = normalizeEtag(etagHeader);
+      const actualMd5 = await calculateMd5(chunks);
+      if (expectedEtag !== actualMd5.toLowerCase()) {
+        throw new MedalIntegrityError(
+          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
+        );
+      }
+    }
+
+    if (checksumHeader) {
+      const expectedChecksum = normalizeHeaderValue(checksumHeader);
+      const actualChecksum = crc32cToBase64(calculateCrc32c(downloadedBytes));
+      if (expectedChecksum !== actualChecksum) {
+        throw new MedalIntegrityError(
+          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: x-amz-checksum-crc32c stimmt nicht mit dem heruntergeladenen Inhalt überein.',
+        );
+      }
+    }
+
+    const videoFile = new File([downloadedBytes as Uint8Array<ArrayBuffer>], fileNameWithExt, { type: mimeType });
+    return {
+      file: videoFile,
+      extension: fileExtension,
+      mimeType,
+    };
+  }
+
+  private uploadMedalFileToPresignedUrl(file: File, presignedUrl: string, contentType: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.fileUploader.clearQueue();
+      this.fileUploader.options.url = presignedUrl;
+      this.fileUploader.options.method = 'PUT';
+      this.fileUploader.options.disableMultipart = true;
+      this.fileUploader.options.headers = [{ name: 'Content-Type', value: contentType }];
+
+      this.fileUploader.onBeforeUploadItem = (item: any) => {
+        item.url = presignedUrl;
+        item.method = 'PUT';
+        item.withCredentials = false;
+        item.headers = [{ name: 'Content-Type', value: contentType }];
+      };
+
+      this.fileUploader.onProgressItem = (_item: any, progress: any) => {
+        this.medalUploadProgress = progress;
+        this.medalETA = calculateETA(this.medalStartTime, progress);
+        this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
+      };
+
+      this.fileUploader.onSuccessItem = () => {
+        this.cleanupUploaderCallbacks();
+        resolve();
+      };
+
+      this.fileUploader.onErrorItem = (_item: any, response: any, status: any) => {
+        this.cleanupUploaderCallbacks();
+        reject(new Error(`Upload fehlgeschlagen: ${status} ${response}`));
+      };
+
+      this.fileUploader.addToQueue([file]);
+      this.fileUploader.uploadAll();
+    });
   }
 
   getFileIcon(filename: string): string {
@@ -205,6 +461,7 @@ export class ReportingComponent implements OnInit {
   }
 
   get allUploadsSuccessful(): boolean {
+    if (this.uploadMode === 'medal') return true;
     return this.files.length > 0 && this.files.every((f) => f.status === 'done');
   }
 
