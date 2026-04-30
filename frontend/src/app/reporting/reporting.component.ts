@@ -316,8 +316,16 @@ export class ReportingComponent implements OnInit {
     if (!bypassData.valid) {
       throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
     }
-    if (!bypassData.src) {
-      throw new Error('Keine Video-URL erhalten');
+
+    const allowedMedalHosts = ['medal.tv', 'cdn.medal.tv', 'medal-content.com', 'cdn.medal-content.com'];
+    let srcUrl: URL;
+    try {
+      srcUrl = new URL(bypassData.src);
+    } catch {
+      throw new Error('Ungültige Video-URL vom Medal Bypass Service');
+    }
+    if (srcUrl.protocol !== 'https:' || !allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))) {
+      throw new Error('Video-URL stammt nicht von einem erlaubten Medal-Host');
     }
 
     return bypassData.src;
@@ -333,6 +341,7 @@ export class ReportingComponent implements OnInit {
       throw new Error('Fehler beim Abrufen des Medal Clips');
     }
 
+    const allowedVideoExtensions = ['mp4', 'webm', 'mov', 'avi', 'mkv'];
     const pathName = new URL(normalizedTargetUrl).pathname;
     const fileNameWithExt = pathName.split('/').pop() || 'clip.mp4';
     let fileExtension = 'mp4';
@@ -342,6 +351,9 @@ export class ReportingComponent implements OnInit {
         fileExtension = extractedExtension.toLowerCase();
       }
     }
+    if (!allowedVideoExtensions.includes(fileExtension)) {
+      throw new Error(`Ungültiges Dateiformat ".${fileExtension}". Erlaubt sind: ${allowedVideoExtensions.join(', ')}.`);
+    }
     const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
 
     this.medalStatusMessage = 'Video wird heruntergeladen...';
@@ -349,6 +361,9 @@ export class ReportingComponent implements OnInit {
 
     const contentLength = response.headers.get('content-length');
     const total = contentLength ? parseInt(contentLength, 10) : 0;
+    if (total > this.maxFileSize) {
+      throw new Error(`Das Video ist zu groß (max. 100 MB).`);
+    }
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error('Fehler beim Lesen des Videos');
@@ -362,6 +377,10 @@ export class ReportingComponent implements OnInit {
       if (readResult.done) break;
       chunks.push(readResult.value);
       receivedLength += readResult.value.length;
+      if (receivedLength > this.maxFileSize) {
+        reader.cancel();
+        throw new Error(`Das Video ist zu groß (max. 100 MB).`);
+      }
       if (total > 0) {
         this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
         this.medalETA = calculateETA(this.medalStartTime, this.medalDownloadProgress);
@@ -393,7 +412,7 @@ export class ReportingComponent implements OnInit {
       }
     }
 
-    const videoFile = new File([downloadedBytes as Uint8Array<ArrayBuffer>], fileNameWithExt, { type: mimeType });
+    const videoFile = new File([downloadedBytes as BlobPart], fileNameWithExt, { type: mimeType });
     return {
       file: videoFile,
       extension: fileExtension,
