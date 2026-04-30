@@ -324,7 +324,10 @@ export class ReportingComponent implements OnInit {
     } catch {
       throw new Error('Ungültige Video-URL vom Medal Bypass Service');
     }
-    if (srcUrl.protocol !== 'https:' || !allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))) {
+    if (
+      srcUrl.protocol !== 'https:' ||
+      !allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))
+    ) {
       throw new Error('Video-URL stammt nicht von einem erlaubten Medal-Host');
     }
 
@@ -352,7 +355,9 @@ export class ReportingComponent implements OnInit {
       }
     }
     if (!allowedVideoExtensions.includes(fileExtension)) {
-      throw new Error(`Ungültiges Dateiformat ".${fileExtension}". Erlaubt sind: ${allowedVideoExtensions.join(', ')}.`);
+      throw new Error(
+        `Ungültiges Dateiformat ".${fileExtension}". Erlaubt sind: ${allowedVideoExtensions.join(', ')}.`,
+      );
     }
     const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
 
