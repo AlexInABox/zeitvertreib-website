@@ -13,8 +13,7 @@ import {
   calculateMd5,
   normalizeEtag,
   normalizeHeaderValue,
-  concatUint8Arrays,
-  calculateCrc32c,
+  calculateCrc32cChunked,
   crc32cToBase64,
 } from '../utils/medal.utils';
 
@@ -89,23 +88,15 @@ export class ReportingComponent implements OnInit {
 
   selectReport(report: Report): void {
     this.selectedReport = report;
-    this.files = [];
-    this.isUploading = false;
-    this.uploadDone = false;
-    this.errorMessage = '';
-    this.uploadMode = 'file';
-    this.medalClipUrl = '';
-    this.isFetchingMedalClip = false;
-    this.medalDownloadProgress = 0;
-    this.medalUploadProgress = 0;
-    this.medalStatusMessage = '';
-    this.medalETA = '';
-    this.medalUrlInvalid = false;
-    this.medalRetryPromptMessage = '';
+    this.resetUploadState();
   }
 
   backToList(): void {
     this.selectedReport = null;
+    this.resetUploadState();
+  }
+
+  private resetUploadState(): void {
     this.files = [];
     this.isUploading = false;
     this.uploadDone = false;
@@ -388,7 +379,6 @@ export class ReportingComponent implements OnInit {
       }
     }
 
-    const downloadedBytes = concatUint8Arrays(chunks);
     const etagHeader = response.headers.get('etag');
     const checksumHeader = response.headers.get('x-amz-checksum-crc32c');
 
@@ -404,7 +394,7 @@ export class ReportingComponent implements OnInit {
 
     if (checksumHeader) {
       const expectedChecksum = normalizeHeaderValue(checksumHeader);
-      const actualChecksum = crc32cToBase64(calculateCrc32c(downloadedBytes));
+      const actualChecksum = crc32cToBase64(calculateCrc32cChunked(chunks));
       if (expectedChecksum !== actualChecksum) {
         throw new MedalIntegrityError(
           'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: x-amz-checksum-crc32c stimmt nicht mit dem heruntergeladenen Inhalt überein.',
@@ -412,7 +402,7 @@ export class ReportingComponent implements OnInit {
       }
     }
 
-    const videoFile = new File([downloadedBytes as BlobPart], fileNameWithExt, { type: mimeType });
+    const videoFile = new File(chunks as BlobPart[], fileNameWithExt, { type: mimeType });
     return {
       file: videoFile,
       extension: fileExtension,

@@ -63,6 +63,17 @@ export function calculateCrc32c(bytes: Uint8Array): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
+export function calculateCrc32cChunked(chunks: Uint8Array[]): number {
+  let crc = 0xffffffff;
+  for (const chunk of chunks) {
+    for (let index = 0; index < chunk.length; index += 1) {
+      const tableIndex = (crc ^ chunk[index]) & 0xff;
+      crc = (crc >>> 8) ^ CRC32C_TABLE[tableIndex];
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
 export function crc32cToBase64(checksum: number): string {
   const bytes = new Uint8Array(4);
   const view = new DataView(bytes.buffer);
