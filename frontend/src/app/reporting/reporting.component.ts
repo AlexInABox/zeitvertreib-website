@@ -315,7 +315,10 @@ export class ReportingComponent implements OnInit {
     } catch {
       throw new Error('Ungültige Video-URL vom Medal Bypass Service');
     }
-    if (srcUrl.protocol !== 'https:' || !allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))) {
+    if (
+      srcUrl.protocol !== 'https:' ||
+      !allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))
+    ) {
       throw new Error('Video-URL stammt nicht von einem erlaubten Medal-Host');
     }
 
@@ -343,7 +346,9 @@ export class ReportingComponent implements OnInit {
       }
     }
     if (!allowedVideoExtensions.includes(fileExtension)) {
-      throw new Error(`Ungültiges Dateiformat ".${fileExtension}". Erlaubt sind: ${allowedVideoExtensions.join(', ')}.`);
+      throw new Error(
+        `Ungültiges Dateiformat ".${fileExtension}". Erlaubt sind: ${allowedVideoExtensions.join(', ')}.`,
+      );
     }
     const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
 
@@ -384,11 +389,14 @@ export class ReportingComponent implements OnInit {
 
     if (etagHeader) {
       const expectedEtag = normalizeEtag(etagHeader);
-      const actualMd5 = await calculateMd5(chunks);
-      if (expectedEtag !== actualMd5.toLowerCase()) {
-        throw new MedalIntegrityError(
-          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
-        );
+      const isMd5Etag = /^[a-f0-9]{32}$/i.test(expectedEtag);
+      if (isMd5Etag) {
+        const actualMd5 = await calculateMd5(chunks);
+        if (expectedEtag.toLowerCase() !== actualMd5.toLowerCase()) {
+          throw new MedalIntegrityError(
+            'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
+          );
+        }
       }
     }
 
