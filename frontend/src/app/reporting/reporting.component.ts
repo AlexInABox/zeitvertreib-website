@@ -399,11 +399,14 @@ export class ReportingComponent implements OnInit {
 
     if (etagHeader) {
       const expectedEtag = normalizeEtag(etagHeader);
-      const actualMd5 = await calculateMd5(chunks);
-      if (expectedEtag !== actualMd5.toLowerCase()) {
-        throw new MedalIntegrityError(
-          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
-        );
+      const isMd5Etag = /^[a-f0-9]{32}$/i.test(expectedEtag);
+      if (isMd5Etag) {
+        const actualMd5 = await calculateMd5(chunks);
+        if (expectedEtag.toLowerCase() !== actualMd5.toLowerCase()) {
+          throw new MedalIntegrityError(
+            'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
+          );
+        }
       }
     }
 
