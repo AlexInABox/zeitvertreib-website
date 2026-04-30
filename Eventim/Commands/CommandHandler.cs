@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
+using System.Text;
 using CommandSystem;
+using LabApi.Features.Console;
 
 namespace Eventim.Commands;
 
@@ -32,8 +35,13 @@ public class CommandHandler : ICommand
                     response += ShowHelp();
                     return false;
                 }
-
-                response = QueueEvent(arguments.Array[2]);
+                
+                string eventName = string.Empty;
+                for (int i = 2; i <= arguments.Count; i++)
+                {
+                    eventName += arguments.Array[i];
+                }
+                response = QueueEvent(eventName);
                 return true;
             default:
                 response = "\n<color=red><b>BEFEHL NICHT GEFUNDEN</b></color>";
@@ -76,11 +84,20 @@ public class CommandHandler : ICommand
         return response;
     }
 
+    private static string Normalize(string s) =>
+        s.ToLowerInvariant().Replace(" ", "");
+    
     private static string QueueEvent(string eventName)
     {
+        Logger.Warn(eventName);
         foreach (IEvent availableEvent in EventHandlers.GetAvailableEvents())
         {
-            if (!string.Equals(availableEvent.Name, eventName, StringComparison.CurrentCultureIgnoreCase)) continue;
+            if (!string.Equals(
+                    Normalize(availableEvent.Name),
+                    Normalize(eventName),
+                    StringComparison.OrdinalIgnoreCase)) {
+                continue;
+            }
             EventHandlers.QueueEvent(availableEvent);
             return $"<color=green><b>{eventName} wurde erfolgreich für die nächste Runde vorbereitet!</b></color>";
         }
