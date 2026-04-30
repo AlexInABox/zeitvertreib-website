@@ -11,14 +11,16 @@ public class SwapPosition : IEvent
 
     public bool CanRun(Player player)
     {
-        // Only run if this player is not the only one alive.
-        return Player.ReadyList.Any(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial);
+        if (player.TryGetEffect("PocketCorroding", out _))
+            return false;
+
+        return Player.ReadyList.Any(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial && !p.TryGetEffect("PocketCorroding", out _));
     }
 
     public void Run(Player player)
     {
         List<Player> possiblePlayers = Player.ReadyList
-            .Where(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial).ToList();
+            .Where(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial && !p.TryGetEffect("PocketCorroding", out _)).ToList();
         Player playerToSwitchWith = possiblePlayers[EventHandlers.Random.Next(0, possiblePlayers.Count)];
 
 
