@@ -68,7 +68,9 @@
   <!-- ===== UPLOAD VIEW ===== -->
   <ng-container *ngIf="selectedReport">
     <div class="upload-view">
-      <button class="ghost-btn" (click)="backToList()"><i class="pi pi-arrow-left"></i> Zurück zur Übersicht</button>
+      <button class="ghost-btn" (click)="backToList()" [disabled]="isFetchingMedalClip || isUploading">
+        <i class="pi pi-arrow-left"></i> Zurück zur Übersicht
+      </button>
 
       <!-- Report summary -->
       <div class="summary-card">
@@ -117,69 +119,151 @@
           <i class="pi pi-upload"></i>
           <span>Beweise hochladen</span>
         </div>
-        <p class="upload-hint">
-          Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV) &middot; Max. 100 MB
-        </p>
 
-        <!-- Error message -->
+        <!-- Upload Mode Toggle -->
+        <div class="upload-mode-toggle">
+          <button
+            class="mode-btn"
+            [class.active]="uploadMode === 'file'"
+            (click)="uploadMode = 'file'; errorMessage = ''"
+            [disabled]="isFetchingMedalClip || isUploading"
+          >
+            <i class="pi pi-file"></i>
+            <span>Datei</span>
+          </button>
+          <button
+            class="mode-btn"
+            [class.active]="uploadMode === 'medal'"
+            (click)="uploadMode = 'medal'; errorMessage = ''"
+            [disabled]="isFetchingMedalClip || isUploading"
+          >
+            <img src="/assets/medal/medal_logo.png" alt="Medal" class="medal-logo" />
+            <span>Medal Clip</span>
+          </button>
+        </div>
+
+        <!-- Error message (shared between modes) -->
         <div class="notice-banner notice-error" *ngIf="errorMessage">
           <i class="pi pi-exclamation-triangle"></i>
           <span>{{ errorMessage }}</span>
           <button (click)="errorMessage = ''"><i class="pi pi-times"></i></button>
         </div>
 
-        <!-- Drop zone -->
-        <div
-          class="upload-zone"
-          (click)="fileInput.click()"
-          (dragover)="$event.preventDefault()"
-          (drop)="$event.preventDefault(); onFileSelect($event)"
-        >
-          <i class="pi pi-cloud-upload"></i>
-          <span>Klicken oder Datei hierher ziehen</span>
-          <input
-            #fileInput
-            type="file"
-            hidden
-            accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
-            (change)="onFileSelect($event)"
-          />
-        </div>
+        <!-- File Upload Mode -->
+        <ng-container *ngIf="uploadMode === 'file'">
+          <p class="upload-hint">
+            Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV) &middot; Max. 100 MB
+          </p>
 
-        <!-- File list -->
-        <div class="file-list" *ngIf="files.length > 0">
-          <div class="file-item" *ngFor="let f of files; let i = index">
-            <i [class]="getFileIcon(f.file.name)"></i>
-            <span class="file-name">{{ f.file.name }}</span>
-            <span class="file-size">{{ formatFileSize(f.file.size) }}</span>
-            <button
-              class="icon-btn"
-              (click)="removeFile(i)"
-              *ngIf="f.status === 'pending'"
-              [disabled]="isUploading"
-              title="Entfernen"
-            >
-              <i class="pi pi-times"></i>
-            </button>
-            <span class="status-badge status-uploading" *ngIf="f.status === 'uploading'"
-              >{{ f.progress | number: '1.0-0' }}%</span
-            >
-            <span class="status-badge status-done" *ngIf="f.status === 'done'"><i class="pi pi-check"></i></span>
-            <span class="status-badge status-error" *ngIf="f.status === 'error'" [title]="f.errorMessage || ''"
-              ><i class="pi pi-times-circle"></i
-            ></span>
-            <div class="progress-bar" *ngIf="f.status === 'uploading'">
-              <div class="progress-fill" [style.width.%]="f.progress"></div>
+          <!-- Drop zone -->
+          <div
+            class="upload-zone"
+            (click)="fileInput.click()"
+            (dragover)="$event.preventDefault()"
+            (drop)="$event.preventDefault(); onFileSelect($event)"
+          >
+            <i class="pi pi-cloud-upload"></i>
+            <span>Klicken oder Datei hierher ziehen</span>
+            <input
+              #fileInput
+              type="file"
+              hidden
+              accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
+              (change)="onFileSelect($event)"
+            />
+          </div>
+
+          <!-- File list -->
+          <div class="file-list" *ngIf="files.length > 0">
+            <div class="file-item" *ngFor="let f of files; let i = index">
+              <i [class]="getFileIcon(f.file.name)"></i>
+              <span class="file-name">{{ f.file.name }}</span>
+              <span class="file-size">{{ formatFileSize(f.file.size) }}</span>
+              <button
+                class="icon-btn"
+                (click)="removeFile(i)"
+                *ngIf="f.status === 'pending'"
+                [disabled]="isUploading"
+                title="Entfernen"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+              <span class="status-badge status-uploading" *ngIf="f.status === 'uploading'"
+                >{{ f.progress | number: '1.0-0' }}%</span
+              >
+              <span class="status-badge status-done" *ngIf="f.status === 'done'"><i class="pi pi-check"></i></span>
+              <span class="status-badge status-error" *ngIf="f.status === 'error'" [title]="f.errorMessage || ''"
+                ><i class="pi pi-times-circle"></i
+              ></span>
+              <div class="progress-bar" *ngIf="f.status === 'uploading'">
+                <div class="progress-fill" [style.width.%]="f.progress"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Upload button -->
-        <button class="primary-btn" [disabled]="files.length === 0 || isUploading" (click)="uploadAll()">
-          <i class="pi pi-upload" *ngIf="!isUploading"></i>
-          <i class="pi pi-spinner pi-spin" *ngIf="isUploading"></i>
-          {{ isUploading ? 'L\u00e4dt hoch\u2026' : 'Hochladen' }}
-        </button>
+          <!-- Upload button -->
+          <button class="primary-btn" [disabled]="files.length === 0 || isUploading" (click)="uploadAll()">
+            <i class="pi pi-upload" *ngIf="!isUploading"></i>
+            <i class="pi pi-spinner pi-spin" *ngIf="isUploading"></i>
+            {{ isUploading ? 'L\u00e4dt hoch\u2026' : 'Hochladen' }}
+          </button>
+        </ng-container>
+
+        <!-- Medal Clip Upload Mode -->
+        <ng-container *ngIf="uploadMode === 'medal'">
+          <p class="upload-hint">Medal.tv Clip-URL einfügen und hochladen &middot; Max. 100 MB</p>
+
+          <div class="medal-input-wrapper">
+            <input
+              type="text"
+              [(ngModel)]="medalClipUrl"
+              (ngModelChange)="onMedalUrlChange()"
+              placeholder="https://medal.tv/games/.../clips/..."
+              class="medal-input"
+              [class.invalid]="medalUrlInvalid"
+              [disabled]="isFetchingMedalClip"
+            />
+            <span class="medal-url-error" *ngIf="medalUrlInvalid">
+              <i class="pi pi-exclamation-circle"></i>
+              Bitte gib eine gültige URL ein
+            </span>
+          </div>
+
+          <!-- Integrity check retry prompt -->
+          <div class="notice-banner notice-warn" *ngIf="medalRetryPromptMessage">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ medalRetryPromptMessage }}</span>
+            <div class="notice-actions">
+              <button (click)="retryMedalClip()"><i class="pi pi-refresh"></i> Erneut versuchen</button>
+              <button (click)="cancelMedalRetry()"><i class="pi pi-times"></i></button>
+            </div>
+          </div>
+
+          <!-- Medal progress -->
+          <div class="medal-progress-container" *ngIf="isFetchingMedalClip">
+            <div class="progress-info">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>{{ medalStatusMessage }}</span>
+            </div>
+            <div class="medal-progress-bar-wrapper">
+              <div
+                class="medal-progress-fill"
+                [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
+              ></div>
+              <span class="medal-progress-text">{{ medalETA }}</span>
+            </div>
+          </div>
+
+          <button
+            class="primary-btn"
+            [disabled]="!medalClipUrl.trim() || medalUrlInvalid || isFetchingMedalClip"
+            (click)="uploadMedalClip()"
+          >
+            <i class="pi pi-cloud-download" *ngIf="!isFetchingMedalClip"></i>
+            <i class="pi pi-spinner pi-spin" *ngIf="isFetchingMedalClip"></i>
+            {{ isFetchingMedalClip ? 'Wird hochgeladen\u2026' : 'Medal Clip hochladen' }}
+          </button>
+        </ng-container>
       </div>
 
       <!-- Success state -->

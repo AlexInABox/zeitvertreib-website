@@ -8,6 +8,13 @@
 // Common / Auth Types
 // ============================================================================
 
+// ============================================================================
+// External Service Types
+// ============================================================================
+
+/** Response from the Medal.tv bypass API service (medalbypass.vercel.app) used to resolve the direct video URL from a Medal.tv clip link. */
+export type MedalBypassResponse = { valid: true; src: string } | { valid: false; reasoning: string };
+
 export interface SteamUser {
   steamId: string;
   username: string;

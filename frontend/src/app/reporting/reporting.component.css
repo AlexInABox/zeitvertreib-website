@@ -129,6 +129,28 @@
   color: #f87171;
 }
 
+.notice-warn {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.notice-warn button {
+  color: #fbbf24;
+}
+
+.notice-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.notice-actions button {
+  margin-left: 0;
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -618,6 +640,158 @@
   margin: 0 0 0.5rem;
   max-width: 380px;
   line-height: 1.5;
+}
+
+/* ================================================
+   UPLOAD MODE TOGGLE
+   ================================================ */
+
+.upload-mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: rgba(139, 92, 246, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover:not(.active) {
+  background: rgba(139, 92, 246, 0.08);
+  color: #a78bfa;
+}
+
+.mode-btn.active {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+}
+
+.mode-btn i {
+  font-size: 1.1rem;
+}
+
+.medal-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* ================================================
+   MEDAL CLIP UPLOAD
+   ================================================ */
+
+.medal-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.medal-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.medal-input::placeholder {
+  color: #64748b;
+}
+
+.medal-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.medal-input.invalid {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.medal-input.invalid:focus {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.medal-url-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f87171;
+  font-size: 0.8rem;
+}
+
+.medal-url-error i {
+  font-size: 0.9rem;
+}
+
+.medal-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a78bfa;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.medal-progress-bar-wrapper {
+  width: 100%;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.medal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+.medal-progress-text {
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  pointer-events: none;
 }
 
 /* ================================================
