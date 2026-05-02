@@ -35,12 +35,7 @@ export class MedalService {
     avi: 'video/x-msvideo',
     mkv: 'video/x-matroska',
   };
-  private readonly allowedMedalHosts = [
-    'medal.tv',
-    'cdn.medal.tv',
-    'medal-content.com',
-    'cdn.medal-content.com',
-  ];
+  private readonly allowedMedalHosts = ['medal.tv', 'cdn.medal.tv', 'medal-content.com', 'cdn.medal-content.com'];
 
   async resolveMedalSourceUrl(targetUrl: string): Promise<string> {
     const bypassUrl = `${environment.medalBypassApiUrl}${encodeURIComponent(targetUrl)}`;
@@ -68,9 +63,7 @@ export class MedalService {
     }
     if (
       srcUrl.protocol !== 'https:' ||
-      !this.allowedMedalHosts.some(
-        (host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`),
-      )
+      !this.allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))
     ) {
       throw new Error('Video-URL stammt nicht von einem erlaubten Medal-Host');
     }

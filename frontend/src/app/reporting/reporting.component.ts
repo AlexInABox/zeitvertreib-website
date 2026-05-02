@@ -234,10 +234,18 @@ export class ReportingComponent implements OnInit {
     try {
       const medalSourceUrl = await this.medalService.resolveMedalSourceUrl(this.medalClipUrl);
       const medalFile = await this.medalService.downloadMedalClipFromCorsProxy(medalSourceUrl, {
-        onStatusMessage: (msg) => { this.medalStatusMessage = msg; },
-        onDownloadProgress: (progress) => { this.medalDownloadProgress = progress; },
-        onETA: (eta) => { this.medalETA = eta; },
-        onStartTime: (time) => { this.medalStartTime = time; },
+        onStatusMessage: (msg) => {
+          this.medalStatusMessage = msg;
+        },
+        onDownloadProgress: (progress) => {
+          this.medalDownloadProgress = progress;
+        },
+        onETA: (eta) => {
+          this.medalETA = eta;
+        },
+        onStartTime: (time) => {
+          this.medalStartTime = time;
+        },
       });
 
       this.medalDownloadProgress = 100;
