@@ -248,7 +248,7 @@ export class ReportingComponent implements OnInit {
         },
       });
 
-      this.medalDownloadProgress = 100;
+      this.medalDownloadProgress = 0;
       this.medalUploadProgress = 0;
       this.medalStatusMessage = 'Upload-URL wird angefordert...';
 
