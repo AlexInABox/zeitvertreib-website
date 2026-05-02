@@ -1,21 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
 import type { GetReportsResponse, ReportFileUploadGetResponse } from '@zeitvertreib/types';
-import {
-  MedalIntegrityError,
-  isMedalBypassResponse,
-  isValidUrl,
-  calculateETA,
-  calculateMd5,
-  normalizeEtag,
-  normalizeHeaderValue,
-  calculateCrc32cChunked,
-  crc32cToBase64,
-} from '../utils/medal.utils';
+import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
+import { MedalService } from '../services/medal.service';
 
 type Report = GetReportsResponse['reports'][number];
 
@@ -59,10 +50,9 @@ export class ReportingComponent implements OnInit {
   fileUploader = new FileUploader({ url: '', autoUpload: false });
 
   private readonly apiUrl = environment.apiUrl;
-  private readonly medalCorsProxyUrl = environment.medalCorsProxyUrl;
-  private readonly medalBypassApiUrl = environment.medalBypassApiUrl;
   private readonly maxFileSize = 100 * 1024 * 1024; // 100 MB
   private readonly allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov', 'avi', 'mkv'];
+  private readonly medalService = inject(MedalService);
 
   ngOnInit(): void {
     void this.loadReports();
@@ -242,8 +232,13 @@ export class ReportingComponent implements OnInit {
     this.medalStartTime = Date.now();
 
     try {
-      const medalSourceUrl = await this.resolveMedalSourceUrl(this.medalClipUrl);
-      const medalFile = await this.downloadMedalClipFromCorsProxy(medalSourceUrl);
+      const medalSourceUrl = await this.medalService.resolveMedalSourceUrl(this.medalClipUrl);
+      const medalFile = await this.medalService.downloadMedalClipFromCorsProxy(medalSourceUrl, {
+        onStatusMessage: (msg) => { this.medalStatusMessage = msg; },
+        onDownloadProgress: (progress) => { this.medalDownloadProgress = progress; },
+        onETA: (eta) => { this.medalETA = eta; },
+        onStartTime: (time) => { this.medalStartTime = time; },
+      });
 
       this.medalDownloadProgress = 100;
       this.medalUploadProgress = 0;
@@ -291,131 +286,6 @@ export class ReportingComponent implements OnInit {
 
   cancelMedalRetry(): void {
     this.medalRetryPromptMessage = '';
-  }
-
-  private async resolveMedalSourceUrl(targetUrl: string): Promise<string> {
-    const bypassUrl = `${this.medalBypassApiUrl}${encodeURIComponent(targetUrl)}`;
-    const bypassResponse = await fetch(bypassUrl);
-    if (!bypassResponse.ok) {
-      throw new Error('Fehler beim Abrufen des Medal Clips');
-    }
-
-    const bypassData: unknown = await bypassResponse.json();
-    if (!isMedalBypassResponse(bypassData)) {
-      throw new Error('Ungültige Antwort vom Medal Bypass Service');
-    }
-    if (!bypassData.valid) {
-      throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
-    }
-
-    const allowedMedalHosts = ['medal.tv', 'cdn.medal.tv', 'medal-content.com', 'cdn.medal-content.com'];
-    let srcUrl: URL;
-    try {
-      srcUrl = new URL(bypassData.src);
-    } catch {
-      throw new Error('Ungültige Video-URL vom Medal Bypass Service');
-    }
-    if (
-      srcUrl.protocol !== 'https:' ||
-      !allowedMedalHosts.some((host) => srcUrl.hostname === host || srcUrl.hostname.endsWith(`.${host}`))
-    ) {
-      throw new Error('Video-URL stammt nicht von einem erlaubten Medal-Host');
-    }
-
-    return bypassData.src;
-  }
-
-  private async downloadMedalClipFromCorsProxy(
-    targetUrl: string,
-  ): Promise<{ file: File; extension: string; mimeType: string }> {
-    const normalizedTargetUrl = targetUrl.trim();
-    const corsProxyUrl = `${this.medalCorsProxyUrl}${encodeURIComponent(normalizedTargetUrl)}`;
-    const response = await fetch(corsProxyUrl);
-    if (!response.ok) {
-      throw new Error('Fehler beim Abrufen des Medal Clips');
-    }
-
-    const allowedVideoExtensions = ['mp4', 'webm', 'mov', 'avi', 'mkv'];
-    const pathName = new URL(normalizedTargetUrl).pathname;
-    const fileNameWithExt = pathName.split('/').pop() || 'clip.mp4';
-    let fileExtension = 'mp4';
-    if (fileNameWithExt.includes('.')) {
-      const extractedExtension = fileNameWithExt.split('.').pop();
-      if (extractedExtension) {
-        fileExtension = extractedExtension.toLowerCase();
-      }
-    }
-    if (!allowedVideoExtensions.includes(fileExtension)) {
-      throw new Error(
-        `Ungültiges Dateiformat ".${fileExtension}". Erlaubt sind: ${allowedVideoExtensions.join(', ')}.`,
-      );
-    }
-    const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
-
-    this.medalStatusMessage = 'Video wird heruntergeladen...';
-    this.medalStartTime = Date.now();
-
-    const contentLength = response.headers.get('content-length');
-    const total = contentLength ? parseInt(contentLength, 10) : 0;
-    if (total > this.maxFileSize) {
-      throw new Error(`Das Video ist zu groß (max. 100 MB).`);
-    }
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Fehler beim Lesen des Videos');
-    }
-
-    const chunks: Uint8Array[] = [];
-    let receivedLength = 0;
-
-    while (true) {
-      const readResult = await reader.read();
-      if (readResult.done) break;
-      chunks.push(readResult.value);
-      receivedLength += readResult.value.length;
-      if (receivedLength > this.maxFileSize) {
-        reader.cancel();
-        throw new Error(`Das Video ist zu groß (max. 100 MB).`);
-      }
-      if (total > 0) {
-        this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
-        this.medalETA = calculateETA(this.medalStartTime, this.medalDownloadProgress);
-        this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
-      }
-    }
-
-    const etagHeader = response.headers.get('etag');
-    const checksumHeader = response.headers.get('x-amz-checksum-crc32c');
-
-    if (etagHeader) {
-      const expectedEtag = normalizeEtag(etagHeader);
-      const isMd5Etag = /^[a-f0-9]{32}$/i.test(expectedEtag);
-      if (isMd5Etag) {
-        const actualMd5 = await calculateMd5(chunks);
-        if (expectedEtag.toLowerCase() !== actualMd5.toLowerCase()) {
-          throw new MedalIntegrityError(
-            'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: ETag stimmt nicht mit dem MD5-Hash überein.',
-          );
-        }
-      }
-    }
-
-    if (checksumHeader) {
-      const expectedChecksum = normalizeHeaderValue(checksumHeader);
-      const actualChecksum = crc32cToBase64(calculateCrc32cChunked(chunks));
-      if (expectedChecksum !== actualChecksum) {
-        throw new MedalIntegrityError(
-          'Die Integritätsprüfung des Medal Clips ist fehlgeschlagen: x-amz-checksum-crc32c stimmt nicht mit dem heruntergeladenen Inhalt überein.',
-        );
-      }
-    }
-
-    const videoFile = new File(chunks as BlobPart[], fileNameWithExt, { type: mimeType });
-    return {
-      file: videoFile,
-      extension: fileExtension,
-      mimeType,
-    };
   }
 
   private uploadMedalFileToPresignedUrl(file: File, presignedUrl: string, contentType: string): Promise<void> {

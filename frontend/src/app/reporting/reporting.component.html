@@ -256,7 +256,7 @@
 
           <button
             class="primary-btn"
-            [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
+            [disabled]="!medalClipUrl.trim() || medalUrlInvalid || isFetchingMedalClip"
             (click)="uploadMedalClip()"
           >
             <i class="pi pi-cloud-download" *ngIf="!isFetchingMedalClip"></i>
