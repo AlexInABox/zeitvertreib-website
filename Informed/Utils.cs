@@ -19,15 +19,13 @@ public static class Utils
 
     public static async void SendHeaderToPlayer(PlayerJoinedEventArgs ev)
     {
-        // Capture all player-specific values BEFORE the async gap.
-        // After the await, ev.Player may refer to a disconnected player.
-        Player player = ev.Player;
-        string nickname = player.Nickname;
-        ReferenceHub hub = player.ReferenceHub;
+        // Capture nickname before the await — accessing it on a disconnected player may throw.
+        string nickname = ev.Player.Nickname;
+        ReferenceHub hub = ev.Player.ReferenceHub;
 
-        string loginSecret = await player.GetLoginSecret();
+        string loginSecret = await ev.Player.GetLoginSecret();
 
-        // Bail out if the player disconnected while we were fetching the secret.
+        // Skip if the player disconnected while we were fetching the secret.
         if (!Player.TryGet(hub, out _))
             return;
 
