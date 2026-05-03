@@ -14,13 +14,16 @@ public class SwapPosition : IEvent
         if (player.TryGetEffect("PocketCorroding", out _))
             return false;
 
-        return Player.ReadyList.Any(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial && !p.TryGetEffect("PocketCorroding", out _));
+        return Player.ReadyList.Any(p =>
+            p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial &&
+            !p.TryGetEffect("PocketCorroding", out _));
     }
 
     public void Run(Player player)
     {
         List<Player> possiblePlayers = Player.ReadyList
-            .Where(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial && !p.TryGetEffect("PocketCorroding", out _)).ToList();
+            .Where(p => p.IsAlive && !p.IsSCP && p != player && p.Role != RoleTypeId.Tutorial &&
+                        !p.TryGetEffect("PocketCorroding", out _)).ToList();
         Player playerToSwitchWith = possiblePlayers[EventHandlers.Random.Next(0, possiblePlayers.Count)];
 
 

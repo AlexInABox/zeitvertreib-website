@@ -47,7 +47,8 @@ public class TriggerEvent : ICommand
 
         if (!selectedEvent.CanRun(target))
         {
-            response = $"Event '{selectedEvent.GetType().Name}' kann derzeit nicht auf {target.Nickname} angewendet werden.";
+            response =
+                $"Event '{selectedEvent.GetType().Name}' kann derzeit nicht auf {target.Nickname} angewendet werden.";
             return false;
         }
 

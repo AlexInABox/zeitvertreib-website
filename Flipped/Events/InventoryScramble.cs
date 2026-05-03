@@ -39,6 +39,7 @@ public class InventoryScramble : IEvent
         foreach (ItemType item in playerItems) other.AddItem(item);
 
         EventHandlers.PushUserMessage(player, $"Die Münze tauscht dein Inventar mit {other.Nickname}!");
-        EventHandlers.PushUserMessage(other, $"{player.Nickname} wirft eine Münze und tauscht dein Inventar mit seinem!");
+        EventHandlers.PushUserMessage(other,
+            $"{player.Nickname} wirft eine Münze und tauscht dein Inventar mit seinem!");
     }
 }
