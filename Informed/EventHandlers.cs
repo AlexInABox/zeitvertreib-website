@@ -96,6 +96,7 @@ public static class EventHandlers
         PlayerEvents.Left += OnLeft;
         ServerEvents.RoundEnded += OnRoundEnded;
         ServerEvents.WaitingForPlayers += OnWaitingForPlayers;
+        PlayerEvents.Banning += OnPlayerBanning;
     }
 
     public static void UnregisterEvents()
@@ -104,8 +105,14 @@ public static class EventHandlers
         PlayerEvents.Left -= OnLeft;
         ServerEvents.RoundEnded -= OnRoundEnded;
         ServerEvents.WaitingForPlayers -= OnWaitingForPlayers;
+        PlayerEvents.Banning -= OnPlayerBanning;
     }
 
+    private static void OnPlayerBanning(PlayerBanningEventArgs ev)
+    {
+        ev.Player?.RedirectToServer(7200);
+    }
+    
     private static void OnWaitingForPlayers()
     {
         _globalRoundTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();

@@ -9,7 +9,7 @@ public class TheWorstPunishment : IEvent
 
     public bool CanRun(Player player)
     {
-        return true;
+        return false;
     }
 
     public void Run(Player player)
