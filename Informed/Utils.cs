@@ -14,10 +14,24 @@ namespace Informed;
 
 public static class Utils
 {
+
+    private static readonly object _settingsLock = new object();
+
     public static async void SendHeaderToPlayer(PlayerJoinedEventArgs ev)
     {
+        // Capture all player-specific values BEFORE the async gap.
+        // After the await, ev.Player may refer to a disconnected player.
+        Player player = ev.Player;
+        string nickname = player.Nickname;
+        ReferenceHub hub = player.ReferenceHub;
+
+        string loginSecret = await player.GetLoginSecret();
+
+        // Bail out if the player disconnected while we were fetching the secret.
+        if (!Player.TryGet(hub, out _))
+            return;
+
         ServerSpecificSettingBase[] extra;
-        string loginSecret = await ev.Player.GetLoginSecret();
 
         if (loginSecret == string.Empty)
             extra =
@@ -31,7 +45,7 @@ public static class Utils
                     "<color=#CBB5F8>- Coins für <b>Perks</b> einlösen</color>\n" +
                     "<color=#CBB5F8>- deine <b>Stats</b> verfolgen</color>\n" +
                     "<color=#CBB5F8>- vieles <b>mehr</b> entdecken</color>\n\n" +
-                    $"<size=95%><color=#E6D9F8><b>Hallo</b> <color=#9A6BFA>{ev.Player.Nickname}</color><b>, willkommen auf dem Server!</b></color></size>\n" +
+                    $"<size=95%><color=#E6D9F8><b>Hallo</b> <color=#9A6BFA>{nickname}</color><b>, willkommen auf dem Server!</b></color></size>\n" +
                     "<size=85%><color=#CBB5F8>Hier unten kannst du <b>Keybinds</b> für alle <b>Zeitvertreib Features</b> einstellen.</color></size>",
                     SSTextArea.FoldoutMode.NotCollapsable, null, TextAlignmentOptions.Center)
             ];
@@ -47,21 +61,24 @@ public static class Utils
                     "<color=#CBB5F8>- Coins für <b>Perks</b> einlösen</color>\n" +
                     "<color=#CBB5F8>- deine <b>Stats</b> verfolgen</color>\n" +
                     "<color=#CBB5F8>- vieles <b>mehr</b> entdecken</color>\n\n" +
-                    $"<size=95%><color=#E6D9F8><b>Hallo</b> <color=#9A6BFA>{ev.Player.Nickname}</color><b>, willkommen auf dem Server!</b></color></size>\n" +
+                    $"<size=95%><color=#E6D9F8><b>Hallo</b> <color=#9A6BFA>{nickname}</color><b>, willkommen auf dem Server!</b></color></size>\n" +
                     "<size=85%><color=#CBB5F8>Hier unten kannst du <b>Keybinds</b> für alle <b>Zeitvertreib Features</b> einstellen.</color></size>",
                     SSTextArea.FoldoutMode.NotCollapsable, null, TextAlignmentOptions.Center)
             ];
 
-        ServerSpecificSettingBase[] existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
-        existing = Array.FindAll(existing,
-            s => s.SettingId != Plugin.Instance.Config!.Id); //remove old headers if any
+        lock (_settingsLock)
+        {
+            ServerSpecificSettingBase[] existing = ServerSpecificSettingsSync.DefinedSettings ?? [];
+            existing = Array.FindAll(existing,
+                s => s.SettingId != Plugin.Instance.Config!.Id); //remove old headers if any
 
-        ServerSpecificSettingBase[] combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
-        extra.CopyTo(combined, 0);
-        existing.CopyTo(combined, extra.Length);
+            ServerSpecificSettingBase[] combined = new ServerSpecificSettingBase[existing.Length + extra.Length];
+            extra.CopyTo(combined, 0);
+            existing.CopyTo(combined, extra.Length);
 
-        ServerSpecificSettingsSync.DefinedSettings = combined;
-        ServerSpecificSettingsSync.SendToPlayer(ev.Player.ReferenceHub);
+            ServerSpecificSettingsSync.DefinedSettings = combined;
+            ServerSpecificSettingsSync.SendToPlayer(hub);
+        }
     }
 
 
