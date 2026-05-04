@@ -236,7 +236,7 @@ export default Sentry.withSentry(
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
       const origin = request.headers.get('Origin');
 
-      logger.logInfo("Example logging thing...");
+      logger.logInfo('Example logging thing...');
 
       // Handle preflight OPTIONS requests
       if (request.method === 'OPTIONS') {
