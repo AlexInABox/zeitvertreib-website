@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/cloudflare';
+import * as logger from './logger.js';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './db/schema.js';
 import {
@@ -223,135 +225,145 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/reports': handleGetReports,
 };
 
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const origin = request.headers.get('Origin');
+export default Sentry.withSentry(
+  (_env: Env) => ({
+    dsn: _env.DSN_URL,
+    autoSessionTracking: false,
+    environment: _env.ENVIRONMENT,
+    enableLogs: true,
+  }),
+  {
+    async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+      const origin = request.headers.get('Origin');
 
-    // Handle preflight OPTIONS requests
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': origin || '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          'Access-Control-Allow-Credentials': 'true',
-        },
-      });
-    }
+      logger.logInfo("Example logging thing...");
 
-    try {
-      const url = new URL(request.url);
-
-      // Remove /api prefix if present to match our route definitions
-      let pathname = url.pathname;
-      if (pathname.startsWith('/api')) {
-        pathname = pathname.substring(4);
-      }
-
-      /*
-      if (pathname === '/openapi.json' && request.method === 'GET') {
-        return new Response(JSON.stringify(openapi), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
+      // Handle preflight OPTIONS requests
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': origin || '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+          },
         });
       }
 
-      // Serve OpenAPI HTML at /docs
-      if (pathname === '/docs' && request.method === 'GET') {
-        const redocHtml = `<!doctype html>
-        <html>
-          <head>
-            <title>Scalar API Reference</title>
-            <meta charset="utf-8" />
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1" />
-          </head>
-
-          <body>
-            <div id="app"></div>
-
-            <!-- Load the Script -->
-            <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
-
-            <!-- Initialize the Scalar API Reference -->
-            <script>
-              Scalar.createApiReference('#app', {
-                // The URL of the OpenAPI/Swagger document
-                url: 'openapi.json',
-              })
-            </script>
-          </body>
-        </html>`;
-
-        return new Response(redocHtml, {
-          status: 200,
-          headers: { 'Content-Type': 'text/html' },
-        });
-      }
-        */
-
-      // Determine route key from method + pathname
-      const routeKey = `${request.method}:${pathname}`;
-
-      const handler = routes[routeKey];
-      if (handler) {
-        return await handler(request, env, ctx);
-      }
-      return createResponse({ error: 'Not Found' }, 404, origin);
-    } catch (error) {
-      console.error('Request error:', error);
-      return createResponse({ error: 'Internal Server Error' }, 500, origin);
-    }
-  },
-
-  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
-
-    // Update leaderboard every 15 minutes
-    if (controller.cron === '*/15 * * * *') {
-      ctx.waitUntil(updateLeaderboard(db, env, ctx));
-      ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
-    }
-
-    // Collect fakerank and spray slot zvc fees every day at midnight UTC
-    if (controller.cron === '0 0 * * *') {
-      ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
-      ctx.waitUntil(collectZvcForSpraySlotsAndCleanup(db, env, ctx));
-
-      // Delete daily quest progress (non-weekly categories)
-      await db.delete(schema.dailyQuestProgress);
-
-      // Delete read notifications ASAP, and unread notifications after 30 days
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      await db
-        .delete(schema.notifications)
-        .where(or(lt(schema.notifications.createdAt, thirtyDaysAgo), isNotNull(schema.notifications.readAt)));
-    }
-
-    // Purge weekly quest progress every Monday at midnight UTC
-    if (controller.cron === '0 0 * * MON') {
-      await db.delete(schema.weeklyQuestProgress);
-    }
-
-    // Flush advent calendar table on January 2nd at 03:00 UTC
-    if (controller.cron === '0 3 2 1 *') {
-      console.log('Running annual advent calendar flush...');
       try {
-        await db.delete(schema.adventCalendar);
-        console.log('Advent calendar table flushed successfully');
-      } catch (error) {
-        console.error('Failed to flush advent calendar:', error);
-      }
-    }
+        const url = new URL(request.url);
 
-    // Check for birthdays every day at 06:00 UTC
-    if (controller.cron === '0 6 * * *') {
-      console.log('Running daily birthday check...');
-      ctx.waitUntil(checkForBirthdays(db, env, ctx));
-    }
-  },
-} satisfies ExportedHandler<Env>;
+        // Remove /api prefix if present to match our route definitions
+        let pathname = url.pathname;
+        if (pathname.startsWith('/api')) {
+          pathname = pathname.substring(4);
+        }
+
+        /*
+        if (pathname === '/openapi.json' && request.method === 'GET') {
+          return new Response(JSON.stringify(openapi), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Serve OpenAPI HTML at /docs
+        if (pathname === '/docs' && request.method === 'GET') {
+          const redocHtml = `<!doctype html>
+          <html>
+            <head>
+              <title>Scalar API Reference</title>
+              <meta charset="utf-8" />
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1" />
+            </head>
+
+            <body>
+              <div id="app"></div>
+
+              <!-- Load the Script -->
+              <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+              <!-- Initialize the Scalar API Reference -->
+              <script>
+                Scalar.createApiReference('#app', {
+                  // The URL of the OpenAPI/Swagger document
+                  url: 'openapi.json',
+                })
+              </script>
+            </body>
+          </html>`;
+
+          return new Response(redocHtml, {
+            status: 200,
+            headers: { 'Content-Type': 'text/html' },
+          });
+        }
+          */
+
+        // Determine route key from method + pathname
+        const routeKey = `${request.method}:${pathname}`;
+
+        const handler = routes[routeKey];
+        if (handler) {
+          return await handler(request, env, ctx);
+        }
+        return createResponse({ error: 'Not Found' }, 404, origin);
+      } catch (error) {
+        console.error('Request error:', error);
+        return createResponse({ error: 'Internal Server Error' }, 500, origin);
+      }
+    },
+
+    async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+      const db = drizzle(env.ZEITVERTREIB_DATA, { schema });
+
+      // Update leaderboard every 15 minutes
+      if (controller.cron === '*/15 * * * *') {
+        ctx.waitUntil(updateLeaderboard(db, env, ctx));
+        ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
+      }
+
+      // Collect fakerank and spray slot zvc fees every day at midnight UTC
+      if (controller.cron === '0 0 * * *') {
+        ctx.waitUntil(collectZvcForFakeranksAndValidateColors(db, env, ctx));
+        ctx.waitUntil(collectZvcForSpraySlotsAndCleanup(db, env, ctx));
+
+        // Delete daily quest progress (non-weekly categories)
+        await db.delete(schema.dailyQuestProgress);
+
+        // Delete read notifications ASAP, and unread notifications after 30 days
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        await db
+          .delete(schema.notifications)
+          .where(or(lt(schema.notifications.createdAt, thirtyDaysAgo), isNotNull(schema.notifications.readAt)));
+      }
+
+      // Purge weekly quest progress every Monday at midnight UTC
+      if (controller.cron === '0 0 * * MON') {
+        await db.delete(schema.weeklyQuestProgress);
+      }
+
+      // Flush advent calendar table on January 2nd at 03:00 UTC
+      if (controller.cron === '0 3 2 1 *') {
+        console.log('Running annual advent calendar flush...');
+        try {
+          await db.delete(schema.adventCalendar);
+          console.log('Advent calendar table flushed successfully');
+        } catch (error) {
+          console.error('Failed to flush advent calendar:', error);
+        }
+      }
+
+      // Check for birthdays every day at 06:00 UTC
+      if (controller.cron === '0 6 * * *') {
+        console.log('Running daily birthday check...');
+        ctx.waitUntil(checkForBirthdays(db, env, ctx));
+      }
+    },
+  } satisfies ExportedHandler<Env>,
+);
 
 // Export PlayerlistStorage for Durable Object
 export { PlayerlistStorage };
