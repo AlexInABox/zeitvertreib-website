@@ -17,10 +17,10 @@ public class Teamdeathmatch : IEvent
 {
     private static CoroutineHandle _explosionCoroutine;
 
-    private static List<Player> _mtfGroup;
-    private static List<Player> _chaosGroup;
-    private static Vector3 mtfSpawn;
-    private static Vector3 chaosSpawn;
+    private static readonly List<Player> MtfGroup = [];
+    private static readonly List<Player> ChaosGroup = [];
+    private static Vector3 _mtfSpawn;
+    private static Vector3 _chaosSpawn;
 
     public string Name => "SCP:SL Global Offensive";
 
@@ -37,16 +37,15 @@ public class Teamdeathmatch : IEvent
         ServerEvents.RoundStarting += OnRoundStarting;
         PlayerEvents.Spawned += OnPlayerSpawned;
         ServerEvents.WaveRespawning += OnWaveRespawning;
-        PlayerEvents.Death += OnPlayerDeath;
         WarheadEvents.Detonated += OnDetonated;
         WarheadEvents.Stopping += OnWarheadStopping;
         PlayerEvents.Joined += OnJoined;
 
-        _mtfGroup.Clear();
-        _chaosGroup.Clear();
+        MtfGroup.Clear();
+        ChaosGroup.Clear();
 
-        RoleTypeId.NtfPrivate.TryGetRandomSpawnPoint(out mtfSpawn, out _);
-        RoleTypeId.ChaosMarauder.TryGetRandomSpawnPoint(out chaosSpawn, out _);
+        RoleTypeId.NtfPrivate.TryGetRandomSpawnPoint(out _mtfSpawn, out _);
+        RoleTypeId.ChaosMarauder.TryGetRandomSpawnPoint(out _chaosSpawn, out _);
     }
 
     public void UnregisterEvents()
@@ -54,7 +53,6 @@ public class Teamdeathmatch : IEvent
         ServerEvents.RoundStarting -= OnRoundStarting;
         PlayerEvents.Spawned -= OnPlayerSpawned;
         ServerEvents.WaveRespawning -= OnWaveRespawning;
-        PlayerEvents.Death -= OnPlayerDeath;
         WarheadEvents.Detonated -= OnDetonated;
         WarheadEvents.Stopping -= OnWarheadStopping;
         PlayerEvents.Joined -= OnJoined;
@@ -66,15 +64,15 @@ public class Teamdeathmatch : IEvent
 
     private static void OnRoundStarting(RoundStartingEventArgs ev)
     {
-        foreach (Player player in _mtfGroup)
+        foreach (Player player in MtfGroup)
         {
             player.SetRole(RoleTypeId.NtfPrivate, RoleChangeReason.RoundStart);
-            player.Position = mtfSpawn;
+            player.Position = _mtfSpawn;
         }
-        foreach (Player player in _chaosGroup)
+        foreach (Player player in ChaosGroup)
         {
             player.SetRole(RoleTypeId.ChaosRifleman, RoleChangeReason.RoundStart);
-            player.Position = chaosSpawn;
+            player.Position = _chaosSpawn;
         }
 
         Door.List.FirstOrDefault(d => d.DoorName == DoorName.SurfaceGate)!.IsOpened = false;
@@ -100,24 +98,16 @@ public class Teamdeathmatch : IEvent
     {
         ev.IsAllowed = false;
         
-        foreach (Player player in _mtfGroup.Where(p => !p.IsAlive))
+        foreach (Player player in MtfGroup.Where(p => !p.IsAlive))
         {
             player.SetRole(RoleTypeId.NtfPrivate, RoleChangeReason.RoundStart);
-            player.Position = mtfSpawn;
+            player.Position = _mtfSpawn;
         }
-        foreach (Player player in _chaosGroup.Where(p => !p.IsAlive))
+        foreach (Player player in ChaosGroup.Where(p => !p.IsAlive))
         {
             player.SetRole(RoleTypeId.ChaosRifleman, RoleChangeReason.RoundStart);
-            player.Position = chaosSpawn;
+            player.Position = _chaosSpawn;
         }
-    }
-
-    private static void OnPlayerDeath(PlayerDeathEventArgs ev)
-    {
-        if (Player.ReadyList.Count(p => p.IsAlive && p != ev.Player) > 1) return;
-
-        foreach (Pickup pickup in Map.Pickups) pickup.Destroy();
-        Round.IsLocked = false;
     }
 
     private static void OnDetonated(WarheadDetonatedEventArgs ev)
@@ -133,13 +123,13 @@ public class Teamdeathmatch : IEvent
     
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
-        if (_mtfGroup.Count > _chaosGroup.Count)
+        if (MtfGroup.Count > ChaosGroup.Count)
         {
-            _chaosGroup.Add(ev.Player);
+            ChaosGroup.Add(ev.Player);
         }
         else
         {
-            _mtfGroup.Add(ev.Player);
+            MtfGroup.Add(ev.Player);
         }
     }
 }
