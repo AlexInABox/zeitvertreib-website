@@ -3,6 +3,8 @@ services:
     container_name: zeitvertreib-counted
     image: ghcr.io/alexinabox/zeitvertreib-counted:latest
     env_file: .env
+    ports:
+      - '3000:3000'
     volumes:
       - ./data:/app/data
       - /etc/localtime:/etc/localtime:ro
