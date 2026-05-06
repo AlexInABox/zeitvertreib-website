@@ -112,7 +112,7 @@ public static class EventHandlers
     {
         ev.Player?.RedirectToServer(7200);
     }
-    
+
     private static void OnWaitingForPlayers()
     {
         _globalRoundTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
