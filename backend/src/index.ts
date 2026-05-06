@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/cloudflare';
-import * as logger from './logger.js';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './db/schema.js';
 import {
@@ -236,8 +235,6 @@ export default Sentry.withSentry(
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
       const origin = request.headers.get('Origin');
 
-      logger.logInfo('Example logging thing...');
-
       // Handle preflight OPTIONS requests
       if (request.method === 'OPTIONS') {
         return new Response(null, {
@@ -311,7 +308,11 @@ export default Sentry.withSentry(
         }
         return createResponse({ error: 'Not Found' }, 404, origin);
       } catch (error) {
-        console.error('Request error:', error);
+        Sentry.captureException(error, {
+          tags: {
+            service: 'FetchHandler',
+          },
+        });
         return createResponse({ error: 'Internal Server Error' }, 500, origin);
       }
     },
