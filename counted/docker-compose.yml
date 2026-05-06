@@ -1,0 +1,9 @@
+services:
+  zeitvertreib-counted:
+    container_name: zeitvertreib-counted
+    image: ghcr.io/alexinabox/zeitvertreib-counted:latest
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
