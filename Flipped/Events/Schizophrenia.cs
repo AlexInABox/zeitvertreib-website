@@ -22,7 +22,7 @@ public class Schizophrenia : IEvent
         "Du bist nicht allein hier.",
     ];
 
-    public EventType EventType { get; } = EventType.Bad;
+    public EventType EventType { get; } = EventType.Cruel;
 
     public bool CanRun(Player player)
     {

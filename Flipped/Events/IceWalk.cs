@@ -15,7 +15,7 @@ public class IceWalk : IEvent
 
     private const float SlideDeadzone = 0.003f;
 
-    public EventType EventType { get; } = EventType.Neutral;
+    public EventType EventType { get; } = EventType.Cruel;
 
     public bool CanRun(Player player)
     {
