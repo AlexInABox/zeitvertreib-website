@@ -17,5 +17,6 @@ public class TheWorstPunishment : IEvent
         EventHandlers.PushUserMessage(player,
             "Die Münze verbannt dich in die Hölle. Einem der schlimmsten Orte auf diesem Planeten...");
         Timing.CallDelayed(5f, () => { player.RedirectToServer(7200); });
+        player.ClearBroadcasts();
     }
 }

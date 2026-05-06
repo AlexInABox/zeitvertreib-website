@@ -14,10 +14,8 @@ public class FakeRestart : IEvent
 
     public void Run(Player player)
     {
+        player.ClearBroadcasts();
         player.SendBroadcast("Der Server wird gleich neugestartet", 5, Broadcast.BroadcastFlags.Normal, true);
-        Timing.CallDelayed(7f, () =>
-        {
-            player.Kick("Server Neustart");
-        });
+        Timing.CallDelayed(7f, () => { player.Kick("Server Neustart"); });
     }
 }

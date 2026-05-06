@@ -57,7 +57,7 @@ public class IceWalk : IEvent
             slide.x *= friction;
             slide.z *= friction;
 
-            Vector3 toApply = new Vector3(slide.x, 0f, slide.z);
+            Vector3 toApply = new(slide.x, 0f, slide.z);
             if (toApply.magnitude < SlideDeadzone)
             {
                 slide = Vector3.zero;

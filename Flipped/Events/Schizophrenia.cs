@@ -19,7 +19,7 @@ public class Schizophrenia : IEvent
         "Hat sich da gerade etwas bewegt?",
         "Ich bin hinter dir.",
         "Der Boden knarrt...",
-        "Du bist nicht allein hier.",
+        "Du bist nicht allein hier."
     ];
 
     public EventType EventType { get; } = EventType.Cruel;
@@ -32,11 +32,11 @@ public class Schizophrenia : IEvent
     public void Run(Player player)
     {
         EventHandlers.PushUserMessage(player, "Die Münze gab es nie....");
-        player.EnableEffect<FogControl>(30, 0f);
-        player.EnableEffect<Scanned>(2, 0f);
-        player.EnableEffect<Blindness>(30, 0f);
-        player.EnableEffect<Slowness>(20, 0f);
-        player.EnableEffect<AmnesiaVision>(1, 0f);
+        player.EnableEffect<FogControl>(30);
+        player.EnableEffect<Scanned>(2);
+        player.EnableEffect<Blindness>(30);
+        player.EnableEffect<Slowness>(20);
+        player.EnableEffect<AmnesiaVision>();
         Timing.RunCoroutine(SchizophreniaLoop(player));
     }
 
@@ -61,22 +61,18 @@ public class Schizophrenia : IEvent
                 case 1:
                     player.EnableEffect<Flashed>(130, 1.8f);
                     player.EnableEffect<Blurred>(120, 2.5f);
-                    Timing.CallDelayed(1.8f, () =>
-                    {
-                        player.Rotation = player.Rotation * Quaternion.Euler(0f, 180f, 0f);
-                    });
+                    Timing.CallDelayed(1.8f,
+                        () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 180f, 0f); });
                     break;
                 case 2:
                     // Voice broadcast
                     string voice = Voices[EventHandlers.Random.Next(Voices.Length)];
-                    player.SendBroadcast(voice, 4, Broadcast.BroadcastFlags.Normal, false);
+                    player.SendBroadcast(voice, 4);
                     break;
                 case 3:
                     player.EnableEffect<Flashed>(130, 1.8f);
-                    Timing.CallDelayed(1.8f, () =>
-                    {
-                        player.Rotation = player.Rotation * Quaternion.Euler(0f, 90f, 0f);
-                    });
+                    Timing.CallDelayed(1.8f,
+                        () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 90f, 0f); });
                     break;
                 case 4:
                     player.EnableEffect<Slowness>(120, 2.5f);
@@ -91,10 +87,8 @@ public class Schizophrenia : IEvent
                 case 7:
                     player.EnableEffect<Flashed>(130, 0.5f);
                     player.EnableEffect<Blurred>(120, 2.5f);
-                    Timing.CallDelayed(0.3f, () =>
-                    {
-                        player.Rotation = player.Rotation * Quaternion.Euler(0f, 270f, 0f);
-                    });
+                    Timing.CallDelayed(0.3f,
+                        () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 270f, 0f); });
                     break;
             }
         }
@@ -121,13 +115,13 @@ public class Schizophrenia : IEvent
                 float stepOffset = (capturedI % 2 == 0 ? 0.35f : 0.55f) * side;
                 Vector3 spawnPos = player.Position + backward * (dist - capturedI * 0.15f) + right * stepOffset;
 
-                SpeakerToy speaker = SpeakerToy.Create(spawnPos, Quaternion.identity, null, true);
+                SpeakerToy speaker = SpeakerToy.Create(spawnPos, Quaternion.identity);
                 speaker.IsSpatial = true;
                 speaker.MinDistance = 1f;
                 speaker.MaxDistance = 14f;
                 speaker.Volume = 0.85f;
                 speaker.ValidPlayers = p => p == player;
-                speaker.Play(GenerateFootstepSamples(), false, false);
+                speaker.Play(GenerateFootstepSamples(), false);
 
                 float clipDuration = 0.2f;
                 Timing.CallDelayed(clipDuration + 0.1f, () =>

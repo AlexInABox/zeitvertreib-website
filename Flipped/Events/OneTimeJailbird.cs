@@ -25,11 +25,9 @@ public class OneTimeJailbird : IEvent
     {
         Item item = player.AddItem(ItemType.Jailbird);
 
-        if (item is JailbirdItem jailbird)
-        {
-            TotalChargesProperty?.SetValue(jailbird.Base, ChargesBeforeBreak);
-        }
+        if (item is JailbirdItem jailbird) TotalChargesProperty?.SetValue(jailbird.Base, ChargesBeforeBreak);
 
-        EventHandlers.PushUserMessage(player, "Die Münze schenkt dir einen fast kaputten Jailbird... eine letzte Chance!");
+        EventHandlers.PushUserMessage(player,
+            "Die Münze schenkt dir einen fast kaputten Jailbird... eine letzte Chance!");
     }
 }

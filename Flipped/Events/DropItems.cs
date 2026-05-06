@@ -16,10 +16,7 @@ public class DropItems : IEvent
     public void Run(Player player)
     {
         List<Item> items = player.Items.ToList();
-        foreach (Item item in items)
-        {
-            player.DropItem(item);
-        }
+        foreach (Item item in items) player.DropItem(item);
 
         EventHandlers.PushUserMessage(player, "Die Münze reißt dir alles aus den Händen!");
     }
