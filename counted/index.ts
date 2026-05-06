@@ -6,6 +6,7 @@ import fs from 'node:fs';
 
 const app = express();
 const PORT = 3000;
+app.set('trust proxy', 1);
 
 // Database
 fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
@@ -61,7 +62,7 @@ app.options('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  if (req.headers.authorization !== `Bearer ${API_KEY} `) {
+  if (req.headers.authorization !== `Bearer ${API_KEY}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -71,17 +72,16 @@ app.post('/', (req, res) => {
   }
 
   try {
-    db.prepare(
-      `
-      INSERT INTO readings(ts, val)
-SELECT: ts, : val
-      WHERE NOT EXISTS(
-  SELECT 1 FROM readings
-        WHERE val = : val
-        AND ts = (SELECT MAX(ts) FROM readings)
-      )
-`,
-    ).run({ ts: Date.now(), val: num });
+    // POST - insert
+    db.prepare(`
+  INSERT INTO readings (ts, val)
+  SELECT $ts, $val
+  WHERE NOT EXISTS (
+    SELECT 1 FROM readings
+    WHERE val = $val
+    AND ts = (SELECT MAX(ts) FROM readings)
+  )
+`).run({ ts: Date.now(), val: num });
 
     return res.status(200).json({ ok: true });
   } catch (err) {
@@ -112,21 +112,17 @@ app.get('/', (req, res) => {
   const endMs = endSec * 1000;
 
   try {
-    const rows = db
-      .prepare(
-        `
+    const rows = db.prepare(`
       SELECT ts, val
       FROM readings
       WHERE ts >= (
-  SELECT COALESCE(MAX(ts), 0)
+        SELECT COALESCE(MAX(ts), 0)
         FROM readings
-        WHERE ts <= : start
+        WHERE ts <= $start
       )
-      AND ts <= : end
+      AND ts <= $end
       ORDER BY ts
-    `,
-      )
-      .all({ start: startMs, end: endMs }) as Array<{ ts: number; val: number }>;
+    `).all({ start: startMs, end: endMs }) as Array<{ ts: number; val: number }>;
 
     return res.json({
       startDate: new Date(startMs).toISOString(),
