@@ -73,7 +73,8 @@ app.post('/', (req, res) => {
 
   try {
     // POST - insert
-    db.prepare(`
+    db.prepare(
+      `
   INSERT INTO readings (ts, val)
   SELECT $ts, $val
   WHERE NOT EXISTS (
@@ -81,7 +82,8 @@ app.post('/', (req, res) => {
     WHERE val = $val
     AND ts = (SELECT MAX(ts) FROM readings)
   )
-`).run({ ts: Date.now(), val: num });
+`,
+    ).run({ ts: Date.now(), val: num });
 
     return res.status(200).json({ ok: true });
   } catch (err) {
@@ -112,7 +114,9 @@ app.get('/', (req, res) => {
   const endMs = endSec * 1000;
 
   try {
-    const rows = db.prepare(`
+    const rows = db
+      .prepare(
+        `
       SELECT ts, val
       FROM readings
       WHERE ts >= (
@@ -122,7 +126,9 @@ app.get('/', (req, res) => {
       )
       AND ts <= $end
       ORDER BY ts
-    `).all({ start: startMs, end: endMs }) as Array<{ ts: number; val: number }>;
+    `,
+      )
+      .all({ start: startMs, end: endMs }) as Array<{ ts: number; val: number }>;
 
     return res.json({
       startDate: new Date(startMs).toISOString(),
