@@ -225,10 +225,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 };
 
 export default Sentry.withSentry(
-  (_env: Env) => ({
-    dsn: _env.DSN_URL,
+  (env: Env) => ({
+    dsn: env.DSN_URL,
     autoSessionTracking: false,
-    environment: _env.ENVIRONMENT,
+    environment: env.ENVIRONMENT,
     enableLogs: true,
   }),
   {
