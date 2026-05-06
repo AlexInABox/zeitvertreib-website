@@ -5,8 +5,8 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 COPY . .
 RUN npm install
-RUN npm prune --omit=dev
 RUN npx tsc
+RUN npm prune --omit=dev
 
 # Run
 FROM node:24-alpine
