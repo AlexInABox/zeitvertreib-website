@@ -33,11 +33,13 @@ const ALLOWED_ORIGINS = new Set([
 const ONE_YEAR_SEC = 365 * 24 * 60 * 60;
 
 // Middleware
-app.use(rateLimit({
-  windowMs: 60 * 1000,
-  max: 50,
-  handler: (_, res) => res.status(429).json({ error: 'Too many requests' }),
-}));
+app.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 50,
+    handler: (_, res) => res.status(429).json({ error: 'Too many requests' }),
+  }),
+);
 
 app.use(express.text({ type: '*/*', limit: '1kb' }));
 
@@ -69,7 +71,8 @@ app.post('/', (req, res) => {
   }
 
   try {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO readings(ts, val)
 SELECT: ts, : val
       WHERE NOT EXISTS(
@@ -77,7 +80,8 @@ SELECT: ts, : val
         WHERE val = : val
         AND ts = (SELECT MAX(ts) FROM readings)
       )
-`).run({ ts: Date.now(), val: num });
+`,
+    ).run({ ts: Date.now(), val: num });
 
     return res.status(200).json({ ok: true });
   } catch (err) {
@@ -108,7 +112,9 @@ app.get('/', (req, res) => {
   const endMs = endSec * 1000;
 
   try {
-    const rows = db.prepare(`
+    const rows = db
+      .prepare(
+        `
       SELECT ts, val
       FROM readings
       WHERE ts >= (
@@ -118,13 +124,15 @@ app.get('/', (req, res) => {
       )
       AND ts <= : end
       ORDER BY ts
-    `).all({ start: startMs, end: endMs }) as Array<{ ts: number; val: number }>;
+    `,
+      )
+      .all({ start: startMs, end: endMs }) as Array<{ ts: number; val: number }>;
 
     return res.json({
       startDate: new Date(startMs).toISOString(),
       endDate: new Date(endMs).toISOString(),
       count: rows.length,
-      readings: rows.map(r => ({ ts: Math.floor(r.ts / 1000), val: r.val })),
+      readings: rows.map((r) => ({ ts: Math.floor(r.ts / 1000), val: r.val })),
     });
   } catch (err) {
     console.error('Query failed:', err);
