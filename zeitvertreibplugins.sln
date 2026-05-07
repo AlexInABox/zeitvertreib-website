@@ -1,8 +1,8 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.36324.18
 MinimumVisualStudioVersion = 10.0.40219.1
-
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afkreplace", "Afkreplace\Afkreplace.csproj", "{E1BD143F-4951-45C6-B975-8CF48097F137}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swapped", "Swapped\Swapped.csproj", "{9ACACCC7-CC43-4120-958F-A6D949E55256}"
@@ -29,7 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Protected", "Protected\Prot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eventim", "Eventim\Eventim.csproj", "{69FE8029-5707-465E-B321-85D5AB6D1C57}"
 EndProject
-
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Informed", "Informed\Informed.csproj", "{ABB1C4C2-C736-4BA0-BF10-D4CC1537EB7F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flipped", "Flipped\Flipped.csproj", "{1F27EEF4-FC23-49EB-83C3-65F29083EA8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|Any CPU = Release|Any CPU
@@ -61,5 +64,15 @@ Global
 		{C18F5A17-9177-4194-9C18-A85C8F23D25B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{69FE8029-5707-465E-B321-85D5AB6D1C57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69FE8029-5707-465E-B321-85D5AB6D1C57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABB1C4C2-C736-4BA0-BF10-D4CC1537EB7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABB1C4C2-C736-4BA0-BF10-D4CC1537EB7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F27EEF4-FC23-49EB-83C3-65F29083EA8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F27EEF4-FC23-49EB-83C3-65F29083EA8A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5F174034-6DEA-4C2E-9F43-05FC06FA08DF}
 	EndGlobalSection
 EndGlobal

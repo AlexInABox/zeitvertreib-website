@@ -8,6 +8,13 @@
 // Common / Auth Types
 // ============================================================================
 
+// ============================================================================
+// External Service Types
+// ============================================================================
+
+/** Response from the Medal.tv bypass API service (medalbypass.vercel.app) used to resolve the direct video URL from a Medal.tv clip link. */
+export type MedalBypassResponse = { valid: true; src: string } | { valid: false; reasoning: string };
+
 export interface SteamUser {
   steamId: string;
   username: string;
@@ -1108,6 +1115,11 @@ export interface GetReportsResponse {
   }[];
 }
 
+/** GET /reports/search?steamId={steamId} response (staff-only) */
+export interface SearchReportsBySteamIdGetResponse {
+  reports: GetReportsResponse['reports'];
+}
+
 //When uploading evidence, the client should first call GET /reports to get a pre-signed URL for the upload, then upload the file directly to S3 using that URL.
 // After generating this pre-signed URL, the backend will notify team members about a new incomming upload for a given case via discord!
 /** GET /reports/upload?reportId={reportId}&extension={ext} request params */
@@ -1137,6 +1149,12 @@ export interface UserNotification {
   readAt: number | null;
 }
 
+/** GET /notifications request params */
+export interface GetNotificationsRequest {
+  /** Notification types to filter by, encoded in the query string as repeated `types` parameters. */
+  types?: UserNotificationType[];
+}
+
 /** GET /notifications response */
 export interface GetNotificationsResponse {
   notifications: UserNotification[];
@@ -1145,4 +1163,43 @@ export interface GetNotificationsResponse {
 /** POST /notifications/read request */
 export interface MarkNotificationsReadRequest {
   ids?: number[];
+}
+
+// ============================================================================
+// Lootbox Types
+// ============================================================================
+
+/** Rarity tiers for lootbox rewards */
+export type LootboxRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+/** A single lootbox reward item */
+export interface LootboxReward {
+  id: string;
+  name: string;
+  emoji: string;
+  rarity: LootboxRarity;
+  zvcValue: number;
+  /** True when this reward is a free-lootbox voucher instead of ZVC */
+  isVoucher?: boolean;
+}
+
+/** POST /lootbox request */
+export interface LootboxPurchaseRequest {
+  /** Set to true to spend one held voucher instead of paying ZVC */
+  useVoucher?: boolean;
+}
+
+/** POST /lootbox response */
+export interface LootboxPurchaseResponse {
+  success: boolean;
+  message: string;
+  reward: LootboxReward;
+  newBalance: number;
+  /** Updated voucher count after this purchase */
+  newVoucherCount: number;
+}
+
+/** GET /lootbox response */
+export interface LootboxInfoResponse {
+  voucherCount: number;
 }

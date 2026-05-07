@@ -1,0 +1,82 @@
+name: Quality Checks (Pull Request)
+
+permissions: {} 
+
+on:
+  pull_request_target:
+    branches:
+      - '**'
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  determine-next-build:
+    name: Determine Next Build
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    outputs:
+      build_number: ${{ steps.version.outputs.build_number }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Determine next build number
+        id: version
+        run: |
+          TAG=$(git tag -l "build-*" --sort=-v:refname | head -n 1)
+
+          if [ -z "$TAG" ]; then
+            BUILD_NUMBER=1
+          else
+            BUILD_NUMBER=${TAG#build-}
+            BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          fi
+
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+  validate-main-changelog:
+    name: Validate Main Branch Changelog
+    permissions:
+      contents: read
+    if: github.event.pull_request.base.ref == 'main'
+    needs: [determine-next-build]
+    uses: ./.github/workflows/REUSABLE_extract-changelog.yml
+    with:
+      build_number: ${{ needs.determine-next-build.outputs.build_number }}
+
+  set-labels:
+    name: Set Labels
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-slim
+    steps:
+    - uses: actions/labeler@v6
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        configuration-path: .github/labeler.yml
+        sync-labels: true
+  assign-author:
+    name: Assign Author
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: toshimaru/auto-author-assign@v3.0.2
+  validate-pr-title:
+    name: Validate PR title
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

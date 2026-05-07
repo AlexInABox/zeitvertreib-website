@@ -71,14 +71,14 @@
           </div>
         </div>
 
-        <!-- Quests Cards - Daily and Weekly side by side -->
+        <!-- Quests Cards — full width, untouched -->
         <div class="grid-item">
           <app-quests></app-quests>
         </div>
 
-        <!-- Two columns under ZV Coins: Sprays (left) + Fakerank (right) -->
+        <!-- Sprays (left, spans 2 rows) + Lootbox & Fakerank stacked (right) -->
         <div class="grid zvcoins-subgrid grid-cols-1 md:grid-cols-2 gap-2">
-          <!-- Custom Sprays (moved here from right column) -->
+          <!-- Custom Sprays -->
           <div class="grid-item spray-card-container">
             <div class="stats-card p-6 rounded-2xl">
               <div class="spray-header" *ngIf="!isSprayBanned">
@@ -195,7 +195,120 @@
             </div>
           </div>
 
-          <!-- Fakerank (moved here from right column) -->
+          <!-- Lootbox Card -->
+          <div class="grid-item min-w-0 lootbox-grid-item">
+            <div class="stats-card p-6 rounded-2xl lootbox-card-wrapper">
+              <div class="lootbox-header">
+                <h3 class="spray-title">🎁 Lootbox</h3>
+                <p class="spray-subtitle">
+                  Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong>
+                </p>
+                <!-- Voucher badge -->
+                <div class="lootbox-voucher-badge" [class.lootbox-voucher-badge-empty]="lootboxVoucherCount === 0">
+                  🎟️ {{ lootboxVoucherCount }} Gutschein{{ lootboxVoucherCount === 1 ? '' : 'e' }}
+                </div>
+              </div>
+
+              <!-- Spin animation area -->
+              <div class="lootbox-stage" [class.is-animating]="lootboxAnimating" [class.is-snapping]="lootboxSnapping">
+                <div class="lootbox-pointer-top"></div>
+                <div class="lootbox-center-line"></div>
+                <div class="lootbox-track-viewport">
+                  <div
+                    class="lootbox-track"
+                    [style.transform]="
+                      lootboxAnimating
+                        ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-animation-center-offset)))'
+                        : lootboxSnapping || lootboxAtRest
+                          ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-center-offset)))'
+                          : 'translateX(0)'
+                    "
+                  >
+                    <div
+                      *ngFor="let item of lootboxSpinItems; let i = index"
+                      class="lootbox-item"
+                      [class.rarity-common]="item.rarity === 'common'"
+                      [class.rarity-uncommon]="item.rarity === 'uncommon'"
+                      [class.rarity-rare]="item.rarity === 'rare'"
+                      [class.rarity-epic]="item.rarity === 'epic'"
+                      [class.rarity-legendary]="item.rarity === 'legendary'"
+                    >
+                      <span class="lootbox-item-emoji">{{ item.emoji }}</span>
+                      <span class="lootbox-item-name">{{ item.name }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lootbox-pointer-bottom"></div>
+
+                <!-- Idle placeholder — absolute overlay keeps track in DOM -->
+                <div
+                  *ngIf="!lootboxAnimating && !lootboxSnapping && !lootboxAtRest && lootboxSpinItems.length === 0"
+                  class="lootbox-idle"
+                >
+                  <img src="assets/lootbox-placeholder.svg" alt="Geschlossene Lootbox" class="lootbox-idle-image" />
+                  <span class="lootbox-idle-label">Bereit zum Öffnen</span>
+                </div>
+              </div>
+
+              <!-- Result banner -->
+              <div
+                *ngIf="lootboxResult && !lootboxSpinning"
+                class="lootbox-result"
+                [class.rarity-common]="lootboxResult.rarity === 'common'"
+                [class.rarity-uncommon]="lootboxResult.rarity === 'uncommon'"
+                [class.rarity-rare]="lootboxResult.rarity === 'rare'"
+                [class.rarity-epic]="lootboxResult.rarity === 'epic'"
+                [class.rarity-legendary]="lootboxResult.rarity === 'legendary'"
+              >
+                <span class="lootbox-result-emoji">{{ lootboxResult.emoji }}</span>
+                <div class="lootbox-result-info">
+                  <strong class="lootbox-result-name">{{ lootboxResult.name }}</strong>
+                  <span class="lootbox-result-rarity lootbox-rarity-{{ lootboxResult.rarity }}">
+                    {{ lootboxResult.rarity | uppercase }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Loading indicator during API call -->
+              <div *ngIf="lootboxLoading" class="lootbox-loading-bar">
+                <div class="lootbox-loading-fill"></div>
+              </div>
+
+              <!-- Messages -->
+              <div *ngIf="lootboxError" class="spray-message spray-message-error mt-2">{{ lootboxError }}</div>
+              <div *ngIf="lootboxSuccess" class="spray-message spray-message-success mt-2">
+                {{ lootboxSuccess }}
+              </div>
+
+              <!-- Buy button -->
+              <div class="lootbox-action">
+                <button
+                  class="lootbox-buy-btn"
+                  (click)="buyLootbox()"
+                  [disabled]="lootboxSpinning || !canAffordLootbox()"
+                >
+                  <span *ngIf="!lootboxSpinning">🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
+                  <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
+                  <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
+                </button>
+                <button
+                  class="lootbox-voucher-btn"
+                  (click)="useVoucherForLootbox()"
+                  [disabled]="lootboxSpinning || lootboxVoucherCount < 1"
+                  [title]="lootboxVoucherCount < 1 ? 'Kein Gutschein vorhanden' : 'Gratis-Lootbox einlösen'"
+                >
+                  <span *ngIf="!lootboxSpinning"
+                    >🎟️ Gutschein einlösen{{ lootboxVoucherCount > 0 ? ' (' + lootboxVoucherCount + ')' : '' }}</span
+                  >
+                  <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
+                  <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
+                </button>
+                <p *ngIf="!canAffordLootbox() && !lootboxSpinning" class="lootbox-insufficient">Nicht genügend ZVC</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fakerank -->
           <div class="grid-item fakerank-container">
             <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
               <div class="spray-header">

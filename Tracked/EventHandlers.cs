@@ -427,6 +427,8 @@ public static class EventHandlers
         FileManager.WriteStringToFile(JsonConvert.SerializeObject(map, Formatting.Indented),
             Plugin.Instance.GetConfigPath(Plugin.Instance.ConfigFileName).Replace(Plugin.Instance.ConfigFileName, "") +
             "map.json");
+
+        Config.CurrentRoundNumber++;
     }
 
     private static void OnRoundStarting(RoundStartingEventArgs ev)

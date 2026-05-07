@@ -1,6 +1,6 @@
 import { validateSession, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, inArray, desc, count, isNull } from 'drizzle-orm';
+import { eq, and, inArray, desc, isNull } from 'drizzle-orm';
 import { notifications } from '../db/schema.js';
 import typia from 'typia';
 import type {
@@ -9,6 +9,13 @@ import type {
   UserNotification,
   UserNotificationType,
 } from '@zeitvertreib/types';
+
+const VALID_TYPES: UserNotificationType[] = [
+  'fakerank_billing',
+  'fakerank_deleted',
+  'spray_deleted',
+  'session_completed',
+];
 
 export async function handleGetNotifications(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
@@ -23,10 +30,41 @@ export async function handleGetNotifications(request: Request, env: Env, ctx: Ex
     );
   }
 
+  const url = new URL(request.url);
+  const typesParam = url.searchParams.get('types');
+
+  let visibleTypes: UserNotificationType[] | null = null;
+  if (typesParam !== null) {
+    if (typesParam === '') {
+      return createResponse({ notifications: [] }, 200, origin);
+    }
+
+    const requestedTypes = typesParam.split(',');
+    const invalidTypes = requestedTypes.filter((t) => t !== '' && !VALID_TYPES.includes(t as UserNotificationType));
+
+    if (invalidTypes.length > 0) {
+      return createResponse({ error: 'Invalid notification types' }, 400, origin);
+    }
+
+    const parsed = requestedTypes.filter((t): t is UserNotificationType =>
+      VALID_TYPES.includes(t as UserNotificationType),
+    );
+
+    if (parsed.length === 0) {
+      return createResponse({ notifications: [] }, 200, origin);
+    }
+    visibleTypes = parsed;
+  }
+
+  const whereCondition =
+    visibleTypes !== null
+      ? and(eq(notifications.userId, sessionResult.steamId), inArray(notifications.type, visibleTypes))
+      : eq(notifications.userId, sessionResult.steamId);
+
   const notificationsResult = await db
     .select()
     .from(notifications)
-    .where(eq(notifications.userId, sessionResult.steamId))
+    .where(whereCondition)
     .orderBy(desc(notifications.createdAt))
     .limit(50);
 

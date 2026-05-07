@@ -1,6 +1,19 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, getCedModLastReports, fetchSteamUserData } from '../utils.js';
-import type { GetReportsResponse, ReportFileUploadGetRequest, ReportFileUploadGetResponse } from '@zeitvertreib/types';
+import {
+  createResponse,
+  getCedModLastReports,
+  getCedModReportsBySteamId,
+  fetchSteamUserData,
+  validateSession,
+  isTeam,
+  validateSteamId,
+} from '../utils.js';
+import type {
+  GetReportsResponse,
+  ReportFileUploadGetRequest,
+  ReportFileUploadGetResponse,
+  SearchReportsBySteamIdGetResponse,
+} from '@zeitvertreib/types';
 import { caseToCedModReportLinks } from '../db/schema.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
@@ -88,6 +101,70 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
 
   const responseBody: ReportFileUploadGetResponse = { url: presignedUrl.url, method: 'PUT' };
   return createResponse(responseBody, 200, origin);
+}
+
+/// GET /reports/search?steamId={steamId}
+export async function handleSearchReportsBySteamId(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
+  const sessionValidation = await validateSession(request, env);
+  if (sessionValidation.status !== 'valid' || !sessionValidation.steamId) {
+    return createResponse(
+      { error: sessionValidation.status === 'expired' ? 'Session expired' : 'Not authenticated' },
+      401,
+      origin,
+    );
+  }
+
+  if (!(await isTeam(sessionValidation.steamId, env))) {
+    return createResponse({ error: 'Unauthorized' }, 401, origin);
+  }
+
+  const url = new URL(request.url);
+  const steamIdParam = url.searchParams.get('steamId');
+  if (!steamIdParam) {
+    return createResponse({ error: 'Missing required parameter: steamId' }, 400, origin);
+  }
+
+  const steamIdValidation = validateSteamId(steamIdParam);
+  if (!steamIdValidation.valid) {
+    return createResponse({ error: steamIdValidation.error || 'Invalid Steam ID' }, 400, origin);
+  }
+
+  const normalizedSteamId = steamIdValidation.normalized!;
+  const cedModReports = await getCedModReportsBySteamId(normalizedSteamId, env);
+
+  const reporterData = await Promise.all(
+    cedModReports.map((report) => fetchSteamUserData(report.reporterId, env, ctx)),
+  );
+
+  const reportedData = await Promise.all(
+    cedModReports.map((report) => fetchSteamUserData(report.reportedId, env, ctx)),
+  );
+
+  const responseData: SearchReportsBySteamIdGetResponse = {
+    reports: cedModReports.map((report, index) => ({
+      id: report.id,
+      reporter: {
+        id: report.reporterId,
+        username: reporterData[index]?.username ?? 'Unknown',
+        avatarUrl: reporterData[index]?.avatarUrl ?? '',
+      },
+      reported: {
+        id: report.reportedId,
+        username: reportedData[index]?.username ?? 'Unknown',
+        avatarUrl: reportedData[index]?.avatarUrl ?? '',
+      },
+      reason: report.reason,
+      createdAt: report.reportedAt,
+    })),
+  };
+
+  return createResponse(responseData, 200, origin);
 }
 
 export async function handleGetReports(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

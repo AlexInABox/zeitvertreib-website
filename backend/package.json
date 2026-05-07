@@ -18,15 +18,16 @@
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "npm-run-all": "^4.1.5",
+    "rimraf": "^6.1.2",
     "ts-patch": "^3.3.0",
     "typescript": "~5.9.3",
-    "wrangler": "^4.61.1",
-    "rimraf": "^6.1.2"
+    "wrangler": "^4.61.1"
   },
   "dependencies": {
     "@2toad/profanity": "^3.2.0",
     "@discordjs/builders": "^1.13.1",
     "@discordjs/rest": "^2.6.0",
+    "@sentry/cloudflare": "^10.51.0",
     "@zeitvertreib/types": "file:../types",
     "aws4fetch": "^1.0.20",
     "better-sqlite3": "^12.6.2",

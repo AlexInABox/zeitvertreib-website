@@ -1,0 +1,69 @@
+name: Build C# Plugins (dev)
+
+on:
+  workflow_dispatch:
+  pull_request_target:
+    branches: [dev]
+    types:
+      - opened
+      - edited
+      - synchronize
+  push:
+    branches: [dev]
+    paths:
+      - "[A-Z]*/**"
+      - "*.sln"
+      - "*.csproj"
+      - "types/**"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      folders: ${{ steps.folders.outputs.folders }}
+    steps:
+      - name: Get last workflow run status
+        id: get_last
+        run: |
+            STATUS=$(gh api "repos/${{ github.repository }}/actions/runs?per_page=100" \
+            --jq '[.workflow_runs[] | select(.name == "Build C# Plugins (dev)")] 
+                    | sort_by(.created_at) | reverse | .[1].conclusion // "none"')
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Resolve plugin folders to build
+        id: folders
+        run: |
+          all()     { find . -maxdepth 1 -type d -name '[A-Z]*' -printf '%f\n'; }
+          changed() { git diff --name-only HEAD~1; }
+          to_json() { jq -Rcs 'split("\n")[:-1]'; }
+
+          if [ "${{ steps.get_last.outputs.status }}" != "success" ] \
+          || [ "${{ github.event_name }}" != "push" ] \
+          || changed | grep -qE '\.sln$|\.csproj$|^types/'; then
+            FOLDERS=$(all | sort -u | to_json)
+          else
+            FOLDERS=$(changed | grep -oP '^[A-Z][^/]+(?=/)' | sort -u | to_json)
+          fi
+
+          echo "folders=$FOLDERS" >> $GITHUB_OUTPUT
+
+  build:
+    needs: check
+    strategy:
+      matrix:
+        plugin: ${{ fromJson(needs.check.outputs.folders) }}
+    uses: ./.github/workflows/REUSABLE_build-c#-plugin.yml
+    with:
+      plugin: ${{ matrix.plugin }}
+    

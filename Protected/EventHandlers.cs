@@ -3,6 +3,8 @@ using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Arguments.Scp049Events;
+using LabApi.Events.Arguments.Scp3114Events;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
@@ -21,6 +23,8 @@ public static class EventHandlers
         PlayerEvents.Hurting += OnHurting;
         PlayerEvents.ShootingWeapon += OnShooting;
         PlayerEvents.ThrowingProjectile += ThrowingProjectile;
+        Scp049Events.Attacking += OnSCP049Infecting;
+        Scp3114Events.StrangleStarting += OnSCP3114Strangling;
 
         PlayerEvents.Joined += OnJoined; // Here we register the HUD!
     }
@@ -31,6 +35,8 @@ public static class EventHandlers
         PlayerEvents.Hurting -= OnHurting;
         PlayerEvents.ShootingWeapon -= OnShooting;
         PlayerEvents.ThrowingProjectile -= ThrowingProjectile;
+        Scp049Events.Attacking -= OnSCP049Infecting;
+        Scp3114Events.StrangleStarting -= OnSCP3114Strangling;
 
         PlayerEvents.Joined -= OnJoined;
     }
@@ -54,6 +60,22 @@ public static class EventHandlers
 
         ev.IsAllowed = false;
 
+        // TODO: Notify the attacker with a hint, that the user they are attacking is spawn protected!
+    }
+
+    private static void OnSCP049Infecting(Scp049AttackingEventArgs ev)
+    {
+        if (!SpawnProtectedPlayers.ContainsKey(ev.Target)) return;
+
+        ev.IsAllowed = false;
+        // TODO: Notify the attacker with a hint, that the user they are attacking is spawn protected!
+    }
+
+    private static void OnSCP3114Strangling(Scp3114StrangleStartingEventArgs ev)
+    {
+        if (!SpawnProtectedPlayers.ContainsKey(ev.Target)) return;
+
+        ev.IsAllowed = false;
         // TODO: Notify the attacker with a hint, that the user they are attacking is spawn protected!
     }
 

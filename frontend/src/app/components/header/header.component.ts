@@ -127,45 +127,65 @@ export class HeaderComponent implements OnInit, OnDestroy {
         route: '/',
       },
       {
-        label: 'Ko-fi',
-        icon: PrimeIcons.HEART,
-        url: 'https://ko-fi.com/zeitvertreib',
-        target: '_blank',
-      },
-      {
-        label: 'Paysafecard',
-        icon: PrimeIcons.CREDIT_CARD,
-        route: '/paysafecard',
-      },
-      {
-        label: 'Dashboard',
+        label: 'Dashboard & Spiele',
         icon: PrimeIcons.USER,
-        route: '/dashboard',
+        items: [
+          {
+            label: 'Dashboard',
+            icon: PrimeIcons.USER,
+            route: '/dashboard',
+          },
+          {
+            label: 'Spiele',
+            icon: PrimeIcons.POWER_OFF,
+            route: '/games',
+          },
+        ],
       },
       {
-        label: 'Spiele',
-        icon: PrimeIcons.CHART_SCATTER,
-        route: '/games',
+        label: 'Spenden',
+        icon: PrimeIcons.HEART,
+
+        items: [
+          {
+            label: 'Ko-fi',
+            icon: PrimeIcons.HEART,
+            url: 'https://ko-fi.com/zeitvertreib',
+            target: '_blank',
+          },
+          {
+            label: 'Paysafecard',
+            icon: PrimeIcons.CREDIT_CARD,
+            route: '/paysafecard',
+          },
+        ],
       },
       {
-        label: 'Cases',
-        icon: PrimeIcons.FOLDER,
-        route: '/cases',
+        label: 'Hilfe!',
+        icon: PrimeIcons.EXCLAMATION_TRIANGLE,
+        items: [
+          {
+            label: 'Z.E.I.T.',
+            icon: PrimeIcons.SEARCH,
+            route: '/zeit',
+          },
+          {
+            label: 'Cases',
+            icon: PrimeIcons.FOLDER,
+            route: '/cases',
+          },
+          {
+            label: 'Melden',
+            icon: PrimeIcons.FLAG,
+            route: '/reporting',
+          },
+        ],
       },
-      {
-        label: 'Z.E.I.T.',
-        icon: PrimeIcons.SEARCH,
-        route: '/zeit',
-      },
+
       {
         label: 'Bewerben',
         icon: PrimeIcons.PAPERCLIP,
         url: '/bewerben',
-      },
-      {
-        label: 'Melden',
-        icon: PrimeIcons.FLAG,
-        route: '/reporting',
       },
     ];
 

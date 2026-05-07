@@ -3,6 +3,13 @@ import { CommonModule } from '@angular/common';
 import { NotificationCenterService } from '../../services/notification-center.service';
 import type { UserNotificationType } from '@zeitvertreib/types';
 
+const ALL_NOTIFICATION_TYPES: { type: UserNotificationType; label: string; icon: string }[] = [
+  { type: 'session_completed', label: 'Spiel-Session', icon: '🎮' },
+  { type: 'fakerank_billing', label: 'Fakerank-Abrechnung', icon: '💸' },
+  { type: 'fakerank_deleted', label: 'Fakerank gelöscht', icon: '🗑️' },
+  { type: 'spray_deleted', label: 'Spray gelöscht', icon: '🗑️' },
+];
+
 @Component({
   selector: 'app-notification-center',
   standalone: true,
@@ -13,12 +20,15 @@ import type { UserNotificationType } from '@zeitvertreib/types';
 export class NotificationCenterComponent implements OnInit, OnDestroy {
   notificationCenter = inject(NotificationCenterService);
   isPanelOpen = false;
+  isFilterPanelOpen = false;
+  allTypes = ALL_NOTIFICATION_TYPES;
 
   private boundClosePanel: (event: MouseEvent) => void = () => {};
 
   ngOnInit(): void {
     this.boundClosePanel = () => {
       this.isPanelOpen = false;
+      this.isFilterPanelOpen = false;
     };
     document.addEventListener('click', this.boundClosePanel);
   }
@@ -30,10 +40,26 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   togglePanel(event: MouseEvent): void {
     event.stopPropagation();
     this.isPanelOpen = !this.isPanelOpen;
+    if (!this.isPanelOpen) {
+      this.isFilterPanelOpen = false;
+    }
   }
 
   stopPropagation(event: MouseEvent): void {
     event.stopPropagation();
+  }
+
+  toggleFilterPanel(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isFilterPanelOpen = !this.isFilterPanelOpen;
+  }
+
+  toggleType(type: UserNotificationType): void {
+    this.notificationCenter.toggleType(type);
+  }
+
+  isTypeVisible(type: UserNotificationType): boolean {
+    return this.notificationCenter.isTypeVisible(type);
   }
 
   markAllRead(): void {
