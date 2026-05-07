@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <Reference Include="Assembly-CSharp-firstpass" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp-firstpass.dll" Private="false"/>
-        <Reference Include="Assembly-CSharp" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp.dll" Private="false"/>
+        <Reference Include="Assembly-CSharp" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp.dll" Private="false" Publicize="true"/>
         <Reference Include="Mirror" HintPath="$(EXILED_REFERENCES)\Mirror.dll" Private="false"/>
         <Reference Include="Pooling" HintPath="$(EXILED_REFERENCES)\Pooling.dll" Private="false"/>
         <Reference Include="UnityEngine" HintPath="$(EXILED_REFERENCES)\UnityEngine.dll" Private="false"/>
@@ -21,10 +21,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" />
         <PackageReference Include="Northwood.LabAPI" Version="1.1.6.1"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="System.Net.Http" Version="4.3.4"/>
-        <PackageReference Include="ExMod.Exiled" Version="9.13.1" />
+        <PackageReference Include="ExMod.Exiled" Version="9.13.3" />
         <PackageReference Include="HintServiceMeow" Version="5.5.0"/>
     </ItemGroup>
 
