@@ -56,7 +56,7 @@ public class Teamdeathmatch : IEvent
         MtfGroup.Clear();
         ChaosGroup.Clear();
         _lastRespawn = 0;
-
+        _respawnInterval = 98f;
         RoleTypeId.NtfPrivate.TryGetRandomSpawnPoint(out _mtfSpawn, out _);
         RoleTypeId.ChaosMarauder.TryGetRandomSpawnPoint(out _chaosSpawn, out _);
     }
