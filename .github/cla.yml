@@ -1,0 +1,30 @@
+document:
+  version: v1
+  url: https://github.com/AlexInABox/zeitvertreib-website/blob/main/CLA.md
+
+signing:
+  mode: comment
+  comment_pattern: I have read the Contributor License Agreement and I hereby grant Zeitvertreib the rights set out therein with respect to my contributions.
+  case_insensitive: true
+  trim_whitespace: true
+  ignore_terminal_punctuation: true
+
+contributors:
+  check_pr_author: true
+  check_commit_authors: true
+  check_coauthors: false
+  exclude_bots: true
+  allowlist:
+    - dependabot[bot]
+    - github-actions[bot]
+    - cursoragent
+
+registry:
+  type: json-repo
+  repository: alexinabox/zeitvertreib-website
+  path_prefix: signatures
+  branch: cla-signatures
+  
+status:
+  check_name: CLA Check
+  comment_tag: <!-- cla-bot -->
