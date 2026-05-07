@@ -70,6 +70,7 @@ public static class Utils
 
                 ServerSpecificSettingsSync.DefinedSettings = combined;
                 ServerSpecificSettingsSync.SendToPlayer(ev.Player.ReferenceHub);
+                ServerSpecificSettingsSync.DefinedSettings = existing; // Reset
             }
         }
         catch (Exception e)
