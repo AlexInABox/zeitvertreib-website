@@ -1,5 +1,8 @@
 name: Extract Changelog (Reusable)
 
+permissions:
+  contents: read
+  
 on:
   workflow_call:
     inputs:

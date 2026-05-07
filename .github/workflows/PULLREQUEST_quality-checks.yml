@@ -1,5 +1,7 @@
 name: Quality Checks (Pull Request)
 
+permissions: {} 
+
 on:
   pull_request_target:
     branches:
@@ -40,6 +42,8 @@ jobs:
 
   validate-main-changelog:
     name: Validate Main Branch Changelog
+    permissions:
+      contents: read
     if: github.event.pull_request.base.ref == 'main'
     needs: [determine-next-build]
     uses: ./.github/workflows/REUSABLE_extract-changelog.yml
@@ -62,6 +66,7 @@ jobs:
     name: Assign Author
     runs-on: ubuntu-slim
     permissions:
+      contents: read
       pull-requests: write
     steps:
       - uses: toshimaru/auto-author-assign@v3.0.2
