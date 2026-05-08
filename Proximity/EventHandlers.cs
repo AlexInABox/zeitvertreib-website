@@ -48,7 +48,7 @@ public static class EventHandlers
 
         ActiveSpeakers[player] = SpeakerToyPool.Rent(
             SpeakerToyPool.NextAvailableId,
-            new SpeakerSettings { IsSpatial = true, Volume = 1.4f, MinDistance = 1f, MaxDistance = 15f },
+            new SpeakerSettings { IsSpatial = true, Volume = 10f, MinDistance = 1f, MaxDistance = 15f },
             player.GameObject!.transform
         );
     }

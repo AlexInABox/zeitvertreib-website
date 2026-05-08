@@ -15,6 +15,7 @@ using QRCoder;
 using UnityEngine;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using Logger = LabApi.Features.Console.Logger;
+using Tracked.API;
 
 namespace Informed;
 
@@ -170,7 +171,7 @@ public static class EventHandlers
         PlayerDisplay playerDisplay = player.GetPlayerDisplay();
 
         long userIdNum = long.Parse(player.UserId.Split('@')[0]);
-        string content = userIdNum.ToString("D10") + _globalRoundTimestamp;
+        string content = userIdNum.ToString("D10") + TrackedAPI.GetCurrentRoundNumber();
         Logger.Warn($"User {player.Nickname} got identifier of: {content}");
 
         using QRCodeGenerator generator = new();

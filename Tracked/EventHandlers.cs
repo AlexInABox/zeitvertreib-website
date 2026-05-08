@@ -428,7 +428,8 @@ public static class EventHandlers
             Plugin.Instance.GetConfigPath(Plugin.Instance.ConfigFileName).Replace(Plugin.Instance.ConfigFileName, "") +
             "map.json");
 
-        Config.CurrentRoundNumber++;
+        Plugin.Instance.Config!.CurrentRoundNumber++;
+        Plugin.Instance.SaveConfig();
     }
 
     private static void OnRoundStarting(RoundStartingEventArgs ev)
