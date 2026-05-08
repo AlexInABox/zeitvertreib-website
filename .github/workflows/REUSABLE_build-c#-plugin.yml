@@ -86,7 +86,7 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v3
       - name: Build plugin
-        run: msbuild ${{ env.PLUGIN_PATH }} -t:Rebuild -property:Configuration=Release
+        run: msbuild zeitvertreibplugins.sln -t:"${{ inputs.plugin }}:Rebuild" -property:Configuration=Release
 
       - name: Upload DLL as artifact
         uses: actions/upload-artifact@v7
