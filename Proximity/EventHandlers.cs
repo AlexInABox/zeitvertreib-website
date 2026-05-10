@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using PlayerRoles;
+using RueI.API;
+using RueI.API.Elements;
 using SecretLabNAudio.Core;
 using SecretLabNAudio.Core.Pools;
 using UnityEngine;
@@ -43,6 +42,9 @@ public static class EventHandlers
         {
             SpeakerToyPool.Return(speaker);
             ActiveSpeakers.Remove(player);
+
+            BasicElement disableHint = new(10f, "<size=18>Proximity Chat: <color=red>DEAKTIVIERT</color></size>");
+            RueDisplay.Get(player).Show(new Tag("ProximityStatus" + player.PlayerId), disableHint);
             return;
         }
 
@@ -51,6 +53,8 @@ public static class EventHandlers
             new SpeakerSettings { IsSpatial = true, Volume = 10f, MinDistance = 1f, MaxDistance = 15f },
             player.GameObject!.transform
         );
+        BasicElement enableHint = new(10f, "<size=18>Proximity Chat: <color=green>AKTIVIERT</color></size>");
+        RueDisplay.Get(player).Show(new Tag("ProximityStatus" + player.PlayerId), enableHint);
     }
 
 
@@ -73,7 +77,7 @@ public static class EventHandlers
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSSSReceived;
         PlayerEvents.SendingVoiceMessage += OnSendingVoiceMessage;
         ServerEvents.WaitingForPlayers += OnWaitingForPlayers;
-        PlayerEvents.Joined += OnJoined;
+        PlayerEvents.ChangedRole += OnChangedRole;
     }
 
     public static void UnregisterEvents()
@@ -81,7 +85,7 @@ public static class EventHandlers
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSSSReceived;
         PlayerEvents.SendingVoiceMessage -= OnSendingVoiceMessage;
         ServerEvents.WaitingForPlayers -= OnWaitingForPlayers;
-        PlayerEvents.Joined -= OnJoined;
+        PlayerEvents.ChangedRole -= OnChangedRole;
     }
 
     private static void OnSSSReceived(ReferenceHub hub, ServerSpecificSettingBase ev)
@@ -114,26 +118,27 @@ public static class EventHandlers
         ActiveSpeakers.Clear();
     }
 
-    private static void OnJoined(PlayerJoinedEventArgs ev)
+    private static void OnChangedRole(PlayerChangedRoleEventArgs ev)
     {
-        Hint hintHud = new()
+        if (ev.NewRole.Team != Team.SCPs)
         {
-            Alignment = HintAlignment.Center,
-            AutoText = _ =>
+            RueDisplay.Get(ev.Player).SetVisible(new Tag("ProximityStatus" + ev.Player.PlayerId), false);
+        }
+        else
+        {
+            if (ActiveSpeakers.TryGetValue(ev.Player, out SpeakerToy _))
             {
-                if (ev.Player.Role.GetTeam() != Team.SCPs) return string.Empty;
-                string hint = ev.Player.IsScpProximityChatEnabled()
-                    ? "<size=18>Proximity Chat: <color=green>AKTIVIERT</color></size>"
-                    : "<size=18>Proximity Chat: <color=red>DEAKTIVIERT</color></size>";
+                BasicElement enableHint = new(10f, "<size=18>Proximity Chat: <color=green>AKTIVIERT</color></size>");
+                RueDisplay.Get(ev.Player).Show(new Tag("ProximityStatus" + ev.Player.PlayerId), enableHint);
+            }
+            else
+            {
+                BasicElement disableHint = new(10f,
+                    "<size=18>Proximity Chat: <color=red>DEAKTIVIERT</color></size>");
+                RueDisplay.Get(ev.Player).Show(new Tag("ProximityStatus" + ev.Player.PlayerId), disableHint);
+            }
 
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Bottom,
-            YCoordinate = 1080,
-            XCoordinate = 0,
-            SyncSpeed = HintSyncSpeed.Slow
-        };
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
-        playerDisplay.AddHint(hintHud);
+            RueDisplay.Get(ev.Player).SetVisible(new Tag("ProximityStatus" + ev.Player.PlayerId), true);
+        }
     }
 }

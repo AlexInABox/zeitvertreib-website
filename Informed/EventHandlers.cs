@@ -1,21 +1,16 @@
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Extension;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
-using MEC;
 using QRCoder;
+using RueI.API;
+using RueI.API.Elements;
+using RueI.Utils;
+using RueI.Utils.Enums;
 using UnityEngine;
-using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using Logger = LabApi.Features.Console.Logger;
-using Tracked.API;
 
 namespace Informed;
 
@@ -23,9 +18,6 @@ namespace Informed;
 
 public static class EventHandlers
 {
-    private static readonly ConcurrentDictionary<Player, List<AbstractHint>> PlayerQrCodes = [];
-    private static long _globalRoundTimestamp;
-
     private static readonly List<Vector2> Points =
     [
         new(49.979748419640934f, 0.009503079328091808f),
@@ -94,18 +86,12 @@ public static class EventHandlers
     public static void RegisterEvents()
     {
         PlayerEvents.Joined += OnJoined;
-        PlayerEvents.Left += OnLeft;
-        ServerEvents.RoundEnded += OnRoundEnded;
-        ServerEvents.WaitingForPlayers += OnWaitingForPlayers;
         PlayerEvents.Banning += OnPlayerBanning;
     }
 
     public static void UnregisterEvents()
     {
         PlayerEvents.Joined -= OnJoined;
-        PlayerEvents.Left -= OnLeft;
-        ServerEvents.RoundEnded -= OnRoundEnded;
-        ServerEvents.WaitingForPlayers -= OnWaitingForPlayers;
         PlayerEvents.Banning -= OnPlayerBanning;
     }
 
@@ -114,64 +100,22 @@ public static class EventHandlers
         ev.Player?.RedirectToServer(7200);
     }
 
-    private static void OnWaitingForPlayers()
-    {
-        _globalRoundTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-    }
-
-    private static IEnumerator<float> UpdateQrCodesLoop()
-    {
-        while (true)
-        {
-            foreach (KeyValuePair<Player, List<AbstractHint>> qrCodeHints in PlayerQrCodes)
-            {
-                foreach (AbstractHint hint in qrCodeHints.Value) hint.Hide = true;
-                qrCodeHints.Value.Clear();
-                PlayerQrCodes.AddOrUpdate(qrCodeHints.Key, static player => GenerateQrCodeForUser(player),
-                    static (player, _) => GenerateQrCodeForUser(player));
-
-                yield return Timing.WaitForSeconds(2);
-            }
-
-            yield return Timing.WaitForSeconds(2);
-        }
-    }
-
-    private static void OnRoundEnded(RoundEndedEventArgs ev)
-    {
-        PlayerQrCodes.Clear();
-    }
-
-    private static void OnLeft(PlayerLeftEventArgs ev)
-    {
-        PlayerQrCodes.TryRemove(ev.Player, out _);
-    }
-
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
         Utils.SendHeaderToPlayer(ev);
 
-
-        /*
-        foreach (Vector2 point in points)
-            _logoHints.Add(DrawPoint(playerDisplay, point,
-                (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 420f, 1015, true, false,
-                2.75f));
-*/
-
-        PlayerQrCodes.AddOrUpdate(ev.Player, static player => GenerateQrCodeForUser(player),
-            static (player, _) => GenerateQrCodeForUser(player));
+        GenerateQrCodeForUser(ev.Player);
     }
 
-    private static List<AbstractHint> GenerateQrCodeForUser(Player player)
+    private static void GenerateQrCodeForUser(Player player)
     {
-        float xOffset = -540f * player.ReferenceHub.aspectRatioSync.AspectRatio + 600f + 405f;
-        const float yOffset = 1000f;
+        float xOffset = player.EdgeOffset() + 405f;
+        const float yOffset = -5f;
 
-        PlayerDisplay playerDisplay = player.GetPlayerDisplay();
+        RueDisplay display = RueDisplay.Get(player);
 
         long userIdNum = long.Parse(player.UserId.Split('@')[0]);
-        string content = userIdNum.ToString("D10") + TrackedAPI.GetCurrentRoundNumber();
+        string content = userIdNum.ToString("D10") + "99999999";
         Logger.Warn($"User {player.Nickname} got identifier of: {content}");
 
         using QRCodeGenerator generator = new();
@@ -184,106 +128,44 @@ public static class EventHandlers
             1 // force size
         );
 
-        List<AbstractHint> hints = [];
-
         for (int y = 0; y < data.ModuleMatrix.Count; y++)
         for (int x = 0; x < data.ModuleMatrix.Count; x++)
             if (data.ModuleMatrix[y][x])
-                hints.Add(
-                    DrawPoint(
-                        playerDisplay,
-                        new Vector2(x * 2, y * 2),
-                        xOffset,
-                        yOffset,
-                        true,
-                        false,
-                        0.85f
-                    ));
-
-        return hints;
+                DrawPoint(
+                    display,
+                    new Vector2(x * 2, y * 2),
+                    xOffset,
+                    yOffset
+                );
     }
 
-    private static AbstractHint DrawPoint(PlayerDisplay playerDisplay, Vector2 position, float xOffset, float yOffset,
-        bool bold, bool hidden, float density = 1f)
+    private static void DrawPoint(RueDisplay playerDisplay, Vector2 position, float xOffset, float yOffset)
     {
-        Hint point = new()
-        {
-            Alignment = HintAlignment.Left,
-            Text = bold ? "<b>." : ".",
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = yOffset + position.y / density,
-            XCoordinate = xOffset + position.x / density,
-            Hide = hidden,
-            SyncSpeed = HintSyncSpeed.UnSync
-        };
-        playerDisplay.AddHint(point);
-        return point;
+        StringBuilder builder = new();
+
+        builder.SetAlignment(AlignStyle.Left);
+        builder.SetHorizontalPos(xOffset + position.x * 1.125f);
+        builder.Append(".");
+        builder.CloseHorizontalPos();
+        builder.CloseAlign();
+        BasicElement point = new(position.y + yOffset, builder.ToString());
+
+        playerDisplay.Show(new Tag(), point);
     }
 
-    private static void DrawBox(PlayerDisplay playerDisplay, int height, int width, Color color, Vector2 position)
+    /// <summary>
+    /// Gets the offset necessary to push a hint to the edge of the screen.
+    /// </summary>
+    /// <param name="player">The player the offset should be calculated for.</param>
+    /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static float EdgeOffset(this Player player)
     {
-        const char topLeftCorner = '┌';
-        const char topRightCorner = '┐';
-        const char bottomRightCorner = '┘';
-        const char bottomLeftCorner = '└';
-        const char vertical = '│';
-        const char horizontal = '─';
+        const float Base = 1080f - 1f; //slight padding
+        const float DisplayAreaWidth = 1200f;
 
+        float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
 
-        Hint leftBox = new()
-        {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
-            {
-                StringBuilder sb = new();
-                sb.Append($"<color={color.ToHex()}>");
-
-                // Top
-                sb.Append(topLeftCorner);
-                sb.Append(horizontal, width);
-                sb.AppendLine();
-
-                // Left wall.
-                for (int i = 0; i < height; i++) sb.AppendLine(vertical.ToString());
-
-                // Bottom
-                sb.Append(bottomLeftCorner);
-                sb.Append(horizontal, width);
-
-                return sb.ToString();
-            },
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = position.y,
-            XCoordinate = position.x,
-            SyncSpeed = HintSyncSpeed.Slow
-        };
-
-        Hint rightBox = new()
-        {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
-            {
-                StringBuilder sb = new();
-                sb.Append($"<color={color.ToHex()}>");
-
-                // Top
-                sb.AppendLine(topRightCorner.ToString());
-
-                // wall.
-                for (int i = 0; i < height; i++) sb.AppendLine(vertical.ToString());
-
-                // Bottom
-                sb.Append(bottomRightCorner);
-
-                return sb.ToString();
-            },
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = position.y,
-            XCoordinate = 20 * width + 20 + position.x,
-            SyncSpeed = HintSyncSpeed.Slow
-        };
-
-        playerDisplay.AddHint(leftBox);
-        playerDisplay.AddHint(rightBox);
+        return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
     }
 }

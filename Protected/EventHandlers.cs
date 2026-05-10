@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Concurrent;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp049Events;
 using LabApi.Events.Arguments.Scp3114Events;
@@ -10,6 +10,11 @@ using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
 using PlayerStatsSystem;
+using RueI.API;
+using RueI.API.Elements;
+using RueI.Utils;
+using RueI.Utils.Enums;
+using UnityEngine;
 
 namespace Protected;
 
@@ -45,8 +50,21 @@ public static class EventHandlers
     {
         if (ev.Player.Role == RoleTypeId.Tutorial || !ev.Player.IsHuman) return;
 
+        StringBuilder builder = new();
+        builder.SetAlignment(AlignStyle.Left);
+        builder.SetHorizontalPos(ev.Player.EdgeOffset() + 5f);
+        builder.Append("<size=25><b><color=green>SPAWNSCHUTZ AKTIV</color=green></b></size>");
+        builder.CloseHorizontalPos();
+        builder.CloseAlign();
+        BasicElement hint = new BasicElement(960f, builder.ToString());
+        RueDisplay.Get(ev.Player).Show(new Tag("ProtectedHintSpawnProtectedStatus" + ev.Player.PlayerId), hint);
+        
         SpawnProtectedPlayers.TryAdd(ev.Player, 0);
-        Timing.CallDelayed(20f, () => SpawnProtectedPlayers.TryRemove(ev.Player, out _));
+        Timing.CallDelayed(20f, () =>
+        {
+            RueDisplay.Get(ev.Player).Remove(new Tag("ProtectedHintSpawnProtectedStatus" + ev.Player.PlayerId));
+            SpawnProtectedPlayers.TryRemove(ev.Player, out _);
+        });
     }
 
     private static void OnHurting(PlayerHurtingEventArgs ev)
@@ -81,36 +99,53 @@ public static class EventHandlers
 
     private static void OnShooting(PlayerShootingWeaponEventArgs ev)
     {
+        RueDisplay.Get(ev.Player).Remove(new Tag("ProtectedHintSpawnProtectedStatus" + ev.Player.PlayerId));
         SpawnProtectedPlayers.TryRemove(ev.Player, out _);
     }
 
     private static void ThrowingProjectile(PlayerThrowingProjectileEventArgs ev)
     {
+        RueDisplay.Get(ev.Player).Remove(new Tag("ProtectedHintSpawnProtectedStatus" + ev.Player.PlayerId));
         SpawnProtectedPlayers.TryRemove(ev.Player, out _);
     }
 
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
-        Hint protectedState = new()
+        RueDisplay display = RueDisplay.Get(ev.Player);
+        DynamicElement hint = new DynamicElement(935f, () =>
         {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
+            StringBuilder builder = new();
+            builder.SetAlignment(AlignStyle.Left);
+
+            if (ev.Player.IsGodModeEnabled)
             {
-                string hint = string.Empty;
-                if (SpawnProtectedPlayers.ContainsKey(ev.Player))
-                    hint = "<size=25><b><color=green>SPAWNSCHUTZ AKTIV</color=green></b></size>\n";
-
-                if (ev.Player.IsGodModeEnabled)
-                    hint = "<size=25><b><color=green>⚠ GODMODE AKTIV ⚠</color=green></b></size>\n";
-
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = 30,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 5,
-            SyncSpeed = HintSyncSpeed.Slowest
+                builder.SetHorizontalPos(ev.Player.EdgeOffset() + 5f);
+                builder.Append("<size=25><b><color=green>⚠ GODMODE AKTIV ⚠</color=green></b></size>");
+                builder.CloseHorizontalPos();
+            }
+            builder.CloseAlign();
+            return builder.ToString();
+        })
+        {
+            UpdateInterval = new TimeSpan(0, 0, 0, 5),
         };
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
-        playerDisplay.AddHint(protectedState);
+        
+        display.Show(new Tag(), hint);
+    }
+    
+    /// <summary>
+    /// Gets the offset necessary to push a hint to the edge of the screen.
+    /// </summary>
+    /// <param name="player">The player the offset should be calculated for.</param>
+    /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static float EdgeOffset(this Player player)
+    {
+        const float Base = 1080f - 1f; //slight padding
+        const float DisplayAreaWidth = 1200f;
+
+        float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
+
+        return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
     }
 }

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Arguments.WarheadEvents;
@@ -15,6 +12,8 @@ using MEC;
 using PlayerRoles;
 using Respawning;
 using Respawning.Objectives;
+using RueI.API;
+using RueI.API.Elements;
 using UnityEngine;
 
 namespace Eventim.Events;
@@ -126,30 +125,33 @@ public class Teamdeathmatch : IEvent
         else
             MtfGroup.Add(ev.Player);
 
+        RueDisplay display = RueDisplay.Get(ev.Player);
 
-        Hint respawnTimer = new()
+        DynamicElement aliveCount = new(25f, () =>
         {
-            Alignment = HintAlignment.Center,
-            AutoText = _ =>
-            {
-                int mtfAlive = MtfGroup.Count(p => p.IsAlive);
-                int chaosAlive = ChaosGroup.Count(p => p.IsAlive);
-                float elapsed = _lastRespawn == 0 ? 0 : DateTimeOffset.UtcNow.ToUnixTimeSeconds() - _lastRespawn;
-                int timeUntilNextSpawn = (int)Math.Round(_respawnInterval - elapsed) + 2; //+2 so it looks better!
+            int mtfAlive = MtfGroup.Count(p => p.IsAlive);
+            int chaosAlive = ChaosGroup.Count(p => p.IsAlive);
 
-                string hint =
-                    $"<size=18><color={MtfColor}>MTF: <b>{mtfAlive}</b></color> | <color={ChaosColor}>Chaos: <b>{chaosAlive}</b></color>\n" +
-                    $"<size=22><b><color=green>Respawn in: {timeUntilNextSpawn} Sekunden</color></b></size>";
-
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Bottom,
-            YCoordinate = 1080,
-            XCoordinate = 0,
-            SyncSpeed = HintSyncSpeed.Slow
+            return
+                $"<size=18><color={MtfColor}>MTF: <b>{mtfAlive}</b></color> | <color={ChaosColor}>Chaos: <b>{chaosAlive}</b></color>";
+        })
+        {
+            UpdateInterval = new TimeSpan(0, 0, 0, 5)
         };
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
-        playerDisplay.AddHint(respawnTimer);
+
+        DynamicElement respawnTimer = new(1f, () =>
+        {
+            float elapsed = _lastRespawn == 0 ? 0 : DateTimeOffset.UtcNow.ToUnixTimeSeconds() - _lastRespawn;
+            int timeUntilNextSpawn = (int)Math.Round(_respawnInterval - elapsed) + 2; //+2 so it looks better!
+
+            return $"<size=22><b><color=green>Respawn in: {timeUntilNextSpawn} Sekunden</color></b></size>";
+        })
+        {
+            UpdateInterval = new TimeSpan(0, 0, 0, 1)
+        };
+
+        display.Show(new Tag(), aliveCount);
+        display.Show(new Tag(), respawnTimer);
     }
 
     private static void OnLeft(PlayerLeftEventArgs ev)

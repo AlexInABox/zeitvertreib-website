@@ -1,5 +1,4 @@
 using LabApi.Features.Wrappers;
-using UnityEngine;
 
 namespace Flipped.Events;
 
@@ -16,7 +15,8 @@ public class BallParty : IEvent
 
     public void Run(Player player)
     {
-        for (int i = 0; i < BallCount; i++) TimedGrenadeProjectile.SpawnActive(player.Position, ItemType.SCP018, player);
+        for (int i = 0; i < BallCount; i++)
+            TimedGrenadeProjectile.SpawnActive(player.Position, ItemType.SCP018, player);
 
         EventHandlers.PushUserMessage(player, "Die Münze lädt eine Ballparty ein... direkt bei dir!");
     }

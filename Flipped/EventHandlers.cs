@@ -1,14 +1,14 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
+using System.Text;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
+using RueI.API;
+using RueI.API.Elements;
+using RueI.Utils;
 using Random = System.Random;
 
 namespace Flipped;
@@ -16,34 +16,15 @@ namespace Flipped;
 public static class EventHandlers
 {
     public static readonly Random Random = new();
-    private static readonly ConcurrentDictionary<int, string> PlayerMessage = new();
 
     public static void RegisterEvents()
     {
         PlayerEvents.FlippedCoin += OnFlippedCoin;
-        PlayerEvents.Joined += OnJoined;
     }
 
     public static void UnregisterEvents()
     {
         PlayerEvents.FlippedCoin -= OnFlippedCoin;
-        PlayerEvents.Joined -= OnJoined;
-    }
-
-    private static void OnJoined(PlayerJoinedEventArgs ev)
-    {
-        Hint hintHud = new()
-        {
-            Alignment = HintAlignment.Center,
-            //AutoText = _ => PlayerMessage[ev.Player.PlayerId],
-            AutoText = _ => PlayerMessage.TryGetValue(ev.Player.PlayerId, out string value) ? value : "",
-            YCoordinateAlign = HintVerticalAlign.Bottom,
-            YCoordinate = 900,
-            XCoordinate = 0,
-            SyncSpeed = HintSyncSpeed.Fast
-        };
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
-        playerDisplay.AddHint(hintHud);
     }
 
     private static void OnFlippedCoin(PlayerFlippedCoinEventArgs ev)
@@ -86,12 +67,16 @@ public static class EventHandlers
 
     public static void PushUserMessage(Player player, string message)
     {
-        PlayerMessage.AddOrUpdate(player.PlayerId, message, (_, _) => message);
-        Timing.CallDelayed(10f, () =>
-        {
-            // Reset the players message to nothing IF the current message still matches our "old" message at this point.
-            PlayerMessage.TryUpdate(player.PlayerId, string.Empty, message);
-        });
+        RueDisplay display = RueDisplay.Get(player);
+        StringBuilder builder = new();
+
+        builder.SetSize(30f);
+        builder.AppendLine(message);
+        builder.CloseSize();
+
+        BasicElement hint = new(100f, builder.ToString());
+
+        display.Show(new Tag("FlippedHint:" + player.PlayerId), hint, 10f);
     }
 }
 
