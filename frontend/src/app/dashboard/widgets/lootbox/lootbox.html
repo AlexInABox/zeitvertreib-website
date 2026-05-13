@@ -1,9 +1,7 @@
 <div class="stats-card p-6 rounded-2xl lootbox-card-wrapper">
   <div class="lootbox-header">
     <h3 class="lootbox-title">🎁 Lootbox</h3>
-    <p class="lootbox-subtitle">
-      Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong>
-    </p>
+    <p class="lootbox-subtitle">Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong></p>
     <div class="lootbox-voucher-badge" [class.lootbox-voucher-badge-empty]="lootboxVoucherCount === 0">
       🎟️ {{ lootboxVoucherCount }} Gutschein{{ lootboxVoucherCount === 1 ? '' : 'e' }}
     </div>
@@ -74,11 +72,7 @@
   <div *ngIf="lootboxSuccess" class="lootbox-message lootbox-message-success mt-2">{{ lootboxSuccess }}</div>
 
   <div class="lootbox-action">
-    <button
-      class="lootbox-buy-btn"
-      (click)="buyLootbox()"
-      [disabled]="lootboxSpinning || !canAffordLootbox()"
-    >
+    <button class="lootbox-buy-btn" (click)="buyLootbox()" [disabled]="lootboxSpinning || !canAffordLootbox()">
       <span *ngIf="!lootboxSpinning">🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
       <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
       <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>

@@ -169,9 +169,13 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
       let bestColor = [59, 130, 246];
 
       for (let i = 0; i < imageData.length; i += 4) {
-        const r = imageData[i]!, g = imageData[i + 1]!, b = imageData[i + 2]!, a = imageData[i + 3]!;
+        const r = imageData[i]!,
+          g = imageData[i + 1]!,
+          b = imageData[i + 2]!,
+          a = imageData[i + 3]!;
         if (a > 200) {
-          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          const max = Math.max(r, g, b),
+            min = Math.min(r, g, b);
           const sat = max === 0 ? 0 : (max - min) / max;
           const brightness = (r * 299 + g * 587 + b * 114) / 1000;
           if (sat > maxSat && brightness > 40 && brightness < 220) {
@@ -306,15 +310,21 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
           compressedCanvas.height = img.height;
           compressedCtx.drawImage(img, 0, 0);
 
-          let quality = 0.8, base64Data = '', compressed = false;
+          let quality = 0.8,
+            base64Data = '',
+            compressed = false;
           while (quality >= 0.1 && !compressed) {
             base64Data = await new Promise<string>((res) => {
-              compressedCanvas.toBlob((blob) => {
-                if (blob && blob.size < 50 * 1024) compressed = true;
-                const reader = new FileReader();
-                reader.onload = () => res(reader.result as string);
-                reader.readAsDataURL(blob!);
-              }, 'image/webp', quality);
+              compressedCanvas.toBlob(
+                (blob) => {
+                  if (blob && blob.size < 50 * 1024) compressed = true;
+                  const reader = new FileReader();
+                  reader.onload = () => res(reader.result as string);
+                  reader.readAsDataURL(blob!);
+                },
+                'image/webp',
+                quality,
+              );
             });
             quality -= 0.1;
           }
@@ -327,8 +337,10 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
 
           const longestSide = Math.max(img.width, img.height);
           const scale = pixelArtQuality / longestSide;
-          const pw = Math.floor(img.width * scale), ph = Math.floor(img.height * scale);
-          const px = (pixelArtQuality - pw) / 2, py = (pixelArtQuality - ph) / 2;
+          const pw = Math.floor(img.width * scale),
+            ph = Math.floor(img.height * scale);
+          const px = (pixelArtQuality - pw) / 2,
+            py = (pixelArtQuality - ph) / 2;
 
           pixelCtx.clearRect(0, 0, pixelArtQuality, pixelArtQuality);
           pixelCtx.drawImage(img, px, py, pw, ph);
@@ -338,29 +350,39 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
           let pixelData = '';
 
           for (let y = 0; y < pixelArtQuality; y++) {
-            let line = '', currentColor = '', consecutive = 0;
+            let line = '',
+              currentColor = '',
+              consecutive = 0;
             for (let x = 0; x < pixelArtQuality; x++) {
               const i = (y * pixelArtQuality + x) * 4;
-              const r = data[i]!, g = data[i+1]!, b = data[i+2]!, a = data[i+3]!;
+              const r = data[i]!,
+                g = data[i + 1]!,
+                b = data[i + 2]!,
+                a = data[i + 3]!;
 
               if (a < 25) {
                 if (consecutive > 0) line += `<color=${currentColor}>${'█'.repeat(consecutive)}</color>`;
                 line += '<color=#00000000>█</color>';
-                currentColor = ''; consecutive = 0; continue;
+                currentColor = '';
+                consecutive = 0;
+                continue;
               }
 
-              const col = `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+              const col = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
               if (col === currentColor) consecutive++;
               else {
                 if (consecutive > 0) line += `<color=${currentColor}>${'█'.repeat(consecutive)}</color>`;
-                currentColor = col; consecutive = 1;
+                currentColor = col;
+                consecutive = 1;
               }
             }
             if (consecutive > 0) line += `<color=${currentColor}>${'█'.repeat(consecutive)}</color>`;
             pixelData += line + '\n';
           }
           resolve({ pixelData, base64Data });
-        } catch (e) { reject(e); }
+        } catch (e) {
+          reject(e);
+        }
       };
       img.onerror = () => reject(new Error('Could not load image'));
       img.src = URL.createObjectURL(file);
@@ -381,7 +403,7 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.spraySlots.forEach(s => {
+    this.spraySlots.forEach((s) => {
       if (s.imageUrl?.startsWith('blob:')) URL.revokeObjectURL(s.imageUrl);
       if (s.preview) URL.revokeObjectURL(s.preview);
     });

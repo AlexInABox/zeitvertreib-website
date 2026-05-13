@@ -24,7 +24,9 @@
   transition: transform 0.3s ease;
 }
 
-.player-card:hover .player-avatar { transform: scale(1.05); }
+.player-card:hover .player-avatar {
+  transform: scale(1.05);
+}
 
 .player-info-item {
   display: flex;
@@ -35,10 +37,16 @@
   color: white;
 }
 
-.player-info-item:last-child { border-bottom: none; }
+.player-info-item:last-child {
+  border-bottom: none;
+}
 
-.player-info-label { color: rgba(255, 255, 255, 0.7); }
-.player-info-value { font-weight: 600; }
+.player-info-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+.player-info-value {
+  font-weight: 600;
+}
 
 .text-gradient {
   background: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6);

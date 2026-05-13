@@ -163,14 +163,18 @@
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   color: #000000;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 :host-context(html.my-app-dark) .preview-modal {
   background: rgba(var(--p-menubar-background-rgb, 24, 24, 27), 0.65);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   color: #ffffff;
 }
 .modal-header {
@@ -343,7 +347,7 @@
   gap: 0.5rem;
   font-size: 0.85rem;
 }
-.checkbox-item input[type="checkbox"] {
+.checkbox-item input[type='checkbox'] {
   width: 1.1rem;
   height: 1.1rem;
   cursor: pointer;
@@ -395,8 +399,14 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .btn-save-fakerank {
@@ -422,8 +432,12 @@
   cursor: not-allowed;
 }
 
-.mt-2 { margin-top: 0.5rem; }
-.mt-4 { margin-top: 1rem; }
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-4 {
+  margin-top: 1rem;
+}
 
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
@@ -436,5 +450,3 @@
   background: rgba(128, 128, 128, 0.3);
   border-radius: 10px;
 }
-
-

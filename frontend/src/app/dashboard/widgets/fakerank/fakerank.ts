@@ -99,7 +99,7 @@ export class FakerankComponent implements OnInit {
           this.currentFakerankColor = 'default';
         }
       },
-      error: () => this.fakerankError = 'Fehler beim Laden'
+      error: () => (this.fakerankError = 'Fehler beim Laden'),
     });
   }
 
@@ -109,7 +109,7 @@ export class FakerankComponent implements OnInit {
         this.fakerankColorsByRole = res;
         this.updateAllowedColors();
       },
-      error: () => this.allowedFakerankColors = []
+      error: () => (this.allowedFakerankColors = []),
     });
   }
 
@@ -118,7 +118,7 @@ export class FakerankComponent implements OnInit {
       team: this.authService.isTeam(),
       vip: this.authService.isVip(),
       donator: this.authService.isDonator(),
-      booster: this.authService.isBooster()
+      booster: this.authService.isBooster(),
     };
     let allowed: FakerankColor[] = [...this.fakerankColorsByRole.otherColors];
     if (roles.booster) allowed = [...this.fakerankColorsByRole.boosterColors, ...allowed];
@@ -128,12 +128,12 @@ export class FakerankComponent implements OnInit {
     this.allowedFakerankColors = [...new Set(allowed)];
   }
 
-  get groupedColors(): { groupName: string, requiredRole: string, colors: any[], isLocked: boolean }[] {
-    const groups: { groupName: string, requiredRole: string, colors: any[], isLocked: boolean }[] = [];
+  get groupedColors(): { groupName: string; requiredRole: string; colors: any[]; isLocked: boolean }[] {
+    const groups: { groupName: string; requiredRole: string; colors: any[]; isLocked: boolean }[] = [];
 
     const addGroup = (keys: string[], name: string, req: string) => {
       if (!keys || keys.length === 0) return;
-      const colors = this.fakerankColors.filter(c => keys.includes(c.key));
+      const colors = this.fakerankColors.filter((c) => keys.includes(c.key));
       if (colors.length > 0) {
         const isLocked = !this.isColorAllowed(colors[0].key);
         groups.push({ groupName: name, requiredRole: req, colors, isLocked });
@@ -147,15 +147,15 @@ export class FakerankComponent implements OnInit {
     addGroup(this.fakerankColorsByRole.otherColors, 'Standard', '');
 
     // Add unassigned colors to Standard fallback
-    const assignedKeys = groups.reduce((acc, g) => [...acc, ...g.colors.map(c => c.key)], [] as string[]);
-    const unassigned = this.fakerankColors.filter(c => !assignedKeys.includes(c.key));
+    const assignedKeys = groups.reduce((acc, g) => [...acc, ...g.colors.map((c) => c.key)], [] as string[]);
+    const unassigned = this.fakerankColors.filter((c) => !assignedKeys.includes(c.key));
     if (unassigned.length > 0) {
-      const stdGroup = groups.find(g => g.groupName === 'Standard');
+      const stdGroup = groups.find((g) => g.groupName === 'Standard');
       if (stdGroup) {
         stdGroup.colors.push(...unassigned);
-        stdGroup.isLocked = stdGroup.colors.some(c => !this.isColorAllowed(c.key));
+        stdGroup.isLocked = stdGroup.colors.some((c) => !this.isColorAllowed(c.key));
       } else {
-        const isLocked = unassigned.some(c => !this.isColorAllowed(c.key));
+        const isLocked = unassigned.some((c) => !this.isColorAllowed(c.key));
         groups.push({ groupName: 'Standard', requiredRole: '', colors: unassigned, isLocked });
       }
     }
@@ -163,7 +163,9 @@ export class FakerankComponent implements OnInit {
     return groups;
   }
 
-  isColorAllowed(key: FakerankColor): boolean { return this.allowedFakerankColors.includes(key); }
+  isColorAllowed(key: FakerankColor): boolean {
+    return this.allowedFakerankColors.includes(key);
+  }
 
   openFakerankModal(): void {
     this.fakerankModalText = this.currentFakerank || '';
@@ -178,7 +180,9 @@ export class FakerankComponent implements OnInit {
     document.body.classList.remove('modal-open');
   }
 
-  selectColor(key: FakerankColor): void { if (this.isColorAllowed(key)) this.fakerankModalColor = key; }
+  selectColor(key: FakerankColor): void {
+    if (this.isColorAllowed(key)) this.fakerankModalColor = key;
+  }
 
   async saveFakerank(): Promise<void> {
     const text = this.fakerankModalText.trim();
@@ -189,13 +193,15 @@ export class FakerankComponent implements OnInit {
 
     this.fakerankLoading = true;
     try {
-      await this.authService.authenticatedPost(`${environment.apiUrl}/fakerank`, { text, color: this.fakerankModalColor }).toPromise();
+      await this.authService
+        .authenticatedPost(`${environment.apiUrl}/fakerank`, { text, color: this.fakerankModalColor })
+        .toPromise();
       this.fakerankSuccess = 'Erfolgreich gespeichert!';
       this.fakerankLoading = false;
       this.closeFakerankModal();
       this.loadFakerank();
       this.notificationCenter.refreshAfterAction();
-      setTimeout(() => this.fakerankSuccess = '', 3000);
+      setTimeout(() => (this.fakerankSuccess = ''), 3000);
     } catch (e: any) {
       this.fakerankLoading = false;
       this.fakerankError = e?.error?.error || 'Fehler beim Speichern';
@@ -206,17 +212,23 @@ export class FakerankComponent implements OnInit {
     if (!this.currentFakerankId) return;
     this.fakerankLoading = true;
     try {
-      await this.http.delete(`${environment.apiUrl}/fakerank`, { body: { id: this.currentFakerankId }, withCredentials: true }).toPromise();
+      await this.http
+        .delete(`${environment.apiUrl}/fakerank`, { body: { id: this.currentFakerankId }, withCredentials: true })
+        .toPromise();
       this.fakerankLoading = false;
       this.fakerankSuccess = 'Erfolgreich gelöscht!';
       this.loadFakerank();
-      setTimeout(() => this.fakerankSuccess = '', 3000);
+      setTimeout(() => (this.fakerankSuccess = ''), 3000);
     } catch (e: any) {
       this.fakerankLoading = false;
       this.fakerankError = e?.error?.error || 'Fehler beim Löschen';
     }
   }
 
-  getColorHex(key: string): string { return this.fakerankColors.find(c => c.key === key)?.hex || '#FFFFFF'; }
-  getColorName(key: string): string { return this.fakerankColors.find(c => c.key === key)?.name || 'Weiß'; }
+  getColorHex(key: string): string {
+    return this.fakerankColors.find((c) => c.key === key)?.hex || '#FFFFFF';
+  }
+  getColorName(key: string): string {
+    return this.fakerankColors.find((c) => c.key === key)?.name || 'Weiß';
+  }
 }

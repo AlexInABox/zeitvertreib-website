@@ -39,8 +39,8 @@
 
           <!-- Lootbox Card -->
           <div class="grid-item min-w-0 lootbox-grid-item">
-            <app-lootbox 
-              [balance]="userStatistics.experience || 0" 
+            <app-lootbox
+              [balance]="userStatistics.experience || 0"
               (balanceChange)="onBalanceChange($event)"
             ></app-lootbox>
           </div>
