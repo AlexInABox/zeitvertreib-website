@@ -1,0 +1,432 @@
+:host {
+  display: block;
+}
+
+.stats-card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+}
+
+.spray-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  margin-bottom: -0.25rem;
+}
+
+.spray-subtitle {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.sprays-container-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.sprays-info-left {
+  flex: 0 0 35%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sprays-action-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.spray-grid-inline {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.spray-item-mini {
+  flex: 1;
+  max-width: 80px;
+  aspect-ratio: 1;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.spray-item-mini:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.spray-image-mini {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spray-uploaded-mini, .spray-preview-mini, .spray-empty-mini, .spray-locked-mini, .spray-uploading-mini {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.spray-delete-btn-mini {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spray-item-mini:hover .spray-delete-btn-mini {
+  opacity: 1;
+}
+
+.spray-upload-btn-mini {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s;
+}
+
+.spray-upload-btn-mini:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.locked-icon-mini {
+  font-size: 1.25rem;
+  opacity: 0.4;
+  cursor: help;
+}
+
+.spray-spinner-mini {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spray-message-compact {
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+.spray-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+.spray-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+}
+
+/* Modal Styles */
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.preview-modal {
+  border-radius: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #000000;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+:host-context(html.my-app-dark) .preview-modal {
+  background: rgba(var(--p-menubar-background-rgb, 24, 24, 27), 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-shrink: 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.preview-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+.modal-close-btn:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.spray-preview-container-modal-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+:host-context(html.my-app-dark) .spray-preview-container-modal-centered {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-image-box-modal {
+  width: 140px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-large-image-modal {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview-input-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.spray-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+:host-context(html.my-app-dark) .spray-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.spray-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.checkbox-item label {
+  cursor: pointer;
+}
+
+.text-link {
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.text-link:hover {
+  color: #2563eb;
+}
+
+:host-context(html.my-app-dark) .text-link:hover {
+  color: #60a5fa;
+}
+
+/* Info Box Inline (Privacy & Rules) */
+.info-box-inline {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-left: 1.5rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+:host-context(html.my-app-dark) .info-box-inline {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.info-content {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.info-content ul, .info-content ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.info-content li {
+  margin-bottom: 0.5rem;
+}
+
+.info-content li:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-save-spray {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-save-spray:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-save-spray:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+}

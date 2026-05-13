@@ -1,0 +1,46 @@
+<div class="stats-card p-6 rounded-2xl auto-height">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Kills -->
+    <div class="stat-item" style="--stat-color: #10b981; --stat-color-light: #34d399">
+      <div class="stat-indicator"></div>
+      <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+        <h5 class="stat-label m-0 mb-1">Abschüsse</h5>
+        <p class="stat-value m-0">
+          {{ userStatistics?.kills | number: '1.0-0' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Deaths -->
+    <div class="stat-item" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa">
+      <div class="stat-indicator"></div>
+      <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+        <h5 class="stat-label m-0 mb-1">Todesfälle</h5>
+        <p class="stat-value m-0">
+          {{ userStatistics?.deaths | number: '1.0-0' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Playtime -->
+    <div class="stat-item" style="--stat-color: #eab308; --stat-color-light: #facc15">
+      <div class="stat-indicator"></div>
+      <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+        <h5 class="stat-label m-0 mb-1">Spielzeit</h5>
+        <p class="stat-value m-0">
+          {{ playtimeFormatted }}
+        </p>
+      </div>
+    </div>
+    <!-- K/D Ratio -->
+    <div class="stat-item" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa">
+      <div class="stat-indicator"></div>
+      <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
+        <h5 class="stat-label m-0 mb-1">K/D Ratio</h5>
+        <p class="stat-value m-0">
+          {{ kdRatio }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

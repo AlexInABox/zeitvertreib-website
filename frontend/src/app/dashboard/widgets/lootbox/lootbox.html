@@ -1,0 +1,96 @@
+<div class="stats-card p-6 rounded-2xl lootbox-card-wrapper">
+  <div class="lootbox-header">
+    <h3 class="lootbox-title">🎁 Lootbox</h3>
+    <p class="lootbox-subtitle">
+      Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong>
+    </p>
+    <div class="lootbox-voucher-badge" [class.lootbox-voucher-badge-empty]="lootboxVoucherCount === 0">
+      🎟️ {{ lootboxVoucherCount }} Gutschein{{ lootboxVoucherCount === 1 ? '' : 'e' }}
+    </div>
+  </div>
+
+  <div class="lootbox-stage" [class.is-animating]="lootboxAnimating" [class.is-snapping]="lootboxSnapping">
+    <div class="lootbox-pointer-top"></div>
+    <div class="lootbox-center-line"></div>
+    <div class="lootbox-track-viewport">
+      <div
+        class="lootbox-track"
+        [style.transform]="
+          lootboxAnimating
+            ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-animation-center-offset)))'
+            : lootboxSnapping || lootboxAtRest
+              ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-center-offset)))'
+              : 'translateX(0)'
+        "
+      >
+        <div
+          *ngFor="let item of lootboxSpinItems; let i = index"
+          class="lootbox-item"
+          [class.rarity-common]="item.rarity === 'common'"
+          [class.rarity-uncommon]="item.rarity === 'uncommon'"
+          [class.rarity-rare]="item.rarity === 'rare'"
+          [class.rarity-epic]="item.rarity === 'epic'"
+          [class.rarity-legendary]="item.rarity === 'legendary'"
+        >
+          <span class="lootbox-item-emoji">{{ item.emoji }}</span>
+          <span class="lootbox-item-name">{{ item.name }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="lootbox-pointer-bottom"></div>
+
+    <div
+      *ngIf="!lootboxAnimating && !lootboxSnapping && !lootboxAtRest && lootboxSpinItems.length === 0"
+      class="lootbox-idle"
+    >
+      <img src="assets/lootbox-placeholder.svg" alt="Lootbox" class="lootbox-idle-image" />
+      <span class="lootbox-idle-label">Bereit zum Öffnen</span>
+    </div>
+  </div>
+
+  <div
+    *ngIf="lootboxResult && !lootboxSpinning"
+    class="lootbox-result"
+    [class.rarity-common]="lootboxResult.rarity === 'common'"
+    [class.rarity-uncommon]="lootboxResult.rarity === 'uncommon'"
+    [class.rarity-rare]="lootboxResult.rarity === 'rare'"
+    [class.rarity-epic]="lootboxResult.rarity === 'epic'"
+    [class.rarity-legendary]="lootboxResult.rarity === 'legendary'"
+  >
+    <span class="lootbox-result-emoji">{{ lootboxResult.emoji }}</span>
+    <div class="lootbox-result-info">
+      <strong class="lootbox-result-name">{{ lootboxResult.name }}</strong>
+      <span class="lootbox-result-rarity lootbox-rarity-{{ lootboxResult.rarity }}">
+        {{ lootboxResult.rarity | uppercase }}
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="lootboxLoading" class="lootbox-loading-bar">
+    <div class="lootbox-loading-fill"></div>
+  </div>
+
+  <div *ngIf="lootboxError" class="lootbox-message lootbox-message-error mt-2">{{ lootboxError }}</div>
+  <div *ngIf="lootboxSuccess" class="lootbox-message lootbox-message-success mt-2">{{ lootboxSuccess }}</div>
+
+  <div class="lootbox-action">
+    <button
+      class="lootbox-buy-btn"
+      (click)="buyLootbox()"
+      [disabled]="lootboxSpinning || !canAffordLootbox()"
+    >
+      <span *ngIf="!lootboxSpinning">🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
+      <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
+      <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
+    </button>
+    <button
+      class="lootbox-voucher-btn"
+      (click)="useVoucherForLootbox()"
+      [disabled]="lootboxSpinning || lootboxVoucherCount < 1"
+    >
+      <span *ngIf="!lootboxSpinning">🎟️ Gutschein einlösen ({{ lootboxVoucherCount }})</span>
+      <span *ngIf="lootboxSpinning">🎰 Wird geöffnet...</span>
+    </button>
+    <p *ngIf="!canAffordLootbox() && !lootboxSpinning" class="lootbox-insufficient">Nicht genügend ZVC</p>
+  </div>
+</div>
