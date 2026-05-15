@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
@@ -34,6 +34,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentUser: SteamUser | null = null;
   isFakerankAdmin = false;
   isUserManagementAdmin = false;
+  activeDropdown: string | null = null;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
 
@@ -45,6 +46,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
+  }
+
+  toggleDropdown(label: string | undefined, event: Event) {
+    // Only toggle on click if we are on a small screen or touch device
+    // On desktop, hover still works via CSS
+    if (!label) return;
+    event.stopPropagation();
+    if (this.activeDropdown === label) {
+      this.activeDropdown = null;
+    } else {
+      this.activeDropdown = label;
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(_event: MouseEvent) {
+    this.activeDropdown = null;
   }
 
   ngOnInit() {

@@ -14,7 +14,7 @@
     <!-- Center: Navigation Links (Always Horizontal) -->
     <div class="nav-links">
       @for (item of items; track item.label) {
-        <div class="nav-item-dropdown">
+        <div class="nav-item-dropdown" [class.active]="activeDropdown === item.label">
           @if (item['route']) {
             <a [routerLink]="item['route']" class="nav-item">
               <i [class]="item.icon"></i>
@@ -26,7 +26,7 @@
               <span>{{ item.label }}</span>
             </a>
           } @else {
-            <div class="nav-item">
+            <div class="nav-item" (click)="toggleDropdown(item.label, $event)">
               <i [class]="item.icon"></i>
               <span>{{ item.label }}</span>
               @if (item.items) {

@@ -63,6 +63,7 @@
   white-space: nowrap;
   -webkit-font-smoothing: antialiased;
   transform: translateZ(0);
+  cursor: pointer;
 }
 
 :host-context(.my-app-dark) .nav-item {
@@ -122,7 +123,8 @@
   background: transparent;
 }
 
-.nav-item-dropdown:hover .dropdown-menu {
+.nav-item-dropdown:hover .dropdown-menu,
+.nav-item-dropdown.active .dropdown-menu {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
