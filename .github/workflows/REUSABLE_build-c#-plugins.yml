@@ -1,25 +1,20 @@
-name: Build C# Plugin (Reusable)
+name: Build All C# Plugins (Reusable)
 
 on:
   workflow_call:
-    inputs:
-      plugin:
-        required: true
-        type: string
-        description: "Plugin name (e.g., Reporter)"
+
+env:
+  REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
+  EXILED_REFERENCES: ${{ github.workspace }}/References
+  AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
+  SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
+  UCR_DLL_URL: https://github.com/UncomplicatedCustomServer/UncomplicatedCustomRoles/releases/download/v9.2.0/UncomplicatedCustomRoles-LabAPI.dll
 
 jobs:
   build:
-    name: 🔨 ${{ inputs.plugin }}
+    name: 🔨 Build All Plugins
     runs-on: windows-latest
-    timeout-minutes: 20
-    env:
-      PLUGIN_PATH: ${{ inputs.plugin }}/${{ inputs.plugin }}.csproj
-      REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
-      EXILED_REFERENCES: ${{ github.workspace }}/References
-      AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
-      SNAKE_API_DLL_URL: https://s3.sr.ht/builds.sr.ht/artifacts/~furry/1546053/1734f84d467bcf19/SnakeAPI.dll
-      UCR_DLL_URL: https://github.com/UncomplicatedCustomServer/UncomplicatedCustomRoles/releases/download/v9.2.0/UncomplicatedCustomRoles-LabAPI.dll
+    timeout-minutes: 40
 
     steps:
       - name: Checkout code
@@ -37,8 +32,12 @@ jobs:
         run: |
           npm install
           npm run build
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+
       - name: Restore NuGet packages
-        run: nuget restore ${{ env.PLUGIN_PATH }}
+        run: nuget restore zeitvertreibplugins.sln
 
       - name: Download dependencies
         shell: pwsh
@@ -50,7 +49,6 @@ jobs:
                   [int]$MaxRetries = 3,
                   [int]$RetryDelaySeconds = 5
               )
-              
               for ($i = 0; $i -lt $MaxRetries; $i++) {
                   try {
                       Invoke-WebRequest -Uri $Uri -OutFile $OutFile -ErrorAction Stop
@@ -71,25 +69,44 @@ jobs:
 
           Invoke-WebRequestWithRetry -Uri $env:AUDIO_PLAYER_API_URL -OutFile "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip"
           Expand-Archive -Path "$env:GITHUB_WORKSPACE/AudioPlayerApi.zip" -DestinationPath "$env:GITHUB_WORKSPACE/AudioPlayerApi"
-
           Get-ChildItem "$env:GITHUB_WORKSPACE/AudioPlayerApi/dependencies" -Filter *.dll | ForEach-Object {
-            $target = Join-Path $env:EXILED_REFERENCES $_.Name
-            if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
+              $target = Join-Path $env:EXILED_REFERENCES $_.Name
+              if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
           }
 
-          # Download SnakeAPI.dll directly into EXILED_REFERENCES
           Invoke-WebRequestWithRetry -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll")
-
-          # Download UCR DLL directly into EXILED_REFERENCES
           Invoke-WebRequestWithRetry -Uri $env:UCR_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "UncomplicatedCustomRoles-LabAPI.dll")
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v3
-      - name: Build plugin
-        run: msbuild zeitvertreibplugins.sln -t:"${{ inputs.plugin }}:Rebuild" -property:Configuration=Release
+      - name: Build all plugins
+        run: |
+          msbuild zeitvertreibplugins.sln `
+            -property:Configuration=Release `
+            -maxcpucount `
+            -verbosity:minimal
 
-      - name: Upload DLL as artifact
+      - name: Collect plugin DLLs
+        shell: pwsh
+        run: |
+          $staging = "$env:GITHUB_WORKSPACE/staging"
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+
+          Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Recurse -Filter "*.dll" |
+            Where-Object {
+              $_.FullName -like "*\bin\Release\*" -and
+              $_.FullName -notlike "*\obj\*"       -and
+              $_.FullName -notlike "*\References\*"
+            } |
+            ForEach-Object {
+              $plugin = $_.FullName.Substring("$env:GITHUB_WORKSPACE\".Length).Split('\')[0]
+              $dest   = Join-Path $staging $plugin
+              New-Item -ItemType Directory -Force -Path $dest | Out-Null
+              Copy-Item $_.FullName -Destination $dest -Force
+              Write-Host "Staged: $plugin/$($_.Name)"
+            }
+
+      - name: Upload all plugin DLLs
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ inputs.plugin }}-dll
-          path: ${{ inputs.plugin }}/bin/Release/**/${{ inputs.plugin }}.dll
+          name: all-plugins
+          path: staging/
+          if-no-files-found: error
