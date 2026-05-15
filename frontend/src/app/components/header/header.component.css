@@ -238,3 +238,51 @@
     margin: 0 0.3rem;
   }
 }
+
+/* Ensure the header scales down on very small screens to prevent overflow */
+@media (max-width: 480px) {
+  .header-glass {
+    transform-origin: center top;
+  }
+}
+
+@media (max-width: 460px) {
+  .header-glass {
+    transform: scale(0.95);
+  }
+}
+@media (max-width: 440px) {
+  .header-glass {
+    transform: scale(0.9);
+  }
+}
+@media (max-width: 420px) {
+  .header-glass {
+    transform: scale(0.85);
+  }
+}
+@media (max-width: 400px) {
+  .header-glass {
+    transform: scale(0.8);
+  }
+}
+@media (max-width: 380px) {
+  .header-glass {
+    transform: scale(0.75);
+  }
+}
+@media (max-width: 360px) {
+  .header-glass {
+    transform: scale(0.7);
+  }
+}
+@media (max-width: 340px) {
+  .header-glass {
+    transform: scale(0.65);
+  }
+}
+@media (max-width: 320px) {
+  .header-glass {
+    transform: scale(0.6);
+  }
+}
