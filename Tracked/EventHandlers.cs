@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -8,9 +9,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Exiled.API.Interfaces;
 using Exiled.Loader;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
@@ -22,6 +20,11 @@ using MEC;
 using Newtonsoft.Json;
 using PlayerRoles;
 using Respawning.Objectives;
+using RueI.API;
+using RueI.API.Elements;
+using RueI.API.Elements.Enums;
+using RueI.Utils;
+using RueI.Utils.Enums;
 using SnakeAPI.API;
 using UnityEngine;
 using Zeitvertreib.Types;
@@ -141,67 +144,28 @@ public static class EventHandlers
 
         Utils.FetchZvcForUserAsync(ev.Player.UserId);
 
-        Hint zvcHint = new()
+        CachedElement zvcHint = new(80, new TimeSpan(0, 0, 0, 5), () =>
         {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
-            {
-                string hint = string.Empty;
-                int zvc = 0;
-                if (Utils.RemoteZvcCount.TryGetValue(userId, out int storedPoints))
-                    zvc += storedPoints;
-                if (ExtraPlayerPointsThisRound.TryGetValue(userId, out int extraPoints))
-                    zvc += extraPoints;
-                zvc += GetPointsOfPlayer(ev.Player);
-                hint += $"<size=20><b>Zeitvertreib Punkte: {zvc}</b></size>\n";
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Bottom,
-            YCoordinate = 990,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 50,
-            SyncSpeed = HintSyncSpeed.Slowest
-        };
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
-        playerDisplay.AddHint(zvcHint);
+            StringBuilder builder = new();
+            builder.SetAlignment(AlignStyle.Left);
+            builder.SetHorizontalPos(ev.Player.EdgeOffset() + 50f);
 
+            int zvc = 0;
+            if (Utils.RemoteZvcCount.TryGetValue(userId, out int storedPoints))
+                zvc += storedPoints;
+            if (ExtraPlayerPointsThisRound.TryGetValue(userId, out int extraPoints))
+                zvc += extraPoints;
+            zvc += GetPointsOfPlayer(ev.Player);
 
-        PlayerKillFeed[ev.Player.PlayerId] = [];
-        Hint killFeed = new()
+            builder.Append($"<size=20><b>Zeitvertreib Punkte: {zvc}</b></size>");
+            builder.CloseHorizontalPos();
+            builder.CloseAlign();
+            return builder.ToString();
+        })
         {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
-            {
-                string hint = "<size=25><b>";
-                if (KillsThisRound.FindAll(k => k.Attacker == ev.Player.UserId).Count > 0)
-                    hint += $"Kills: {KillsThisRound.FindAll(k => k.Attacker == ev.Player.UserId).Count}\n";
-
-                foreach (string s in PlayerKillFeed[ev.Player.PlayerId]) hint += s + "\n";
-                hint += "</b></size>";
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = 30,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 3,
-            SyncSpeed = HintSyncSpeed.Fast
+            VerticalAlign = VerticalAlign.Up
         };
-        playerDisplay.AddHint(killFeed);
-
-        Hint tpsInfo = new()
-        {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
-            {
-                Color roleColor = ev.Player.Role.GetRoleColor();
-                string hexColor = ColorUtility.ToHtmlStringRGB(roleColor);
-
-                return $"<size=22><b><color=#{hexColor}>{Server.Tps}/{Server.MaxTps} TPS</color></b></size>";
-            },
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = 6,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 80,
-            SyncSpeed = HintSyncSpeed.Slow
-        };
-        playerDisplay.AddHint(tpsInfo);
+        RueDisplay.Get(ev.Player).Show(new Tag(), zvcHint);
     }
 
     private static void OnLeft(PlayerLeftEventArgs ev)
@@ -663,6 +627,22 @@ public static class EventHandlers
             Logger.Info("Connected to RoundReports API successfully.");
         else
             Logger.Warn("RoundReports API not found or failed to connect.");
+    }
+
+    /// <summary>
+    ///     Gets the offset necessary to push a hint to the edge of the screen.
+    /// </summary>
+    /// <param name="player">The player the offset should be calculated for.</param>
+    /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static float EdgeOffset(this Player player)
+    {
+        const float Base = 1080f - 1f; //slight padding
+        const float DisplayAreaWidth = 1200f;
+
+        float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
+
+        return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
     }
 }
 

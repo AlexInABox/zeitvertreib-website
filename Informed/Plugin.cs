@@ -1,4 +1,5 @@
 ﻿using System;
+using HarmonyLib;
 using LabApi.Features;
 using LabApi.Features.Console;
 using LabApi.Loader;
@@ -43,6 +44,8 @@ public class Plugin : Plugin<Config>
 
         Translation = translation;
         EventHandlers.RegisterEvents();
+        Harmony harmony = new("com.zeitvertreib-website.informed");
+        harmony.PatchAll();
     }
 
     public override void Disable()

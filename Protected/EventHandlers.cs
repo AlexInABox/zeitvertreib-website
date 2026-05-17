@@ -56,9 +56,9 @@ public static class EventHandlers
         builder.Append("<size=25><b><color=green>SPAWNSCHUTZ AKTIV</color=green></b></size>");
         builder.CloseHorizontalPos();
         builder.CloseAlign();
-        BasicElement hint = new BasicElement(960f, builder.ToString());
+        BasicElement hint = new(960f, builder.ToString());
         RueDisplay.Get(ev.Player).Show(new Tag("ProtectedHintSpawnProtectedStatus" + ev.Player.PlayerId), hint);
-        
+
         SpawnProtectedPlayers.TryAdd(ev.Player, 0);
         Timing.CallDelayed(20f, () =>
         {
@@ -112,7 +112,7 @@ public static class EventHandlers
     private static void OnJoined(PlayerJoinedEventArgs ev)
     {
         RueDisplay display = RueDisplay.Get(ev.Player);
-        DynamicElement hint = new DynamicElement(935f, () =>
+        DynamicElement hint = new(935f, () =>
         {
             StringBuilder builder = new();
             builder.SetAlignment(AlignStyle.Left);
@@ -123,18 +123,19 @@ public static class EventHandlers
                 builder.Append("<size=25><b><color=green>⚠ GODMODE AKTIV ⚠</color=green></b></size>");
                 builder.CloseHorizontalPos();
             }
+
             builder.CloseAlign();
             return builder.ToString();
         })
         {
-            UpdateInterval = new TimeSpan(0, 0, 0, 5),
+            UpdateInterval = new TimeSpan(0, 0, 0, 5)
         };
-        
+
         display.Show(new Tag(), hint);
     }
-    
+
     /// <summary>
-    /// Gets the offset necessary to push a hint to the edge of the screen.
+    ///     Gets the offset necessary to push a hint to the edge of the screen.
     /// </summary>
     /// <param name="player">The player the offset should be calculated for.</param>
     /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>

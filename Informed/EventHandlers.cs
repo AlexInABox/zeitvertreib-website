@@ -1,20 +1,20 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using HarmonyLib;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
-using LabApi.Features.Wrappers;
 using QRCoder;
 using RueI.API;
 using RueI.API.Elements;
 using RueI.Utils;
 using RueI.Utils.Enums;
+using Tracked.API;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
+using Player = LabApi.Features.Wrappers.Player;
 
 namespace Informed;
-
-//This TANKS tps with 15+ players. Might be a performance issue with piss old HintServiceMeow that hasnt been updated in a quadrillion years. We should switch to RueI. Its maintained :shrug:
 
 public static class EventHandlers
 {
@@ -115,7 +115,7 @@ public static class EventHandlers
         RueDisplay display = RueDisplay.Get(player);
 
         long userIdNum = long.Parse(player.UserId.Split('@')[0]);
-        string content = userIdNum.ToString("D10") + "99999999";
+        string content = userIdNum.ToString("D10") + TrackedAPI.GetCurrentRoundNumber();
         Logger.Warn($"User {player.Nickname} got identifier of: {content}");
 
         using QRCodeGenerator generator = new();
@@ -154,7 +154,7 @@ public static class EventHandlers
     }
 
     /// <summary>
-    /// Gets the offset necessary to push a hint to the edge of the screen.
+    ///     Gets the offset necessary to push a hint to the edge of the screen.
     /// </summary>
     /// <param name="player">The player the offset should be calculated for.</param>
     /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>
@@ -167,5 +167,23 @@ public static class EventHandlers
         float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
 
         return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
+    }
+
+
+    // We patch all basegamehints here to use RueI. This is very important so basegamehints dont make RueI hints dissappear
+    [HarmonyPatch(typeof(Player), nameof(Player.SendHint), typeof(string), typeof(float))]
+    // ReSharper disable once UnusedType.Global
+    public class HintHarmony
+    {
+        // ReSharper disable once InconsistentNaming
+        // ReSharper disable once UnusedMember.Global
+        public static bool Prefix(Player __instance, ref string text, ref float duration)
+        {
+            RueDisplay display = RueDisplay.Get(__instance);
+
+            display.Show(new Tag("BASEGAMEHINT"), new BasicElement(300, text), duration);
+
+            return false;
+        }
     }
 }
