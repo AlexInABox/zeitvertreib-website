@@ -1,0 +1,6 @@
+<Project>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <PackageReference Include="Lib.Harmony" Version="2.3.3"/>
+    </ItemGroup>
+</Project>
