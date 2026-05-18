@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flipped", "Flipped\Flipped.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proximity", "Proximity\Proximity.csproj", "{DAEC83B9-B16C-44E7-A0AD-B50808F1B30C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Audited", "Audited\Audited.csproj", "{A3F2C1D8-5B74-4E91-BC23-7D8E6F0A9B42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|Any CPU = Release|Any CPU
@@ -72,6 +74,8 @@ Global
 		{1F27EEF4-FC23-49EB-83C3-65F29083EA8A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DAEC83B9-B16C-44E7-A0AD-B50808F1B30C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAEC83B9-B16C-44E7-A0AD-B50808F1B30C}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{A3F2C1D8-5B74-4E91-BC23-7D8E6F0A9B42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3F2C1D8-5B74-4E91-BC23-7D8E6F0A9B42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
