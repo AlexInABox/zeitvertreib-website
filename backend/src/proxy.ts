@@ -1,17 +1,17 @@
 export async function proxyFetch(url: string, options: RequestInit = {}, env: Env): Promise<Response> {
-  // if the proxy host isn't configured (e.g. local development), just do a normal fetch
-  if (!env.PROXY_HOST) {
+  // if the proxy api key isn't configured (e.g. local development), just do a normal fetch
+  if (!env.PROXIED_API_KEY) {
     return fetch(url, options);
   }
 
   try {
-    const target = new URL(url);
+    const proxyUrl = `https://cors.zeitvertreib.vip/unrestricted?url=${encodeURIComponent(url)}`;
 
-    const response = await fetch(`${env.PROXY_HOST}/${target}`, {
+    const response = await fetch(proxyUrl, {
       ...options,
       headers: {
         ...(options.headers || {}),
-        'x-requested-with': 'cf-worker',
+        'PROXIED-Authorization': `Bearer ${env.PROXIED_API_KEY}`,
       },
     });
 
