@@ -51,6 +51,7 @@ public class Teamdeathmatch : IEvent
         WarheadEvents.Stopping += OnWarheadStopping;
         PlayerEvents.Joined += OnJoined;
         PlayerEvents.Left += OnLeft;
+        ServerEvents.RoundEnding += OnRoundEnding;
 
         MtfGroup.Clear();
         ChaosGroup.Clear();
@@ -69,6 +70,7 @@ public class Teamdeathmatch : IEvent
         WarheadEvents.Stopping -= OnWarheadStopping;
         PlayerEvents.Joined -= OnJoined;
         PlayerEvents.Left -= OnLeft;
+        ServerEvents.RoundEnding -= OnRoundEnding;
 
         Timing.KillCoroutines(_explosionCoroutine);
         Timing.KillCoroutines(_respawnCoroutine);
@@ -191,5 +193,13 @@ public class Teamdeathmatch : IEvent
 
             SpawnTeams(true);
         }
+    }
+
+    private static void OnRoundEnding(RoundEndingEventArgs ev)
+    {
+        if (RespawnWaves.MiniMtfWave != null) RespawnWaves.MiniMtfWave.IsForcefullyPaused = true;
+        if (RespawnWaves.MiniChaosWave != null) RespawnWaves.MiniChaosWave.IsForcefullyPaused = true;
+        if (RespawnWaves.PrimaryChaosWave != null) RespawnWaves.PrimaryChaosWave.IsForcefullyPaused = true;
+        if (RespawnWaves.PrimaryMtfWave != null) RespawnWaves.PrimaryMtfWave.IsForcefullyPaused = true;
     }
 }
