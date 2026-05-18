@@ -119,7 +119,10 @@ app.all('/unrestricted', async (req, res) => {
     const upstream = await fetch(url, fetchOptions);
     res.status(upstream.status);
     upstream.headers.forEach((value, key) => {
-      res.setHeader(key, value);
+      const lowerAuth = key.toLowerCase();
+      if (lowerAuth !== 'content-encoding' && lowerAuth !== 'content-length' && lowerAuth !== 'transfer-encoding') {
+        res.setHeader(key, value);
+      }
     });
     res.send(Buffer.from(await upstream.arrayBuffer()));
   } catch {
