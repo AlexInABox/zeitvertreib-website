@@ -12,7 +12,7 @@ public static class CommandTranslator
     private static readonly HashSet<string> ItemSecondArg =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            "give",
+            "give"
         };
 
     public static string Translate(string rawCommand)
@@ -51,6 +51,7 @@ public static class CommandTranslator
                         continue;
                     }
                 }
+
                 sb.Append(token);
                 continue;
             }
@@ -62,6 +63,7 @@ public static class CommandTranslator
                     sb.Append((ItemType)itemId).Append($"({itemId})");
                     continue;
                 }
+
                 sb.Append(token);
                 continue;
             }

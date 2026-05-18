@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Reflection;
-using CommandSystem;
 using HarmonyLib;
 using RemoteAdmin;
 
@@ -18,14 +17,18 @@ public static class RemoteAdminCommandPatch
         "mute",
         "unmute",
         "forceban",
-        "kick",
+        "kick"
     ];
 
     [HarmonyTargetMethod]
-    static MethodBase TargetMethod() =>
-        AccessTools.Method("CommandProcessor:ProcessQuery")
-        ?? AccessTools.Method("RemoteAdmin.CommandProcessor:ProcessQuery");
+    // ReSharper disable once ArrangeTypeMemberModifiers
+    static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("CommandProcessor:ProcessQuery")
+               ?? AccessTools.Method("RemoteAdmin.CommandProcessor:ProcessQuery");
+    }
 
+    // ReSharper disable once ArrangeTypeMemberModifiers
     static void Postfix(string q, CommandSender sender)
     {
         if (sender is not PlayerCommandSender)
@@ -43,10 +46,8 @@ public static class RemoteAdminCommandPatch
             return;
 
         foreach (string excluded in ExcludedPrefixes)
-        {
             if (commandName == excluded)
                 return;
-        }
 
         string senderId = sender.SenderId ?? "";
         List<string> exempt = Plugin.Instance?.Config?.ExemptSteamIds;

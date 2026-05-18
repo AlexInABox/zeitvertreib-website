@@ -23,11 +23,11 @@ public static class DiscordWebhook
                 new
                 {
                     color = 0x3b82f6,
-                    description = $"**{staffName}** `{staffId}`\n```{translatedCommand}```",
-                },
+                    description = $"**{staffName}** `{staffId}`\n```{translatedCommand}```"
+                }
             },
             flags = 4096,
-            allowed_mentions = new { parse = Array.Empty<string>() },
+            allowed_mentions = new { parse = Array.Empty<string>() }
         };
 
         StringContent content = new(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
@@ -35,7 +35,7 @@ public static class DiscordWebhook
         _ = Http.PostAsync(webhookUrl, content).ContinueWith(task =>
         {
             if (task.IsFaulted)
-                Logger.Error($"[Audited] Failed to send Discord message: {task.Exception?.GetBaseException().Message}");
+                Logger.Error($"Failed to send Discord message: {task.Exception?.GetBaseException().Message}");
         });
     }
 }

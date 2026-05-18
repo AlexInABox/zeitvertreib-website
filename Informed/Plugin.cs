@@ -26,6 +26,9 @@ public class Plugin : Plugin<Config>
     public Translation Translation { get; private set; }
 
     public static Plugin Instance { get; private set; }
+    
+    private Harmony _harmony;
+
 
     public override void Enable()
     {
@@ -44,12 +47,13 @@ public class Plugin : Plugin<Config>
 
         Translation = translation;
         EventHandlers.RegisterEvents();
-        Harmony harmony = new("com.zeitvertreib-website.informed");
-        harmony.PatchAll();
+        _harmony = new("com.zeitvertreib-website.informed");
+        _harmony.PatchAll();
     }
 
     public override void Disable()
     {
+        _harmony.UnpatchAll(_harmony.Id);
         EventHandlers.UnregisterEvents();
     }
 }
