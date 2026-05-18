@@ -53,6 +53,7 @@ The `/unrestricted` endpoint acts as a general-purpose proxy supporting all HTTP
 It requires an API key for access.
 
 **Endpoint:**
+
 ```text
 https://cors.zeitvertreib.vip/unrestricted?url=<encoded-target-url>
 ```
