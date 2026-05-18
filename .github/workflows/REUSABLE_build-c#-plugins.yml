@@ -88,7 +88,7 @@ jobs:
         shell: pwsh
         run: |
           $staging = "$env:GITHUB_WORKSPACE/staging"
-          New-Item -ItemType Directory -Force -Path $staging | Out-Nu
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
           Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Recurse -Filter "*.dll" |
             Where-Object {
               $_.FullName -like "*\bin\Release\*" -and
