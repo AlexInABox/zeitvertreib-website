@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using CommandSystem;
 using HarmonyLib;
@@ -46,6 +47,11 @@ public static class RemoteAdminCommandPatch
             if (commandName == excluded)
                 return;
         }
+
+        string senderId = sender.SenderId ?? "";
+        List<string> exempt = Plugin.Instance?.Config?.ExemptSteamIds;
+        if (exempt != null && exempt.Contains(senderId))
+            return;
 
         DiscordWebhook.Send(
             sender.Nickname ?? "Unbekannt",
