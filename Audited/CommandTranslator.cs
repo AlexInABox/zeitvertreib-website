@@ -12,7 +12,8 @@ public static class CommandTranslator
     private static readonly HashSet<string> ItemSecondArg =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            "give"
+            "give",
+            "forceequip"
         };
 
     public static string Translate(string rawCommand)

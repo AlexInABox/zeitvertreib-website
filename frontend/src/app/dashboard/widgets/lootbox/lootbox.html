@@ -15,10 +15,10 @@
         class="lootbox-track"
         [style.transform]="
           lootboxAnimating
-            ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-animation-center-offset)))'
+            ? 'translateX(calc(-36 * var(--lootbox-item-total-width) - 105px))'
             : lootboxSnapping || lootboxAtRest
-              ? 'translateX(calc(-36 * var(--lootbox-item-total-width) + 50% - var(--lootbox-center-offset)))'
-              : 'translateX(0)'
+              ? 'translateX(calc(-36 * var(--lootbox-item-total-width) - 60px))'
+              : 'translateX(-60px)'
         "
       >
         <div
@@ -69,7 +69,6 @@
   </div>
 
   <div *ngIf="lootboxError" class="lootbox-message lootbox-message-error mt-2">{{ lootboxError }}</div>
-  <div *ngIf="lootboxSuccess" class="lootbox-message lootbox-message-success mt-2">{{ lootboxSuccess }}</div>
 
   <div class="lootbox-action">
     <button class="lootbox-buy-btn" (click)="buyLootbox()" [disabled]="lootboxSpinning || !canAffordLootbox()">
