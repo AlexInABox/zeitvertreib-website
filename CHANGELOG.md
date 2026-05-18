@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
-## [26] - Unreleased
+## [27] - Unreleased
+
+## [26]
+
+### Added
+
+- New Flipped plugin
+- Added lootboxes to the website
+- Implemented systems for tracking player activity
+- Added Medal uploads to the public report system
+- Redesigned parts of the website
+
+### Fixed
+
+- Ported all remaining plugins to use the new `RueI` framework (replacing `HintServiceMeow`)
+- Reworked and simplified most GitHub action workflows
 
 ## [25]
 
@@ -92,7 +107,8 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Improved dark mode appearance site-wide, especially on the dashboard.
 - Chicken Cross game payout adjusted to compound each step for larger payouts.
 
-[26]: https://github.com/alexinabox/zeitvertreib-website/compare/build-25...dev
+[27]: https://github.com/alexinabox/zeitvertreib-website/compare/build-26...dev
+[26]: https://github.com/alexinabox/zeitvertreib-website/compare/build-25...build-26
 [25]: https://github.com/alexinabox/zeitvertreib-website/compare/build-24...build-25
 [24]: https://github.com/alexinabox/zeitvertreib-website/compare/build-23...build-24
 [23]: https://github.com/alexinabox/zeitvertreib-website/compare/build-22...build-23
