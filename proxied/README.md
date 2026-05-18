@@ -46,3 +46,20 @@ This proxy only serves requests with one of these `Origin` values:
 
 - `https://dev.zeitvertreib.vip`
 - `https://zeitvertreib.vip`
+
+## Unrestricted Endpoint
+
+The `/unrestricted` endpoint acts as a general-purpose proxy supporting all HTTP methods, with no CORS restrictions.
+It requires an API key for access.
+
+**Endpoint:**
+```text
+https://cors.zeitvertreib.vip/unrestricted?url=<encoded-target-url>
+```
+
+**Authentication:**
+Provide the key via the `PROXIED-Authorization` header matchning the `PROXIED_API_KEY` environment variable.
+
+```http
+PROXIED-Authorization: Bearer <your-api-key>
+```

@@ -77,4 +77,54 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.all('/unrestricted', async (req, res) => {
+  const authHeader = req.get('PROXIED-Authorization');
+  const apiKey = process.env.PROXIED_API_KEY;
+
+  if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const url = req.query.url;
+  if (typeof url !== 'string' || !url) {
+    return res.status(400).json({ error: 'url query param required' });
+  }
+
+  try {
+    const headers = new Headers();
+    for (const key in req.headers) {
+      if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'proxied-authorization') {
+        const value = req.headers[key];
+        if (typeof value === 'string') {
+          headers.set(key, value);
+        } else if (Array.isArray(value)) {
+          value.forEach((v) => headers.append(key, v));
+        }
+      }
+    }
+
+    const fetchOptions: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      fetchOptions.body = Buffer.concat(chunks);
+    }
+
+    const upstream = await fetch(url, fetchOptions);
+    res.status(upstream.status);
+    upstream.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+    res.send(Buffer.from(await upstream.arrayBuffer()));
+  } catch {
+    res.status(502).json({ error: 'Failed to fetch url' });
+  }
+});
+
 app.listen(port, () => console.log(`Proxy running on port ${port}`));
