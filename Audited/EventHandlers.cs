@@ -5,9 +5,6 @@ using RemoteAdmin;
 
 namespace Audited;
 
-/// <summary>
-/// Patches CommandProcessor.ProcessQuery to intercept all Remote Admin commands.
-/// </summary>
 [HarmonyPatch]
 public static class RemoteAdminCommandPatch
 {
