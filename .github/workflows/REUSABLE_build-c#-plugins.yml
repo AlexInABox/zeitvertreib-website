@@ -88,8 +88,7 @@ jobs:
         shell: pwsh
         run: |
           $staging = "$env:GITHUB_WORKSPACE/staging"
-          New-Item -ItemType Directory -Force -Path $staging | Out-Null
-
+          New-Item -ItemType Directory -Force -Path $staging | Out-Nu
           Get-ChildItem -Path "$env:GITHUB_WORKSPACE" -Recurse -Filter "*.dll" |
             Where-Object {
               $_.FullName -like "*\bin\Release\*" -and
@@ -98,12 +97,12 @@ jobs:
             } |
             ForEach-Object {
               $plugin = $_.FullName.Substring("$env:GITHUB_WORKSPACE\".Length).Split('\')[0]
-              $dest   = Join-Path $staging $plugin
-              New-Item -ItemType Directory -Force -Path $dest | Out-Null
-              Copy-Item $_.FullName -Destination $dest -Force
-              Write-Host "Staged: $plugin/$($_.Name)"
+              if ($_.BaseName -eq $plugin) {
+                Copy-Item $_.FullName -Destination $staging -Force
+                Write-Host "Staged: $($_.Name)"
+              }
             }
-
+              
       - name: Upload all plugin DLLs
         uses: actions/upload-artifact@v7
         with:

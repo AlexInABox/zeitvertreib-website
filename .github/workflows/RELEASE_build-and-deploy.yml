@@ -313,15 +313,25 @@ jobs:
     with:
       build_number: ${{ needs.determine-version.outputs.build_number }}
 
+  build-plugins:
+    name: 🔨 Build Plugins
+    uses: ./.github/workflows/REUSABLE_build-c#-plugins.yml
+
   create-release:
     name: 📦 Create GitHub Release
     runs-on: ubuntu-slim
-    needs: [deploy-frontend, deploy-backend, deploy-overwatch, determine-version, extract-changelog]
+    needs: [deploy-frontend, deploy-backend, deploy-overwatch, determine-version, extract-changelog, build-plugins]
     timeout-minutes: 10
     permissions:
       contents: write
 
     steps:
+      - name: Download all plugin DLLs
+        uses: actions/download-artifact@v4
+        with:
+          name: all-plugins
+          path: plugins-staging
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -330,3 +340,4 @@ jobs:
           body: ${{ needs.extract-changelog.outputs.changelog }}
           draft: false
           make_latest: true
+          files: plugins-staging/*.dll
