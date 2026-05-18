@@ -11,6 +11,7 @@ export class DomainWarningComponent implements OnInit {
   showWarning = false;
   clickCount = 0;
   private readonly STORAGE_KEY = 'domain-warning-dismissed';
+  private readonly URL_FLAG = 'hiddev';
   private readonly PRODUCTION_DOMAIN = 'zeitvertreib.vip';
 
   ngOnInit(): void {
@@ -20,8 +21,16 @@ export class DomainWarningComponent implements OnInit {
   private checkDomain(): void {
     const hostname = window.location.hostname;
     const isDevelopment = hostname === 'dev.zeitvertreib.vip' || hostname === 'localhost';
+    const urlParams = new URLSearchParams(window.location.search);
+    const hideWarningFlag = urlParams.get(this.URL_FLAG);
 
     if (isDevelopment) {
+      if (hideWarningFlag !== null && hideWarningFlag !== 'false') {
+        sessionStorage.setItem(this.STORAGE_KEY, 'true');
+        this.showWarning = false;
+        return;
+      }
+
       const dismissed = sessionStorage.getItem(this.STORAGE_KEY);
       this.showWarning = !dismissed;
     }

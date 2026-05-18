@@ -1,0 +1,56 @@
+name: Extract Changelog (Reusable)
+
+permissions:
+  contents: read
+  
+on:
+  workflow_call:
+    inputs:
+      build_number:
+        required: true
+        type: number
+        description: "Build number (e.g., 26)"
+    outputs:
+      changelog:
+        description: "Changelog contents for the requested build number"
+        value: ${{ jobs.extract-changelog.outputs.changelog }}
+jobs:
+  extract-changelog:
+    outputs:
+      changelog: ${{ steps.extract.outputs.changelog }}
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Extract changelog section
+        id: extract
+        run: |
+          BUILD_NUMBER='${{ inputs.build_number }}'
+          CHANGELOG_FILE="CHANGELOG.md"
+
+          if [[ ! -f "$CHANGELOG_FILE" ]]; then
+            echo "❌ Changelog file not found: $CHANGELOG_FILE"
+            exit 1
+          fi
+
+          TMPFILE=$(mktemp)
+          awk -v ver="## [${BUILD_NUMBER}]" 'BEGIN{p=0} $0==ver{p=1;next} p==1 && /^## \[/ {exit} p==1{print}' "$CHANGELOG_FILE" > "$TMPFILE"
+
+          if [[ ! -s "$TMPFILE" ]]; then
+            echo "❌ No changelog entry found for version: ${BUILD_NUMBER}"
+            rm -f "$TMPFILE"
+            exit 1
+          fi
+
+          DELIM="DELIM_${GITHUB_RUN_ID}_$(date +%s)_$RANDOM"
+          {
+            echo "changelog<<$DELIM"
+            cat "$TMPFILE"
+            echo "$DELIM"
+          } >> "$GITHUB_OUTPUT"
+
+          rm -f "$TMPFILE"

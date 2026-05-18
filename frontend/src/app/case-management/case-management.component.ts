@@ -393,7 +393,8 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
 
   navigateToCreatorProfile(discordId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { discordId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { discordId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 

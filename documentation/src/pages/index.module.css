@@ -1,0 +1,197 @@
+.heroBanner {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 5.5rem 0 4rem;
+  min-height: calc(100vh - var(--ifm-navbar-height));
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 78% 24%,
+      color-mix(in srgb, var(--ifm-color-primary) 16%, transparent) 0%,
+      transparent 48%
+    ),
+    linear-gradient(to top right, #ffffff 0%, color-mix(in srgb, var(--ifm-color-primary) 24%, #ffffff 76%) 100%);
+}
+
+[data-theme='dark'] .heroBanner {
+  background:
+    radial-gradient(
+      circle at 78% 24%,
+      color-mix(in srgb, var(--ifm-color-primary) 30%, transparent) 0%,
+      transparent 48%
+    ),
+    linear-gradient(to top right, #000000 0%, color-mix(in srgb, var(--ifm-color-primary) 36%, #000000 64%) 100%);
+}
+
+.gridBackground {
+  position: relative;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.32;
+}
+
+.gridBackground::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--ifm-font-color-base) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--ifm-font-color-base) 8%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.heroContainer {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+}
+
+.heroTitle {
+  margin-bottom: 0.75rem;
+  font-size: clamp(2.2rem, 4.2vw, 3.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.heroSubtitle {
+  margin: 0 auto;
+  max-width: 700px;
+  color: color-mix(in srgb, var(--ifm-font-color-base) 66%, transparent);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+}
+
+.cardLayout {
+  margin: 3rem auto 0;
+  max-width: 920px;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+  text-align: left;
+  border-radius: 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--ifm-font-color-base) 12%, transparent);
+  background: color-mix(in srgb, var(--ifm-background-color) 86%, transparent);
+  backdrop-filter: blur(4px);
+  padding: 1.35rem 1.35rem 1.15rem;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.06);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--ifm-color-primary) 22%, transparent) 0%,
+    transparent 70%
+  );
+  transition: opacity 240ms ease;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .card {
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.35);
+}
+
+.cardHighlighted {
+  border-color: color-mix(in srgb, var(--ifm-color-primary) 38%, transparent);
+}
+
+.cardLower {
+  grid-column: 1 / -1;
+  max-width: 430px;
+  justify-self: center;
+}
+
+.cardTitle {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.55rem;
+  font-size: 1.7rem;
+  letter-spacing: -0.01em;
+}
+
+.cardText {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: color-mix(in srgb, var(--ifm-font-color-base) 70%, transparent);
+  line-height: 1.5;
+}
+
+.cardButton {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.cardButton:hover {
+  text-decoration: none;
+  color: inherit;
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ifm-color-primary) 52%, transparent);
+  box-shadow: 0 24px 42px color-mix(in srgb, var(--ifm-color-primary) 18%, transparent);
+}
+
+.cardButton:hover::before {
+  opacity: 1;
+}
+
+.cardButtonDisabled {
+  cursor: not-allowed;
+}
+
+.cardDisabled {
+  border-color: color-mix(in srgb, var(--ifm-font-color-base) 20%, transparent);
+  background: color-mix(in srgb, var(--ifm-font-color-base) 8%, var(--ifm-background-color) 92%);
+  box-shadow: none;
+}
+
+.cardDisabled::before {
+  display: none;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    min-height: auto;
+    padding: 3.3rem 1rem 2.7rem;
+  }
+
+  .cardLayout {
+    margin-top: 2.2rem;
+    grid-template-columns: 1fr;
+  }
+
+  .cardLower {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroContainer {
+    animation: fadeIn 500ms ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

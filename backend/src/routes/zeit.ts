@@ -42,21 +42,16 @@ export async function getUserData(request: Request, env: Env, ctx: ExecutionCont
     }
   }
 
-  if (steamId && validateSteamId(steamId).valid) {
-    const user = await db
-      .select()
-      .from(playerdata)
-      .where(eq(playerdata.id, validateSteamId(steamId).normalized!))
-      .limit(1);
-    if (user.length === 0) {
-      return createResponse({ error: 'Benutzer nicht gefunden' }, 404, origin);
-    }
-  } else {
+  if (!steamId || !validateSteamId(steamId).valid) {
     return createResponse({ error: 'Ungültige SteamID' }, 400, origin);
   }
 
-  // Now that we are sure that the user exists in our db. Lets start fetching all the data!
-  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).limit(1);
+  // Lets start fetching all the data!
+  let playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).limit(1);
+  // If not found, return empty row instead of 404
+  if (playerdataResult.length === 0) {
+    playerdataResult = [{} as typeof playerdata.$inferSelect];
+  }
 
   const steamUserDataResult = await fetchSteamUserData(steamId, env, ctx);
 
@@ -129,9 +124,9 @@ export async function getUserData(request: Request, env: Env, ctx: ExecutionCont
       avatar: steamUserDataResult?.avatarUrl || '',
     },
     discord: discordData,
-    zvc: playerdataResult[0]!.experience!,
-    playtime: playerdataResult[0]!.playtime!,
-    roundsplayed: playerdataResult[0]!.roundsplayed!,
+    zvc: playerdataResult[0]!.experience ? playerdataResult[0]!.experience! : 0,
+    playtime: playerdataResult[0]!.playtime ? playerdataResult[0]!.playtime! : 0,
+    roundsplayed: playerdataResult[0]!.roundsplayed ? playerdataResult[0]!.roundsplayed! : 0,
     fakerank: fakerankData,
     fakerankBanned: fakerankBanResult.length > 0,
     fakerankBanReason: fakerankBanResult[0]?.reason,

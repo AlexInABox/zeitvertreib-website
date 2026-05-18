@@ -1,0 +1,22 @@
+{
+  "name": "counted",
+  "version": "1.0.0",
+  "description": "This is a server + database for keeping track of historical player counts for Zeitvertreib, which can be PUT and GET via API.",
+  "scripts": {
+    "start": "npx tsc && node dist/index.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "typescript": "^6.0.3"
+  }
+}

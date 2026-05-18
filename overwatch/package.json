@@ -19,11 +19,12 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.1",
+    "@zeitvertreib/types": "file:../types",
     "prettier": "3.6.2",
-    "typescript": "^5.9.2",
-    "@zeitvertreib/types": "file:../types"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.19.2",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.1",
     "openai": "^5.12.2"

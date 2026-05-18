@@ -245,6 +245,25 @@ export async function handleUpdatePlayerlist(request: Request, env: Env): Promis
       );
     }
 
+    try {
+      const countedResponse = await fetch('https://counted.zeitvertreib.vip/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.COUNTED_API_KEY}`,
+          'Content-Type': 'text/plain',
+        },
+        body: String(enrichedPlayerlist.length),
+      });
+
+      if (!countedResponse.ok) {
+        console.error(
+          `[Playerlist POST] Failed to update counted service: ${countedResponse.status} ${countedResponse.statusText}`,
+        );
+      }
+    } catch (countedError) {
+      console.error('[Playerlist POST] Failed to call counted service:', countedError);
+    }
+
     return createResponse({ success: true, message: 'Playerlist updated successfully' }, 200, origin);
   } catch (error) {
     console.error('Error updating playerlist:', error);

@@ -8,3 +8,4 @@
 */.angular
 */LICENSE
 .github
+**/worker-configuration.d.ts

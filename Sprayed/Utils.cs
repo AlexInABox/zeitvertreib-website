@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
 using LabApi.Features.Wrappers;
 using MEC;
 using Newtonsoft.Json;
+using RueI.API;
+using RueI.API.Elements;
+using RueI.API.Elements.Enums;
+using RueI.Utils;
+using RueI.Utils.Enums;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 using Zeitvertreib.Types;
@@ -297,60 +301,81 @@ public static class Utils
 
     public static void RegisterHud(this Player player)
     {
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(player);
-
-        Hint sprayListHint = new()
+        DynamicElement sprayListHint = new(90, () =>
         {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
+            StringBuilder builder = new();
+
+            if (!UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) ||
+                sprays.Count == 0)
+                return builder.ToString();
+
+            bool hudDisabled = ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(
+                player.ReferenceHub,
+                Plugin.Instance.Config!.SprayHudToogleSettingId).SyncIsB;
+
+            if (hudDisabled) return builder.ToString();
+
+            int selectedSprayId = ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(
+                player.ReferenceHub,
+                Plugin.Instance.Config!.SpraySelectionSettingId).SyncSelectionIndexRaw;
+
+            int cooldownSeconds = 0;
+            if (Cooldowns.TryGetValue(player.PlayerId, out int cooldownEnd))
+                if (cooldownEnd > Time.time)
+                    cooldownSeconds = Mathf.CeilToInt(cooldownEnd - Time.time);
+
+
+            builder.SetAlignment(AlignStyle.Left);
+            builder.SetLineHeight(20f);
+            builder.SetHorizontalPos(player.EdgeOffset() + 50f);
+            builder.AppendLine("<size=20><b><color=#F4F1BB>=== Sprays ===</color></b></size>");
+            for (int i = 0; i < sprays.Count; i++)
             {
-                string hint = string.Empty;
-                if (!UserSprayIds.TryGetValue(player.UserId, out List<(int id, string name)> sprays) ||
-                    sprays.Count == 0)
-                    return hint;
-
-                bool hudDisabled = ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(
-                    player.ReferenceHub,
-                    Plugin.Instance.Config!.SprayHudToogleSettingId).SyncIsB;
-
-                if (hudDisabled) return hint;
-
-                int selectedSprayId = ServerSpecificSettingsSync.GetSettingOfUser<SSDropdownSetting>(
-                    player.ReferenceHub,
-                    Plugin.Instance.Config!.SpraySelectionSettingId).SyncSelectionIndexRaw;
-
-                int cooldownSeconds = 0;
-                if (Cooldowns.TryGetValue(player.PlayerId, out int cooldownEnd))
-                    if (cooldownEnd > Time.time)
-                        cooldownSeconds = Mathf.CeilToInt(cooldownEnd - Time.time);
-
-
-                hint += "<size=20><b><color=#F4F1BB>=== Sprays ===</color></b></size>\n";
-                for (int i = 0; i < sprays.Count; i++)
+                builder.SetHorizontalPos(player.EdgeOffset() + 50f);
+                (int _, string name) = sprays[i];
+                if (i == selectedSprayId)
                 {
-                    (int id, string name) = sprays[i];
-                    if (i == selectedSprayId)
-                    {
-                        if (cooldownSeconds > 0)
-                            hint +=
-                                $"<size=18><color=#ff8e00>> {name} <b>({cooldownSeconds}s)</b></color></size>\n";
-                        else
-                            hint += $"<size=18><color=#00FF00>> {name}</color></size>\n";
-                    }
-
-                    else
-                    {
-                        hint += $"<size=18>{name}</size>\n";
-                    }
+                    builder.SetHorizontalPos(player.EdgeOffset() + 50f);
+                    builder.AppendLine(
+                        cooldownSeconds > 0
+                            ? $"<size=18><color=#ff8e00>> {name} <b>({cooldownSeconds}s)</b></color></size>"
+                            : $"<size=18><color=#00FF00>> {name}</color></size>");
+                }
+                else
+                {
+                    builder.AppendLine($"<size=18>{name}</size>");
                 }
 
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Bottom,
-            YCoordinate = 960,
-            XCoordinate = (int)(-540f * player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 50,
-            SyncSpeed = HintSyncSpeed.Normal
+                builder.CloseHorizontalPos();
+            }
+
+            builder.CloseHorizontalPos();
+            builder.CloseLineHeight();
+            builder.CloseAlign();
+
+            return builder.ToString();
+        })
+        {
+            UpdateInterval = new TimeSpan(0, 0, 0, 1),
+            VerticalAlign = VerticalAlign.Up
         };
-        playerDisplay.AddHint(sprayListHint);
+
+        RueDisplay.Get(player).Show(new Tag(), sprayListHint);
+    }
+
+    /// <summary>
+    ///     Gets the offset necessary to push a hint to the edge of the screen.
+    /// </summary>
+    /// <param name="player">The player the offset should be calculated for.</param>
+    /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static float EdgeOffset(this Player player)
+    {
+        const float Base = 1080f - 1f; //slight padding
+        const float DisplayAreaWidth = 1200f;
+
+        float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
+
+        return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
     }
 }

@@ -3,18 +3,23 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../services/auth.service';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
+
 import type {
   GetCaseMetadataGetResponse,
   CaseFileUploadGetResponse,
   UpdateCaseMetadataPutRequest,
   CaseCategory,
+  SearchReportsBySteamIdGetResponse,
 } from '@zeitvertreib/types';
+import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
+import { MedalService } from '../services/medal.service';
 
 @Component({
   selector: 'app-case-detail',
@@ -97,6 +102,13 @@ export class CaseDetailComponent implements OnInit {
   reportLinkError = '';
   reportLinkSuccess = '';
 
+  // Report search results and UI state
+  isSearchingReports = false;
+  reportSearchResults: SearchReportsBySteamIdGetResponse['reports'] = [];
+  reportSearchDropdownOpen = false;
+  reportSearchError = '';
+  showManualReportEntry = false;
+
   sortOptions = [
     { label: 'Name (A-Z)', value: 'name' },
     { label: 'Name (Z-A)', value: 'name-desc' },
@@ -117,6 +129,7 @@ export class CaseDetailComponent implements OnInit {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private medalService = inject(MedalService);
 
   constructor(
     private route: ActivatedRoute,
@@ -128,6 +141,9 @@ export class CaseDetailComponent implements OnInit {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
       this.sortDropdownOpen = false;
+    }
+    if (!target.closest('.report-search-section') && this.reportSearchDropdownOpen) {
+      this.reportSearchDropdownOpen = false;
     }
   }
 
@@ -259,13 +275,15 @@ export class CaseDetailComponent implements OnInit {
 
   navigateToUserProfile(steamId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { steamId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { steamId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
   navigateToCreatorProfile(discordId: string) {
     if (this.isTeam) {
-      this.router.navigate(['/zeit'], { queryParams: { discordId } });
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { discordId } }));
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -497,6 +515,53 @@ export class CaseDetailComponent implements OnInit {
       });
   }
 
+  toggleManualReportEntry(): void {
+    this.showManualReportEntry = !this.showManualReportEntry;
+    if (!this.showManualReportEntry) {
+      this.newLinkedReportId = '';
+    }
+  }
+
+  async searchReportsBySteamId(steamId: string): Promise<void> {
+    if (!steamId || !steamId.trim()) {
+      this.reportSearchError = 'Steam-ID ist erforderlich';
+      return;
+    }
+
+    this.isSearchingReports = true;
+    this.reportSearchDropdownOpen = false;
+    this.reportSearchError = '';
+    this.reportSearchResults = [];
+
+    try {
+      const data = await firstValueFrom(
+        this.http.get<SearchReportsBySteamIdGetResponse>(
+          `${environment.apiUrl}/reports/search?steamId=${encodeURIComponent(steamId)}`,
+          { headers: this.getAuthHeaders(), withCredentials: true },
+        ),
+      );
+
+      const alreadyLinked = this.caseData?.linkedReportIds ?? [];
+      this.reportSearchResults = (data?.reports ?? []).filter((r) => !alreadyLinked.includes(r.id));
+      if (this.reportSearchResults.length > 0) {
+        this.reportSearchDropdownOpen = true;
+      } else {
+        this.reportSearchError = 'Keine (nicht verknüpften) Reports für diese Steam-ID gefunden';
+      }
+    } catch (error: any) {
+      this.reportSearchError = error?.error?.error || 'Fehler beim Suchen der Reports';
+    } finally {
+      this.isSearchingReports = false;
+    }
+  }
+
+  selectReportFromSearch(reportId: number): void {
+    this.reportSearchDropdownOpen = false;
+    this.newLinkedReportId = String(reportId);
+    this.showManualReportEntry = false;
+    this.linkReport();
+  }
+
   removeLinkedReport(reportId: number, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -594,21 +659,6 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  private calculateETA(startTime: number, progress: number): string {
-    if (progress === 0) return 'Berechne...';
-    const elapsed = Date.now() - startTime;
-    const total = (elapsed / progress) * 100;
-    const remaining = total - elapsed;
-    const seconds = Math.ceil(remaining / 1000);
-    if (seconds < 10) return '<10s';
-    const roundedSeconds = Math.ceil(seconds / 10) * 10;
-    if (roundedSeconds < 60) return `~${roundedSeconds}s`;
-    const minutes = Math.floor(roundedSeconds / 60);
-    const secs = roundedSeconds % 60;
-    if (secs === 0) return `~${minutes}m`;
-    return `~${minutes}m ${secs}s`;
-  }
-
   async uploadFile() {
     if (!this.selectedFile) {
       alert('Bitte wähle eine Datei aus');
@@ -640,7 +690,7 @@ export class CaseDetailComponent implements OnInit {
       await this.uploadFileToPresignedUrl(this.selectedFile, uploadInfo.url, contentType, {
         onProgress: (progress) => {
           this.uploadProgress = progress;
-          this.uploadETA = this.calculateETA(this.uploadStartTime, progress);
+          this.uploadETA = calculateETA(this.uploadStartTime, progress);
           this.uploadStatusMessage = `Datei wird hochgeladen... (${progress}%)`;
         },
       });
@@ -667,17 +717,11 @@ export class CaseDetailComponent implements OnInit {
   }
 
   isValidUrl(urlString: string): boolean {
-    if (!urlString?.trim()) return false;
-    try {
-      const url = new URL(urlString.trim());
-      return url.protocol.startsWith('http');
-    } catch {
-      return false;
-    }
+    return isValidUrl(urlString);
   }
 
   onMedalUrlChange() {
-    this.medalUrlInvalid = this.medalClipUrl.trim() ? !this.isValidUrl(this.medalClipUrl) : false;
+    this.medalUrlInvalid = this.medalClipUrl.trim() ? !isValidUrl(this.medalClipUrl) : false;
   }
 
   async uploadMedalClip() {
@@ -685,7 +729,7 @@ export class CaseDetailComponent implements OnInit {
       alert('Bitte gib eine URL ein');
       return;
     }
-    if (!this.isValidUrl(this.medalClipUrl)) {
+    if (!isValidUrl(this.medalClipUrl)) {
       alert('Bitte gib eine gültige URL ein');
       return;
     }
@@ -698,101 +742,81 @@ export class CaseDetailComponent implements OnInit {
     this.medalStartTime = Date.now();
 
     try {
-      const bypassUrl = `https://medalbypass.vercel.app/api/clip?url=${encodeURIComponent(this.medalClipUrl)}`;
-      const bypassResponse = await fetch(bypassUrl);
-      if (!bypassResponse.ok) throw new Error('Fehler beim Abrufen des Medal Clips');
-
-      const bypassData = (await bypassResponse.json()) as { valid: boolean; src?: string; reasoning?: string };
-      if (!bypassData.valid) throw new Error(bypassData.reasoning || 'Ungültige Medal.tv URL');
-      if (!bypassData.src) throw new Error('Keine Video-URL erhalten');
-
-      const urlPath = bypassData.src.split('?')[0];
-      const fileNameWithExt = urlPath.split('/').pop() ?? 'clip.mp4';
-      const fileExtension = fileNameWithExt.includes('.') ? fileNameWithExt.split('.').pop()!.toLowerCase() : 'mp4';
-      const mimeType = fileExtension === 'webm' ? 'video/webm' : 'video/mp4';
-
-      this.medalStatusMessage = 'Video wird heruntergeladen...';
-      this.medalStartTime = Date.now();
-
-      const corsProxies = [
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(bypassData.src)}`,
-        `https://corsproxy.io/?url=${encodeURIComponent(bypassData.src)}`,
-        bypassData.src,
-      ];
-
-      let videoResponse: Response | null = null;
-      for (const proxyUrl of corsProxies) {
-        try {
-          const resp = await fetch(proxyUrl);
-          if (resp.ok) {
-            videoResponse = resp;
-            break;
-          }
-        } catch {
-          continue;
-        }
-      }
-
-      if (!videoResponse) throw new Error('Fehler beim Herunterladen des Videos');
-
-      const contentLength = videoResponse.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      const reader = videoResponse.body?.getReader();
-      if (!reader) throw new Error('Fehler beim Lesen des Videos');
-
-      const chunks: Uint8Array[] = [];
-      let receivedLength = 0;
-
       while (true) {
-        const readResult = await reader.read();
-        if (readResult.done) break;
-        chunks.push(readResult.value);
-        receivedLength += readResult.value.length;
-        if (total > 0) {
-          this.medalDownloadProgress = Math.round((receivedLength / total) * 100);
-          this.medalETA = this.calculateETA(this.medalStartTime, this.medalDownloadProgress);
-          this.medalStatusMessage = `Video wird heruntergeladen... (${this.medalDownloadProgress}%)`;
+        try {
+          const medalSourceUrl = await this.medalService.resolveMedalSourceUrl(this.medalClipUrl);
+          const medalFile = await this.medalService.downloadMedalClipFromCorsProxy(medalSourceUrl, {
+            onStatusMessage: (msg) => {
+              this.medalStatusMessage = msg;
+            },
+            onDownloadProgress: (progress) => {
+              this.medalDownloadProgress = progress;
+            },
+            onETA: (eta) => {
+              this.medalETA = eta;
+            },
+            onStartTime: (time) => {
+              this.medalStartTime = time;
+            },
+          });
+
+          this.medalDownloadProgress = 100;
+          this.medalUploadProgress = 0;
+          this.medalStatusMessage = 'Upload-URL wird angefordert...';
+
+          const uploadInfo = await this.http
+            .get<CaseFileUploadGetResponse>(
+              `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${medalFile.extension}`,
+              { headers: this.getAuthHeaders(), withCredentials: true },
+            )
+            .toPromise();
+
+          if (!uploadInfo?.url) throw new Error('Fehler beim Abrufen der Upload-URL');
+
+          this.medalStatusMessage = 'Video wird hochgeladen...';
+          this.medalStartTime = Date.now();
+
+          await this.uploadFileToPresignedUrl(medalFile.file, uploadInfo.url, medalFile.mimeType, {
+            onProgress: (progress) => {
+              this.medalUploadProgress = progress;
+              this.medalETA = calculateETA(this.medalStartTime, progress);
+              this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
+            },
+          });
+
+          this.isFetchingMedalClip = false;
+          this.medalDownloadProgress = 0;
+          this.medalUploadProgress = 0;
+          this.medalClipUrl = '';
+          this.medalStatusMessage = '';
+          this.medalETA = '';
+
+          this.loadCaseData();
+          alert('Medal Clip erfolgreich hochgeladen!');
+          return;
+        } catch (error) {
+          if (error instanceof MedalIntegrityError) {
+            const retry = window.confirm(`${error.message}\n\nMöchtest du es erneut versuchen?`);
+            if (retry) {
+              this.medalDownloadProgress = 0;
+              this.medalUploadProgress = 0;
+              this.medalStatusMessage = 'Erneuter Download wird vorbereitet...';
+              this.medalETA = '';
+              this.medalStartTime = Date.now();
+              continue;
+            }
+
+            this.isFetchingMedalClip = false;
+            this.medalDownloadProgress = 0;
+            this.medalUploadProgress = 0;
+            this.medalStatusMessage = '';
+            this.medalETA = '';
+            return;
+          }
+
+          throw error;
         }
       }
-
-      // Use Blob directly from chunks to avoid corruption from manual Uint8Array assembly
-      const videoBlob = new Blob(chunks as BlobPart[], { type: mimeType });
-
-      this.medalDownloadProgress = 100;
-      this.medalUploadProgress = 0;
-      this.medalStatusMessage = 'Upload-URL wird angefordert...';
-
-      const uploadInfo = await this.http
-        .get<CaseFileUploadGetResponse>(
-          `${environment.apiUrl}/cases/upload?case=${this.caseId}&extension=${fileExtension}`,
-          { headers: this.getAuthHeaders(), withCredentials: true },
-        )
-        .toPromise();
-
-      if (!uploadInfo?.url) throw new Error('Fehler beim Abrufen der Upload-URL');
-
-      this.medalStatusMessage = 'Video wird hochgeladen...';
-      this.medalStartTime = Date.now();
-
-      const videoFile = new File([videoBlob], fileNameWithExt, { type: mimeType });
-
-      await this.uploadFileToPresignedUrl(videoFile, uploadInfo.url, mimeType, {
-        onProgress: (progress) => {
-          this.medalUploadProgress = progress;
-          this.medalETA = this.calculateETA(this.medalStartTime, progress);
-          this.medalStatusMessage = `Video wird hochgeladen... (${progress}%)`;
-        },
-      });
-
-      this.isFetchingMedalClip = false;
-      this.medalDownloadProgress = 0;
-      this.medalUploadProgress = 0;
-      this.medalClipUrl = '';
-      this.medalStatusMessage = '';
-      this.medalETA = '';
-
-      this.loadCaseData();
-      alert('Medal Clip erfolgreich hochgeladen!');
     } catch (error) {
       this.isFetchingMedalClip = false;
       this.medalDownloadProgress = 0;
@@ -825,14 +849,14 @@ export class CaseDetailComponent implements OnInit {
       this.fileUploader.options.headers = [{ name: 'Content-Type', value: contentType }];
 
       // Set up callbacks
-      this.fileUploader.onBeforeUploadItem = (item) => {
+      this.fileUploader.onBeforeUploadItem = (item: any) => {
         item.url = presignedUrl;
         item.method = 'PUT';
         item.withCredentials = false;
         item.headers = [{ name: 'Content-Type', value: contentType }];
       };
 
-      this.fileUploader.onProgressItem = (_item, progress) => {
+      this.fileUploader.onProgressItem = (_item: any, progress: any) => {
         callbacks.onProgress(progress);
       };
 
@@ -841,7 +865,7 @@ export class CaseDetailComponent implements OnInit {
         resolve();
       };
 
-      this.fileUploader.onErrorItem = (_item, response, status) => {
+      this.fileUploader.onErrorItem = (_item: any, response: any, status: any) => {
         this.cleanupUploaderCallbacks();
         reject(new Error(`Upload fehlgeschlagen: ${status} ${response}`));
       };

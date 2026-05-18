@@ -62,8 +62,9 @@ import {
 } from './routes/chickencross.js';
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
-import { handleGetReports, handleReportFileUpload } from './routes/reports.js';
+import { handleGetReports, handleReportFileUpload, handleSearchReportsBySteamId } from './routes/reports.js';
 import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
+import { handleLootboxPurchase, handleLootboxInfo } from './routes/lootbox.js';
 import {
   handleGetMinecraftStats,
   handlePostMinecraftLink,
@@ -209,10 +210,15 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/chickencross': handleChickenCrossGet,
   'POST:/chickencross': handleChickenCrossPost,
 
+  // Lootbox routes
+  'GET:/lootbox': handleLootboxInfo,
+  'POST:/lootbox': handleLootboxPurchase,
+
   // Z.E.I.T. routes
   'GET:/zeit': getUserData,
 
   // Reporting routes
+  'GET:/reports/search': handleSearchReportsBySteamId,
   'GET:/reports/upload': handleReportFileUpload,
   'GET:/reports': handleGetReports,
 };
@@ -226,7 +232,7 @@ export default {
       return new Response(null, {
         headers: {
           'Access-Control-Allow-Origin': origin || '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Allow-Credentials': 'true',
         },
@@ -294,7 +300,7 @@ export default {
       }
       return createResponse({ error: 'Not Found' }, 404, origin);
     } catch (error) {
-      console.error('Request error:', error);
+      console.error('Error in FetchHandler:', error);
       return createResponse({ error: 'Internal Server Error' }, 500, origin);
     }
   },
@@ -345,7 +351,7 @@ export default {
       ctx.waitUntil(checkForBirthdays(db, env, ctx));
     }
   },
-} satisfies ExportedHandler<Env>;
+};
 
 // Export PlayerlistStorage for Durable Object
 export { PlayerlistStorage };

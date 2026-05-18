@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.Hints;
-using HintServiceMeow.Core.Utilities;
+using System.Text;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
-using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
 using MEC;
+using RueI.API;
+using RueI.API.Elements;
+using RueI.Utils;
+using RueI.Utils.Enums;
+using UnityEngine;
+using Logger = LabApi.Features.Console.Logger;
+using Random = System.Random;
 
 namespace Eventim;
 
@@ -79,57 +84,54 @@ public static class EventHandlers
 
     private static void OnPlayerJoined(PlayerJoinedEventArgs ev)
     {
-        Hint eventInfoHud = new()
+        if (_currentEvent is null) return;
+
+        RueDisplay display = RueDisplay.Get(ev.Player);
+        StringBuilder builder = new();
+        builder.SetAlignment(AlignStyle.Left);
+        builder.SetLineHeight(15f);
+        builder.SetHorizontalPos(ev.Player.EdgeOffset());
+        builder.Append($"<size=25><b><color=green>{_currentEvent.Name} EVENT</color></b></size>\n");
+        builder.CloseHorizontalPos();
+        builder.AppendLine(
+            $"<size=15><b><color=white>{Wrap(_currentEvent.Description, 40, ev.Player.EdgeOffset())}</color></b></size>");
+        if (_currentEvent.Rules.Count > 0)
         {
-            Alignment = HintAlignment.Left,
-            AutoText = _ =>
+            builder.AddLinebreak();
+            builder.SetHorizontalPos(ev.Player.EdgeOffset());
+            builder.AppendLine("<size=15><b><color=yellow>REGELN:</color></b></size>");
+            builder.CloseHorizontalPos();
+            int ruleCounter = 1;
+            foreach (string rule in _currentEvent.Rules)
             {
-                string hint = string.Empty;
-                if (_currentEvent is null) return hint;
+                builder.SetHorizontalPos(ev.Player.EdgeOffset());
+                builder.Append($"<size=15><b>{ruleCounter}. {Wrap(rule, 40, ev.Player.EdgeOffset() + 20f)}</b></size>");
+                builder.CloseHorizontalPos();
+                builder.AddLinebreak();
+                ruleCounter++;
+            }
+        }
 
-                string description = Wrap(_currentEvent.Description, 40);
-                hint =
-                    $"""
-                     <size=25><b><color=green>{_currentEvent.Name} EVENT</color></b></size>
-                     <size=15><b><color=white>{description}</color></b></size>
-                     """;
+        builder.CloseLineHeight();
+        builder.CloseAlign();
 
-                if (_currentEvent.Rules.Count > 0)
-                {
-                    string rules = string.Join(
-                        "\n",
-                        _currentEvent.Rules.Select((rule, i) => $"<size=15><b>{i + 1}. {Wrap(rule, 40)}</b></size>")
-                    );
+        BasicElement hint = new(800f, builder.ToString());
 
-                    hint +=
-                        $"""
-
-                         <size=15><b><color=yellow>REGELN:</color></b></size>
-                         {rules}
-                         """;
-                }
-
-                return hint;
-            },
-            YCoordinateAlign = HintVerticalAlign.Top,
-            YCoordinate = 200,
-            XCoordinate = (int)(-540f * ev.Player.ReferenceHub.aspectRatioSync.AspectRatio + 600f) + 5,
-            SyncSpeed = HintSyncSpeed.Slowest
-        };
-        PlayerDisplay playerDisplay = PlayerDisplay.Get(ev.Player);
-        playerDisplay.AddHint(eventInfoHud);
+        display.Show(new Tag(), hint);
     }
 
-    private static string Wrap(string text, int maxLineLength)
+    private static string Wrap(string text, int maxLineLength, float horizontalPosition)
     {
         string[] words = text.Split(' ');
         string line = "";
-        List<string> result = new();
+        StringBuilder result = new();
 
         foreach (string word in words)
             if (line.Length + word.Length + 1 > maxLineLength)
             {
-                result.Add(line);
+                result.SetHorizontalPos(horizontalPosition);
+                result.AppendLine(line);
+                result.CloseHorizontalPos();
                 line = word;
             }
             else
@@ -138,9 +140,13 @@ public static class EventHandlers
             }
 
         if (!string.IsNullOrEmpty(line))
-            result.Add(line);
+        {
+            result.SetHorizontalPos(horizontalPosition);
+            result.AppendLine(line);
+            result.CloseHorizontalPos();
+        }
 
-        return string.Join("\n", result);
+        return result.ToString();
     }
 
     public static void QueueEvent(IEvent ev)
@@ -164,6 +170,22 @@ public static class EventHandlers
                 typeof(IEvent).IsAssignableFrom(t))
             .Select(t => (IEvent)Activator.CreateInstance(t)!)
             .ToList();
+    }
+
+    /// <summary>
+    ///     Gets the offset necessary to push a hint to the edge of the screen.
+    /// </summary>
+    /// <param name="player">The player the offset should be calculated for.</param>
+    /// <returns>The position offset needed to place the hint on the edge of the screen.</returns>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private static float EdgeOffset(this Player player)
+    {
+        const float Base = 1080f - 1f; //slight padding
+        const float DisplayAreaWidth = 1200f;
+
+        float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
+
+        return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
     }
 }
 

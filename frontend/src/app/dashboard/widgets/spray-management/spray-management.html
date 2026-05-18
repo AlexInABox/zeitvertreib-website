@@ -1,0 +1,186 @@
+<div id="sprays-card" class="stats-card p-6 rounded-2xl auto-height">
+  <!-- Spray Ban Warning -->
+  <div *ngIf="isSprayBanned" class="spray-ban-warning mb-4">
+    <div class="spray-ban-icon">🔨</div>
+    <div class="spray-ban-content">
+      <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
+      <p class="spray-ban-reason"><strong>Grund:</strong> {{ sprayBanReason }}</p>
+      <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ sprayBannedBy }}</p>
+      <p class="spray-ban-contact">
+        Öffne ein Ticket auf unserem
+        <a href="https://dsc.gg/zeit" target="_blank" class="spray-ban-link"><strong>Discord-Server</strong></a
+        >.
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="!isSprayBanned" class="sprays-container-inline">
+    <div class="sprays-info-left">
+      <h3 class="spray-title">🖼️ Sprays</h3>
+      <p class="spray-subtitle">Bis zu {{ isDonator ? 3 : 2 }} Sprays hochladen</p>
+    </div>
+
+    <div class="sprays-action-right">
+      <div class="spray-grid-inline">
+        <div *ngFor="let slot of spraySlots; let i = index" class="spray-item-mini">
+          <!-- Supporter slot (3rd slot) — locked for non-donators -->
+          <div *ngIf="i === 2 && !isDonator" class="spray-locked-mini">
+            <span class="locked-icon-mini" title="Exklusiv für Unterstützer!">🔒</span>
+          </div>
+
+          <!-- Uploaded Spray -->
+          <div
+            *ngIf="shouldShowSpraySlot(i)"
+            class="spray-uploaded-mini"
+            [attr.data-slot-index]="i"
+            [attr.data-spray-id]="slot.id"
+          >
+            <img [src]="slot.imageUrl" [alt]="slot.name" class="spray-image-mini" />
+            <button
+              (click)="deleteSprayForSlot(i)"
+              class="spray-delete-btn-mini"
+              [disabled]="slot.isUploading"
+              title="Löschen"
+            >
+              <span *ngIf="!slot.isUploading">🗑️</span>
+              <span *ngIf="slot.isUploading" class="spray-spinner-mini"></span>
+            </button>
+          </div>
+
+          <!-- Preview & Upload (opens modal) -->
+          <div
+            *ngIf="canUploadToSlot(i) && slot.selectedFile && !previewModalOpen && !slot.isUploading"
+            class="spray-preview-mini"
+          >
+            <img [src]="slot.preview" alt="Preview" class="spray-image-mini" />
+          </div>
+
+          <!-- Uploading State -->
+          <div *ngIf="slot.isUploading && !slot.id" class="spray-uploading-mini">
+            <div class="spray-spinner-mini"></div>
+          </div>
+
+          <!-- Empty Paid Slot -->
+          <div *ngIf="isSlotPaidButAvailable(i) && !slot.id && !slot.selectedFile" class="spray-empty-mini">
+            <input
+              type="file"
+              [id]="'spray' + i"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              (change)="onSprayFileSelected($event, i)"
+              class="spray-file-input"
+              style="display: none"
+            />
+            <label [for]="'spray' + i" class="spray-upload-btn-mini" title="Kostenpflichtiger Slot (100 ZVC/Woche)">
+              💰
+            </label>
+          </div>
+
+          <!-- Empty Free Slot -->
+          <div
+            *ngIf="canUploadToSlot(i) && !isSlotPaidButAvailable(i) && !slot.id && !slot.selectedFile"
+            class="spray-empty-mini"
+          >
+            <input
+              type="file"
+              [id]="'spray' + i"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              (change)="onSprayFileSelected($event, i)"
+              class="spray-file-input"
+              style="display: none"
+            />
+            <label [for]="'spray' + i" class="spray-upload-btn-mini" title="Bild wählen"> 📁 </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="sprayError" class="spray-message-compact spray-error mt-3">{{ sprayError }}</div>
+  <div *ngIf="spraySuccess" class="spray-message-compact spray-success mt-3">{{ spraySuccess }}</div>
+</div>
+
+<!-- Preview Modal -->
+<div class="preview-overlay" *ngIf="previewModalOpen" (click)="closePreviewModal(true)">
+  <div class="preview-modal compact-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-content">
+        <h3 class="preview-title">Spray konfigurieren</h3>
+      </div>
+      <button class="modal-close-btn" (click)="closePreviewModal(true)">✕</button>
+    </div>
+
+    <div class="modal-body compact-body custom-scrollbar">
+      <!-- Preview Area -->
+      <div class="spray-preview-container-modal-centered">
+        <div class="preview-image-box-modal">
+          <img [src]="previewModalUrl" alt="Spray Preview" class="preview-large-image-modal" />
+        </div>
+      </div>
+
+      <div class="preview-input-group">
+        <label for="sprayName">Name deines Sprays (max. 20 Zeichen)</label>
+        <input
+          id="sprayName"
+          type="text"
+          class="spray-input"
+          [(ngModel)]="previewModalName"
+          placeholder="z.B. Mein cooles Spray"
+          maxlength="20"
+          [class.invalid-input]="previewModalName && !isNameValid(previewModalName)"
+        />
+        <div *ngIf="previewModalName && !isNameValid(previewModalName)" class="input-error-hint">
+          Nur Buchstaben, Zahlen, Unterstriche und Leerzeichen erlaubt.
+        </div>
+      </div>
+
+      <div class="checkbox-group mt-2">
+        <div class="checkbox-item">
+          <input type="checkbox" id="privacyCheck" [(ngModel)]="acceptedPrivacy" />
+          <label for="privacyCheck">
+            Ich akzeptiere die
+            <span class="text-link" (click)="showPrivacyText = !showPrivacyText; $event.preventDefault()"
+              >Datenschutzhinweise</span
+            >
+          </label>
+        </div>
+        <div *ngIf="showPrivacyText" class="info-box-inline">
+          <div class="info-content">
+            <ul>
+              <li><strong>Öffentliche Verfügbarkeit:</strong> Dein Bild wird öffentlich zugänglich.</li>
+              <li><strong>Moderation:</strong> Bilder werden automatisiert geprüft.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="checkbox-item">
+          <input type="checkbox" id="rulesCheck" [(ngModel)]="acceptedRules" />
+          <label for="rulesCheck">
+            Ich respektiere die
+            <span class="text-link" (click)="showRulesText = !showRulesText; $event.preventDefault()"
+              >Inhaltsregeln</span
+            >
+          </label>
+        </div>
+        <div *ngIf="showRulesText" class="info-box-inline">
+          <div class="info-content">
+            <div *ngIf="sprayRulesLoading">Regeln werden geladen...</div>
+            <div *ngIf="!sprayRulesLoading && sprayRules">
+              <ol>
+                <li *ngFor="let rule of sprayRules.rules_de">{{ rule }}</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        class="btn-save-spray mt-4"
+        (click)="confirmUploadFromModal()"
+        [disabled]="previewModalUploading || !isNameValid(previewModalName) || !acceptedPrivacy || !acceptedRules"
+      >
+        <span *ngIf="!previewModalUploading">🚀 Jetzt hochladen</span>
+        <span *ngIf="previewModalUploading" class="spray-spinner-mini"></span>
+      </button>
+    </div>
+  </div>
+</div>

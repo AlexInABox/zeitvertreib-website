@@ -1,0 +1,28 @@
+{
+  "name": "proxied",
+  "version": "1.0.0",
+  "description": "This is a custom CORS Proxy server for Zeitvertreib only, that allows us to bypass CORS restrictions when downloading medal clips from the medal cdn!",
+  "scripts": {
+    "start": "npx tsc && node dist/index.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^10.2.0",
+    "express": "^5.2.1",
+    "install": "^0.13.0",
+    "nodemon": "^3.1.14",
+    "npm": "^11.12.1",
+    "prettier": "^3.8.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2"
+  }
+}
