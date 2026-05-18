@@ -1,10 +1,10 @@
 :host {
   display: block;
-  --lootbox-item-width: 120px;
+  --lootbox-item-width: 100px;
   --lootbox-item-gap: 12px;
   --lootbox-item-total-width: calc(var(--lootbox-item-width) + var(--lootbox-item-gap));
   --lootbox-animation-center-offset: 45px;
-  --lootbox-center-offset: 0px;
+  --lootbox-center-offset: 45px;
 }
 
 .stats-card {
@@ -66,6 +66,8 @@
   gap: var(--lootbox-item-gap);
   padding: 0 10px;
   will-change: transform;
+  margin-left: 50%;
+  width: max-content;
 }
 
 .is-animating .lootbox-track {

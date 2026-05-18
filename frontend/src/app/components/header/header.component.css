@@ -19,8 +19,6 @@
   padding: 0.5rem 1rem;
   border-radius: 999px;
   background: rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.6);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.1),
@@ -29,6 +27,17 @@
   width: fit-content;
   min-width: min-content;
   position: relative;
+}
+
+.header-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  z-index: -1;
+  pointer-events: none;
 }
 
 :host-context(.my-app-dark) .header-glass {
@@ -103,13 +112,18 @@
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 1001;
 }
 
 :host-context(.my-app-dark) .dropdown-menu {
   background: rgba(var(--p-menubar-background-rgb, 24, 24, 27), 0.65);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* Hover bridge to prevent menu from closing when moving mouse from nav-item to dropdown */

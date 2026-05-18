@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
@@ -20,6 +21,13 @@ public static class RemoteAdminCommandPatch
         "kick"
     ];
 
+    [ThreadStatic]
+    internal static string PendingStaffName;
+    [ThreadStatic]
+    internal static string PendingStaffId;
+    [ThreadStatic]
+    internal static string PendingTranslated;
+
     [HarmonyTargetMethod]
     // ReSharper disable once ArrangeTypeMemberModifiers
     static MethodBase TargetMethod()
@@ -29,8 +37,12 @@ public static class RemoteAdminCommandPatch
     }
 
     // ReSharper disable once ArrangeTypeMemberModifiers
-    static void Postfix(string q, CommandSender sender)
+    static void Prefix(string q, CommandSender sender)
     {
+        PendingStaffName = null;
+        PendingStaffId = null;
+        PendingTranslated = null;
+
         if (sender is not PlayerCommandSender)
             return;
 
@@ -54,10 +66,48 @@ public static class RemoteAdminCommandPatch
         if (exempt != null && exempt.Contains(senderId))
             return;
 
+        PendingStaffName = sender.Nickname ?? "Unbekannt";
+        PendingStaffId = sender.SenderId ?? "Unbekannt";
+        PendingTranslated = CommandTranslator.Translate(q);
+    }
+
+    static void Postfix()
+    {
+        PendingStaffName = null;
+        PendingStaffId = null;
+        PendingTranslated = null;
+    }
+}
+
+/// Patches PlayerCommandSender.RaReply to detect whether a command succeeded.
+[HarmonyPatch]
+public static class RaReplyPatch
+{
+    [HarmonyTargetMethod]
+    // ReSharper disable once ArrangeTypeMemberModifiers
+    static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("PlayerCommandSender:RaReply")
+               ?? AccessTools.Method("RemoteAdmin.PlayerCommandSender:RaReply");
+    }
+
+    // ReSharper disable once ArrangeTypeMemberModifiers
+    static void Prefix(bool success)
+    {
+        if (!success)
+            return;
+
+        string translated = RemoteAdminCommandPatch.PendingTranslated;
+        if (translated == null)
+            return;
+
+        // Clear to prevent duplicate sends if RaReply is called more than once
+        RemoteAdminCommandPatch.PendingTranslated = null;
+
         DiscordWebhook.Send(
-            sender.Nickname ?? "Unbekannt",
-            sender.SenderId ?? "Unbekannt",
-            CommandTranslator.Translate(q)
+            RemoteAdminCommandPatch.PendingStaffName,
+            RemoteAdminCommandPatch.PendingStaffId,
+            translated
         );
     }
 }

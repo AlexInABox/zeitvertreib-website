@@ -12,7 +12,8 @@ public static class CommandTranslator
     private static readonly HashSet<string> ItemSecondArg =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            "give"
+            "give",
+            "forceequip"
         };
 
     public static string Translate(string rawCommand)
@@ -48,6 +49,37 @@ public static class CommandTranslator
                     if (player != null)
                     {
                         sb.Append(player.Nickname).Append($"({playerId})");
+                        continue;
+                    }
+                }
+                else if (stripped.Contains('.'))
+                {
+                    string[] parts = stripped.Split('.');
+                    StringBuilder partSb = new();
+                    bool anyResolved = false;
+
+                    for (int j = 0; j < parts.Length; j++)
+                    {
+                        if (j > 0)
+                            partSb.Append('.');
+
+                        if (int.TryParse(parts[j], out int pid))
+                        {
+                            Player p = Player.GetAll().FirstOrDefault(x => x.PlayerId == pid);
+                            if (p != null)
+                            {
+                                partSb.Append(p.Nickname).Append($"({pid})");
+                                anyResolved = true;
+                                continue;
+                            }
+                        }
+
+                        partSb.Append(parts[j]);
+                    }
+
+                    if (anyResolved)
+                    {
+                        sb.Append(partSb);
                         continue;
                     }
                 }
