@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
@@ -9,6 +10,36 @@ namespace Audited;
 public static class DiscordWebhook
 {
     private static readonly HttpClient Http = new();
+
+    private static readonly HashSet<string> RedCommands = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "give",
+        "godmode",
+        "noclip",
+    };
+
+    private static readonly HashSet<string> YellowCommands = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "pbc",
+        "bc",
+        "forceclass",
+    };
+
+    private static int GetColor(string translatedCommand)
+    {
+        int spaceIndex = translatedCommand.IndexOf(' ');
+        string commandName = spaceIndex >= 0
+            ? translatedCommand.Substring(0, spaceIndex)
+            : translatedCommand;
+
+        if (RedCommands.Contains(commandName))
+            return 0xef4444;
+
+        if (YellowCommands.Contains(commandName))
+            return 0xeab308;
+
+        return 0x3b82f6;
+    }
 
     public static void Send(string staffName, string staffId, string translatedCommand)
     {
@@ -22,7 +53,7 @@ public static class DiscordWebhook
             {
                 new
                 {
-                    color = 0x3b82f6,
+                    color = GetColor(translatedCommand),
                     description = $"**{staffName}** `{staffId}`\n```{translatedCommand}```"
                 }
             },
