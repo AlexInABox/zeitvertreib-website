@@ -12,6 +12,17 @@ public class Schizophrenia : IEvent
     private const float Duration = 1000f;
     private const int AudioSampleRate = 48000;
 
+    private static readonly Dictionary<Player, CoroutineHandle> ActiveCoroutines = new();
+
+    public static void StopFor(Player player)
+    {
+        if (ActiveCoroutines.TryGetValue(player, out CoroutineHandle handle))
+        {
+            Timing.KillCoroutines(handle);
+            ActiveCoroutines.Remove(player);
+        }
+    }
+
     private static readonly string[] Voices =
     [
         "Da war etwas...",
@@ -37,7 +48,7 @@ public class Schizophrenia : IEvent
         player.EnableEffect<Blindness>(30);
         player.EnableEffect<Slowness>(20);
         player.EnableEffect<AmnesiaVision>();
-        Timing.RunCoroutine(SchizophreniaLoop(player));
+        ActiveCoroutines[player] = Timing.RunCoroutine(SchizophreniaLoop(player));
     }
 
     private static IEnumerator<float> SchizophreniaLoop(Player player)
@@ -46,6 +57,7 @@ public class Schizophrenia : IEvent
 
         while (elapsed < Duration && player.IsAlive)
         {
+
             float wait = EventHandlers.Random.Next(15, 26);
             yield return Timing.WaitForSeconds(wait);
             elapsed += wait;
@@ -53,6 +65,7 @@ public class Schizophrenia : IEvent
             if (!player.IsAlive) break;
 
             // Random hallucinations
+
             switch (EventHandlers.Random.Next(8))
             {
                 case 0:
@@ -92,6 +105,8 @@ public class Schizophrenia : IEvent
                     break;
             }
         }
+
+        ActiveCoroutines.Remove(player);
     }
 
     private static void PlayHallucinatedFootsteps(Player player)
