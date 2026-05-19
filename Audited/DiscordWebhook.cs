@@ -23,6 +23,8 @@ public static class DiscordWebhook
         "pbc",
         "bc",
         "forceclass",
+        "flip",
+        "playerscale",
     };
 
     private static int GetColor(string translatedCommand)

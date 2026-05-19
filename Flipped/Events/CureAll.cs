@@ -13,6 +13,7 @@ public class CureAll : IEvent
 
     public void Run(Player player)
     {
+        Schizophrenia.StopFor(player);
         player.DisableAllEffects();
         EventHandlers.PushUserMessage(player, "Die Münze heilt dich von allem! Du bist gerettet!");
     }

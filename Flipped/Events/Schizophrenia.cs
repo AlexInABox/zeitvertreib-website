@@ -12,6 +12,17 @@ public class Schizophrenia : IEvent
     private const float Duration = 1000f;
     private const int AudioSampleRate = 48000;
 
+    private static readonly Dictionary<Player, CoroutineHandle> ActiveCoroutines = new();
+
+    public static void StopFor(Player player)
+    {
+        if (ActiveCoroutines.TryGetValue(player, out CoroutineHandle handle))
+        {
+            Timing.KillCoroutines(handle);
+            ActiveCoroutines.Remove(player);
+        }
+    }
+
     private static readonly string[] Voices =
     [
         "Da war etwas...",
@@ -37,7 +48,7 @@ public class Schizophrenia : IEvent
         player.EnableEffect<Blindness>(30);
         player.EnableEffect<Slowness>(20);
         player.EnableEffect<AmnesiaVision>();
-        Timing.RunCoroutine(SchizophreniaLoop(player));
+        ActiveCoroutines[player] = Timing.RunCoroutine(SchizophreniaLoop(player));
     }
 
     private static IEnumerator<float> SchizophreniaLoop(Player player)
@@ -46,6 +57,7 @@ public class Schizophrenia : IEvent
 
         while (elapsed < Duration && player.IsAlive)
         {
+
             float wait = EventHandlers.Random.Next(15, 26);
             yield return Timing.WaitForSeconds(wait);
             elapsed += wait;
@@ -53,6 +65,7 @@ public class Schizophrenia : IEvent
             if (!player.IsAlive) break;
 
             // Random hallucinations
+
             switch (EventHandlers.Random.Next(8))
             {
                 case 0:
@@ -61,7 +74,7 @@ public class Schizophrenia : IEvent
                 case 1:
                     player.EnableEffect<Flashed>(130, 1.8f);
                     player.EnableEffect<Blurred>(120, 2.5f);
-                    Timing.CallDelayed(1.8f,
+                    Timing.CallDelayed(0.1f,
                         () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 180f, 0f); });
                     break;
                 case 2:
@@ -71,7 +84,7 @@ public class Schizophrenia : IEvent
                     break;
                 case 3:
                     player.EnableEffect<Flashed>(130, 1.8f);
-                    Timing.CallDelayed(1.8f,
+                    Timing.CallDelayed(0.1f,
                         () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 90f, 0f); });
                     break;
                 case 4:
@@ -85,13 +98,15 @@ public class Schizophrenia : IEvent
                     PlayHallucinatedFootsteps(player);
                     break;
                 case 7:
-                    player.EnableEffect<Flashed>(130, 0.5f);
+                    player.EnableEffect<Flashed>(130, 2f);
                     player.EnableEffect<Blurred>(120, 2.5f);
-                    Timing.CallDelayed(0.3f,
+                    Timing.CallDelayed(0.1f,
                         () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 270f, 0f); });
                     break;
             }
         }
+
+        ActiveCoroutines.Remove(player);
     }
 
     private static void PlayHallucinatedFootsteps(Player player)
