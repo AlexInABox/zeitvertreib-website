@@ -74,7 +74,7 @@ public class Schizophrenia : IEvent
                 case 1:
                     player.EnableEffect<Flashed>(130, 1.8f);
                     player.EnableEffect<Blurred>(120, 2.5f);
-                    Timing.CallDelayed(1.8f,
+                    Timing.CallDelayed(0.1f,
                         () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 180f, 0f); });
                     break;
                 case 2:
@@ -84,7 +84,7 @@ public class Schizophrenia : IEvent
                     break;
                 case 3:
                     player.EnableEffect<Flashed>(130, 1.8f);
-                    Timing.CallDelayed(1.8f,
+                    Timing.CallDelayed(0.1f,
                         () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 90f, 0f); });
                     break;
                 case 4:
@@ -98,9 +98,9 @@ public class Schizophrenia : IEvent
                     PlayHallucinatedFootsteps(player);
                     break;
                 case 7:
-                    player.EnableEffect<Flashed>(130, 0.5f);
+                    player.EnableEffect<Flashed>(130, 2f);
                     player.EnableEffect<Blurred>(120, 2.5f);
-                    Timing.CallDelayed(0.3f,
+                    Timing.CallDelayed(0.1f,
                         () => { player.Rotation = player.Rotation * Quaternion.Euler(0f, 270f, 0f); });
                     break;
             }
