@@ -51,7 +51,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Check path filters
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           base: ${{ steps.last-success.outputs.base }}
