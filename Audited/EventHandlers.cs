@@ -18,7 +18,8 @@ public static class RemoteAdminCommandPatch
         "mute",
         "unmute",
         "forceban",
-        "kick"
+        "kick",
+        "tps"
     ];
 
     [ThreadStatic]
