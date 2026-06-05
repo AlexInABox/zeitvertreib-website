@@ -2,7 +2,12 @@ import OpenAI from 'openai';
 
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
-export function buildModerationPrompt(context: string, username: string, messageContent: string, hasMedia: boolean = false): string {
+export function buildModerationPrompt(
+  context: string,
+  username: string,
+  messageContent: string,
+  hasMedia: boolean = false,
+): string {
   const mediaInstruction = hasMedia
     ? `
 ### MEDIA ANALYSIS:

@@ -72,12 +72,15 @@ export async function moderateMessage(message: Message): Promise<void> {
       })
       .join(' ');
 
-    enhancedMessageContent = enhancedMessageContent
-      ? `${enhancedMessageContent} ${metadataStr}`
-      : metadataStr;
+    enhancedMessageContent = enhancedMessageContent ? `${enhancedMessageContent} ${metadataStr}` : metadataStr;
   }
 
-  const prompt = buildModerationPrompt(context, freshMessage.author.username, enhancedMessageContent, mediaItems.length > 0);
+  const prompt = buildModerationPrompt(
+    context,
+    freshMessage.author.username,
+    enhancedMessageContent,
+    mediaItems.length > 0,
+  );
 
   try {
     const messages: any[] = [];

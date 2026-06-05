@@ -132,7 +132,7 @@ async function downloadDirectly(url: string, tempId: string): Promise<string> {
   }
 
   const contentType = (response.headers.get('content-type') || '').toLowerCase();
-  
+
   // Ensure it's not a webpage
   const isHtml =
     contentType.includes('html') ||
@@ -153,7 +153,9 @@ async function downloadDirectly(url: string, tempId: string): Promise<string> {
 
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  console.log(`[MediaDownloader] [${tempId}] Direct fetch download finished: ${buffer.length} bytes, content-type: ${contentType}`);
+  console.log(
+    `[MediaDownloader] [${tempId}] Direct fetch download finished: ${buffer.length} bytes, content-type: ${contentType}`,
+  );
 
   if (buffer.length > MAX_MEDIA_SIZE_BYTES) {
     throw new Error(`Direct download exceeded maximum file size limit (15MB)`);
@@ -178,7 +180,9 @@ async function getVideoDuration(videoPath: string, tempId: string): Promise<numb
     console.log(`[MediaDownloader] [${tempId}] ffprobe duration result: ${duration} seconds`);
     return isNaN(duration) || duration <= 0 ? null : duration;
   } catch (err) {
-    console.log(`[MediaDownloader] [${tempId}] ffprobe duration check failed: ${err instanceof Error ? err.message : err}`);
+    console.log(
+      `[MediaDownloader] [${tempId}] ffprobe duration check failed: ${err instanceof Error ? err.message : err}`,
+    );
     return null;
   }
 }
@@ -188,7 +192,7 @@ async function getVideoDuration(videoPath: string, tempId: string): Promise<numb
  */
 async function extractFramesFromVideo(videoPath: string, tempId: string): Promise<MediaItem[]> {
   const framePattern = path.join('/tmp', `overwatch_frame_${tempId}_%03d.jpg`);
-  
+
   // Get video duration to space frames evenly
   const duration = await getVideoDuration(videoPath, tempId);
   const fpsVal = duration ? 6 / duration : 0.5;
@@ -201,18 +205,24 @@ async function extractFramesFromVideo(videoPath: string, tempId: string): Promis
     await runCommandWithTimeout(command, 15000);
     console.log(`[MediaDownloader] [${tempId}] FFmpeg command completed successfully`);
   } catch (err) {
-    console.warn(`[MediaDownloader] [${tempId}] Initial FFmpeg command failed: ${err instanceof Error ? err.message : err}`);
+    console.warn(
+      `[MediaDownloader] [${tempId}] Initial FFmpeg command failed: ${err instanceof Error ? err.message : err}`,
+    );
   }
 
   const files = await fs.readdir('/tmp');
   let frameFiles = files.filter((file) => file.startsWith(`overwatch_frame_${tempId}_`)).sort();
-  console.log(`[MediaDownloader] [${tempId}] Initial frame files found on disk: ${frameFiles.length} (${frameFiles.join(', ')})`);
+  console.log(
+    `[MediaDownloader] [${tempId}] Initial frame files found on disk: ${frameFiles.length} (${frameFiles.join(', ')})`,
+  );
 
   // If we got too few frames (e.g. because the video was truncated due to max-filesize and the duration-based fps was too small),
   // fall back to extracting 6 frames from the first 60 seconds of the clip (fps = 6 / 60 = 0.1)
   if (frameFiles.length < 5) {
-    console.log(`[MediaDownloader] [${tempId}] Extracted only ${frameFiles.length} frames. Falling back to extracting 6 frames from the first 60 seconds.`);
-    
+    console.log(
+      `[MediaDownloader] [${tempId}] Extracted only ${frameFiles.length} frames. Falling back to extracting 6 frames from the first 60 seconds.`,
+    );
+
     // Clean up current frames
     for (const frame of frameFiles) {
       await fs.unlink(path.join('/tmp', frame)).catch(() => {});
@@ -223,7 +233,9 @@ async function extractFramesFromVideo(videoPath: string, tempId: string): Promis
       await runCommandWithTimeout(fallbackCmd, 15000);
       const updatedFiles = await fs.readdir('/tmp');
       frameFiles = updatedFiles.filter((file) => file.startsWith(`overwatch_frame_${tempId}_`)).sort();
-      console.log(`[MediaDownloader] [${tempId}] Fallback frame files found on disk: ${frameFiles.length} (${frameFiles.join(', ')})`);
+      console.log(
+        `[MediaDownloader] [${tempId}] Fallback frame files found on disk: ${frameFiles.length} (${frameFiles.join(', ')})`,
+      );
     } catch (fallbackErr) {
       console.warn(`[MediaDownloader] [${tempId}] 60-second fallback frames extraction failed: ${fallbackErr}`);
     }
@@ -295,7 +307,7 @@ async function processMediaUrl(url: string, tempId: string): Promise<MediaItem[]
 
     const ext = path.extname(filePath).toLowerCase();
     console.log(`[MediaDownloader] [${tempId}] File extension resolved to: ${ext}`);
-    
+
     // If it's a static image, read directly
     if (IMAGE_EXTENSIONS.includes(ext)) {
       console.log(`[MediaDownloader] [${tempId}] Reading image file directly`);
@@ -372,7 +384,11 @@ export async function collectMediaFromMessage(message: Message): Promise<Process
         mediaItems.push(...result);
         logResults.push({ url: `${url}${isThumbnail ? ' (Thumbnail)' : ''}`, success: true });
       } else {
-        logResults.push({ url: `${url}${isThumbnail ? ' (Thumbnail)' : ''}`, success: false, error: 'No media items extracted' });
+        logResults.push({
+          url: `${url}${isThumbnail ? ' (Thumbnail)' : ''}`,
+          success: false,
+          error: 'No media items extracted',
+        });
       }
 
       // If this is a main media link (not a thumbnail itself), fetch metadata
