@@ -23,10 +23,10 @@
 
     <ItemGroup>
         <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" />
-        <PackageReference Include="Northwood.LabAPI" Version="1.1.6.1"/>
+        <PackageReference Include="Northwood.LabAPI" Version="1.1.7"/>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="System.Net.Http" Version="4.3.4"/>
-        <PackageReference Include="ExMod.Exiled" Version="9.13.3" />
+        <PackageReference Include="ExMod.Exiled" Version="9.14.2" />
         <PackageReference Include="RueI" Version="3.1.2" />
     </ItemGroup>
 

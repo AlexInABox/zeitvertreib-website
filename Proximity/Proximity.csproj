@@ -1,6 +1,6 @@
 <Project>
     <Import Project="..\Base.csproj"/>
     <ItemGroup>
-        <PackageReference Include="SecretLabNAudio.Core" Version="2.0.0"/>
+        <PackageReference Include="SecretLabNAudio.Core" Version="2.1.0" />
     </ItemGroup>
 </Project>
