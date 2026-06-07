@@ -7,7 +7,7 @@ import path from 'path';
 const execAsync = promisify(exec);
 
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff'];
-const MAX_MEDIA_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
+const MAX_MEDIA_SIZE_BYTES = 15 * 1024 * 1024 * 10; // 150MB
 
 export interface MediaItem {
   mimeType: string;
@@ -58,7 +58,7 @@ async function cleanUpTempFiles(tempId: string): Promise<void> {
     for (const file of files) {
       if (file.startsWith(`overwatch_media_${tempId}`) || file.startsWith(`overwatch_frame_${tempId}`)) {
         const filePath = path.join('/tmp', file);
-        await fs.unlink(filePath).catch(() => {});
+        await fs.unlink(filePath).catch(() => { });
       }
     }
   } catch (err) {
@@ -114,7 +114,7 @@ async function downloadWithYtDlp(url: string, tempId: string): Promise<string> {
   console.log(`[MediaDownloader] [${tempId}] yt-dlp download finished: ${filePath} (${stat.size} bytes)`);
 
   if (stat.size < 1000) {
-    await fs.unlink(filePath).catch(() => {});
+    await fs.unlink(filePath).catch(() => { });
     throw new Error(`Downloaded file too small (${stat.size} bytes)`);
   }
 
@@ -225,7 +225,7 @@ async function extractFramesFromVideo(videoPath: string, tempId: string): Promis
 
     // Clean up current frames
     for (const frame of frameFiles) {
-      await fs.unlink(path.join('/tmp', frame)).catch(() => {});
+      await fs.unlink(path.join('/tmp', frame)).catch(() => { });
     }
 
     const fallbackCmd = `ffmpeg -i "${videoPath}" -vf "fps=0.1,scale=480:-1" -vframes 6 "${framePattern}" 2>/dev/null`;
@@ -284,7 +284,7 @@ async function processMediaUrl(url: string, tempId: string): Promise<MediaItem[]
       const pathResult = await downloadWithYtDlp(url, tempId);
       const isHtml = await isLocalFileHtmlOrText(pathResult);
       if (isHtml) {
-        await fs.unlink(pathResult).catch(() => {});
+        await fs.unlink(pathResult).catch(() => { });
         throw new Error('yt-dlp downloaded webpage HTML instead of binary media');
       }
       filePath = pathResult;
