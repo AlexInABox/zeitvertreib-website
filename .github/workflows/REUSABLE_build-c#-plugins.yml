@@ -73,7 +73,6 @@ jobs:
               if (-not (Test-Path $target)) { Copy-Item $_.FullName $target }
           }
 
-          Invoke-WebRequestWithRetry -Uri $env:SNAKE_API_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "SnakeAPI.dll")
           Invoke-WebRequestWithRetry -Uri $env:UCR_DLL_URL -OutFile (Join-Path $env:EXILED_REFERENCES "UncomplicatedCustomRoles-LabAPI.dll")
 
       - name: Build all plugins
