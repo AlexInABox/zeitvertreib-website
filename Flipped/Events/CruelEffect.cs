@@ -20,22 +20,22 @@ public class CruelEffect : IEvent
         [
             () =>
             {
-                player.EnableEffect<Blindness>(90, 15f); // Barely blind. 10% visibility left!
+                player.EnableEffect<Blindness>(90, 15f); // Barely blind. 10% visibility left
                 EventHandlers.PushUserMessage(player, "Die Münze nimmt dir deine Augen...");
             },
             () =>
             {
-                player.EnableEffect<Slowness>(90, 15f); // 90% Slowdown!
+                player.EnableEffect<Slowness>(90, 15f); // 90% Slowdown
                 EventHandlers.PushUserMessage(player, "Das Glück der Münze bricht dir deine Beine!");
             },
             () =>
             {
-                player.EnableEffect<Sinkhole>(1, 15f); // Scary!
+                player.EnableEffect<Sinkhole>(1, 15f); // Scary
                 EventHandlers.PushUserMessage(player, "Die Münze möchte dich leiden sehen!");
             },
             () =>
             {
-                player.EnableEffect<Slowness>(190, 15f); // Reversed controls!!
+                player.EnableEffect<Slowness>(190, 15f); // Reversed controls
                 EventHandlers.PushUserMessage(player, "Die Münze invertiert deine Steuerung?! Lol.");
             }
         ];
