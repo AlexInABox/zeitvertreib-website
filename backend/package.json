@@ -27,6 +27,7 @@
     "@2toad/profanity": "^3.3.0",
     "@discordjs/builders": "^1.14.1",
     "@discordjs/rest": "^2.6.1",
+    "@mollie/api-client": "^4.5.0",
     "@zeitvertreib/types": "file:../types",
     "aws4fetch": "^1.0.20",
     "better-sqlite3": "^12.10.0",

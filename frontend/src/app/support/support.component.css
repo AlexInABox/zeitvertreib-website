@@ -1,0 +1,602 @@
+/* Support Page - Minimalist Glassmorphism */
+
+.support-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 4rem);
+  padding: 2rem 1rem;
+}
+
+/* Glass panel matching the header texture */
+.glass-panel {
+  background: rgba(var(--p-menubar-background-rgb, 255, 255, 255), 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  padding: 2rem;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* Text color for light mode */
+  color: #1f2937;
+}
+
+:host-context(.my-app-dark) .glass-panel {
+  background: rgba(var(--p-menubar-background-rgb, 24, 24, 27), 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+  /* Text color for dark mode */
+  color: #f3f4f6;
+}
+
+/* Titles */
+.glow-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: inherit;
+}
+
+.subtitle {
+  margin: 0.25rem 0 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.mollie-logo-wrap {
+  display: inline-block;
+  vertical-align: baseline;
+  height: 0.8em;
+  margin-left: 0.1rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.mollie-logo {
+  height: 100%;
+  width: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mollie-logo--light {
+  display: block;
+}
+.mollie-logo--dark {
+  display: none;
+}
+
+:host-context(.my-app-dark) .mollie-logo--light {
+  display: none;
+}
+:host-context(.my-app-dark) .mollie-logo--dark {
+  display: block;
+}
+
+/* ─── Thank-you / Success Screen ─── */
+.thank-you-view {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.confetti-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: 20px;
+}
+
+.ty-emoji {
+  font-size: 3.5rem;
+  line-height: 1;
+  animation: emoji-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  position: relative;
+  z-index: 1;
+}
+
+.ty-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0.25rem 0 0;
+  color: inherit;
+  position: relative;
+  z-index: 1;
+  animation: fade-up 0.5s 0.1s ease both;
+}
+
+.ty-sub {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  opacity: 0.75;
+  color: inherit;
+  position: relative;
+  z-index: 1;
+  animation: fade-up 0.5s 0.2s ease both;
+}
+
+.ty-thanks {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0.25rem 0 1.25rem;
+  color: inherit;
+  position: relative;
+  z-index: 1;
+  animation: fade-up 0.5s 0.3s ease both;
+}
+
+@keyframes emoji-pop {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Plain back button — no rainbow, no glow */
+.btn-back {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0.55rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  color: inherit;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+  animation: fade-up 0.5s 0.4s ease both;
+}
+
+.btn-back:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+:host-context(.my-app-dark) .btn-back {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.my-app-dark) .btn-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Cancelled View ─── */
+.cancelled-view {
+  padding: 1.25rem 0;
+}
+
+.cancel-title {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.cancel-sub {
+  opacity: 0.6 !important;
+  font-weight: 500 !important;
+}
+
+.cancel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.cancel-actions .btn-primary {
+  animation: fade-up 0.5s 0.35s ease both;
+}
+
+.cancel-actions .btn-back {
+  animation: fade-up 0.5s 0.45s ease both;
+}
+
+/* ─── Payment Icons ─── */
+.payment-icons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  /* Disallow selecting payment icons or content */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+:host-context(.my-app-dark) .payment-icons {
+  border-top-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Uniform card shell — same size for every icon */
+.pay-icon-wrap {
+  width: 48px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  opacity: 0.88;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  flex-shrink: 0;
+  /* Prevent visual layout shifting and promote to GPU */
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+:host-context(.my-app-dark) .pay-icon-wrap {
+  border-color: rgba(255, 255, 255, 0.12);
+  /* keep white bg so logos with transparent backgrounds still look right */
+}
+
+.pay-icon-wrap:hover {
+  opacity: 1;
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* The actual icon fills its card */
+.pay-icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  /* Prevent text/image selection and drag behavior, and prevent mouse leave/enter flickering */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Custom logo scaling to match visual weight */
+.pay-icon--paypal {
+  width: 125%;
+  height: 125%;
+}
+
+.pay-icon--applepay {
+  transform: scale(1.14);
+  transform-origin: center;
+}
+
+.pay-icon--gpay {
+  transform: scale(1.14);
+  transform-origin: center;
+}
+
+/* SOFORT card — no white bg needed, color fills the card */
+.pay-icon-wrap--sofort {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Presets Grid */
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.preset-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+:host-context(.my-app-dark) .preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.preset-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+:host-context(.my-app-dark) .preset-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.preset-btn.active {
+  background: var(--p-primary-color, #3b82f6) !important;
+  color: var(--p-primary-contrast-color, white) !important;
+  border-color: var(--p-primary-color, #3b82f6) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Inputs & Form Groups */
+.input-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.input-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.text-muted {
+  color: inherit;
+  opacity: 0.5;
+}
+
+.glass-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+:host-context(.my-app-dark) .glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.glass-input::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.my-app-dark) .glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.glass-input:focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--p-primary-color, #3b82f6);
+}
+
+:host-context(.my-app-dark) .glass-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--p-primary-color, #3b82f6);
+}
+
+.glass-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.glass-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.input-invalid {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+.input-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.text-danger {
+  color: #ef4444 !important;
+}
+
+/* Primary Button */
+.btn-primary {
+  width: 100%;
+  background: var(--p-primary-color, #3b82f6);
+  color: var(--p-primary-contrast-color, white);
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.18);
+  position: relative;
+  overflow: hidden; /* clips the shimmer to the button shape */
+  z-index: 1;
+}
+
+:host-context(.my-app-dark) .btn-primary {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Shimmer sweep on hover */
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+  background-size: 200% 100%;
+  background-position: 200% 0;
+  transition: background-position 1s ease;
+  pointer-events: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.35),
+    0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+:host-context(.my-app-dark) .btn-primary:hover:not(:disabled) {
+  box-shadow:
+    0 6px 24px rgba(99, 153, 255, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.btn-primary:hover:not(:disabled)::before {
+  background-position: -200% 0;
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Error Alert */
+.error-toast {
+  padding: 0.85rem 1.15rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+/* Thank You screen styling */
+.thank-you-view {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.description {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.detail-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: inherit;
+  opacity: 0.7;
+  margin-bottom: 1.5rem;
+}
+
+/* Fade-in Animation */
+.fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .glass-panel {
+    padding: 1.5rem;
+  }
+
+  .presets-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .preset-btn:nth-child(4),
+  .preset-btn:nth-child(5) {
+    grid-column: span 1.5;
+  }
+}

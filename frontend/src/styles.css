@@ -8,32 +8,7 @@
 }
 /* Global styles & vanilla utility layer (Tailwind removed) */
 
-/* Ko-fi widget positioning and fixes */
-.floatingchat-container-wrap,
-.floatingchat-container-wrap-mo498,
-[class*='floatingchat-container'] {
-  position: fixed !important;
-  bottom: 20px !important;
-  left: 25px !important;
-  right: auto !important;
-  top: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  z-index: 99999 !important;
-  overflow: visible !important;
-  max-width: none !important;
-  width: auto !important;
-  transform: none !important;
-}
 
-.floatingchat-container-wrap iframe,
-.floatingchat-container-wrap-mo498 iframe,
-[class*='floatingchat-container'] iframe {
-  overflow: visible !important;
-  max-width: none !important;
-  width: auto !important;
-  height: auto !important;
-}
 
 :root {
   --p-menubar-background-rgb: 255, 255, 255;

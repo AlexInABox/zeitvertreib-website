@@ -1,0 +1,137 @@
+<div class="support-container">
+  <div class="support-card glass-panel fade-in">
+    <!-- Success / Returned screen -->
+    <div *ngIf="showSuccessMessage" class="thank-you-view">
+      <canvas #confettiCanvas class="confetti-canvas"></canvas>
+      <div class="ty-emoji">🎉</div>
+      <h1 class="ty-title">Juhuu!!</h1>
+      <p class="ty-sub">Wir verarbeiten gerade deine Zahlung.</p>
+      <p class="ty-thanks">Danke so sehr für deine Unterstützung! 💜</p>
+      <button class="btn-back" (click)="showSuccessMessage = false">← Zurück</button>
+    </div>
+
+    <!-- Cancelled screen -->
+    <div *ngIf="showCancelledMessage" class="thank-you-view cancelled-view">
+      <div class="ty-emoji">😕</div>
+      <h1 class="ty-title cancel-title">Abgebrochen</h1>
+      <p class="ty-sub">Deine Zahlung wurde nicht abgeschlossen.</p>
+      <p class="ty-thanks cancel-sub">Kein Problem — du kannst es jederzeit erneut versuchen.</p>
+      <div class="cancel-actions">
+        <button class="btn-primary" (click)="retry()">Erneut versuchen</button>
+        <button class="btn-back" (click)="showCancelledMessage = false">← Zurück</button>
+      </div>
+    </div>
+
+    <div *ngIf="!showSuccessMessage && !showCancelledMessage" class="donation-form-view">
+      <div class="card-header">
+        <h1 class="glow-title">❤️ Spenden</h1>
+        <p class="subtitle">
+          Unterstütze Zeitvertreib mit einer Spende via
+          <a href="https://www.mollie.com/" target="_blank" rel="noopener noreferrer" class="mollie-logo-wrap">
+            <img
+              src="assets/PAYMENT_LOGOS/Mollie-Logo-Black-2023.svg"
+              class="mollie-logo mollie-logo--light"
+              alt="Mollie"
+            />
+            <img
+              src="assets/PAYMENT_LOGOS/Mollie-Logo-White-2023.svg"
+              class="mollie-logo mollie-logo--dark"
+              alt="Mollie"
+            />
+          </a>
+        </p>
+      </div>
+      <div *ngIf="errorMessage" class="error-toast">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Presets Grid -->
+      <div class="presets-grid">
+        <button
+          *ngFor="let amount of predefinedAmounts"
+          type="button"
+          class="preset-btn"
+          [class.active]="selectedAmount === amount"
+          (click)="selectAmount(amount)"
+        >
+          {{ amount }}€
+        </button>
+      </div>
+
+      <!-- Custom Amount Input -->
+      <div class="input-group">
+        <label for="customAmount" class="input-label">Anderer Betrag (€)</label>
+        <input
+          type="number"
+          id="customAmount"
+          [(ngModel)]="customAmount"
+          placeholder="Betrag eingeben (min. 5€)"
+          class="glass-input"
+          [disabled]="isSubmitting"
+          (input)="onCustomAmountChange()"
+          min="5"
+          step="1"
+        />
+      </div>
+
+      <!-- Greeting Message Input -->
+      <div class="input-group">
+        <label for="greeting" class="input-label flex justify-between">
+          <span>Grußbotschaft (optional)</span>
+          <span class="text-muted">{{ currentWords }}/{{ maxWords }} Wörter</span>
+        </label>
+        <textarea
+          id="greeting"
+          [(ngModel)]="greeting"
+          placeholder="Nachricht für die Discord-Ankündigung..."
+          class="glass-input glass-textarea"
+          [disabled]="isSubmitting"
+          [class.input-invalid]="isGreetingInvalid"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Submit Action -->
+      <button
+        class="btn-primary"
+        (click)="submitDonation()"
+        [disabled]="finalAmount < 5 || isGreetingInvalid || isSubmitting"
+        [class.btn-loading]="isSubmitting"
+      >
+        <span *ngIf="!isSubmitting">Spenden ({{ finalAmount }}€)</span>
+        <span *ngIf="isSubmitting">Bitte warten...</span>
+      </button>
+
+      <!-- Payment method icons -->
+      <div class="payment-icons">
+        <div class="pay-icon-wrap" style="background: #0e4595">
+          <img src="assets/PAYMENT_LOGOS/visa.svg" alt="Visa" class="pay-icon" />
+        </div>
+        <div class="pay-icon-wrap" style="background: #252525">
+          <img src="assets/PAYMENT_LOGOS/mastercard.svg" alt="Mastercard" class="pay-icon" />
+        </div>
+        <div class="pay-icon-wrap" style="background:#fff;"><img src="assets/PAYMENT_LOGOS/paypal.svg"     alt="PayPal"            class="pay-icon pay-icon--paypal" /></div>
+        <div class="pay-icon-wrap" style="background:#000;"><img src="assets/PAYMENT_LOGOS/applepay.svg"   alt="Apple Pay"         class="pay-icon pay-icon--applepay" /></div>
+        <div class="pay-icon-wrap" style="background:#fff;"><img src="assets/PAYMENT_LOGOS/googlepay.svg"  alt="Google Pay"        class="pay-icon pay-icon--gpay" /></div>
+        <!-- Sofort — custom SVG, kept as-is -->
+        <div class="pay-icon-wrap pay-icon-wrap--sofort">
+          <svg viewBox="0 0 50 32" xmlns="http://www.w3.org/2000/svg" aria-label="Sofortüberweisung" class="pay-icon">
+            <rect width="50" height="32" rx="5" fill="#fa82a0" />
+            <text
+              x="50%"
+              y="54%"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              fill="white"
+              font-size="9"
+              font-weight="700"
+              font-family="Arial, sans-serif"
+            >
+              SOFORT
+            </text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
