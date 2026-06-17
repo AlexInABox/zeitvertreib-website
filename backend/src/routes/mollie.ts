@@ -54,7 +54,11 @@ export async function handleMollieCheckout(request: Request, env: Env): Promise<
         .reduce((sum: number, word: string) => sum + Math.ceil(word.length / 10), 0);
       const limit = getWordLimit(amount);
       if (wordCount > limit) {
-        return createResponse({ error: `Deine Grußbotschaft überschreitet das Limit von ${limit} Wörtern.` }, 400, origin);
+        return createResponse(
+          { error: `Deine Grußbotschaft überschreitet das Limit von ${limit} Wörtern.` },
+          400,
+          origin,
+        );
       }
     }
 
@@ -107,7 +111,7 @@ export async function handleMollieWebhook(request: Request, env: Env, ctx: Execu
     // Mollie webhook payload is sent as form-encoded (id=tr_xxx) or potentially JSON (e.g. { id: "tr_xxx" })
     const contentType = request.headers.get('Content-Type') || '';
     if (contentType.includes('application/json')) {
-      const body = await request.json() as any;
+      const body = (await request.json()) as any;
       paymentId = body.id || null;
     } else {
       const text = await request.text();
@@ -151,7 +155,7 @@ export async function handleMollieWebhook(request: Request, env: Env, ctx: Execu
     console.log(`❤️ Processing donation from ${username} (${userId}) of ${amountValue} ${amountCurrency}`);
 
     // Post message to donations channel
-    const donationsChannelId = "888946307346100247";
+    const donationsChannelId = '888946307346100247';
     const botToken = env.DISCORD_TOKEN;
 
     const greeting = (payment.metadata as any)?.greeting;
@@ -170,7 +174,7 @@ export async function handleMollieWebhook(request: Request, env: Env, ctx: Execu
       }
     }
 
-    let description = "";
+    let description = '';
     if (greeting) {
       description += `# _"${greeting}"_`;
     } else {
@@ -185,13 +189,11 @@ export async function handleMollieWebhook(request: Request, env: Env, ctx: Execu
     if (greeting) {
       embed.footer = {
         text: `${username} spendet großzügige ${amountValue}€ 💖`,
-      }
+      };
       if (avatarUrl) {
         embed.thumbnail = { url: avatarUrl };
       }
     }
-
-
 
     // Determine ping: >= 15€ is @everyone, otherwise @here
     const parsedAmount = parseFloat(amountValue);

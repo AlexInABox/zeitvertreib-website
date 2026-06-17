@@ -23,7 +23,9 @@ export class SupportComponent implements OnInit {
   errorMessage = '';
 
   private _showSuccessMessage = false;
-  get showSuccessMessage() { return this._showSuccessMessage; }
+  get showSuccessMessage() {
+    return this._showSuccessMessage;
+  }
   set showSuccessMessage(val: boolean) {
     this._showSuccessMessage = val;
     if (val) {
@@ -39,10 +41,7 @@ export class SupportComponent implements OnInit {
   private confettiAnimId: number | null = null;
   private confettiParticles: any[] = [];
 
-  private readonly COLORS = [
-    '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff',
-    '#c77dff', '#ff9f43', '#48dbfb', '#ff6bac'
-  ];
+  private readonly COLORS = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#48dbfb', '#ff6bac'];
 
   // Predefined options
   predefinedAmounts = [5, 10, 20, 50, 100];
@@ -52,11 +51,11 @@ export class SupportComponent implements OnInit {
     private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router,
-    private ngZone: NgZone
+    private ngZone: NgZone,
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['status'] === 'returned') {
         this.showSuccessMessage = true;
         this.router.navigate([], { queryParams: { status: null }, queryParamsHandling: 'merge' });
@@ -162,7 +161,10 @@ export class SupportComponent implements OnInit {
 
   get currentWords(): number {
     if (!this.greeting || !this.greeting.trim()) return 0;
-    return this.greeting.trim().split(/\s+/).filter(Boolean)
+    return this.greeting
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
       .reduce((sum, word) => sum + Math.ceil(word.length / 10), 0);
   }
 
@@ -194,28 +196,27 @@ export class SupportComponent implements OnInit {
 
     const body = {
       amount,
-      greeting: this.greeting ? this.greeting.trim() : ''
+      greeting: this.greeting ? this.greeting.trim() : '',
     };
 
-    this.http.post<{ success: boolean; checkoutUrl: string }>(
-      `${environment.apiUrl}/mollie/checkout`,
-      body,
-      { headers }
-    ).subscribe({
-      next: (response) => {
-        if (response.success && response.checkoutUrl) {
-          // Redirect the user to Mollie Checkout
-          window.location.href = response.checkoutUrl;
-        } else {
-          this.errorMessage = 'Checkout-Link konnte nicht generiert werden.';
+    this.http
+      .post<{ success: boolean; checkoutUrl: string }>(`${environment.apiUrl}/mollie/checkout`, body, { headers })
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.checkoutUrl) {
+            // Redirect the user to Mollie Checkout
+            window.location.href = response.checkoutUrl;
+          } else {
+            this.errorMessage = 'Checkout-Link konnte nicht generiert werden.';
+            this.isSubmitting = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error initiating Mollie checkout:', error);
+          this.errorMessage =
+            error?.error?.error || 'Fehler beim Erstellen der Spende. Bitte versuche es später erneut.';
           this.isSubmitting = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error initiating Mollie checkout:', error);
-        this.errorMessage = error?.error?.error || 'Fehler beim Erstellen der Spende. Bitte versuche es später erneut.';
-        this.isSubmitting = false;
-      }
-    });
+        },
+      });
   }
 }

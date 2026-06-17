@@ -8,8 +8,6 @@
 }
 /* Global styles & vanilla utility layer (Tailwind removed) */
 
-
-
 :root {
   --p-menubar-background-rgb: 255, 255, 255;
   --surface-a: #ffffff !important;
