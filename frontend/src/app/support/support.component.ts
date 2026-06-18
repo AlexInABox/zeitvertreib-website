@@ -18,9 +18,18 @@ export class SupportComponent implements OnInit {
 
   selectedAmount: number | null = 10; // default 10€
   customAmount: number | null = null;
+  customAmountInput = '';
   greeting = '';
   isSubmitting = false;
   errorMessage = '';
+  acceptedTerms = false;
+  showTerms = false;
+
+  toggleTerms(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showTerms = !this.showTerms;
+  }
 
   private _showSuccessMessage = false;
   get showSuccessMessage() {
@@ -134,10 +143,33 @@ export class SupportComponent implements OnInit {
   selectAmount(amount: number): void {
     this.selectedAmount = amount;
     this.customAmount = null;
+    this.customAmountInput = '';
     this.errorMessage = '';
   }
 
-  onCustomAmountChange(): void {
+  onCustomAmountInputChange(event: any): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value;
+
+    // Remove any character that is not a digit, dot, or comma
+    value = value.replace(/[^0-9.,]/g, '');
+
+    // Allow at most one dot or comma
+    const firstSeparatorIndex = value.search(/[.,]/);
+    if (firstSeparatorIndex !== -1) {
+      const before = value.substring(0, firstSeparatorIndex + 1);
+      const after = value.substring(firstSeparatorIndex + 1).replace(/[.,]/g, '');
+      value = before + after;
+    }
+
+    input.value = value;
+    this.customAmountInput = value;
+
+    // Convert decimal separator to dot for float parsing
+    const normalizedValue = value.replace(',', '.');
+    const parsed = parseFloat(normalizedValue);
+    this.customAmount = isNaN(parsed) ? null : parsed;
+
     this.selectedAmount = null;
     this.errorMessage = '';
   }

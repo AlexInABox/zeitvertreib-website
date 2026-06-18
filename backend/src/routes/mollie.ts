@@ -196,7 +196,7 @@ export async function handleMollieWebhook(request: Request, env: Env, ctx: Execu
     }
 
     // Determine ping: >= 15€ is @everyone, otherwise @here
-    const parsedAmount = parseFloat(amountValue);
+    const parsedAmount = parseFloat(payment.amount?.value || '0.00');
     const ping = parsedAmount >= 15.0 ? '@everyone' : '@here';
     //const ping = '@nobody'; //TESTING
     const payload: any = {

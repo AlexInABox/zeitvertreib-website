@@ -62,15 +62,13 @@
       <div class="input-group">
         <label for="customAmount" class="input-label">Anderer Betrag (€)</label>
         <input
-          type="number"
+          type="text"
           id="customAmount"
-          [(ngModel)]="customAmount"
+          [(ngModel)]="customAmountInput"
           placeholder="Betrag eingeben (min. 5€)"
-          class="glass-input"
+          class="glass-input no-spin"
           [disabled]="isSubmitting"
-          (input)="onCustomAmountChange()"
-          min="5"
-          step="1"
+          (input)="onCustomAmountInputChange($event)"
         />
       </div>
 
@@ -89,13 +87,43 @@
           [class.input-invalid]="isGreetingInvalid"
           rows="3"
         ></textarea>
+        <p class="input-hint">
+          Spenden werden auf Discord mit <strong>deiner</strong> Grußbotschaft angekündigt (ab 15€ mit
+          <strong>@everyone</strong>, darunter mit <strong>@here</strong>).
+        </p>
+      </div>
+
+      <!-- Legal & Terms Section -->
+      <div class="legal-section">
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="acceptedTerms" class="glass-checkbox" [disabled]="isSubmitting" />
+            <span>
+              Ich akzeptiere die
+              <button type="button" class="terms-toggle-btn" (click)="toggleTerms($event)">wichtigen Hinweise</button>.
+            </span>
+          </label>
+        </div>
+
+        <div class="terms-collapse-box" [class.expanded]="showTerms">
+          <div class="terms-content">
+            <p>Spenden fließen direkt in Server- und Entwicklungskosten.</p>
+            <p>
+              Die Grußbotschaft ist ein freiwilliges Dankeschön — wir geben unser Bestes, sie zu übertragen, können sie
+              aber nicht garantieren.
+            </p>
+            <p>
+              Support-Anfragen per E-Mail an <a href="mailto:support@zeitvertreib.vip">support@zeitvertreib.vip</a>.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Submit Action -->
       <button
         class="btn-primary"
         (click)="submitDonation()"
-        [disabled]="finalAmount < 5 || isGreetingInvalid || isSubmitting"
+        [disabled]="finalAmount < 5 || isGreetingInvalid || isSubmitting || !acceptedTerms"
         [class.btn-loading]="isSubmitting"
       >
         <span *ngIf="!isSubmitting">Spenden ({{ finalAmount }}€)</span>

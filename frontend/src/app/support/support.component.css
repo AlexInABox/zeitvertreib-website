@@ -600,3 +600,165 @@
     grid-column: span 1.5;
   }
 }
+
+/* Legal & Terms Section */
+.legal-section {
+  margin-bottom: 1.25rem;
+  background: rgba(0, 0, 0, 0.015);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+}
+
+:host-context(.my-app-dark) .legal-section {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.checkbox-group {
+  margin-bottom: 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.35;
+  user-select: none;
+  opacity: 0.85;
+  color: inherit;
+}
+
+.checkbox-label:hover {
+  opacity: 1;
+}
+
+.terms-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--p-primary-color, #3b82f6);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.15s ease;
+}
+
+.terms-toggle-btn:hover {
+  opacity: 0.8;
+}
+
+/* Glass Checkbox */
+.glass-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  transition: all 0.2s ease;
+}
+
+:host-context(.my-app-dark) .glass-checkbox {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.glass-checkbox:focus {
+  outline: none;
+  border-color: var(--p-primary-color, #3b82f6);
+}
+
+.glass-checkbox:checked {
+  background: var(--p-primary-color, #3b82f6);
+  border-color: var(--p-primary-color, #3b82f6);
+}
+
+.glass-checkbox:checked::before {
+  content: '✓';
+  color: var(--p-primary-contrast-color, white);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.glass-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Smooth transition collapse box */
+.terms-collapse-box {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
+}
+
+.terms-collapse-box.expanded {
+  grid-template-rows: 1fr;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+:host-context(.my-app-dark) .terms-collapse-box.expanded {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.terms-content {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  opacity: 0.8;
+  text-align: left;
+}
+
+.terms-content p {
+  margin: 0;
+  position: relative;
+  padding-left: 0.65rem;
+}
+
+.terms-content p::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  opacity: 0.7;
+}
+
+.terms-content a {
+  color: var(--p-primary-color, #3b82f6);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.terms-content a:hover {
+  text-decoration: underline;
+}
+
+/* Remove spin buttons from number inputs (utility) */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spin {
+  -moz-appearance: textfield;
+}
