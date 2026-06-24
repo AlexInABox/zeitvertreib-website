@@ -246,22 +246,22 @@ export async function handleUpdatePlayerlist(request: Request, env: Env): Promis
     }
 
     try {
-      const countedResponse = await fetch('https://counted.zeitvertreib.vip/', {
+      const prometheusResponse = await fetch('https://pushgateway.zeitvertreib.vip/metrics/job/gameserver/instance/node3', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${env.COUNTED_API_KEY}`,
           'Content-Type': 'text/plain',
+          'Authorization': 'Basic ' + btoa(`${env.PUSHGATEWAY_USERNAME}:${env.PUSHGATEWAY_PASSWORD}`),
         },
-        body: String(enrichedPlayerlist.length),
+        body: `# TYPE playercount gauge\nplayercount ${enrichedPlayerlist.length}\n`,
       });
 
-      if (!countedResponse.ok) {
+      if (!prometheusResponse.ok) {
         console.error(
-          `[Playerlist POST] Failed to update counted service: ${countedResponse.status} ${countedResponse.statusText}`,
+          `[Playerlist POST] Failed to update prometheus: ${prometheusResponse.status} ${prometheusResponse.statusText}`,
         );
       }
-    } catch (countedError) {
-      console.error('[Playerlist POST] Failed to call counted service:', countedError);
+    } catch (prometheusError) {
+      console.error('[Playerlist POST] Failed to call prometheus:', prometheusError);
     }
 
     return createResponse({ success: true, message: 'Playerlist updated successfully' }, 200, origin);
