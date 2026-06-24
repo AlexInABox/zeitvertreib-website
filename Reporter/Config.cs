@@ -8,6 +8,9 @@ public class Config
 
     [Description("Discord bot token.")] public string Token { get; set; } = "";
 
-    [Description("API Key to acces the webserver. (Set to an empty string to disable.")]
+    public string WebserverEndpoint { get; set; } = "https://example.com";
+
+    [Description("API Key to acces the webserver. (Set to an empty string to disable.)")]
     public string ApiKey { get; set; } = "superSecretPassword";
+    
 }

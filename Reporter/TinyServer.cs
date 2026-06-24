@@ -11,7 +11,6 @@ namespace Reporter;
 
 public class TinyServer
 {
-    private const string WebhookUrl = "https://zeitvertreib.vip/api/playerlist";
     private static readonly HttpClient HttpClient = new();
     private static volatile bool _isUploading;
 
@@ -56,10 +55,10 @@ public class TinyServer
 
             string json = JsonConvert.SerializeObject(payload);
 
-            Logger.Debug($"Uploading to endpoint: {WebhookUrl}", Plugin.Instance.Config!.Debug);
+            Logger.Debug($"Uploading to endpoint: {Plugin.Instance.Config!.WebserverEndpoint}", Plugin.Instance.Config!.Debug);
             Logger.Debug($"Payload: {json}", Plugin.Instance.Config!.Debug);
 
-            using HttpRequestMessage requestMessage = new(HttpMethod.Post, WebhookUrl);
+            using HttpRequestMessage requestMessage = new(HttpMethod.Post, Plugin.Instance.Config!.WebserverEndpoint);
             requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
             if (!string.IsNullOrEmpty(Plugin.Instance.Config!.ApiKey))
                 requestMessage.Headers.Add("Authorization", $"Bearer {Plugin.Instance.Config.ApiKey}");
