@@ -246,14 +246,17 @@ export async function handleUpdatePlayerlist(request: Request, env: Env): Promis
     }
 
     try {
-      const prometheusResponse = await fetch('https://pushgateway.zeitvertreib.vip/metrics/job/gameserver/instance/node3', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-          'Authorization': 'Basic ' + btoa(`${env.PUSHGATEWAY_USERNAME}:${env.PUSHGATEWAY_PASSWORD}`),
+      const prometheusResponse = await fetch(
+        'https://pushgateway.zeitvertreib.vip/metrics/job/gameserver/instance/node3',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            Authorization: 'Basic ' + btoa(`${env.PUSHGATEWAY_USERNAME}:${env.PUSHGATEWAY_PASSWORD}`),
+          },
+          body: `# TYPE playercount gauge\nplayercount ${enrichedPlayerlist.length}\n`,
         },
-        body: `# TYPE playercount gauge\nplayercount ${enrichedPlayerlist.length}\n`,
-      });
+      );
 
       if (!prometheusResponse.ok) {
         console.error(
