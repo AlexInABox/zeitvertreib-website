@@ -2,10 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+**What this Changelog is and isn't:**
+
+- **It is:** Only user-facing, gameplay-affecting changes that impact player and user experience.
+- **It isn't:** Technical details, NuGet/npm dependency upgrades, internal refactors, developer chores, or CI/CD updates.
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
-## [27] - Unreleased
+## [28] - Unreleased
+
+## [27]
+
+### Added
+
+- New Escaped plugin that converts player roles when they enter custom escape zones
+- Mollie-powered support/donation flow on the website with checkout, success, and cancel pages
+- Player HUD hints now automatically adjust their position when status effects are active to prevent overlapping
+- Schizophrenia status effects are now correctly removed when a player is cured
+
+### Fixed
+
+- Fixed generated QR codes being flipped horizontally
+- Improved behavior and timing of Schizophrenia status effects
+- Disabled InstantNuke (NukeRun) and IceWalk events from the coinflip event pools
+- Fixed an issue where the attacker kill feed would sometimes fail to update
+- Fixed the profile page icon color when using light mode
+- Increased the maximum file size limit for uploaded media files to 150MB
 
 ## [26]
 
@@ -107,7 +130,8 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Improved dark mode appearance site-wide, especially on the dashboard.
 - Chicken Cross game payout adjusted to compound each step for larger payouts.
 
-[27]: https://github.com/alexinabox/zeitvertreib-website/compare/build-26...dev
+[28]: https://github.com/alexinabox/zeitvertreib-website/compare/build-27...dev
+[27]: https://github.com/alexinabox/zeitvertreib-website/compare/build-26...build-27
 [26]: https://github.com/alexinabox/zeitvertreib-website/compare/build-25...build-26
 [25]: https://github.com/alexinabox/zeitvertreib-website/compare/build-24...build-25
 [24]: https://github.com/alexinabox/zeitvertreib-website/compare/build-23...build-24
