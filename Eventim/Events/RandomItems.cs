@@ -43,15 +43,9 @@ public class RandomItems : IEvent
     {
         while (true)
         {
-            // Countdown from 10 to 1
-            for (int i = 10; i > 0; i--)
-            {
-                foreach (Player player in Player.ReadyList.Where(p => p.IsHuman && !p.IsDummy))
-                    EventHandlers.PushUserMessage(player, $"Nächstes Item in {i} Sekunden");
-                    
-
-                yield return Timing.WaitForSeconds(1f);
-            }
+         
+           // Wait for 10 seconds before continuing:
+           yield return Timing.WaitForSeconds(10f);
 
             // Give items
             foreach (Player player in Player.ReadyList.Where(p => p.IsHuman && !p.IsDummy))
@@ -59,10 +53,6 @@ public class RandomItems : IEvent
                 ItemType randomItem = ValidItems[Rng.Next(ValidItems.Length)];
                 player.AddItem(randomItem);
             }
-
-            // Notify
-            foreach (Player player in Player.ReadyList.Where(p => p.IsHuman && !p.IsDummy))
-                EventHandlers.PushUserMessage(player, "Du hast ein zufalliges Item erhalten!");
         }
     }
 }
