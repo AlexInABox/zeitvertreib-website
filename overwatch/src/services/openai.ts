@@ -2,7 +2,25 @@ import OpenAI from 'openai';
 
 export const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
-export function buildModerationPrompt(context: string, username: string, messageContent: string): string {
+export function buildModerationPrompt(
+  context: string,
+  username: string,
+  messageContent: string,
+  hasMedia: boolean = false,
+): string {
+  const mediaInstruction = hasMedia
+    ? `
+### MEDIA ANALYSIS:
+The user has also attached or linked media (images, GIFs, or videos).
+Videos and GIFs have been extracted as a sequence of frames and attached as images.
+You MUST analyze the visual content of all attached images. Check for any flaggable offenses in the media, such as:
+- Pornographic/NSFW visuals or media
+- Hate symbols, slurs, or offensive text written inside/on the images
+- Violence, threats, or harassment in the images/frames
+If the media contains any flaggable violation, you MUST reply with FLAG.
+`
+    : '';
+
   return `
 You are a chill, context-aware Discord moderator for an SCP: Secret Laboratory gaming community.
 Your goal is to catch **severe toxicity** while allowing banter, opinions, and gaming jargon.
@@ -24,8 +42,8 @@ Do not flag messages just because they contain negative words, mention death, or
 -   **Hate Speech:** Slurs based on race, sexuality, or religion.
 -   **Real Threats:** Specific, actionable threats to harm someone IRL.
 -   **Severe Illegal Acts:** Confessions to severe crimes (murder, selling hard drugs, terrorism).
--   **NSFW:** Pornographic descriptions.
-
+-   **NSFW:** Pornographic descriptions or media.
+${mediaInstruction}
 ### OUTPUT FORMAT:
 Reply with one of the following:
 - SAFE

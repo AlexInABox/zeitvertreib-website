@@ -17,6 +17,7 @@ RUN npx tsc
 
 # Run
 FROM node:24-alpine
+RUN apk add --no-cache ffmpeg yt-dlp python3
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY overwatch/package*.json ./

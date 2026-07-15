@@ -132,4 +132,19 @@ public static class Utils
             RemoteZvcCount[userId] = 0;
         }
     }
+
+    public static void AddOrUpdateList<TKey, TValue>(
+        this Dictionary<TKey, List<TValue>> dict,
+        TKey key,
+        TValue value)
+        where TKey : notnull
+    {
+        if (!dict.TryGetValue(key, out List<TValue> list))
+        {
+            list = [];
+            dict[key] = list;
+        }
+
+        list.Insert(0, value);
+    }
 }

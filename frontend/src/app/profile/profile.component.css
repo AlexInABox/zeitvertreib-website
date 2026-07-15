@@ -464,6 +464,7 @@
 .data-btn-icon {
   font-size: 1.5rem;
   flex-shrink: 0;
+  color: white;
 }
 
 .data-btn-text {
@@ -550,6 +551,7 @@
 .toggle-icon {
   font-size: 1.5rem;
   flex-shrink: 0;
+  color: white;
 }
 
 .toggle-text {

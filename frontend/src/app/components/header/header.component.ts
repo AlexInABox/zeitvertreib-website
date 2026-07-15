@@ -117,10 +117,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
         items: [
           {
-            label: 'Ko-fi',
+            label: 'Online-Spende',
             icon: PrimeIcons.HEART,
-            url: 'https://ko-fi.com/zeitvertreib',
-            target: '_blank',
+            route: '/support',
           },
           {
             label: 'Paysafecard',

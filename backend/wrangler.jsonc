@@ -6,7 +6,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zeitvertreib-website-backend",
   "main": "dist/src/index.js",
-  "compatibility_date": "2025-06-04",
+  "compatibility_date": "2026-05-14",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "logs": {
@@ -43,6 +43,10 @@
     {
       "binding": "ZEITVERTREIB_SESSIONS",
       "id": "f151e8f642a8447d915c129d7de5f078",
+    },
+    {
+      "binding": "ZEITVERTREIB_FLAGS",
+      "id": "5e0e683c122a4d5a96225ffabb769010",
     },
   ],
   "d1_databases": [
@@ -100,6 +104,10 @@
         {
           "binding": "ZEITVERTREIB_SESSIONS",
           "id": "f151e8f642a8447d915c129d7de5f078",
+        },
+        {
+          "binding": "ZEITVERTREIB_FLAGS",
+          "id": "5e0e683c122a4d5a96225ffabb769010",
         },
       ],
       "d1_databases": [
@@ -165,6 +173,10 @@
         {
           "binding": "ZEITVERTREIB_SESSIONS",
           "id": "f151e8f642a8447d915c129d7de5f078",
+        },
+        {
+          "binding": "ZEITVERTREIB_FLAGS",
+          "id": "5e0e683c122a4d5a96225ffabb769010",
         },
       ],
       "d1_databases": [

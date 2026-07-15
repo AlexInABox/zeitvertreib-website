@@ -50,7 +50,7 @@ nur, soweit dies zur Erfüllung der jeweiligen Funktionen erforderlich ist oder 
 Beispiele aus dem System:
 - Steam (OAuth): Übermittlung der Steam-ID und öffentlich verfügbarer Profildaten zur Authentifizierung
 - Discord (Bot API): Abfrage von Discord-Benutzerinformationen (z. B. zur Moderation/Verknüpfung)
-- Ko-fi: Webhook zur Spendenbenachrichtigung
+- Mollie: Zahlungsschnittstelle zur Spendenabwicklung und -benachrichtigung
 - Paysafe-Provider: zur Verifikation eingereichter Kartencodes (falls genutzt)
 - Cloudflare (D1, KV) als Hosting- und Datenspeicher
 

@@ -133,7 +133,7 @@ public static class EventHandlers
             if (data.ModuleMatrix[y][x])
                 DrawPoint(
                     display,
-                    new Vector2(x * 2, y * 2),
+                    new Vector2(x * 2, (data.ModuleMatrix.Count - 1 - y) * 2),
                     xOffset,
                     yOffset
                 );

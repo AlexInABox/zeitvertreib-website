@@ -188,7 +188,7 @@ public static class EventHandlers
         if (ev.Attacker == null || ev.Attacker.IsNpc) return;
 
         string color = ev.OldRole.GetRoleColor().ToHex();
-        PlayerKillFeed[ev.Attacker.PlayerId].Insert(0, $"<color={color}>💀 - {ev.Player.Nickname}</color>");
+        PlayerKillFeed.AddOrUpdateList(ev.Attacker.PlayerId, $"<color={color}>💀 - {ev.Player.Nickname}</color>");
 
         Timing.CallDelayed(10f, () =>
         {
@@ -643,6 +643,19 @@ public static class EventHandlers
         float aspectRatio = player.ReferenceHub.aspectRatioSync.AspectRatio;
 
         return -Mathf.Min((aspectRatio * Base - DisplayAreaWidth) / 2f, DisplayAreaWidth);
+    }
+
+    private static float ExtraStatusBarOffset(this Player player)
+    {
+        float offset = 0f;
+
+        if (!Mathf.Approximately(player.HumeShieldRegenRate, -1)) offset += 15f;
+
+        if (!Mathf.Approximately(player.ArtificialHealth, 0)) offset += 20f;
+
+        if (!Mathf.Approximately(player.StaminaRemaining, 1)) offset += 15f;
+
+        return offset;
     }
 }
 
