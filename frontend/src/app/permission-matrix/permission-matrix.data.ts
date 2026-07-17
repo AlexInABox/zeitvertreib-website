@@ -287,6 +287,6 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
   ],
   test_moderator: ['BN1', 'BN2', 'BN3', 'FSE', 'FSP', 'FWR', 'GMD', 'OVR', 'PLM', 'VHB', 'NCP', 'ATC', 'VAM'],
 
-  supporter: ['BN1', 'BN2', 'BN3', 'FSE', 'FSP', 'FWR', 'GMD', 'OVR', 'PLM', 'VHB', 'NCP', 'ATC', 'VAN'],
+  supporter: ['BN1', 'BN2', 'FSE', 'FSP', 'FWR', 'GMD', 'OVR', 'PLM', 'VHB', 'NCP', 'ATC'],
   test_supporter: ['BN1', 'BN2', 'FSE', 'FSP', 'FWR', 'ATC'],
 };
