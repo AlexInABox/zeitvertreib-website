@@ -35,7 +35,8 @@ export const routes: Routes = [
   },
   {
     path: 'permissions',
-    loadComponent: () => import('./permission-matrix/permission-matrix.component').then((m) => m.PermissionMatrixComponent),
+    loadComponent: () =>
+      import('./permission-matrix/permission-matrix.component').then((m) => m.PermissionMatrixComponent),
   },
   {
     path: 'cases',

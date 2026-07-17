@@ -67,11 +67,7 @@ export class PermissionMatrixComponent implements OnInit {
     if (this.searchText.trim() !== '') {
       const q = this.searchText.trim().toLowerCase();
       list = list.filter((p) => {
-        return (
-          p.code.toLowerCase().includes(q) ||
-          p.name.toLowerCase().includes(q) ||
-          p.desc.toLowerCase().includes(q)
-        );
+        return p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
       });
     }
 
@@ -125,11 +121,7 @@ export class PermissionMatrixComponent implements OnInit {
   }
 
   get isFilterActive(): boolean {
-    return (
-      this.searchText.trim() !== '' ||
-      this.selectedCategory !== 'all' ||
-      this.activePermCode !== null
-    );
+    return this.searchText.trim() !== '' || this.selectedCategory !== 'all' || this.activePermCode !== null;
   }
 
   async exportTable(format: 'png' | 'svg') {
@@ -166,7 +158,8 @@ export class PermissionMatrixComponent implements OnInit {
     clone.style.display = 'table';
 
     // Enforce theme background styles for the capture
-    const isDark = document.documentElement.classList.contains('my-app-dark') || document.body.classList.contains('my-app-dark');
+    const isDark =
+      document.documentElement.classList.contains('my-app-dark') || document.body.classList.contains('my-app-dark');
     clone.style.background = isDark ? '#18181b' : '#ffffff';
     clone.style.color = isDark ? '#f3f4f6' : '#1f2937';
 
@@ -203,7 +196,7 @@ export class PermissionMatrixComponent implements OnInit {
           backgroundColor: isDark ? '#18181b' : '#ffffff',
           skipFonts: true,
           width: width,
-          height: height
+          height: height,
         });
         this.triggerDownload(dataUrl, 'rechte-matrix.png');
       } else if (format === 'svg') {
@@ -212,7 +205,7 @@ export class PermissionMatrixComponent implements OnInit {
           backgroundColor: isDark ? '#18181b' : '#ffffff',
           skipFonts: true,
           width: width,
-          height: height
+          height: height,
         });
         this.triggerDownload(dataUrl, 'rechte-matrix.svg');
       }
@@ -230,4 +223,3 @@ export class PermissionMatrixComponent implements OnInit {
     link.click();
   }
 }
-

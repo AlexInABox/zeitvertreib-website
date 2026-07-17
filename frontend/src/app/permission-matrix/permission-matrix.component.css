@@ -23,7 +23,7 @@
   max-width: 1500px;
   padding: 2rem;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  
+
   /* Text color for light mode */
   color: #1f2937;
   display: flex;
