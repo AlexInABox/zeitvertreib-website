@@ -42,7 +42,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     public themeService: ThemeService,
     private http: HttpClient,
-  ) {}
+  ) { }
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -136,6 +136,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
             label: 'Z.E.I.T.',
             icon: PrimeIcons.SEARCH,
             route: '/zeit',
+          },
+          {
+            label: 'Permissions?',
+            icon: PrimeIcons.TABLE,
+            route: '/permissions',
           },
           {
             label: 'Cases',

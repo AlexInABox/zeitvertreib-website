@@ -34,6 +34,10 @@ export const routes: Routes = [
     // No guard - accessible to everyone, query locked in component
   },
   {
+    path: 'permissions',
+    loadComponent: () => import('./permission-matrix/permission-matrix.component').then((m) => m.PermissionMatrixComponent),
+  },
+  {
     path: 'cases',
     loadComponent: () => import('./case-management/case-management.component').then((m) => m.CaseManagementComponent),
   },

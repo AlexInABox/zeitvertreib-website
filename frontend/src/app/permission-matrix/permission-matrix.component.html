@@ -1,0 +1,132 @@
+<div class="matrix-container">
+  <div class="matrix-card glass-panel fade-in">
+    <div class="card-header">
+      <h1 class="glow-title">RECHTE-MATRIX</h1>
+      <p class="subtitle">
+        Referenztabelle der Remote-Admin-Berechtigungsknoten und der Rollen, die diese besitzen.
+      </p>
+    </div>
+
+    <div class="toolbar">
+      <div class="input-wrapper">
+        <i class="pi pi-search search-icon"></i>
+        <input
+          id="search-input"
+          type="text"
+          class="glass-input"
+          placeholder="Suchen..."
+          [(ngModel)]="searchText"
+          autocomplete="off"
+        />
+      </div>
+
+      <select class="glass-select" [(ngModel)]="selectedCategory">
+        <option value="all">Kategorie: Alle</option>
+        <option *ngFor="let cat of categories" [value]="cat">Kategorie: {{ cat }}</option>
+      </select>
+
+
+      <div class="toolbar-actions">
+        <span class="result-count">{{ visiblePermissions.length }} / {{ permissions.length }}</span>
+
+        <div class="export-group">
+          <button class="export-btn" (click)="exportTable('png')" title="Als PNG exportieren">
+            <i class="pi pi-image"></i> PNG
+          </button>
+          <button class="export-btn" (click)="exportTable('svg')" title="Als SVG exportieren">
+            <i class="pi pi-code"></i> SVG
+          </button>
+        </div>
+
+        <button *ngIf="isFilterActive" class="clear-btn" (click)="resetFilters()" title="Zurücksetzen">
+          <i class="pi pi-refresh"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap-container">
+      <div class="table-wrap">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th class="sticky-col text-col col-code">Code</th>
+              <th class="sticky-col text-col col-name">Name</th>
+              <th class="sticky-col text-col col-desc">Beschreibung</th>
+              <th
+                *ngFor="let role of roles"
+                class="role-header"
+              >
+                <span class="role-name">{{ role.name }}</span>
+                <span class="role-count">{{ role.count }} Berechtigungen</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="visiblePermissions.length === 0">
+              <td [attr.colspan]="3 + roles.length" class="no-results">
+                Keine Berechtigungen entsprechen den aktuellen Filtern.
+              </td>
+            </tr>
+            <tr
+              *ngFor="let perm of visiblePermissions"
+              [class.row-active]="activePermCode === perm.code"
+              (click)="togglePermission(perm.code)"
+            >
+              <td class="sticky-col col-code" [innerHTML]="highlightMatch(perm.code)"></td>
+              <td class="sticky-col col-name" [innerHTML]="highlightMatch(perm.name)"></td>
+              <td class="sticky-col col-desc" [innerHTML]="highlightMatch(perm.desc)"></td>
+              <td
+                *ngFor="let role of roles"
+                class="perm-cell"
+                [class.granted]="assignments[perm.code][role.id]"
+                [class.denied]="!assignments[perm.code][role.id]"
+                [class.col-active]="isCellActive(perm.code, role.id)"
+              >
+                <svg
+                  *ngIf="assignments[perm.code][role.id]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="faint-check"
+                  title="Zugewiesen"
+                  aria-label="Zugewiesen"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="matrix-legend">
+      <div class="legend-item">
+        <span class="legend-block granted">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="faint-check"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+        <span>Zugewiesen</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-block denied"></span>
+        <span>Nicht zugewiesen</span>
+      </div>
+
+    </footer>
+  </div>
+</div>

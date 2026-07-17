@@ -1,0 +1,213 @@
+export interface IngamePermission {
+  code: string;
+  name: string;
+  desc: string;
+  category: string;
+}
+
+export const INGAME_PERMISSIONS: IngamePermission[] = [
+  {
+    code: 'BN1',
+    name: 'Kick & Kurzer Ban',
+    desc: 'Spieler kicken und kurze Bans aussprechen (bis zu einer Stunde).',
+    category: 'Moderation',
+  },
+  {
+    code: 'BN2',
+    name: 'Temporärer Ban',
+    desc: 'Spieler für bis zu einen Tag bannen, stummschalten/entstummen, Intercom-Moderation.',
+    category: 'Moderation',
+  },
+  {
+    code: 'BN3',
+    name: 'Permanenter Ban',
+    desc: 'Permanente Bans, Langzeit-Bans und Entbann-Befehle.',
+    category: 'Moderation',
+  },
+  {
+    code: 'FSE',
+    name: 'Forceclass Eigen',
+    desc: 'Die eigene Spielerklasse ändern.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'FSP',
+    name: 'Forceclass Zuschauer',
+    desc: 'Einen anderen Spieler in den reinen Zuschauermodus zwingen.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'FWR',
+    name: 'Forceclass Alle',
+    desc: 'Jeden Spieler ohne Einschränkungen in jede Klasse zwingen.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'GIV',
+    name: 'Items Vergeben',
+    desc: 'Gegenstände spawnen oder an Spieler vergeben.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'EWA',
+    name: 'Sprengkopf-Events',
+    desc: 'Alpha-Sprengkopf-Ereignisse starten, stoppen und verwalten.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'ERE',
+    name: 'Respawn-Events',
+    desc: 'MTF- und Chaos-Respawns auslösen.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'ERO',
+    name: 'Runden-Events',
+    desc: 'Runden neu starten, Lobby sperren und weitere Rundenverwaltungsaktionen.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'SGR',
+    name: 'Gruppe Zuweisen',
+    desc: 'Remote-Admin-Gruppen zuweisen oder ändern.',
+    category: 'Administration',
+  },
+  {
+    code: 'GMD',
+    name: 'Gameplay-Daten',
+    desc: 'Gameplay-Informationen und Spielerstatistiken einsehen.',
+    category: 'Utility',
+  },
+  {
+    code: 'OVR',
+    name: 'Overwatch',
+    desc: 'Overwatch-Modus aktivieren.',
+    category: 'Utility',
+  },
+  {
+    code: 'FCM',
+    name: 'Anlagensteuerung',
+    desc: 'Türen, Lockdowns und Anlagensysteme steuern.',
+    category: 'Administration',
+  },
+  {
+    code: 'PLM',
+    name: 'Spielerverwaltung',
+    desc: 'Heilen, teleportieren, Godmode, Bypass und erweiterte Spielerverwaltung.',
+    category: 'Administration',
+  },
+  {
+    code: 'PRM',
+    name: 'Rechteverwaltung',
+    desc: 'Remote-Admin-Berechtigungen und Rollenzuweisungen verwalten.',
+    category: 'Administration',
+  },
+  {
+    code: 'SCC',
+    name: 'Serverkonsole',
+    desc: 'Serverkonsolenbefehle ausführen.',
+    category: 'Administration',
+  },
+  {
+    code: 'VHB',
+    name: 'Versteckte Badges',
+    desc: 'Versteckte Team-Abzeichen einsehen.',
+    category: 'Utility',
+  },
+  {
+    code: 'CFG',
+    name: 'Serverkonfiguration',
+    desc: 'Serverkonfiguration und Gameplay-Einstellungen ändern.',
+    category: 'Administration',
+  },
+  {
+    code: 'BRC',
+    name: 'Broadcasting',
+    desc: 'Broadcasts und Ankündigungen senden.',
+    category: 'Moderation',
+  },
+  {
+    code: 'CDA',
+    name: 'Sensible Spielerdaten',
+    desc: 'Zugriff auf IP-Adressen und Authentifizierungs-IDs von Spielern.',
+    category: 'Moderation',
+  },
+  {
+    code: 'NCP',
+    name: 'Noclip',
+    desc: 'Noclip-Modus verwenden.',
+    category: 'Utility',
+  },
+  {
+    code: 'AFK',
+    name: 'AFK-Immunität',
+    desc: 'Automatische AFK-Behandlung verhindern.',
+    category: 'Utility',
+  },
+  {
+    code: 'ATC',
+    name: 'Admin-Chat',
+    desc: 'Zugriff auf den privaten Administrator-Chat.',
+    category: 'Utility',
+  },
+  {
+    code: 'GHB',
+    name: 'Versteckte Globale Badges',
+    desc: 'Versteckte globale Abzeichen und Ränge einsehen.',
+    category: 'Utility',
+  },
+  {
+    code: 'ANN',
+    name: 'C.A.S.S.I.E. Ansagen',
+    desc: 'C.A.S.S.I.E.-Ansagen auslösen.',
+    category: 'Utility',
+  },
+  {
+    code: 'EFF',
+    name: 'Statuseffekte',
+    desc: 'Statuseffekte bei Spielern anwenden oder entfernen.',
+    category: 'Gameplay',
+  },
+  {
+    code: 'FFI',
+    name: 'FF-Detektor Immunität',
+    desc: 'Immunität gegen die automatische Friendly-Fire-Erkennung.',
+    category: 'Utility',
+  },
+  {
+    code: 'FFT',
+    name: 'FF-Detektor Deaktivieren',
+    desc: 'Den Friendly-Fire-Detektor vorübergehend deaktivieren.',
+    category: 'Utility',
+  },
+  {
+    code: 'LLF',
+    name: 'Live-Logfeed',
+    desc: 'Live-Feed der Server-Logs in Echtzeit einsehen.',
+    category: 'Administration',
+  },
+  {
+    code: 'EXA',
+    name: 'Ausführen Als',
+    desc: 'Befehle im Namen eines anderen Spielers ausführen.',
+    category: 'Administration',
+  },
+  {
+    code: 'VAN',
+    name: 'Vanish-Modus',
+    desc: 'Unsichtbarkeits-Modus (Vanish) aktivieren.',
+    category: 'Utility',
+  },
+];
+
+export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
+  owner: [], // Set dynamically to all
+  teamleitung: ['BN1', 'BN2', 'BN3', 'FSE', 'FSP', 'FWR', 'GIV', 'EWA', 'ERE', 'ERO', 'GMD', 'OVR', 'FCM', 'PLM', 'VHB', 'CFG', 'BRC', 'NCP', 'AFK', 'ATC', 'GHB', 'ANN', 'EFF', 'FFT', 'VAN'],
+  entwicklungsleitung: ['BN1', 'BN2', 'FSE', 'FSP', 'FWR', 'GIV', 'EWA', 'ERE', 'ERO', 'SGR', 'GMD', 'OVR', 'FCM', 'PLM', 'PRM', 'SCC', 'VHB', 'CFG', 'BRC', 'NCP', 'AFK', 'ATC', 'ANN', 'EFF', 'FFT', 'EXA', 'VAN'],
+
+  moderator: ['BN1', 'BN2', 'BN3', 'FSE', 'FSP', 'FWR', 'GIV', 'EWA', 'ERE', 'ERO', 'GMD', 'OVR', 'FCM', 'PLM', 'VHB', 'CFG', 'BRC', 'NCP', 'AFK', 'ATC', 'ANN', 'EFF', 'FFT', 'VAN'],
+  test_moderator: ['BN1', 'BN2', 'BN3', 'FSE', 'FSP', 'FWR', 'GMD', 'OVR', 'PLM', 'VHB', 'NCP', 'ATC', 'VAM'],
+
+  supporter: ['BN1', 'BN2', 'BN3', 'FSE', 'FSP', 'FWR', 'GMD', 'OVR', 'PLM', 'VHB', 'NCP', 'ATC', 'VAN'],
+  test_supporter: ['BN1', 'BN2', 'FSE', 'FSP', 'FWR', 'ATC'],
+};
