@@ -26,10 +26,10 @@ export class PlayerInfoCardComponent {
   }
 
   getAvatarUrl(avatarUrl?: string): string {
-    return avatarUrl || '/assets/logos/logo_full_color_1to1.png';
+    return avatarUrl || '/assets/logos/logo_full_color_1to1.avif';
   }
 
   onImageError(event: Event): void {
-    (event.target as HTMLImageElement).src = '/assets/logos/logo_full_color_1to1.png';
+    (event.target as HTMLImageElement).src = '/assets/logos/logo_full_color_1to1.avif';
   }
 }

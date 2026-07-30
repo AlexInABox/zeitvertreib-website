@@ -25,30 +25,30 @@ interface Player {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   images: string[] = [
-    '0.jpg',
-    '1.jpg',
-    '2.jpg',
-    '3.jpg',
-    '4.jpg',
-    '5.jpg',
-    '6.jpg',
-    '7.jpg',
+    '0.avif',
+    '1.avif',
+    '2.avif',
+    '3.avif',
+    '4.avif',
+    '5.avif',
+    '6.avif',
+    '7.avif',
     '8.gif',
-    '9.jpg',
-    '10.jpg',
-    '11.jpg',
-    '13.jpg',
-    '14.jpg',
-    '15.jpg',
-    '16.jpg',
-    '17.jpg',
-    '18.jpg',
-    '19.jpg',
-    '20.jpg',
-    '21.jpg',
-    '22.jpg',
+    '9.avif',
+    '10.avif',
+    '11.avif',
+    '13.avif',
+    '14.avif',
+    '15.avif',
+    '16.avif',
+    '17.avif',
+    '18.avif',
+    '19.avif',
+    '20.avif',
+    '21.avif',
+    '22.avif',
     '23.gif',
-    '24.jpg',
+    '24.avif',
   ];
   players: Player[] = [];
   isLoading = true;
@@ -58,7 +58,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   showGalleryBadge = true;
   private imageCache: Map<string, boolean> = new Map();
-  private intersectionObserver: IntersectionObserver | null = null;
 
   get isDark() {
     return this.themeService.isDark;
@@ -83,19 +82,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Setup scroll listener to hide badge when gallery is visible
     this.boundScrollHandler = this.handleScroll.bind(this);
     window.addEventListener('scroll', this.boundScrollHandler);
-
-    //Firefox Fix(?)
-    setTimeout(() => {
-      this.images.forEach((image) => {
-        if (!image.endsWith('.mp4')) {
-          this.preloadImage(image, 'tiny');
-        }
-      });
-    }, 100);
-
-    setTimeout(() => {
-      this.setupImageObserver();
-    }, 500);
   }
 
   ngOnDestroy() {
@@ -104,9 +90,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     if (this.boundScrollHandler) {
       window.removeEventListener('scroll', this.boundScrollHandler);
-    }
-    if (this.intersectionObserver) {
-      this.intersectionObserver.disconnect();
     }
   }
 
@@ -196,30 +179,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.imageCache.set(cacheKey, true);
     };
     img.src = `/assets/showcase/${folder}/${filename}`;
-  }
-
-  private setupImageObserver(): void {
-    const imageElements = document.querySelectorAll('.masonry-media');
-
-    this.intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target as HTMLImageElement | HTMLVideoElement;
-            const src = img.getAttribute('data-src');
-            if (src && !img.src) {
-              img.src = src;
-              img.removeAttribute('data-src');
-            }
-          }
-        });
-      },
-      { rootMargin: '000px' }, //Alex: adjust based on how soon images should load
-    );
-
-    imageElements.forEach((img) => {
-      this.intersectionObserver!.observe(img);
-    });
   }
 
   scrollToGallery(event: Event) {

@@ -106,7 +106,7 @@ html::after {
 
 /* Easter image replaces the light layer when active */
 html.easter::before {
-  background: linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)), url('/assets/bunny.jpg');
+  background: linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18)), url('/assets/bunny.avif');
   background-attachment: fixed;
   background-size: cover;
 }
@@ -121,7 +121,7 @@ html.my-app-dark::after {
 
 html.my-app-dark.easter::after {
   opacity: 1;
-  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/assets/bunny.jpg');
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/assets/bunny.avif');
   background-attachment: fixed;
   background-size: cover;
 }
@@ -134,7 +134,7 @@ body.chiikawa::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: url('/assets/chiikawa.png') center/cover no-repeat;
+  background: url('/assets/chiikawa.avif') center/cover no-repeat;
   background-attachment: fixed;
   opacity: 1;
   filter: saturate(1.05) contrast(1.02) brightness(1.05);
