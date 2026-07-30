@@ -131,21 +131,27 @@
 
   <div class="h-10rem"></div>
   <div class="flex flex-wrap justify-center gap-8">
-    <div class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4">
+    <div
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
       <div class="rounded-full border-2 border-white w-12 h-12 flex items-center justify-center">
         <i class="pi pi-map-marker text-2xl"></i>
       </div>
       <span class="text-2xl font-bold">Standort</span>
       <span class="text-center">Server in Frankfurt - zentral in Deutschland.</span>
     </div>
-    <div class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4">
+    <div
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
       <div class="rounded-full border-2 border-white w-12 h-12 flex items-center justify-center">
         <i class="pi pi-crown text-2xl"></i>
       </div>
       <span class="text-2xl font-bold">Gameplay</span>
       <span class="text-center">Vanilla Feeling mit sinnvollen QoL-Plugins - perfekt abgestimmt.</span>
     </div>
-    <div class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4">
+    <div
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
       <div class="rounded-full border-2 border-white w-12 h-12 flex items-center justify-center">
         <i class="pi pi-shield text-2xl"></i>
       </div>
@@ -156,17 +162,23 @@
 
   <div class="h-5rem"></div>
   <div class="flex flex-wrap justify-center gap-8">
-    <div class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4">
+    <div
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
       <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">400+</span>
       <span class="text-2xl font-bold">Spieler</span>
       <span class="text-center">Täglich kommen neue Spieler auf unseren Discord!</span>
     </div>
-    <div class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4">
+    <div
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
       <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">2</span>
       <span class="text-2xl font-bold">Server</span>
       <span class="text-center">Ein zweiter Server steht immer als Backup bereit.</span>
     </div>
-    <div class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4">
+    <div
+      class="flex flex-col bg-primary/15 backdrop-blur-md text-primary-contrast border-primary shadow-lg justify-center items-center max-w-80 rounded-2xl p-8 gap-4"
+    >
       <span class="bg-white/20 text-xl font-medium rounded-xl px-4 py-2">{{ yearsSinceFounding }}+</span>
       <span class="text-2xl font-bold">Jahre</span>
       <span class="text-center">Unser Projekt besteht seit über {{ yearsSinceFounding }} Jahren!</span>
@@ -175,9 +187,7 @@
 
   <div class="h-10rem" id="gallery-section"></div>
 
-  <h2 class="gallery-title">
-    ✨ Bilder sagen mehr als 1000 Worte ✨
-  </h2>
+  <h2 class="gallery-title">✨ Bilder sagen mehr als 1000 Worte ✨</h2>
 
   <div class="masonry-gallery">
     <div *ngFor="let item of images; let i = index" class="masonry-item" (click)="openLightbox(i)">
