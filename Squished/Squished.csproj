@@ -1,0 +1,6 @@
+﻿<Project>
+    <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <Reference Include="AudioPlayerApi" HintPath="$(EXILED_REFERENCES)\AudioPlayerApi.dll" Private="false"/>
+    </ItemGroup>
+</Project>
