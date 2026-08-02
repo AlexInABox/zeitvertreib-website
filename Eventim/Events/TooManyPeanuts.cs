@@ -20,11 +20,10 @@ public class TooManyPeanuts : IEvent
     public string Name => "Too Many Peanuts!";
 
     public string Description =>
-        "ein Viertel der Spieler spawnen als SCP-173, der Rest als Guards! Aber ohne Ausweg...";
+        "Ein Viertel aller Spieler spawnen als SCP-173, der Rest als Guards! Aber ohne Ausweg...";
 
     public List<string> Rules =>
     [
-        "Versuche zu überleben!"
     ];
 
     public void RegisterEvents()
