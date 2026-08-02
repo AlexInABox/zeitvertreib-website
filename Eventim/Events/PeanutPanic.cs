@@ -13,10 +13,10 @@ namespace Eventim.Events;
 
 public class PeanutPanic : IEvent
 {
-    public string Name => "PeanutPanik";
+    public string Name => "Peanut-Panik";
 
     public string Description =>
-        "Ich glaube das wirst du nicht überleben...";
+        "";
 
     public List<string> Rules =>
     [
@@ -26,6 +26,9 @@ public class PeanutPanic : IEvent
     public void RegisterEvents()
     {
         ServerEvents.RoundStarting += OnRoundStarting;
+
+        PlayerEvents.Death += OnPlayerDeath;
+
         PlayerEvents.Spawned += OnPlayerSpawned;
         ServerEvents.WaveRespawning += OnWaveRespawning;
     }
@@ -33,6 +36,9 @@ public class PeanutPanic : IEvent
     public void UnregisterEvents()
     {
         ServerEvents.RoundStarting -= OnRoundStarting;
+
+        PlayerEvents.Death -= OnPlayerDeath;
+
         PlayerEvents.Spawned -= OnPlayerSpawned;
         ServerEvents.WaveRespawning -= OnWaveRespawning;
     }
@@ -64,5 +70,17 @@ public class PeanutPanic : IEvent
     private static void OnWaveRespawning(WaveRespawningEventArgs ev)
     {
         ev.IsAllowed = false;
+    }
+
+
+    private static void OnPlayerDeath(PlayerDeathEventArgs ev)
+    {
+        if (Player.ReadyList.Count(p => p.Role == RoleTypeId.ClassD) > 1) return;
+
+        Player.ReadyList.First(p => p.Role == RoleTypeId.Scp173).Kill();
+        
+        string winnerName = Player.ReadyList.First(p => p.Role == RoleTypeId.ClassD).DisplayName;
+        foreach (Player player in Player.ReadyList)
+            player.SendBroadcast($"{winnerName} hat gewonnen!!!", 20, Broadcast.BroadcastFlags.Normal, true);
     }
 }
