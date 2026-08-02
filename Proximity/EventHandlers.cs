@@ -17,12 +17,12 @@ namespace Proximity;
 
 public static class EventHandlers
 {
-    private static Dictionary<Player, SpeakerToy> ActiveSpeakers { get; } = [];
+    public static Dictionary<Player, SpeakerToy> ActiveSpeakers { get; } = [];
 
     /// <summary>Gets whether the player has Proximity Chat enabled.</summary>
     /// <param name="player">The player to check.</param>
     /// <returns>If the player has Proximity Chat enabled.</returns>
-    private static bool IsScpProximityChatEnabled(this Player player)
+    public static bool IsScpProximityChatEnabled(this Player player)
     {
         return ActiveSpeakers.ContainsKey(player);
     }
@@ -50,7 +50,7 @@ public static class EventHandlers
 
         ActiveSpeakers[player] = SpeakerToyPool.Rent(
             SpeakerToyPool.NextAvailableId,
-            new SpeakerSettings { IsSpatial = true, Volume = 10f, MinDistance = 1f, MaxDistance = 15f },
+            new SpeakerSettings { IsSpatial = true, Volume = 20F, MinDistance = 1f, MaxDistance = 20},
             player.GameObject!.transform
         );
         BasicElement enableHint = new(10f, "<size=18>Proximity Chat: <color=green>AKTIVIERT</color></size>");
@@ -103,7 +103,7 @@ public static class EventHandlers
     private static void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
     {
         if (ev.Message.Channel != VoiceChatChannel.ScpChat || !ev.Player.IsScpProximityChatEnabled()) return;
-
+        ev.IsAllowed = false;
         ev.Player.VoiceModule!.CurrentChannel = VoiceChatChannel.Proximity;
 
         AudioMessage message = new(ActiveSpeakers[ev.Player].ControllerId, ev.Message.Data, ev.Message.DataLength);

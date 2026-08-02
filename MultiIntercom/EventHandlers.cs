@@ -5,6 +5,7 @@ using LabApi.Features.Wrappers;
 using MapGeneration;
 using MEC;
 using PlayerRoles.Voice;
+using Proximity;
 
 namespace MultiIntercom;
 
@@ -35,9 +36,13 @@ public static class EventHandlers
             bool isInUse = Intercom.State == IntercomState.InUse;
 
             if (isInUse)
+            {
                 // Only update overrides when state changes or new players enter/leave
-                foreach (Player player in Player.List)
+                foreach (Player player in Player.List.Where(p => p.IsHuman))
                     Intercom.TrySetOverride(player.ReferenceHub, intercomRoom.Players.Contains(player));
+                foreach (Player player in Player.List.Where(p => p.IsSCP))
+                    Intercom.TrySetOverride(player.ReferenceHub, intercomRoom.Players.Contains(player) && player.IsScpProximityChatEnabled());
+            }
             else if (intercomWasInUse)
                 // Disable overrides only once when leaving "InUse" state
                 foreach (Player player in Player.List)
