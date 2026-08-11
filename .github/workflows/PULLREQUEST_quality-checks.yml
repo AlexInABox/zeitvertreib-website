@@ -49,6 +49,7 @@ jobs:
     uses: ./.github/workflows/REUSABLE_extract-changelog.yml
     with:
       build_number: ${{ needs.determine-next-build.outputs.build_number }}
+      ref: ${{ github.event.pull_request.head.sha }}
 
   set-labels:
     name: Set Labels

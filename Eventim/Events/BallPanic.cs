@@ -95,5 +95,9 @@ public class BallPanic : IEvent
 
         foreach (Pickup pickup in Map.Pickups) pickup.Destroy();
         Round.IsLocked = false;
+
+        string winnerName = Player.ReadyList.First(p => p.Role == RoleTypeId.ClassD).DisplayName;
+        foreach (Player player in Player.ReadyList)
+            player.SendBroadcast($"{winnerName} hat gewonnen!!!", 20, Broadcast.BroadcastFlags.Normal, true);
     }
 }

@@ -41,5 +41,7 @@
     ],
     "strictNullChecks": true,
     "exactOptionalPropertyTypes": false
-  }
+  },
+  "include": ["src/**/*", "worker-configuration.d.ts", "drizzle.config.ts"],
+  "exclude": ["dist", "node_modules"]
 }

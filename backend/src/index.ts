@@ -48,7 +48,7 @@ import {
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
 import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
-import { handleMollieCheckout, handleMollieWebhook } from './routes/mollie.js';
+import { handleStripeCheckout, handleStripeWebhook } from './routes/stripe.js';
 import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.js';
 import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
@@ -188,9 +188,9 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'POST:/paysafe': handlePostPaysafe,
   'GET:/paysafe': handleGetPaysafe,
 
-  // Mollie routes
-  'POST:/mollie/checkout': handleMollieCheckout,
-  'POST:/mollie/webhook': handleMollieWebhook,
+  // Stripe routes
+  'POST:/stripe/checkout': handleStripeCheckout,
+  'POST:/stripe/webhook': handleStripeWebhook,
 
   // Sessions routes
   'GET:/sessions': handleGetSessions,

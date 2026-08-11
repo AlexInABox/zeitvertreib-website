@@ -20,11 +20,10 @@ public class TooManyPeanuts : IEvent
     public string Name => "Too Many Peanuts!";
 
     public string Description =>
-        "Die Hälfte der Spieler spawnen als SCP-173! Die restlichen Spieler werden Guards, aber ohne Ausweg...";
+        "Ein Viertel aller Spieler spawnen als SCP-173, der Rest als Guards! Aber ohne Ausweg...";
 
     public List<string> Rules =>
     [
-        "Versuche zu überleben!"
     ];
 
     public void RegisterEvents()
@@ -43,14 +42,13 @@ public class TooManyPeanuts : IEvent
 
     private static readonly RoleTypeId[] HczSpawnPoints =
     [
-        RoleTypeId.Scp096,
-        RoleTypeId.Scp939
+        RoleTypeId.Scp096
     ];
 
     private static void OnRoundStarting(RoundStartingEventArgs ev)
     {
         List<Player> allPlayers = Player.ReadyList.ToList();
-        int scpCount = Math.Max(1, allPlayers.Count / 2);
+        int scpCount = Math.Max(1, (int)(allPlayers.Count * 0.25));
 
         for (int i = 0; i < scpCount; i++)
         {

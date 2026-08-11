@@ -10,6 +10,11 @@ on:
         required: true
         type: string
         description: "Build number (e.g., 26)"
+      ref:
+        required: false
+        type: string
+        default: ""
+        description: "Git ref or commit SHA to checkout"
     outputs:
       changelog:
         description: "Changelog contents for the requested build number"
@@ -25,6 +30,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref }}
 
       - name: Extract changelog section
         id: extract
@@ -35,6 +41,12 @@ jobs:
           if [[ ! -f "$CHANGELOG_FILE" ]]; then
             echo "❌ Changelog file not found: $CHANGELOG_FILE"
             exit 1
+          fi
+
+          PR_HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          if ! grep -q "^## \[${BUILD_NUMBER}\]" "$CHANGELOG_FILE" && [ -n "$PR_HEAD_SHA" ]; then
+            echo "Attempting to checkout $CHANGELOG_FILE from PR head SHA: $PR_HEAD_SHA"
+            git checkout "$PR_HEAD_SHA" -- "$CHANGELOG_FILE" || true
           fi
 
           TMPFILE=$(mktemp)

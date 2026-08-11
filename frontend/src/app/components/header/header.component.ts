@@ -138,6 +138,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
             route: '/zeit',
           },
           {
+            label: 'Permissions?',
+            icon: PrimeIcons.TABLE,
+            route: '/permissions',
+          },
+          {
             label: 'Cases',
             icon: PrimeIcons.FOLDER,
             route: '/cases',

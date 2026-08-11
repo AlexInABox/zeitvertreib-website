@@ -232,11 +232,11 @@ export class SupportComponent implements OnInit {
     };
 
     this.http
-      .post<{ success: boolean; checkoutUrl: string }>(`${environment.apiUrl}/mollie/checkout`, body, { headers })
+      .post<{ success: boolean; checkoutUrl: string }>(`${environment.apiUrl}/stripe/checkout`, body, { headers })
       .subscribe({
         next: (response) => {
           if (response.success && response.checkoutUrl) {
-            // Redirect the user to Mollie Checkout
+            // Redirect the user to Stripe Checkout
             window.location.href = response.checkoutUrl;
           } else {
             this.errorMessage = 'Checkout-Link konnte nicht generiert werden.';
@@ -244,7 +244,7 @@ export class SupportComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error initiating Mollie checkout:', error);
+          console.error('Error initiating Stripe checkout:', error);
           this.errorMessage =
             error?.error?.error || 'Fehler beim Erstellen der Spende. Bitte versuche es später erneut.';
           this.isSubmitting = false;

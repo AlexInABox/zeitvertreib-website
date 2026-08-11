@@ -1,3 +1,6 @@
 ﻿<Project>
     <Import Project="..\Base.csproj"/>
+    <ItemGroup>
+        <ProjectReference Include="../Proximity/Proximity.csproj"/>
+    </ItemGroup>
 </Project>
