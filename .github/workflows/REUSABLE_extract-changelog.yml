@@ -43,6 +43,12 @@ jobs:
             exit 1
           fi
 
+          PR_HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          if ! grep -q "^## \[${BUILD_NUMBER}\]" "$CHANGELOG_FILE" && [ -n "$PR_HEAD_SHA" ]; then
+            echo "Attempting to checkout $CHANGELOG_FILE from PR head SHA: $PR_HEAD_SHA"
+            git checkout "$PR_HEAD_SHA" -- "$CHANGELOG_FILE" || true
+          fi
+
           TMPFILE=$(mktemp)
           awk -v ver="## [${BUILD_NUMBER}]" 'BEGIN{p=0} $0==ver{p=1;next} p==1 && /^## \[/ {exit} p==1{print}' "$CHANGELOG_FILE" > "$TMPFILE"
 
