@@ -12,9 +12,18 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 
 ## [28]
 
+### Added
+
+- Re-added the Squished plugin, causing players falling from a height to deal fall damage to players below them
+- New interactive permission matrix page on the website displaying staff permissions per role
+- Round victory announcements and proper round endings for the Peanut-Panik auto-event
+
 ### Changed
 
 - Switched website donation processor from Mollie to Stripe on the support page
+- SCP proximity voice chat now integrates with MultiIntercom only when proximity chat is actively toggled on
+- Adjusted balancing in the Too Many Peanuts! auto-event, reducing SCP-173 spawns from 50% to 25% of players
+- Optimized website media loading performance by migrating assets to AVIF format
 
 ## [27]
 
