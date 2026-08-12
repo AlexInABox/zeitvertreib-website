@@ -1,13 +1,14 @@
 import {
   Component,
   OnInit,
-  ViewChild,
   ElementRef,
   AfterViewInit,
   NgZone,
   ChangeDetectionStrategy,
+  inject,
+  viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -17,13 +18,19 @@ import { environment } from '../../environments/environment';
 @Component({
   selector: 'app-support',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './support.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./support.component.css'],
 })
 export class SupportComponent implements OnInit {
-  @ViewChild('confettiCanvas') confettiCanvasRef!: ElementRef<HTMLCanvasElement>;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private ngZone = inject(NgZone);
+
+  readonly confettiCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('confettiCanvas');
 
   selectedAmount: number | null = 10; // default 10€
   customAmount: number | null = null;
@@ -64,14 +71,6 @@ export class SupportComponent implements OnInit {
   // Predefined options
   predefinedAmounts = [5, 10, 20, 50, 100];
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private ngZone: NgZone,
-  ) {}
-
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       if (params['status'] === 'returned') {
@@ -90,7 +89,7 @@ export class SupportComponent implements OnInit {
   }
 
   private launchConfetti(): void {
-    const canvas = this.confettiCanvasRef?.nativeElement;
+    const canvas = this.confettiCanvasRef()?.nativeElement;
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
 

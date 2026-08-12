@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -19,12 +19,15 @@ interface PaysafeSubmission {
 @Component({
   selector: 'app-paysafecard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './paysafecard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./paysafecard.component.css'],
 })
 export class PaysafecardComponent implements OnInit {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
   cardCode = '';
   isSubmitting = false;
   isLoadingSubmissions = true;
@@ -36,10 +39,7 @@ export class PaysafecardComponent implements OnInit {
   // Animation particles
   particles: { left: number; delay: number; size: number }[] = [];
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {
+  constructor() {
     this.generateParticles();
   }
 

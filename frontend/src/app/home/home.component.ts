@@ -1,6 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
 
 import { AnimateOnScrollModule } from 'primeng/animateonscroll';
 import { ImageModule } from 'primeng/image';
@@ -19,12 +18,15 @@ interface Player {
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, AnimateOnScrollModule, ImageModule, PanelModule, CardModule, DiscordStatsComponent],
+  imports: [AnimateOnScrollModule, ImageModule, PanelModule, CardModule, DiscordStatsComponent],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+  private themeService = inject(ThemeService);
+
   images: string[] = [
     '0.avif',
     '1.avif',
@@ -63,11 +65,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   get isDark() {
     return this.themeService.isDark;
   }
-
-  constructor(
-    private http: HttpClient,
-    private themeService: ThemeService,
-  ) {}
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, inject, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, model, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
@@ -20,8 +20,7 @@ type LootboxSpinItem = {
   styleUrls: ['./lootbox.css'],
 })
 export class LootboxComponent implements OnInit {
-  @Input() balance = 0;
-  @Output() balanceChange = new EventEmitter<number>();
+  readonly balance = model<number>(0);
 
   readonly lootboxCost = 100;
   lootboxVoucherCount = 0;
@@ -98,7 +97,7 @@ export class LootboxComponent implements OnInit {
   }
 
   canAffordLootbox(): boolean {
-    return this.balance >= this.lootboxCost;
+    return this.balance() >= this.lootboxCost;
   }
 
   useVoucherForLootbox(): void {
@@ -130,9 +129,8 @@ export class LootboxComponent implements OnInit {
 
     if (useVoucher) this.lootboxVoucherCount -= 1;
     else {
-      this.balance -= this.lootboxCost;
-      this.balanceChange.emit(this.balance);
-      this.zvcService.setBalance(this.balance);
+      this.balance.update((b) => b - this.lootboxCost);
+      this.zvcService.setBalance(this.balance());
     }
 
     const duration = 9000,
@@ -157,8 +155,7 @@ export class LootboxComponent implements OnInit {
               this.lootboxResult = res.reward;
               this.lootboxSpinning = false;
               this.lootboxSuccess = res.message;
-              this.balance = res.newBalance;
-              this.balanceChange.emit(this.balance);
+              this.balance.set(res.newBalance);
               this.zvcService.setBalance(res.newBalance);
               this.lootboxVoucherCount = res.newVoucherCount;
               setTimeout(() => (this.lootboxSuccess = ''), 6000);
@@ -170,9 +167,8 @@ export class LootboxComponent implements OnInit {
           this.lootboxSpinning = false;
           if (useVoucher) this.lootboxVoucherCount += 1;
           else {
-            this.balance += this.lootboxCost;
-            this.balanceChange.emit(this.balance);
-            this.zvcService.setBalance(this.balance);
+            this.balance.update((b) => b + this.lootboxCost);
+            this.zvcService.setBalance(this.balance());
           }
           this.lootboxError = err?.error?.error || 'Fehler beim Öffnen der Lootbox';
           setTimeout(() => (this.lootboxError = ''), 4000);

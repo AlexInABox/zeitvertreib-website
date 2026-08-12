@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AuthService, SteamUser } from '../services/auth.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -15,12 +15,20 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 @Component({
   standalone: true,
   selector: 'app-profile',
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RouterModule, FormsModule],
   templateUrl: './profile.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  private sessionsService = inject(SessionsService);
+  private takeoutService = inject(TakeoutService);
+  private deletionService = inject(DeletionService);
+  private birthdayService = inject(BirthdayService);
+  private minecraftLinkService = inject(MinecraftLinkService);
+  private http = inject(HttpClient);
+
   currentUser: SteamUser | null = null;
   sessions: SessionInfo[] = [];
   loadingSessions = true;
@@ -98,16 +106,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   // Router is injected via `inject()` so standalone/component-level DI is stable
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-
-  constructor(
-    private authService: AuthService,
-    private sessionsService: SessionsService,
-    private takeoutService: TakeoutService,
-    private deletionService: DeletionService,
-    private birthdayService: BirthdayService,
-    private minecraftLinkService: MinecraftLinkService,
-    private http: HttpClient,
-  ) {}
 
   ngOnInit() {
     // Watch for optional :id param (viewing other users)

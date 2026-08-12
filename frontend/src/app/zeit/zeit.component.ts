@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -10,12 +10,16 @@ import type { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib
 @Component({
   standalone: true,
   selector: 'app-zeit',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './zeit.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zeit.component.css'],
 })
 export class ZeitComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  private zeitService = inject(ZeitService);
+  private route = inject(ActivatedRoute);
+
   // Search state
   searchInput = '';
   searchType: 'steamid' | 'discordid' = 'steamid';
@@ -63,12 +67,6 @@ export class ZeitComponent implements OnInit, OnDestroy {
     army_green: '#4B5320',
     pumpkin: '#FF7518',
   };
-
-  constructor(
-    private authService: AuthService,
-    private zeitService: ZeitService,
-    private route: ActivatedRoute,
-  ) {}
 
   ngOnInit() {
     this.authSubscription = this.authService.currentUser$.subscribe((user: any) => {

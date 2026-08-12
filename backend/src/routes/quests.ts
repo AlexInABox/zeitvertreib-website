@@ -102,14 +102,14 @@ export async function handleGetQuests(request: Request, env: Env, ctx: Execution
     const dailyProgressMap = new Map(dailyProgressRows.map((r) => [r.category, r]));
     const weeklyProgressMap = new Map(weeklyProgressRows.map((r) => [r.category, r]));
 
-    const dailyQuestsProgress: QuestProgress[] = todaysQuests.map((quest) => {
+    const dailyQuestsProgress: QuestProgress[] = todaysQuests.map((quest, index) => {
       const row = dailyProgressMap.get(quest.category);
       const currentProgress = row?.progress ?? 0;
       const isCompleted = currentProgress >= quest.targetValue;
       const claimedAt = row?.claimedAt ?? 0;
 
       return {
-        id: row?.id ?? 0,
+        id: row?.id ?? index + 1,
         category: quest.category,
         description: quest.description,
         targetValue: quest.targetValue,
@@ -120,14 +120,14 @@ export async function handleGetQuests(request: Request, env: Env, ctx: Execution
       };
     });
 
-    const weeklyQuestsProgress: QuestProgress[] = weeklyQuests.map((quest) => {
+    const weeklyQuestsProgress: QuestProgress[] = weeklyQuests.map((quest, index) => {
       const row = weeklyProgressMap.get(quest.category);
       const currentProgress = row?.progress ?? 0;
       const isCompleted = currentProgress >= quest.targetValue;
       const claimedAt = row?.claimedAt ?? 0;
 
       return {
-        id: row?.id ?? 0,
+        id: row?.id ?? index + 100,
         category: quest.category,
         description: quest.description,
         targetValue: quest.targetValue,

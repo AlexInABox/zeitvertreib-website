@@ -1,6 +1,5 @@
-import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, input, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
 
 interface DiscordInviteResponse {
   approximate_member_count: number;
@@ -10,18 +9,18 @@ interface DiscordInviteResponse {
 @Component({
   selector: 'app-discord-stats',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './discord-stats.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./discord-stats.component.css'],
 })
 export class DiscordStatsComponent implements OnInit {
-  @Input() variant: 'full' | 'mini' = 'full';
+  private http = inject(HttpClient);
+
+  readonly variant = input<'full' | 'mini'>('full');
 
   discordMemberCount = 0;
   discordOnlineCount = 0;
-
-  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.fetchDiscordStats();

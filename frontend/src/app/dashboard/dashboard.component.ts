@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { AvatarModule } from 'primeng/avatar';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { NotificationCenterService } from '../services/notification-center.service';
@@ -47,7 +47,6 @@ interface Statistics {
     CardModule,
     ChartModule,
     AvatarModule,
-    CommonModule,
     FormsModule,
     QuestsComponent,
     StatsOverviewComponent,
@@ -61,6 +60,8 @@ interface Statistics {
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  authService = inject(AuthService);
+
   userStatistics: Statistics = {
     username: 'LÄDT...',
     kills: 0,
@@ -91,7 +92,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private notificationCenter = inject(NotificationCenterService);
   private zvcService = inject(ZvcService);
 
-  constructor(public authService: AuthService) {
+  constructor() {
     this.generateRandomColors();
     this.loadUserStats();
   }

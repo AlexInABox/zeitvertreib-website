@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../services/notification.service';
 
@@ -11,7 +11,7 @@ import { NotificationService } from '../../services/notification.service';
   styleUrls: ['./toast.component.css'],
 })
 export class ToastComponent {
-  constructor(readonly notificationService: NotificationService) {}
+  readonly notificationService = inject(NotificationService);
 
   removeToast(id: number): void {
     this.notificationService.removeToast(id);

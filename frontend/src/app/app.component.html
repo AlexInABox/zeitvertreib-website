@@ -1,9 +1,11 @@
 <app-domain-warning />
 <app-toast />
 <app-zvc-overlay />
-<div class="fixed top-0 left-0 w-full z-50" *ngIf="showHeader">
-  <app-header />
-</div>
+@if (showHeader) {
+  <div class="fixed top-0 left-0 w-full z-50">
+    <app-header />
+  </div>
+}
 <div [class.pt-5_5rem]="showHeader">
   <router-outlet />
 </div>

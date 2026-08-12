@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
@@ -15,20 +15,19 @@ import { NotificationCenterComponent } from '../notification-center/notification
 
 @Component({
   selector: 'app-header',
-  imports: [
-    CommonModule,
-    RouterModule,
-    ButtonModule,
-    AvatarModule,
-    AvatarGroupModule,
-    FormsModule,
-    NotificationCenterComponent,
-  ],
+  imports: [RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, FormsModule, NotificationCenterComponent],
   templateUrl: './header.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./header.component.css'],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+  },
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  themeService = inject(ThemeService);
+  private http = inject(HttpClient);
+
   items: MenuItem[] | undefined;
   userLoggedIn = false;
   avatarIcon = '';
@@ -38,12 +37,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   activeDropdown: string | null = null;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
-
-  constructor(
-    private authService: AuthService,
-    public themeService: ThemeService,
-    private http: HttpClient,
-  ) {}
 
   get logoSrc(): string {
     return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
@@ -61,7 +54,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('document:click', ['$event'])
   onDocumentClick(_event: MouseEvent) {
     this.activeDropdown = null;
   }
@@ -186,33 +178,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private checkUserManagementAccess() {
-    if (!this.userLoggedIn) {
-      this.isUserManagementAdmin = false;
-      this.updateMenuItems();
-      return;
-    }
-
-    const token = this.authService.getSessionToken();
-    if (!token) {
-      this.isUserManagementAdmin = false;
-      this.updateMenuItems();
-      return;
-    }
-
-    this.http
-      .get<{ hasAccess: boolean }>(`${environment.apiUrl}/user-management/access`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .subscribe({
-        next: (response) => {
-          this.isUserManagementAdmin = response.hasAccess;
-          this.updateMenuItems();
-        },
-        error: () => {
-          this.isUserManagementAdmin = false;
-          this.updateMenuItems();
-        },
-      });
+    this.isUserManagementAdmin = this.userLoggedIn && this.authService.isTeam();
+    this.updateMenuItems();
   }
 
   login() {

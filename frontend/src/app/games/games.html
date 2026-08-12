@@ -23,10 +23,11 @@
       </div>
 
       <!-- Inline Compact Payout Info -->
-      <div *ngIf="slotMachineInfo" class="slot-payout-compact">
+      @if (slotMachineInfo) {
+      <div class="slot-payout-compact">
         <div class="payout-compact-grid">
+          @for (entry of slotMachineInfo.payoutTable; track entry.tier + entry.symbol) {
           <div
-            *ngFor="let entry of slotMachineInfo.payoutTable"
             class="payout-compact-entry"
             [class.jackpot-entry]="entry.tier === 'jackpot'"
             [class.big-win-entry]="entry.tier === 'big_win'"
@@ -35,8 +36,10 @@
             <span class="payout-compact-condition">{{ entry.condition }}</span>
             <span class="payout-compact-amount">+{{ entry.payout }}</span>
           </div>
+          }
         </div>
       </div>
+      }
 
       <div
         class="slot-machine-controls wheel-bet-controls"
@@ -49,8 +52,11 @@
           [class.spinning]="isSpinning"
           [class.disabled]="!canAffordSlotMachine()"
         >
-          <span class="btn-text" *ngIf="!isSpinning">Drehen!</span>
-          <span class="btn-text" *ngIf="isSpinning">Dreht...</span>
+          @if (!isSpinning) {
+          <span class="btn-text">Drehen!</span>
+          } @if (isSpinning) {
+          <span class="btn-text">Dreht...</span>
+          }
           <span class="btn-cost">🪙 {{ slotMachineInfo?.cost || 10 }} ZVC</span>
         </button>
 
@@ -62,8 +68,11 @@
             [disabled]="!canAffordSlotMachine()"
             style="flex: 1"
           >
-            <span *ngIf="!autoSpinEnabled">🔄 Auto</span>
-            <span *ngIf="autoSpinEnabled">⏹️ Stoppen</span>
+            @if (!autoSpinEnabled) {
+            <span>🔄 Auto</span>
+            } @if (autoSpinEnabled) {
+            <span>⏹️ Stoppen</span>
+            }
           </button>
 
           <button
@@ -72,18 +81,25 @@
             [class.active]="fastModeEnabled"
             style="flex: 1"
           >
-            <span *ngIf="!fastModeEnabled">⚡ Schneller Modus</span>
-            <span *ngIf="fastModeEnabled">⚡ Schneller Modus</span>
+            @if (!fastModeEnabled) {
+            <span>⚡ Schneller Modus</span>
+            } @if (fastModeEnabled) {
+            <span>⚡ Schneller Modus</span>
+            }
           </button>
         </div>
       </div>
 
       <!-- Status Messages -->
-      <div *ngIf="slotMachineMessage" class="slot-machine-message">{{ slotMachineMessage }}</div>
-      <div *ngIf="slotMachineError" class="slot-machine-error">{{ slotMachineError }}</div>
+      @if (slotMachineMessage) {
+      <div class="slot-machine-message">{{ slotMachineMessage }}</div>
+      } @if (slotMachineError) {
+      <div class="slot-machine-error">{{ slotMachineError }}</div>
+      }
 
       <!-- Win Log -->
-      <div *ngIf="slotWinLog.length > 0" class="slot-win-log">
+      @if (slotWinLog.length > 0) {
+      <div class="slot-win-log">
         <div class="win-log-header">
           <span class="win-log-title">📜 Letzte Spins</span>
           <div class="win-log-header-controls">
@@ -95,8 +111,8 @@
           </div>
         </div>
         <div class="win-log-list">
+          @for (entry of getFilteredWinLog(); track entry.id || $index) {
           <div
-            *ngFor="let entry of getFilteredWinLog(); trackBy: trackByWinLogId"
             class="win-log-entry"
             [class.win-log-jackpot]="entry.winType === 'jackpot'"
             [class.win-log-big-win]="entry.winType === 'big_win'"
@@ -116,11 +132,15 @@
             </div>
             <div class="win-log-payout" [class.negative]="entry.payout === 0">
               <span class="payout-amount"> {{ entry.payout > 0 ? '+' : '' }}{{ entry.payout }} </span>
-              <span class="payout-cost" *ngIf="entry.payout > 0">-{{ slotMachineInfo?.cost || 10 }}</span>
+              @if (entry.payout > 0) {
+              <span class="payout-cost">-{{ slotMachineInfo?.cost || 10 }}</span>
+              }
             </div>
           </div>
+          }
         </div>
       </div>
+      }
     </div>
     <!-- Roulette Widget -->
     <div class="roulette-widget">
@@ -129,13 +149,16 @@
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="!rouletteInfo && !rouletteError" class="text-center py-8">
+      @if (!rouletteInfo && !rouletteError) {
+      <div class="text-center py-8">
         <div class="loading-spinner mx-auto mb-4"></div>
         <p class="text-lg text-white">Lade Roulette...</p>
       </div>
+      }
 
       <!-- Error State -->
-      <div *ngIf="rouletteError && !rouletteInfo" class="text-center py-8">
+      @if (rouletteError && !rouletteInfo) {
+      <div class="text-center py-8">
         <div class="text-red-400 mb-4">⚠️</div>
         <p class="text-red-400">{{ rouletteError }}</p>
         <button
@@ -145,9 +168,11 @@
           Erneut versuchen
         </button>
       </div>
+      }
 
       <!-- Roulette Content -->
-      <div *ngIf="rouletteInfo">
+      @if (rouletteInfo) {
+      <div>
         <!-- Roulette Wheel Visualization -->
         <div class="roulette-wheel-container">
           <!-- Pointer at top (outside the rotating wheel) -->
@@ -160,9 +185,11 @@
           >
             <!-- SVG Wheel Background -->
             <svg class="roulette-wheel-svg" viewBox="0 0 200 200">
-              <g *ngFor="let segment of rouletteWheelSegments; let i = index">
+              @for (segment of rouletteWheelSegments; track $index; let i = $index) {
+              <g>
                 <path [attr.d]="segment.path" [attr.fill]="segment.color" />
               </g>
+              }
             </svg>
             <!-- Roulette logo center -->
             <div class="roulette-logo">
@@ -170,22 +197,13 @@
             </div>
             <!-- Roulette numbers 0-36 arranged in a circle -->
             <div class="roulette-numbers">
-              <div
-                *ngFor="
-                  let num of rouletteWheelSequence;
-                  let i = index
-                "
-                class="roulette-number"
-                [ngStyle]="getRouletteNumberPosition(num)"
-              >
-                {{ num }}
-              </div>
+              @for ( num of rouletteWheelSequence; track num; let i = $index) {
+              <div class="roulette-number" [ngStyle]="getRouletteNumberPosition(num)">{{ num }}</div>
+              }
             </div>
           </div>
         </div>
-
         <!-- Result Display removed - no popup -->
-
         <!-- Bet Type Selection -->
         <div class="roulette-bet-type-section">
           <label class="bet-type-label">Wettart</label>
@@ -254,9 +272,9 @@
               Nummer
             </button>
           </div>
-
           <!-- Number input for specific number bet -->
-          <div *ngIf="rouletteBetType === 'number'" class="number-input-section">
+          @if (rouletteBetType === 'number') {
+          <div class="number-input-section">
             <input
               type="number"
               [(ngModel)]="rouletteBetValue"
@@ -268,8 +286,8 @@
               [disabled]="isRouletteSpinning"
             />
           </div>
+          }
         </div>
-
         <!-- Bet Controls -->
         <div class="roulette-bet-controls">
           <div class="roulette-bet-display">
@@ -309,7 +327,6 @@
               +
             </button>
           </div>
-
           <button
             (click)="spinRoulette()"
             class="roulette-spin-btn"
@@ -320,12 +337,13 @@
             <span class="btn-text">{{ isRouletteSpinning ? 'Dreht...' : 'Drehen!' }}</span>
           </button>
         </div>
-
         <!-- Status Messages -->
-        <div *ngIf="rouletteError && rouletteInfo" class="roulette-error">{{ rouletteError }}</div>
-
+        @if (rouletteError && rouletteInfo) {
+        <div class="roulette-error">{{ rouletteError }}</div>
+        }
         <!-- Roulette Spin Log -->
-        <div *ngIf="rouletteSpinLog.length > 0" class="slot-win-log roulette-spin-log">
+        @if (rouletteSpinLog.length > 0) {
+        <div class="slot-win-log roulette-spin-log">
           <div class="win-log-header">
             <span class="win-log-title">📜 Letzte Spins</span>
             <div class="win-log-header-controls">
@@ -337,12 +355,8 @@
             </div>
           </div>
           <div class="win-log-list">
-            <div
-              *ngFor="let entry of getFilteredRouletteSpinLog(); trackBy: trackByRouletteSpinId"
-              class="win-log-entry"
-              [class.win-log-win]="entry.won"
-              [class.win-log-loss]="!entry.won"
-            >
+            @for (entry of getFilteredRouletteSpinLog(); track entry.id || $index) {
+            <div class="win-log-entry" [class.win-log-win]="entry.won" [class.win-log-loss]="!entry.won">
               <div class="win-log-symbols">
                 <span
                   class="roulette-number-badge"
@@ -368,9 +382,12 @@
                 <span class="roulette-log-bet">-{{ entry.betAmount }}</span>
               </div>
             </div>
+            }
           </div>
         </div>
+        }
       </div>
+      }
     </div>
     <!-- Lucky Wheel Widget -->
     <div class="lucky-wheel-widget">
@@ -379,13 +396,16 @@
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="!luckyWheelInfo && !luckyWheelError" class="text-center py-8">
+      @if (!luckyWheelInfo && !luckyWheelError) {
+      <div class="text-center py-8">
         <div class="loading-spinner mx-auto mb-4"></div>
         <p class="text-lg text-white">Lade Glücksrad...</p>
       </div>
+      }
 
       <!-- Error State -->
-      <div *ngIf="luckyWheelError && !luckyWheelInfo" class="text-center py-8">
+      @if (luckyWheelError && !luckyWheelInfo) {
+      <div class="text-center py-8">
         <div class="text-red-400 mb-4">⚠️</div>
         <p class="text-red-400">{{ luckyWheelError }}</p>
         <button
@@ -395,9 +415,11 @@
           Erneut versuchen
         </button>
       </div>
+      }
 
       <!-- Lucky Wheel Content -->
-      <div *ngIf="luckyWheelInfo">
+      @if (luckyWheelInfo) {
+      <div>
         <!-- Lucky Wheel SVG -->
         <div class="wheel-container">
           <svg
@@ -407,7 +429,8 @@
             viewBox="0 0 200 200"
           >
             <!-- Wheel segments -->
-            <g *ngFor="let segment of getWheelSegments(); let i = index">
+            @for (segment of getWheelSegments(); track $index; let i = $index) {
+            <g>
               <path
                 class="wheel-segment"
                 [attr.d]="
@@ -427,15 +450,15 @@
                 [class.wheel-segment-active]="winningSegmentIndex === i && showWheelResult"
               />
             </g>
-
+            }
             <!-- Logo image in center -->
             <defs>
               <clipPath id="circleClip">
                 <circle cx="100" cy="100" r="22" />
               </clipPath>
             </defs>
+            @if (!(lastWheelMultiplier !== null && showWheelResult)) {
             <image
-              *ngIf="!(lastWheelMultiplier !== null && showWheelResult)"
               href="assets/logos/logo_full_color_1to1.avif"
               x="78"
               y="78"
@@ -443,17 +466,12 @@
               height="44"
               clip-path="url(#circleClip)"
             />
-
+            }
             <!-- Result display circle -->
-            <circle
-              *ngIf="lastWheelMultiplier !== null && showWheelResult"
-              cx="100"
-              cy="100"
-              r="22"
-              fill="rgba(0,0,0,0.9)"
-            />
+            @if (lastWheelMultiplier !== null && showWheelResult) {
+            <circle cx="100" cy="100" r="22" fill="rgba(0,0,0,0.9)" />
+            } @if (lastWheelMultiplier !== null && showWheelResult) {
             <text
-              *ngIf="lastWheelMultiplier !== null && showWheelResult"
               x="100"
               y="100"
               text-anchor="middle"
@@ -464,23 +482,19 @@
             >
               {{ lastWheelMultiplier + 'x' }}
             </text>
+            }
           </svg>
-
           <!-- Pointer arrow at top -->
           <div class="wheel-pointer"></div>
         </div>
-
         <!-- Multiplier Legend (compact colored badges) -->
         <div class="wheel-multiplier-legend">
-          <div
-            *ngFor="let entry of luckyWheelInfo.payoutTable; let i = index"
-            class="legend-badge"
-            [style.background-color]="getMultiplierColor(entry.multiplier)"
-          >
+          @for (entry of luckyWheelInfo.payoutTable; track entry.multiplier; let i = $index) {
+          <div class="legend-badge" [style.background-color]="getMultiplierColor(entry.multiplier)">
             {{ entry.multiplier }}x
           </div>
+          }
         </div>
-
         <!-- Bet Controls -->
         <div class="wheel-bet-controls">
           <div class="wheel-bet-display">
@@ -520,7 +534,6 @@
               +
             </button>
           </div>
-
           <button
             (click)="spinLuckyWheel()"
             class="wheel-spin-btn"
@@ -530,7 +543,6 @@
             <span class="btn-icon">🎡</span>
             <span class="btn-text">{{ isWheelSpinning ? 'Dreht...' : 'Drehen!' }}</span>
           </button>
-
           <button
             (click)="toggleAutoWheelSpin()"
             class="wheel-autospin-btn"
@@ -538,16 +550,20 @@
             [disabled]="!luckyWheelInfo"
             title="{{ autoWheelSpinEnabled ? 'Auto-Spin deaktivieren' : 'Auto-Spin aktivieren' }}"
           >
-            <span *ngIf="!autoWheelSpinEnabled">🔄 Auto</span>
-            <span *ngIf="autoWheelSpinEnabled">⏹️ Stopp</span>
+            @if (!autoWheelSpinEnabled) {
+            <span>🔄 Auto</span>
+            } @if (autoWheelSpinEnabled) {
+            <span>⏹️ Stopp</span>
+            }
           </button>
         </div>
-
         <!-- Status Messages -->
-        <div *ngIf="luckyWheelError && luckyWheelInfo" class="wheel-error">{{ luckyWheelError }}</div>
-
+        @if (luckyWheelError && luckyWheelInfo) {
+        <div class="wheel-error">{{ luckyWheelError }}</div>
+        }
         <!-- Lucky Wheel Spin Log -->
-        <div *ngIf="luckyWheelSpinLog.length > 0" class="slot-win-log wheel-spin-log">
+        @if (luckyWheelSpinLog.length > 0) {
+        <div class="slot-win-log wheel-spin-log">
           <div class="win-log-header">
             <span class="win-log-title">📜 Letzte Wheel-Spins</span>
             <div class="win-log-header-controls">
@@ -559,12 +575,8 @@
             </div>
           </div>
           <div class="win-log-list">
-            <div
-              *ngFor="let entry of getFilteredWheelSpinLog(); trackBy: trackByWheelSpinId"
-              class="win-log-entry"
-              [class.win-log-win]="entry.payout > 0"
-              [class.win-log-loss]="entry.payout === 0"
-            >
+            @for (entry of getFilteredWheelSpinLog(); track entry.id || $index) {
+            <div class="win-log-entry" [class.win-log-win]="entry.payout > 0" [class.win-log-loss]="entry.payout === 0">
               <div class="win-log-symbols">
                 <span class="legend-badge" [style.background-color]="getMultiplierColor(entry.multiplier)"
                   >{{ entry.multiplier }}x</span
@@ -581,28 +593,36 @@
                 <span class="wheel-log-bet">-{{ entry.bet }}</span>
               </div>
             </div>
+            }
           </div>
         </div>
+        }
       </div>
+      }
     </div>
     <!-- Chicken Cross Widget -->
     <div class="chicken-cross-widget">
       <div class="chicken-cross-header">
         <h4 class="zvcoins-section-title">🐔 Chicken Cross</h4>
-        <div *ngIf="hasActiveChickenCrossGame()" class="chicken-payout-display">
+        @if (hasActiveChickenCrossGame()) {
+        <div class="chicken-payout-display">
           <span class="payout-label">Auszahlung:</span>
           <span class="payout-value">{{ chickenCrossGame!.currentPayout }} ZVC</span>
         </div>
+        }
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="!chickenCrossInfo && !chickenCrossError" class="text-center py-8">
+      @if (!chickenCrossInfo && !chickenCrossError) {
+      <div class="text-center py-8">
         <div class="loading-spinner mx-auto mb-4"></div>
         <p class="text-lg text-white">Lade Spiel...</p>
       </div>
+      }
 
       <!-- Error State (no info) -->
-      <div *ngIf="chickenCrossError && !chickenCrossInfo" class="text-center py-8">
+      @if (chickenCrossError && !chickenCrossInfo) {
+      <div class="text-center py-8">
         <div class="text-red-400 mb-4">⚠️</div>
         <p class="text-red-400">{{ chickenCrossError }}</p>
         <button
@@ -612,9 +632,11 @@
           Erneut versuchen
         </button>
       </div>
+      }
 
       <!-- Game Content -->
-      <div *ngIf="chickenCrossInfo">
+      @if (chickenCrossInfo) {
+      <div>
         <!-- Game Board Visualization -->
         <div class="chicken-game-board">
           <div
@@ -636,120 +658,112 @@
               </span>
               <span class="chicken-lane-label">Start</span>
             </div>
-
             <!-- Active game: passed steps + next 4 steps -->
-            <ng-container *ngIf="hasActiveChickenCrossGame()">
-              <!-- Passed steps (1 to current step) -->
-              <div
-                *ngFor="let step of [].constructor(chickenCrossGame!.step); let i = index"
-                class="chicken-lane"
-                [class.chicken-passed]="i + 1 < chickenCrossGame!.step"
-                [class.chicken-current]="
+            @if (hasActiveChickenCrossGame()) {
+            <!-- Passed steps (1 to current step) -->
+            @for (step of [].constructor(chickenCrossGame!.step); track $index; let i = $index) {
+            <div
+              class="chicken-lane"
+              [class.chicken-passed]="i + 1 < chickenCrossGame!.step"
+              [class.chicken-current]="
                   i + 1 === chickenCrossGame!.step && chickenCrossGame!.state !== 'LOST'
                 "
-                [class.chicken-suspense]="
+              [class.chicken-suspense]="
                   chickenCrossIsAnimating &&
                   i + 1 === chickenCrossGame!.step &&
                   chickenCrossGame!.state !== 'LOST'
                 "
-                [class.chicken-dead]="
+              [class.chicken-dead]="
                   chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step
                 "
-                [class.chicken-success]="
+              [class.chicken-success]="
                   !chickenCrossIsAnimating &&
                   i + 1 === chickenCrossGame!.step &&
                   chickenCrossGame!.state === 'ACTIVE'
                 "
-              >
-                <span
-                  class="chicken-lane-marker"
-                  [class.chicken-emoji]="
+            >
+              <span
+                class="chicken-lane-marker"
+                [class.chicken-emoji]="
                     i + 1 === chickenCrossGame!.step &&
                     chickenCrossGame!.state !== 'LOST' &&
                     !chickenCrossIsAnimating
                   "
-                  [class.chicken-suspense-emoji]="
+                [class.chicken-suspense-emoji]="
                     chickenCrossIsAnimating &&
                     i + 1 === chickenCrossGame!.step &&
                     chickenCrossGame!.state !== 'LOST'
                   "
-                >
-                  {{ chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step ? '💀' : i + 1 ===
-                  chickenCrossGame!.step ? '🐔' : '✅' }}
-                </span>
-                <span class="chicken-lane-multiplier"
-                  >{{ getChickenMultiplierForStep(chickenCrossGame!.seed, i + 1) }}x</span
-                >
-                <!-- Explosion particles inside the dead lane -->
-                <div
-                  *ngIf="chickenCrossLostAnimation && i + 1 === chickenCrossGame!.step"
-                  class="chicken-explosion-inline"
-                >
-                  <div class="explosion-particle-inline" *ngFor="let p of [1, 2, 3, 4, 5, 6, 7, 8]"></div>
-                </div>
-              </div>
-
-              <!-- Next 4 steps with multipliers -->
-              <div
-                *ngFor="let nextStep of getNextChickenSteps(); let i = index"
-                class="chicken-lane chicken-future"
-                [class.chicken-next-immediate]="i === 0"
               >
-                <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
-                <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
+                {{ chickenCrossGame!.state === 'LOST' && i + 1 === chickenCrossGame!.step ? '💀' : i + 1 ===
+                chickenCrossGame!.step ? '🐔' : '✅' }}
+              </span>
+              <span class="chicken-lane-multiplier"
+                >{{ getChickenMultiplierForStep(chickenCrossGame!.seed, i + 1) }}x</span
+              >
+              <!-- Explosion particles inside the dead lane -->
+              @if (chickenCrossLostAnimation && i + 1 === chickenCrossGame!.step) {
+              <div class="chicken-explosion-inline">
+                @for (p of [1, 2, 3, 4, 5, 6, 7, 8]; track p) {
+                <div class="explosion-particle-inline"></div>
+                }
               </div>
-            </ng-container>
-
+              }
+            </div>
+            }
+            <!-- Next 4 steps with multipliers -->
+            @for (nextStep of getNextChickenSteps(); track nextStep.step; let i = $index) {
+            <div class="chicken-lane chicken-future" [class.chicken-next-immediate]="i === 0">
+              <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
+              <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
+            </div>
+            } }
             <!-- Dead game display (show the lost state while bet controls appear) -->
-            <ng-container *ngIf="!hasActiveChickenCrossGame() && chickenCrossDeadGame">
-              <div
-                *ngFor="let step of [].constructor(chickenCrossDeadGame.step); let i = index"
-                class="chicken-lane"
-                [class.chicken-passed]="i + 1 < chickenCrossDeadGame.step"
-                [class.chicken-dead]="i + 1 === chickenCrossDeadGame.step"
+            @if (!hasActiveChickenCrossGame() && chickenCrossDeadGame) { @for (step of
+            [].constructor(chickenCrossDeadGame.step); track $index; let i = $index) {
+            <div
+              class="chicken-lane"
+              [class.chicken-passed]="i + 1 < chickenCrossDeadGame.step"
+              [class.chicken-dead]="i + 1 === chickenCrossDeadGame.step"
+            >
+              <span class="chicken-lane-marker" [class.chicken-dead-emoji]="i + 1 === chickenCrossDeadGame.step">
+                {{ i + 1 === chickenCrossDeadGame.step ? '💀' : '✅' }}
+              </span>
+              <span class="chicken-lane-multiplier"
+                >{{ getChickenMultiplierForStep(chickenCrossDeadGame.seed, i + 1) }}x</span
               >
-                <span class="chicken-lane-marker" [class.chicken-dead-emoji]="i + 1 === chickenCrossDeadGame.step">
-                  {{ i + 1 === chickenCrossDeadGame.step ? '💀' : '✅' }}
-                </span>
-                <span class="chicken-lane-multiplier"
-                  >{{ getChickenMultiplierForStep(chickenCrossDeadGame.seed, i + 1) }}x</span
-                >
-              </div>
-
-              <!-- Show the next 4 steps that could have been -->
-              <div
-                *ngFor="let nextStep of getDeadChickenNextSteps(); let i = index"
-                class="chicken-lane chicken-future"
-                [class.chicken-next-immediate]="i === 0"
-              >
-                <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
-                <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
-              </div>
-            </ng-container>
-
+            </div>
+            }
+            <!-- Show the next 4 steps that could have been -->
+            @for (nextStep of getDeadChickenNextSteps(); track nextStep.step; let i = $index) {
+            <div class="chicken-lane chicken-future" [class.chicken-next-immediate]="i === 0">
+              <span class="chicken-lane-marker">{{ i === 0 ? '❓' : '·' }}</span>
+              <span class="chicken-lane-multiplier">{{ nextStep.multiplier }}x</span>
+            </div>
+            } }
             <!-- No active game and no dead game: show start position + preview steps -->
-            <ng-container *ngIf="!hasActiveChickenCrossGame() && !chickenCrossDeadGame">
-              <div class="chicken-lane chicken-preview">
-                <span class="chicken-lane-marker">❓</span>
-              </div>
-              <div class="chicken-lane chicken-preview">
-                <span class="chicken-lane-marker">❓</span>
-              </div>
-              <div class="chicken-lane chicken-preview">
-                <span class="chicken-lane-marker">❓</span>
-              </div>
-              <div class="chicken-lane chicken-preview">
-                <span class="chicken-lane-marker">❓</span>
-              </div>
-              <div class="chicken-lane chicken-preview">
-                <span class="chicken-lane-marker">❓</span>
-              </div>
-            </ng-container>
+            @if (!hasActiveChickenCrossGame() && !chickenCrossDeadGame) {
+            <div class="chicken-lane chicken-preview">
+              <span class="chicken-lane-marker">❓</span>
+            </div>
+            <div class="chicken-lane chicken-preview">
+              <span class="chicken-lane-marker">❓</span>
+            </div>
+            <div class="chicken-lane chicken-preview">
+              <span class="chicken-lane-marker">❓</span>
+            </div>
+            <div class="chicken-lane chicken-preview">
+              <span class="chicken-lane-marker">❓</span>
+            </div>
+            <div class="chicken-lane chicken-preview">
+              <span class="chicken-lane-marker">❓</span>
+            </div>
+            }
           </div>
         </div>
-
         <!-- Bet Controls (only shown when no active game) -->
-        <div *ngIf="!hasActiveChickenCrossGame()" class="wheel-bet-controls chicken-bet-controls">
+        @if (!hasActiveChickenCrossGame()) {
+        <div class="wheel-bet-controls chicken-bet-controls">
           <div class="wheel-bet-display">
             <button
               (click)="adjustChickenCrossBet(-10)"
@@ -787,7 +801,6 @@
               +
             </button>
           </div>
-
           <button
             (click)="startChickenCrossGame()"
             class="chicken-start-btn"
@@ -797,9 +810,10 @@
             <span class="btn-text">{{ chickenCrossLoading ? 'Startet...' : 'Spiel starten!' }}</span>
           </button>
         </div>
-
+        }
         <!-- Game Actions (only shown during active game) -->
-        <div *ngIf="hasActiveChickenCrossGame()" class="chicken-game-actions">
+        @if (hasActiveChickenCrossGame()) {
+        <div class="chicken-game-actions">
           <button
             (click)="chickenCrossMove()"
             class="chicken-action-btn chicken-move-btn"
@@ -817,12 +831,14 @@
             Cashout
           </button>
         </div>
-
+        }
         <!-- Error message only -->
-        <div *ngIf="chickenCrossError && chickenCrossInfo" class="chicken-error">{{ chickenCrossError }}</div>
-
+        @if (chickenCrossError && chickenCrossInfo) {
+        <div class="chicken-error">{{ chickenCrossError }}</div>
+        }
         <!-- Game History Log -->
-        <div *ngIf="chickenCrossHistory.length > 0" class="slot-win-log chicken-history-log">
+        @if (chickenCrossHistory.length > 0) {
+        <div class="slot-win-log chicken-history-log">
           <div class="win-log-header">
             <span class="win-log-title">📜 Letzte Spiele</span>
             <div class="win-log-header-controls">
@@ -834,8 +850,8 @@
             </div>
           </div>
           <div class="win-log-list">
+            @for (entry of getFilteredChickenHistory(); track entry.timestamp || $index) {
             <div
-              *ngFor="let entry of getFilteredChickenHistory(); trackBy: trackByChickenHistoryId"
               class="win-log-entry"
               [class.win-log-win]="entry.state === 'CASHED_OUT'"
               [class.win-log-loss]="entry.state === 'LOST'"
@@ -854,9 +870,12 @@
                 <span class="payout-cost">-{{ entry.initialWager }}</span>
               </div>
             </div>
+            }
           </div>
         </div>
+        }
       </div>
+      }
     </div>
   </div>
 </div>

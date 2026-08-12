@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -14,13 +14,15 @@ export type UserData = GetUserResponse;
   providedIn: 'root',
 })
 export class AuthService {
+  private http = inject(HttpClient);
+
   private currentUserSubject = new BehaviorSubject<SteamUser | null>(null);
   private currentUserDataSubject = new BehaviorSubject<GetUserResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   public currentUserData$ = this.currentUserDataSubject.asObservable();
   private sessionToken: string | null = null;
 
-  constructor(private http: HttpClient) {
+  constructor() {
     this.loadTokenFromStorage();
     this.checkForTokenInUrl();
     this.checkForLoginSecret();

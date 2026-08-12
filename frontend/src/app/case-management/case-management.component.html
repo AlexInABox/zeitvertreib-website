@@ -1,513 +1,573 @@
 <div class="case-management-container">
   <div class="content-wrapper">
     <!-- Public Case Lookup (when not team member) -->
-    <div *ngIf="!isLoading && !isTeam" class="public-lookup-container">
-      <div class="lookup-card">
-        <div class="lookup-header">
-          <i class="pi pi-search lookup-icon"></i>
-          <h1 class="lookup-title">Fall suchen</h1>
-          <p class="lookup-subtitle">
-            Gib bis zu 10 alphanumerische Zeichen ein — kürzere Eingaben werden mit Nullen aufgefüllt
-          </p>
-        </div>
-
-        <div class="lookup-body">
-          <div class="lookup-input-wrapper">
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="lookupCaseId"
-              placeholder="z.B. abc123456z"
-              class="lookup-input"
-              maxlength="10"
-              (keypress)="onLookupKeyPress($event)"
-              [disabled]="isLookingUp"
-            />
-            <button
-              pButton
-              label="Suchen"
-              icon="pi pi-arrow-right"
-              class="lookup-button"
-              (click)="lookupCase()"
-              [disabled]="isLookingUp"
-              [loading]="isLookingUp"
-            ></button>
+    @if (!isLoading && !isTeam) {
+      <div class="public-lookup-container">
+        <div class="lookup-card">
+          <div class="lookup-header">
+            <i class="pi pi-search lookup-icon"></i>
+            <h1 class="lookup-title">Fall suchen</h1>
+            <p class="lookup-subtitle">
+              Gib bis zu 10 alphanumerische Zeichen ein — kürzere Eingaben werden mit Nullen aufgefüllt
+            </p>
           </div>
-
-          <div *ngIf="lookupError" class="lookup-error">
-            <i class="pi pi-exclamation-circle"></i>
-            <span>{{ lookupError }}</span>
+          <div class="lookup-body">
+            <div class="lookup-input-wrapper">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="lookupCaseId"
+                placeholder="z.B. abc123456z"
+                class="lookup-input"
+                maxlength="10"
+                (keypress)="onLookupKeyPress($event)"
+                [disabled]="isLookingUp"
+              />
+              <button
+                pButton
+                label="Suchen"
+                icon="pi pi-arrow-right"
+                class="lookup-button"
+                (click)="lookupCase()"
+                [disabled]="isLookingUp"
+                [loading]="isLookingUp"
+              ></button>
+            </div>
+            @if (lookupError) {
+              <div class="lookup-error">
+                <i class="pi pi-exclamation-circle"></i>
+                <span>{{ lookupError }}</span>
+              </div>
+            }
           </div>
         </div>
       </div>
-    </div>
+    }
 
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">Fälle werden geladen...</p>
-      <div class="loading-dots">
-        <span></span>
-        <span></span>
-        <span></span>
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Fälle werden geladen...</p>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="error-state">
-      <div class="error-icon-wrapper">
-        <i class="pi pi-exclamation-triangle"></i>
+    @if (hasError && !isLoading) {
+      <div class="error-state">
+        <div class="error-icon-wrapper">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
+        <p class="error-message">{{ errorMessage }}</p>
+        <button
+          pButton
+          label="Erneut versuchen"
+          icon="pi pi-refresh"
+          class="retry-button"
+          (click)="loadCases()"
+        ></button>
       </div>
-      <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
-      <p class="error-message">{{ errorMessage }}</p>
-      <button pButton label="Erneut versuchen" icon="pi pi-refresh" class="retry-button" (click)="loadCases()"></button>
-    </div>
+    }
 
     <!-- Main Content -->
-    <div *ngIf="!isLoading && !hasError && isTeam" class="main-content">
-      <!-- Header Section -->
-      <div class="header-section">
-        <div class="header-content">
-          <div class="title-area">
-            <div class="title-wrapper">
-              <i class="pi pi-briefcase header-icon"></i>
-              <h1 class="page-title">Fallverwaltung</h1>
+    @if (!isLoading && !hasError && isTeam) {
+      <div class="main-content">
+        <!-- Header Section -->
+        <div class="header-section">
+          <div class="header-content">
+            <div class="title-area">
+              <div class="title-wrapper">
+                <i class="pi pi-briefcase header-icon"></i>
+                <h1 class="page-title">Fallverwaltung</h1>
+              </div>
+              <div class="header-meta-row">
+                <span class="header-meta-item">
+                  <i class="pi pi-folder"></i>
+                  {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }}
+                </span>
+                <span class="header-meta-sep">·</span>
+                <span class="header-meta-item">
+                  <i class="pi pi-clock"></i>
+                  {{ getRecentCasesCount() }} kürzlich erstellt
+                </span>
+              </div>
             </div>
-            <div class="header-meta-row">
-              <span class="header-meta-item">
-                <i class="pi pi-folder"></i>
-                {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }}
-              </span>
-              <span class="header-meta-sep">·</span>
-              <span class="header-meta-item">
-                <i class="pi pi-clock"></i>
-                {{ getRecentCasesCount() }} kürzlich erstellt
-              </span>
+            <div class="header-actions">
+              <button
+                pButton
+                label="Aktualisieren"
+                icon="pi pi-refresh"
+                class="refresh-btn"
+                (click)="loadCases()"
+                [disabled]="isLoading"
+              ></button>
+              <button
+                pButton
+                label="Neuer Fall"
+                icon="pi pi-plus"
+                class="create-btn"
+                (click)="createNewCase()"
+              ></button>
             </div>
-          </div>
-          <div class="header-actions">
-            <button
-              pButton
-              label="Aktualisieren"
-              icon="pi pi-refresh"
-              class="refresh-btn"
-              (click)="loadCases()"
-              [disabled]="isLoading"
-            ></button>
-            <button pButton label="Neuer Fall" icon="pi pi-plus" class="create-btn" (click)="createNewCase()"></button>
           </div>
         </div>
-      </div>
-
-      <!-- Search Section -->
-      <div class="search-section">
-        <!-- Search Mode Selector -->
-        <div class="search-mode-row">
-          <div class="search-mode-pills">
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'all'"
-              (click)="setSearchMode('all')"
-              type="button"
-            >
-              <i class="pi pi-list"></i>
-              <span>Alle Fälle</span>
-            </button>
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'steamId'"
-              (click)="setSearchMode('steamId')"
-              type="button"
-            >
-              <i class="pi pi-id-card"></i>
-              <span>Steam-ID</span>
-            </button>
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'discordId'"
-              (click)="setSearchMode('discordId')"
-              type="button"
-            >
-              <i class="pi pi-discord"></i>
-              <span>Discord-ID</span>
-            </button>
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'caseId'"
-              (click)="setSearchMode('caseId')"
-              type="button"
-            >
-              <i class="pi pi-folder-open"></i>
-              <span>Fall-ID</span>
-            </button>
-          </div>
-
-          <div class="search-mode-pills">
-            <!-- Sort Dropdown (only in 'all' mode) -->
-            <div class="custom-dropdown" *ngIf="searchMode === 'all'">
-              <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
-                <i class="pi pi-sort-alt"></i>
-                <span class="dropdown-label">{{ getSortLabel() }}</span>
-                <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+        <!-- Search Section -->
+        <div class="search-section">
+          <!-- Search Mode Selector -->
+          <div class="search-mode-row">
+            <div class="search-mode-pills">
+              <button
+                class="mode-pill"
+                [class.active]="searchMode === 'all'"
+                (click)="setSearchMode('all')"
+                type="button"
+              >
+                <i class="pi pi-list"></i>
+                <span>Alle Fälle</span>
               </button>
-              <div class="dropdown-menu" *ngIf="sortDropdownOpen">
-                <button
-                  *ngFor="let option of sortOptions"
-                  class="dropdown-item"
-                  [class.active]="sortBy === option.sortBy && sortOrder === option.sortOrder"
-                  (click)="changeSortOrder(option.sortBy, option.sortOrder)"
-                  type="button"
-                >
-                  <span>{{ option.label }}</span>
-                  <i class="pi pi-check" *ngIf="sortBy === option.sortBy && sortOrder === option.sortOrder"></i>
-                </button>
-              </div>
+              <button
+                class="mode-pill"
+                [class.active]="searchMode === 'steamId'"
+                (click)="setSearchMode('steamId')"
+                type="button"
+              >
+                <i class="pi pi-id-card"></i>
+                <span>Steam-ID</span>
+              </button>
+              <button
+                class="mode-pill"
+                [class.active]="searchMode === 'discordId'"
+                (click)="setSearchMode('discordId')"
+                type="button"
+              >
+                <i class="pi pi-discord"></i>
+                <span>Discord-ID</span>
+              </button>
+              <button
+                class="mode-pill"
+                [class.active]="searchMode === 'caseId'"
+                (click)="setSearchMode('caseId')"
+                type="button"
+              >
+                <i class="pi pi-folder-open"></i>
+                <span>Fall-ID</span>
+              </button>
             </div>
-
-            <!-- Category Filter (only in 'all' mode) -->
-            <div class="rule-filter-wrapper" *ngIf="searchMode === 'all'">
-              <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="rule-filter-select">
-                <option [ngValue]="null">Alle Kategorien</option>
-                <option *ngFor="let category of availableCategories" [ngValue]="category">{{ category }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- "Alle Fälle" — local text filter -->
-        <div class="search-input-row" *ngIf="searchMode === 'all'">
-          <div class="search-wrapper">
-            <i class="pi pi-search search-icon"></i>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="searchQuery"
-              (input)="filterCases()"
-              placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
-              class="search-input"
-            />
-            <button
-              *ngIf="searchQuery"
-              pButton
-              icon="pi pi-times"
-              class="clear-btn"
-              (click)="clearSearch()"
-              [text]="true"
-            ></button>
-          </div>
-          <div class="search-hint" *ngIf="!searchQuery">
-            <i class="pi pi-info-circle"></i>
-            Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
-          </div>
-          <div class="search-results-info" *ngIf="searchQuery">
-            <i class="pi pi-filter"></i>
-            <span>{{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser Seite</span>
-          </div>
-        </div>
-
-        <!-- "Steam-ID" — server-side search across all cases -->
-        <div class="search-input-row" *ngIf="searchMode === 'steamId'">
-          <div class="search-wrapper">
-            <i class="pi pi-id-card search-icon"></i>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="steamIdQuery"
-              (input)="onSteamIdQueryChange()"
-              placeholder="Steam-ID eingeben (z.B. 76561198…)"
-              class="search-input"
-            />
-            <i class="pi pi-spin pi-spinner search-spinner" *ngIf="isSearching"></i>
-            <button
-              *ngIf="steamIdQuery && !isSearching"
-              pButton
-              icon="pi pi-times"
-              class="clear-btn"
-              (click)="clearSteamIdSearch()"
-              [text]="true"
-            ></button>
-          </div>
-          <div class="search-hint" *ngIf="!steamIdQuery">
-            <i class="pi pi-info-circle"></i>
-            Durchsucht <strong>alle</strong> Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse erscheinen
-            automatisch nach 600 ms.
-          </div>
-          <div class="search-error" *ngIf="searchError">
-            <i class="pi pi-exclamation-circle"></i>
-            {{ searchError }}
-          </div>
-          <div class="search-results-info" *ngIf="steamIdResults !== null && !isSearching && !searchError">
-            <i class="pi pi-server"></i>
-            <span
-              >{{ steamIdResultCount }} {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite
-              Suche)</span
-            >
-          </div>
-        </div>
-
-        <!-- "Discord-ID" — server-side search by creator Discord ID (paginated) -->
-        <div class="search-input-row" *ngIf="searchMode === 'discordId'">
-          <div class="search-wrapper">
-            <i class="pi pi-discord search-icon"></i>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="discordIdQuery"
-              (input)="onDiscordIdQueryChange()"
-              placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
-              class="search-input"
-            />
-            <i class="pi pi-spin pi-spinner search-spinner" *ngIf="isSearching && discordIdQuery"></i>
-            <button
-              *ngIf="discordIdQuery && !isSearching"
-              pButton
-              icon="pi pi-times"
-              class="clear-btn"
-              (click)="clearDiscordIdSearch()"
-              [text]="true"
-            ></button>
-          </div>
-          <div class="search-hint" *ngIf="!discordIdQuery">
-            <i class="pi pi-info-circle"></i>
-            Filtert <strong>alle</strong> Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch nach
-            600 ms.
-          </div>
-          <div class="search-error" *ngIf="searchError">
-            <i class="pi pi-exclamation-circle"></i>
-            {{ searchError }}
-          </div>
-          <div
-            class="search-results-info"
-            *ngIf="discordIdQuery && !isSearching && !searchError && discordIdResults !== null"
-          >
-            <i class="pi pi-server"></i>
-            <span
-              >{{ discordIdResultCount }}
-              {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite Suche)</span
-            >
-          </div>
-        </div>
-
-        <!-- "Fall-ID" — direct navigation to case detail -->
-        <div class="search-input-row" *ngIf="searchMode === 'caseId'">
-          <div class="search-wrapper">
-            <i class="pi pi-folder-open search-icon"></i>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="caseIdQuery"
-              (keypress)="onCaseIdKeyPress($event)"
-              (input)="caseIdError = ''"
-              placeholder="Fall-ID eingeben (z.B. abc1230000)"
-              class="search-input search-input--with-btn"
-              maxlength="10"
-            />
-            <button
-              pButton
-              icon="pi pi-arrow-right"
-              class="search-submit-btn"
-              (click)="submitCaseIdSearch()"
-              [disabled]="!caseIdQuery"
-            ></button>
-          </div>
-          <div class="search-hint" *ngIf="!caseIdQuery && !caseIdError">
-            <i class="pi pi-info-circle"></i>
-            Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil drücken
-            zum Öffnen.
-          </div>
-          <div class="search-error" *ngIf="caseIdError">
-            <i class="pi pi-exclamation-circle"></i>
-            {{ caseIdError }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Cases Grid -->
-      <div class="cases-grid" *ngIf="displayedCases.length > 0">
-        <div
-          *ngFor="let item of displayedCases; let i = index"
-          class="case-card"
-          (click)="openCase(item)"
-          [style.animation-delay]="i * 0.05 + 's'"
-        >
-          <div class="case-card-header">
-            <div class="case-icon-wrapper">
-              <i class="pi pi-folder-open"></i>
-            </div>
-            <div class="case-linked-users" *ngIf="item.linkedSteamIds.length > 0">
-              <i class="pi pi-users"></i>
-              <span>{{ item.linkedSteamIds.length }}</span>
-            </div>
-          </div>
-
-          <div class="case-card-body">
-            <h3 class="case-title">
-              {{ item.title || formatCaseName(item.caseId) }}
-            </h3>
-            <p class="case-id">ID: {{ item.caseId }}</p>
-            <p class="case-description" *ngIf="item.description">{{ item.description }}</p>
-            <div class="case-rule-badge" *ngIf="item.category">
-              <i class="pi pi-shield"></i>
-              <span>{{ item.category }}</span>
-            </div>
-          </div>
-
-          <div class="case-card-footer">
-            <div class="footer-left">
-              <!-- Creator Chip -->
-              <div class="case-creator-section" *ngIf="item.createdBy">
-                <div
-                  class="creator-chip"
-                  (click)="navigateToCreatorProfile(item.createdBy.discordId)"
-                  [style.cursor]="isTeam ? 'pointer' : 'default'"
-                  [style.opacity]="isTeam ? '1' : '0.6'"
-                  [title]="'Erstellt von ' + item.createdBy.username + (isTeam ? ' (klickbar)' : '')"
-                >
-                  <img [src]="item.createdBy.avatarUrl" [alt]="item.createdBy.username" class="creator-avatar" />
-                  <span class="creator-name">
-                    {{ item.createdBy.username }}
-                  </span>
+            <div class="search-mode-pills">
+              <!-- Sort Dropdown (only in 'all' mode) -->
+              @if (searchMode === 'all') {
+                <div class="custom-dropdown">
+                  <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
+                    <i class="pi pi-sort-alt"></i>
+                    <span class="dropdown-label">{{ getSortLabel() }}</span>
+                    <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                  </button>
+                  @if (sortDropdownOpen) {
+                    <div class="dropdown-menu">
+                      @for (option of sortOptions; track option.sortBy + option.sortOrder) {
+                        <button
+                          class="dropdown-item"
+                          [class.active]="sortBy === option.sortBy && sortOrder === option.sortOrder"
+                          (click)="changeSortOrder(option.sortBy, option.sortOrder)"
+                          type="button"
+                        >
+                          <span>{{ option.label }}</span>
+                          @if (sortBy === option.sortBy && sortOrder === option.sortOrder) {
+                            <i class="pi pi-check"></i>
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
                 </div>
-              </div>
-              <!-- Meta Items -->
-              <div class="case-meta">
-                <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
-                  <i class="pi pi-calendar-plus"></i>
-                  {{ formatDate(item.createdAt) }}
-                </span>
-                <span
-                  class="meta-item"
-                  *ngIf="item.lastUpdatedAt !== item.createdAt"
-                  [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)"
-                >
-                  <i class="pi pi-history"></i>
-                  {{ formatDate(item.lastUpdatedAt) }}
-                </span>
-              </div>
-            </div>
-            <div class="case-action">
-              <i class="pi pi-arrow-right"></i>
+              }
+              <!-- Category Filter (only in 'all' mode) -->
+              @if (searchMode === 'all') {
+                <div class="rule-filter-wrapper">
+                  <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="rule-filter-select">
+                    <option [ngValue]="null">Alle Kategorien</option>
+                    @for (category of availableCategories; track category) {
+                      <option [ngValue]="category">{{ category }}</option>
+                    }
+                  </select>
+                </div>
+              }
             </div>
           </div>
-
-          <!-- Hover Effect Overlay -->
-          <div class="card-overlay"></div>
+          <!-- "Alle Fälle" — local text filter -->
+          @if (searchMode === 'all') {
+            <div class="search-input-row">
+              <div class="search-wrapper">
+                <i class="pi pi-search search-icon"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="searchQuery"
+                  (input)="filterCases()"
+                  placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
+                  class="search-input"
+                />
+                @if (searchQuery) {
+                  <button pButton icon="pi pi-times" class="clear-btn" (click)="clearSearch()" [text]="true"></button>
+                }
+              </div>
+              @if (!searchQuery) {
+                <div class="search-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
+                </div>
+              }
+              @if (searchQuery) {
+                <div class="search-results-info">
+                  <i class="pi pi-filter"></i>
+                  <span
+                    >{{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser
+                    Seite</span
+                  >
+                </div>
+              }
+            </div>
+          }
+          <!-- "Steam-ID" — server-side search across all cases -->
+          @if (searchMode === 'steamId') {
+            <div class="search-input-row">
+              <div class="search-wrapper">
+                <i class="pi pi-id-card search-icon"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="steamIdQuery"
+                  (input)="onSteamIdQueryChange()"
+                  placeholder="Steam-ID eingeben (z.B. 76561198…)"
+                  class="search-input"
+                />
+                @if (isSearching) {
+                  <i class="pi pi-spin pi-spinner search-spinner"></i>
+                }
+                @if (steamIdQuery && !isSearching) {
+                  <button
+                    pButton
+                    icon="pi pi-times"
+                    class="clear-btn"
+                    (click)="clearSteamIdSearch()"
+                    [text]="true"
+                  ></button>
+                }
+              </div>
+              @if (!steamIdQuery) {
+                <div class="search-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Durchsucht <strong>alle</strong> Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse
+                  erscheinen automatisch nach 600 ms.
+                </div>
+              }
+              @if (searchError) {
+                <div class="search-error">
+                  <i class="pi pi-exclamation-circle"></i>
+                  {{ searchError }}
+                </div>
+              }
+              @if (steamIdResults !== null && !isSearching && !searchError) {
+                <div class="search-results-info">
+                  <i class="pi pi-server"></i>
+                  <span
+                    >{{ steamIdResultCount }}
+                    {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite Suche)</span
+                  >
+                </div>
+              }
+            </div>
+          }
+          <!-- "Discord-ID" — server-side search by creator Discord ID (paginated) -->
+          @if (searchMode === 'discordId') {
+            <div class="search-input-row">
+              <div class="search-wrapper">
+                <i class="pi pi-discord search-icon"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="discordIdQuery"
+                  (input)="onDiscordIdQueryChange()"
+                  placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
+                  class="search-input"
+                />
+                @if (isSearching && discordIdQuery) {
+                  <i class="pi pi-spin pi-spinner search-spinner"></i>
+                }
+                @if (discordIdQuery && !isSearching) {
+                  <button
+                    pButton
+                    icon="pi pi-times"
+                    class="clear-btn"
+                    (click)="clearDiscordIdSearch()"
+                    [text]="true"
+                  ></button>
+                }
+              </div>
+              @if (!discordIdQuery) {
+                <div class="search-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Filtert <strong>alle</strong> Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch
+                  nach 600 ms.
+                </div>
+              }
+              @if (searchError) {
+                <div class="search-error">
+                  <i class="pi pi-exclamation-circle"></i>
+                  {{ searchError }}
+                </div>
+              }
+              @if (discordIdQuery && !isSearching && !searchError && discordIdResults !== null) {
+                <div class="search-results-info">
+                  <i class="pi pi-server"></i>
+                  <span
+                    >{{ discordIdResultCount }}
+                    {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite Suche)</span
+                  >
+                </div>
+              }
+            </div>
+          }
+          <!-- "Fall-ID" — direct navigation to case detail -->
+          @if (searchMode === 'caseId') {
+            <div class="search-input-row">
+              <div class="search-wrapper">
+                <i class="pi pi-folder-open search-icon"></i>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="caseIdQuery"
+                  (keypress)="onCaseIdKeyPress($event)"
+                  (input)="caseIdError = ''"
+                  placeholder="Fall-ID eingeben (z.B. abc1230000)"
+                  class="search-input search-input--with-btn"
+                  maxlength="10"
+                />
+                <button
+                  pButton
+                  icon="pi pi-arrow-right"
+                  class="search-submit-btn"
+                  (click)="submitCaseIdSearch()"
+                  [disabled]="!caseIdQuery"
+                ></button>
+              </div>
+              @if (!caseIdQuery && !caseIdError) {
+                <div class="search-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil
+                  drücken zum Öffnen.
+                </div>
+              }
+              @if (caseIdError) {
+                <div class="search-error">
+                  <i class="pi pi-exclamation-circle"></i>
+                  {{ caseIdError }}
+                </div>
+              }
+            </div>
+          }
         </div>
-      </div>
-
-      <!-- Pagination -->
-      <div class="pagination-section" *ngIf="showPagination">
-        <button
-          pButton
-          icon="pi pi-chevron-left"
-          class="page-btn"
-          (click)="prevPage()"
-          [disabled]="!hasPreviousPage"
-        ></button>
-        <span class="page-info">Seite {{ page }} von {{ totalPages }}</span>
-        <button
-          pButton
-          icon="pi pi-chevron-right"
-          class="page-btn"
-          (click)="nextPage()"
-          [disabled]="!hasNextPage"
-        ></button>
-      </div>
-
-      <!-- Empty State -->
-      <!-- discordId mode: no query entered yet -->
-      <div *ngIf="searchMode === 'discordId' && !discordIdQuery && !isLoading" class="empty-state empty-state-hint">
-        <div class="empty-icon-wrapper"><i class="pi pi-discord"></i></div>
-        <h3 class="empty-title">Discord-ID eingeben</h3>
-        <p class="empty-description">
-          Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.
-        </p>
-      </div>
-
-      <!-- discordId mode: searched but nothing found -->
-      <div
-        *ngIf="
+        <!-- Cases Grid -->
+        @if (displayedCases.length > 0) {
+          <div class="cases-grid">
+            @for (item of displayedCases; track item.caseId; let i = $index) {
+              <div class="case-card" (click)="openCase(item)" [style.animation-delay]="i * 0.05 + 's'">
+                <div class="case-card-header">
+                  <div class="case-icon-wrapper">
+                    <i class="pi pi-folder-open"></i>
+                  </div>
+                  @if (item.linkedSteamIds.length > 0) {
+                    <div class="case-linked-users">
+                      <i class="pi pi-users"></i>
+                      <span>{{ item.linkedSteamIds.length }}</span>
+                    </div>
+                  }
+                </div>
+                <div class="case-card-body">
+                  <h3 class="case-title">
+                    {{ item.title || formatCaseName(item.caseId) }}
+                  </h3>
+                  <p class="case-id">ID: {{ item.caseId }}</p>
+                  @if (item.description) {
+                    <p class="case-description">{{ item.description }}</p>
+                  }
+                  @if (item.category) {
+                    <div class="case-rule-badge">
+                      <i class="pi pi-shield"></i>
+                      <span>{{ item.category }}</span>
+                    </div>
+                  }
+                </div>
+                <div class="case-card-footer">
+                  <div class="footer-left">
+                    <!-- Creator Chip -->
+                    @if (item.createdBy) {
+                      <div class="case-creator-section">
+                        <div
+                          class="creator-chip"
+                          (click)="navigateToCreatorProfile(item.createdBy.discordId)"
+                          [style.cursor]="isTeam ? 'pointer' : 'default'"
+                          [style.opacity]="isTeam ? '1' : '0.6'"
+                          [title]="'Erstellt von ' + item.createdBy.username + (isTeam ? ' (klickbar)' : '')"
+                        >
+                          <img
+                            [src]="item.createdBy.avatarUrl"
+                            [alt]="item.createdBy.username"
+                            class="creator-avatar"
+                          />
+                          <span class="creator-name">
+                            {{ item.createdBy.username }}
+                          </span>
+                        </div>
+                      </div>
+                    }
+                    <!-- Meta Items -->
+                    <div class="case-meta">
+                      <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
+                        <i class="pi pi-calendar-plus"></i>
+                        {{ formatDate(item.createdAt) }}
+                      </span>
+                      @if (item.lastUpdatedAt !== item.createdAt) {
+                        <span class="meta-item" [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)">
+                          <i class="pi pi-history"></i>
+                          {{ formatDate(item.lastUpdatedAt) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                  <div class="case-action">
+                    <i class="pi pi-arrow-right"></i>
+                  </div>
+                </div>
+                <!-- Hover Effect Overlay -->
+                <div class="card-overlay"></div>
+              </div>
+            }
+          </div>
+        }
+        <!-- Pagination -->
+        @if (showPagination) {
+          <div class="pagination-section">
+            <button
+              pButton
+              icon="pi pi-chevron-left"
+              class="page-btn"
+              (click)="prevPage()"
+              [disabled]="!hasPreviousPage"
+            ></button>
+            <span class="page-info">Seite {{ page }} von {{ totalPages }}</span>
+            <button
+              pButton
+              icon="pi pi-chevron-right"
+              class="page-btn"
+              (click)="nextPage()"
+              [disabled]="!hasNextPage"
+            ></button>
+          </div>
+        }
+        <!-- Empty State -->
+        <!-- discordId mode: no query entered yet -->
+        @if (searchMode === 'discordId' && !discordIdQuery && !isLoading) {
+          <div class="empty-state empty-state-hint">
+            <div class="empty-icon-wrapper"><i class="pi pi-discord"></i></div>
+            <h3 class="empty-title">Discord-ID eingeben</h3>
+            <p class="empty-description">
+              Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.
+            </p>
+          </div>
+        }
+        <!-- discordId mode: searched but nothing found -->
+        @if (
           searchMode === 'discordId' &&
           discordIdQuery &&
           !isSearching &&
           discordIdResults !== null &&
           discordIdResults.length === 0 &&
           !searchError
-        "
-        class="empty-state"
-      >
-        <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
-        <h3 class="empty-title">Keine Fälle gefunden</h3>
-        <p class="empty-description">
-          Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
-        </p>
-        <button
-          pButton
-          label="Suche zurücksetzen"
-          icon="pi pi-times"
-          class="empty-action-btn"
-          (click)="clearDiscordIdSearch()"
-        ></button>
-      </div>
-
-      <!-- steamId mode: no query entered yet -->
-      <div *ngIf="searchMode === 'steamId' && !steamIdQuery && !isSearching" class="empty-state empty-state-hint">
-        <div class="empty-icon-wrapper"><i class="pi pi-id-card"></i></div>
-        <h3 class="empty-title">Steam-ID eingeben</h3>
-        <p class="empty-description">Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
-      </div>
-
-      <!-- steamId mode: searched but nothing found -->
-      <div
-        *ngIf="
+        ) {
+          <div class="empty-state">
+            <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
+            <h3 class="empty-title">Keine Fälle gefunden</h3>
+            <p class="empty-description">
+              Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
+            </p>
+            <button
+              pButton
+              label="Suche zurücksetzen"
+              icon="pi pi-times"
+              class="empty-action-btn"
+              (click)="clearDiscordIdSearch()"
+            ></button>
+          </div>
+        }
+        <!-- steamId mode: no query entered yet -->
+        @if (searchMode === 'steamId' && !steamIdQuery && !isSearching) {
+          <div class="empty-state empty-state-hint">
+            <div class="empty-icon-wrapper"><i class="pi pi-id-card"></i></div>
+            <h3 class="empty-title">Steam-ID eingeben</h3>
+            <p class="empty-description">Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
+          </div>
+        }
+        <!-- steamId mode: searched but nothing found -->
+        @if (
           searchMode === 'steamId' &&
           steamIdResults !== null &&
           steamIdResults.length === 0 &&
           !isSearching &&
           !searchError
-        "
-        class="empty-state"
-      >
-        <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
-        <h3 class="empty-title">Keine Fälle gefunden</h3>
-        <p class="empty-description">
-          Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
-        </p>
-        <button
-          pButton
-          label="Suche zurücksetzen"
-          icon="pi pi-times"
-          class="empty-action-btn"
-          (click)="clearSteamIdSearch()"
-        ></button>
-      </div>
-
-      <!-- all mode: no cases at all -->
-      <div *ngIf="searchMode === 'all' && cases.length === 0 && !isLoading" class="empty-state">
-        <div class="empty-illustration">
-          <div class="empty-icon-wrapper">
-            <i class="pi pi-inbox"></i>
+        ) {
+          <div class="empty-state">
+            <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
+            <h3 class="empty-title">Keine Fälle gefunden</h3>
+            <p class="empty-description">
+              Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
+            </p>
+            <button
+              pButton
+              label="Suche zurücksetzen"
+              icon="pi pi-times"
+              class="empty-action-btn"
+              (click)="clearSteamIdSearch()"
+            ></button>
           </div>
-          <div class="empty-circles">
-            <div class="circle circle-1"></div>
-            <div class="circle circle-2"></div>
-            <div class="circle circle-3"></div>
+        }
+        <!-- all mode: no cases at all -->
+        @if (searchMode === 'all' && cases.length === 0 && !isLoading) {
+          <div class="empty-state">
+            <div class="empty-illustration">
+              <div class="empty-icon-wrapper">
+                <i class="pi pi-inbox"></i>
+              </div>
+              <div class="empty-circles">
+                <div class="circle circle-1"></div>
+                <div class="circle circle-2"></div>
+                <div class="circle circle-3"></div>
+              </div>
+            </div>
+            <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
+            <p class="empty-description">
+              Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.
+            </p>
+            <button
+              pButton
+              label="Ersten Fall erstellen"
+              icon="pi pi-plus-circle"
+              class="empty-action-btn"
+              (click)="createNewCase()"
+            ></button>
+            <div class="empty-tips">
+              <p class="tip-title">💡 Tipp:</p>
+              <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
+            </div>
           </div>
-        </div>
-        <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
-        <p class="empty-description">Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
-        <button
-          pButton
-          label="Ersten Fall erstellen"
-          icon="pi pi-plus-circle"
-          class="empty-action-btn"
-          (click)="createNewCase()"
-        ></button>
-        <div class="empty-tips">
-          <p class="tip-title">💡 Tipp:</p>
-          <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
-        </div>
+        }
       </div>
-    </div>
+    }
   </div>
 </div>
