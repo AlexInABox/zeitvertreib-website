@@ -41,17 +41,13 @@
           @if (viewedUser?.firstSeen) {
             <div class="stat-item">
               <span class="stat-label">First Seen</span>
-              <span class="stat-value date-value">{{
-                getDateDisplay(viewedUser?.firstSeen)
-              }}</span>
+              <span class="stat-value date-value">{{ getDateDisplay(viewedUser?.firstSeen) }}</span>
             </div>
           }
           @if (viewedUser?.lastSeen) {
             <div class="stat-item">
               <span class="stat-label">Last Seen</span>
-              <span class="stat-value date-value">{{
-                getDateDisplay(viewedUser?.lastSeen)
-              }}</span>
+              <span class="stat-value date-value">{{ getDateDisplay(viewedUser?.lastSeen) }}</span>
             </div>
           }
         </div>
