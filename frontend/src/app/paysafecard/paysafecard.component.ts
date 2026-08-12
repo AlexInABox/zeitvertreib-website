@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -21,6 +21,7 @@ interface PaysafeSubmission {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './paysafecard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./paysafecard.component.css'],
 })
 export class PaysafecardComponent implements OnInit {

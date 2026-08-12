@@ -9,6 +9,7 @@ import {
   QueryList,
   inject,
   NgZone,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +40,7 @@ type OdometerColumn = DigitColumn | SeparatorColumn;
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './zvc-overlay.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zvc-overlay.component.css'],
 })
 export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {

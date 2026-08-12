@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
   standalone: true,
   imports: [CommonModule, ButtonModule],
   templateUrl: './no-steam-link.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./no-steam-link.component.css'],
 })
 export class NoSteamLinkComponent {

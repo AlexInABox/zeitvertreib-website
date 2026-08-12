@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,6 +23,7 @@ type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
   selector: 'app-case-management',
   imports: [CommonModule, FormsModule, ButtonModule, InputTextModule],
   templateUrl: './case-management.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-management.component.css'],
 })
 export class CaseManagementComponent implements OnInit, OnDestroy {

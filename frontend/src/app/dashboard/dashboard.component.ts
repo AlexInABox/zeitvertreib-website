@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
@@ -57,6 +57,7 @@ interface Statistics {
     PlayerInfoCardComponent,
   ],
   templateUrl: './dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {

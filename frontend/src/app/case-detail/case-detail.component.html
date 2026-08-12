@@ -55,14 +55,14 @@
                       </div>
                       <div
                         class="creator-chip"
-                        (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
+                        (click)="navigateToCreatorProfile($safeNavigationMigration(caseData?.createdBy?.discordId)!)"
                         [style.cursor]="isTeam ? 'pointer' : 'default'"
                         [style.opacity]="isTeam ? '1' : '0.6'"
                         title="Zum Profil"
                       >
                         <img
-                          [src]="caseData?.createdBy?.avatarUrl"
-                          [alt]="caseData?.createdBy?.username"
+                          [src]="$safeNavigationMigration(caseData?.createdBy?.avatarUrl)"
+                          [alt]="$safeNavigationMigration(caseData?.createdBy?.username)"
                           class="creator-avatar"
                         />
                         <span class="creator-name">{{ caseData?.createdBy?.username }}</span>

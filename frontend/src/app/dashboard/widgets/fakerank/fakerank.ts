@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, inject } from '@angular/core';
+import { Component, OnInit, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -18,6 +18,7 @@ import type {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './fakerank.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./fakerank.css'],
 })
 export class FakerankComponent implements OnInit {

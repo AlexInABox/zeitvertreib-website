@@ -1,4 +1,12 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, NgZone } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  NgZone,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
@@ -11,6 +19,7 @@ import { environment } from '../../environments/environment';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './support.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./support.component.css'],
 })
 export class SupportComponent implements OnInit {

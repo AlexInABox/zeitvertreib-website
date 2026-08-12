@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DiscordStatsComponent } from '../../../components/discord-stats/discord-stats.component';
 
@@ -7,6 +7,7 @@ import { DiscordStatsComponent } from '../../../components/discord-stats/discord
   standalone: true,
   imports: [CommonModule, DecimalPipe, DiscordStatsComponent],
   templateUrl: './player-info-card.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./player-info-card.css'],
 })
 export class PlayerInfoCardComponent {

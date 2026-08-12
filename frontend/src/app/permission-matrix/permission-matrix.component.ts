@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -15,6 +15,7 @@ export interface Role {
   selector: 'app-permission-matrix',
   imports: [CommonModule, FormsModule],
   templateUrl: './permission-matrix.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./permission-matrix.component.css'],
 })
 export class PermissionMatrixComponent implements OnInit {

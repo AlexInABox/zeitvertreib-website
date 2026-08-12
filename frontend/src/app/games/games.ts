@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -83,6 +83,7 @@ interface LuckyWheelResult {
   selector: 'app-games',
   imports: [CommonModule, FormsModule],
   templateUrl: './games.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./games.css'],
 })
 export class GamesComponent implements OnInit, OnDestroy {

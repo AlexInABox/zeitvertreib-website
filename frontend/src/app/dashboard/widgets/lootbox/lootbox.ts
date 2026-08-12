@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, inject, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, inject, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
@@ -16,6 +16,7 @@ type LootboxSpinItem = {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './lootbox.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./lootbox.css'],
 })
 export class LootboxComponent implements OnInit {

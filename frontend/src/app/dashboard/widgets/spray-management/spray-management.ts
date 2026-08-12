@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -25,6 +25,7 @@ interface SpraySlot {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './spray-management.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./spray-management.css'],
 })
 export class SprayManagementComponent implements OnInit, OnDestroy {

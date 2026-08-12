@@ -10,8 +10,12 @@
           </div>
         </div>
         <div class="profile-content">
-          <a [href]="viewedUser?.avatarUrl" target="_blank" class="avatar-link">
-            <img *ngIf="viewedUser?.avatarUrl" [src]="viewedUser?.avatarUrl" class="avatar clickable" />
+          <a [href]="$safeNavigationMigration(viewedUser?.avatarUrl)" target="_blank" class="avatar-link">
+            <img
+              *ngIf="viewedUser?.avatarUrl"
+              [src]="$safeNavigationMigration(viewedUser?.avatarUrl)"
+              class="avatar clickable"
+            />
           </a>
           <div class="profile-info">
             <span class="username">{{ viewedUser?.username || viewedUser?.steamId }}</span>
@@ -20,24 +24,32 @@
         </div>
 
         <div class="stats-grid">
-          <div class="stat-item" *ngIf="viewedUser?.coins !== undefined">
+          <div class="stat-item" *ngIf="$safeNavigationMigration(viewedUser?.coins) !== undefined">
             <span class="stat-label">Coins</span>
             <span class="stat-value">{{ viewedUser?.coins }}</span>
           </div>
           <div class="stat-item" *ngIf="viewedUser?.discordId || viewedUser?.discordAvatarUrl">
             <span class="stat-label">Discord</span>
             <div class="stat-value discord-value">
-              <img *ngIf="viewedUser?.discordAvatarUrl" [src]="viewedUser?.discordAvatarUrl" class="avatar small" />
+              <img
+                *ngIf="viewedUser?.discordAvatarUrl"
+                [src]="$safeNavigationMigration(viewedUser?.discordAvatarUrl)"
+                class="avatar small"
+              />
               <span>{{ viewedUser?.discordId || 'Verbunden' }}</span>
             </div>
           </div>
           <div class="stat-item" *ngIf="viewedUser?.firstSeen">
             <span class="stat-label">First Seen</span>
-            <span class="stat-value date-value">{{ getDateDisplay(viewedUser?.firstSeen) }}</span>
+            <span class="stat-value date-value">{{
+              getDateDisplay($safeNavigationMigration(viewedUser?.firstSeen))
+            }}</span>
           </div>
           <div class="stat-item" *ngIf="viewedUser?.lastSeen">
             <span class="stat-label">Last Seen</span>
-            <span class="stat-value date-value">{{ getDateDisplay(viewedUser?.lastSeen) }}</span>
+            <span class="stat-value date-value">{{
+              getDateDisplay($safeNavigationMigration(viewedUser?.lastSeen))
+            }}</span>
           </div>
         </div>
       </div>
@@ -204,7 +216,9 @@
           </div>
           <div class="restriction-item" *ngIf="!viewedUser?.coinRestriction?.isPermanent">
             <span class="restriction-label">Bis</span>
-            <span class="restriction-value">{{ getDateDisplay(viewedUser?.coinRestriction?.restrictedUntil) }}</span>
+            <span class="restriction-value">{{
+              getDateDisplay($safeNavigationMigration(viewedUser?.coinRestriction?.restrictedUntil))
+            }}</span>
           </div>
           <div class="restriction-item" *ngIf="viewedUser?.coinRestriction?.isPermanent">
             <span class="restriction-label">Dauer</span>

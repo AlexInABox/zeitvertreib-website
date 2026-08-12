@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
@@ -12,6 +12,7 @@ interface DiscordInviteResponse {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './discord-stats.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./discord-stats.component.css'],
 })
 export class DiscordStatsComponent implements OnInit {

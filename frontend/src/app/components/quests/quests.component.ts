@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -13,6 +13,7 @@ import type { GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
   standalone: true,
   imports: [CommonModule, ButtonModule, CardModule, ProgressBarModule],
   templateUrl: './quests.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./quests.component.css'],
 })
 export class QuestsComponent implements OnInit {

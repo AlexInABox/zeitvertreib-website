@@ -1,6 +1,6 @@
 import { provideRouter } from '@angular/router';
 
-import { provideHttpClient, withInterceptors, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, HTTP_INTERCEPTORS, withXhr } from '@angular/common/http';
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
@@ -5239,7 +5239,7 @@ const MyPreset = definePreset(
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimationsAsync(),
-    provideHttpClient(),
+    provideHttpClient(withXhr()),
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
     providePrimeNG({
       theme: {

@@ -5,7 +5,7 @@
       <div class="stat-indicator"></div>
       <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
         <h5 class="stat-label m-0 mb-1">Abschüsse</h5>
-        <p class="stat-value m-0">{{ userStatistics?.kills | number: '1.0-0' }}</p>
+        <p class="stat-value m-0">{{ $safeNavigationMigration(userStatistics?.kills) | number: '1.0-0' }}</p>
       </div>
     </div>
 
@@ -14,7 +14,7 @@
       <div class="stat-indicator"></div>
       <div class="flex-1 min-w-0 ml-4 flex flex-col justify-center">
         <h5 class="stat-label m-0 mb-1">Todesfälle</h5>
-        <p class="stat-value m-0">{{ userStatistics?.deaths | number: '1.0-0' }}</p>
+        <p class="stat-value m-0">{{ $safeNavigationMigration(userStatistics?.deaths) | number: '1.0-0' }}</p>
       </div>
     </div>
 

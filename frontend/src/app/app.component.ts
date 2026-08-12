@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, NavigationEnd, Router } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
@@ -16,6 +16,7 @@ import { filter } from 'rxjs/operators';
   selector: 'app-root',
   imports: [CommonModule, RouterOutlet, HeaderComponent, DomainWarningComponent, ToastComponent, ZvcOverlayComponent],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AdventCalendarService } from '../services/advent-calendar.service';
@@ -11,6 +11,7 @@ import type { AdventCalendarDoor, GetAdventCalendarResponse, RedeemAdventDoorRes
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './advent-calendar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./advent-calendar.component.css'],
 })
 export class AdventCalendarComponent implements OnInit {

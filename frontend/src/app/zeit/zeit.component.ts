@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
@@ -12,6 +12,7 @@ import type { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib
   selector: 'app-zeit',
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './zeit.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zeit.component.css'],
 })
 export class ZeitComponent implements OnInit, OnDestroy {
