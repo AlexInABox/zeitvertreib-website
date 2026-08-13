@@ -26,18 +26,10 @@
         @if (isManageView()) {
           <div class="spray-actions">
             @if (editingSprayId !== spray.id) {
-              <button
-                class="btn-icon btn-icon-secondary"
-                (click)="startEditSpray(spray)"
-                title="Name bearbeiten"
-              >
+              <button class="btn-icon btn-icon-secondary" (click)="startEditSpray(spray)" title="Name bearbeiten">
                 <i class="pi pi-pencil"></i>
               </button>
-              <button
-                class="btn-icon btn-icon-danger"
-                (click)="deleteSpray(spray.id)"
-                title="Spray löschen"
-              >
+              <button class="btn-icon btn-icon-danger" (click)="deleteSpray(spray.id)" title="Spray löschen">
                 <i class="pi pi-trash"></i>
               </button>
             }

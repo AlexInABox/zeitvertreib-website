@@ -94,12 +94,24 @@
   font-size: 1.125rem;
 }
 
-.icon-green { color: #4ade80; }
-.icon-pink { color: #f472b6; }
-.icon-blue { color: #60a5fa; }
-.icon-purple { color: #a78bfa; }
-.icon-shield { color: #38bdf8; }
-.icon-danger { color: #f87171; }
+.icon-green {
+  color: #4ade80;
+}
+.icon-pink {
+  color: #f472b6;
+}
+.icon-blue {
+  color: #60a5fa;
+}
+.icon-purple {
+  color: #a78bfa;
+}
+.icon-shield {
+  color: #38bdf8;
+}
+.icon-danger {
+  color: #f87171;
+}
 
 .card-warning-border {
   border-color: rgba(239, 68, 68, 0.3);

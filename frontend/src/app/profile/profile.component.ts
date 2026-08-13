@@ -124,9 +124,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   onSprayUpdated(event: { id: number; name: string }) {
     if (this.viewedUser?.sprays) {
-      this.viewedUser.sprays = this.viewedUser.sprays.map((s) =>
-        s.id === event.id ? { ...s, name: event.name } : s,
-      );
+      this.viewedUser.sprays = this.viewedUser.sprays.map((s) => (s.id === event.id ? { ...s, name: event.name } : s));
     }
   }
 

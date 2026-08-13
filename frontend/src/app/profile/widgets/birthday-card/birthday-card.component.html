@@ -109,9 +109,7 @@
           </div>
         }
         @if (isUnder18()) {
-          <div class="dense-notice notice-error">
-            Mindestalter von 18 Jahren erforderlich.
-          </div>
+          <div class="dense-notice notice-error">Mindestalter von 18 Jahren erforderlich.</div>
         }
         @if (birthdayError) {
           <div class="dense-notice notice-error">
@@ -122,11 +120,7 @@
 
       <div class="birthday-actions-bar">
         @if (hasBirthday() && !showDeleteConfirm) {
-          <button
-            class="btn btn-danger-soft btn-sm"
-            (click)="showDeleteBirthdayConfirm()"
-            [disabled]="birthdayLoading"
-          >
+          <button class="btn btn-danger-soft btn-sm" (click)="showDeleteBirthdayConfirm()" [disabled]="birthdayLoading">
             <i class="pi pi-trash"></i> Löschen
           </button>
         }
@@ -134,7 +128,9 @@
           <div class="inline-confirm">
             <span class="confirm-query">Löschen?</span>
             <button class="btn btn-danger btn-xs" (click)="deleteBirthday()" [disabled]="birthdayLoading">Ja</button>
-            <button class="btn btn-secondary-soft btn-xs" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">Nein</button>
+            <button class="btn btn-secondary-soft btn-xs" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">
+              Nein
+            </button>
           </div>
         }
         <div class="spacer"></div>

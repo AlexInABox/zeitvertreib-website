@@ -88,8 +88,18 @@ export class BirthdayCardComponent implements OnInit {
 
   getMonthName(month: number): string {
     const months = [
-      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember',
     ];
     return months[month - 1] || '';
   }

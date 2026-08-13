@@ -29,7 +29,9 @@
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.18);
   object-fit: cover;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .avatar-wrapper:hover .hero-avatar {

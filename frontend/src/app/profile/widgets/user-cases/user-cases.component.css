@@ -72,7 +72,9 @@
 .item-arrow {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.3);
-  transition: transform 0.15s ease, color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
 }
 
 .item-clickable:hover .item-arrow {

@@ -10,11 +10,7 @@
   </div>
   <div class="dense-body privacy-body">
     <!-- EXPORT DATA BUTTON ITEM -->
-    <button
-      class="action-item-button"
-      [disabled]="isTakeoutDisabled()"
-      (click)="openTakeoutModal()"
-    >
+    <button class="action-item-button" [disabled]="isTakeoutDisabled()" (click)="openTakeoutModal()">
       <div class="action-item-icon icon-blue-bg">
         <i class="pi pi-download"></i>
       </div>
@@ -71,8 +67,7 @@
           Sende eine E-Mail an
           <a
             [href]="
-              'mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20' +
-              userId()
+              'mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20' + userId()
             "
             class="support-link"
           >
@@ -82,17 +77,11 @@
         </p>
         <div class="userid-copy-row">
           <code class="userid-code">{{ userId() }}</code>
-          <button
-            class="btn-icon btn-icon-secondary"
-            (click)="copyUserId()"
-            title="User-ID kopieren"
-          >
+          <button class="btn-icon btn-icon-secondary" (click)="copyUserId()" title="User-ID kopieren">
             <i class="pi" [class.pi-copy]="!copiedUserId" [class.pi-check]="copiedUserId"></i>
           </button>
         </div>
-        <p class="guide-subtext">
-          Unser Team bearbeitet die Löschung innerhalb von 30 Tagen.
-        </p>
+        <p class="guide-subtext">Unser Team bearbeitet die Löschung innerhalb von 30 Tagen.</p>
       </div>
     }
   </div>
@@ -154,7 +143,11 @@
           <button class="btn btn-secondary-soft" (click)="closeTakeoutModal()" [disabled]="takeoutLoading">
             Abbrechen
           </button>
-          <button class="btn btn-secondary-soft btn-confirm" (click)="submitTakeout()" [disabled]="takeoutLoading || !takeoutEmail">
+          <button
+            class="btn btn-secondary-soft btn-confirm"
+            (click)="submitTakeout()"
+            [disabled]="takeoutLoading || !takeoutEmail"
+          >
             {{ takeoutLoading ? 'Wird gesendet...' : 'Export anfordern' }}
           </button>
         </div>
