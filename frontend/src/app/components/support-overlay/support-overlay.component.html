@@ -37,10 +37,7 @@
             <h3 class="support-status-title">Juhuu!</h3>
             <p class="support-status-sub">Wir verarbeiten gerade deine Zahlung.</p>
             <p class="support-status-thanks">Danke so sehr für deine Unterstützung! 💜</p>
-            <button
-              class="support-btn-back"
-              (click)="showSuccessMessage = false; $event.stopPropagation()"
-            >
+            <button class="support-btn-back" (click)="showSuccessMessage = false; $event.stopPropagation()">
               ← Zurück
             </button>
           </div>
@@ -54,13 +51,8 @@
             <p class="support-status-sub">Deine Zahlung wurde nicht abgeschlossen.</p>
             <p class="support-status-thanks">Kein Problem — versuche es gerne erneut.</p>
             <div class="support-status-actions">
-              <button class="support-submit-btn" (click)="retry(); $event.stopPropagation()">
-                Erneut versuchen
-              </button>
-              <button
-                class="support-btn-back"
-                (click)="showCancelledMessage = false; $event.stopPropagation()"
-              >
+              <button class="support-submit-btn" (click)="retry(); $event.stopPropagation()">Erneut versuchen</button>
+              <button class="support-btn-back" (click)="showCancelledMessage = false; $event.stopPropagation()">
                 ← Zurück
               </button>
             </div>
@@ -128,21 +120,12 @@
             <!-- Legal / Terms Section -->
             <div class="support-legal-box">
               <label class="support-checkbox-label" (click)="$event.stopPropagation()">
-                <input
-                  type="checkbox"
-                  [(ngModel)]="acceptedTerms"
-                  class="support-checkbox"
-                  [disabled]="isSubmitting"
-                />
+                <input type="checkbox" [(ngModel)]="acceptedTerms" class="support-checkbox" [disabled]="isSubmitting" />
                 <span>
                   Ich akzeptiere die
-                  <button
-                    type="button"
-                    class="support-terms-link"
-                    (click)="toggleTerms($event)"
-                  >
-                    wichtigen Hinweise
-                  </button>.
+                  <button type="button" class="support-terms-link" (click)="toggleTerms($event)">
+                    wichtigen Hinweise</button
+                  >.
                 </span>
               </label>
 
@@ -191,7 +174,12 @@
                 <img src="assets/PAYMENT_LOGOS/googlepay.svg" alt="Google Pay" class="pay-icon pay-icon--gpay" />
               </div>
               <div class="pay-icon-wrap pay-icon-wrap--sofort">
-                <svg viewBox="0 0 50 32" xmlns="http://www.w3.org/2000/svg" aria-label="Sofortüberweisung" class="pay-icon">
+                <svg
+                  viewBox="0 0 50 32"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-label="Sofortüberweisung"
+                  class="pay-icon"
+                >
                   <rect width="50" height="32" rx="5" fill="#fa82a0" />
                   <text
                     x="50%"
