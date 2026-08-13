@@ -2,6 +2,7 @@
   <!-- Bell button -->
   <button
     class="notification-bell-btn"
+    [class.has-unread]="notificationCenter.filteredUnreadCount() > 0"
     (click)="togglePanel($event)"
     [attr.aria-label]="
       notificationCenter.filteredUnreadCount() > 0
@@ -15,11 +16,6 @@
     "
   >
     <i class="pi pi-bell notification-bell-icon"></i>
-    @if (notificationCenter.filteredUnreadCount() > 0) {
-      <span class="notification-badge">{{
-        notificationCenter.filteredUnreadCount() > 99 ? '99+' : notificationCenter.filteredUnreadCount()
-      }}</span>
-    }
   </button>
 
   <!-- Dropdown panel -->
