@@ -5,6 +5,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { DomainWarningComponent } from './components/domain-warning/domain-warning.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { ZvcOverlayComponent } from './components/zvc-overlay/zvc-overlay.component';
+import { SupportOverlayComponent } from './components/support-overlay/support-overlay.component';
 import { ThemeService } from './services/theme.service';
 import { EasterEggService } from './services/easter-egg.service';
 import { AudioService } from './services/audio.service';
@@ -13,7 +14,14 @@ import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderComponent, DomainWarningComponent, ToastComponent, ZvcOverlayComponent],
+  imports: [
+    RouterOutlet,
+    HeaderComponent,
+    DomainWarningComponent,
+    ToastComponent,
+    ZvcOverlayComponent,
+    SupportOverlayComponent,
+  ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./app.component.css'],

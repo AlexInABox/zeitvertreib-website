@@ -1,38 +1,47 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   ElementRef,
-  AfterViewInit,
   NgZone,
   ChangeDetectionStrategy,
   inject,
   viewChild,
+  effect,
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
-import { environment } from '../../environments/environment';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { SupportService } from '../../services/support.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
-  selector: 'app-support',
+  selector: 'app-support-overlay',
   standalone: true,
-  imports: [FormsModule, RouterModule],
-  templateUrl: './support.component.html',
+  imports: [FormsModule],
+  templateUrl: './support-overlay.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrls: ['./support.component.css'],
+  styleUrls: ['./support-overlay.component.css'],
 })
-export class SupportComponent implements OnInit {
+export class SupportOverlayComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private supportService = inject(SupportService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ngZone = inject(NgZone);
 
   readonly confettiCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('confettiCanvas');
 
-  selectedAmount: number | null = 10; // default 10€
+  // UI state for expansion
+  expanded = false;
+  persistExpanded = false;
+
+  // Donation form state
+  selectedAmount: number | null = 10;
   customAmount: number | null = null;
   customAmountInput = '';
   greeting = '';
@@ -41,12 +50,9 @@ export class SupportComponent implements OnInit {
   acceptedTerms = false;
   showTerms = false;
 
-  toggleTerms(event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.showTerms = !this.showTerms;
-  }
+  predefinedAmounts = [5, 10, 20, 50, 100];
 
+  // Success & Cancelled states
   private _showSuccessMessage = false;
   get showSuccessMessage() {
     return this._showSuccessMessage;
@@ -54,7 +60,6 @@ export class SupportComponent implements OnInit {
   set showSuccessMessage(val: boolean) {
     this._showSuccessMessage = val;
     if (val) {
-      // Wait one tick for the canvas to render before firing confetti
       setTimeout(() => this.launchConfetti(), 0);
     } else {
       this.stopConfetti();
@@ -65,90 +70,76 @@ export class SupportComponent implements OnInit {
 
   private confettiAnimId: number | null = null;
   private confettiParticles: any[] = [];
-
   private readonly COLORS = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#48dbfb', '#ff6bac'];
 
-  // Predefined options
-  predefinedAmounts = [5, 10, 20, 50, 100];
+  private collapseTimer: any = null;
+  private queryParamsSub?: Subscription;
+
+  constructor() {
+    // Sync with SupportService signals
+    effect(() => {
+      const isExp = this.supportService.expanded();
+      const isPersist = this.supportService.persistExpanded();
+      const sAmt = this.supportService.selectedAmount();
+
+      this.expanded = isExp;
+      this.persistExpanded = isPersist;
+      if (sAmt !== undefined && sAmt !== this.selectedAmount) {
+        this.selectAmount(sAmt);
+      }
+    });
+  }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
+    this.queryParamsSub = this.route.queryParams.subscribe((params) => {
       if (params['status'] === 'returned') {
         this.showSuccessMessage = true;
+        this.expanded = true;
+        this.persistExpanded = true;
         this.router.navigate([], { queryParams: { status: null }, queryParamsHandling: 'merge' });
       } else if (params['status'] === 'cancelled') {
         this.showCancelledMessage = true;
+        this.expanded = true;
+        this.persistExpanded = true;
         this.router.navigate([], { queryParams: { status: null }, queryParamsHandling: 'merge' });
       }
     });
   }
 
-  retry(): void {
-    this.showCancelledMessage = false;
-    this.errorMessage = '';
+  ngOnDestroy(): void {
+    this.queryParamsSub?.unsubscribe();
+    this.stopConfetti();
   }
 
-  private launchConfetti(): void {
-    const canvas = this.confettiCanvasRef()?.nativeElement;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-
-    canvas.width = canvas.offsetWidth || 400;
-    canvas.height = canvas.offsetHeight || 300;
-
-    this.confettiParticles = Array.from({ length: 140 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      w: Math.random() * 8 + 4,
-      h: Math.random() * 4 + 2,
-      color: this.COLORS[Math.floor(Math.random() * this.COLORS.length)],
-      speed: Math.random() * 3 + 1.5,
-      drift: (Math.random() - 0.5) * 1.2,
-      angle: Math.random() * Math.PI * 2,
-      spin: (Math.random() - 0.5) * 0.15,
-      opacity: 1,
-    }));
-
-    const tick = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let alive = false;
-      for (const p of this.confettiParticles) {
-        p.y += p.speed;
-        p.x += p.drift;
-        p.angle += p.spin;
-        if (p.y > canvas.height * 0.75) {
-          p.opacity = Math.max(0, p.opacity - 0.015);
-        }
-        if (p.opacity <= 0) continue;
-        alive = true;
-        ctx.save();
-        ctx.globalAlpha = p.opacity;
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.angle);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx.restore();
-      }
-      if (alive && this._showSuccessMessage) {
-        this.confettiAnimId = requestAnimationFrame(tick);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    };
-
-    this.ngZone.runOutsideAngular(() => {
-      this.confettiAnimId = requestAnimationFrame(tick);
-    });
-  }
-
-  private stopConfetti(): void {
-    if (this.confettiAnimId !== null) {
-      cancelAnimationFrame(this.confettiAnimId);
-      this.confettiAnimId = null;
+  // --- Interaction Handlers ---
+  onMouseEnter(): void {
+    if (this.collapseTimer) {
+      clearTimeout(this.collapseTimer);
+      this.collapseTimer = null;
     }
+    this.expanded = true;
   }
 
-  selectAmount(amount: number): void {
+  onMouseLeave(): void {
+    if (this.persistExpanded) return;
+    this.collapseTimer = setTimeout(() => {
+      this.expanded = false;
+      this.collapseTimer = null;
+    }, 700);
+  }
+
+  togglePersist(): void {
+    this.persistExpanded = !this.persistExpanded;
+    this.expanded = this.persistExpanded || this.expanded;
+  }
+
+  toggleTerms(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showTerms = !this.showTerms;
+  }
+
+  selectAmount(amount: number | null): void {
     this.selectedAmount = amount;
     this.customAmount = null;
     this.customAmountInput = '';
@@ -159,10 +150,8 @@ export class SupportComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     let value = input.value;
 
-    // Remove any character that is not a digit, dot, or comma
     value = value.replace(/[^0-9.,]/g, '');
 
-    // Allow at most one dot or comma
     const firstSeparatorIndex = value.search(/[.,]/);
     if (firstSeparatorIndex !== -1) {
       const before = value.substring(0, firstSeparatorIndex + 1);
@@ -173,7 +162,6 @@ export class SupportComponent implements OnInit {
     input.value = value;
     this.customAmountInput = value;
 
-    // Convert decimal separator to dot for float parsing
     const normalizedValue = value.replace(',', '.');
     const parsed = parseFloat(normalizedValue);
     this.customAmount = isNaN(parsed) ? null : parsed;
@@ -212,6 +200,11 @@ export class SupportComponent implements OnInit {
     return this.currentWords > this.maxWords;
   }
 
+  retry(): void {
+    this.showCancelledMessage = false;
+    this.errorMessage = '';
+  }
+
   submitDonation(): void {
     const amount = this.finalAmount;
 
@@ -244,7 +237,6 @@ export class SupportComponent implements OnInit {
       .subscribe({
         next: (response) => {
           if (response.success && response.checkoutUrl) {
-            // Redirect the user to Stripe Checkout
             window.location.href = response.checkoutUrl;
           } else {
             this.errorMessage = 'Checkout-Link konnte nicht generiert werden.';
@@ -258,5 +250,65 @@ export class SupportComponent implements OnInit {
           this.isSubmitting = false;
         },
       });
+  }
+
+  private launchConfetti(): void {
+    const canvas = this.confettiCanvasRef()?.nativeElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+
+    canvas.width = canvas.offsetWidth || 300;
+    canvas.height = canvas.offsetHeight || 250;
+
+    this.confettiParticles = Array.from({ length: 100 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 6 + 3,
+      h: Math.random() * 3 + 2,
+      color: this.COLORS[Math.floor(Math.random() * this.COLORS.length)],
+      speed: Math.random() * 2.5 + 1.2,
+      drift: (Math.random() - 0.5) * 1.0,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.12,
+      opacity: 1,
+    }));
+
+    const tick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (const p of this.confettiParticles) {
+        p.y += p.speed;
+        p.x += p.drift;
+        p.angle += p.spin;
+        if (p.y > canvas.height * 0.75) {
+          p.opacity = Math.max(0, p.opacity - 0.02);
+        }
+        if (p.opacity <= 0) continue;
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      if (alive && this._showSuccessMessage) {
+        this.confettiAnimId = requestAnimationFrame(tick);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+
+    this.ngZone.runOutsideAngular(() => {
+      this.confettiAnimId = requestAnimationFrame(tick);
+    });
+  }
+
+  private stopConfetti(): void {
+    if (this.confettiAnimId !== null) {
+      cancelAnimationFrame(this.confettiAnimId);
+      this.confettiAnimId = null;
+    }
   }
 }

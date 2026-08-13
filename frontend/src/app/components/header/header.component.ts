@@ -13,6 +13,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { NotificationCenterComponent } from '../notification-center/notification-center.component';
 
+import { SupportService } from '../../services/support.service';
+
 @Component({
   selector: 'app-header',
   imports: [RouterModule, ButtonModule, AvatarModule, AvatarGroupModule, FormsModule, NotificationCenterComponent],
@@ -27,6 +29,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   themeService = inject(ThemeService);
   private http = inject(HttpClient);
+  private supportService = inject(SupportService);
 
   items: MenuItem[] | undefined;
   userLoggedIn = false;
@@ -51,6 +54,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.activeDropdown = null;
     } else {
       this.activeDropdown = label;
+    }
+  }
+
+  onSubItemClick(subItem: MenuItem, event: Event) {
+    event.stopPropagation();
+    this.activeDropdown = null;
+    if (subItem.command) {
+      subItem.command({ originalEvent: event, item: subItem });
     }
   }
 
@@ -110,9 +121,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
         items: [
           {
-            label: 'Online-Spende',
+            label: 'Unterstützen',
             icon: PrimeIcons.HEART,
-            route: '/support',
+            command: () => this.supportService.expand(true),
           },
           {
             label: 'Paysafecard',
