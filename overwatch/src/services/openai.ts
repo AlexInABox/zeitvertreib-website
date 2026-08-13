@@ -15,8 +15,10 @@ The user has also attached or linked media (images, GIFs, or videos).
 Videos and GIFs have been extracted as a sequence of frames and attached as images.
 You MUST analyze the visual content of all attached images. Check for any flaggable offenses in the media, such as:
 - Pornographic/NSFW visuals or media
+- Obscene or strongly sexualized imagery, including cartoon, surreal, grotesque, fetish, or meme-style visuals; explicit nudity is not required
 - Hate symbols, slurs, or offensive text written inside/on the images
 - Violence, threats, or harassment in the images/frames
+Do not excuse obscene content because it is animated, fictional, surreal, or presented as a joke. Harmless surreal or unusual artwork without sexual or obscene elements is SAFE.
 If the media contains any flaggable violation, you MUST reply with FLAG.
 `
     : '';
