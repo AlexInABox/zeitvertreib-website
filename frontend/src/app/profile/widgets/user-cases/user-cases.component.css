@@ -1,0 +1,91 @@
+.dense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.dense-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.15s ease;
+}
+
+.item-clickable:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.case-id-tag {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.case-title-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.meta-subtext {
+  font-size: 0.725rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.meta-date {
+  font-size: 0.725rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: ui-monospace, monospace;
+}
+
+.item-arrow {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.item-clickable:hover .item-arrow {
+  transform: translateX(3px);
+  color: #a78bfa;
+}
+
+.empty-state-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8125rem;
+}

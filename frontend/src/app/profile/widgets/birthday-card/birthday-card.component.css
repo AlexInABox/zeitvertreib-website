@@ -1,0 +1,105 @@
+.integration-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.integration-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 1.125rem;
+  gap: 0.75rem;
+}
+
+.integration-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.birthday-display-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 38px;
+}
+
+.birthday-text-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.birthday-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.birthday-val i {
+  color: #f472b6;
+  font-size: 0.9rem;
+}
+
+.muted-text {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.birthday-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-field label {
+  font-size: 0.725rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.optional-label {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.birthday-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.inline-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.confirm-query {
+  font-size: 0.75rem;
+  color: #f87171;
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1;
+}

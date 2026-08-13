@@ -10,3 +10,4 @@ zeitvertreibplugins.sln.DotSettings.user
 node_modules/
 **/.env
 skills-lock.json
+.gemini/

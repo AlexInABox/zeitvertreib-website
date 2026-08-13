@@ -1,0 +1,53 @@
+.moderation-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.625rem;
+  padding: 0.875rem 1.125rem;
+}
+
+.mod-stat-item {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mod-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+}
+
+.mod-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+
+.mod-warn .mod-stat-value {
+  color: #fbbf24;
+}
+
+.mod-ban .mod-stat-value {
+  color: #f87171;
+}
+
+.mod-mute .mod-stat-value {
+  color: #a78bfa;
+}
+
+.mod-cases .mod-stat-value {
+  color: #38bdf8;
+}
+
+@media (max-width: 640px) {
+  .moderation-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
