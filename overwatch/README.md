@@ -10,10 +10,12 @@ directory must be mounted from a persistent host path in production:
 ```yaml
 services:
   overwatch:
-    image: your-overwatch-image
+    image: ghcr.io/alexinabox/zeitvertreib-overwatch
+    #image: ghcr.io/alexinabox/zeitvertreib-overwatch:dev
     env_file: .env
     volumes:
       - ./data:/app/data
+    restart: unless-stopped
 ```
 
 The `./data` directory lives next to the Compose file, so it survives container

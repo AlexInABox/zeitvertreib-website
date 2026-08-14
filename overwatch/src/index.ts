@@ -6,7 +6,6 @@ import { handleReady } from './events/ready';
 import { handleMessageCreate } from './events/messageCreate';
 import { handleMessageUpdate } from './events/messageUpdate';
 import { handleOptOutButton } from './services/stickyMessage';
-import { handleVoiceStateUpdate } from './events/voiceStateUpdate';
 
 const client = new Client({
   intents: [
@@ -22,7 +21,6 @@ const client = new Client({
 client.once(Events.ClientReady, handleReady);
 client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.MessageUpdate, handleMessageUpdate);
-client.on(Events.VoiceStateUpdate, handleVoiceStateUpdate);
 
 // Handle button interactions
 client.on(Events.InteractionCreate, async (interaction) => {
