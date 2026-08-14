@@ -26,4 +26,9 @@ COPY overwatch/package*.json ./
 COPY --from=build /types ../types
 
 RUN npm install --production
+
+# The member tracker stores its synchronization baseline here. Mount this
+# directory from Compose so restarts do not make every member look new.
+VOLUME ["/app/data"]
+
 CMD ["node", "dist/index.js"]
