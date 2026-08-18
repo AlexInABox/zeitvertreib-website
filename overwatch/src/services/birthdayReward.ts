@@ -71,7 +71,7 @@ export async function handleBirthdayReply(message: Message): Promise<void> {
     if (result.status === 'awarded') {
       if (message.channel.isSendable()) {
         await message.channel.send({
-          content: `🎉 <@${message.author.id}> erhält **${result.amount} ZVC** für seine Geburtstagswünsche! 🎁`,
+          content: `🎉 <@${message.author.id}> hat **${result.amount} ZVC** für Geburtstagswünsche erhalten! 🎁`,
           allowedMentions: { users: [message.author.id] },
         });
       }
