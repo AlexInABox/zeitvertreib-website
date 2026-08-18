@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import typia from 'typia';
 
 import { playerdata } from '../db/schema.js';
+import { getZvc } from '../db/zvc.js';
 
 import {
   RouletteBetType,
@@ -154,13 +155,7 @@ export async function handleRoulette(request: Request, env: Env, ctx?: Execution
   try {
     const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    const playerRecord = await db
-      .select({ experience: playerdata.experience })
-      .from(playerdata)
-      .where(eq(playerdata.id, playerId))
-      .get();
-
-    const currentBalance = playerRecord?.experience || 0;
+    const currentBalance = (await getZvc(db, { id: playerId })) ?? 0;
 
     if (currentBalance < body.bet) {
       return createResponse(

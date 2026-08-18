@@ -1,7 +1,6 @@
 import { createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
-import { playerdata } from '../db/schema.js';
+import { getZvc, decreaseZvc } from '../db/zvc.js';
 import type { SwappedRequest, SwappedResponse } from '@zeitvertreib/types';
 
 /**
@@ -52,13 +51,11 @@ export async function handleSwapped(request: Request, env: Env): Promise<Respons
     }
 
     // Query the player's current experience (ZVC)
-    const player = await db.select().from(playerdata).where(eq(playerdata.id, userid)).limit(1);
+    const currentExp = await getZvc(db, { id: userid });
 
-    if (player.length === 0 || !player[0]) {
+    if (currentExp === null) {
       return createResponse({ error: 'Bad Request: Player not found' }, 400, origin);
     }
-
-    const currentExp = player[0].experience || 0;
 
     // Check if player has enough ZVC
     if (currentExp < price) {
@@ -74,8 +71,7 @@ export async function handleSwapped(request: Request, env: Env): Promise<Respons
     }
 
     // Subtract the price from player's experience
-    const newExp = currentExp - price;
-    await db.update(playerdata).set({ experience: newExp }).where(eq(playerdata.id, userid));
+    await decreaseZvc(db, { id: userid }, price);
 
     // Return success response
     const response: SwappedResponse = {

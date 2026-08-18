@@ -1,9 +1,10 @@
-import { validateSession, createResponse, increment, fetchSteamUserData } from '../utils.js';
+import { validateSession, createResponse, fetchSteamUserData } from '../utils.js';
 import { proxyFetch } from '../proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
 
 import { playerdata, chickenCrossGames } from '../db/schema.js';
+import { getZvc, decreaseZvc, increaseZvc } from '../db/zvc.js';
 import {
   ChickenCrossGetRequest,
   ChickenCrossGetResponse,
@@ -242,12 +243,11 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
       return createResponse({ error: `Bet must be between ${MIN_BET} and ${MAX_BET}` }, 400, origin);
     }
 
-    const player = await db.select().from(playerdata).where(eq(playerdata.id, steamId)).get();
-    if (!player) {
+    const currentExperience = await getZvc(db, { id: steamId });
+    if (currentExperience === null) {
       return createResponse({ error: 'Player not found' }, 404, origin);
     }
 
-    const currentExperience = player.experience ?? 0;
     if (currentExperience < bet) {
       return createResponse({ error: 'Insufficient ZVC balance' }, 400, origin);
     }
@@ -266,10 +266,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
       );
     }
 
-    await db
-      .update(playerdata)
-      .set({ experience: increment(playerdata.experience, -bet) })
-      .where(eq(playerdata.id, steamId));
+    await decreaseZvc(db, { id: steamId }, bet);
 
     const seedBuffer = new Uint32Array(1);
     crypto.getRandomValues(seedBuffer);
@@ -318,10 +315,7 @@ export async function handleChickenCrossPost(request: Request, env: Env, ctx?: E
   const now = Date.now();
 
   if (intent === 'CASHOUT') {
-    await db
-      .update(playerdata)
-      .set({ experience: increment(playerdata.experience, game.currentPayout) })
-      .where(eq(playerdata.id, steamId));
+    await increaseZvc(db, { id: steamId }, game.currentPayout);
 
     await db
       .update(chickenCrossGames)

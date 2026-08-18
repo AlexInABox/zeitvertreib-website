@@ -8,11 +8,12 @@ import { Routes, InteractionType } from 'discord-api-types/v10';
 import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
 import { AwsClient } from 'aws4fetch';
-import { createResponse, increment } from '../utils.js';
+import { createResponse } from '../utils.js';
 import { appendNotification } from '../notifications.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { getZvc, increaseZvc, decreaseZvc } from '../db/zvc.js';
 import {
   playerdata,
   sprays,
@@ -208,30 +209,12 @@ export async function handleDiscordBotInteractions(
                 // Initialize Drizzle database
                 const db = drizzle(env.ZEITVERTREIB_DATA);
 
-                // Check both players' balances using Drizzle ORM
-                const challengerBalanceResult = await db
-                  .select({
-                    experience: playerdata.experience,
-                    discordId: playerdata.discordId,
-                  })
-                  .from(playerdata)
-                  .where(eq(playerdata.discordId, challengerId))
-                  .limit(1);
-
-                const participantBalanceResult = await db
-                  .select({
-                    experience: playerdata.experience,
-                    discordId: playerdata.discordId,
-                  })
-                  .from(playerdata)
-                  .where(eq(playerdata.discordId, participantId))
-                  .limit(1);
-
-                const challengerBalance = challengerBalanceResult[0];
-                const participantBalance = participantBalanceResult[0];
+                // Check both players' balances
+                const challengerBalance = await getZvc(db, { discordId: challengerId });
+                const participantBalance = await getZvc(db, { discordId: participantId });
 
                 // Check if challenger account is still linked
-                if (!challengerBalance) {
+                if (challengerBalance === null) {
                   await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Der Challenge-Ersteller hat keinen verknüpften Zeitvertreib-Account mehr!',
@@ -242,7 +225,7 @@ export async function handleDiscordBotInteractions(
                 }
 
                 // Check if participant account is linked
-                if (!participantBalance) {
+                if (participantBalance === null) {
                   await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       embeds: [
@@ -265,7 +248,7 @@ export async function handleDiscordBotInteractions(
                   return;
                 }
 
-                if ((challengerBalance.experience || 0) < amount) {
+                if (challengerBalance < amount) {
                   await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Der Challenge-Ersteller hat nicht genügend ZVC!',
@@ -275,7 +258,7 @@ export async function handleDiscordBotInteractions(
                   return;
                 }
 
-                if ((participantBalance.experience || 0) < amount) {
+                if (participantBalance < amount) {
                   await rest.post(Routes.webhook(env.DISCORD_APPLICATION_ID, interaction.token), {
                     body: {
                       content: '❌ Du hast nicht genügend ZVC für diesen Münzwurf!',
@@ -294,16 +277,9 @@ export async function handleDiscordBotInteractions(
                 const tax = Math.floor(amount * 0.05); // Only tax if 5% results in at least 1 ZVC
                 const winnerReceives = amount - tax;
 
-                // Update balances using Drizzle ORM
-                await db
-                  .update(playerdata)
-                  .set({ experience: sql`${playerdata.experience} + ${winnerReceives}` })
-                  .where(eq(playerdata.discordId, winnerId));
-
-                await db
-                  .update(playerdata)
-                  .set({ experience: sql`${playerdata.experience} - ${amount}` })
-                  .where(eq(playerdata.discordId, loserId));
+                // Update balances
+                await increaseZvc(db, { discordId: winnerId }, winnerReceives);
+                await decreaseZvc(db, { discordId: loserId }, amount);
 
                 // Get updated balances and usernames using Drizzle ORM
                 const winnerDataResult = await db
@@ -354,12 +330,12 @@ export async function handleDiscordBotInteractions(
                   fields: [
                     {
                       name: `🏆 Gewinner: ${winnerDisplayName}${winnerSteamName}`,
-                      value: `${formatBalance((winnerId === participantId ? participantBalance.experience : challengerBalance.experience) || 0)} ➜ ${formatBalance(winnerData?.experience || 0)}`,
+                      value: `${formatBalance((winnerId === participantId ? participantBalance : challengerBalance) || 0)} ➜ ${formatBalance(winnerData?.experience || 0)}`,
                       inline: false,
                     },
                     {
                       name: `💸 Verlierer: ${loserDisplayName}${loserSteamName}`,
-                      value: `${formatBalance((loserId === participantId ? participantBalance.experience : challengerBalance.experience) || 0)} ➜ ${formatBalance(loserData?.experience || 0)}`,
+                      value: `${formatBalance((loserId === participantId ? participantBalance : challengerBalance) || 0)} ➜ ${formatBalance(loserData?.experience || 0)}`,
                       inline: false,
                     },
                     {

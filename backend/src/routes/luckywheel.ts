@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 
 import { playerdata } from '../db/schema.js';
+import { getZvc } from '../db/zvc.js';
 
 // Lucky Wheel configuration - easily modifiable
 const MIN_BET = 1;
@@ -151,12 +152,10 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
   }
 
   try {
-    // Get current balance
-    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare('SELECT experience FROM playerdata WHERE id = ?')
-      .bind(playerId)
-      .first()) as { experience: number } | null;
+    const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    const currentBalance = balanceResult?.experience || 0;
+    // Get current balance
+    const currentBalance = (await getZvc(db, { id: playerId })) ?? 0;
 
     // Check if player has enough ZVC
     if (currentBalance < betAmount) {
@@ -170,8 +169,6 @@ export async function handleLuckyWheel(request: Request, env: Env, ctx?: Executi
         origin,
       );
     }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
 
     let selectedEntry = LUCKYWHEEL_TABLE[0]!;
 

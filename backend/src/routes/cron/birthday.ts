@@ -3,7 +3,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 import * as schema from '../../db/schema.js';
 import { proxyFetch } from '../../proxy.js';
 import { birthdays, playerdata, discordInfo, birthdayMessages } from '../../db/schema.js';
-import { increment } from '../../utils.js';
+import { increaseZvc } from '../../db/zvc.js';
 
 // Hardcoded channel where birthday messages are posted
 const BIRTHDAY_CHANNEL_ID = '888946307346100247';
@@ -48,12 +48,7 @@ export async function checkForBirthdays(
     // Award each celebrant with 1000 ZVC
     for (const birthdayRecord of birthdaysToday) {
       console.log(`Awarding birthday ZVC to user ${birthdayRecord.userid}`);
-      await db
-        .update(playerdata)
-        .set({
-          experience: increment(playerdata.experience, 1000),
-        })
-        .where(eq(playerdata.id, birthdayRecord.userid));
+      await increaseZvc(db, { id: birthdayRecord.userid }, 1000);
 
       // Lets send some birthday wishes in Discord too
       const player = await db.select().from(playerdata).where(eq(playerdata.id, birthdayRecord.userid)).get();

@@ -106,3 +106,43 @@ if (typeof body.name !== 'string') {
 ## 5. Route Registration
 
 Register all backend API route handlers inside `src/index.ts` (there is no `src/routes/index.ts`). Discord slash commands are registered in `src/discord/commands.ts`.
+
+---
+
+## 6. ZVC Balances via `src/db/zvc.ts`
+
+ZVC (Zeitvertreib Coins) balances are stored in `playerdata.experience`. All balance reads and writes **must** go through the helpers in `src/db/zvc.ts` — never through ad-hoc queries.
+
+Available helpers (all take the drizzle instance and a `{ id }` or `{ discordId }` user reference):
+
+- `getZvc(db, user)` → `Promise<number | null>` (`null` = user has no `playerdata` row)
+- `increaseZvc(db, user, amount)` → atomic increment
+- `decreaseZvc(db, user, amount)` → atomic decrement
+
+For multi-statement writes, wrap them in `db.transaction()` so balance changes stay atomic.
+
+### ✅ DO (Correct)
+
+```typescript
+import { getZvc, decreaseZvc } from '../db/zvc.js';
+
+const balance = await getZvc(db, { id: userid });
+if (balance === null) {
+  return createResponse({ error: 'Player not found' }, 404, origin);
+}
+
+await db.transaction(async (tx) => {
+  await decreaseZvc(tx, { id: userid }, 100);
+  await tx.update(sprays).set({ createdAt: now }).where(eq(sprays.id, sprayId));
+});
+```
+
+### ❌ DON'T (Forbidden)
+
+```typescript
+// Direct experience reads/writes outside src/db/zvc.ts are forbidden
+const result = await db.select({ experience: playerdata.experience }).from(playerdata).where(...);
+await db.update(playerdata).set({ experience: balance - 100 }).where(...);
+```
+
+**Exceptions:** queries that select additional fields alongside `experience` (e.g. `username`) or that need `returning()`/conditional `gte` clauses may keep their custom query, but only when the ZVC helper cannot express it.

@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 
 import { playerdata } from '../db/schema.js';
+import { getZvc, decreaseZvc, increaseZvc } from '../db/zvc.js';
 
 // Payout table configuration - shared between endpoints
 const SLOT_COST = 10;
@@ -216,12 +217,10 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
   }
 
   try {
-    // Get current balance
-    const balanceResult = (await env.ZEITVERTREIB_DATA.prepare('SELECT experience FROM playerdata WHERE id = ?')
-      .bind(playerId)
-      .first()) as { experience: number } | null;
+    const db = drizzle(env.ZEITVERTREIB_DATA);
 
-    const currentBalance = balanceResult?.experience || 0;
+    // Get current balance
+    const currentBalance = (await getZvc(db, { id: playerId })) ?? 0;
 
     // Check if player has enough ZVC (using experience as ZVC)
     if (currentBalance < SLOT_COST) {
@@ -235,8 +234,6 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
         origin,
       );
     }
-
-    const db = drizzle(env.ZEITVERTREIB_DATA);
 
     // Helper function for cryptographically secure random number generation
     const getRandomIndex = (max: number): number => {
@@ -260,9 +257,10 @@ export async function handleSlotMachine(request: Request, env: Env, ctx?: Execut
     const newBalance = currentBalance + netChange;
 
     // Update player balance (using experience field as ZVC)
-    await env.ZEITVERTREIB_DATA.prepare('UPDATE playerdata SET experience = ? WHERE id = ?')
-      .bind(newBalance, playerId)
-      .run();
+    await decreaseZvc(db, { id: playerId }, SLOT_COST);
+    if (result.payout > 0) {
+      await increaseZvc(db, { id: playerId }, result.payout);
+    }
 
     // Send webhook notification for significant wins only (jackpot, big_win, small_win)
     if (result.type === 'jackpot' || result.type === 'big_win' || result.type === 'small_win') {
