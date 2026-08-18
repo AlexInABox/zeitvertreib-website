@@ -26,6 +26,10 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Adjusted balancing in the Too Many Peanuts! auto-event, reducing SCP-173 spawns from 50% to 25% of players
 - Optimized website media loading performance by migrating assets to AVIF format
 
+### Fixed
+
+- Fixed the Discord leaderboard bot occasionally posting duplicate leaderboard messages instead of updating the existing one
+
 ## [27]
 
 ### Added

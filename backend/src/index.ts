@@ -317,7 +317,7 @@ export default {
 
     // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
-      ctx.waitUntil(updateLeaderboard(db, env, ctx));
+      ctx.waitUntil(updateLeaderboard(db, env, ctx, true));
       ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
     }
 
