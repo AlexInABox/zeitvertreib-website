@@ -1,9 +1,10 @@
-import { Message } from 'discord.js';
+import { Message, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import type { BirthdayRewardResponse } from '@zeitvertreib/types';
 import { ZEITVERTREIB_GUILD_ID } from '../config/constants';
 
 const BIRTHDAY_CHANNEL_ID = '888946307346100247';
-const BACKEND_API_URL = 'https://zeitvertreib.vip/api/birthday/reward';
+const BACKEND_URL = process.env.BACKEND_URL ?? 'https://zeitvertreib.vip';
+const BACKEND_API_URL = `${BACKEND_URL}/api/birthday/reward`;
 const OVERWATCH_API_KEY = process.env.OVERWATCH_API_KEY;
 
 function berlinDay(date: Date): string {
@@ -68,14 +69,31 @@ export async function handleBirthdayReply(message: Message): Promise<void> {
     const result = (await response.json()) as BirthdayRewardResponse;
 
     if (result.status === 'awarded') {
-      await message.reply({
-        content: `🎉 Danke für deine Geburtstagswünsche, <@${message.author.id}>! Du hast **${result.amount} ZVC** erhalten! 🎁`,
-        allowedMentions: { repliedUser: true },
-      });
+      if (message.channel.isSendable()) {
+        await message.channel.send({
+          content: `🎉 <@${message.author.id}> erhält **${result.amount} ZVC** für seine Geburtstagswünsche! 🎁`,
+          allowedMentions: { users: [message.author.id] },
+        });
+      }
     } else if (result.status === 'no_account') {
+      const notFoundEmbed = new EmbedBuilder()
+        .setColor(0xfee75c)
+        .setTitle('👤 Kein Account gefunden')
+        .setDescription(
+          `Du bist noch **nicht auf Zeitvertreib registriert**.\n\n` +
+            `Erstelle jetzt kostenlos deinen Account, um deine ZVC-Belohnung für Geburtstagswünsche zu erhalten!`,
+        )
+        .setTimestamp();
+
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setLabel('Jetzt registrieren 🕹️').setStyle(ButtonStyle.Link).setURL(`${BACKEND_URL}/login`),
+      );
+
       await message.reply({
-        content: `Danke für deine Geburtstagswünsche! Verknüpfe deinen Discord-Account unter https://zeitvertreib.vip, um die ZVC-Belohnung zu erhalten. 🎁`,
-        allowedMentions: { repliedUser: true },
+        embeds: [notFoundEmbed],
+        components: [row],
+        flags: MessageFlags.Ephemeral as unknown as MessageFlags.SuppressEmbeds,
+        allowedMentions: { repliedUser: false },
       });
     }
   } catch (error) {

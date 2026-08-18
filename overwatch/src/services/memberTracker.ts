@@ -12,7 +12,8 @@ import {
 } from '../config/constants';
 import type { TrackedMember, MemberUpdatePayload, MemberDeletePayload } from '@zeitvertreib/types/discord-tracker';
 
-const BACKEND_API_URL = 'https://zeitvertreib.vip/api/discord-tracker';
+const BACKEND_URL = process.env.BACKEND_URL ?? 'https://zeitvertreib.vip';
+const BACKEND_API_URL = `${BACKEND_URL}/api/discord-tracker`;
 const OVERWATCH_API_KEY = process.env.OVERWATCH_API_KEY;
 
 interface MemberData {
