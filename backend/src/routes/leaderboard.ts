@@ -515,7 +515,11 @@ async function findLatestLeaderboardMessage(env: Env, channelId: string, botToke
   return null;
 }
 
-async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage, retryOnMissing: boolean = false): Promise<boolean> {
+async function sendOrUpdateDiscordMessage(
+  env: Env,
+  message: DiscordMessage,
+  retryOnMissing: boolean = false,
+): Promise<boolean> {
   try {
     const channelId = env.LEADERBOARD_CHANNEL_ID;
     const botToken = env.DISCORD_TOKEN;
