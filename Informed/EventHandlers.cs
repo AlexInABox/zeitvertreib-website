@@ -126,7 +126,7 @@ public static class EventHandlers
         if (content == string.Empty)
             return;
 
-        Logger.Debug($"User {player.Nickname} got tracking identifier of: {content}", Plugin.Instance.Config!.Debug);
+        Logger.Info($"User {player.Nickname} got tracking identifier of: {content}");
 
         using QRCodeGenerator generator = new();
         QRCodeData data = generator.CreateQrCode(
