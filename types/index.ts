@@ -1216,3 +1216,9 @@ export interface LootboxPurchaseResponse {
 export interface LootboxInfoResponse {
   voucherCount: number;
 }
+
+/** POST /informed request */
+export interface InformedTrackingPostRequest {
+  steamId: string;
+  roundNumber: number;
+}

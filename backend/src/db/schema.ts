@@ -366,3 +366,9 @@ export const minecraftLinkCodes = sqliteTable('minecraft_link_codes', {
   code: text('code').notNull(),
   expiresAt: integer('expires_at').notNull(),
 });
+
+export const informedTracking = sqliteTable('informed_tracking', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  steamId: text('steam_id').notNull(),
+  roundNumber: integer('round_number').notNull(),
+});

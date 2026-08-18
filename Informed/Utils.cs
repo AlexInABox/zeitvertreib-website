@@ -90,7 +90,7 @@ public static class Utils
             Config config = Plugin.Instance.Config!;
             string endpoint = $"{config.BackendURL}/api/auth/generate-login-secret";
 
-            Logger.Debug($"Fetching spray from endpoint: {endpoint}", Plugin.Instance.Config!.Debug);
+            Logger.Debug($"Fetching auth secret from endpoint: {endpoint}", Plugin.Instance.Config!.Debug);
 
             using HttpClient client = new();
             client.DefaultRequestHeaders.Add("Authorization", "Bearer " + config.APIKey);
@@ -115,6 +115,38 @@ public static class Utils
         catch (Exception ex)
         {
             Logger.Debug($"Exception while fetching spray for Player {player.Nickname}: {ex}",
+                Plugin.Instance.Config!.Debug);
+            return string.Empty;
+        }
+    }
+
+    public static async Task<string> GetTrackingIdentifier(Player player, int roundNumber)
+    {
+        try
+        {
+            Config config = Plugin.Instance.Config!;
+            string endpoint = $"{config.BackendURL}/informed";
+
+            using HttpClient client = new();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + config.TrackingAPIKey);
+
+            var body = new
+            {
+                steamId = player.UserId,
+                roundNumber
+            };
+
+            StringContent content = new(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await client.PostAsync(endpoint, content);
+            if (!response.IsSuccessStatusCode)
+                return string.Empty;
+
+            JObject obj = JObject.Parse(await response.Content.ReadAsStringAsync());
+            return obj["id"]?.ToString() ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug($"Exception while creating tracking identifier for Player {player.Nickname}: {ex}",
                 Plugin.Instance.Config!.Debug);
             return string.Empty;
         }
