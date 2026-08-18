@@ -17,6 +17,7 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Re-added the Squished plugin, causing players falling from a height to deal fall damage to players below them
 - New interactive permission matrix page on the website displaying staff permissions per role
 - Round victory announcements and proper round endings for the Peanut-Panik auto-event
+- Users replying with birthday wishes to a Discord birthday message now receive 250 ZVC
 
 ### Changed
 

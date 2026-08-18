@@ -48,6 +48,10 @@
       "binding": "ZEITVERTREIB_FLAGS",
       "id": "5e0e683c122a4d5a96225ffabb769010",
     },
+    {
+      "binding": "SCRATCH",
+      "id": "872ca4de755e4114828d156bdb46d347",
+    },
   ],
   "d1_databases": [
     {
@@ -108,6 +112,10 @@
         {
           "binding": "ZEITVERTREIB_FLAGS",
           "id": "5e0e683c122a4d5a96225ffabb769010",
+        },
+        {
+          "binding": "SCRATCH",
+          "id": "872ca4de755e4114828d156bdb46d347",
         },
       ],
       "d1_databases": [
@@ -177,6 +185,10 @@
         {
           "binding": "ZEITVERTREIB_FLAGS",
           "id": "5e0e683c122a4d5a96225ffabb769010",
+        },
+        {
+          "binding": "SCRATCH",
+          "id": "872ca4de755e4114828d156bdb46d347",
         },
       ],
       "d1_databases": [

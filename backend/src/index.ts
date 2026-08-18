@@ -54,6 +54,7 @@ import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
 import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
 import { handleGetBirthday, handlePostBirthday, handleDeleteBirthday } from './routes/birthday.js';
+import { handleBirthdayReward } from './routes/birthday-reward.js';
 import { checkForBirthdays } from './routes/cron/birthday.js';
 import {
   handleChickenCrossInfo,
@@ -208,6 +209,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/birthday': handleGetBirthday,
   'POST:/birthday': handlePostBirthday,
   'DELETE:/birthday': handleDeleteBirthday,
+  'POST:/birthday/reward': handleBirthdayReward,
 
   // Chicken Cross routes
   'GET:/chickencross/info': handleChickenCrossInfo,

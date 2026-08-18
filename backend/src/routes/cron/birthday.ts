@@ -2,8 +2,11 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, inArray } from 'drizzle-orm';
 import * as schema from '../../db/schema.js';
 import { proxyFetch } from '../../proxy.js';
-import { birthdays, playerdata, discordInfo } from '../../db/schema.js';
+import { birthdays, playerdata, discordInfo, birthdayMessages } from '../../db/schema.js';
 import { increment } from '../../utils.js';
+
+// Hardcoded channel where birthday messages are posted
+const BIRTHDAY_CHANNEL_ID = '888946307346100247';
 
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -35,7 +38,7 @@ export async function checkForBirthdays(
       .from(birthdays)
       .where(and(eq(birthdays.month, monthToCheck), inArray(birthdays.day, daysToCheck)))
       .all();
-    const channelId = env.DONATIONS_CHANNEL_ID;
+    const channelId = BIRTHDAY_CHANNEL_ID;
     const botToken = env.DISCORD_TOKEN;
 
     console.log(`Found ${birthdaysToday.length} birthdays today.`);
@@ -119,7 +122,13 @@ export async function checkForBirthdays(
               const text = await response.text();
               console.error('Response:', text);
             } else {
-              console.log('Birthday message sent successfully');
+              const sentMessage: { id?: string } = await response.json();
+              if (sentMessage.id) {
+                await db.insert(birthdayMessages).values({ messageId: sentMessage.id });
+                console.log(`Birthday message sent successfully (id: ${sentMessage.id})`);
+              } else {
+                console.error('Birthday message sent but no message id in response');
+              }
             }
           } catch (error) {
             console.error('Error sending birthday message:', error);

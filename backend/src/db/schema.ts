@@ -259,6 +259,11 @@ export const birthdayUpdates = sqliteTable('birthday_updates', {
   lastUpdated: integer('last_updated').notNull(),
 });
 
+// Discord message IDs of sent birthday messages (checked by Overwatch on reply)
+export const birthdayMessages = sqliteTable('birthday_messages', {
+  messageId: text('message_id').primaryKey(),
+});
+
 export const chickenCrossGames = sqliteTable('chicken_cross_games', {
   seed: integer('seed').primaryKey().notNull(),
   userid: text('userid').notNull(),
