@@ -1,0 +1,14 @@
+{
+  "github_login": "alexinabox",
+  "signer_type": "individual",
+  "signatures": [
+    {
+      "cla_version": "v1",
+      "signed_at": "2026-05-18T20:46:37Z",
+      "document_url": "https://github.com/AlexInABox/zeitvertreib-website/blob/main/CLA.md",
+      "source_repo": "AlexInABox/zeitvertreib-website",
+      "source_pr_number": 211,
+      "source_comment_id": 4482024698
+    }
+  ]
+}

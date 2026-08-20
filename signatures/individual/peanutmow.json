@@ -1,0 +1,14 @@
+{
+  "github_login": "peanutmow",
+  "signer_type": "individual",
+  "signatures": [
+    {
+      "cla_version": "v1",
+      "signed_at": "2026-05-19T19:15:12Z",
+      "document_url": "https://github.com/AlexInABox/zeitvertreib-website/blob/main/CLA.md",
+      "source_repo": "AlexInABox/zeitvertreib-website",
+      "source_pr_number": 216,
+      "source_comment_id": 4491189256
+    }
+  ]
+}
