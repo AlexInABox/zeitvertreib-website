@@ -1,0 +1,40 @@
+name: 'CLA Bot'
+description: 'Checks and manages CLA confirmations for forgejo'
+inputs:
+  token:
+    description: 'API token with write access to repos, issues, and PRs'
+    required: true
+  org:
+    description: 'Organization / owner name'
+    required: true
+  repo:
+    description: 'Repository name'
+    required: true
+  cla-branch:
+    description: 'Branch where CLA signatures are stored'
+    required: false
+    default: 'cla-signatures'
+  document-url:
+    description: 'URL to the CLA document'
+    required: false
+    default: 'https://git.zeitvertreib.vip/zeitvertreib/zeitvertreib/src/branch/main/CLA.md'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Deno
+      shell: bash
+      run: |
+        mkdir -p $HOME/.deno/bin
+        curl -fsSL https://deno.land/install.sh | sh -s -- v2.5.6
+        echo "$HOME/.deno/bin" >> $GITHUB_PATH
+
+    - name: Run CLA Bot
+      shell: bash
+      env:
+        FORGEJO_TOKEN: ${{ inputs.token }}
+        ORG: ${{ inputs.org }}
+        REPO: ${{ inputs.repo }}
+        CLA_BRANCH: ${{ inputs.cla-branch }}
+        DOCUMENT_URL: ${{ inputs.document-url }}
+      run: |
+        deno run --allow-net --allow-read --allow-env --allow-write "$GITHUB_ACTION_PATH/src/main.ts"
