@@ -10,6 +10,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
+## [29]
+
+### Added
+
+- Users replying with birthday wishes to a Discord birthday message now receive 250 ZVC
+
+### Fixed
+
+- Fixed the Discord leaderboard bot occasionally posting duplicate leaderboard messages instead of updating the existing one
+
 ## [28]
 
 ### Added
@@ -17,7 +27,6 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Re-added the Squished plugin, causing players falling from a height to deal fall damage to players below them
 - New interactive permission matrix page on the website displaying staff permissions per role
 - Round victory announcements and proper round endings for the Peanut-Panik auto-event
-- Users replying with birthday wishes to a Discord birthday message now receive 250 ZVC
 
 ### Changed
 
@@ -25,10 +34,6 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - SCP proximity voice chat now integrates with MultiIntercom only when proximity chat is actively toggled on
 - Adjusted balancing in the Too Many Peanuts! auto-event, reducing SCP-173 spawns from 50% to 25% of players
 - Optimized website media loading performance by migrating assets to AVIF format
-
-### Fixed
-
-- Fixed the Discord leaderboard bot occasionally posting duplicate leaderboard messages instead of updating the existing one
 
 ## [27]
 
@@ -148,7 +153,8 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Improved dark mode appearance site-wide, especially on the dashboard.
 - Chicken Cross game payout adjusted to compound each step for larger payouts.
 
-[28]: https://github.com/alexinabox/zeitvertreib-website/compare/build-27...dev
+[29]: https://github.com/alexinabox/zeitvertreib-website/compare/build-28...dev
+[28]: https://github.com/alexinabox/zeitvertreib-website/compare/build-27...build-28
 [27]: https://github.com/alexinabox/zeitvertreib-website/compare/build-26...build-27
 [26]: https://github.com/alexinabox/zeitvertreib-website/compare/build-25...build-26
 [25]: https://github.com/alexinabox/zeitvertreib-website/compare/build-24...build-25
