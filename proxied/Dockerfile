@@ -1,19 +1,24 @@
 # Build
-FROM node:24-alpine AS build
+FROM alpine:3.24 AS build
+RUN apk add --no-cache nodejs npm
 WORKDIR /app
 
-# Copy proxied package
 COPY package*.json ./
-COPY . .
+RUN npm ci
 
-RUN npm install
+COPY . .
 RUN npx tsc
 
 # Run
-FROM node:24-alpine
+FROM alpine:3.24
+RUN apk add --no-cache nodejs ca-certificates
 WORKDIR /app
+
 COPY --from=build /app/dist ./dist
 COPY package*.json ./
+RUN apk add --no-cache --virtual .npm npm \
+ && npm ci --omit=dev --no-audit --no-fund --cache /tmp/npm-cache \
+ && rm -rf /tmp/npm-cache \
+ && apk del .npm
 
-RUN npm install --omit=dev
 CMD ["node", "dist/index.js"]
