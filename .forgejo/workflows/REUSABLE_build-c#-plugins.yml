@@ -1,0 +1,90 @@
+name: Build All C# Plugins (Reusable)
+
+on:
+  workflow_call:
+
+env:
+  REFERENCES_URL: https://dev.zeitvertreib.vip/assets/buildtools/scpsl-references.zip
+  EXILED_REFERENCES: ${{ github.workspace }}/References
+  AUDIO_PLAYER_API_URL: https://github.com/Killers0992/AudioPlayerApi/releases/download/1.1.2/dependencies.zip
+  UCR_DLL_URL: https://github.com/UncomplicatedCustomServer/UncomplicatedCustomRoles/releases/download/v9.2.0/UncomplicatedCustomRoles-LabAPI.dll
+
+jobs:
+  build:
+    name: 🔨 Build All Plugins
+    # EXILED plugins target net4.8.1; on Linux they are built with the .NET
+    # SDK using Microsoft.NETFramework.ReferenceAssemblies (no Windows runner
+    # available).
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout code
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: |
+          npm install
+          npm run build
+
+      - name: Setup .NET SDK
+        uses: https://github.com/actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download dependencies
+        run: |
+          curl -fsSL -o Dev.zip "$REFERENCES_URL"
+          mkdir -p "$EXILED_REFERENCES"
+          unzip -o Dev.zip -d "$EXILED_REFERENCES"
+
+          curl -fsSL -o AudioPlayerApi.zip "$AUDIO_PLAYER_API_URL"
+          unzip -o AudioPlayerApi.zip -d AudioPlayerApi
+          for f in AudioPlayerApi/dependencies/*.dll; do
+            [ -e "$f" ] || continue
+            cp -n "$f" "$EXILED_REFERENCES/" 2>/dev/null || true
+          done
+
+          curl -fsSL -o "$EXILED_REFERENCES/UncomplicatedCustomRoles-LabAPI.dll" "$UCR_DLL_URL"
+
+      - name: Restore NuGet packages
+        run: |
+          dotnet restore zeitvertreibplugins.sln \
+            -p:EXILED_REFERENCES="$EXILED_REFERENCES" \
+            -p:AutomaticallyUseReferenceAssemblyPackages=true
+
+      - name: Build all plugins
+        run: |
+          dotnet build zeitvertreibplugins.sln \
+            -c Release \
+            --no-restore \
+            -p:EXILED_REFERENCES="$EXILED_REFERENCES" \
+            -p:AutomaticallyUseReferenceAssemblyPackages=true
+
+      - name: Collect plugin DLLs
+        run: |
+          mkdir -p staging
+          find "$GITHUB_WORKSPACE" -path "*/bin/Release/*.dll" \
+            -not -path "*/obj/*" \
+            -not -path "*/References/*" | while read -r dll; do
+            rel="${dll#"$GITHUB_WORKSPACE"/}"
+            plugin="${rel%%/*}"
+            base="$(basename "$dll" .dll)"
+            if [ "$base" = "$plugin" ]; then
+              cp -f "$dll" staging/
+              echo "Staged: $(basename "$dll")"
+            fi
+          done
+
+      - name: Upload all plugin DLLs
+        uses: https://github.com/actions/upload-artifact@v3
+        with:
+          name: all-plugins
+          path: staging/
+          if-no-files-found: error

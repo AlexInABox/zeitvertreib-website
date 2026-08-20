@@ -1,0 +1,24 @@
+name: CLA Check
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout action files
+        uses: https://github.com/actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.ref_name }}
+
+      - name: Run CLA Bot
+        uses: ./.forgejo/actions/cla-bot
+        with:
+          token: ${{ github.token }}
+          org: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          cla-branch: cla-signatures

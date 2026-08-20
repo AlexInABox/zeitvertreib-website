@@ -1,0 +1,318 @@
+name: Build and Deploy (Dev)
+
+on:
+  push:
+    branches:
+      - 'dev'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # DETECT CHANGES - Determine what to build
+  # ============================================
+  detect-changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      types: ${{ steps.filter.outputs.types }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      overwatch: ${{ steps.filter.outputs.overwatch }}
+    steps:
+      - name: Checkout
+        uses: https://github.com/actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine base SHA
+        id: last-success
+        run: |
+          BASE_SHA="${{ github.event.before }}"
+          echo "base=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "Using base SHA: $BASE_SHA"
+
+      - name: Check path filters
+        uses: https://github.com/dorny/paths-filter@v4
+        id: filter
+        with:
+          base: ${{ steps.last-success.outputs.base }}
+          filters: |
+            types:
+              - 'types/**'
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+            overwatch:
+              - 'overwatch/**'
+
+  # ============================================
+  # BUILD JOBS - Run conditionally based on changes
+  # ============================================
+
+  build-types:
+    name: 🔨 Build Types
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.types == 'true'
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: types
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload types artifact
+        uses: https://github.com/actions/upload-artifact@v3
+        with:
+          name: types-dist
+          path: types/dist/
+
+  build-frontend:
+    name: 🔨 Build Frontend
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    # Build if types changed OR frontend changed
+    if: |
+      needs.detect-changes.outputs.types == 'true' ||
+      needs.detect-changes.outputs.frontend == 'true'
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build (dev)
+        run: npm run build:dev
+
+  build-backend:
+    name: 🔨 Build Backend
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    # Build if types changed OR backend changed
+    if: |
+      needs.detect-changes.outputs.types == 'true' ||
+      needs.detect-changes.outputs.backend == 'true'
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 1a27efaacb5e2b77fcaec04e0f6b0a0b
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Verify Wrangler types
+        run: npx wrangler types -e dev
+
+      - name: Test build with code schema
+        run: npx tsc
+
+      - name: Pull real database schema
+        run: NODE_ENV=production npx drizzle-kit pull
+
+      - name: Test build with real schema
+        run: |
+          mv src/db/schema.ts src/db/schema.ts.back
+          cp drizzle/schema.ts src/db/schema.ts
+          npx tsc
+          mv src/db/schema.ts.back src/db/schema.ts
+
+      - name: Final build
+        run: npx tsc
+
+  build-overwatch:
+    name: 🔨 Build Overwatch
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    # Build if types changed OR overwatch changed
+    if: |
+      needs.detect-changes.outputs.types == 'true' ||
+      needs.detect-changes.outputs.overwatch == 'true'
+    timeout-minutes: 15
+    steps:
+      - uses: https://github.com/actions/checkout@v6
+
+      - uses: https://github.com/docker/setup-buildx-action@v4
+
+      - name: Build Docker image (no push)
+        uses: https://github.com/docker/build-push-action@v7
+        with:
+          context: .
+          file: overwatch/Dockerfile
+          push: false
+          tags: zeitvertreib-overwatch:test
+
+  # ============================================
+  # DEPLOY JOBS - Only run on dev branch
+  # ============================================
+
+  deploy-frontend:
+    name: 🚀 Deploy Frontend (Dev)
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-frontend]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/dev' &&
+      (needs.detect-changes.outputs.types == 'true' || needs.detect-changes.outputs.frontend == 'true') &&
+      needs.build-frontend.result == 'success'
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 1a27efaacb5e2b77fcaec04e0f6b0a0b
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build (dev)
+        run: npm run build:dev
+
+      - name: Deploy to Cloudflare (dev)
+        run: npx wrangler deploy -e dev
+
+  deploy-backend:
+    name: 🚀 Deploy Backend (Dev)
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-backend]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/dev' &&
+      (needs.detect-changes.outputs.types == 'true' || needs.detect-changes.outputs.backend == 'true') &&
+      needs.build-backend.result == 'success'
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 1a27efaacb5e2b77fcaec04e0f6b0a0b
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Build
+        run: npx tsc
+
+      - name: Deploy to Cloudflare (dev)
+        run: npx wrangler deploy -e dev
+
+  deploy-overwatch:
+    name: 🚀 Deploy Overwatch (Dev)
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-overwatch]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/dev' &&
+      (needs.detect-changes.outputs.types == 'true' || needs.detect-changes.outputs.overwatch == 'true') &&
+      needs.build-overwatch.result == 'success'
+    timeout-minutes: 20
+
+    steps:
+      - uses: https://github.com/actions/checkout@v6
+
+      - uses: https://github.com/docker/setup-buildx-action@v4
+      - id: downcase
+        name: downcase REPO_OWNER
+        run: |
+          OWNER=${GITHUB_REPOSITORY%%/*}
+          echo "REPO_OWNER=${OWNER,,}" >> $GITHUB_OUTPUT
+
+      - name: Login to Forgejo Container Registry
+        run: |
+          PASSWORD="${{ secrets.REGISTRY_TOKEN }}"
+          if [ -z "$PASSWORD" ]; then
+            PASSWORD="${{ secrets.GITHUB_TOKEN }}"
+          fi
+          echo "$PASSWORD" | docker login git.zeitvertreib.vip \
+            --username "${{ github.repository_owner }}" \
+            --password-stdin
+
+      - name: Build and push Docker image
+        uses: https://github.com/docker/build-push-action@v7
+        with:
+          context: .
+          file: overwatch/Dockerfile
+          push: true
+          tags: git.zeitvertreib.vip/${{ steps.downcase.outputs.REPO_OWNER }}/zeitvertreib-overwatch:dev

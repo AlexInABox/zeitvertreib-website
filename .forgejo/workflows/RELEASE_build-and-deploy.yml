@@ -1,0 +1,350 @@
+name: Build and Deploy (Production)
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  # ============================================
+  # BUILD JOBS - Run in parallel to verify all builds pass
+  # ============================================
+
+  build-types:
+    name: 🔨 Build Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: types
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload types artifact
+        uses: https://github.com/actions/upload-artifact@v3
+        with:
+          name: types-dist
+          path: types/dist/
+
+  build-frontend:
+    name: 🔨 Build Frontend
+    runs-on: ubuntu-latest
+    needs: [build-types]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+  build-backend:
+    name: 🔨 Build Backend
+    runs-on: ubuntu-latest
+    needs: [build-types]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 1a27efaacb5e2b77fcaec04e0f6b0a0b
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Verify Wrangler types
+        run: npx wrangler types -e production
+
+      - name: Test build with code schema
+        run: npx tsc
+
+      - name: Pull real database schema
+        run: NODE_ENV=production npx drizzle-kit pull
+
+      - name: Test build with real schema
+        run: |
+          mv src/db/schema.ts src/db/schema.ts.back
+          cp drizzle/schema.ts src/db/schema.ts
+          npx tsc
+          mv src/db/schema.ts.back src/db/schema.ts
+
+      - name: Final build
+        run: npx tsc
+
+  build-overwatch:
+    name: 🔨 Build Overwatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: https://github.com/actions/checkout@v6
+
+      - uses: https://github.com/docker/setup-buildx-action@v4
+
+      - name: Build Docker image (no push)
+        uses: https://github.com/docker/build-push-action@v7
+        with:
+          context: .
+          file: overwatch/Dockerfile
+          push: false
+          tags: zeitvertreib-overwatch:test
+
+  # ============================================
+  # DEPLOY JOBS - Only run if ALL builds succeed
+  # ============================================
+
+  deploy-frontend:
+    name: 🚀 Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend, build-overwatch]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 1a27efaacb5e2b77fcaec04e0f6b0a0b
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare
+        run: npx wrangler deploy -e production
+
+  deploy-backend:
+    name: 🚀 Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend, build-overwatch]
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 1a27efaacb5e2b77fcaec04e0f6b0a0b
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Build shared types
+        working-directory: types
+        run: npm install && npm run build
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Build
+        run: npx tsc
+
+      - name: Deploy to Cloudflare (prod)
+        run: npx wrangler deploy -e production
+
+  deploy-overwatch:
+    name: 🚀 Deploy Overwatch
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend, build-overwatch]
+    timeout-minutes: 20
+
+    steps:
+      - uses: https://github.com/actions/checkout@v6
+
+      - uses: https://github.com/docker/setup-buildx-action@v4
+
+      - id: downcase
+        name: downcase REPO_OWNER
+        run: |
+          OWNER=${GITHUB_REPOSITORY%%/*}
+          echo "REPO_OWNER=${OWNER,,}" >> $GITHUB_OUTPUT
+
+      - name: Login to Forgejo Container Registry
+        run: |
+          PASSWORD="${{ secrets.REGISTRY_TOKEN }}"
+          if [ -z "$PASSWORD" ]; then
+            PASSWORD="${{ secrets.GITHUB_TOKEN }}"
+          fi
+          echo "$PASSWORD" | docker login git.zeitvertreib.vip \
+            --username "${{ github.repository_owner }}" \
+            --password-stdin
+
+      - id: tags
+        run: |
+          OWNER=${{ steps.downcase.outputs.REPO_OWNER }}
+          IMG="git.zeitvertreib.vip/${OWNER}/zeitvertreib-overwatch"
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "tags=$IMG:latest" >> $GITHUB_OUTPUT
+          else
+            echo "tags=$IMG:${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
+        uses: https://github.com/docker/build-push-action@v7
+        with:
+          context: .
+          file: overwatch/Dockerfile
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+
+  determine-version:
+    name: 📦 Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      build_number: ${{ steps.version.outputs.build_number }}
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Determine version tag
+        id: version
+        run: |
+          # Get the latest build number
+          git fetch --tags
+          LATEST_TAG=$(git tag -l "build-*" --sort=-v:refname | head -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            BUILD_NUMBER=1
+          else
+            # Extract number from build-XXX
+            BUILD_NUMBER=${LATEST_TAG#build-}
+            BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          fi
+
+          NEW_TAG="build-${BUILD_NUMBER}"
+
+          echo "Latest tag: $LATEST_TAG"
+          echo "New tag: $NEW_TAG"
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "previous_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+  extract-changelog:
+    name: 📦 Extract Changelog
+    needs: [determine-version]
+    uses: ./.forgejo/workflows/REUSABLE_extract-changelog.yml
+    with:
+      build_number: ${{ needs.determine-version.outputs.build_number }}
+
+  build-plugins:
+    name: 🔨 Build Plugins
+    uses: ./.forgejo/workflows/REUSABLE_build-c#-plugins.yml
+
+  create-release:
+    name: 📦 Create Release
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend, deploy-overwatch, determine-version, extract-changelog, build-plugins]
+    timeout-minutes: 10
+
+    steps:
+      - name: Download all plugin DLLs
+        uses: https://github.com/actions/download-artifact@v3
+        with:
+          name: all-plugins
+          path: plugins-staging
+
+      - name: Create Release (Forgejo API)
+        env:
+          TAG: ${{ needs.determine-version.outputs.tag }}
+          NAME: Build ${{ needs.determine-version.outputs.build_number }}
+          BODY: ${{ needs.extract-changelog.outputs.changelog }}
+        run: |
+          command -v jq >/dev/null || sudo apt-get install -y jq
+
+          API="$GITHUB_API_URL"
+          REPO="${{ github.repository }}"
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          payload=$(jq -n --arg tag "$TAG" --arg name "$NAME" --arg body "$BODY" \
+            '{tag_name: $tag, name: $name, body: $body, draft: false}')
+
+          release=$(curl -fsS -X POST "$API/repos/$REPO/releases" \
+            -H "Authorization: token $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$payload")
+
+          release_id=$(echo "$release" | jq -r .id)
+
+          for f in plugins-staging/*.dll; do
+            [ -e "$f" ] || continue
+            echo "Uploading $(basename "$f")"
+            curl -fsS -X POST "$API/repos/$REPO/releases/$release_id/assets?name=$(basename "$f")" \
+              -H "Authorization: token $TOKEN" \
+              -F "attachment=@$f"
+          done
+
+          echo "Release created: ${{ github.server_url }}/$REPO/releases/tag/$TAG"
