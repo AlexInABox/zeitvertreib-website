@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DiscordStatsComponent } from '../../../components/discord-stats/discord-stats.component';
 
@@ -7,21 +7,22 @@ import { DiscordStatsComponent } from '../../../components/discord-stats/discord
   standalone: true,
   imports: [CommonModule, DecimalPipe, DiscordStatsComponent],
   templateUrl: './player-info-card.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./player-info-card.css'],
 })
 export class PlayerInfoCardComponent {
-  @Input() userStatistics: any;
+  readonly userStatistics = input<any>();
 
   get playtimeFormatted(): string {
-    const playtime = this.userStatistics?.playtime || 0;
+    const playtime = this.userStatistics()?.playtime || 0;
     const hours = Math.floor(playtime / 3600);
     const minutes = Math.floor((playtime % 3600) / 60);
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   }
 
   get leaderboardText(): string {
-    return this.userStatistics?.leaderboardposition
-      ? `Platz #${this.userStatistics.leaderboardposition}`
+    return this.userStatistics()?.leaderboardposition
+      ? `Platz #${this.userStatistics()?.leaderboardposition}`
       : 'NICHT GENÜGEND DATEN';
   }
 

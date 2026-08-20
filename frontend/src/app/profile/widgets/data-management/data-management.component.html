@@ -1,0 +1,198 @@
+<div class="dense-card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi pi-shield-check card-icon icon-purple"></i>
+      <div>
+        <h2>Daten & Datenschutz</h2>
+        <span class="card-subtitle">DSGVO-Verwaltung & Export</span>
+      </div>
+    </div>
+  </div>
+  <div class="dense-body privacy-body">
+    <!-- EXPORT DATA BUTTON ITEM -->
+    <button class="action-item-button" [disabled]="isTakeoutDisabled()" (click)="openTakeoutModal()">
+      <div class="action-item-icon icon-blue-bg">
+        <i class="pi pi-download"></i>
+      </div>
+      <div class="action-item-text">
+        <span class="action-title">Daten exportieren</span>
+        @if (!isTakeoutDisabled()) {
+          <span class="action-desc">Sämtliche Account-Daten als JSON anfordern</span>
+        }
+        @if (isTakeoutDisabled() && lastTakeoutAt > 0) {
+          <span class="action-desc">Zuletzt angefordert: {{ formatDate(lastTakeoutAt) }}</span>
+        }
+      </div>
+      @if (isTakeoutDisabled() && lastTakeoutAt > 0) {
+        <span class="badge badge-warning">{{ getDaysUntilNextTakeout() }}d Cooldown</span>
+      }
+      @if (!isTakeoutDisabled()) {
+        <i class="pi pi-chevron-right action-arrow"></i>
+      }
+    </button>
+
+    <!-- ACCOUNT DELETION TOGGLE ITEM -->
+    <div
+      class="action-item-toggle"
+      [class.is-enabled]="isDeletionEnabled()"
+      [class.is-disabled]="deletionLoading"
+      (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())"
+    >
+      <div class="action-item-icon icon-danger-bg">
+        <i class="pi pi-trash"></i>
+      </div>
+      <div class="action-item-text">
+        <span class="action-title text-danger">Account löschen</span>
+        @if (!isDeletionEnabled()) {
+          <span class="action-desc">Account für die Löschung freigeben</span>
+        }
+        @if (isDeletionEnabled()) {
+          <span class="action-desc">Freigegeben am {{ formatDate(deletionEnabledAt) }}</span>
+        }
+      </div>
+      <div class="toggle-switch-ui">
+        <input type="checkbox" [checked]="isDeletionEnabled()" [disabled]="deletionLoading" tabindex="-1" />
+        <span class="toggle-slider-ui"></span>
+      </div>
+    </div>
+
+    <!-- DELETION INSTRUCTIONS BOX -->
+    @if (isDeletionEnabled()) {
+      <div class="deletion-guide-box">
+        <div class="guide-header">
+          <i class="pi pi-envelope"></i>
+          <span>Löschanfrage abschließen</span>
+        </div>
+        <p class="guide-text">
+          Sende eine E-Mail an
+          <a
+            [href]="
+              'mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20' + userId()
+            "
+            class="support-link"
+          >
+            support&#64;zeitvertreib.vip
+          </a>
+          mit deiner User-ID:
+        </p>
+        <div class="userid-copy-row">
+          <code class="userid-code">{{ userId() }}</code>
+          <button class="btn-icon btn-icon-secondary" (click)="copyUserId()" title="User-ID kopieren">
+            <i class="pi" [class.pi-copy]="!copiedUserId" [class.pi-check]="copiedUserId"></i>
+          </button>
+        </div>
+        <p class="guide-subtext">Unser Team bearbeitet die Löschung innerhalb von 30 Tagen.</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- TAKEOUT MODAL -->
+@if (showTakeoutModal) {
+  <div class="modal-backdrop" (click)="closeTakeoutModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-card-header">
+        <div class="modal-card-title">
+          <i class="pi pi-download icon-blue"></i>
+          <h3>Daten exportieren</h3>
+        </div>
+        <button class="btn-modal-close" (click)="closeTakeoutModal()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="modal-card-body">
+        @if (takeoutSuccess) {
+          <div class="modal-success-box">
+            <i class="pi pi-check-circle success-big-icon"></i>
+            <h4>Export angefordert!</h4>
+            <p>Du erhältst in Kürze eine E-Mail mit all deinen gespeicherten Daten als JSON-Datei.</p>
+          </div>
+        }
+        @if (!takeoutSuccess) {
+          <div class="modal-body-stack">
+            <p class="modal-intro-text">
+              Wir senden dir eine vollständige Kopie deiner Nutzerdaten (Spielstatistiken, Sitzungen, Uploads).
+            </p>
+            <div class="form-field">
+              <label for="takeout-email">E-Mail-Adresse für den Empfang</label>
+              <input
+                type="email"
+                id="takeout-email"
+                class="dense-input"
+                [(ngModel)]="takeoutEmail"
+                placeholder="deine@email.de"
+                [disabled]="takeoutLoading"
+                (keyup.enter)="submitTakeout()"
+                autofocus
+              />
+            </div>
+            @if (takeoutError) {
+              <div class="dense-notice notice-error">
+                {{ takeoutError }}
+              </div>
+            }
+            <div class="modal-note-box">
+              <i class="pi pi-info-circle note-icon"></i>
+              <span>Ein Daten-Export kann alle 30 Tage angefordert werden.</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (!takeoutSuccess) {
+        <div class="modal-card-footer">
+          <button class="btn btn-secondary-soft" (click)="closeTakeoutModal()" [disabled]="takeoutLoading">
+            Abbrechen
+          </button>
+          <button
+            class="btn btn-secondary-soft btn-confirm"
+            (click)="submitTakeout()"
+            [disabled]="takeoutLoading || !takeoutEmail"
+          >
+            {{ takeoutLoading ? 'Wird gesendet...' : 'Export anfordern' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- DELETION MODAL -->
+@if (showDeletionModal) {
+  <div class="modal-backdrop" (click)="closeDeletionModal()">
+    <div class="modal-card modal-card-danger" (click)="$event.stopPropagation()">
+      <div class="modal-card-header header-danger">
+        <div class="modal-card-title text-danger">
+          <i class="pi pi-exclamation-triangle"></i>
+          <h3>Account zur Löschung markieren</h3>
+        </div>
+        <button class="btn-modal-close" (click)="closeDeletionModal()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="modal-card-body">
+        <div class="danger-warning-box">
+          <h4>Achtung! Unwiderrufliche Aktion</h4>
+          <p>
+            Sobald du den Toggle aktivierst und eine E-Mail an den Support sendest, werden alle Accountdaten
+            <strong>unwiderruflich gelöscht</strong>.
+          </p>
+        </div>
+        <p class="modal-intro-text">Gelöscht werden unter anderem:</p>
+        <ul class="danger-list">
+          <li>Spielstatistiken, Level & Ränge</li>
+          <li>ZVCoins Guthaben & Transaktionen</li>
+          <li>Hochgeladene Sprays & Profil-Anpassungen</li>
+          <li>Sitzungsprotokolle & Discord-Verknüpfung</li>
+        </ul>
+      </div>
+
+      <div class="modal-card-footer">
+        <button class="btn btn-secondary-soft" (click)="closeDeletionModal()" [disabled]="deletionLoading">
+          Abbrechen
+        </button>
+        <button class="btn btn-danger" (click)="confirmEnableDeletion()" [disabled]="deletionLoading">
+          {{ deletionLoading ? 'Wird aktiviert...' : 'Zur Löschung freigeben' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

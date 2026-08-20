@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-domain-warning',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './domain-warning.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./domain-warning.component.css'],
 })
 export class DomainWarningComponent implements OnInit {

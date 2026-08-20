@@ -1,0 +1,45 @@
+<div class="dense-card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi pi-palette card-icon icon-pink"></i>
+      <div>
+        <h2>Sprays</h2>
+        <span class="card-subtitle">{{ sprays().length }} hochgeladene Texturen</span>
+      </div>
+    </div>
+    @if (sprayBanned()) {
+      <span class="badge badge-danger">Spray-Gebannt</span>
+    }
+  </div>
+  <div class="dense-list">
+    @for (spray of sprays(); track spray.id || $index) {
+      <div class="dense-list-item spray-row">
+        <div class="spray-main">
+          @if (editingSprayId !== spray.id) {
+            <span class="spray-title">{{ spray.name }}</span>
+          }
+          @if (editingSprayId === spray.id) {
+            <input class="dense-input spray-input" [(ngModel)]="editingSprayName" autofocus />
+          }
+          <span class="meta-date">{{ getDateDisplay(spray.uploadedAt) }}</span>
+        </div>
+        @if (isManageView()) {
+          <div class="spray-actions">
+            @if (editingSprayId !== spray.id) {
+              <button class="btn-icon btn-icon-secondary" (click)="startEditSpray(spray)" title="Name bearbeiten">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="btn-icon btn-icon-danger" (click)="deleteSpray(spray.id)" title="Spray löschen">
+                <i class="pi pi-trash"></i>
+              </button>
+            }
+            @if (editingSprayId === spray.id) {
+              <button class="btn-xs btn-secondary-soft" (click)="cancelEditSpray()">Abbrechen</button>
+              <button class="btn-xs btn-primary" (click)="saveSprayEdit(spray.id)">Speichern</button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

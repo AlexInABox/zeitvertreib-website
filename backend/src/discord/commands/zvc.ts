@@ -4,6 +4,7 @@ import { BaseCommand } from '../base-command.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { playerdata } from '../../db/schema.js';
+import { decreaseZvc, increaseZvc } from '../../db/zvc.js';
 
 /**
  * Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
@@ -299,16 +300,10 @@ export class ZvcCommand extends BaseCommand {
         return;
       }
 
-      await db.batch([
-        db
-          .update(playerdata)
-          .set({ experience: senderBalance - totalCost })
-          .where(eq(playerdata.id, senderSteamId)),
-        db
-          .update(playerdata)
-          .set({ experience: recipientBalance + amount })
-          .where(eq(playerdata.id, recipientSteamId)),
-      ]);
+      await db.transaction(async (tx) => {
+        await decreaseZvc(tx, { id: senderSteamId }, totalCost);
+        await increaseZvc(tx, { id: recipientSteamId }, amount);
+      });
 
       const newRecipientBalance = recipientBalance + amount;
 

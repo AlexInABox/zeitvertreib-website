@@ -9,3 +9,5 @@ zeitvertreibplugins.sln.DotSettings.user
 */.DS_Store
 node_modules/
 **/.env
+skills-lock.json
+.gemini/

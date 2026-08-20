@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,12 +9,10 @@ import type { GetAdventCalendarResponse, RedeemAdventDoorRequest, RedeemAdventDo
   providedIn: 'root',
 })
 export class AdventCalendarService {
-  private apiUrl = environment.apiUrl;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {}
+  private apiUrl = environment.apiUrl;
 
   private getAuthHeaders(): HttpHeaders {
     const sessionToken = this.authService.getSessionToken();

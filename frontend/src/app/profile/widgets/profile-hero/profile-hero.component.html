@@ -1,0 +1,70 @@
+<div class="profile-hero">
+  <div class="hero-main">
+    <a [href]="user()?.avatarUrl" target="_blank" class="avatar-wrapper" title="Avatar im neuen Tab öffnen">
+      @if (user()?.avatarUrl) {
+        <img [src]="user()?.avatarUrl" alt="Avatar" class="hero-avatar" />
+      }
+      @if (!user()?.avatarUrl) {
+        <div class="hero-avatar-placeholder">
+          <i class="pi pi-user"></i>
+        </div>
+      }
+    </a>
+    <div class="hero-identity">
+      <div class="identity-header">
+        <h1 class="username">{{ user()?.username || user()?.steamId }}</h1>
+        @if (isManageView()) {
+          <span class="badge badge-admin"><i class="pi pi-shield"></i> Admin-Ansicht</span>
+        }
+      </div>
+      <div class="steamid-row">
+        <code class="steamid-text">{{ user()?.steamId }}</code>
+        <button class="btn-copy" (click)="copySteamId()" title="SteamID kopieren">
+          <i class="pi" [class.pi-copy]="!copiedSteamId" [class.pi-check]="copiedSteamId"></i>
+          <span>{{ copiedSteamId ? 'Kopiert!' : 'Kopieren' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO STATS -->
+  <div class="hero-stats-group">
+    <div class="hero-stats">
+      @if (user()?.coins !== undefined) {
+        <div class="hero-stat-pill">
+          <span class="pill-label">Coins</span>
+          <span class="pill-value coin-value"><i class="pi pi-dollar"></i> {{ user()?.coins }}</span>
+        </div>
+      }
+      @if (user()?.discordId || user()?.discordAvatarUrl) {
+        <div class="hero-stat-pill">
+          <span class="pill-label">Discord</span>
+          <div class="pill-value discord-value">
+            @if (user()?.discordAvatarUrl) {
+              <img [src]="user()?.discordAvatarUrl" alt="Discord Avatar" class="discord-avatar" />
+            }
+            <span class="discord-id">{{ user()?.discordId || 'Verbunden' }}</span>
+          </div>
+        </div>
+      }
+      @if (user()?.firstSeen) {
+        <div class="hero-stat-pill">
+          <span class="pill-label">Zuerst gesehen</span>
+          <span class="pill-value date-pill">{{ getDateDisplay(user()?.firstSeen) }}</span>
+        </div>
+      }
+      @if (user()?.lastSeen) {
+        <div class="hero-stat-pill">
+          <span class="pill-label">Zuletzt gesehen</span>
+          <span class="pill-value date-pill">{{ getDateDisplay(user()?.lastSeen) }}</span>
+        </div>
+      }
+    </div>
+
+    @if (isSelf()) {
+      <div class="hero-actions">
+        <button class="btn btn-danger-soft" (click)="logout()"><i class="pi pi-sign-out"></i> Abmelden</button>
+      </div>
+    }
+  </div>
+</div>

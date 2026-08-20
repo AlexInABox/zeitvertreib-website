@@ -37,4 +37,4 @@ runs:
         CLA_BRANCH: ${{ inputs.cla-branch }}
         DOCUMENT_URL: ${{ inputs.document-url }}
       run: |
-        deno run --allow-net --allow-read --allow-env --allow-write "$GITHUB_ACTION_PATH/src/main.ts"
+        deno run --allow-net --allow-read --allow-env --allow-write "$GITHUB_ACTION_PATH/main.ts"

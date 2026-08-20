@@ -1,0 +1,85 @@
+<div class="dense-card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi pi-desktop card-icon icon-blue"></i>
+      <div>
+        <h2>Aktive Sitzungen</h2>
+        <span class="card-subtitle">Eingeloggte Geräte & Browser</span>
+      </div>
+    </div>
+    <div class="header-right-actions">
+      <button class="btn-toggle-ip" (click)="toggleIps()">
+        <i class="pi" [class.pi-eye]="!showIps" [class.pi-eye-slash]="showIps"></i>
+        <span>{{ showIps ? 'IPs verbergen' : 'IPs anzeigen' }}</span>
+      </button>
+      @if (sessions.length > 0) {
+        <span class="badge badge-info">{{ sessions.length }}</span>
+      }
+    </div>
+  </div>
+
+  @if (loadingSessions) {
+    <div class="card-loading-inline">
+      <div class="loading-spinner small"></div>
+      <span>Lade Sitzungen...</span>
+    </div>
+  }
+
+  @if (!loadingSessions && sessions.length > 0) {
+    <div class="sessions-table">
+      @for (session of sessions; track session.id) {
+        <div
+          class="session-row-dense"
+          [class.is-current]="isCurrentSession(session.id)"
+          [class.is-stale]="!isCurrentSession(session.id) && isStale(session.lastLoginAt)"
+        >
+          <div class="device-icon-box">
+            <span class="device-emoji">{{ getDeviceIcon(session.userAgent) }}</span>
+          </div>
+          <div class="session-info-main">
+            <div class="session-name-row">
+              <span class="browser-name">{{ getBrowserName(session.userAgent) }}</span>
+              @if (isCurrentSession(session.id)) {
+                <span class="badge badge-success-sm">Aktuelle Sitzung</span>
+              }
+              @if (!isCurrentSession(session.id) && isStale(session.lastLoginAt)) {
+                <span class="badge badge-warning-sm">Inaktiv</span>
+              }
+            </div>
+            <div class="session-meta-row">
+              <code class="ip-address">{{ getIpDisplay(session.ipAddress) }}</code>
+              <span class="meta-dot">•</span>
+              <span class="login-time" [class.text-warning]="isStale(session.lastLoginAt)">
+                {{ getRelativeTime(session.lastLoginAt) }}
+              </span>
+              <span class="meta-dot">•</span>
+              <span class="created-date">{{ formatDate(session.createdAt) }}</span>
+            </div>
+          </div>
+          @if (!isCurrentSession(session.id)) {
+            <button
+              class="btn-icon btn-icon-danger"
+              (click)="revokeSession(session.id)"
+              [disabled]="revokingSession === session.id"
+              title="Sitzung beenden"
+            >
+              @if (revokingSession !== session.id) {
+                <i class="pi pi-trash"></i>
+              }
+              @if (revokingSession === session.id) {
+                <span class="loading-spinner tiny"></span>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loadingSessions && sessions.length === 0) {
+    <div class="empty-state-inline">
+      <i class="pi pi-lock"></i>
+      <span>Keine aktiven Sitzungen gefunden</span>
+    </div>
+  }
+</div>

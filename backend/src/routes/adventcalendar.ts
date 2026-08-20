@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
-import { createResponse, validateSession, isDonator, increment } from '../utils.js';
+import { createResponse, validateSession, isDonator } from '../utils.js';
+import { getZvc, increaseZvc } from '../db/zvc.js';
 
 // 2026 Advent rewards with exciting bumps and Christmas bonus - if this is still here in 2027 thats awkward lol
 const ADVENT_REWARDS: Record<number, number> = {
@@ -193,19 +194,11 @@ export async function handleRedeemAdventDoor(request: Request, env: Env): Promis
     .where(eq(schema.adventCalendar.userId, userId));
 
   // Get current ZVC
-  const playerResult = await db.select().from(schema.playerdata).where(eq(schema.playerdata.id, userId));
-
-  const currentZvc = playerResult[0]?.experience ?? 0;
+  const currentZvc = (await getZvc(db, { id: userId })) ?? 0;
   const newZvc = currentZvc + reward;
 
   // Update ZVC
-  await db
-    .update(schema.playerdata)
-    .set({
-      experience: increment(schema.playerdata.experience, reward),
-    })
-    .where(eq(schema.playerdata.id, userId))
-    .run();
+  await increaseZvc(db, { id: userId }, reward);
 
   return createResponse(
     {

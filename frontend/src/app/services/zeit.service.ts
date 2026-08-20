@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,12 +9,10 @@ import type { ZeitGetResponse } from '@zeitvertreib/types';
   providedIn: 'root',
 })
 export class ZeitService {
-  private partnerApiKey: string | null = null;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {}
+  private partnerApiKey: string | null = null;
 
   setPartnerApiKey(key: string | null): void {
     this.partnerApiKey = key;

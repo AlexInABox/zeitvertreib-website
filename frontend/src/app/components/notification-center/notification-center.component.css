@@ -8,19 +8,66 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  background: rgba(var(--p-menubar-background-rgb), 0.05);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #000000;
   cursor: pointer;
-  color: var(--p-menubar-item-color);
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+:host-context(.my-app-dark) .notification-bell-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
 .notification-bell-btn:hover {
-  background: rgba(var(--p-menubar-background-rgb), 0.1);
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--p-primary-color);
   transform: scale(1.05);
+}
+
+:host-context(.my-app-dark) .notification-bell-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--p-primary-color);
+}
+
+.notification-bell-icon {
+  font-size: 0.95rem;
+}
+
+.notification-bell-btn.has-unread {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #ef4444 !important;
+  animation: sonarr-pulse 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:host-context(.my-app-dark) .notification-bell-btn.has-unread {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #f87171 !important;
+}
+
+@keyframes sonarr-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(239, 68, 68, 0.35),
+      0 0 6px rgba(239, 68, 68, 0.2);
+  }
+  70% {
+    box-shadow:
+      0 0 0 7px rgba(239, 68, 68, 0),
+      0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(239, 68, 68, 0),
+      0 0 6px rgba(239, 68, 68, 0.2);
+  }
 }
 
 .notification-panel {

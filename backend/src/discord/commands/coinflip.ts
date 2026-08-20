@@ -1,8 +1,7 @@
 import { EmbedBuilder } from '@discordjs/builders';
 import { BaseCommand } from '../base-command.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
-import { playerdata } from '../../db/schema.js';
+import { getZvc } from '../../db/zvc.js';
 
 export class CoinflipCommand extends BaseCommand {
   override name = 'münzwurf';
@@ -38,16 +37,12 @@ export class CoinflipCommand extends BaseCommand {
       return;
     }
 
-    // Check if user has enough ZVC using Drizzle ORM
+    // Check if user has enough ZVC
     const db = drizzle(env.ZEITVERTREIB_DATA);
-    const userBalanceResult = await db
-      .select({ experience: playerdata.experience })
-      .from(playerdata)
-      .where(eq(playerdata.discordId, userId))
-      .limit(1);
+    const currentBalance = await getZvc(db, { discordId: userId });
 
     // Check if user account is linked
-    if (userBalanceResult.length === 0) {
+    if (currentBalance === null) {
       await helpers.reply({
         embeds: [
           {
@@ -66,8 +61,6 @@ export class CoinflipCommand extends BaseCommand {
       });
       return;
     }
-
-    const currentBalance = userBalanceResult[0]?.experience || 0;
 
     if (currentBalance < amount) {
       await helpers.reply(

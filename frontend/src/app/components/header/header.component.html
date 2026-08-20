@@ -48,6 +48,11 @@
                     <i [class]="subItem.icon"></i>
                     <span>{{ subItem.label }}</span>
                   </a>
+                } @else if (subItem['command']) {
+                  <div class="dropdown-item cursor-pointer" (click)="onSubItemClick(subItem, $event)">
+                    <i [class]="subItem.icon"></i>
+                    <span>{{ subItem.label }}</span>
+                  </div>
                 }
               }
             </div>

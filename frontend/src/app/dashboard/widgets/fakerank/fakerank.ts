@@ -1,5 +1,5 @@
-import { Component, OnInit, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectionStrategy, input } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -16,12 +16,13 @@ import type {
 @Component({
   selector: 'app-fakerank',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './fakerank.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./fakerank.css'],
 })
 export class FakerankComponent implements OnInit {
-  @Input() isDonator = false;
+  readonly isDonator = input(false);
 
   currentFakerankId: number | null = null;
   currentFakerank: string | null = null;

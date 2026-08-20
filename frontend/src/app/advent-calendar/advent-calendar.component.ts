@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+
 import { RouterModule } from '@angular/router';
 import { AdventCalendarService } from '../services/advent-calendar.service';
 import { AuthService } from '../services/auth.service';
@@ -9,11 +9,15 @@ import type { AdventCalendarDoor, GetAdventCalendarResponse, RedeemAdventDoorRes
 @Component({
   selector: 'app-advent-calendar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './advent-calendar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./advent-calendar.component.css'],
 })
 export class AdventCalendarComponent implements OnInit {
+  private adventCalendarService = inject(AdventCalendarService);
+  private authService = inject(AuthService);
+
   doors: AdventCalendarDoor[] = [];
   isLoading = true;
   hasError = false;
@@ -30,10 +34,7 @@ export class AdventCalendarComponent implements OnInit {
   private doorTilts: Map<number, number> = new Map();
   private doorOffsets: Map<number, number> = new Map();
 
-  constructor(
-    private adventCalendarService: AdventCalendarService,
-    private authService: AuthService,
-  ) {
+  constructor() {
     this.generateSnowflakes();
     this.generateDoorStyles();
     this.authService.currentUserData$.subscribe((data: UserData | null) => {

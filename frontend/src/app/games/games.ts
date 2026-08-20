@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -83,9 +83,12 @@ interface LuckyWheelResult {
   selector: 'app-games',
   imports: [CommonModule, FormsModule],
   templateUrl: './games.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./games.css'],
 })
 export class GamesComponent implements OnInit, OnDestroy {
+  authService = inject(AuthService);
+
   // Roulette wheel constants - European roulette sequence (clockwise from 0)
   static readonly ROULETTE_WHEEL_SEQUENCE = [
     0, 26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17, 25,
@@ -238,17 +241,7 @@ export class GamesComponent implements OnInit, OnDestroy {
   private themeService = inject(ThemeService);
   private zvcService = inject(ZvcService);
 
-  constructor(public authService: AuthService) {
-    this.loadUserStats();
-    this.loadSlotMachineInfo();
-    this.loadLuckyWheelInfo();
-    this.loadChickenCrossInfo();
-    this.loadChickenCrossActive();
-    this.loadRouletteInfo();
-    this.loadWinLog();
-    this.loadLuckyWheelSpinLog();
-    this.loadChickenCrossHistory();
-
+  constructor() {
     // Register roulette sounds
     this.audioService.register('roulette.spin', '/assets/sounds/roulette-spin.mp3', {
       loop: true,
@@ -269,6 +262,16 @@ export class GamesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadUserStats();
+    this.loadSlotMachineInfo();
+    this.loadLuckyWheelInfo();
+    this.loadChickenCrossInfo();
+    this.loadChickenCrossActive();
+    this.loadRouletteInfo();
+    this.loadWinLog();
+    this.loadLuckyWheelSpinLog();
+    this.loadChickenCrossHistory();
+
     // Initialize slot machine with question marks
     setTimeout(() => {
       this.initializeSlotMachine();
@@ -805,11 +808,11 @@ export class GamesComponent implements OnInit, OnDestroy {
   }
 
   trackByWinLogId(index: number, entry: SlotWinLogEntry): number {
-    return entry.id;
+    return entry.id || index;
   }
 
   trackByWheelSpinId(index: number, entry: LuckyWheelSpinLogEntry): number {
-    return entry.id;
+    return entry.id || index;
   }
 
   // ===== LUCKY WHEEL METHODS =====
@@ -1333,7 +1336,7 @@ export class GamesComponent implements OnInit, OnDestroy {
   }
 
   trackByChickenHistoryId(index: number, entry: (typeof this.chickenCrossHistory)[0]): number {
-    return entry.seed;
+    return entry.timestamp || entry.seed || index;
   }
 
   canAffordChickenCross(): boolean {
@@ -1937,7 +1940,7 @@ export class GamesComponent implements OnInit, OnDestroy {
   }
 
   trackByRouletteSpinId(index: number, entry: (typeof this.rouletteSpinLog)[0]): number {
-    return entry.id;
+    return entry.id || index;
   }
 
   getRouletteSpinTypeInfo(entry: (typeof this.rouletteSpinLog)[0]): { emoji: string; label: string; color: string } {

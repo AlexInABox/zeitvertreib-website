@@ -1,20 +1,22 @@
 <div class="player-card">
   <!-- Avatar Header -->
-  <div class="player-avatar-container" *ngIf="userStatistics?.avatarFull">
+  @if (userStatistics()?.avatarFull) {
+  <div class="player-avatar-container">
     <img
       class="player-avatar"
-      [src]="getAvatarUrl(userStatistics.avatarFull)"
-      [alt]="userStatistics.username || 'Player Avatar'"
+      [src]="getAvatarUrl(userStatistics()?.avatarFull)"
+      [alt]="userStatistics()?.username || 'Player Avatar'"
       loading="lazy"
       (error)="onImageError($event)"
     />
   </div>
+  }
 
   <!-- Player Info -->
   <div class="p-6">
     <h2 class="text-2xl font-bold text-white mb-2 cardHeader">
       Willkommen zurück,<br />
-      <span class="text-gradient">{{ userStatistics?.username || 'Spieler' }}</span>
+      <span class="text-gradient">{{ userStatistics()?.username || 'Spieler' }}</span>
     </h2>
 
     <p class="text-lg text-gray-300 mb-6">{{ leaderboardText }}</p>
@@ -23,7 +25,7 @@
     <div class="space-y-3">
       <div class="player-info-item">
         <span class="player-info-label">Gespielte Runden:</span>
-        <span class="player-info-value">{{ userStatistics?.roundsplayed | number: '1.0-0' }}</span>
+        <span class="player-info-value">{{ userStatistics()?.roundsplayed | number: '1.0-0' }}</span>
       </div>
 
       <div class="player-info-item">
@@ -33,27 +35,27 @@
 
       <div class="player-info-item">
         <span class="player-info-label">Benutzte Medkits:</span>
-        <span class="player-info-value">{{ userStatistics?.usedmedkits | number: '1.0-0' }}</span>
+        <span class="player-info-value">{{ userStatistics()?.usedmedkits | number: '1.0-0' }}</span>
       </div>
 
       <div class="player-info-item">
         <span class="player-info-label">Getrunkene Colas:</span>
-        <span class="player-info-value">{{ userStatistics?.usedcolas | number: '1.0-0' }}</span>
+        <span class="player-info-value">{{ userStatistics()?.usedcolas | number: '1.0-0' }}</span>
       </div>
 
       <div class="player-info-item">
         <span class="player-info-label">Pocket Escapes:</span>
-        <span class="player-info-value">{{ userStatistics?.pocketescapes | number: '1.0-0' }}</span>
+        <span class="player-info-value">{{ userStatistics()?.pocketescapes | number: '1.0-0' }}</span>
       </div>
 
       <div class="player-info-item">
         <span class="player-info-label">Benutzte Adrenalin:</span>
-        <span class="player-info-value">{{ userStatistics?.usedadrenaline | number: '1.0-0' }}</span>
+        <span class="player-info-value">{{ userStatistics()?.usedadrenaline | number: '1.0-0' }}</span>
       </div>
 
       <div class="player-info-item">
         <span class="player-info-label">Snake Highscore:</span>
-        <span class="player-info-value">{{ userStatistics?.snakehighscore | number: '1.0-0' }}</span>
+        <span class="player-info-value">{{ userStatistics()?.snakehighscore | number: '1.0-0' }}</span>
       </div>
     </div>
 

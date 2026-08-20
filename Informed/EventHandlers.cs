@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Threading.Tasks;
 using HarmonyLib;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
@@ -104,28 +105,33 @@ public static class EventHandlers
     {
         Utils.SendHeaderToPlayer(ev);
 
-        GenerateQrCodeForUser(ev.Player);
+        if (ev.Player.DoNotTrack)
+            return;
+
+        _ = GenerateQrCodeForUser(ev.Player);
     }
 
-    private static void GenerateQrCodeForUser(Player player)
+    private static async Task GenerateQrCodeForUser(Player player)
     {
+        if (player.DoNotTrack)
+            return;
+
         float xOffset = player.EdgeOffset() + 405f;
         const float yOffset = -5f;
 
         RueDisplay display = RueDisplay.Get(player);
 
-        long userIdNum = long.Parse(player.UserId.Split('@')[0]);
-        string content = userIdNum.ToString("D10") + TrackedAPI.GetCurrentRoundNumber();
-        Logger.Warn($"User {player.Nickname} got identifier of: {content}");
+        int roundNumber = TrackedAPI.GetCurrentRoundNumber();
+        string content = await Utils.GetTrackingIdentifier(player, roundNumber);
+        if (content == string.Empty)
+            return;
+
+        Logger.Info($"User {player.Nickname} got tracking identifier of: {content}");
 
         using QRCodeGenerator generator = new();
         QRCodeData data = generator.CreateQrCode(
             content,
-            QRCodeGenerator.ECCLevel.L,
-            false,
-            false,
-            QRCodeGenerator.EciMode.Default,
-            1 // force size
+            QRCodeGenerator.ECCLevel.H
         );
 
         for (int y = 0; y < data.ModuleMatrix.Count; y++)

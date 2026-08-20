@@ -1,0 +1,29 @@
+<div class="dense-card card-warning-border">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi pi-ban card-icon icon-danger"></i>
+      <div>
+        <h2>Coin-Beschränkung</h2>
+        <span class="card-subtitle">Senden von Coins deaktiviert</span>
+      </div>
+    </div>
+  </div>
+  <div class="dense-body">
+    <div class="info-row">
+      <span class="info-label">Grund</span>
+      <span class="info-value text-warning">{{ coinRestriction()?.reason }}</span>
+    </div>
+    @if (!coinRestriction()?.isPermanent) {
+      <div class="info-row">
+        <span class="info-label">Gültig bis</span>
+        <span class="info-value">{{ getDateDisplay(coinRestriction()?.restrictedUntil) }}</span>
+      </div>
+    }
+    @if (coinRestriction()?.isPermanent) {
+      <div class="info-row">
+        <span class="info-label">Dauer</span>
+        <span class="info-value text-danger font-semibold">Dauerhaft</span>
+      </div>
+    }
+  </div>
+</div>

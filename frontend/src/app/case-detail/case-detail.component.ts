@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,9 +25,17 @@ import { MedalService } from '../services/medal.service';
   selector: 'app-case-detail',
   imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, FileUploadModule],
   templateUrl: './case-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-detail.component.css'],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'onEscapeKey()',
+  },
 })
 export class CaseDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   caseId = '';
   caseData: GetCaseMetadataGetResponse | null = null;
   filteredFiles: GetCaseMetadataGetResponse['files'] = [];
@@ -131,12 +139,6 @@ export class CaseDetailComponent implements OnInit {
   private authService = inject(AuthService);
   private medalService = inject(MedalService);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-  ) {}
-
-  @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
@@ -147,7 +149,6 @@ export class CaseDetailComponent implements OnInit {
     }
   }
 
-  @HostListener('document:keydown.escape')
   onEscapeKey() {
     if (this.viewerOpen) {
       this.closeViewer();

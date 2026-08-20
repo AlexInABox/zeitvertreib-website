@@ -1,665 +1,720 @@
 <div class="case-detail-container">
   <div class="content-wrapper">
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">Fall wird geladen...</p>
-      <div class="loading-dots">
-        <span></span>
-        <span></span>
-        <span></span>
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Fall wird geladen...</p>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="error-state">
-      <div class="error-icon-wrapper">
-        <i class="pi pi-exclamation-triangle"></i>
-      </div>
-      <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
-      <p class="error-message">{{ errorMessage }}</p>
-      <button
-        pButton
-        label="Erneut versuchen"
-        icon="pi pi-refresh"
-        class="retry-button"
-        (click)="loadCaseData()"
-      ></button>
-    </div>
-
-    <!-- Main Content -->
-    <div *ngIf="!isLoading && !hasError" class="main-content">
-      <!-- Header Section -->
-      <div class="header-section">
+    @if (hasError && !isLoading) {
+      <div class="error-state">
+        <div class="error-icon-wrapper">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
+        <p class="error-message">{{ errorMessage }}</p>
         <button
           pButton
-          icon="pi pi-arrow-left"
-          label="Zurück zu Fällen"
-          class="back-button"
-          (click)="goBack()"
+          label="Erneut versuchen"
+          icon="pi pi-refresh"
+          class="retry-button"
+          (click)="loadCaseData()"
         ></button>
+      </div>
+    }
 
-        <div class="header-content">
-          <div class="title-area">
-            <div class="title-wrapper">
-              <i class="pi pi-folder-open header-icon"></i>
-              <div class="title-text">
-                <h1 class="page-title">
-                  <span class="nickname">{{ caseData?.title || formatCaseName(caseId) }}</span>
-                  <span class="case-id" *ngIf="caseData?.title">#{{ caseId }}</span>
-                  <!-- Creator chip -->
-                  <div *ngIf="caseData?.createdBy" class="header-creator">
-                    <div class="creator-chip-container">
-                      <div class="creator-label-icon">
-                        <span class="creator-label">Erstellt von</span>
+    <!-- Main Content -->
+    @if (!isLoading && !hasError) {
+      <div class="main-content">
+        <!-- Header Section -->
+        <div class="header-section">
+          <button
+            pButton
+            icon="pi pi-arrow-left"
+            label="Zurück zu Fällen"
+            class="back-button"
+            (click)="goBack()"
+          ></button>
+          <div class="header-content">
+            <div class="title-area">
+              <div class="title-wrapper">
+                <i class="pi pi-folder-open header-icon"></i>
+                <div class="title-text">
+                  <h1 class="page-title">
+                    <span class="nickname">{{ caseData?.title || formatCaseName(caseId) }}</span>
+                    @if (caseData?.title) {
+                      <span class="case-id">#{{ caseId }}</span>
+                    }
+                    <!-- Creator chip -->
+                    @if (caseData?.createdBy) {
+                      <div class="header-creator">
+                        <div class="creator-chip-container">
+                          <div class="creator-label-icon">
+                            <span class="creator-label">Erstellt von</span>
+                          </div>
+                          <div
+                            class="creator-chip"
+                            (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
+                            [style.cursor]="isTeam ? 'pointer' : 'default'"
+                            [style.opacity]="isTeam ? '1' : '0.6'"
+                            title="Zum Profil"
+                          >
+                            <img
+                              [src]="caseData?.createdBy?.avatarUrl"
+                              [alt]="caseData?.createdBy?.username"
+                              class="creator-avatar"
+                            />
+                            <span class="creator-name">{{ caseData?.createdBy?.username }}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        class="creator-chip"
-                        (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
-                        [style.cursor]="isTeam ? 'pointer' : 'default'"
-                        [style.opacity]="isTeam ? '1' : '0.6'"
-                        title="Zum Profil"
-                      >
-                        <img
-                          [src]="caseData?.createdBy?.avatarUrl"
-                          [alt]="caseData?.createdBy?.username"
-                          class="creator-avatar"
-                        />
-                        <span class="creator-name">{{ caseData?.createdBy?.username }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </h1>
-              </div>
-            </div>
-            <p class="case-description" *ngIf="caseData?.description && !isEditingMetadata">
-              {{ caseData?.description }}
-            </p>
-            <div class="case-rule" *ngIf="!isEditingMetadata">
-              <span class="rule-label">Kategorie:</span>
-              <span class="rule-badge">{{ caseData!.category }}</span>
-            </div>
-
-            <!-- Linked Users inline in header -->
-            <div *ngIf="isTeam" class="header-linked-users">
-              <div class="header-chips" *ngIf="caseData?.linkedUsers?.length">
-                <div
-                  class="header-chip"
-                  *ngFor="let user of caseData?.linkedUsers"
-                  (click)="navigateToUserProfile(user.steamId)"
-                  title="Zum Profil"
-                  [style.cursor]="'pointer'"
-                >
-                  <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
-                  <span class="chip-name">{{ user.username }}</span>
-                  <button
-                    class="chip-remove"
-                    (click)="removeLinkedUser(user.steamId, $event)"
-                    [disabled]="isManagingLinkedUsers"
-                    title="Entfernen"
-                  >
-                    <i class="pi pi-times"></i>
-                  </button>
+                    }
+                  </h1>
                 </div>
               </div>
-              <div class="header-add-user">
-                <i class="pi pi-user-plus header-add-icon"></i>
+              @if (caseData?.description && !isEditingMetadata) {
+                <p class="case-description">
+                  {{ caseData?.description }}
+                </p>
+              }
+              @if (!isEditingMetadata) {
+                <div class="case-rule">
+                  <span class="rule-label">Kategorie:</span>
+                  <span class="rule-badge">{{ caseData!.category }}</span>
+                </div>
+              }
+              <!-- Linked Users inline in header -->
+              @if (isTeam) {
+                <div class="header-linked-users">
+                  @if (caseData?.linkedUsers?.length) {
+                    <div class="header-chips">
+                      @for (user of caseData?.linkedUsers; track user.steamId) {
+                        <div
+                          class="header-chip"
+                          (click)="navigateToUserProfile(user.steamId)"
+                          title="Zum Profil"
+                          [style.cursor]="'pointer'"
+                        >
+                          <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
+                          <span class="chip-name">{{ user.username }}</span>
+                          <button
+                            class="chip-remove"
+                            (click)="removeLinkedUser(user.steamId, $event)"
+                            [disabled]="isManagingLinkedUsers"
+                            title="Entfernen"
+                          >
+                            <i class="pi pi-times"></i>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                  <div class="header-add-user">
+                    <i class="pi pi-user-plus header-add-icon"></i>
+                    <input
+                      type="text"
+                      [(ngModel)]="newLinkedSteamId"
+                      placeholder="Steam-ID hinzufügen…"
+                      class="header-steamid-input"
+                      (keydown.enter)="addLinkedUser()"
+                      [disabled]="isManagingLinkedUsers"
+                      autocomplete="off"
+                    />
+                    <button
+                      class="header-add-btn"
+                      (click)="addLinkedUser()"
+                      [disabled]="isManagingLinkedUsers || !newLinkedSteamId.trim()"
+                    >
+                      <i class="pi" [ngClass]="isManagingLinkedUsers ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
+                    </button>
+                  </div>
+                </div>
+              }
+              @if (linkedUserError) {
+                <div class="header-linked-error"><i class="pi pi-exclamation-circle"></i> {{ linkedUserError }}</div>
+              }
+              <!-- Linked Reports -->
+              @if (isTeam) {
+                <div class="header-linked-users">
+                  @if (caseData?.linkedReportIds?.length) {
+                    <div class="header-chips">
+                      @for (reportId of caseData?.linkedReportIds; track reportId) {
+                        <div
+                          class="header-chip report-chip"
+                          (click)="copyReportIdToClipboard(reportId)"
+                          title="ID kopieren"
+                        >
+                          <i class="pi pi-flag chip-report-icon"></i>
+                          <span class="chip-name">Report #{{ reportId }}</span>
+                          <button
+                            class="chip-remove"
+                            (click)="removeLinkedReport(reportId, $event)"
+                            [disabled]="isLinkingReport"
+                            title="Verknüpfung entfernen"
+                          >
+                            <i class="pi pi-times"></i>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                  <!-- Primary: Search reports from linked users -->
+                  <div class="report-search-section">
+                    @if (caseData?.linkedUsers?.length || !caseData?.linkedUsers?.length) {
+                      <div class="report-search-row">
+                        @if (caseData?.linkedUsers?.length) {
+                          <i class="pi pi-search header-add-icon"></i>
+                        }
+                        @if (caseData?.linkedUsers?.length) {
+                          <span class="search-hint">Report suchen:</span>
+                        }
+                        @for (user of caseData?.linkedUsers; track user.steamId) {
+                          <button
+                            class="report-search-user-quick-btn"
+                            (click)="searchReportsBySteamId(user.steamId)"
+                            [disabled]="isSearchingReports || isLinkingReport"
+                            [title]="'Reports für ' + user.username + ' suchen'"
+                            type="button"
+                          >
+                            <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
+                            <span>{{ user.username }}</span>
+                          </button>
+                        }
+                        <button
+                          class="header-add-btn"
+                          (click)="toggleManualReportEntry()"
+                          type="button"
+                          [title]="showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report über ID hinzufügen'"
+                        >
+                          <i class="pi" [ngClass]="showManualReportEntry ? 'pi-times' : 'pi-plus'"></i>
+                        </button>
+                      </div>
+                    }
+                    <!-- Fallback: Manual report ID input -->
+                    @if (showManualReportEntry) {
+                      <div class="header-add-user manual-report-entry">
+                        <i class="pi pi-flag-fill header-add-icon"></i>
+                        <input
+                          type="text"
+                          [(ngModel)]="newLinkedReportId"
+                          placeholder="Report-ID eingeben…"
+                          class="header-steamid-input"
+                          (keydown.enter)="linkReport()"
+                          [disabled]="isLinkingReport"
+                          autocomplete="off"
+                          inputmode="numeric"
+                          #reportIdInput
+                        />
+                        <button
+                          class="header-add-btn"
+                          (click)="linkReport()"
+                          [disabled]="isLinkingReport || !newLinkedReportId.trim()"
+                        >
+                          <i class="pi" [ngClass]="isLinkingReport ? 'pi-spinner pi-spin' : 'pi-check'"></i>
+                        </button>
+                      </div>
+                    }
+                    <!-- Report search dropdown (appears after search) -->
+                    @if (reportSearchDropdownOpen && reportSearchResults.length) {
+                      <div class="report-search-dropdown">
+                        @for (report of reportSearchResults; track report.id) {
+                          <div
+                            class="report-search-item"
+                            (click)="selectReportFromSearch(report.id)"
+                            (keydown.enter)="selectReportFromSearch(report.id)"
+                            (keydown.space)="selectReportFromSearch(report.id)"
+                            role="button"
+                            tabindex="0"
+                            title="Report #{{ report.id }} verknüpfen"
+                          >
+                            <div class="report-search-item-main">
+                              <span class="report-search-id">#{{ report.id }}</span>
+                              <span class="report-search-sep">·</span>
+                              <span class="report-search-reason">{{ report.reason }}</span>
+                            </div>
+                            <div class="report-search-item-meta">
+                              <span class="report-search-users"
+                                >{{ report.reporter.username }} → {{ report.reported.username }}</span
+                              >
+                              <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                    <!-- Search error message -->
+                    @if (reportSearchError && reportSearchDropdownOpen) {
+                      <div class="header-linked-error report-search-error-msg">
+                        <i class="pi pi-exclamation-circle"></i> {{ reportSearchError }}
+                      </div>
+                    }
+                  </div>
+                  <!-- Error/Success messages -->
+                  @if (reportLinkError) {
+                    <div class="header-linked-error">
+                      <i class="pi pi-exclamation-circle"></i> {{ reportLinkError }}
+                    </div>
+                  }
+                  @if (reportLinkSuccess) {
+                    <div class="header-linked-success"><i class="pi pi-check-circle"></i> {{ reportLinkSuccess }}</div>
+                  }
+                </div>
+              }
+              <!-- Non-team: read-only report IDs -->
+              @if (!isTeam && caseData?.linkedReportIds?.length) {
+                <div class="header-linked-users">
+                  <div class="header-chips">
+                    @for (reportId of caseData?.linkedReportIds; track reportId) {
+                      <div class="header-chip report-chip">
+                        <i class="pi pi-flag chip-report-icon"></i>
+                        <span class="chip-name">Report #{{ reportId }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+              <!-- Header meta strip -->
+              @if (caseData) {
+                <div class="header-meta-row">
+                  <span class="header-meta-item">
+                    <i class="pi pi-file"></i>
+                    {{ caseData.files.length }} {{ caseData.files.length === 1 ? 'Datei' : 'Dateien' }}
+                  </span>
+                  <span class="header-meta-sep">·</span>
+                  <span class="header-meta-item">
+                    <i class="pi pi-database"></i>
+                    {{ getTotalSize() }}
+                  </span>
+                  <span class="header-meta-sep">·</span>
+                  <span class="header-meta-item">
+                    <i class="pi pi-calendar"></i>
+                    {{ formatDate(caseData.createdAt) }}
+                  </span>
+                  @if (caseData.lastUpdatedAt !== caseData.createdAt) {
+                    <span class="header-meta-sep">·</span>
+                    <span class="header-meta-item">
+                      <i class="pi pi-history"></i>
+                      {{ formatTimeAgo(caseData.lastUpdatedAt) }}
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+            <div class="header-actions">
+              @if (isTeam && !isEditingMetadata) {
+                <button
+                  pButton
+                  label="Bearbeiten"
+                  icon="pi pi-pencil"
+                  class="edit-btn"
+                  (click)="startEditingMetadata()"
+                ></button>
+              }
+            </div>
+          </div>
+        </div>
+        <!-- Metadata Editor -->
+        @if (isEditingMetadata) {
+          <div class="metadata-editor">
+            <div class="editor-header">
+              <h3 class="editor-title">Fall-Informationen bearbeiten</h3>
+            </div>
+            <div class="editor-body">
+              <div class="form-field">
+                <label>Titel</label>
                 <input
                   type="text"
-                  [(ngModel)]="newLinkedSteamId"
-                  placeholder="Steam-ID hinzufügen…"
-                  class="header-steamid-input"
-                  (keydown.enter)="addLinkedUser()"
-                  [disabled]="isManagingLinkedUsers"
-                  autocomplete="off"
+                  pInputText
+                  [(ngModel)]="editedTitle"
+                  placeholder="z.B. Wichtiger Fall"
+                  class="form-input"
                 />
+              </div>
+              <div class="form-field">
+                <label>Beschreibung</label>
+                <textarea
+                  pInputTextarea
+                  [(ngModel)]="editedDescription"
+                  placeholder="Beschreibe diesen Fall..."
+                  rows="3"
+                  class="form-input"
+                ></textarea>
+              </div>
+              <div class="form-field">
+                <label>Kategorie</label>
+                <select [(ngModel)]="editedCategory" class="form-input rule-select">
+                  @for (category of availableCategories; track category) {
+                    <option [ngValue]="category">{{ category }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="editor-footer">
+              <button
+                pButton
+                label="Abbrechen"
+                icon="pi pi-times"
+                class="cancel-btn"
+                (click)="cancelEditingMetadata()"
+                [disabled]="isSavingMetadata"
+              ></button>
+              <button
+                pButton
+                label="Speichern"
+                icon="pi pi-check"
+                class="save-btn"
+                (click)="saveMetadata()"
+                [disabled]="isSavingMetadata"
+                [loading]="isSavingMetadata"
+              ></button>
+            </div>
+          </div>
+        }
+        <!-- File Upload Section -->
+        @if (isTeam) {
+          <div class="upload-section">
+            <div class="upload-card">
+              <div class="upload-header">
+                <i class="pi pi-cloud-upload upload-icon"></i>
+                <h3 class="upload-title">Datei hochladen</h3>
+              </div>
+              <!-- Upload Mode Toggle -->
+              <div class="upload-mode-toggle">
+                <button class="mode-btn" [class.active]="uploadMode === 'file'" (click)="uploadMode = 'file'">
+                  <i class="pi pi-file"></i>
+                  <span>Datei</span>
+                </button>
                 <button
-                  class="header-add-btn"
-                  (click)="addLinkedUser()"
-                  [disabled]="isManagingLinkedUsers || !newLinkedSteamId.trim()"
+                  class="mode-btn medal-btn"
+                  [class.active]="uploadMode === 'medal'"
+                  (click)="uploadMode = 'medal'"
                 >
-                  <i class="pi" [ngClass]="isManagingLinkedUsers ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
+                  <img src="/assets/medal/medal_logo.avif" alt="Medal" class="medal-logo" />
+                  <span>Medal Clip</span>
                 </button>
               </div>
-            </div>
-            <div class="header-linked-error" *ngIf="linkedUserError">
-              <i class="pi pi-exclamation-circle"></i> {{ linkedUserError }}
-            </div>
-
-            <!-- Linked Reports -->
-            <div *ngIf="isTeam" class="header-linked-users">
-              <div class="header-chips" *ngIf="caseData?.linkedReportIds?.length">
-                <div
-                  class="header-chip report-chip"
-                  *ngFor="let reportId of caseData?.linkedReportIds"
-                  (click)="copyReportIdToClipboard(reportId)"
-                  title="ID kopieren"
-                >
-                  <i class="pi pi-flag chip-report-icon"></i>
-                  <span class="chip-name">Report #{{ reportId }}</span>
+              <!-- File Upload Mode -->
+              @if (uploadMode === 'file') {
+                <div class="upload-body">
+                  <div class="file-input-wrapper">
+                    <input
+                      type="file"
+                      id="fileInput"
+                      class="file-input"
+                      (change)="onFileSelected($event)"
+                      [disabled]="isUploading"
+                    />
+                    <label for="fileInput" class="file-input-label">
+                      <i class="pi pi-paperclip"></i>
+                      @if (!selectedFile) {
+                        <span>Datei auswählen</span>
+                      }
+                      @if (selectedFile) {
+                        <span class="file-name">{{ selectedFile.name }}</span>
+                      }
+                    </label>
+                  </div>
                   <button
-                    class="chip-remove"
-                    (click)="removeLinkedReport(reportId, $event)"
-                    [disabled]="isLinkingReport"
-                    title="Verknüpfung entfernen"
-                  >
-                    <i class="pi pi-times"></i>
-                  </button>
+                    pButton
+                    label="Hochladen"
+                    icon="pi pi-upload"
+                    class="upload-btn"
+                    (click)="uploadFile()"
+                    [disabled]="!selectedFile || isUploading"
+                    [loading]="isUploading"
+                  ></button>
                 </div>
-              </div>
-
-              <!-- Primary: Search reports from linked users -->
-              <div class="report-search-section">
-                <div class="report-search-row" *ngIf="caseData?.linkedUsers?.length || !caseData?.linkedUsers?.length">
-                  <i class="pi pi-search header-add-icon" *ngIf="caseData?.linkedUsers?.length"></i>
-                  <span class="search-hint" *ngIf="caseData?.linkedUsers?.length">Report suchen:</span>
-
+              }
+              <!-- Medal Clip Upload Mode -->
+              @if (uploadMode === 'medal') {
+                <div class="upload-body">
+                  <div class="medal-input-wrapper">
+                    <input
+                      type="text"
+                      pInputText
+                      [(ngModel)]="medalClipUrl"
+                      (ngModelChange)="onMedalUrlChange()"
+                      placeholder="https://medal.tv/games/.../clips/..."
+                      class="medal-input"
+                      [class.invalid]="medalUrlInvalid"
+                      [disabled]="isFetchingMedalClip"
+                    />
+                    @if (medalUrlInvalid) {
+                      <span class="medal-url-error">
+                        <i class="pi pi-exclamation-circle"></i>
+                        Bitte gib eine gültige URL ein
+                      </span>
+                    }
+                  </div>
                   <button
-                    *ngFor="let user of caseData?.linkedUsers"
-                    class="report-search-user-quick-btn"
-                    (click)="searchReportsBySteamId(user.steamId)"
-                    [disabled]="isSearchingReports || isLinkingReport"
-                    [title]="'Reports für ' + user.username + ' suchen'"
-                    type="button"
-                  >
-                    <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
-                    <span>{{ user.username }}</span>
-                  </button>
-
-                  <button
-                    class="header-add-btn"
-                    (click)="toggleManualReportEntry()"
-                    type="button"
-                    [title]="showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report über ID hinzufügen'"
-                  >
-                    <i class="pi" [ngClass]="showManualReportEntry ? 'pi-times' : 'pi-plus'"></i>
-                  </button>
+                    pButton
+                    label="Medal Clip hochladen"
+                    icon="pi pi-cloud-download"
+                    class="upload-btn medal-upload-btn"
+                    (click)="uploadMedalClip()"
+                    [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
+                    [loading]="isFetchingMedalClip"
+                  ></button>
                 </div>
-
-                <!-- Fallback: Manual report ID input -->
-                <div class="header-add-user manual-report-entry" *ngIf="showManualReportEntry">
-                  <i class="pi pi-flag-fill header-add-icon"></i>
-                  <input
-                    type="text"
-                    [(ngModel)]="newLinkedReportId"
-                    placeholder="Report-ID eingeben…"
-                    class="header-steamid-input"
-                    (keydown.enter)="linkReport()"
-                    [disabled]="isLinkingReport"
-                    autocomplete="off"
-                    inputmode="numeric"
-                    #reportIdInput
-                  />
-                  <button
-                    class="header-add-btn"
-                    (click)="linkReport()"
-                    [disabled]="isLinkingReport || !newLinkedReportId.trim()"
-                  >
-                    <i class="pi" [ngClass]="isLinkingReport ? 'pi-spinner pi-spin' : 'pi-check'"></i>
-                  </button>
-                </div>
-
-                <!-- Report search dropdown (appears after search) -->
-                <div class="report-search-dropdown" *ngIf="reportSearchDropdownOpen && reportSearchResults.length">
-                  <div
-                    *ngFor="let report of reportSearchResults"
-                    class="report-search-item"
-                    (click)="selectReportFromSearch(report.id)"
-                    (keydown.enter)="selectReportFromSearch(report.id)"
-                    (keydown.space)="selectReportFromSearch(report.id)"
-                    role="button"
-                    tabindex="0"
-                    title="Report #{{ report.id }} verknüpfen"
-                  >
-                    <div class="report-search-item-main">
-                      <span class="report-search-id">#{{ report.id }}</span>
-                      <span class="report-search-sep">·</span>
-                      <span class="report-search-reason">{{ report.reason }}</span>
-                    </div>
-                    <div class="report-search-item-meta">
-                      <span class="report-search-users"
-                        >{{ report.reporter.username }} → {{ report.reported.username }}</span
-                      >
-                      <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
-                    </div>
+              }
+              <!-- File Upload Progress Bar -->
+              @if (isUploading && uploadMode === 'file') {
+                <div class="upload-progress-container">
+                  <div class="progress-info">
+                    <i class="pi pi-spin pi-spinner"></i>
+                    <span>{{ uploadStatusMessage }}</span>
+                  </div>
+                  <div class="progress-bar-wrapper">
+                    <div class="progress-bar" [style.width.%]="uploadProgress"></div>
+                    <span class="progress-text-centered">{{ uploadETA }}</span>
                   </div>
                 </div>
-
-                <!-- Search error message -->
-                <div
-                  class="header-linked-error report-search-error-msg"
-                  *ngIf="reportSearchError && reportSearchDropdownOpen"
-                >
-                  <i class="pi pi-exclamation-circle"></i> {{ reportSearchError }}
+              }
+              <!-- Medal Clip Progress -->
+              @if (isFetchingMedalClip && uploadMode === 'medal') {
+                <div class="upload-progress-container">
+                  <div class="progress-info">
+                    <i class="pi pi-spin pi-spinner"></i>
+                    <span>{{ medalStatusMessage }}</span>
+                  </div>
+                  <div class="progress-bar-wrapper">
+                    <div
+                      class="progress-bar"
+                      [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
+                    ></div>
+                    <span class="progress-text-centered">{{ medalETA }}</span>
+                  </div>
                 </div>
-              </div>
-
-              <!-- Error/Success messages -->
-              <div class="header-linked-error" *ngIf="reportLinkError">
-                <i class="pi pi-exclamation-circle"></i> {{ reportLinkError }}
-              </div>
-              <div class="header-linked-success" *ngIf="reportLinkSuccess">
-                <i class="pi pi-check-circle"></i> {{ reportLinkSuccess }}
-              </div>
-            </div>
-
-            <!-- Non-team: read-only report IDs -->
-            <div *ngIf="!isTeam && caseData?.linkedReportIds?.length" class="header-linked-users">
-              <div class="header-chips">
-                <div class="header-chip report-chip" *ngFor="let reportId of caseData?.linkedReportIds">
-                  <i class="pi pi-flag chip-report-icon"></i>
-                  <span class="chip-name">Report #{{ reportId }}</span>
+              }
+              @if (!isUploading && !isFetchingMedalClip) {
+                <div class="upload-info">
+                  <i class="pi pi-info-circle"></i>
+                  @if (uploadMode === 'file') {
+                    <span>Erlaubte Dateitypen: Bilder, Videos, Audio, PDF, TXT, Archive</span>
+                  }
+                  @if (uploadMode === 'medal') {
+                    <span>Füge deine Medal.tv Clip-URL ein und lade das Video direkt hoch</span>
+                  }
                 </div>
-              </div>
-            </div>
-
-            <!-- Header meta strip -->
-            <div class="header-meta-row" *ngIf="caseData">
-              <span class="header-meta-item">
-                <i class="pi pi-file"></i>
-                {{ caseData.files.length }} {{ caseData.files.length === 1 ? 'Datei' : 'Dateien' }}
-              </span>
-              <span class="header-meta-sep">·</span>
-              <span class="header-meta-item">
-                <i class="pi pi-database"></i>
-                {{ getTotalSize() }}
-              </span>
-              <span class="header-meta-sep">·</span>
-              <span class="header-meta-item">
-                <i class="pi pi-calendar"></i>
-                {{ formatDate(caseData.createdAt) }}
-              </span>
-              <ng-container *ngIf="caseData.lastUpdatedAt !== caseData.createdAt">
-                <span class="header-meta-sep">·</span>
-                <span class="header-meta-item">
-                  <i class="pi pi-history"></i>
-                  {{ formatTimeAgo(caseData.lastUpdatedAt) }}
-                </span>
-              </ng-container>
+              }
             </div>
           </div>
-          <div class="header-actions">
-            <button
-              *ngIf="isTeam && !isEditingMetadata"
-              pButton
-              label="Bearbeiten"
-              icon="pi pi-pencil"
-              class="edit-btn"
-              (click)="startEditingMetadata()"
-            ></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Metadata Editor -->
-      <div *ngIf="isEditingMetadata" class="metadata-editor">
-        <div class="editor-header">
-          <h3 class="editor-title">Fall-Informationen bearbeiten</h3>
-        </div>
-        <div class="editor-body">
-          <div class="form-field">
-            <label>Titel</label>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="editedTitle"
-              placeholder="z.B. Wichtiger Fall"
-              class="form-input"
-            />
-          </div>
-          <div class="form-field">
-            <label>Beschreibung</label>
-            <textarea
-              pInputTextarea
-              [(ngModel)]="editedDescription"
-              placeholder="Beschreibe diesen Fall..."
-              rows="3"
-              class="form-input"
-            ></textarea>
-          </div>
-          <div class="form-field">
-            <label>Kategorie</label>
-            <select [(ngModel)]="editedCategory" class="form-input rule-select">
-              <option *ngFor="let category of availableCategories" [ngValue]="category">{{ category }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="editor-footer">
-          <button
-            pButton
-            label="Abbrechen"
-            icon="pi pi-times"
-            class="cancel-btn"
-            (click)="cancelEditingMetadata()"
-            [disabled]="isSavingMetadata"
-          ></button>
-          <button
-            pButton
-            label="Speichern"
-            icon="pi pi-check"
-            class="save-btn"
-            (click)="saveMetadata()"
-            [disabled]="isSavingMetadata"
-            [loading]="isSavingMetadata"
-          ></button>
-        </div>
-      </div>
-
-      <!-- File Upload Section -->
-      <div *ngIf="isTeam" class="upload-section">
-        <div class="upload-card">
-          <div class="upload-header">
-            <i class="pi pi-cloud-upload upload-icon"></i>
-            <h3 class="upload-title">Datei hochladen</h3>
-          </div>
-
-          <!-- Upload Mode Toggle -->
-          <div class="upload-mode-toggle">
-            <button class="mode-btn" [class.active]="uploadMode === 'file'" (click)="uploadMode = 'file'">
-              <i class="pi pi-file"></i>
-              <span>Datei</span>
-            </button>
-            <button class="mode-btn medal-btn" [class.active]="uploadMode === 'medal'" (click)="uploadMode = 'medal'">
-              <img src="/assets/medal/medal_logo.avif" alt="Medal" class="medal-logo" />
-              <span>Medal Clip</span>
-            </button>
-          </div>
-
-          <!-- File Upload Mode -->
-          <div class="upload-body" *ngIf="uploadMode === 'file'">
-            <div class="file-input-wrapper">
-              <input
-                type="file"
-                id="fileInput"
-                class="file-input"
-                (change)="onFileSelected($event)"
-                [disabled]="isUploading"
-              />
-              <label for="fileInput" class="file-input-label">
-                <i class="pi pi-paperclip"></i>
-                <span *ngIf="!selectedFile">Datei auswählen</span>
-                <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
-              </label>
-            </div>
-            <button
-              pButton
-              label="Hochladen"
-              icon="pi pi-upload"
-              class="upload-btn"
-              (click)="uploadFile()"
-              [disabled]="!selectedFile || isUploading"
-              [loading]="isUploading"
-            ></button>
-          </div>
-
-          <!-- Medal Clip Upload Mode -->
-          <div class="upload-body" *ngIf="uploadMode === 'medal'">
-            <div class="medal-input-wrapper">
+        }
+        <!-- Search and Sort -->
+        @if ((caseData?.files?.length ?? 0) > 0) {
+          <div class="search-section">
+            <div class="search-wrapper">
+              <i class="pi pi-search search-icon"></i>
               <input
                 type="text"
                 pInputText
-                [(ngModel)]="medalClipUrl"
-                (ngModelChange)="onMedalUrlChange()"
-                placeholder="https://medal.tv/games/.../clips/..."
-                class="medal-input"
-                [class.invalid]="medalUrlInvalid"
-                [disabled]="isFetchingMedalClip"
+                [(ngModel)]="searchQuery"
+                (input)="filterFiles()"
+                placeholder="Suche nach Dateinamen..."
+                class="search-input"
               />
-              <span class="medal-url-error" *ngIf="medalUrlInvalid">
-                <i class="pi pi-exclamation-circle"></i>
-                Bitte gib eine gültige URL ein
-              </span>
+              @if (searchQuery) {
+                <button pButton icon="pi pi-times" class="clear-btn" (click)="clearSearch()" [text]="true"></button>
+              }
             </div>
+            <!-- Custom Sort Dropdown -->
+            <div class="sort-wrapper">
+              <label class="sort-label">
+                <i class="pi pi-sort-alt"></i>
+                Sortieren:
+              </label>
+              <div class="custom-dropdown">
+                <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
+                  <span class="dropdown-label">{{ getSortLabel() }}</span>
+                  <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </button>
+                @if (sortDropdownOpen) {
+                  <div class="dropdown-menu">
+                    @for (option of sortOptions; track option.value) {
+                      <button
+                        class="dropdown-item"
+                        [class.active]="sortBy === option.value"
+                        (click)="changeSortOrder($any(option.value))"
+                        type="button"
+                      >
+                        <span>{{ option.label }}</span>
+                        @if (sortBy === option.value) {
+                          <i class="pi pi-check"></i>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            @if (searchQuery) {
+              <div class="search-results-info">
+                <span class="results-count">
+                  {{ filteredFiles.length }}
+                  {{ filteredFiles.length === 1 ? 'Datei gefunden' : 'Dateien gefunden' }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+        <!-- Files Grid -->
+        @if (filteredFiles.length > 0) {
+          <div class="files-grid">
+            @for (file of filteredFiles; track file.name; let i = $index) {
+              <div class="file-card" [style.animation-delay]="i * 0.05 + 's'">
+                <!-- Thumbnail Preview (images & videos only) -->
+                @if (isImageFile(file.name) || isVideoFile(file.name)) {
+                  <div class="file-thumbnail">
+                    @if (isImageFile(file.name)) {
+                      <img [src]="file.url" [alt]="file.name" loading="lazy" class="file-thumbnail-media" />
+                    }
+                    @if (isVideoFile(file.name)) {
+                      <video
+                        [src]="file.url + '#t=0.1'"
+                        preload="metadata"
+                        muted
+                        playsinline
+                        class="file-thumbnail-media"
+                      ></video>
+                    }
+                  </div>
+                }
+                <div class="file-card-header">
+                  <div class="file-icon-wrapper">
+                    <i class="pi" [ngClass]="getFileIcon(file.name)"></i>
+                  </div>
+                  <div class="file-badge">{{ getFileType(file.name) }}</div>
+                </div>
+                <div class="file-card-body">
+                  <h3 class="file-title" [title]="file.name">{{ file.name }}</h3>
+                  <div class="file-stats">
+                    <span class="stat-item">
+                      <i class="pi pi-database"></i>
+                      {{ formatFileSize(file.size) }}
+                    </span>
+                    @if (file.createdAt) {
+                      <span class="stat-item">
+                        <i class="pi pi-calendar"></i>
+                        {{ formatDate(file.createdAt) }}
+                      </span>
+                    }
+                  </div>
+                </div>
+                <div class="file-card-footer">
+                  @if (isViewableFile(file.name)) {
+                    <button class="file-action-btn view-btn" title="Datei öffnen" (click)="openViewer(file.name)">
+                      <i class="pi pi-eye"></i>
+                      <span>Ansehen</span>
+                    </button>
+                  }
+                  <a
+                    [href]="file.url"
+                    target="_blank"
+                    download
+                    class="file-action-btn download-btn"
+                    [class.full-width]="!isViewableFile(file.name)"
+                    title="Datei herunterladen"
+                  >
+                    <i class="pi pi-download"></i>
+                    <span>Download</span>
+                  </a>
+                </div>
+                <!-- Hover Effect Overlay -->
+                <div class="card-overlay"></div>
+              </div>
+            }
+          </div>
+        }
+        <!-- Empty State (no files) -->
+        @if ((caseData?.files?.length ?? 0) === 0) {
+          <div class="empty-state">
+            <div class="empty-illustration">
+              <div class="empty-icon-wrapper">
+                <i class="pi pi-inbox"></i>
+              </div>
+              <div class="empty-circles">
+                <div class="circle circle-1"></div>
+                <div class="circle circle-2"></div>
+                <div class="circle circle-3"></div>
+              </div>
+            </div>
+            <h3 class="empty-title">Noch keine Dateien</h3>
+            <p class="empty-description">Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
+            <div class="empty-tips">
+              <p class="tip-title">💡 Tipp:</p>
+              <p class="tip-text">Du kannst verschiedene Dateitypen hochladen: Bilder, Videos, Dokumente und mehr.</p>
+            </div>
+          </div>
+        }
+        <!-- Empty Search Results -->
+        @if ((caseData?.files?.length ?? 0) > 0 && filteredFiles.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon-wrapper">
+              <i class="pi pi-search"></i>
+            </div>
+            <h3 class="empty-title">Keine Ergebnisse</h3>
+            <p class="empty-description">Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".</p>
             <button
               pButton
-              label="Medal Clip hochladen"
-              icon="pi pi-cloud-download"
-              class="upload-btn medal-upload-btn"
-              (click)="uploadMedalClip()"
-              [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
-              [loading]="isFetchingMedalClip"
+              label="Suche zurücksetzen"
+              icon="pi pi-times"
+              class="empty-action-btn"
+              (click)="clearSearch()"
             ></button>
           </div>
-
-          <!-- File Upload Progress Bar -->
-          <div class="upload-progress-container" *ngIf="isUploading && uploadMode === 'file'">
-            <div class="progress-info">
-              <i class="pi pi-spin pi-spinner"></i>
-              <span>{{ uploadStatusMessage }}</span>
-            </div>
-            <div class="progress-bar-wrapper">
-              <div class="progress-bar" [style.width.%]="uploadProgress"></div>
-              <span class="progress-text-centered">{{ uploadETA }}</span>
-            </div>
-          </div>
-
-          <!-- Medal Clip Progress -->
-          <div class="upload-progress-container" *ngIf="isFetchingMedalClip && uploadMode === 'medal'">
-            <div class="progress-info">
-              <i class="pi pi-spin pi-spinner"></i>
-              <span>{{ medalStatusMessage }}</span>
-            </div>
-            <div class="progress-bar-wrapper">
-              <div
-                class="progress-bar"
-                [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
-              ></div>
-              <span class="progress-text-centered">{{ medalETA }}</span>
-            </div>
-          </div>
-
-          <div class="upload-info" *ngIf="!isUploading && !isFetchingMedalClip">
-            <i class="pi pi-info-circle"></i>
-            <span *ngIf="uploadMode === 'file'">Erlaubte Dateitypen: Bilder, Videos, Audio, PDF, TXT, Archive</span>
-            <span *ngIf="uploadMode === 'medal'">Füge deine Medal.tv Clip-URL ein und lade das Video direkt hoch</span>
-          </div>
-        </div>
+        }
       </div>
-
-      <!-- Search and Sort -->
-      <div class="search-section" *ngIf="(caseData?.files?.length ?? 0) > 0">
-        <div class="search-wrapper">
-          <i class="pi pi-search search-icon"></i>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="searchQuery"
-            (input)="filterFiles()"
-            placeholder="Suche nach Dateinamen..."
-            class="search-input"
-          />
-          <button
-            *ngIf="searchQuery"
-            pButton
-            icon="pi pi-times"
-            class="clear-btn"
-            (click)="clearSearch()"
-            [text]="true"
-          ></button>
-        </div>
-
-        <!-- Custom Sort Dropdown -->
-        <div class="sort-wrapper">
-          <label class="sort-label">
-            <i class="pi pi-sort-alt"></i>
-            Sortieren:
-          </label>
-          <div class="custom-dropdown">
-            <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
-              <span class="dropdown-label">{{ getSortLabel() }}</span>
-              <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-            </button>
-            <div class="dropdown-menu" *ngIf="sortDropdownOpen">
-              <button
-                *ngFor="let option of sortOptions"
-                class="dropdown-item"
-                [class.active]="sortBy === option.value"
-                (click)="changeSortOrder($any(option.value))"
-                type="button"
-              >
-                <span>{{ option.label }}</span>
-                <i class="pi pi-check" *ngIf="sortBy === option.value"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="search-results-info" *ngIf="searchQuery">
-          <span class="results-count">
-            {{ filteredFiles.length }}
-            {{ filteredFiles.length === 1 ? 'Datei gefunden' : 'Dateien gefunden' }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Files Grid -->
-      <div class="files-grid" *ngIf="filteredFiles.length > 0">
-        <div
-          *ngFor="let file of filteredFiles; let i = index"
-          class="file-card"
-          [style.animation-delay]="i * 0.05 + 's'"
-        >
-          <!-- Thumbnail Preview (images & videos only) -->
-          <div class="file-thumbnail" *ngIf="isImageFile(file.name) || isVideoFile(file.name)">
-            <img
-              *ngIf="isImageFile(file.name)"
-              [src]="file.url"
-              [alt]="file.name"
-              loading="lazy"
-              class="file-thumbnail-media"
-            />
-            <video
-              *ngIf="isVideoFile(file.name)"
-              [src]="file.url + '#t=0.1'"
-              preload="metadata"
-              muted
-              playsinline
-              class="file-thumbnail-media"
-            ></video>
-          </div>
-
-          <div class="file-card-header">
-            <div class="file-icon-wrapper">
-              <i class="pi" [ngClass]="getFileIcon(file.name)"></i>
-            </div>
-            <div class="file-badge">{{ getFileType(file.name) }}</div>
-          </div>
-
-          <div class="file-card-body">
-            <h3 class="file-title" [title]="file.name">{{ file.name }}</h3>
-            <div class="file-stats">
-              <span class="stat-item">
-                <i class="pi pi-database"></i>
-                {{ formatFileSize(file.size) }}
-              </span>
-              <span class="stat-item" *ngIf="file.createdAt">
-                <i class="pi pi-calendar"></i>
-                {{ formatDate(file.createdAt) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="file-card-footer">
-            <button
-              *ngIf="isViewableFile(file.name)"
-              class="file-action-btn view-btn"
-              title="Datei öffnen"
-              (click)="openViewer(file.name)"
-            >
-              <i class="pi pi-eye"></i>
-              <span>Ansehen</span>
-            </button>
-            <a
-              [href]="file.url"
-              target="_blank"
-              download
-              class="file-action-btn download-btn"
-              [class.full-width]="!isViewableFile(file.name)"
-              title="Datei herunterladen"
-            >
-              <i class="pi pi-download"></i>
-              <span>Download</span>
-            </a>
-          </div>
-
-          <!-- Hover Effect Overlay -->
-          <div class="card-overlay"></div>
-        </div>
-      </div>
-
-      <!-- Empty State (no files) -->
-      <div *ngIf="(caseData?.files?.length ?? 0) === 0" class="empty-state">
-        <div class="empty-illustration">
-          <div class="empty-icon-wrapper">
-            <i class="pi pi-inbox"></i>
-          </div>
-          <div class="empty-circles">
-            <div class="circle circle-1"></div>
-            <div class="circle circle-2"></div>
-            <div class="circle circle-3"></div>
-          </div>
-        </div>
-        <h3 class="empty-title">Noch keine Dateien</h3>
-        <p class="empty-description">Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
-        <div class="empty-tips">
-          <p class="tip-title">💡 Tipp:</p>
-          <p class="tip-text">Du kannst verschiedene Dateitypen hochladen: Bilder, Videos, Dokumente und mehr.</p>
-        </div>
-      </div>
-
-      <!-- Empty Search Results -->
-      <div *ngIf="(caseData?.files?.length ?? 0) > 0 && filteredFiles.length === 0" class="empty-state">
-        <div class="empty-icon-wrapper">
-          <i class="pi pi-search"></i>
-        </div>
-        <h3 class="empty-title">Keine Ergebnisse</h3>
-        <p class="empty-description">Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".</p>
-        <button
-          pButton
-          label="Suche zurücksetzen"
-          icon="pi pi-times"
-          class="empty-action-btn"
-          (click)="clearSearch()"
-        ></button>
-      </div>
-    </div>
+    }
   </div>
 
   <!-- Media Viewer Modal -->
-  <div class="media-viewer-overlay" *ngIf="viewerOpen" (click)="closeViewer()">
-    <div class="media-viewer-content" (click)="$event.stopPropagation()">
-      <div class="viewer-header">
-        <h2 class="viewer-title">{{ viewerFileName }}</h2>
-        <div class="viewer-actions">
-          <a [href]="viewerFileUrl" target="_blank" class="viewer-download-btn" title="Herunterladen">
-            <i class="pi pi-download"></i>
-            <span>Download</span>
-          </a>
-          <button class="viewer-close-btn" (click)="closeViewer()" title="Schließen">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="viewer-body">
-        <!-- Image Viewer -->
-        <div *ngIf="viewerMediaType === 'image'" class="image-viewer">
-          <img [src]="viewerFileUrl" [alt]="viewerFileName" />
-        </div>
-
-        <!-- Video Viewer -->
-        <div *ngIf="viewerMediaType === 'video'" class="video-viewer">
-          <video controls [src]="viewerFileUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
-        </div>
-
-        <!-- Audio Viewer -->
-        <div *ngIf="viewerMediaType === 'audio'" class="audio-viewer">
-          <div class="audio-player-wrapper">
-            <i class="pi pi-volume-up audio-icon"></i>
-            <audio controls [src]="viewerFileUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
+  @if (viewerOpen) {
+    <div class="media-viewer-overlay" (click)="closeViewer()">
+      <div class="media-viewer-content" (click)="$event.stopPropagation()">
+        <div class="viewer-header">
+          <h2 class="viewer-title">{{ viewerFileName }}</h2>
+          <div class="viewer-actions">
+            <a [href]="viewerFileUrl" target="_blank" class="viewer-download-btn" title="Herunterladen">
+              <i class="pi pi-download"></i>
+              <span>Download</span>
+            </a>
+            <button class="viewer-close-btn" (click)="closeViewer()" title="Schließen">
+              <i class="pi pi-times"></i>
+            </button>
           </div>
+        </div>
+        <div class="viewer-body">
+          <!-- Image Viewer -->
+          @if (viewerMediaType === 'image') {
+            <div class="image-viewer">
+              <img [src]="viewerFileUrl" [alt]="viewerFileName" />
+            </div>
+          }
+          <!-- Video Viewer -->
+          @if (viewerMediaType === 'video') {
+            <div class="video-viewer">
+              <video controls [src]="viewerFileUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
+            </div>
+          }
+          <!-- Audio Viewer -->
+          @if (viewerMediaType === 'audio') {
+            <div class="audio-viewer">
+              <div class="audio-player-wrapper">
+                <i class="pi pi-volume-up audio-icon"></i>
+                <audio controls [src]="viewerFileUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
+              </div>
+            </div>
+          }
         </div>
       </div>
     </div>
-  </div>
+  }
 </div>

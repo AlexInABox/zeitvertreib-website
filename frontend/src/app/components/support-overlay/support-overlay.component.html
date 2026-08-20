@@ -1,0 +1,204 @@
+<div
+  class="support-overlay-hud"
+  [class.is-expanded]="expanded"
+  (mouseenter)="onMouseEnter()"
+  (mouseleave)="onMouseLeave()"
+>
+  <div class="support-hud-inner" [class.expanded]="expanded">
+    <!-- Trigger Header Row (Always Visible) -->
+    <div class="support-trigger-row" (click)="togglePersist()">
+      <span class="support-hud-icon">❤️</span>
+      <span class="support-hud-title">Unterstützen</span>
+      @if (expanded) {
+        <div class="support-hud-stripe-inline">
+          <span class="support-header-sub">via</span>
+          <a
+            href="https://stripe.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="stripe-logo-wrap"
+            (click)="$event.stopPropagation()"
+          >
+            <img src="assets/PAYMENT_LOGOS/stripe.svg" class="stripe-logo" alt="Stripe" />
+          </a>
+        </div>
+      }
+      <span class="support-expand-chevron" [class.open]="expanded">&#x25B2;</span>
+    </div>
+
+    <!-- Expandable Body (Slides open upward inside the glass panel) -->
+    <div class="support-expand-body" [class.open]="expanded">
+      <div class="support-expand-content">
+        <!-- Success / Returned screen -->
+        @if (showSuccessMessage) {
+          <div class="support-status-view">
+            <canvas #confettiCanvas class="support-confetti-canvas"></canvas>
+            <div class="support-status-emoji">🎉</div>
+            <h3 class="support-status-title">Juhuu!</h3>
+            <p class="support-status-sub">Wir verarbeiten gerade deine Zahlung.</p>
+            <p class="support-status-thanks">Danke so sehr für deine Unterstützung! 💜</p>
+            <button class="support-btn-back" (click)="showSuccessMessage = false; $event.stopPropagation()">
+              ← Zurück
+            </button>
+          </div>
+        }
+
+        <!-- Cancelled screen -->
+        @if (showCancelledMessage) {
+          <div class="support-status-view cancelled">
+            <div class="support-status-emoji">😕</div>
+            <h3 class="support-status-title">Abgebrochen</h3>
+            <p class="support-status-sub">Deine Zahlung wurde nicht abgeschlossen.</p>
+            <p class="support-status-thanks">Kein Problem — versuche es gerne erneut.</p>
+            <div class="support-status-actions">
+              <button class="support-submit-btn" (click)="retry(); $event.stopPropagation()">Erneut versuchen</button>
+              <button class="support-btn-back" (click)="showCancelledMessage = false; $event.stopPropagation()">
+                ← Zurück
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Main Form View -->
+        @if (!showSuccessMessage && !showCancelledMessage) {
+          <div class="support-form-view">
+            @if (errorMessage) {
+              <div class="support-error-toast">
+                {{ errorMessage }}
+              </div>
+            }
+
+            <!-- Presets Row -->
+            <div class="support-presets-grid">
+              @for (amount of predefinedAmounts; track amount) {
+                <button
+                  type="button"
+                  class="support-preset-btn"
+                  [class.active]="selectedAmount === amount"
+                  (click)="selectAmount(amount); $event.stopPropagation()"
+                >
+                  {{ amount }}€
+                </button>
+              }
+            </div>
+
+            <!-- Custom Amount Input -->
+            <div class="support-input-group">
+              <input
+                type="text"
+                class="support-input no-spin"
+                placeholder="Betrag eingeben (min. 5€)"
+                [value]="customAmountInput"
+                [disabled]="isSubmitting"
+                (input)="onCustomAmountInputChange($event)"
+                (click)="$event.stopPropagation()"
+              />
+            </div>
+
+            <!-- Greeting Input -->
+            <div class="support-input-group">
+              <div class="support-label-row">
+                <span class="support-label">Grußbotschaft (optional)</span>
+                <span class="support-word-count" [class.text-danger]="isGreetingInvalid">
+                  {{ currentWords }}/{{ maxWords }} W.
+                </span>
+              </div>
+              <textarea
+                rows="2"
+                class="support-input support-textarea"
+                placeholder="Nachricht für Discord..."
+                [(ngModel)]="greeting"
+                [disabled]="isSubmitting"
+                [class.input-invalid]="isGreetingInvalid"
+                (click)="$event.stopPropagation()"
+              ></textarea>
+              <div class="support-hint-text">
+                Discord (ab 15€ mit <strong>@everyone</strong>, darunter <strong>@here</strong>)
+              </div>
+            </div>
+
+            <!-- Legal / Terms Section -->
+            <div class="support-legal-box">
+              <label class="support-checkbox-label" (click)="$event.stopPropagation()">
+                <input type="checkbox" [(ngModel)]="acceptedTerms" class="support-checkbox" [disabled]="isSubmitting" />
+                <span>
+                  Ich akzeptiere die
+                  <button type="button" class="support-terms-link" (click)="toggleTerms($event)">
+                    wichtigen Hinweise</button
+                  >.
+                </span>
+              </label>
+
+              <div class="support-terms-collapse" [class.expanded]="showTerms">
+                <div class="support-terms-content">
+                  <p>Spenden fließen direkt in Server- und Entwicklungskosten.</p>
+                  <p>Grußbotschaft ist ein freiwilliges Dankeschön (ohne Garantie).</p>
+                  <p>
+                    Support per E-Mail:
+                    <a href="mailto:support@zeitvertreib.vip">support@zeitvertreib.vip</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Primary Button -->
+            <button
+              class="support-submit-btn"
+              (click)="submitDonation(); $event.stopPropagation()"
+              [disabled]="finalAmount < 5 || isGreetingInvalid || isSubmitting || !acceptedTerms"
+              [class.btn-loading]="isSubmitting"
+            >
+              @if (!isSubmitting) {
+                <span>Spenden ({{ finalAmount }}€)</span>
+              }
+              @if (isSubmitting) {
+                <span>Verbinden...</span>
+              }
+            </button>
+
+            <!-- Payment Icons Row -->
+            <div class="support-payment-icons">
+              <div class="pay-icon-wrap" style="background: #0e4595">
+                <img src="assets/PAYMENT_LOGOS/visa.svg" alt="Visa" class="pay-icon" />
+              </div>
+              <div class="pay-icon-wrap" style="background: #252525">
+                <img src="assets/PAYMENT_LOGOS/mastercard.svg" alt="Mastercard" class="pay-icon" />
+              </div>
+              <div class="pay-icon-wrap" style="background: #fff">
+                <img src="assets/PAYMENT_LOGOS/paypal.svg" alt="PayPal" class="pay-icon pay-icon--paypal" />
+              </div>
+              <div class="pay-icon-wrap" style="background: #000">
+                <img src="assets/PAYMENT_LOGOS/applepay.svg" alt="Apple Pay" class="pay-icon pay-icon--applepay" />
+              </div>
+              <div class="pay-icon-wrap" style="background: #fff">
+                <img src="assets/PAYMENT_LOGOS/googlepay.svg" alt="Google Pay" class="pay-icon pay-icon--gpay" />
+              </div>
+              <div class="pay-icon-wrap pay-icon-wrap--sofort">
+                <svg
+                  viewBox="0 0 50 32"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-label="Sofortüberweisung"
+                  class="pay-icon"
+                >
+                  <rect width="50" height="32" rx="5" fill="#fa82a0" />
+                  <text
+                    x="50%"
+                    y="54%"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    fill="white"
+                    font-size="9"
+                    font-weight="700"
+                    font-family="Arial, sans-serif"
+                  >
+                    SOFORT
+                  </text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

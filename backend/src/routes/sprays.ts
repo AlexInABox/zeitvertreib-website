@@ -1,8 +1,9 @@
 import { AwsClient } from 'aws4fetch';
-import { createResponse, validateSession, isDonator, increment, computeSpraySha256 } from '../utils.js';
+import { createResponse, validateSession, isDonator, computeSpraySha256 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
+import { getZvc, decreaseZvc } from '../db/zvc.js';
 
 import { proxyFetch } from '../proxy.js';
 import type {
@@ -299,13 +300,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     const collectPayment = existingSprays.length === (userIsDonator ? 2 : 1);
     let canPay = true;
     if (collectPayment) {
-      const [user] = await db
-        .select({ experience: playerdata.experience })
-        .from(playerdata)
-        .where(eq(playerdata.id, userid))
-        .limit(1);
-
-      const currentBalance = user?.experience ?? 0;
+      const currentBalance = (await getZvc(db, { id: userid })) ?? 0;
       canPay = currentBalance >= SPRAY_SLOT_COST;
     }
 
@@ -403,11 +398,7 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
 
     if (collectPayment) {
       // Subtract ZVC cost for paid slot
-      await db
-        .update(playerdata)
-        .set({ experience: increment(playerdata.experience, -SPRAY_SLOT_COST) })
-        .where(eq(playerdata.id, userid))
-        .run();
+      await decreaseZvc(db, { id: userid }, SPRAY_SLOT_COST);
     }
 
     return createResponse(
@@ -701,22 +692,11 @@ export async function collectZvcForSpraySlotsAndCleanup(db: any, env: Env, ctx: 
       for (const spray of paidSprays) {
         if (spray.createdAt <= oneWeekAgo) {
           // This spray is due for tax (older than 1 week)
-          const [user] = await db
-            .select({ experience: playerdata.experience })
-            .from(playerdata)
-            .where(eq(playerdata.id, userid))
-            .limit(1);
-
-          const balance = user?.experience ?? 0;
+          const balance = (await getZvc(db, { id: userid })) ?? 0;
 
           if (balance >= SPRAY_SLOT_COST) {
             // Charge tax and reset createdAt to now
-            await db
-              .update(playerdata)
-              .set({
-                experience: increment(playerdata.experience, -SPRAY_SLOT_COST),
-              })
-              .where(eq(playerdata.id, userid));
+            await decreaseZvc(db, { id: userid }, SPRAY_SLOT_COST);
 
             await db
               .update(sprays)

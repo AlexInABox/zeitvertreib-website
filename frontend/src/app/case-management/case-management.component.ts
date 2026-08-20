@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,9 +23,17 @@ type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
   selector: 'app-case-management',
   imports: [CommonModule, FormsModule, ButtonModule, InputTextModule],
   templateUrl: './case-management.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-management.component.css'],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+  },
 })
 export class CaseManagementComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   cases: CaseListItem[] = [];
   filteredCases: CaseListItem[] = [];
 
@@ -92,13 +100,6 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
   private discordIdSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private router: Router,
-  ) {}
-
-  @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {

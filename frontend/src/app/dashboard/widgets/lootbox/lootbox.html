@@ -21,8 +21,8 @@
               : 'translateX(-60px)'
         "
       >
+        @for (item of lootboxSpinItems; track $index; let i = $index) {
         <div
-          *ngFor="let item of lootboxSpinItems; let i = index"
           class="lootbox-item"
           [class.rarity-common]="item.rarity === 'common'"
           [class.rarity-uncommon]="item.rarity === 'uncommon'"
@@ -33,21 +33,21 @@
           <span class="lootbox-item-emoji">{{ item.emoji }}</span>
           <span class="lootbox-item-name">{{ item.name }}</span>
         </div>
+        }
       </div>
     </div>
     <div class="lootbox-pointer-bottom"></div>
 
-    <div
-      *ngIf="!lootboxAnimating && !lootboxSnapping && !lootboxAtRest && lootboxSpinItems.length === 0"
-      class="lootbox-idle"
-    >
+    @if (!lootboxAnimating && !lootboxSnapping && !lootboxAtRest && lootboxSpinItems.length === 0) {
+    <div class="lootbox-idle">
       <img src="assets/lootbox-placeholder.svg" alt="Lootbox" class="lootbox-idle-image" />
       <span class="lootbox-idle-label">Bereit zum Öffnen</span>
     </div>
+    }
   </div>
 
+  @if (lootboxResult && !lootboxSpinning) {
   <div
-    *ngIf="lootboxResult && !lootboxSpinning"
     class="lootbox-result"
     [class.rarity-common]="lootboxResult.rarity === 'common'"
     [class.rarity-uncommon]="lootboxResult.rarity === 'uncommon'"
@@ -63,27 +63,37 @@
       </span>
     </div>
   </div>
-
-  <div *ngIf="lootboxLoading" class="lootbox-loading-bar">
+  } @if (lootboxLoading) {
+  <div class="lootbox-loading-bar">
     <div class="lootbox-loading-fill"></div>
   </div>
-
-  <div *ngIf="lootboxError" class="lootbox-message lootbox-message-error mt-2">{{ lootboxError }}</div>
+  } @if (lootboxError) {
+  <div class="lootbox-message lootbox-message-error mt-2">{{ lootboxError }}</div>
+  }
 
   <div class="lootbox-action">
     <button class="lootbox-buy-btn" (click)="buyLootbox()" [disabled]="lootboxSpinning || !canAffordLootbox()">
-      <span *ngIf="!lootboxSpinning">🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
-      <span *ngIf="lootboxSpinning && lootboxLoading">⌛ Wird verarbeitet...</span>
-      <span *ngIf="lootboxSpinning && !lootboxLoading">🎰 Wird geöffnet...</span>
+      @if (!lootboxSpinning) {
+      <span>🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
+      } @if (lootboxSpinning && lootboxLoading) {
+      <span>⌛ Wird verarbeitet...</span>
+      } @if (lootboxSpinning && !lootboxLoading) {
+      <span>🎰 Wird geöffnet...</span>
+      }
     </button>
     <button
       class="lootbox-voucher-btn"
       (click)="useVoucherForLootbox()"
       [disabled]="lootboxSpinning || lootboxVoucherCount < 1"
     >
-      <span *ngIf="!lootboxSpinning">🎟️ Gutschein einlösen ({{ lootboxVoucherCount }})</span>
-      <span *ngIf="lootboxSpinning">🎰 Wird geöffnet...</span>
+      @if (!lootboxSpinning) {
+      <span>🎟️ Gutschein einlösen ({{ lootboxVoucherCount }})</span>
+      } @if (lootboxSpinning) {
+      <span>🎰 Wird geöffnet...</span>
+      }
     </button>
-    <p *ngIf="!canAffordLootbox() && !lootboxSpinning" class="lootbox-insufficient">Nicht genügend ZVC</p>
+    @if (!canAffordLootbox() && !lootboxSpinning) {
+    <p class="lootbox-insufficient">Nicht genügend ZVC</p>
+    }
   </div>
 </div>

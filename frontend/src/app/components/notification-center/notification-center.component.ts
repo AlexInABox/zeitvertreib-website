@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { NotificationCenterService } from '../../services/notification-center.service';
 import type { UserNotificationType } from '@zeitvertreib/types';
 
@@ -13,8 +13,9 @@ const ALL_NOTIFICATION_TYPES: { type: UserNotificationType; label: string; icon:
 @Component({
   selector: 'app-notification-center',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './notification-center.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./notification-center.component.css'],
 })
 export class NotificationCenterComponent implements OnInit, OnDestroy {

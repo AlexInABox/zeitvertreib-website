@@ -1,0 +1,82 @@
+.integration-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.integration-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 1.125rem;
+  gap: 0.75rem;
+}
+
+.integration-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.minecraft-linked-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.uuid-display-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uuid-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: #ffffff;
+  flex: 1;
+  word-break: break-all;
+}
+
+.minecraft-unlinked-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dense-help-text {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input-action-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.input-action-group .dense-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+}
+
+.input-action-group .btn-link-mc {
+  height: 38px;
+  padding: 0 0.875rem;
+  flex-shrink: 0;
+}
+
+.code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+}

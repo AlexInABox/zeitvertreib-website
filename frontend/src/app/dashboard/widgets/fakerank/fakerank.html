@@ -1,5 +1,6 @@
 <div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
-  <div *ngIf="isFakerankBanned" class="spray-ban-warning mb-4">
+  @if (isFakerankBanned) {
+  <div class="spray-ban-warning mb-4">
     <div class="spray-ban-icon">⛔</div>
     <div class="spray-ban-content">
       <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
@@ -7,19 +8,19 @@
       <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
     </div>
   </div>
-
-  <div *ngIf="!isFakerankBanned" class="fakerank-container-inline">
+  } @if (!isFakerankBanned) {
+  <div class="fakerank-container-inline">
     <div class="fakerank-info-left">
       <h3 class="spray-title">✨ Fakerank</h3>
       <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
       <div>
-        <span class="fakerank-cost-badge">🪙 {{ isDonator ? '10' : '100' }} ZVC / Woche</span>
+        <span class="fakerank-cost-badge">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
       </div>
     </div>
-
     <div class="fakerank-action-right">
       <!-- Active Fakerank -->
-      <div *ngIf="currentFakerank" class="fakerank-active-stacked">
+      @if (currentFakerank) {
+      <div class="fakerank-active-stacked">
         <div class="fakerank-preview-small" [style.color]="getColorHex(currentFakerankColor)">
           {{ currentFakerank }}
         </div>
@@ -32,28 +33,32 @@
           </button>
         </div>
       </div>
-
+      }
       <!-- No Fakerank -->
-      <div *ngIf="!currentFakerank" class="fakerank-empty-inline">
+      @if (!currentFakerank) {
+      <div class="fakerank-empty-inline">
         <button (click)="openFakerankModal()" class="fakerank-create-btn-small" [disabled]="fakerankLoading">
           ✨ Erstellen
         </button>
       </div>
+      }
     </div>
   </div>
-
-  <div *ngIf="fakerankError" class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
-  <div *ngIf="fakerankSuccess" class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
+  } @if (fakerankError) {
+  <div class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
+  } @if (fakerankSuccess) {
+  <div class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
+  }
 </div>
 
 <!-- Modal -->
-<div class="preview-overlay" *ngIf="fakerankModalOpen" (click)="closeFakerankModal()">
+@if (fakerankModalOpen) {
+<div class="preview-overlay" (click)="closeFakerankModal()">
   <div class="preview-modal compact-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="preview-title">Fakerank konfigurieren</h3>
       <button class="modal-close-btn" (click)="closeFakerankModal()">✕</button>
     </div>
-
     <div class="modal-body compact-body custom-scrollbar">
       <!-- Preview Area -->
       <div class="fakerank-preview-container">
@@ -62,7 +67,6 @@
           {{ fakerankModalText || 'Dein Rangname' }}
         </div>
       </div>
-
       <div class="preview-input-group">
         <label>Rangname (max. 50 Zeichen)</label>
         <input
@@ -73,25 +77,23 @@
           placeholder="Tippe deinen Rangnamen ein..."
         />
       </div>
-
       <div class="preview-input-group">
         <label
           >Farbe wählen <span class="selected-color-name-inline">({{ getColorName(fakerankModalColor) }})</span></label
         >
-
         <div class="color-groups-wrapper">
-          <div *ngFor="let group of groupedColors" class="color-group">
+          @for (group of groupedColors; track group.groupName) {
+          <div class="color-group">
             <div class="color-group-header">
               <span class="color-group-title"
-                >{{ group.groupName }}
-                <span *ngIf="group.isLocked" class="locked-icon" title="Benötigt: {{ group.requiredRole }}"
-                  >🔒</span
-                ></span
+                >{{ group.groupName }} @if (group.isLocked) {
+                <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}">🔒</span>
+                }</span
               >
             </div>
             <div class="color-grid">
+              @for (c of group.colors; track c.key) {
               <button
-                *ngFor="let c of group.colors"
                 (click)="selectColor(c.key)"
                 class="color-option-btn"
                 [class.selected]="fakerankModalColor === c.key"
@@ -100,11 +102,12 @@
                 [disabled]="!isColorAllowed(c.key)"
                 [title]="c.name + (!isColorAllowed(c.key) && group.requiredRole ? ' (' + group.requiredRole + ')' : '')"
               ></button>
+              }
             </div>
           </div>
+          }
         </div>
       </div>
-
       <div class="checkbox-group mt-2">
         <div class="checkbox-item">
           <input type="checkbox" id="frPrivacy" [(ngModel)]="acceptedFakerankPrivacy" />
@@ -117,7 +120,8 @@
             ></label
           >
         </div>
-        <div *ngIf="showFakerankPrivacyText" class="info-box-inline">
+        @if (showFakerankPrivacyText) {
+        <div class="info-box-inline">
           <div class="info-content">
             <ul>
               <li>
@@ -129,7 +133,7 @@
             </ul>
           </div>
         </div>
-
+        }
         <div class="checkbox-item">
           <input type="checkbox" id="frRules" [(ngModel)]="acceptedFakerankRules" />
           <label for="frRules"
@@ -139,7 +143,8 @@
             ></label
           >
         </div>
-        <div *ngIf="showFakerankRulesText" class="info-box-inline">
+        @if (showFakerankRulesText) {
+        <div class="info-box-inline">
           <div class="info-content">
             <ul>
               <li>Keine beleidigenden, rassistischen, sexistischen oder anderweitig diskriminierenden Begriffe.</li>
@@ -149,8 +154,8 @@
             </ul>
           </div>
         </div>
+        }
       </div>
-
       <button
         class="btn-save-fakerank mt-4"
         (click)="saveFakerank()"
@@ -161,3 +166,4 @@
     </div>
   </div>
 </div>
+}

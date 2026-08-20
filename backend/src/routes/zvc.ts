@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { inArray, eq } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
 import { createResponse, validateSession } from '../utils.js';
+import { getZvc, increaseZvc, decreaseZvc } from '../db/zvc.js';
 import type { ZvcGetResponse } from '@zeitvertreib/types';
 
 /**
@@ -122,12 +123,9 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
     const totalCost = amount + taxAmount; // Total amount to deduct from sender
 
     // Check if sender has enough ZVC (needs 105% of transfer amount on weekdays)
-    const senderResult = await db
-      .select({ experience: schema.playerdata.experience })
-      .from(schema.playerdata)
-      .where(eq(schema.playerdata.id, senderSteamId));
+    const senderBalance = await getZvc(db, { id: senderSteamId });
 
-    if (senderResult.length === 0) {
+    if (senderBalance === null) {
       return createResponse(
         {
           error: 'Sender ' + senderSteamId + ' nicht in der Datenbank gefunden',
@@ -137,7 +135,6 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
       );
     }
 
-    const senderBalance = senderResult[0]?.experience || 0;
     if (senderBalance < totalCost) {
       return createResponse(
         {
@@ -160,11 +157,10 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
     // Check if it's a valid Steam ID format (17 digits)
     if (/^\d{17}$/.test(recipientSteamId)) {
       // It's a Steam ID - query by id column with @steam suffix
-      const result = await db
-        .select({ id: schema.playerdata.id, experience: schema.playerdata.experience })
-        .from(schema.playerdata)
-        .where(eq(schema.playerdata.id, recipientSteamId + '@steam'));
-      recipientData = result.length > 0 && result[0] ? result[0] : null;
+      const balance = await getZvc(db, { id: recipientSteamId + '@steam' });
+      if (balance !== null) {
+        recipientData = { id: recipientSteamId + '@steam', experience: balance };
+      }
     } else {
       // It's not a Steam ID - treat as username and query by username column
       const result = await db
@@ -189,17 +185,13 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
 
     // Perform the transfer in a transaction
     try {
-      // Deduct total cost from sender (amount + tax)
-      await db
-        .update(schema.playerdata)
-        .set({ experience: senderBalance - totalCost })
-        .where(eq(schema.playerdata.id, senderSteamId));
+      await db.transaction(async (tx) => {
+        // Deduct total cost from sender (amount + tax)
+        await decreaseZvc(tx, { id: senderSteamId }, totalCost);
 
-      // Add only the transfer amount to recipient (not including tax)
-      await db
-        .update(schema.playerdata)
-        .set({ experience: recipientBalance + amount })
-        .where(eq(schema.playerdata.id, finalRecipientId));
+        // Add only the transfer amount to recipient (not including tax)
+        await increaseZvc(tx, { id: finalRecipientId }, amount);
+      });
 
       // Calculate new balances
       const newSenderBalance = senderBalance - totalCost;

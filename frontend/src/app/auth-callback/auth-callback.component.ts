@@ -1,26 +1,31 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="auth-callback-container">
       <div class="auth-callback-content">
         <h2>Completing Authentication...</h2>
         <p>{{ message }}</p>
-        <div class="loading-spinner" *ngIf="!error"></div>
-        <div class="error-message" *ngIf="error">
-          <p>{{ error }}</p>
-          <button (click)="retryAuth()" class="retry-button">Try Again</button>
-          <button (click)="goHome()" class="home-button">Go Home</button>
-        </div>
+        @if (!error) {
+          <div class="loading-spinner"></div>
+        }
+        @if (error) {
+          <div class="error-message">
+            <p>{{ error }}</p>
+            <button (click)="retryAuth()" class="retry-button">Try Again</button>
+            <button (click)="goHome()" class="home-button">Go Home</button>
+          </div>
+        }
       </div>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .auth-callback-container {
@@ -86,13 +91,11 @@ import { AuthService } from '../services/auth.service';
   ],
 })
 export class AuthCallbackComponent implements OnInit {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   message = 'Processing your login...';
   error: string | null = null;
-
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-  ) {}
 
   ngOnInit() {
     this.handleAuthCallback();

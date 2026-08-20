@@ -1,0 +1,34 @@
+<div class="dense-card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi pi-shield card-icon icon-shield"></i>
+      <div>
+        <h2>Moderations-Übersicht</h2>
+        <span class="card-subtitle">Verwarnungen, Bans & Verlinkungen</span>
+      </div>
+    </div>
+  </div>
+  <div class="moderation-bar">
+    <div class="mod-stat-item mod-warn">
+      <span class="mod-stat-value">{{ moderation()?.warns?.length || 0 }}</span>
+      <span class="mod-stat-label">Verwarnungen</span>
+    </div>
+    <div class="mod-stat-item mod-ban">
+      <span class="mod-stat-value">{{ moderation()?.bans?.length || 0 }}</span>
+      <span class="mod-stat-label">Bans</span>
+    </div>
+    <div class="mod-stat-item mod-mute">
+      <span class="mod-stat-value">{{ moderation()?.mutes?.length || 0 }}</span>
+      <span class="mod-stat-label">Mutes</span>
+    </div>
+    <div class="mod-stat-item mod-cases">
+      <span class="mod-stat-value">{{ casesCount() }}</span>
+      <span class="mod-stat-label">Verlinkte Cases</span>
+    </div>
+  </div>
+  @if (moderation()?.source === 'cedmod-api-not-implemented') {
+    <div class="dense-notice notice-info">
+      <i class="pi pi-info-circle"></i> Moderationsdaten werden in Kürze synchronisiert.
+    </div>
+  }
+</div>

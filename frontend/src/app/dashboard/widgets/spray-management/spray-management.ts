@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, input } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -23,12 +23,13 @@ interface SpraySlot {
 @Component({
   selector: 'app-spray-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './spray-management.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./spray-management.css'],
 })
 export class SprayManagementComponent implements OnInit, OnDestroy {
-  @Input() isDonator = false;
+  readonly isDonator = input(false);
 
   spraySlots: SpraySlot[] = [
     { id: null, name: '', imageUrl: null, isUploading: false, selectedFile: null, preview: null },
@@ -92,7 +93,7 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
 
           sprayData.forEach((spray, dbIndex) => {
             let visualIndex = dbIndex;
-            if (this.isDonator || this.authService.isVip() || this.authService.isBooster()) {
+            if (this.isDonator() || this.authService.isVip() || this.authService.isBooster()) {
               if (sprayData.length === 2 && dbIndex === 1) {
                 visualIndex = 2;
               } else if (sprayData.length === 3) {
@@ -391,15 +392,16 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
 
   shouldShowSpraySlot(i: number): boolean {
     const slot = this.spraySlots[i];
-    return !!(slot && slot.id && !slot.selectedFile && (i === 0 || i === 1 || (i === 2 && this.isDonator)));
+    return !!(slot && slot.id && !slot.selectedFile && (i === 0 || i === 1 || (i === 2 && this.isDonator())));
   }
 
   canUploadToSlot(i: number): boolean {
-    return i === 0 || i === 1 || (i === 2 && this.isDonator);
+    return i === 0 || i === 1 || (i === 2 && this.isDonator());
   }
 
   isSlotPaidButAvailable(i: number): boolean {
-    return (i === 1 && !this.isDonator) || (i === 2 && this.isDonator);
+    const isDonator = this.isDonator();
+    return (i === 1 && !isDonator) || (i === 2 && isDonator);
   }
 
   ngOnDestroy(): void {

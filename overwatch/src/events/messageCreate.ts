@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 import { TICKET_PHRASES, SUPPORT_CHANNEL_ID } from '../config/constants';
 import { moderateMessage } from '../handlers/moderation';
+import { handleBirthdayReply } from '../services/birthdayReward';
 
 export async function handleMessageCreate(message: Message): Promise<void> {
   // Delete stats command responses
@@ -24,4 +25,7 @@ export async function handleMessageCreate(message: Message): Promise<void> {
     });
     return;
   }
+
+  // Check if this is a reply to a birthday message and award ZVC
+  await handleBirthdayReply(message);
 }

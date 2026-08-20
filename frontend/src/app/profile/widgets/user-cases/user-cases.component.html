@@ -1,0 +1,47 @@
+<div class="dense-card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi card-icon" [class]="iconClass()"></i>
+      <div>
+        <h2>{{ title() }}</h2>
+        <span class="card-subtitle">{{ subtitle() }}</span>
+      </div>
+    </div>
+    <span class="badge">{{ cases().length }}</span>
+  </div>
+  @if (cases() && cases().length > 0) {
+    <div class="dense-list">
+      @for (caseItem of cases(); track caseItem.caseId) {
+        <a [routerLink]="['/cases', caseItem.caseId]" class="dense-list-item item-clickable">
+          <div class="item-main">
+            <span class="case-id-tag">#{{ caseItem.caseId }}</span>
+            @if (caseItem.title) {
+              <span class="case-title-text">{{ caseItem.title }}</span>
+            }
+          </div>
+          <div class="item-meta">
+            @if (caseItem.rule) {
+              <span class="badge badge-rule">{{ caseItem.rule }}</span>
+            }
+            @if (!isCreatedCases() && caseItem.createdBy?.displayName) {
+              <span class="meta-subtext">von {{ caseItem.createdBy.displayName }}</span>
+            }
+            @if (isCreatedCases() && caseItem.linkedUserCount !== undefined && caseItem.linkedUserCount > 0) {
+              <span class="badge badge-neutral">
+                {{ caseItem.linkedUserCount }} {{ caseItem.linkedUserCount === 1 ? 'Nutzer' : 'Nutzer' }}
+              </span>
+            }
+            <span class="meta-date">{{ getDateDisplay(caseItem.createdAt) }}</span>
+            <i class="pi pi-chevron-right item-arrow"></i>
+          </div>
+        </a>
+      }
+    </div>
+  }
+  @if (!cases() || cases().length === 0) {
+    <div class="empty-state-inline">
+      <i class="pi pi-inbox"></i>
+      <span>Keine Cases vorhanden</span>
+    </div>
+  }
+</div>

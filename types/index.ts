@@ -734,6 +734,19 @@ export interface BirthdayPostRequest {
 /** DELETE /birthday request */
 export interface BirthdayDeleteRequest {}
 
+/** POST /birthday/reward request (sent by the Overwatch bot) */
+export interface BirthdayRewardRequest {
+  messageId: string; // Discord message id of the birthday message
+  discordId: string; // Discord user id of the person replying
+}
+
+/** POST /birthday/reward response */
+export interface BirthdayRewardResponse {
+  status: 'awarded' | 'already_awarded' | 'not_found' | 'no_account';
+  amount?: number;
+  newBalance?: number;
+}
+
 // ============================================================================
 // Chicken Cross Types
 // ============================================================================
@@ -1202,4 +1215,10 @@ export interface LootboxPurchaseResponse {
 /** GET /lootbox response */
 export interface LootboxInfoResponse {
   voucherCount: number;
+}
+
+/** POST /informed request */
+export interface InformedTrackingPostRequest {
+  steamId: string;
+  roundNumber: number;
 }

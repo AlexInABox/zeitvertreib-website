@@ -174,3 +174,6 @@ dist
 .hypothesis
 schemathesis.toml
 drizzle
+!drizzle/
+drizzle/*
+!drizzle/0001_informed_tracking.sql

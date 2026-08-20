@@ -4,13 +4,13 @@ import {
   OnDestroy,
   AfterViewInit,
   ElementRef,
-  ViewChild,
-  ViewChildren,
-  QueryList,
   inject,
   NgZone,
+  ChangeDetectionStrategy,
+  viewChild,
+  viewChildren,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
@@ -37,8 +37,9 @@ type OdometerColumn = DigitColumn | SeparatorColumn;
 @Component({
   selector: 'app-zvc-overlay',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './zvc-overlay.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zvc-overlay.component.css'],
 })
 export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -62,8 +63,8 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   transferMessage = '';
   transferSuccess = false;
 
-  @ViewChild('odometerContainer') odometerContainer!: ElementRef<HTMLElement>;
-  @ViewChildren('ribbonRef') ribbons!: QueryList<ElementRef<HTMLElement>>;
+  readonly odometerContainer = viewChild<ElementRef<HTMLElement>>('odometerContainer');
+  readonly ribbons = viewChildren<ElementRef<HTMLElement>>('ribbonRef');
 
   private currentValue = -1;
   private balanceSub: Subscription | null = null;
@@ -277,7 +278,7 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
    * odometer lives on an integer-pixel grid.
    */
   private calibrateGrid(): number {
-    const container = this.odometerContainer?.nativeElement;
+    const container = this.odometerContainer()?.nativeElement;
     if (!container) return 16;
 
     // Measure one rendered digit
@@ -319,14 +320,15 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
     const newColumns: OdometerColumn[] = [];
     let digitIndex = 0;
     const totalDigits = chars.filter((c) => c !== '.' && c !== '-').length;
-    for (const ch of chars) {
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
       if (ch === '.' || ch === '-') {
-        newColumns.push({ key: `sep-${digitIndex}`, type: 'separator', value: ch, duration: 0 });
+        newColumns.push({ key: `sep-${i}`, type: 'separator', value: ch, duration: 0 });
       } else {
         const val = parseInt(ch, 10);
         const posFromRight = totalDigits - 1 - digitIndex;
         const duration = 600 + posFromRight * 80;
-        newColumns.push({ key: `d-${digitIndex}`, type: 'digit', value: val, duration });
+        newColumns.push({ key: `d-${i}`, type: 'digit', value: val, duration });
         digitIndex++;
       }
     }
@@ -347,7 +349,7 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       requestAnimationFrame(() => {
         // Force every element onto an integer-pixel grid
         const digitHeight = this.calibrateGrid();
-        const ribbonEls = this.ribbons.toArray();
+        const ribbonEls = this.ribbons();
 
         for (let i = 0, digitIdx = 0; i < this.columns.length; i++) {
           const col = this.columns[i];

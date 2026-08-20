@@ -1,0 +1,52 @@
+.dense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.dense-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.spray-row {
+  align-items: center;
+}
+
+.spray-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.spray-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+}
+
+.spray-input {
+  max-width: 240px;
+}
+
+.spray-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.meta-date {
+  font-size: 0.725rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: ui-monospace, monospace;
+}

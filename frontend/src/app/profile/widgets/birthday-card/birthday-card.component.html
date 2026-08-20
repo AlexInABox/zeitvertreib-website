@@ -1,0 +1,150 @@
+<div class="dense-card integration-card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="pi pi-gift card-icon icon-pink"></i>
+      <div>
+        <h2>Geburtstag</h2>
+        <span class="card-subtitle">Geburtstags-Belohnungen</span>
+      </div>
+    </div>
+    @if (hasBirthday()) {
+      <span class="badge badge-pink">Gesetzt</span>
+    }
+    @if (!hasBirthday()) {
+      <span class="badge badge-neutral">Nicht gesetzt</span>
+    }
+  </div>
+
+  @if (loadingBirthday) {
+    <div class="card-loading-inline">
+      <div class="loading-spinner small"></div>
+      <span>Lade Geburtstag...</span>
+    </div>
+  }
+
+  <!-- DISPLAY MODE -->
+  @if (!loadingBirthday && !isEditingBirthday) {
+    <div class="dense-body integration-body">
+      <div class="integration-content">
+        <div class="birthday-display-bar">
+          <div class="birthday-text-group">
+            @if (hasBirthday()) {
+              <span class="birthday-val"><i class="pi pi-calendar"></i> {{ getBirthdayDisplay() }}</span>
+            }
+            @if (!hasBirthday()) {
+              <span class="muted-text">Kein Geburtstag hinterlegt</span>
+            }
+          </div>
+          <button
+            class="btn btn-secondary-soft btn-sm"
+            (click)="startEditBirthday()"
+            [disabled]="!hasBirthday() && isBirthdayEditDisabled()"
+          >
+            <i class="pi" [class.pi-pencil]="hasBirthday()" [class.pi-plus]="!hasBirthday()"></i>
+            <span>{{ hasBirthday() ? 'Bearbeiten' : 'Hinzufügen' }}</span>
+          </button>
+        </div>
+      </div>
+
+      @if (hasBirthday() && isBirthdayEditDisabled()) {
+        <div class="dense-notice notice-warning">
+          <i class="pi pi-clock"></i> Änderung in {{ getDaysUntilBirthdayEdit() }} Tag(en) möglich.
+        </div>
+      }
+      @if (!hasBirthday() && isBirthdayEditDisabled()) {
+        <div class="dense-notice notice-warning">
+          <i class="pi pi-clock"></i> Hinzufügen in {{ getDaysUntilBirthdayEdit() }} Tag(en) möglich.
+        </div>
+      }
+    </div>
+  }
+
+  <!-- EDIT FORM MODE -->
+  @if (!loadingBirthday && isEditingBirthday) {
+    <div class="dense-body integration-body">
+      <div class="integration-content">
+        <div class="birthday-form-grid">
+          <div class="form-field">
+            <label for="birthday-day">Tag</label>
+            <input
+              type="number"
+              id="birthday-day"
+              class="dense-input center-text"
+              [(ngModel)]="editDay"
+              placeholder="01"
+              min="1"
+              max="31"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            />
+          </div>
+          <div class="form-field">
+            <label for="birthday-month">Monat</label>
+            <input
+              type="number"
+              id="birthday-month"
+              class="dense-input center-text"
+              [(ngModel)]="editMonth"
+              placeholder="01"
+              min="1"
+              max="12"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            />
+          </div>
+          <div class="form-field">
+            <label for="birthday-year">Jahr <span class="optional-label">(opt.)</span></label>
+            <input
+              type="number"
+              id="birthday-year"
+              class="dense-input center-text"
+              [(ngModel)]="editYear"
+              placeholder="1995"
+              [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+            />
+          </div>
+        </div>
+
+        @if (!isBirthdayEditDisabled()) {
+          <div class="dense-notice notice-info">
+            <i class="pi pi-info-circle"></i> Geburtstag ist <strong>öffentlich einsehbar</strong>.
+          </div>
+        }
+        @if (isUnder18()) {
+          <div class="dense-notice notice-error">Mindestalter von 18 Jahren erforderlich.</div>
+        }
+        @if (birthdayError) {
+          <div class="dense-notice notice-error">
+            {{ birthdayError }}
+          </div>
+        }
+      </div>
+
+      <div class="birthday-actions-bar">
+        @if (hasBirthday() && !showDeleteConfirm) {
+          <button class="btn btn-danger-soft btn-sm" (click)="showDeleteBirthdayConfirm()" [disabled]="birthdayLoading">
+            <i class="pi pi-trash"></i> Löschen
+          </button>
+        }
+        @if (showDeleteConfirm) {
+          <div class="inline-confirm">
+            <span class="confirm-query">Löschen?</span>
+            <button class="btn btn-danger btn-xs" (click)="deleteBirthday()" [disabled]="birthdayLoading">Ja</button>
+            <button class="btn btn-secondary-soft btn-xs" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">
+              Nein
+            </button>
+          </div>
+        }
+        <div class="spacer"></div>
+        <button class="btn btn-secondary-soft btn-sm" (click)="cancelEditBirthday()" [disabled]="birthdayLoading">
+          Abbrechen
+        </button>
+        <button
+          class="btn btn-primary btn-sm"
+          (click)="saveBirthday()"
+          [disabled]="birthdayLoading || isBirthdayEditDisabled() || isUnder18()"
+        >
+          {{ birthdayLoading ? 'Speichert...' : 'Speichern' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

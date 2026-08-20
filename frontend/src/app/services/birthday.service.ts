@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,10 +9,8 @@ import type { BirthdayGetResponse, BirthdayPostRequest } from '@zeitvertreib/typ
   providedIn: 'root',
 })
 export class BirthdayService {
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-  ) {}
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   private getAuthHeaders(): HttpHeaders {
     let headers = new HttpHeaders();

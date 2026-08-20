@@ -482,62 +482,92 @@ function createDiscordMessage(
   };
 }
 
-async function sendOrUpdateDiscordMessage(env: Env, message: DiscordMessage): Promise<boolean> {
+const RETRY_COUNT = 4;
+const RETRY_DELAY_MS = 60_000;
+
+async function findLatestLeaderboardMessage(env: Env, channelId: string, botToken: string): Promise<string | null> {
+  try {
+    const messagesResponse = await proxyFetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages?limit=1`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bot ${botToken}`,
+          'Content-Type': 'application/json',
+        },
+      },
+      env,
+    );
+
+    if (messagesResponse.ok) {
+      const messages = (await messagesResponse.json()) as Array<{ id: string }>;
+
+      if (messages && messages.length > 0) {
+        return messages[0]?.id ?? null;
+      }
+    } else {
+      console.log('Abrufen der letzten Nachricht fehlgeschlagen:', messagesResponse.status);
+    }
+  } catch (error) {
+    console.log('Fehler beim Abrufen der letzten Nachricht:', error);
+  }
+
+  return null;
+}
+
+async function sendOrUpdateDiscordMessage(
+  env: Env,
+  message: DiscordMessage,
+  retryOnMissing: boolean = false,
+): Promise<boolean> {
   try {
     const channelId = env.LEADERBOARD_CHANNEL_ID;
     const botToken = env.DISCORD_TOKEN;
 
     // Fetch the latest message in the channel
-    try {
-      const messagesResponse = await proxyFetch(
-        `https://discord.com/api/v10/channels/${channelId}/messages?limit=1`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bot ${botToken}`,
-            'Content-Type': 'application/json',
-          },
-        },
-        env,
-      );
+    let latestMessageId = await findLatestLeaderboardMessage(env, channelId, botToken);
 
-      if (messagesResponse.ok) {
-        const messages = (await messagesResponse.json()) as Array<{ id: string }>;
-
-        if (messages && messages.length > 0) {
-          const latestMessageId = messages[0]?.id;
-
-          // Try to edit the latest message
-          try {
-            const editResponse = await proxyFetch(
-              `https://discord.com/api/v10/channels/${channelId}/messages/${latestMessageId}`,
-              {
-                method: 'PATCH',
-                headers: {
-                  Authorization: `Bot ${botToken}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(message),
-              },
-              env,
-            );
-
-            if (editResponse.ok) {
-              console.log('Discord Bestenliste erfolgreich aktualisiert');
-              return true;
-            } else {
-              console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', editResponse.status);
-            }
-          } catch (error) {
-            console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', error);
-          }
+    // Discord sporadically reports no message although one exists. Instead of
+    // trusting that, wait CPU-free (scheduler.wait) and retry before sending a new one.
+    if (latestMessageId === null && retryOnMissing) {
+      for (let attempt = 1; attempt <= RETRY_COUNT; attempt++) {
+        console.log(`Keine bestehende Bestenlisten-Nachricht gefunden, Retry ${attempt}/${RETRY_COUNT} in 1 Minute...`);
+        await scheduler.wait(RETRY_DELAY_MS);
+        latestMessageId = await findLatestLeaderboardMessage(env, channelId, botToken);
+        if (latestMessageId !== null) {
+          break;
         }
       }
-    } catch (error) {
-      console.log('Fehler beim Abrufen der letzten Nachricht, erstelle neue:', error);
     }
 
-    // If editing failed, send a new message
+    if (latestMessageId !== null) {
+      // Try to edit the existing message
+      try {
+        const editResponse = await proxyFetch(
+          `https://discord.com/api/v10/channels/${channelId}/messages/${latestMessageId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bot ${botToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message),
+          },
+          env,
+        );
+
+        if (editResponse.ok) {
+          console.log('Discord Bestenliste erfolgreich aktualisiert');
+          return true;
+        } else {
+          console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', editResponse.status);
+        }
+      } catch (error) {
+        console.log('Nachricht bearbeiten fehlgeschlagen, erstelle neue:', error);
+      }
+    }
+
+    // If editing failed or no message exists after all retries, send a new message
     const response = await proxyFetch(
       `https://discord.com/api/v10/channels/${channelId}/messages`,
       {
@@ -569,6 +599,7 @@ export async function updateLeaderboard(
   db: ReturnType<typeof drizzle>,
   env: Env,
   ctx: ExecutionContext,
+  retryOnMissing: boolean = false,
 ): Promise<boolean> {
   try {
     console.log('Starte Bestenliste Update...');
@@ -580,7 +611,7 @@ export async function updateLeaderboard(
     const discordMessage = createDiscordMessage(leaderboardData, env);
 
     // Send or update Discord message
-    const success = await sendOrUpdateDiscordMessage(env, discordMessage);
+    const success = await sendOrUpdateDiscordMessage(env, discordMessage, retryOnMissing);
 
     if (success) {
       console.log('Bestenliste Update erfolgreich abgeschlossen');

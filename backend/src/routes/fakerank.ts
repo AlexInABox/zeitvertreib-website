@@ -1,8 +1,9 @@
-import { validateSession, createResponse, isTeam, isVip, isDonator, isBooster, increment } from '../utils.js';
+import { validateSession, createResponse, isTeam, isVip, isDonator, isBooster } from '../utils.js';
 import { appendNotification } from '../notifications.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, inArray } from 'drizzle-orm';
 import { fakeranks, fakerankBans, deletedFakeranks, playerdata } from '../db/schema.js';
+import { getZvc, decreaseZvc } from '../db/zvc.js';
 import { proxyFetch } from '../proxy.js';
 import type {
   FakerankGetRequest,
@@ -307,13 +308,7 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
     }
 
     // Check if user has at least 100 ZVC
-    const userBalanceResult = await db
-      .select({ experience: playerdata.experience })
-      .from(playerdata)
-      .where(eq(playerdata.id, userid))
-      .limit(1);
-
-    const currentBalance = userBalanceResult[0]?.experience || 0;
+    const currentBalance = (await getZvc(db, { id: userid })) ?? 0;
     const COST_FOR_THIS_USER = await getWeeklyFakerankCostForUser(userid, env);
 
     if (currentBalance < COST_FOR_THIS_USER) {
@@ -342,10 +337,7 @@ export async function updateFakerank(request: Request, env: Env, ctx: ExecutionC
       .returning();
 
     // Deduct 100 ZVC from user's balance
-    await db
-      .update(playerdata)
-      .set({ experience: increment(playerdata.experience, -COST_FOR_THIS_USER) })
-      .where(eq(playerdata.id, userid));
+    await decreaseZvc(db, { id: userid }, COST_FOR_THIS_USER);
 
     const newFakerank = result[0];
     if (!newFakerank) {
@@ -483,20 +475,11 @@ export async function collectZvcForFakeranksAndValidateColors(
           const weeklyCost = await getWeeklyFakerankCostForUser(fakerank.userid, env);
 
           // Get user's current balance
-          const userBalance = await db
-            .select({ experience: playerdata.experience })
-            .from(playerdata)
-            .where(eq(playerdata.id, fakerank.userid))
-            .limit(1);
-
-          const currentBalance = userBalance[0]?.experience || 0;
+          const currentBalance = (await getZvc(db, { id: fakerank.userid })) ?? 0;
 
           if (currentBalance >= weeklyCost) {
             // Deduct the cost and update the uploadedAt timestamp
-            await db
-              .update(playerdata)
-              .set({ experience: increment(playerdata.experience, -weeklyCost) })
-              .where(eq(playerdata.id, fakerank.userid));
+            await decreaseZvc(db, { id: fakerank.userid }, weeklyCost);
 
             ctx.waitUntil(
               appendNotification(env, fakerank.userid, {

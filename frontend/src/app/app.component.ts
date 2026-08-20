@@ -1,11 +1,11 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { RouterOutlet, NavigationEnd, Router } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { DomainWarningComponent } from './components/domain-warning/domain-warning.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { ZvcOverlayComponent } from './components/zvc-overlay/zvc-overlay.component';
-import { BackgroundMusicService } from './services/background-music.service';
+import { SupportOverlayComponent } from './components/support-overlay/support-overlay.component';
 import { ThemeService } from './services/theme.service';
 import { EasterEggService } from './services/easter-egg.service';
 import { AudioService } from './services/audio.service';
@@ -14,26 +14,30 @@ import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, HeaderComponent, DomainWarningComponent, ToastComponent, ZvcOverlayComponent],
+  imports: [
+    RouterOutlet,
+    HeaderComponent,
+    DomainWarningComponent,
+    ToastComponent,
+    ZvcOverlayComponent,
+    SupportOverlayComponent,
+  ],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private themeService = inject(ThemeService);
+  private easterEggService = inject(EasterEggService);
+  private router = inject(Router);
+
   title = 'zeitvertreib-website';
   showHeader = true;
-  showSoundCTA: boolean = false;
   private chiikawaSubscription?: Subscription;
   private chiikawaActivatedSubscription?: Subscription;
   private routerSubscription?: Subscription;
   private chiikawaOriginalSrc: Map<HTMLImageElement, string> = new Map();
   private audioService = inject(AudioService);
-
-  constructor(
-    private backgroundMusic: BackgroundMusicService,
-    private themeService: ThemeService,
-    private easterEggService: EasterEggService,
-    private router: Router,
-  ) {}
 
   //feel free to transfer this to a seperate file and then call that, but I tried it and it broke everything and killed my grandma
   private easterDates: Record<number, { month: number; day: number }> = {
@@ -66,13 +70,6 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     } catch (e) {
       console.warn('Easter background check failed', e);
-    }
-
-    // Start background music
-    try {
-      this.backgroundMusic.init();
-    } catch (e) {
-      console.warn('Failed to initialize background music', e);
     }
 
     // Register chiikawa sound (quieter!!!)

@@ -8,6 +8,7 @@ const execAsync = promisify(exec);
 
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff'];
 const MAX_MEDIA_SIZE_BYTES = 15 * 1024 * 1024 * 10; // 150MB
+const DISCORD_CDN_ATTACHMENT_PATTERN = /^https:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net)\/attachments\//;
 
 export interface MediaItem {
   mimeType: string;
@@ -367,6 +368,60 @@ async function fetchMetadata(url: string, message: Message): Promise<MediaMetada
 }
 
 /**
+ * Normalizes a Discord media URL to its canonical cdn.discordapp.com attachment URL.
+ */
+function normalizeDiscordAttachmentUrl(url: string): string {
+  if (url.startsWith('https://media.discordapp.net/attachments/')) {
+    return url.replace('https://media.discordapp.net/attachments/', 'https://cdn.discordapp.com/attachments/');
+  }
+  return url;
+}
+
+/**
+ * Refreshes Discord CDN attachment URLs via Discord's API. Discord strips the signed query
+ * parameters (?ex=..&is=..&hm=..) from attachment URLs in message content, which makes those
+ * URLs return 404. This endpoint returns working signed URLs for them.
+ */
+async function refreshDiscordCdnUrls(urls: string[], token: string): Promise<Map<string, string>> {
+  const refreshed = new Map<string, string>();
+  const uniqueUrls = Array.from(new Set(urls.map(normalizeDiscordAttachmentUrl)));
+  if (uniqueUrls.length === 0) return refreshed;
+
+  try {
+    const response = await fetch('https://discord.com/api/v9/attachments/refresh-urls', {
+      method: 'POST',
+      headers: {
+        Authorization: token.startsWith('Bot ') ? token : `Bot ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attachment_urls: uniqueUrls }),
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (!response.ok) {
+      console.warn(`[MediaDownloader] Discord CDN URL refresh failed with HTTP status ${response.status}`);
+      return refreshed;
+    }
+
+    const json = (await response.json()) as {
+      refreshed_urls?: { original?: string; refreshed?: string }[];
+    };
+
+    if (Array.isArray(json.refreshed_urls)) {
+      for (const item of json.refreshed_urls) {
+        if (item.original && item.refreshed) {
+          refreshed.set(item.original, item.refreshed);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[MediaDownloader] Discord CDN URL refresh error: ${err instanceof Error ? err.message : err}`);
+  }
+
+  return refreshed;
+}
+
+/**
  * Extracts and downloads all media and metadata from a message (attachments, embeds, text URLs).
  */
 export async function collectMediaFromMessage(message: Message): Promise<ProcessedMediaResults> {
@@ -375,9 +430,26 @@ export async function collectMediaFromMessage(message: Message): Promise<Process
   const processedUrls = new Set<string>();
   const logResults: { url: string; success: boolean; error?: string }[] = [];
 
+  // Cache of Discord CDN attachment URL -> working (refreshed) URL
+  const cdnRefreshCache = new Map<string, string>();
+
+  // Resolves a Discord CDN attachment URL to a working signed URL via the refresh API.
+  const resolveDiscordCdnUrl = async (url: string): Promise<string> => {
+    if (!DISCORD_CDN_ATTACHMENT_PATTERN.test(url)) return url;
+    const canonical = normalizeDiscordAttachmentUrl(url);
+    if (cdnRefreshCache.has(canonical)) return cdnRefreshCache.get(canonical)!;
+    if (!message.client.token) return canonical;
+
+    const refreshed = await refreshDiscordCdnUrls([canonical], message.client.token);
+    const resolved = refreshed.get(canonical) ?? canonical;
+    cdnRefreshCache.set(canonical, resolved);
+    return resolved;
+  };
+
   // Helper to process a URL and track its success/error
-  const handleUrl = async (url: string, isThumbnail: boolean = false) => {
+  const handleUrl = async (rawUrl: string, isThumbnail: boolean = false) => {
     const tempId = Math.random().toString(36).substring(2, 15);
+    const url = await resolveDiscordCdnUrl(rawUrl);
     try {
       const result = await processMediaUrl(url, tempId);
       if (result && result.length > 0) {

@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { IngamePermission, INGAME_PERMISSIONS, DEFAULT_ROLE_GRANTS } from './permission-matrix.data';
@@ -13,11 +13,14 @@ export interface Role {
 @Component({
   standalone: true,
   selector: 'app-permission-matrix',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './permission-matrix.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./permission-matrix.component.css'],
 })
 export class PermissionMatrixComponent implements OnInit {
+  private sanitizer = inject(DomSanitizer);
+
   roles: Role[] = [
     { id: 'test_supporter', name: 'Test Supporter', count: 0 },
     { id: 'supporter', name: 'Supporter', count: 0 },
@@ -37,8 +40,6 @@ export class PermissionMatrixComponent implements OnInit {
   searchText = '';
   selectedCategory = 'all';
   activePermCode: string | null = null;
-
-  constructor(private sanitizer: DomSanitizer) {}
 
   ngOnInit() {
     this.roleGrants['owner'] = this.permissions.map((p) => p.code);

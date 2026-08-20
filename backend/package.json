@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "rimraf node_modules/ && npm i && rimraf dist/ && npm run db:init && NODE_ENV=production npx drizzle-kit pull && npx tsc",
-    "build:dev": "rimraf node_modules/ && npm i && rimraf dist/ && npm run db:init && npx tsc",
+    "build": "rimraf dist/ && npx tsc",
+    "build:dev": "rimraf dist/ && npx tsc",
     "start": "npm run build:dev && npm-run-all --parallel watch:dev wrangler:dev",
     "wrangler:dev": "wrangler dev --ip 127.0.0.1",
     "watch:dev": "tsc --watch --project tsconfig.json",

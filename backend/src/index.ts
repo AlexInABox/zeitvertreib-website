@@ -54,6 +54,7 @@ import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
 import { handleGetTakeout, handlePostTakeout } from './routes/takeout.js';
 import { handleGetDeletion, handlePostDeletion } from './routes/deletion.js';
 import { handleGetBirthday, handlePostBirthday, handleDeleteBirthday } from './routes/birthday.js';
+import { handleBirthdayReward } from './routes/birthday-reward.js';
 import { checkForBirthdays } from './routes/cron/birthday.js';
 import {
   handleChickenCrossInfo,
@@ -64,6 +65,7 @@ import {
 import { getUserData } from './routes/zeit.js';
 import { handleGetQuests, handleClaimQuestReward } from './routes/quests.js';
 import { handleGetReports, handleReportFileUpload, handleSearchReportsBySteamId } from './routes/reports.js';
+import { handleCreateInformedTracking, handleResolveInformedTracking } from './routes/informed.js';
 import { handleGetNotifications, handleMarkNotificationsRead } from './routes/notifications.js';
 import { handleLootboxPurchase, handleLootboxInfo } from './routes/lootbox.js';
 import {
@@ -208,6 +210,7 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/birthday': handleGetBirthday,
   'POST:/birthday': handlePostBirthday,
   'DELETE:/birthday': handleDeleteBirthday,
+  'POST:/birthday/reward': handleBirthdayReward,
 
   // Chicken Cross routes
   'GET:/chickencross/info': handleChickenCrossInfo,
@@ -226,6 +229,10 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
   'GET:/reports/search': handleSearchReportsBySteamId,
   'GET:/reports/upload': handleReportFileUpload,
   'GET:/reports': handleGetReports,
+
+  // Informed QR tracking routes
+  'POST:/informed': handleCreateInformedTracking,
+  'GET:/public/informed': handleResolveInformedTracking,
 };
 
 export default {
@@ -315,7 +322,7 @@ export default {
 
     // Update leaderboard every 15 minutes
     if (controller.cron === '*/15 * * * *') {
-      ctx.waitUntil(updateLeaderboard(db, env, ctx));
+      ctx.waitUntil(updateLeaderboard(db, env, ctx, true));
       ctx.waitUntil(updateDonationsLeaderboard(db, env, ctx));
     }
 
