@@ -10,6 +10,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
+## [30]
+
+### Added
+
+- New Toolkit plugin that gives every player three coins in their starting inventory
+
+### Changed
+
+- Rebalanced SCP proximity voice chat to be quieter but audible from a greater distance
+
 ## [29]
 
 ### Added
@@ -153,7 +163,8 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Improved dark mode appearance site-wide, especially on the dashboard.
 - Chicken Cross game payout adjusted to compound each step for larger payouts.
 
-[29]: https://github.com/alexinabox/zeitvertreib-website/compare/build-28...dev
+[30]: https://github.com/alexinabox/zeitvertreib-website/compare/build-29...dev
+[29]: https://github.com/alexinabox/zeitvertreib-website/compare/build-28...build-29
 [28]: https://github.com/alexinabox/zeitvertreib-website/compare/build-27...build-28
 [27]: https://github.com/alexinabox/zeitvertreib-website/compare/build-26...build-27
 [26]: https://github.com/alexinabox/zeitvertreib-website/compare/build-25...build-26
