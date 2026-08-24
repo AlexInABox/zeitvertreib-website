@@ -11,6 +11,11 @@ import { playerdata } from './schema.js';
  *
  * `getZvc` returns `null` when the user has no playerdata row at all, so
  * callers can distinguish "user not found" from an empty (0) balance.
+ *
+ * For multi-statement writes (e.g. transfers), put the unexecuted `*Query`
+ * builders into `db.batch([...])`. D1 does not support interactive
+ * transactions — `db.transaction()` emits a literal `BEGIN`, which D1
+ * rejects. Batches are atomic: all statements commit together or roll back.
  */
 
 export type ZvcDb = BaseSQLiteDatabase<any, any, any, any>;
@@ -35,18 +40,32 @@ export async function getZvc(db: ZvcDb, user: ZvcUserRef): Promise<number | null
   return result ? (result.experience ?? 0) : null;
 }
 
-export async function increaseZvc(db: ZvcDb, user: ZvcUserRef, amount: number): Promise<void> {
-  await db
+/**
+ * Unexecuted increment query. Pass into `db.batch([...])` to make it atomic
+ * with other statements.
+ */
+export function increaseZvcQuery(db: ZvcDb, user: ZvcUserRef, amount: number) {
+  return db
     .update(playerdata)
     .set({ experience: sql`${playerdata.experience} + ${amount}` })
-    .where(eq(zvcUserColumn(user), zvcUserValue(user)))
-    .run();
+    .where(eq(zvcUserColumn(user), zvcUserValue(user)));
+}
+
+export async function increaseZvc(db: ZvcDb, user: ZvcUserRef, amount: number): Promise<void> {
+  await increaseZvcQuery(db, user, amount).run();
+}
+
+/**
+ * Unexecuted decrement query. Pass into `db.batch([...])` to make it atomic
+ * with other statements.
+ */
+export function decreaseZvcQuery(db: ZvcDb, user: ZvcUserRef, amount: number) {
+  return db
+    .update(playerdata)
+    .set({ experience: sql`${playerdata.experience} - ${amount}` })
+    .where(eq(zvcUserColumn(user), zvcUserValue(user)));
 }
 
 export async function decreaseZvc(db: ZvcDb, user: ZvcUserRef, amount: number): Promise<void> {
-  await db
-    .update(playerdata)
-    .set({ experience: sql`${playerdata.experience} - ${amount}` })
-    .where(eq(zvcUserColumn(user), zvcUserValue(user)))
-    .run();
+  await decreaseZvcQuery(db, user, amount).run();
 }

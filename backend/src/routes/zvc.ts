@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { inArray, eq } from 'drizzle-orm';
 import * as schema from '../db/schema.js';
 import { createResponse, validateSession } from '../utils.js';
-import { getZvc, increaseZvc, decreaseZvc } from '../db/zvc.js';
+import { getZvc, increaseZvcQuery, decreaseZvcQuery } from '../db/zvc.js';
 import type { ZvcGetResponse } from '@zeitvertreib/types';
 
 /**
@@ -183,15 +183,14 @@ export async function handleTransferZVC(request: Request, env: Env): Promise<Res
     const recipientBalance = recipientData.experience || 0;
     const finalRecipientId = recipientData.id;
 
-    // Perform the transfer in a transaction
+    // Perform the transfer atomically (D1 batch = one transaction).
     try {
-      await db.transaction(async (tx) => {
+      await db.batch([
         // Deduct total cost from sender (amount + tax)
-        await decreaseZvc(tx, { id: senderSteamId }, totalCost);
-
+        decreaseZvcQuery(db, { id: senderSteamId }, totalCost),
         // Add only the transfer amount to recipient (not including tax)
-        await increaseZvc(tx, { id: finalRecipientId }, amount);
-      });
+        increaseZvcQuery(db, { id: finalRecipientId }, amount),
+      ]);
 
       // Calculate new balances
       const newSenderBalance = senderBalance - totalCost;
