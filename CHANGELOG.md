@@ -20,6 +20,10 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 
 - Rebalanced SCP proximity voice chat to be quieter but audible from a greater distance
 
+### Fixed
+
+- Failing database queries have benn fixed. Spray uploads, coin transfers and quest redemptions work again!
+
 ## [29]
 
 ### Added
