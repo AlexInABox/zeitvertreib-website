@@ -1,0 +1,53 @@
+name: 'Patchnotes Publisher'
+description: >-
+  Turns published release notes into a player-friendly German Discord announcement via OpenAI
+  and posts it using the Discord Components V2 message system.
+inputs:
+  openai-api-key:
+    description: 'OpenAI API token used to translate and rephrase the changelog'
+    required: true
+  discord-webhook-url:
+    description: 'Discord webhook URL that receives the announcement'
+    required: true
+  discord-role-id:
+    description: 'Role ID that gets mentioned (pinged) by the announcement'
+    required: false
+    default: ''
+  openai-model:
+    description: 'OpenAI model used to generate the patchnotes'
+    required: false
+    default: 'gpt-4o-mini'
+  accent-color:
+    description: 'Hex color of the container accent bar (e.g. #B41B85)'
+    required: false
+    default: '#B41B85'
+  bot-username:
+    description: 'Username displayed for the webhook message'
+    required: false
+    default: 'Zeitvertreib Patchnoten'
+  avatar-url:
+    description: 'Avatar displayed for the webhook message'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Deno
+      shell: bash
+      run: |
+        mkdir -p $HOME/.deno/bin
+        curl -fsSL https://deno.land/install.sh | sh -s -- v2.5.6
+        echo "$HOME/.deno/bin" >> $GITHUB_PATH
+
+    - name: Publish patchnotes
+      shell: bash
+      env:
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        DISCORD_WEBHOOK_URL: ${{ inputs.discord-webhook-url }}
+        DISCORD_ROLE_ID: ${{ inputs.discord-role-id }}
+        OPENAI_MODEL: ${{ inputs.openai-model }}
+        ACCENT_COLOR: ${{ inputs.accent-color }}
+        BOT_USERNAME: ${{ inputs.bot-username }}
+        AVATAR_URL: ${{ inputs.avatar-url }}
+      run: |
+        deno run --allow-net --allow-read --allow-env "$GITHUB_ACTION_PATH/main.ts"
