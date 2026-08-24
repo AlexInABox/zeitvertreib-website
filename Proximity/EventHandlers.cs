@@ -50,7 +50,7 @@ public static class EventHandlers
 
         ActiveSpeakers[player] = SpeakerToyPool.Rent(
             SpeakerToyPool.NextAvailableId,
-            new SpeakerSettings { IsSpatial = true, Volume = 20F, MinDistance = 1f, MaxDistance = 20},
+            new SpeakerSettings { IsSpatial = true, Volume = 15F, MinDistance = 1f, MaxDistance = 30},
             player.GameObject!.transform
         );
         BasicElement enableHint = new(10f, "<size=18>Proximity Chat: <color=green>AKTIVIERT</color></size>");

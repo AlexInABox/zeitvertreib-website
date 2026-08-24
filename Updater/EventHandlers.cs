@@ -24,9 +24,9 @@ public static class EventHandlers
         Client.DefaultRequestHeaders.UserAgent.ParseAdd("zvupdater");
 
         // Add GitHub token if available
-        if (!string.IsNullOrEmpty(Plugin.Instance.Config!.GitHubToken))
+        if (!string.IsNullOrEmpty(Plugin.Instance.Config!.GitToken))
             Client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("token", Plugin.Instance.Config.GitHubToken);
+                new AuthenticationHeaderValue("token", Plugin.Instance.Config.GitToken);
 
         _coroutineHandle = Timing.RunCoroutine(MainLoop());
     }
@@ -68,7 +68,7 @@ public static class EventHandlers
         try
         {
             string json = await Client
-                .GetStringAsync("https://api.github.com/repos/AlexInABox/zeitvertreib-website/releases");
+                .GetStringAsync("https://git.zeitvertreib.vip/api/v1/repos/zeitvertreib/zeitvertreib/releases");
 
             JArray releases = JArray.Parse(json);
 

@@ -1,0 +1,22 @@
+name: Release Patchnotes
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  patchnotes:
+    name: 📣 Announce Release on Discord
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repo
+        uses: https://github.com/actions/checkout@v6
+
+      - name: Generate and publish German patchnotes
+        uses: ./.forgejo/actions/patchnotes
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          discord-webhook-url: ${{ secrets.DISCORD_PATCHNOTES_WEBHOOK_URL }}
+          discord-role-id: '1530263629927022674'

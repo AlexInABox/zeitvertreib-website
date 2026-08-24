@@ -1,8 +1,8 @@
-import { dailyQuestProgress, weeklyQuestProgress, playerdata } from '../db/schema.js';
+import { dailyQuestProgress, weeklyQuestProgress } from '../db/schema.js';
 import { validateSession, getPlayerData, createResponse, increment } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
-import { increaseZvc } from '../db/zvc.js';
+import { increaseZvcQuery } from '../db/zvc.js';
 import typia from 'typia';
 import type {
   GetQuestsResponse,
@@ -243,21 +243,21 @@ export async function handleClaimQuestReward(request: Request, env: Env): Promis
 
     const claimTimestamp = Math.floor(Date.now() / 1000);
     if (isWeeklyQuest) {
-      await db.transaction(async (tx) => {
-        await increaseZvc(tx, { id: sessionResult.steamId! }, questDef.coinReward);
-        await tx
+      await db.batch([
+        increaseZvcQuery(db, { id: sessionResult.steamId! }, questDef.coinReward),
+        db
           .update(weeklyQuestProgress)
           .set({ claimedAt: claimTimestamp })
-          .where(eq(weeklyQuestProgress.id, progressRow.id));
-      });
+          .where(eq(weeklyQuestProgress.id, progressRow.id)),
+      ]);
     } else {
-      await db.transaction(async (tx) => {
-        await increaseZvc(tx, { id: sessionResult.steamId! }, questDef.coinReward);
-        await tx
+      await db.batch([
+        increaseZvcQuery(db, { id: sessionResult.steamId! }, questDef.coinReward),
+        db
           .update(dailyQuestProgress)
           .set({ claimedAt: claimTimestamp })
-          .where(eq(dailyQuestProgress.id, progressRow.id));
-      });
+          .where(eq(dailyQuestProgress.id, progressRow.id)),
+      ]);
     }
 
     const response: ClaimQuestRewardResponse = {

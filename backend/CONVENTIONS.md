@@ -118,23 +118,27 @@ Available helpers (all take the drizzle instance and a `{ id }` or `{ discordId 
 - `getZvc(db, user)` → `Promise<number | null>` (`null` = user has no `playerdata` row)
 - `increaseZvc(db, user, amount)` → atomic increment
 - `decreaseZvc(db, user, amount)` → atomic decrement
+- `increaseZvcQuery(db, user, amount)` / `decreaseZvcQuery(db, user, amount)` → the same updates **without executing them**, for composing atomic multi-statement writes
 
-For multi-statement writes, wrap them in `db.transaction()` so balance changes stay atomic.
+For multi-statement writes, combine the `*Query` builders in `db.batch([...])`. Batches are atomic on D1 (all statements commit together or roll back).
+
+> [!WARNING]
+> **Never use `db.transaction()` with D1.** Cloudflare D1 rejects explicit `BEGIN`/`COMMIT`/`ROLLBACK` SQL, and the drizzle D1 driver implements `.transaction()` by issuing exactly those statements — every call fails with a disallowed-query error. `db.batch([...])` is the only atomic multi-write primitive on D1.
 
 ### ✅ DO (Correct)
 
 ```typescript
-import { getZvc, decreaseZvc } from '../db/zvc.js';
+import { getZvc, decreaseZvcQuery } from '../db/zvc.js';
 
 const balance = await getZvc(db, { id: userid });
 if (balance === null) {
   return createResponse({ error: 'Player not found' }, 404, origin);
 }
 
-await db.transaction(async (tx) => {
-  await decreaseZvc(tx, { id: userid }, 100);
-  await tx.update(sprays).set({ createdAt: now }).where(eq(sprays.id, sprayId));
-});
+await db.batch([
+  decreaseZvcQuery(db, { id: userid }, 100),
+  db.update(sprays).set({ createdAt: now }).where(eq(sprays.id, sprayId)),
+]);
 ```
 
 ### ❌ DON'T (Forbidden)

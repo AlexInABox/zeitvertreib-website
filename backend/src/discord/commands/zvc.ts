@@ -4,7 +4,7 @@ import { BaseCommand } from '../base-command.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { playerdata } from '../../db/schema.js';
-import { decreaseZvc, increaseZvc } from '../../db/zvc.js';
+import { decreaseZvcQuery, increaseZvcQuery } from '../../db/zvc.js';
 
 /**
  * Check if it's currently weekend (Saturday or Sunday) in Berlin, Germany
@@ -300,10 +300,11 @@ export class ZvcCommand extends BaseCommand {
         return;
       }
 
-      await db.transaction(async (tx) => {
-        await decreaseZvc(tx, { id: senderSteamId }, totalCost);
-        await increaseZvc(tx, { id: recipientSteamId }, amount);
-      });
+      // Atomic transfer via D1 batch (all-or-nothing)
+      await db.batch([
+        decreaseZvcQuery(db, { id: senderSteamId }, totalCost),
+        increaseZvcQuery(db, { id: recipientSteamId }, amount),
+      ]);
 
       const newRecipientBalance = recipientBalance + amount;
 
