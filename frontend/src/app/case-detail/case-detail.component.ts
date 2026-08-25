@@ -1,15 +1,11 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
 import { AuthService } from '../services/auth.service';
-import { FileUploader, FileUploadModule } from 'ng2-file-upload';
+import { FileUploader } from 'ng2-file-upload';
 
 import type {
   GetCaseMetadataGetResponse,
@@ -20,10 +16,11 @@ import type {
 } from '@zeitvertreib/types';
 import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
 import { MedalService } from '../services/medal.service';
+import { IconComponent } from '../components/icon/icon.component';
 
 @Component({
   selector: 'app-case-detail',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, FileUploadModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './case-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-detail.component.css'],
@@ -41,7 +38,6 @@ export class CaseDetailComponent implements OnInit {
   filteredFiles: GetCaseMetadataGetResponse['files'] = [];
   searchQuery = '';
   sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest' = 'newest';
-  sortDropdownOpen = false;
   isLoading = true;
   hasError = false;
   errorMessage = '';
@@ -104,6 +100,12 @@ export class CaseDetailComponent implements OnInit {
   isManagingLinkedUsers = false;
   linkedUserError = '';
 
+  // Two-click removal confirmation state
+  pendingRemoveUser: string | null = null;
+  pendingRemoveReport: number | null = null;
+  private pendingUserTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingReportTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Linked report management state
   newLinkedReportId = '';
   isLinkingReport = false;
@@ -141,17 +143,69 @@ export class CaseDetailComponent implements OnInit {
 
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
-      this.sortDropdownOpen = false;
-    }
     if (!target.closest('.report-search-section') && this.reportSearchDropdownOpen) {
       this.reportSearchDropdownOpen = false;
+    }
+    if (!target.closest('.user-chip') && !target.closest('.report-chip')) {
+      this.cancelPendingRemoval('user');
+      this.cancelPendingRemoval('report');
     }
   }
 
   onEscapeKey() {
     if (this.viewerOpen) {
       this.closeViewer();
+    }
+    this.cancelPendingRemoval('user');
+    this.cancelPendingRemoval('report');
+  }
+
+  onRemoveLinkedUser(steamId: string, event: Event) {
+    event.stopPropagation();
+    if (this.pendingRemoveUser !== steamId) {
+      this.pendingRemoveUser = steamId;
+      this.armPendingTimer('user');
+      return;
+    }
+    this.cancelPendingRemoval('user');
+    this.removeLinkedUser(steamId);
+  }
+
+  onRemoveLinkedReport(reportId: number, event: Event) {
+    event.stopPropagation();
+    if (this.pendingRemoveReport !== reportId) {
+      this.pendingRemoveReport = reportId;
+      this.armPendingTimer('report');
+      return;
+    }
+    this.cancelPendingRemoval('report');
+    this.removeLinkedReport(reportId);
+  }
+
+  cancelPendingRemoval(which: 'user' | 'report') {
+    if (which === 'user') {
+      if (this.pendingUserTimer !== null) {
+        clearTimeout(this.pendingUserTimer);
+        this.pendingUserTimer = null;
+      }
+      this.pendingRemoveUser = null;
+    } else {
+      if (this.pendingReportTimer !== null) {
+        clearTimeout(this.pendingReportTimer);
+        this.pendingReportTimer = null;
+      }
+      this.pendingRemoveReport = null;
+    }
+  }
+
+  private armPendingTimer(which: 'user' | 'report') {
+    const confirmTimeout = 3000;
+    if (which === 'user') {
+      if (this.pendingUserTimer !== null) clearTimeout(this.pendingUserTimer);
+      this.pendingUserTimer = setTimeout(() => this.cancelPendingRemoval('user'), confirmTimeout);
+    } else {
+      if (this.pendingReportTimer !== null) clearTimeout(this.pendingReportTimer);
+      this.pendingReportTimer = setTimeout(() => this.cancelPendingRemoval('report'), confirmTimeout);
     }
   }
 
@@ -177,9 +231,11 @@ export class CaseDetailComponent implements OnInit {
     });
   }
 
-  loadCaseData() {
-    this.isLoading = true;
-    this.hasError = false;
+  loadCaseData(silent = false) {
+    if (!silent) {
+      this.isLoading = true;
+      this.hasError = false;
+    }
 
     this.http.get<GetCaseMetadataGetResponse>(`${environment.apiUrl}/cases/metadata?case=${this.caseId}`).subscribe({
       next: (data) => {
@@ -191,6 +247,7 @@ export class CaseDetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading case:', error);
+        if (silent) return;
         this.hasError = true;
         this.errorMessage = error.error?.error || 'Fehler beim Laden des Falls';
         this.isLoading = false;
@@ -232,16 +289,11 @@ export class CaseDetailComponent implements OnInit {
 
   changeSortOrder(sortBy: 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest') {
     this.sortBy = sortBy;
-    this.sortDropdownOpen = false;
     this.filterFiles();
   }
 
-  toggleSortDropdown() {
-    this.sortDropdownOpen = !this.sortDropdownOpen;
-  }
-
-  getSortLabel(): string {
-    return this.sortOptions.find((opt) => opt.value === this.sortBy)?.label || 'Sortieren';
+  onSortChange(value: string) {
+    this.changeSortOrder(value as 'name' | 'name-desc' | 'newest' | 'oldest' | 'largest' | 'smallest');
   }
 
   clearSearch() {
@@ -317,17 +369,6 @@ export class CaseDetailComponent implements OnInit {
 
   getFileExtension(filename: string): string {
     return filename.split('.').pop()?.toLowerCase() || '';
-  }
-
-  getFileIcon(filename: string): string {
-    const ext = this.getFileExtension(filename);
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return 'pi-image';
-    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'pi-video';
-    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'pi-volume-up';
-    if (['pdf'].includes(ext)) return 'pi-file-pdf';
-    if (['txt', 'md'].includes(ext)) return 'pi-file-edit';
-    if (['zip', 'tar', 'gz'].includes(ext)) return 'pi-box';
-    return 'pi-file';
   }
 
   getFileType(filename: string): string {
@@ -459,7 +500,7 @@ export class CaseDetailComponent implements OnInit {
         next: () => {
           this.isSavingMetadata = false;
           this.isEditingMetadata = false;
-          this.loadCaseData();
+          this.loadCaseData(true);
         },
         error: (error) => {
           this.isSavingMetadata = false;
@@ -506,7 +547,7 @@ export class CaseDetailComponent implements OnInit {
         next: () => {
           this.isManagingLinkedUsers = false;
           this.newLinkedSteamId = '';
-          this.loadCaseData();
+          this.loadCaseData(true);
         },
         error: (error) => {
           this.isManagingLinkedUsers = false;
@@ -578,7 +619,7 @@ export class CaseDetailComponent implements OnInit {
       .subscribe({
         next: () => {
           this.isLinkingReport = false;
-          this.loadCaseData();
+          this.loadCaseData(true);
         },
         error: (error) => {
           this.isLinkingReport = false;
@@ -617,7 +658,7 @@ export class CaseDetailComponent implements OnInit {
           this.isLinkingReport = false;
           this.newLinkedReportId = '';
           this.reportLinkSuccess = `Report #${reportId} wurde erfolgreich verknüpft`;
-          this.loadCaseData();
+          this.loadCaseData(true);
         },
         error: (error) => {
           this.isLinkingReport = false;
@@ -643,7 +684,7 @@ export class CaseDetailComponent implements OnInit {
       .subscribe({
         next: () => {
           this.isManagingLinkedUsers = false;
-          this.loadCaseData();
+          this.loadCaseData(true);
         },
         error: (error) => {
           this.isManagingLinkedUsers = false;
@@ -705,7 +746,7 @@ export class CaseDetailComponent implements OnInit {
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
 
-      this.loadCaseData();
+      this.loadCaseData(true);
       alert('Datei erfolgreich hochgeladen!');
     } catch (error) {
       this.isUploading = false;
@@ -792,7 +833,7 @@ export class CaseDetailComponent implements OnInit {
           this.medalStatusMessage = '';
           this.medalETA = '';
 
-          this.loadCaseData();
+          this.loadCaseData(true);
           alert('Medal Clip erfolgreich hochgeladen!');
           return;
         } catch (error) {

@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
+import { IconComponent } from '../components/icon/icon.component';
 import type {
   CaseListItem,
   CaseCategory,
@@ -18,7 +19,7 @@ type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
 
 @Component({
   selector: 'app-case-management',
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './case-management.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-management.component.css'],

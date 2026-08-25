@@ -99,7 +99,7 @@
   white-space: nowrap;
 }
 
-.badge i {
+.badge app-icon {
   font-size: 0.65rem;
 }
 
@@ -303,7 +303,7 @@
   font-family: inherit;
 }
 
-.create-case-row i {
+.create-case-row app-icon {
   font-size: 0.75rem;
 }
 
@@ -355,7 +355,7 @@
   font-family: inherit;
 }
 
-.mode-pill i {
+.mode-pill app-icon {
   font-size: 0.75rem;
 }
 
@@ -472,7 +472,7 @@
   line-height: 1.4;
 }
 
-.search-hint i {
+.search-hint app-icon {
   font-size: 0.725rem;
   flex-shrink: 0;
 }
@@ -481,8 +481,8 @@
   color: #c4b5fd;
 }
 
-.hint-active i,
-.hint-error i {
+.hint-active app-icon,
+.hint-error app-icon {
   flex-shrink: 0;
 }
 
