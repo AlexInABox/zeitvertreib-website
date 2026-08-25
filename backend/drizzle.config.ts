@@ -7,11 +7,14 @@ import path from 'path';
 
 const getLocalD1 = () => {
   try {
-    const basePath = path.resolve('.wrangler');
-    const dbFile = fs.readdirSync(basePath, { encoding: 'utf-8', recursive: true }).find((f) => f.endsWith('.sqlite'));
+    const basePath = path.resolve('.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+    const dbFiles = fs
+      .readdirSync(basePath, { encoding: 'utf-8' })
+      .filter((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite');
+    const dbFile = dbFiles[0];
 
     if (!dbFile) {
-      throw new Error(`.sqlite file not found in ${basePath}`);
+      throw new Error(`D1 .sqlite file not found in ${basePath} (run 'wrangler dev' once to create local state)`);
     }
 
     const url = path.resolve(basePath, dbFile);
