@@ -1,13 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../services/auth.service';
 import type {
   CaseListItem,
@@ -21,13 +18,10 @@ type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
 
 @Component({
   selector: 'app-case-management',
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule],
+  imports: [FormsModule],
   templateUrl: './case-management.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-management.component.css'],
-  host: {
-    '(document:click)': 'onDocumentClick($event)',
-  },
 })
 export class CaseManagementComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
@@ -51,7 +45,6 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
 
   sortBy: 'createdAt' | 'lastUpdatedAt' = 'createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
-  sortDropdownOpen = false;
 
   // Category filter
   categoryFilter: CaseCategory | null = null;
@@ -99,13 +92,6 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
   private steamIdSubject = new Subject<string>();
   private discordIdSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
-
-  onDocumentClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.custom-dropdown') && this.sortDropdownOpen) {
-      this.sortDropdownOpen = false;
-    }
-  }
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getSessionToken();
@@ -392,7 +378,8 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
     this.router.navigate(['/cases', item.caseId]);
   }
 
-  navigateToCreatorProfile(discordId: string) {
+  navigateToCreatorProfile(discordId: string, event?: MouseEvent) {
+    event?.stopPropagation();
     if (this.isTeam) {
       const url = this.router.serializeUrl(this.router.createUrlTree(['/zeit'], { queryParams: { discordId } }));
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -454,17 +441,12 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
   changeSortOrder(sortBy: 'createdAt' | 'lastUpdatedAt', sortOrder: 'asc' | 'desc') {
     this.sortBy = sortBy;
     this.sortOrder = sortOrder;
-    this.sortDropdownOpen = false;
     this.loadCases(true);
   }
 
-  toggleSortDropdown() {
-    this.sortDropdownOpen = !this.sortDropdownOpen;
-  }
-
-  getSortLabel(): string {
-    const opt = this.sortOptions.find((o) => o.sortBy === this.sortBy && o.sortOrder === this.sortOrder);
-    return opt?.label || 'Sortieren';
+  onSortChange(value: string) {
+    const [sortBy, sortOrder] = value.split(':') as ['createdAt' | 'lastUpdatedAt', 'asc' | 'desc'];
+    this.changeSortOrder(sortBy, sortOrder);
   }
 
   nextPage() {
@@ -514,9 +496,5 @@ export class CaseManagementComponent implements OnInit, OnDestroy {
   clearSearch() {
     this.searchQuery = '';
     this.filterCases();
-  }
-
-  closeSortDropdown() {
-    this.sortDropdownOpen = false;
   }
 }
