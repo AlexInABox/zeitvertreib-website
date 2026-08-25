@@ -36,9 +36,7 @@ function findLocalD1() {
     console.error(`No local D1 state found at ${dir}. Run 'npm run db:init' first.`);
     process.exit(1);
   }
-  const file = fs
-    .readdirSync(dir)
-    .find((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite');
+  const file = fs.readdirSync(dir).find((f) => f.endsWith('.sqlite') && f !== 'metadata.sqlite');
   if (!file) {
     console.error(`No D1 database file found in ${dir}. Run 'npm run db:init' first.`);
     process.exit(1);
@@ -47,36 +45,100 @@ function findLocalD1() {
 }
 
 const FAKERANK_COLORS = [
-  'pink', 'red', 'brown', 'silver', 'default', 'light_green', 'crimson', 'cyan',
-  'aqua', 'deep_pink', 'tomato', 'yellow', 'magenta', 'blue_green', 'orange',
-  'lime', 'green', 'emerald', 'carmine', 'nickel', 'mint', 'army_green', 'pumpkin',
+  'pink',
+  'red',
+  'brown',
+  'silver',
+  'default',
+  'light_green',
+  'crimson',
+  'cyan',
+  'aqua',
+  'deep_pink',
+  'tomato',
+  'yellow',
+  'magenta',
+  'blue_green',
+  'orange',
+  'lime',
+  'green',
+  'emerald',
+  'carmine',
+  'nickel',
+  'mint',
+  'army_green',
+  'pumpkin',
 ];
 
 const CASE_CATEGORIES = [
-  'Beleidigungen', 'Supportflucht', 'Team-Trolling', 'Soundboard', 'Report-Abuse',
-  'Camping', 'Rollenflucht', 'Bug-Abusing', 'Diebstahl', 'Teaming',
-  'Gefesselte Klassen', 'Ban-Evasion', 'Rundenende', 'Sonstiges',
+  'Beleidigungen',
+  'Supportflucht',
+  'Team-Trolling',
+  'Soundboard',
+  'Report-Abuse',
+  'Camping',
+  'Rollenflucht',
+  'Bug-Abusing',
+  'Diebstahl',
+  'Teaming',
+  'Gefesselte Klassen',
+  'Ban-Evasion',
+  'Rundenende',
+  'Sonstiges',
 ];
 
 const USERNAMES = [
-  'BratwurstBoss', 'KartoffelKiller', 'SCPEnjoyer', 'DBoiDario', 'Kettenraeucherin',
-  'Nierenbrecher', 'TuersteherTim', 'LachsackLarry', 'ZugunfallBert', 'KaffeeKrieger',
-  'PixelPirat', 'SneakySven', 'WurstWasser', 'ChaosCharlotte', 'MegaMettwurst',
-  'Tuetenharry', 'RettungsRoller', 'ZombieZimt', 'KlausKlever', 'SchlachtbankSteve',
+  'BratwurstBoss',
+  'KartoffelKiller',
+  'SCPEnjoyer',
+  'DBoiDario',
+  'Kettenraeucherin',
+  'Nierenbrecher',
+  'TuersteherTim',
+  'LachsackLarry',
+  'ZugunfallBert',
+  'KaffeeKrieger',
+  'PixelPirat',
+  'SneakySven',
+  'WurstWasser',
+  'ChaosCharlotte',
+  'MegaMettwurst',
+  'Tuetenharry',
+  'RettungsRoller',
+  'ZombieZimt',
+  'KlausKlever',
+  'SchlachtbankSteve',
 ];
 
 const DISCORD_NAMES = [
-  ['wurstwasser', 'Wurstwasser'], ['klaus.klever', 'Klaus Klever'], ['d_boi', 'D-Boi'],
-  ['chaoscharlotte', 'Chaos Charlotte'], ['mettwurst', 'MegaMettwurst'], ['pixelpirat', 'PixelPirat'],
-  ['sneaky.sven', 'SneakySven'], ['zombiezimt', 'ZombieZimt'], ['tuertsteher_tim', 'Türsteher Tim'],
+  ['wurstwasser', 'Wurstwasser'],
+  ['klaus.klever', 'Klaus Klever'],
+  ['d_boi', 'D-Boi'],
+  ['chaoscharlotte', 'Chaos Charlotte'],
+  ['mettwurst', 'MegaMettwurst'],
+  ['pixelpirat', 'PixelPirat'],
+  ['sneaky.sven', 'SneakySven'],
+  ['zombiezimt', 'ZombieZimt'],
+  ['tuertsteher_tim', 'Türsteher Tim'],
   ['kaffeekrieger', 'KaffeeKrieger'],
 ];
 
 const FAKERANK_TEXTS = [
-  'Zertifikter Keksliebhaber', 'Echter Nerd', 'Brot-Priester', 'Kartoffelkönig',
-  'Professioneller Bettnässer', 'SCP-096s Bester Freund', 'Chef-Ente', 'Meister des Chaos',
-  'Lebende Legende (selbst ernannt)', 'Fachidiot für alles', 'Kaffeekanne des Jahres',
-  'Vorsitzender des Nerd-Rats', 'Ehrenmann ohne Ehre', 'Turbo-Bean', 'Lord of Latenz',
+  'Zertifikter Keksliebhaber',
+  'Echter Nerd',
+  'Brot-Priester',
+  'Kartoffelkönig',
+  'Professioneller Bettnässer',
+  'SCP-096s Bester Freund',
+  'Chef-Ente',
+  'Meister des Chaos',
+  'Lebende Legende (selbst ernannt)',
+  'Fachidiot für alles',
+  'Kaffeekanne des Jahres',
+  'Vorsitzender des Nerd-Rats',
+  'Ehrenmann ohne Ehre',
+  'Turbo-Bean',
+  'Lord of Latenz',
 ];
 
 const CASE_TEMPLATES = {
@@ -180,7 +242,16 @@ const CASE_TEMPLATES = {
   },
 };
 
-const ROLES = ['D-Klasse', 'Wissenschaftler', 'MTF-Epsilon-11', 'Chaos-Insurgency', 'SCP-096', 'SCP-173', 'Facility Guard', 'Nine-Tailed Fox'];
+const ROLES = [
+  'D-Klasse',
+  'Wissenschaftler',
+  'MTF-Epsilon-11',
+  'Chaos-Insurgency',
+  'SCP-096',
+  'SCP-173',
+  'Facility Guard',
+  'Nine-Tailed Fox',
+];
 const MAPS = ['Site-02', 'Light Containment Zone', 'Heavy Containment Zone', 'Entrance Zone', 'Surface Zone'];
 const INSULTS = ['Banause', 'Gemüse', 'NPC', 'Amateur'];
 
@@ -305,7 +376,8 @@ players[0].id = `${MAIN_STEAM_ID}@steam`;
 
 const linkedCount = Math.floor(players.length * 0.6);
 for (let i = 0; i < linkedCount; i++) {
-  players[i].discordId = i === 0 ? MAIN_DISCORD_ID : (900000000000000000n + BigInt(randInt(100000000, 999999999))).toString();
+  players[i].discordId =
+    i === 0 ? MAIN_DISCORD_ID : (900000000000000000n + BigInt(randInt(100000000, 999999999))).toString();
 }
 
 const teamDiscordIds = [];
@@ -370,7 +442,13 @@ db.transaction(() => {
 
     if (chance(0.45)) {
       const rankText = pick(FAKERANK_TEXTS);
-      insertFakerank.run(player.id, rankText, rankText.toLowerCase(), pick(FAKERANK_COLORS), now - randInt(0, 60) * DAY_MS);
+      insertFakerank.run(
+        player.id,
+        rankText,
+        rankText.toLowerCase(),
+        pick(FAKERANK_COLORS),
+        now - randInt(0, 60) * DAY_MS,
+      );
     }
 
     if (chance(0.3)) {
@@ -383,7 +461,11 @@ db.transaction(() => {
   }
 
   for (let i = 0; i < 10; i++) {
-    insertDonation.run(pick(players.filter((p) => p.discordId)).discordId ?? MAIN_DISCORD_ID, (randInt(1, 60) + 0.99).toFixed(2), now - randInt(0, 90) * DAY_MS);
+    insertDonation.run(
+      pick(players.filter((p) => p.discordId)).discordId ?? MAIN_DISCORD_ID,
+      (randInt(1, 60) + 0.99).toFixed(2),
+      now - randInt(0, 90) * DAY_MS,
+    );
   }
 
   for (let i = 0; i < 6; i++) {
@@ -401,7 +483,13 @@ db.transaction(() => {
     );
   }
 
-  for (const code of [['ZEIT2026', 500, 100], ['KEKSE', 50, 999], ['NERDPOWER', 1337, 10], ['WILLKOMMEN', 100, 500], ['GEBURTSTAG', 250, 50]]) {
+  for (const code of [
+    ['ZEIT2026', 500, 100],
+    ['KEKSE', 50, 999],
+    ['NERDPOWER', 1337, 10],
+    ['WILLKOMMEN', 100, 500],
+    ['GEBURTSTAG', 250, 50],
+  ]) {
     insertRedemptionCode.run(...code);
   }
 
@@ -410,17 +498,35 @@ db.transaction(() => {
     if (player.discordId && player.discordId !== MAIN_DISCORD_ID && chance(0.4)) {
       insertAdventCalendar.run(
         player.discordId,
-        chance(0.8) ? 1 : 0, chance(0.7) ? 1 : 0, chance(0.6) ? 1 : 0, chance(0.5) ? 1 : 0,
-        chance(0.4) ? 1 : 0, chance(0.3) ? 1 : 0, chance(0.2) ? 1 : 0, 0,
+        chance(0.8) ? 1 : 0,
+        chance(0.7) ? 1 : 0,
+        chance(0.6) ? 1 : 0,
+        chance(0.5) ? 1 : 0,
+        chance(0.4) ? 1 : 0,
+        chance(0.3) ? 1 : 0,
+        chance(0.2) ? 1 : 0,
+        0,
       );
     }
   }
 
   const notificationTemplates = [
-    ['fakerank_billing', 'Fakerank läuft bald ab', 'Dein Fakerank läuft in wenigen Tagen ab. Verlängere ihn jetzt, um deinen Rang zu behalten!'],
-    ['fakerank_deleted', 'Fakerank entfernt', 'Dein Fakerank wurde von einem Moderator entfernt. Grund: Verstoß gegen die Namensrichtlinien.'],
+    [
+      'fakerank_billing',
+      'Fakerank läuft bald ab',
+      'Dein Fakerank läuft in wenigen Tagen ab. Verlängere ihn jetzt, um deinen Rang zu behalten!',
+    ],
+    [
+      'fakerank_deleted',
+      'Fakerank entfernt',
+      'Dein Fakerank wurde von einem Moderator entfernt. Grund: Verstoß gegen die Namensrichtlinien.',
+    ],
     ['spray_deleted', 'Spray entfernt', 'Dein Spray wurde von einem Moderator entfernt. Grund: Unangemessener Inhalt.'],
-    ['session_completed', 'Sitzung abgeschlossen', 'Du hast genug XP für einen Level-Up gesammelt. Schau auf deinem Profil vorbei!'],
+    [
+      'session_completed',
+      'Sitzung abgeschlossen',
+      'Du hast genug XP für einen Level-Up gesammelt. Schau auf deinem Profil vorbei!',
+    ],
   ];
   for (const player of players) {
     if (!player.discordId || !chance(0.5)) continue;
@@ -436,7 +542,12 @@ db.transaction(() => {
   }
 
   for (let i = 0; i < 5; i++) {
-    insertSpray.run(pick(players).id, pick(['MeinKunstwerk', 'Katze.png', 'Trollface', 'Blumen']), crypto.randomBytes(32).toString('hex'), now - randInt(0, 120) * DAY_MS);
+    insertSpray.run(
+      pick(players).id,
+      pick(['MeinKunstwerk', 'Katze.png', 'Trollface', 'Blumen']),
+      crypto.randomBytes(32).toString('hex'),
+      now - randInt(0, 120) * DAY_MS,
+    );
   }
 
   const caseCount = randInt(10, 16);
@@ -450,7 +561,10 @@ db.transaction(() => {
 
     insertCase.run(id, title, description, category, creator, createdAt, lastUpdatedAt);
 
-    const relatedUsers = [...players].sort(() => rng() - 0.5).slice(0, randInt(1, 4)).map((p) => p.id);
+    const relatedUsers = [...players]
+      .sort(() => rng() - 0.5)
+      .slice(0, randInt(1, 4))
+      .map((p) => p.id);
     if (chance(0.2)) relatedUsers.push(`${randomSteamId()}@steam`);
     for (const steamId of relatedUsers) {
       insertCaseUser.run(id, steamId);
