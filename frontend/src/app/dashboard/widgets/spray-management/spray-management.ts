@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, input } 
 
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ButtonComponent, CardComponent, DialogComponent, SpinnerComponent } from '@app/ui';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import type {
@@ -23,7 +24,7 @@ interface SpraySlot {
 @Component({
   selector: 'app-spray-management',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ButtonComponent, CardComponent, DialogComponent, SpinnerComponent],
   templateUrl: './spray-management.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./spray-management.css'],
@@ -146,7 +147,7 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
 
     slot.selectedFile = file;
     slot.preview = URL.createObjectURL(file);
-    slot.name = file.name.replace(/\.[^/.]+$/, '');
+    slot.name = this.normalizeSprayName(file.name);
     this.sprayError = '';
     this.spraySuccess = '';
 
@@ -202,7 +203,6 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
     this.acceptedRules = false;
     this.showPrivacyText = false;
     this.showRulesText = false;
-    document.body.classList.add('modal-open');
   }
 
   closePreviewModal(cancel = false): void {
@@ -213,12 +213,20 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
     this.previewModalSlotIndex = null;
     this.previewModalUrl = null;
     this.previewModalName = '';
-    document.body.classList.remove('modal-open');
   }
 
   isNameValid(name: string): boolean {
     if (!name) return false;
     return name.length > 0 && name.length <= 20 && /^[a-zA-Z0-9_ ]+$/.test(name);
+  }
+
+  private normalizeSprayName(rawName: string): string {
+    return rawName
+      .replace(/\.[^/.]+$/, '')
+      .replace(/[^a-zA-Z0-9_ ]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 20);
   }
 
   async confirmUploadFromModal(): Promise<void> {
@@ -230,7 +238,6 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
     this.previewModalUploading = true;
     await this.uploadSprayForSlot(this.previewModalSlotIndex);
     this.previewModalUploading = false;
-    document.body.classList.remove('modal-open');
   }
 
   async uploadSprayForSlot(slotIndex: number): Promise<void> {
@@ -409,6 +416,5 @@ export class SprayManagementComponent implements OnInit, OnDestroy {
       if (s.imageUrl?.startsWith('blob:')) URL.revokeObjectURL(s.imageUrl);
       if (s.preview) URL.revokeObjectURL(s.preview);
     });
-    document.body.classList.remove('modal-open');
   }
 }

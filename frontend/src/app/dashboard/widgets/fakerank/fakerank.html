@@ -1,6 +1,6 @@
-<div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
+<ui-card>
   @if (isFakerankBanned) {
-  <div class="spray-ban-warning mb-4">
+  <div class="spray-ban-warning">
     <div class="spray-ban-icon">⛔</div>
     <div class="spray-ban-content">
       <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
@@ -14,7 +14,7 @@
       <h3 class="spray-title">✨ Fakerank</h3>
       <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
       <div>
-        <span class="fakerank-cost-badge">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+        <ui-badge variant="warning">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</ui-badge>
       </div>
     </div>
     <div class="fakerank-action-right">
@@ -37,133 +37,117 @@
       <!-- No Fakerank -->
       @if (!currentFakerank) {
       <div class="fakerank-empty-inline">
-        <button (click)="openFakerankModal()" class="fakerank-create-btn-small" [disabled]="fakerankLoading">
-          ✨ Erstellen
-        </button>
+        <ui-button variant="info" (click)="openFakerankModal()" [disabled]="fakerankLoading"> ✨ Erstellen </ui-button>
       </div>
       }
     </div>
   </div>
   } @if (fakerankError) {
-  <div class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
+  <div class="fakerank-message fakerank-error">{{ fakerankError }}</div>
   } @if (fakerankSuccess) {
-  <div class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
+  <div class="fakerank-message fakerank-success">{{ fakerankSuccess }}</div>
   }
-</div>
+</ui-card>
 
 <!-- Modal -->
-@if (fakerankModalOpen) {
-<div class="preview-overlay" (click)="closeFakerankModal()">
-  <div class="preview-modal compact-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3 class="preview-title">Fakerank konfigurieren</h3>
-      <button class="modal-close-btn" (click)="closeFakerankModal()">✕</button>
+<ui-dialog [(open)]="fakerankModalOpen" title="Fakerank konfigurieren">
+  <div class="fakerank-preview-container">
+    <span class="preview-label">Vorschau:</span>
+    <div class="preview-rank-box" [style.color]="getColorHex(fakerankModalColor)">
+      {{ fakerankModalText || 'Dein Rangname' }}
     </div>
-    <div class="modal-body compact-body custom-scrollbar">
-      <!-- Preview Area -->
-      <div class="fakerank-preview-container">
-        <span class="preview-label">Vorschau:</span>
-        <div class="preview-rank-box" [style.color]="getColorHex(fakerankModalColor)">
-          {{ fakerankModalText || 'Dein Rangname' }}
+  </div>
+  <div class="preview-input-group">
+    <label>Rangname (max. 50 Zeichen)</label>
+    <input
+      type="text"
+      [(ngModel)]="fakerankModalText"
+      maxlength="50"
+      class="fakerank-input"
+      placeholder="Tippe deinen Rangnamen ein..."
+    />
+  </div>
+  <div class="preview-input-group">
+    <label>Farbe wählen <span class="selected-color-name-inline">({{ getColorName(fakerankModalColor) }})</span></label>
+    <div class="color-groups-wrapper">
+      @for (group of groupedColors; track group.groupName) {
+      <div class="color-group">
+        <div class="color-group-header">
+          <span class="color-group-title"
+            >{{ group.groupName }} @if (group.isLocked) {
+            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}">🔒</span>
+            }</span
+          >
         </div>
-      </div>
-      <div class="preview-input-group">
-        <label>Rangname (max. 50 Zeichen)</label>
-        <input
-          type="text"
-          [(ngModel)]="fakerankModalText"
-          maxlength="50"
-          class="fakerank-input"
-          placeholder="Tippe deinen Rangnamen ein..."
-        />
-      </div>
-      <div class="preview-input-group">
-        <label
-          >Farbe wählen <span class="selected-color-name-inline">({{ getColorName(fakerankModalColor) }})</span></label
-        >
-        <div class="color-groups-wrapper">
-          @for (group of groupedColors; track group.groupName) {
-          <div class="color-group">
-            <div class="color-group-header">
-              <span class="color-group-title"
-                >{{ group.groupName }} @if (group.isLocked) {
-                <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}">🔒</span>
-                }</span
-              >
-            </div>
-            <div class="color-grid">
-              @for (c of group.colors; track c.key) {
-              <button
-                (click)="selectColor(c.key)"
-                class="color-option-btn"
-                [class.selected]="fakerankModalColor === c.key"
-                [class.disabled]="!isColorAllowed(c.key)"
-                [style.background-color]="c.hex"
-                [disabled]="!isColorAllowed(c.key)"
-                [title]="c.name + (!isColorAllowed(c.key) && group.requiredRole ? ' (' + group.requiredRole + ')' : '')"
-              ></button>
-              }
-            </div>
-          </div>
+        <div class="color-grid">
+          @for (c of group.colors; track c.key) {
+          <button
+            (click)="selectColor(c.key)"
+            class="color-option-btn"
+            [class.selected]="fakerankModalColor === c.key"
+            [class.disabled]="!isColorAllowed(c.key)"
+            [style.background-color]="c.hex"
+            [disabled]="!isColorAllowed(c.key)"
+            [title]="c.name + (!isColorAllowed(c.key) && group.requiredRole ? ' (' + group.requiredRole + ')' : '')"
+          ></button>
           }
         </div>
       </div>
-      <div class="checkbox-group mt-2">
-        <div class="checkbox-item">
-          <input type="checkbox" id="frPrivacy" [(ngModel)]="acceptedFakerankPrivacy" />
-          <label for="frPrivacy"
-            >Ich akzeptiere die
-            <span
-              class="text-link"
-              (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()"
-              >Datenschutzhinweise</span
-            ></label
-          >
-        </div>
-        @if (showFakerankPrivacyText) {
-        <div class="info-box-inline">
-          <div class="info-content">
-            <ul>
-              <li>
-                <strong>Öffentliche Sichtbarkeit:</strong> Dein Fakerank wird für andere Spieler im Spiel sichtbar sein.
-              </li>
-              <li>
-                <strong>Speicherung:</strong> Der Text und die Farbe werden mit deinem Profil verknüpft gespeichert.
-              </li>
-            </ul>
-          </div>
-        </div>
-        }
-        <div class="checkbox-item">
-          <input type="checkbox" id="frRules" [(ngModel)]="acceptedFakerankRules" />
-          <label for="frRules"
-            >Ich respektiere die
-            <span class="text-link" (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()"
-              >Inhaltsregeln</span
-            ></label
-          >
-        </div>
-        @if (showFakerankRulesText) {
-        <div class="info-box-inline">
-          <div class="info-content">
-            <ul>
-              <li>Keine beleidigenden, rassistischen, sexistischen oder anderweitig diskriminierenden Begriffe.</li>
-              <li>Keine Nachahmung von Team-Rängen (z.B. "Admin", "Moderator", "Owner").</li>
-              <li>Keine Werbung oder Links in Fakeranks.</li>
-              <li>Verstöße können zum permanenten Ausschluss von diesem Feature führen.</li>
-            </ul>
-          </div>
-        </div>
-        }
-      </div>
-      <button
-        class="btn-save-fakerank mt-4"
-        (click)="saveFakerank()"
-        [disabled]="fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules"
-      >
-        💾 Speichern
-      </button>
+      }
     </div>
   </div>
-</div>
-}
+  <div class="checkbox-group mt-2">
+    <div class="checkbox-item">
+      <input type="checkbox" id="frPrivacy" [(ngModel)]="acceptedFakerankPrivacy" />
+      <label for="frPrivacy"
+        >Ich akzeptiere die
+        <span class="text-link" (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()"
+          >Datenschutzhinweise</span
+        ></label
+      >
+    </div>
+    @if (showFakerankPrivacyText) {
+    <div class="info-box-inline">
+      <div class="info-content">
+        <ul>
+          <li>
+            <strong>Öffentliche Sichtbarkeit:</strong> Dein Fakerank wird für andere Spieler im Spiel sichtbar sein.
+          </li>
+          <li><strong>Speicherung:</strong> Der Text und die Farbe werden mit deinem Profil verknüpft gespeichert.</li>
+        </ul>
+      </div>
+    </div>
+    }
+    <div class="checkbox-item">
+      <input type="checkbox" id="frRules" [(ngModel)]="acceptedFakerankRules" />
+      <label for="frRules"
+        >Ich respektiere die
+        <span class="text-link" (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()"
+          >Inhaltsregeln</span
+        ></label
+      >
+    </div>
+    @if (showFakerankRulesText) {
+    <div class="info-box-inline">
+      <div class="info-content">
+        <ul>
+          <li>Keine beleidigenden, rassistischen, sexistischen oder anderweitig diskriminierenden Begriffe.</li>
+          <li>Keine Nachahmung von Team-Rängen (z.B. "Admin", "Moderator", "Owner").</li>
+          <li>Keine Werbung oder Links in Fakeranks.</li>
+          <li>Verstöße können zum permanenten Ausschluss von diesem Feature führen.</li>
+        </ul>
+      </div>
+    </div>
+    }
+  </div>
+  <div uiDialogFooter>
+    <ui-button
+      variant="info"
+      full
+      (click)="saveFakerank()"
+      [disabled]="fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules"
+    >
+      💾 Speichern
+    </ui-button>
+  </div>
+</ui-dialog>

@@ -1,0 +1,206 @@
+:host {
+  display: block;
+}
+
+.birthday {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--ui-sidebar-divider);
+  padding-top: 0.75rem;
+}
+
+.birthday-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.birthday-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.birthday-label {
+  font-size: 0.8125rem;
+  color: var(--ui-sidebar-muted);
+}
+
+.birthday-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ui-sidebar-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.birthday-none {
+  font-weight: 400;
+  color: var(--ui-sidebar-muted);
+}
+
+.birthday-loading {
+  font-size: 0.8125rem;
+  color: var(--ui-sidebar-muted);
+}
+
+.birthday-edit {
+  background: none;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--ui-sidebar-text-soft);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--ui-sidebar-divider);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+
+.birthday-edit:hover:not(:disabled) {
+  color: var(--ui-sidebar-text);
+  text-decoration-color: currentColor;
+}
+
+.birthday-edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.birthday-cooldown {
+  font-size: 0.75rem;
+  color: var(--ui-sidebar-muted);
+}
+
+/* Edit form */
+.birthday-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.birthday-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.375rem;
+}
+
+.birthday-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.birthday-field label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--ui-sidebar-muted);
+}
+
+.birthday-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ui-sidebar-divider);
+  background: var(--ui-sidebar-surface);
+  color: var(--ui-sidebar-text);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  text-align: center;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.birthday-input:focus {
+  outline: none;
+  border-color: var(--ui-focus-ring);
+  box-shadow: 0 0 0 2px var(--ui-focus-ring-glow);
+}
+
+.birthday-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.birthday-note {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  padding: 0.4rem 0.625rem;
+  border-radius: 0.5rem;
+  background: var(--ui-info-bg);
+  border: 1px solid var(--ui-info-border);
+  color: var(--ui-sidebar-info);
+}
+
+.birthday-note--error {
+  background: var(--ui-danger-bg);
+  border-color: var(--ui-danger-border);
+  color: var(--ui-sidebar-danger);
+}
+
+.birthday-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.birthday-spacer {
+  flex: 1;
+}
+
+.birthday-confirm {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ui-sidebar-danger);
+}
+
+.birthday-btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ui-sidebar-divider);
+  background: var(--ui-sidebar-surface);
+  color: var(--ui-sidebar-text-soft);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.birthday-btn:hover:not(:disabled) {
+  background: var(--ui-sidebar-surface-hover);
+  color: var(--ui-sidebar-text);
+}
+
+.birthday-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.birthday-btn--primary {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+}
+
+.birthday-btn--primary:hover:not(:disabled) {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.birthday-btn--danger {
+  color: var(--ui-sidebar-danger);
+}

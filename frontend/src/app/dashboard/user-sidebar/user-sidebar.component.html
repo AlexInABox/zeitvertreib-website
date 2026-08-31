@@ -1,0 +1,74 @@
+<div class="sidebar-inner">
+  <!-- Hero: full-width profile picture backdrop -->
+  <div class="identity-hero">
+    <img
+      class="identity-hero-avatar"
+      [src]="getAvatarUrl(userStatistics()?.avatarFull)"
+      [alt]="userStatistics()?.username || 'Player Avatar'"
+      loading="lazy"
+      (error)="onImageError($event)"
+    />
+    <div class="identity-hero-scrim"></div>
+    <span class="identity-hero-name">{{ userStatistics()?.username || 'Spieler' }}</span>
+  </div>
+
+  <!-- Stat tiles -->
+  <div class="stat-tiles">
+    <div class="stat-tile" style="--stat-color: #10b981; --stat-color-light: #34d399">
+      <span class="stat-tile-value">{{ userStatistics()?.kills | number: '1.0-0' }}</span>
+      <span class="stat-tile-label">Kills</span>
+    </div>
+    <div class="stat-tile" style="--stat-color: #3b82f6; --stat-color-light: #60a5fa">
+      <span class="stat-tile-value">{{ userStatistics()?.deaths | number: '1.0-0' }}</span>
+      <span class="stat-tile-label">Tode</span>
+    </div>
+    <div class="stat-tile" style="--stat-color: #eab308; --stat-color-light: #facc15">
+      <span class="stat-tile-value">{{ playtimeFormatted }}</span>
+      <span class="stat-tile-label">Spielzeit</span>
+    </div>
+    <div class="stat-tile" style="--stat-color: #8b5cf6; --stat-color-light: #a78bfa">
+      <span class="stat-tile-value">{{ userStatistics()?.roundsplayed | number: '1.0-0' }}</span>
+      <span class="stat-tile-label">Gespielte Runden</span>
+    </div>
+  </div>
+
+  <!-- Info rows -->
+  <div class="info-section">
+    <div class="info-row">
+      <span class="info-row-label">K/D</span>
+      <strong class="info-row-value">{{ kdRatio }}</strong>
+    </div>
+    <div class="info-row">
+      <span class="info-row-label">Medkits</span>
+      <strong class="info-row-value">{{ userStatistics()?.usedmedkits | number: '1.0-0' }}</strong>
+    </div>
+    <div class="info-row">
+      <span class="info-row-label">Colas</span>
+      <strong class="info-row-value">{{ userStatistics()?.usedcolas | number: '1.0-0' }}</strong>
+    </div>
+    <div class="info-row">
+      <span class="info-row-label">Pocket Escapes</span>
+      <strong class="info-row-value">{{ userStatistics()?.pocketescapes | number: '1.0-0' }}</strong>
+    </div>
+    <div class="info-row">
+      <span class="info-row-label">Adrenalin</span>
+      <strong class="info-row-value">{{ userStatistics()?.usedadrenaline | number: '1.0-0' }}</strong>
+    </div>
+    <div class="info-row">
+      <span class="info-row-label">Snake Highscore</span>
+      <strong class="info-row-value">{{ userStatistics()?.snakehighscore | number: '1.0-0' }}</strong>
+    </div>
+
+    <!-- Birthday -->
+    <app-birthday-card></app-birthday-card>
+  </div>
+
+  <!-- Discord -->
+  <app-discord-stats variant="full"></app-discord-stats>
+
+  <!-- Links -->
+  <div class="sidebar-links">
+    <a routerLink="/profile" class="sidebar-link">Profil verwalten</a>
+    <a routerLink="/games" class="sidebar-link">Spiele</a>
+  </div>
+</div>

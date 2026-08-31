@@ -1,26 +1,22 @@
 import { Component, OnInit, OnDestroy, inject, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { AudioService } from '../services/audio.service';
 import { HttpClient } from '@angular/common/http';
-import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
-import { CardModule } from 'primeng/card';
-import { ChartModule } from 'primeng/chart';
-import { AvatarModule } from 'primeng/avatar';
 
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationCenterService } from '../services/notification-center.service';
 import { ThemeService } from '../services/theme.service';
 import { EasterEggService } from '../services/easter-egg.service';
 import { QuestsComponent } from '../components/quests/quests.component';
 import { ZvcService } from '../services/zvc.service';
+import { ButtonComponent, SpinnerComponent } from '@app/ui';
+import { UserSidebarComponent } from './user-sidebar/user-sidebar.component';
 
-// New Widgets
-import { StatsOverviewComponent } from './widgets/stats-overview/stats-overview';
+// Widgets
 import { SprayManagementComponent } from './widgets/spray-management/spray-management';
-import { LootboxComponent } from './widgets/lootbox/lootbox';
 import { FakerankComponent } from './widgets/fakerank/fakerank';
-import { PlayerInfoCardComponent } from './widgets/player-info-card/player-info-card';
 
 interface Statistics {
   username: string;
@@ -43,17 +39,14 @@ interface Statistics {
 @Component({
   selector: 'app-dashboard',
   imports: [
-    ButtonModule,
-    CardModule,
-    ChartModule,
-    AvatarModule,
     FormsModule,
+    RouterModule,
     QuestsComponent,
-    StatsOverviewComponent,
     SprayManagementComponent,
-    LootboxComponent,
     FakerankComponent,
-    PlayerInfoCardComponent,
+    UserSidebarComponent,
+    ButtonComponent,
+    SpinnerComponent,
   ],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -99,6 +92,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isDonator = this.authService.isDonator();
+    // Split layout: tells the global header to center over the functional column
+    document.documentElement.classList.add('dashboard-layout');
+  }
+
+  ngOnDestroy(): void {
+    document.documentElement.classList.remove('dashboard-layout');
   }
 
   generateRandomColors(): void {
@@ -156,10 +155,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.generateRandomColors();
     this.loadUserStats();
   }
-
-  onBalanceChange(newBalance: number): void {
-    this.userStatistics.experience = newBalance;
-  }
-
-  ngOnDestroy(): void {}
 }

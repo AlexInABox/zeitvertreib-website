@@ -8,7 +8,6 @@ import { environment } from '../../environments/environment';
 
 import { ProfileHeroComponent } from './widgets/profile-hero/profile-hero.component';
 import { MinecraftLinkComponent } from './widgets/minecraft-link/minecraft-link.component';
-import { BirthdayCardComponent } from './widgets/birthday-card/birthday-card.component';
 import { ActiveSessionsComponent } from './widgets/active-sessions/active-sessions.component';
 import { DataManagementComponent } from './widgets/data-management/data-management.component';
 import { ModerationSummaryComponent } from './widgets/moderation-summary/moderation-summary.component';
@@ -24,7 +23,6 @@ import { CoinRestrictionComponent } from './widgets/coin-restriction/coin-restri
     RouterModule,
     ProfileHeroComponent,
     MinecraftLinkComponent,
-    BirthdayCardComponent,
     ActiveSessionsComponent,
     DataManagementComponent,
     ModerationSummaryComponent,

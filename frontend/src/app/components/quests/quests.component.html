@@ -1,147 +1,141 @@
 <!-- Loading State -->
 @if (isLoading) {
-  <div class="quests-card w-full">
+  <ui-card>
     <div class="quest-state-container">
-      <div class="loading-spinner mx-auto mb-3"></div>
+      <ui-spinner size="lg" class="mx-auto mb-3" />
       <p class="state-text">Quests werden geladen...</p>
     </div>
-  </div>
+  </ui-card>
 }
 
 <!-- Error State -->
 @if (hasError && !isLoading) {
-  <div class="quests-card w-full">
+  <ui-card>
     <div class="quest-state-container">
       <p class="error-text">{{ errorMessage }}</p>
-      <button (click)="loadQuests()" class="refresh-btn">Erneut versuchen</button>
+      <ui-button variant="secondary" full (click)="loadQuests()">Erneut versuchen</ui-button>
     </div>
-  </div>
+  </ui-card>
 }
 
 <!-- Quests Display Grid -->
 @if (!isLoading && !hasError) {
   <div class="grid grid-cols-1 md:grid-cols-2 w-full quest-grid">
     <!-- Daily Quests -->
-    <div class="quests-card h-full">
-      <div class="quests-container">
-        <div class="quests-header">
-          <h3 class="quests-title">📅 Tägliche Quests</h3>
-          <p class="quests-subtitle">Erfülle Tägliche Quests für wertvolle ZVC</p>
-        </div>
-        <div class="quests-list">
-          @for (quest of dailyQuests; track quest.category || quest.id || $index) {
-            <div
-              class="quest-row"
-              [ngClass]="{
-                'quest-claimed': quest.claimedAt > 0,
-                'quest-completed': isQuestCompleted(quest) && quest.claimedAt === 0,
-              }"
-            >
-              <div
-                class="quest-row-main"
-                [ngClass]="{ 'is-completed-state': isQuestCompleted(quest) && quest.claimedAt === 0 }"
-              >
-                <div class="quest-info">
-                  <span class="quest-name">{{ quest.description }}</span>
-                  <span class="quest-reward">+{{ quest.coinReward }} ZV Coins</span>
-                </div>
-                <div class="quest-action">
-                  @if (isQuestCompleted(quest) && quest.claimedAt === 0) {
-                    <button (click)="claimReward(quest)" [disabled]="claimingQuestId === quest.id" class="claim-btn">
-                      @if (claimingQuestId !== quest.id) {
-                        <span>Beanspruchen</span>
-                      }
-                      @if (claimingQuestId === quest.id) {
-                        <span class="spinner-small"></span>
-                      }
-                    </button>
-                  }
-                  @if (quest.claimedAt > 0) {
-                    <div class="claimed-badge">✓ Beansprucht</div>
-                  }
-                  @if (!isQuestCompleted(quest)) {
-                    <div class="progress-text">
-                      {{ getProgressText(quest) }}
-                    </div>
-                  }
-                </div>
-              </div>
-              @if (!isQuestCompleted(quest) && quest.claimedAt === 0) {
-                <div class="progress-bar-container">
-                  <div class="progress-track" [ngClass]="{ 'progress-track-completed': isQuestCompleted(quest) }">
-                    <div
-                      class="progress-fill"
-                      [style.width.%]="getProgressPercentage(quest)"
-                      [ngClass]="{ 'progress-full': getProgressPercentage(quest) >= 100 }"
-                    ></div>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
+    <ui-card class="h-full">
+      <div class="quests-header">
+        <h3 class="quests-title">📅 Tägliche Quests</h3>
+        <p class="quests-subtitle">Erfülle Tägliche Quests für wertvolle ZVC</p>
       </div>
-    </div>
+      <div class="quests-list">
+        @for (quest of dailyQuests; track quest.category || quest.id || $index) {
+          <div
+            class="quest-row"
+            [ngClass]="{
+              'quest-claimed': quest.claimedAt > 0,
+              'quest-completed': isQuestCompleted(quest) && quest.claimedAt === 0,
+            }"
+          >
+            <div
+              class="quest-row-main"
+              [ngClass]="{ 'is-completed-state': isQuestCompleted(quest) && quest.claimedAt === 0 }"
+            >
+              <div class="quest-info">
+                <span class="quest-name">{{ quest.description }}</span>
+                <span class="quest-reward">+{{ quest.coinReward }} ZV Coins</span>
+              </div>
+              <div class="quest-action">
+                @if (isQuestCompleted(quest) && quest.claimedAt === 0) {
+                  <ui-button
+                    variant="success"
+                    [style.min-width.px]="110"
+                    (click)="claimReward(quest)"
+                    [disabled]="claimingQuestId === quest.id"
+                  >
+                    @if (claimingQuestId !== quest.id) {
+                      <span>Beanspruchen</span>
+                    }
+                    @if (claimingQuestId === quest.id) {
+                      <ui-spinner size="xs" variant="light" />
+                    }
+                  </ui-button>
+                }
+                @if (quest.claimedAt > 0) {
+                  <ui-badge variant="success">✓ Beansprucht</ui-badge>
+                }
+                @if (!isQuestCompleted(quest)) {
+                  <div class="progress-text">
+                    {{ getProgressText(quest) }}
+                  </div>
+                }
+              </div>
+            </div>
+            @if (!isQuestCompleted(quest) && quest.claimedAt === 0) {
+              <div class="progress-bar-container">
+                <ui-progress [value]="getProgressPercentage(quest)" />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </ui-card>
     <!-- Weekly Quests -->
-    <div class="quests-card h-full">
-      <div class="quests-container">
-        <div class="quests-header">
-          <h3 class="quests-title">📆 Wöchentliche Quests</h3>
-          <p class="quests-subtitle">Erfülle Wöchentliche Quests für wertvolle ZVC</p>
-        </div>
-        <div class="quests-list">
-          @for (quest of weeklyQuests; track quest.category || quest.id || $index) {
-            <div
-              class="quest-row"
-              [ngClass]="{
-                'quest-claimed': quest.claimedAt > 0,
-                'quest-completed': isQuestCompleted(quest) && quest.claimedAt === 0,
-              }"
-            >
-              <div
-                class="quest-row-main"
-                [ngClass]="{ 'is-completed-state': isQuestCompleted(quest) && quest.claimedAt === 0 }"
-              >
-                <div class="quest-info">
-                  <span class="quest-name">{{ quest.description }}</span>
-                  <span class="quest-reward">+{{ quest.coinReward }} ZV Coins</span>
-                </div>
-                <div class="quest-action">
-                  @if (isQuestCompleted(quest) && quest.claimedAt === 0) {
-                    <button (click)="claimReward(quest)" [disabled]="claimingQuestId === quest.id" class="claim-btn">
-                      @if (claimingQuestId !== quest.id) {
-                        <span>Beanspruchen</span>
-                      }
-                      @if (claimingQuestId === quest.id) {
-                        <span class="spinner-small"></span>
-                      }
-                    </button>
-                  }
-                  @if (quest.claimedAt > 0) {
-                    <div class="claimed-badge">✓ Beansprucht</div>
-                  }
-                  @if (!isQuestCompleted(quest)) {
-                    <div class="progress-text">
-                      {{ getProgressText(quest) }}
-                    </div>
-                  }
-                </div>
-              </div>
-              @if (!isQuestCompleted(quest) && quest.claimedAt === 0) {
-                <div class="progress-bar-container">
-                  <div class="progress-track" [ngClass]="{ 'progress-track-completed': isQuestCompleted(quest) }">
-                    <div
-                      class="progress-fill"
-                      [style.width.%]="getProgressPercentage(quest)"
-                      [ngClass]="{ 'progress-full': getProgressPercentage(quest) >= 100 }"
-                    ></div>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
+    <ui-card class="h-full">
+      <div class="quests-header">
+        <h3 class="quests-title">📆 Wöchentliche Quests</h3>
+        <p class="quests-subtitle">Erfülle Wöchentliche Quests für wertvolle ZVC</p>
       </div>
-    </div>
+      <div class="quests-list">
+        @for (quest of weeklyQuests; track quest.category || quest.id || $index) {
+          <div
+            class="quest-row"
+            [ngClass]="{
+              'quest-claimed': quest.claimedAt > 0,
+              'quest-completed': isQuestCompleted(quest) && quest.claimedAt === 0,
+            }"
+          >
+            <div
+              class="quest-row-main"
+              [ngClass]="{ 'is-completed-state': isQuestCompleted(quest) && quest.claimedAt === 0 }"
+            >
+              <div class="quest-info">
+                <span class="quest-name">{{ quest.description }}</span>
+                <span class="quest-reward">+{{ quest.coinReward }} ZV Coins</span>
+              </div>
+              <div class="quest-action">
+                @if (isQuestCompleted(quest) && quest.claimedAt === 0) {
+                  <ui-button
+                    variant="success"
+                    [style.min-width.px]="110"
+                    (click)="claimReward(quest)"
+                    [disabled]="claimingQuestId === quest.id"
+                  >
+                    @if (claimingQuestId !== quest.id) {
+                      <span>Beanspruchen</span>
+                    }
+                    @if (claimingQuestId === quest.id) {
+                      <ui-spinner size="xs" variant="light" />
+                    }
+                  </ui-button>
+                }
+                @if (quest.claimedAt > 0) {
+                  <ui-badge variant="success">✓ Beansprucht</ui-badge>
+                }
+                @if (!isQuestCompleted(quest)) {
+                  <div class="progress-text">
+                    {{ getProgressText(quest) }}
+                  </div>
+                }
+              </div>
+            </div>
+            @if (!isQuestCompleted(quest) && quest.claimedAt === 0) {
+              <div class="progress-bar-container">
+                <ui-progress [value]="getProgressPercentage(quest)" />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </ui-card>
   </div>
 }

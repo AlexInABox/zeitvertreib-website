@@ -1,0 +1,116 @@
+<div class="birthday">
+  <!-- Loading -->
+  @if (loadingBirthday) {
+    <div class="birthday-row">
+      <span class="birthday-label">Geburtstag</span>
+      <span class="birthday-loading">Lade...</span>
+    </div>
+  }
+
+  <!-- DISPLAY MODE -->
+  @if (!loadingBirthday && !isEditingBirthday) {
+    <div class="birthday-row">
+      <span class="birthday-label">Geburtstag</span>
+      <div class="birthday-row-right">
+        @if (hasBirthday()) {
+          <strong class="birthday-value">{{ getBirthdayDisplay() }}</strong>
+        } @else {
+          <span class="birthday-value birthday-none">Nicht gesetzt</span>
+        }
+        <button
+          class="birthday-edit"
+          (click)="startEditBirthday()"
+          [disabled]="!hasBirthday() && isBirthdayEditDisabled()"
+        >
+          {{ hasBirthday() ? 'Bearbeiten' : 'Hinzufügen' }}
+        </button>
+      </div>
+    </div>
+    @if (isBirthdayEditDisabled()) {
+      <span class="birthday-cooldown">Änderung in {{ getDaysUntilBirthdayEdit() }} Tag(en) möglich</span>
+    }
+  }
+
+  <!-- EDIT FORM MODE -->
+  @if (!loadingBirthday && isEditingBirthday) {
+    <div class="birthday-form">
+      <div class="birthday-form-grid">
+        <div class="birthday-field">
+          <label for="birthday-day">Tag</label>
+          <input
+            type="number"
+            id="birthday-day"
+            class="birthday-input"
+            [(ngModel)]="editDay"
+            placeholder="01"
+            min="1"
+            max="31"
+            [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+          />
+        </div>
+        <div class="birthday-field">
+          <label for="birthday-month">Monat</label>
+          <input
+            type="number"
+            id="birthday-month"
+            class="birthday-input"
+            [(ngModel)]="editMonth"
+            placeholder="01"
+            min="1"
+            max="12"
+            [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+          />
+        </div>
+        <div class="birthday-field">
+          <label for="birthday-year">Jahr</label>
+          <input
+            type="number"
+            id="birthday-year"
+            class="birthday-input"
+            [(ngModel)]="editYear"
+            placeholder="1995"
+            [disabled]="birthdayLoading || isBirthdayEditDisabled()"
+          />
+        </div>
+      </div>
+
+      @if (!isBirthdayEditDisabled()) {
+        <span class="birthday-note">Geburtstag ist öffentlich einsehbar.</span>
+      }
+      @if (isUnder18()) {
+        <span class="birthday-note birthday-note--error">Mindestalter von 18 Jahren erforderlich.</span>
+      }
+      @if (birthdayError) {
+        <span class="birthday-note birthday-note--error">{{ birthdayError }}</span>
+      }
+
+      <div class="birthday-actions">
+        @if (hasBirthday() && !showDeleteConfirm) {
+          <button
+            class="birthday-btn birthday-btn--danger"
+            (click)="showDeleteBirthdayConfirm()"
+            [disabled]="birthdayLoading"
+          >
+            Löschen
+          </button>
+        }
+        @if (showDeleteConfirm) {
+          <span class="birthday-confirm">Löschen?</span>
+          <button class="birthday-btn birthday-btn--danger" (click)="deleteBirthday()" [disabled]="birthdayLoading">
+            Ja
+          </button>
+          <button class="birthday-btn" (click)="cancelDeleteBirthday()" [disabled]="birthdayLoading">Nein</button>
+        }
+        <span class="birthday-spacer"></span>
+        <button class="birthday-btn" (click)="cancelEditBirthday()" [disabled]="birthdayLoading">Abbrechen</button>
+        <button
+          class="birthday-btn birthday-btn--primary"
+          (click)="saveBirthday()"
+          [disabled]="birthdayLoading || isBirthdayEditDisabled() || isUnder18()"
+        >
+          {{ birthdayLoading ? 'Speichert...' : 'Speichern' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

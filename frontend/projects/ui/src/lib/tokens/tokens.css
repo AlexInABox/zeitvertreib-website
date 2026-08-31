@@ -1,0 +1,170 @@
+/* ============================================================
+   Zeitvertreib UI — Design Tokens
+   Single source of truth for colors, surfaces, radii, focus
+   rings, transitions and shared form-field utility classes.
+
+   Import this file ONCE from the app's global `styles.css`:
+     @import '../projects/ui/src/lib/tokens/tokens.css';
+
+   Light values live on :root; dark overrides live under
+   `.my-app-dark` (the existing app-wide dark-mode selector).
+   Components must reference `var(--ui-*)` — never hardcode hex.
+   ============================================================ */
+
+:root {
+  /* Brand */
+  --ui-primary: #b41b85;
+  --ui-primary-contrast: #ffffff;
+  --ui-primary-grad: linear-gradient(135deg, #7c3aed 0%, #b41b85 100%);
+  --ui-primary-grad-hover: linear-gradient(135deg, #6d28d9 0%, #9d1774 100%);
+  --ui-primary-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+  --ui-primary-shadow-hover: 0 4px 12px rgba(124, 58, 237, 0.4);
+  --ui-violet: #8b5cf6;
+  --ui-violet-soft: #a78bfa;
+  --ui-violet-pale: #c4b5fd;
+  --ui-fuchsia: #ec4899;
+
+  /* Text */
+  --ui-text: #ffffff;
+  --ui-text-soft: rgba(255, 255, 255, 0.8);
+  --ui-text-muted: rgba(255, 255, 255, 0.6);
+  --ui-text-faint: rgba(255, 255, 255, 0.45);
+
+  /* Surfaces (glass over the page gradient) */
+  --ui-surface: rgba(255, 255, 255, 0.035);
+  --ui-surface-hover: rgba(255, 255, 255, 0.12);
+  --ui-surface-active: rgba(255, 255, 255, 0.2);
+  --ui-surface-soft: rgba(255, 255, 255, 0.06);
+  --ui-surface-subtle: rgba(255, 255, 255, 0.05);
+  --ui-border: rgba(255, 255, 255, 0.08);
+  --ui-border-strong: rgba(255, 255, 255, 0.14);
+  --ui-border-soft: rgba(255, 255, 255, 0.1);
+  --ui-divider: rgba(255, 255, 255, 0.06);
+  --ui-header-bg: rgba(255, 255, 255, 0.015);
+  --ui-input-bg: rgba(0, 0, 0, 0.25);
+  --ui-input-bg-focus: rgba(0, 0, 0, 0.35);
+  --ui-input-border: rgba(255, 255, 255, 0.1);
+
+  /* Focus ring */
+  --ui-focus-ring: rgba(167, 139, 250, 0.5);
+  --ui-focus-ring-glow: rgba(167, 139, 250, 0.15);
+
+  /* Status colors */
+  --ui-danger: #f87171;
+  --ui-danger-bg: rgba(239, 68, 68, 0.12);
+  --ui-danger-bg-hover: rgba(239, 68, 68, 0.22);
+  --ui-danger-border: rgba(239, 68, 68, 0.25);
+  --ui-danger-solid: #dc2626;
+  --ui-danger-solid-hover: #b91c1c;
+  --ui-success: #4ade80;
+  --ui-success-bg: rgba(34, 197, 94, 0.15);
+  --ui-success-border: rgba(34, 197, 94, 0.25);
+  --ui-success-fill: linear-gradient(90deg, #10b981, #34d399);
+  --ui-warning: #facc15;
+  --ui-warning-bg: rgba(234, 179, 8, 0.15);
+  --ui-warning-border: rgba(234, 179, 8, 0.25);
+  --ui-info: #60a5fa;
+  --ui-info-bg: rgba(59, 130, 246, 0.15);
+  --ui-info-border: rgba(59, 130, 246, 0.25);
+  --ui-pink: #f472b6;
+  --ui-pink-bg: rgba(244, 114, 182, 0.15);
+  --ui-pink-border: rgba(244, 114, 182, 0.25);
+
+  /* Progress */
+  --ui-progress-track: rgba(255, 255, 255, 0.1);
+  --ui-progress-fill: linear-gradient(90deg, #8b5cf6, #ec4899);
+
+  /* Radius */
+  --ui-radius-xs: 0.25rem;
+  --ui-radius-sm: 0.375rem;
+  --ui-radius-md: 0.875rem;
+  --ui-radius-lg: 1.5rem;
+  --ui-radius-full: 9999px;
+
+  /* Effects */
+  --ui-blur: 12px;
+  --ui-transition: all 0.15s ease;
+
+  /* Dialog (glass appearance) */
+  --ui-overlay-bg: rgba(0, 0, 0, 0.4);
+  --ui-dialog-bg: rgba(255, 255, 255, 0.6);
+  --ui-dialog-border: rgba(255, 255, 255, 0.15);
+  --ui-dialog-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --ui-dialog-color: #000000;
+
+  /* Sidebar (dashboard user bar) */
+  --ui-sidebar-bg-grad: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5));
+  --ui-sidebar-border: rgba(255, 255, 255, 0.25);
+  --ui-sidebar-text: #1e293b;
+  --ui-sidebar-text-soft: rgba(30, 41, 59, 0.85);
+  --ui-sidebar-muted: rgba(30, 41, 59, 0.55);
+  --ui-sidebar-surface: rgba(15, 23, 42, 0.05);
+  --ui-sidebar-surface-hover: rgba(15, 23, 42, 0.09);
+  --ui-sidebar-divider: rgba(15, 23, 42, 0.08);
+  --ui-sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --ui-sidebar-info: #1d4ed8;
+  --ui-sidebar-danger: #dc2626;
+  --ui-sidebar-success: #16a34a;
+}
+
+.my-app-dark {
+  --ui-overlay-bg: rgba(0, 0, 0, 0.6);
+  --ui-dialog-bg: rgba(24, 24, 27, 0.65);
+  --ui-dialog-border: rgba(255, 255, 255, 0.05);
+  --ui-dialog-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --ui-dialog-color: #ffffff;
+
+  /* Sidebar (dashboard user bar) */
+  --ui-sidebar-bg-grad: linear-gradient(180deg, rgba(36, 38, 52, 0.85), rgba(24, 26, 38, 0.68));
+  --ui-sidebar-border: rgba(255, 255, 255, 0.1);
+  --ui-sidebar-text: #e2e8f0;
+  --ui-sidebar-text-soft: rgba(226, 232, 240, 0.88);
+  --ui-sidebar-muted: rgba(226, 232, 240, 0.55);
+  --ui-sidebar-surface: rgba(255, 255, 255, 0.06);
+  --ui-sidebar-surface-hover: rgba(255, 255, 255, 0.11);
+  --ui-sidebar-divider: rgba(255, 255, 255, 0.08);
+  --ui-sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --ui-sidebar-info: #93c5fd;
+  --ui-sidebar-danger: #fca5a5;
+  --ui-sidebar-success: #4ade80;
+}
+
+/* Body scroll lock while a dialog is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* ============================================================
+   Shared form field utility (applies to native <input>,
+   <select> and <textarea>). ui-input uses this internally;
+   pages may apply it to native controls too.
+   ============================================================ */
+
+.ui-field {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  background: var(--ui-input-bg);
+  border: 1px solid var(--ui-input-border);
+  border-radius: var(--ui-radius-sm);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: var(--ui-text);
+  transition: var(--ui-transition);
+  box-sizing: border-box;
+}
+
+.ui-field:focus {
+  outline: none;
+  border-color: var(--ui-focus-ring);
+  box-shadow: 0 0 0 2px var(--ui-focus-ring-glow);
+  background: var(--ui-input-bg-focus);
+}
+
+.ui-field::placeholder {
+  color: var(--ui-text-muted);
+}
+
+.ui-field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

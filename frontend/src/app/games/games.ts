@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
 import { ZvcService } from '../services/zvc.service';
+import { LootboxComponent } from '../dashboard/widgets/lootbox/lootbox';
 import type {
   ChickenCrossInfoResponse,
   ChickenCrossGetResponse,
@@ -81,7 +82,7 @@ interface LuckyWheelResult {
 
 @Component({
   selector: 'app-games',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LootboxComponent],
   templateUrl: './games.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./games.css'],
@@ -303,6 +304,11 @@ export class GamesComponent implements OnInit, OnDestroy {
         console.error('Fehler beim Laden der Benutzerstatistiken:', error);
       },
     });
+  }
+
+  onBalanceChange(newBalance: number): void {
+    this.userStatistics.experience = newBalance;
+    this.zvcService.setBalance(newBalance);
   }
 
   // ===== SLOT MACHINE METHODS =====

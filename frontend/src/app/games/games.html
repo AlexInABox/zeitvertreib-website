@@ -2,6 +2,9 @@
 <div class="games-page-wrapper">
   <!-- Games Grid -->
   <div class="zvcoins-games-card">
+    <!-- Lootbox -->
+    <app-lootbox [balance]="userStatistics.experience || 0" (balanceChange)="onBalanceChange($event)"></app-lootbox>
+
     <!-- Slot machine-->
     <div class="slot-machine-widget">
       <div class="slot-machine-header">

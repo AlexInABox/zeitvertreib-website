@@ -1,29 +1,35 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { DiscordStatsComponent } from '../../../components/discord-stats/discord-stats.component';
+import { RouterModule } from '@angular/router';
+import { DiscordStatsComponent } from '../../components/discord-stats/discord-stats.component';
+import { BirthdayCardComponent } from './birthday-card/birthday-card.component';
 
 @Component({
-  selector: 'app-player-info-card',
+  selector: 'app-user-sidebar',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DiscordStatsComponent],
-  templateUrl: './player-info-card.html',
+  imports: [CommonModule, DecimalPipe, RouterModule, DiscordStatsComponent, BirthdayCardComponent],
+  templateUrl: './user-sidebar.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
-  styleUrls: ['./player-info-card.css'],
+  styleUrls: ['./user-sidebar.component.css'],
 })
-export class PlayerInfoCardComponent {
+export class UserSidebarComponent {
   readonly userStatistics = input<any>();
+
+  get kdRatio(): string {
+    const kills = this.userStatistics()?.kills || 0;
+    const deaths = this.userStatistics()?.deaths || 0;
+
+    if (!deaths || deaths === 0) {
+      return kills > 0 ? '∞' : '0.00';
+    }
+    return (kills / deaths).toFixed(2);
+  }
 
   get playtimeFormatted(): string {
     const playtime = this.userStatistics()?.playtime || 0;
     const hours = Math.floor(playtime / 3600);
     const minutes = Math.floor((playtime % 3600) / 60);
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  }
-
-  get leaderboardText(): string {
-    return this.userStatistics()?.leaderboardposition
-      ? `Platz #${this.userStatistics()?.leaderboardposition}`
-      : 'NICHT GENÜGEND DATEN';
   }
 
   getAvatarUrl(avatarUrl?: string): string {

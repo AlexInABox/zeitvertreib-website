@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectionStrategy, input } from '@angu
 
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { BadgeComponent, ButtonComponent, CardComponent, DialogComponent } from '@app/ui';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationCenterService } from '../../../services/notification-center.service';
@@ -16,7 +17,7 @@ import type {
 @Component({
   selector: 'app-fakerank',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ButtonComponent, CardComponent, DialogComponent, BadgeComponent],
   templateUrl: './fakerank.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./fakerank.css'],
@@ -173,12 +174,10 @@ export class FakerankComponent implements OnInit {
     this.fakerankModalColor = this.currentFakerankColor;
     this.fakerankModalOpen = true;
     this.acceptedFakerankPrivacy = this.acceptedFakerankRules = false;
-    document.body.classList.add('modal-open');
   }
 
   closeFakerankModal(): void {
     this.fakerankModalOpen = false;
-    document.body.classList.remove('modal-open');
   }
 
   selectColor(key: FakerankColor): void {

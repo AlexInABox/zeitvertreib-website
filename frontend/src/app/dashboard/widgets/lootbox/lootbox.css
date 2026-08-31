@@ -7,16 +7,7 @@
   --lootbox-center-offset: 45px;
 }
 
-.stats-card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-}
-
 .lootbox-header {
-  margin-bottom: 1.5rem;
   position: relative;
 }
 
@@ -37,12 +28,6 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .lootbox-stage {
@@ -51,7 +36,6 @@
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
 }
 
 .lootbox-track-viewport {
@@ -180,7 +164,6 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 12px;
-  margin-bottom: 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -202,31 +185,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-.lootbox-buy-btn,
-.lootbox-voucher-btn {
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-
-.lootbox-buy-btn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-}
-.lootbox-voucher-btn {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.lootbox-buy-btn:disabled,
-.lootbox-voucher-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .lootbox-message {

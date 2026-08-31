@@ -1,9 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { ProgressBarModule } from 'primeng/progressbar';
+import { BadgeComponent, ButtonComponent, CardComponent, ProgressComponent, SpinnerComponent } from '@app/ui';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import type { GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
@@ -11,7 +9,7 @@ import type { GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
 @Component({
   selector: 'app-quests',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, ProgressBarModule],
+  imports: [CommonModule, ButtonComponent, BadgeComponent, CardComponent, ProgressComponent, SpinnerComponent],
   templateUrl: './quests.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./quests.component.css'],

@@ -1,7 +1,7 @@
-<div id="sprays-card" class="stats-card p-6 rounded-2xl auto-height">
+<ui-card>
   <!-- Spray Ban Warning -->
   @if (isSprayBanned) {
-  <div class="spray-ban-warning mb-4">
+  <div class="spray-ban-warning">
     <div class="spray-ban-icon">🔨</div>
     <div class="spray-ban-content">
       <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
@@ -43,7 +43,7 @@
               @if (!slot.isUploading) {
               <span>🗑️</span>
               } @if (slot.isUploading) {
-              <span class="spray-spinner-mini"></span>
+              <ui-spinner size="sm" variant="light" />
               }
             </button>
           </div>
@@ -57,7 +57,7 @@
           <!-- Uploading State -->
           @if (slot.isUploading && !slot.id) {
           <div class="spray-uploading-mini">
-            <div class="spray-spinner-mini"></div>
+            <ui-spinner size="sm" variant="light" />
           </div>
           }
           <!-- Empty Paid Slot -->
@@ -96,103 +96,91 @@
     </div>
   </div>
   } @if (sprayError) {
-  <div class="spray-message-compact spray-error mt-3">{{ sprayError }}</div>
+  <div class="spray-message-compact spray-error">{{ sprayError }}</div>
   } @if (spraySuccess) {
-  <div class="spray-message-compact spray-success mt-3">{{ spraySuccess }}</div>
+  <div class="spray-message-compact spray-success">{{ spraySuccess }}</div>
   }
-</div>
+</ui-card>
 
 <!-- Preview Modal -->
-@if (previewModalOpen) {
-<div class="preview-overlay" (click)="closePreviewModal(true)">
-  <div class="preview-modal compact-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="header-content">
-        <h3 class="preview-title">Spray konfigurieren</h3>
-      </div>
-      <button class="modal-close-btn" (click)="closePreviewModal(true)">✕</button>
-    </div>
-    <div class="modal-body compact-body custom-scrollbar">
-      <!-- Preview Area -->
-      <div class="spray-preview-container-modal-centered">
-        <div class="preview-image-box-modal">
-          <img [src]="previewModalUrl" alt="Spray Preview" class="preview-large-image-modal" />
-        </div>
-      </div>
-      <div class="preview-input-group">
-        <label for="sprayName">Name deines Sprays (max. 20 Zeichen)</label>
-        <input
-          id="sprayName"
-          type="text"
-          class="spray-input"
-          [(ngModel)]="previewModalName"
-          placeholder="z.B. Mein cooles Spray"
-          maxlength="20"
-          [class.invalid-input]="previewModalName && !isNameValid(previewModalName)"
-        />
-        @if (previewModalName && !isNameValid(previewModalName)) {
-        <div class="input-error-hint">Nur Buchstaben, Zahlen, Unterstriche und Leerzeichen erlaubt.</div>
-        }
-      </div>
-      <div class="checkbox-group mt-2">
-        <div class="checkbox-item">
-          <input type="checkbox" id="privacyCheck" [(ngModel)]="acceptedPrivacy" />
-          <label for="privacyCheck">
-            Ich akzeptiere die
-            <span class="text-link" (click)="showPrivacyText = !showPrivacyText; $event.preventDefault()"
-              >Datenschutzhinweise</span
-            >
-          </label>
-        </div>
-        @if (showPrivacyText) {
-        <div class="info-box-inline">
-          <div class="info-content">
-            <ul>
-              <li><strong>Öffentliche Verfügbarkeit:</strong> Dein Bild wird öffentlich zugänglich.</li>
-              <li><strong>Moderation:</strong> Bilder werden automatisiert geprüft.</li>
-            </ul>
-          </div>
-        </div>
-        }
-        <div class="checkbox-item">
-          <input type="checkbox" id="rulesCheck" [(ngModel)]="acceptedRules" />
-          <label for="rulesCheck">
-            Ich respektiere die
-            <span class="text-link" (click)="showRulesText = !showRulesText; $event.preventDefault()"
-              >Inhaltsregeln</span
-            >
-          </label>
-        </div>
-        @if (showRulesText) {
-        <div class="info-box-inline">
-          <div class="info-content">
-            @if (sprayRulesLoading) {
-            <div>Regeln werden geladen...</div>
-            } @if (!sprayRulesLoading && sprayRules) {
-            <div>
-              <ol>
-                @for (rule of sprayRules.rules_de; track $index) {
-                <li>{{ rule }}</li>
-                }
-              </ol>
-            </div>
-            }
-          </div>
-        </div>
-        }
-      </div>
-      <button
-        class="btn-save-spray mt-4"
-        (click)="confirmUploadFromModal()"
-        [disabled]="previewModalUploading || !isNameValid(previewModalName) || !acceptedPrivacy || !acceptedRules"
-      >
-        @if (!previewModalUploading) {
-        <span>🚀 Jetzt hochladen</span>
-        } @if (previewModalUploading) {
-        <span class="spray-spinner-mini"></span>
-        }
-      </button>
+<ui-dialog [(open)]="previewModalOpen" title="Spray konfigurieren" (close)="closePreviewModal(true)">
+  <div class="spray-preview-container-modal-centered">
+    <div class="preview-image-box-modal">
+      <img [src]="previewModalUrl" alt="Spray Preview" class="preview-large-image-modal" />
     </div>
   </div>
-</div>
-}
+  <div class="preview-input-group">
+    <label for="sprayName">Name deines Sprays (max. 20 Zeichen)</label>
+    <input
+      id="sprayName"
+      type="text"
+      class="spray-input"
+      [(ngModel)]="previewModalName"
+      placeholder="z.B. Mein cooles Spray"
+      maxlength="20"
+      [class.invalid-input]="previewModalName && !isNameValid(previewModalName)"
+    />
+    @if (previewModalName && !isNameValid(previewModalName)) {
+    <div class="input-error-hint">Nur Buchstaben, Zahlen, Unterstriche und Leerzeichen erlaubt.</div>
+    }
+  </div>
+  <div class="checkbox-group mt-2">
+    <div class="checkbox-item">
+      <input type="checkbox" id="privacyCheck" [(ngModel)]="acceptedPrivacy" />
+      <label for="privacyCheck">
+        Ich akzeptiere die
+        <span class="text-link" (click)="showPrivacyText = !showPrivacyText; $event.preventDefault()"
+          >Datenschutzhinweise</span
+        >
+      </label>
+    </div>
+    @if (showPrivacyText) {
+    <div class="info-box-inline">
+      <div class="info-content">
+        <ul>
+          <li><strong>Öffentliche Verfügbarkeit:</strong> Dein Bild wird öffentlich zugänglich.</li>
+          <li><strong>Moderation:</strong> Bilder werden automatisiert geprüft.</li>
+        </ul>
+      </div>
+    </div>
+    }
+    <div class="checkbox-item">
+      <input type="checkbox" id="rulesCheck" [(ngModel)]="acceptedRules" />
+      <label for="rulesCheck">
+        Ich respektiere die
+        <span class="text-link" (click)="showRulesText = !showRulesText; $event.preventDefault()">Inhaltsregeln</span>
+      </label>
+    </div>
+    @if (showRulesText) {
+    <div class="info-box-inline">
+      <div class="info-content">
+        @if (sprayRulesLoading) {
+        <div>Regeln werden geladen...</div>
+        } @if (!sprayRulesLoading && sprayRules) {
+        <div>
+          <ol>
+            @for (rule of sprayRules.rules_de; track $index) {
+            <li>{{ rule }}</li>
+            }
+          </ol>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  <div uiDialogFooter>
+    <ui-button
+      variant="info"
+      full
+      (click)="confirmUploadFromModal()"
+      [disabled]="previewModalUploading || !isNameValid(previewModalName) || !acceptedPrivacy || !acceptedRules"
+    >
+      @if (!previewModalUploading) {
+      <span>🚀 Jetzt hochladen</span>
+      } @if (previewModalUploading) {
+      <ui-spinner size="sm" variant="light" />
+      }
+    </ui-button>
+  </div>
+</ui-dialog>

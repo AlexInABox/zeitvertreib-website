@@ -7,6 +7,7 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
 import { IconComponent } from '../components/icon/icon.component';
+import { BadgeComponent, ButtonComponent, CardComponent, SpinnerComponent } from '@app/ui';
 import type {
   CaseListItem,
   CaseCategory,
@@ -19,7 +20,7 @@ type SearchMode = 'all' | 'steamId' | 'discordId' | 'caseId';
 
 @Component({
   selector: 'app-case-management',
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, ButtonComponent, CardComponent, BadgeComponent, SpinnerComponent],
   templateUrl: './case-management.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-management.component.css'],

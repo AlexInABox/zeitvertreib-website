@@ -1,5 +1,6 @@
 import { Component, OnInit, model, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BadgeComponent, ButtonComponent, CardComponent } from '@app/ui';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { ZvcService } from '../../../services/zvc.service';
@@ -14,7 +15,7 @@ type LootboxSpinItem = {
 @Component({
   selector: 'app-lootbox',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent, BadgeComponent, CardComponent],
   templateUrl: './lootbox.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./lootbox.css'],

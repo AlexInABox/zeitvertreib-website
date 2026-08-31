@@ -1,10 +1,14 @@
-<div class="stats-card p-6 rounded-2xl lootbox-card-wrapper">
+<ui-card>
   <div class="lootbox-header">
     <h3 class="lootbox-title">🎁 Lootbox</h3>
     <p class="lootbox-subtitle">Einmal öffnen für <strong>{{ lootboxCost }} ZVC</strong></p>
-    <div class="lootbox-voucher-badge" [class.lootbox-voucher-badge-empty]="lootboxVoucherCount === 0">
+    <ui-badge
+      variant="info"
+      class="lootbox-voucher-badge"
+      [class.lootbox-voucher-badge-empty]="lootboxVoucherCount === 0"
+    >
       🎟️ {{ lootboxVoucherCount }} Gutschein{{ lootboxVoucherCount === 1 ? '' : 'e' }}
-    </div>
+    </ui-badge>
   </div>
 
   <div class="lootbox-stage" [class.is-animating]="lootboxAnimating" [class.is-snapping]="lootboxSnapping">
@@ -68,11 +72,11 @@
     <div class="lootbox-loading-fill"></div>
   </div>
   } @if (lootboxError) {
-  <div class="lootbox-message lootbox-message-error mt-2">{{ lootboxError }}</div>
+  <div class="lootbox-message lootbox-message-error">{{ lootboxError }}</div>
   }
 
   <div class="lootbox-action">
-    <button class="lootbox-buy-btn" (click)="buyLootbox()" [disabled]="lootboxSpinning || !canAffordLootbox()">
+    <ui-button variant="success" full (click)="buyLootbox()" [disabled]="lootboxSpinning || !canAffordLootbox()">
       @if (!lootboxSpinning) {
       <span>🎁 Lootbox öffnen — {{ lootboxCost }} ZVC</span>
       } @if (lootboxSpinning && lootboxLoading) {
@@ -80,9 +84,10 @@
       } @if (lootboxSpinning && !lootboxLoading) {
       <span>🎰 Wird geöffnet...</span>
       }
-    </button>
-    <button
-      class="lootbox-voucher-btn"
+    </ui-button>
+    <ui-button
+      variant="info"
+      full
       (click)="useVoucherForLootbox()"
       [disabled]="lootboxSpinning || lootboxVoucherCount < 1"
     >
@@ -91,9 +96,9 @@
       } @if (lootboxSpinning) {
       <span>🎰 Wird geöffnet...</span>
       }
-    </button>
+    </ui-button>
     @if (!canAffordLootbox() && !lootboxSpinning) {
     <p class="lootbox-insufficient">Nicht genügend ZVC</p>
     }
   </div>
-</div>
+</ui-card>

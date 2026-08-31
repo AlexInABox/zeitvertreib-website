@@ -1,10 +1,10 @@
 .header-container {
   position: fixed;
   top: 1.25rem;
-  left: 50%;
+  left: var(--header-left, 50%);
   transform: translateX(-50%);
-  width: calc(100% - 2.5rem);
-  max-width: 1400px;
+  width: var(--header-width, calc(100% - 2.5rem));
+  max-width: var(--header-max-width, 1400px);
   z-index: 1000;
   display: flex;
   justify-content: center;

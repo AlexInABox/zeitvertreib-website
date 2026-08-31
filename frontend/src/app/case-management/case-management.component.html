@@ -2,48 +2,40 @@
   <!-- Public Case Lookup (when not team member) -->
   @if (!isLoading && !isTeam) {
     <div class="public-lookup-container">
-      <div class="dense-card lookup-card">
-        <div class="card-header">
-          <div class="card-title">
-            <app-icon class="card-icon icon-purple" name="search" />
-            <div>
-              <h2>Fall suchen</h2>
-              <span class="card-subtitle">
-                Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt
-              </span>
-            </div>
-          </div>
+      <ui-card
+        class="lookup-card"
+        title="Fall suchen"
+        subtitle="Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt"
+      >
+        <app-icon uiCardIcon class="icon-purple" name="search" />
+        <div class="lookup-input-wrapper">
+          <input
+            type="text"
+            class="ui-field lookup-input"
+            [(ngModel)]="lookupCaseId"
+            placeholder="z.B. abc123456z"
+            maxlength="10"
+            (keypress)="onLookupKeyPress($event)"
+            [disabled]="isLookingUp"
+          />
+          <ui-button (click)="lookupCase()" [disabled]="isLookingUp">
+            <app-icon name="arrow-right" /> Suchen
+          </ui-button>
         </div>
-        <div class="dense-body">
-          <div class="lookup-input-wrapper">
-            <input
-              type="text"
-              class="dense-input lookup-input"
-              [(ngModel)]="lookupCaseId"
-              placeholder="z.B. abc123456z"
-              maxlength="10"
-              (keypress)="onLookupKeyPress($event)"
-              [disabled]="isLookingUp"
-            />
-            <button class="btn btn-primary" (click)="lookupCase()" [disabled]="isLookingUp">
-              <app-icon name="arrow-right" /> Suchen
-            </button>
+        @if (lookupError) {
+          <div class="dense-notice notice-error">
+            <app-icon name="exclamation-circle" />
+            <span>{{ lookupError }}</span>
           </div>
-          @if (lookupError) {
-            <div class="dense-notice notice-error">
-              <app-icon name="exclamation-circle" />
-              <span>{{ lookupError }}</span>
-            </div>
-          }
-        </div>
-      </div>
+        }
+      </ui-card>
     </div>
   }
 
   <!-- Loading State -->
   @if (isLoading) {
     <div class="state-card">
-      <div class="loading-spinner"></div>
+      <ui-spinner />
       <p>Fälle werden geladen...</p>
     </div>
   }
@@ -54,7 +46,7 @@
       <app-icon class="state-icon-danger" name="exclamation-triangle" />
       <h3>Ein Fehler ist aufgetreten</h3>
       <p class="state-text">{{ errorMessage }}</p>
-      <button class="btn btn-secondary-soft" (click)="loadCases()"><app-icon name="refresh" /> Erneut versuchen</button>
+      <ui-button variant="secondary" (click)="loadCases()"><app-icon name="refresh" /> Erneut versuchen</ui-button>
     </div>
   }
 
@@ -73,7 +65,7 @@
     </div>
 
     <!-- Toolbar -->
-    <div class="dense-card">
+    <ui-card [padded]="false">
       <div class="toolbar-body">
         <div class="toolbar-row">
           <div class="mode-pills">
@@ -114,7 +106,7 @@
             @if (searchMode === 'all') {
               <div class="filter-select-wrapper">
                 <select
-                  class="dense-input filter-select"
+                  class="ui-field filter-select"
                   [ngModel]="sortBy + ':' + sortOrder"
                   (ngModelChange)="onSortChange($event)"
                 >
@@ -125,11 +117,7 @@
                 <app-icon class="filter-select-chevron" name="chevron-down" />
               </div>
               <div class="filter-select-wrapper">
-                <select
-                  [(ngModel)]="categoryFilter"
-                  (change)="onCategoryFilterChange()"
-                  class="dense-input filter-select"
-                >
+                <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="ui-field filter-select">
                   <option [ngValue]="null">Alle Kategorien</option>
                   @for (category of availableCategories; track category) {
                     <option [ngValue]="category">{{ category }}</option>
@@ -148,15 +136,15 @@
               <app-icon class="search-icon" name="search" />
               <input
                 type="text"
-                class="dense-input search-input"
+                class="ui-field search-input"
                 [(ngModel)]="searchQuery"
                 (input)="filterCases()"
                 placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
               />
               @if (searchQuery) {
-                <button class="btn-icon btn-icon-secondary clear-btn" (click)="clearSearch()">
+                <ui-button variant="icon" class="clear-btn" (click)="clearSearch()">
                   <app-icon name="times" />
-                </button>
+                </ui-button>
               }
             </div>
             @if (!searchQuery) {
@@ -180,7 +168,7 @@
               <app-icon class="search-icon" name="id-card" />
               <input
                 type="text"
-                class="dense-input search-input"
+                class="ui-field search-input"
                 [(ngModel)]="steamIdQuery"
                 (input)="onSteamIdQueryChange()"
                 placeholder="Steam-ID eingeben (z.B. 76561198…)"
@@ -189,9 +177,9 @@
                 <app-icon class="search-spinner spin" name="loader" />
               }
               @if (steamIdQuery && !isSearching) {
-                <button class="btn-icon btn-icon-secondary clear-btn" (click)="clearSteamIdSearch()">
+                <ui-button variant="icon" class="clear-btn" (click)="clearSteamIdSearch()">
                   <app-icon name="times" />
-                </button>
+                </ui-button>
               }
             </div>
             @if (!steamIdQuery) {
@@ -221,7 +209,7 @@
               <app-icon class="search-icon" name="discord" />
               <input
                 type="text"
-                class="dense-input search-input"
+                class="ui-field search-input"
                 [(ngModel)]="discordIdQuery"
                 (input)="onDiscordIdQueryChange()"
                 placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
@@ -230,9 +218,9 @@
                 <app-icon class="search-spinner spin" name="loader" />
               }
               @if (discordIdQuery && !isSearching) {
-                <button class="btn-icon btn-icon-secondary clear-btn" (click)="clearDiscordIdSearch()">
+                <ui-button variant="icon" class="clear-btn" (click)="clearDiscordIdSearch()">
                   <app-icon name="times" />
-                </button>
+                </ui-button>
               }
             </div>
             @if (!discordIdQuery) {
@@ -261,20 +249,16 @@
               <app-icon class="search-icon" name="folder-open" />
               <input
                 type="text"
-                class="dense-input search-input search-input--with-btn"
+                class="ui-field search-input search-input--with-btn"
                 [(ngModel)]="caseIdQuery"
                 (keypress)="onCaseIdKeyPress($event)"
                 (input)="caseIdError = ''"
                 placeholder="Fall-ID eingeben (z.B. abc1230000)"
                 maxlength="10"
               />
-              <button
-                class="btn-icon btn-icon-secondary submit-btn"
-                (click)="submitCaseIdSearch()"
-                [disabled]="!caseIdQuery"
-              >
+              <ui-button variant="icon" class="submit-btn" (click)="submitCaseIdSearch()" [disabled]="!caseIdQuery">
                 <app-icon name="arrow-right" />
-              </button>
+              </ui-button>
             </div>
             @if (!caseIdQuery && !caseIdError) {
               <span class="search-hint">
@@ -289,14 +273,14 @@
           </div>
         }
       </div>
-    </div>
+    </ui-card>
 
     <!-- Create Case -->
     <button class="create-case-row" (click)="createNewCase()"><app-icon name="plus" /> Neuen Fall erstellen</button>
 
     <!-- Cases List -->
     @if (displayedCases.length > 0) {
-      <div class="dense-card">
+      <ui-card [padded]="false">
         <div class="cases-list">
           @for (item of displayedCases; track item.caseId) {
             <div class="case-row" role="button" tabindex="0" (click)="openCase(item)" (keydown.enter)="openCase(item)">
@@ -309,12 +293,12 @@
               </div>
               <div class="row-meta">
                 @if (item.category) {
-                  <span class="badge badge-rule">{{ item.category }}</span>
+                  <ui-badge variant="rule">{{ item.category }}</ui-badge>
                 }
                 @if (item.linkedSteamIds.length > 0) {
-                  <span class="badge badge-neutral" [title]="item.linkedSteamIds.length + ' verknüpfte Nutzer'">
+                  <ui-badge variant="neutral" [title]="item.linkedSteamIds.length + ' verknüpfte Nutzer'">
                     <app-icon name="users" /> {{ item.linkedSteamIds.length }}
-                  </span>
+                  </ui-badge>
                 }
                 @if (item.createdBy) {
                   <span
@@ -341,19 +325,19 @@
             </div>
           }
         </div>
-      </div>
+      </ui-card>
     }
 
     <!-- Pagination -->
     @if (showPagination) {
       <div class="pagination-section">
-        <button class="btn-icon btn-icon-secondary" (click)="prevPage()" [disabled]="!hasPreviousPage">
+        <ui-button variant="icon" (click)="prevPage()" [disabled]="!hasPreviousPage">
           <app-icon name="chevron-left" />
-        </button>
+        </ui-button>
         <span class="page-info">Seite {{ page }} von {{ totalPages }}</span>
-        <button class="btn-icon btn-icon-secondary" (click)="nextPage()" [disabled]="!hasNextPage">
+        <ui-button variant="icon" (click)="nextPage()" [disabled]="!hasNextPage">
           <app-icon name="chevron-right" />
-        </button>
+        </ui-button>
       </div>
     }
 
@@ -378,9 +362,9 @@
         <p class="state-text">
           Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
         </p>
-        <button class="btn btn-secondary-soft" (click)="clearDiscordIdSearch()">
+        <ui-button variant="secondary" (click)="clearDiscordIdSearch()">
           <app-icon name="times" /> Suche zurücksetzen
-        </button>
+        </ui-button>
       </div>
     }
     @if (searchMode === 'steamId' && !steamIdQuery && !isSearching) {
@@ -398,9 +382,9 @@
         <p class="state-text">
           Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
         </p>
-        <button class="btn btn-secondary-soft" (click)="clearSteamIdSearch()">
+        <ui-button variant="secondary" (click)="clearSteamIdSearch()">
           <app-icon name="times" /> Suche zurücksetzen
-        </button>
+        </ui-button>
       </div>
     }
     @if (searchMode === 'all' && cases.length === 0 && !isLoading) {
@@ -408,9 +392,7 @@
         <app-icon class="state-icon-muted" name="inbox" />
         <h3>Noch keine Fälle vorhanden</h3>
         <p class="state-text">Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
-        <button class="btn btn-primary" (click)="createNewCase()">
-          <app-icon name="plus" /> Ersten Fall erstellen
-        </button>
+        <ui-button (click)="createNewCase()"> <app-icon name="plus" /> Ersten Fall erstellen </ui-button>
       </div>
     }
   }
