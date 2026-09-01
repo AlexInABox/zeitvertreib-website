@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
+/** Dense card surface with optional header (title/subtitle), icon and action slots. */
 @Component({
   selector: 'ui-card',
   changeDetection: ChangeDetectionStrategy.Eager,

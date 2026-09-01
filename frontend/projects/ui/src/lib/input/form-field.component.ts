@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
+/** Label/hint/error wrapper around form controls. */
 @Component({
   selector: 'ui-form-field',
   changeDetection: ChangeDetectionStrategy.Eager,

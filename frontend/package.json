@@ -5,7 +5,12 @@
     "start": "ng serve --configuration local",
     "build": "ng build --configuration production",
     "build:dev": "ng build --configuration dev",
-    "build:local": "ng build --configuration local"
+    "build:local": "ng build --configuration local",
+    "ui:registry": "node tools/generate-ui-registry.mjs",
+    "prestart": "npm run ui:registry",
+    "prebuild": "npm run ui:registry",
+    "prebuild:dev": "npm run ui:registry",
+    "prebuild:local": "npm run ui:registry"
   },
   "private": true,
   "dependencies": {

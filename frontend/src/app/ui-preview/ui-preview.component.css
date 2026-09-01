@@ -1,0 +1,247 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.page {
+  display: flex;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.sidebar {
+  position: sticky;
+  top: 1.5rem;
+  width: 190px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+}
+
+.sidebar__brand {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ui-text);
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sidebar__link {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--ui-text-muted);
+  text-decoration: none;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--ui-radius-sm);
+  transition: var(--ui-transition);
+}
+
+.sidebar__link:hover {
+  background: var(--ui-surface-hover);
+  color: var(--ui-text);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-toggle__input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.theme-toggle__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-surface-hover);
+  border: 1px solid var(--ui-border-strong);
+  transition: var(--ui-transition);
+}
+
+.theme-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ui-text-soft);
+  transition: var(--ui-transition);
+}
+
+.theme-toggle__input:checked + .theme-toggle__track {
+  background: var(--ui-primary-grad);
+  border-color: transparent;
+}
+
+.theme-toggle__input:checked + .theme-toggle__track .theme-toggle__thumb {
+  transform: translateX(14px);
+  background: var(--ui-primary-contrast);
+}
+
+.theme-toggle__input:focus-visible + .theme-toggle__track {
+  box-shadow: 0 0 0 2px var(--ui-focus-ring-glow);
+}
+
+.theme-toggle__label {
+  font-size: 0.78rem;
+  color: var(--ui-text-soft);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-header__title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--ui-text);
+}
+
+.page-header__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ui-text-muted);
+}
+
+.section {
+  scroll-margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--ui-text);
+}
+
+.section__selector {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--ui-violet-pale);
+  background: var(--ui-surface-subtle);
+  border: 1px solid var(--ui-border-soft);
+  border-radius: var(--ui-radius-xs);
+  padding: 0.15rem 0.45rem;
+}
+
+.section__desc {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ui-text-muted);
+  max-width: 70ch;
+}
+
+.section__subtitle {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-text-faint);
+}
+
+.section__outputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.section__demos {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.props {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.props th,
+.props td {
+  text-align: left;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--ui-divider);
+}
+
+.props th {
+  color: var(--ui-text-faint);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.props td {
+  color: var(--ui-text-soft);
+}
+
+.props code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  color: var(--ui-violet-pale);
+}
+
+@media (max-width: 768px) {
+  .page {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .sidebar__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

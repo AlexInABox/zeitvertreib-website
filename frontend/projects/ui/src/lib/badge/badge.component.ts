@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 export type UiBadgeVariant = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'pink' | 'admin' | 'rule';
 
+/** Small status badge with color variants; exposes data-variant on the host element. */
 @Component({
   selector: 'ui-badge',
   changeDetection: ChangeDetectionStrategy.Eager,

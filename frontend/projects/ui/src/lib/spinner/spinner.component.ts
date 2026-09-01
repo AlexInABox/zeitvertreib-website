@@ -10,6 +10,7 @@ const SIZE_PX: Record<UiSpinnerSize, number> = {
   lg: 32,
 };
 
+/** Loading spinner with size presets (or a custom pixel size) and accent/light variants. */
 @Component({
   selector: 'ui-spinner',
   changeDetection: ChangeDetectionStrategy.Eager,

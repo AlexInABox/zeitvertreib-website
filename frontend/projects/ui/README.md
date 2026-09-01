@@ -54,9 +54,24 @@ directly (e.g. icon-inside-input layouts).
 ## Adding a component
 
 1. Create `lib/<name>/<name>.component.ts` (standalone, `ChangeDetectionStrategy.Eager`, signal inputs).
+   Add a short `/** ... */` JSDoc description directly above `@Component` and keep each
+   input/output declaration on a single line — both are parsed by the registry generator.
 2. Export it from `src/public-api.ts`.
 3. Add it to this README's table.
+4. (Optional, recommended) Create `lib/<name>/<name>.demo.ts` exporting `demos: UiDemoEntry[]`
+   (see `lib/registry.ts`) with small interactive example components. Demos appear on the
+   `/ui` preview page automatically.
+
+`registry.generated.ts` is regenerated from the sources before every build/serve
+(`tools/generate-ui-registry.mjs`, wired via npm pre-hooks) and drives the `/ui` preview
+page. Do not edit it manually.
 
 The library is consumed as source via the `@app/ui` path alias in `tsconfig.json`
 (`./projects/ui/src/public-api.ts`) — it is bundled and tree-shaken with the app, so no
 separate `ng build ui` step is needed during development.
+
+## Preview page
+
+The app ships a live component library preview at `/ui` (route `ui-preview`). It lists every
+exported component with selector, description, inputs/outputs table and all demos found in
+the package. No page code needs to change when the library grows.

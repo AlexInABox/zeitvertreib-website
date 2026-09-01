@@ -103,7 +103,11 @@ export class AppComponent implements OnInit, OnDestroy {
     // Re-apply chiikawa images after navigation (for dynamically loaded content)
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
+      .subscribe((event) => {
+        if (event instanceof NavigationEnd) {
+          // Full-screen layout for the component library preview page
+          this.showHeader = !event.urlAfterRedirects.startsWith('/ui');
+        }
         if (this.easterEggService.isChiikawaActive()) {
           // Small delay to allow new content to render
           setTimeout(() => this.applyChiikawaImages(), 100);

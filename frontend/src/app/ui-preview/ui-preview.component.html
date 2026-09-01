@@ -1,0 +1,84 @@
+<div class="page">
+  <aside class="sidebar">
+    <div class="sidebar__brand">@app/ui</div>
+    <label class="theme-toggle">
+      <input class="theme-toggle__input" type="checkbox" [checked]="isDark()" (change)="toggleTheme()" />
+      <span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span>
+      <span class="theme-toggle__label">Dark Mode</span>
+    </label>
+    <nav class="sidebar__nav">
+      @for (entry of registry; track entry.selector) {
+        <button type="button" class="sidebar__link" (click)="scrollTo(entry.selector)">{{ entry.selector }}</button>
+      }
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="page-header">
+      <h1 class="page-header__title">UI Komponentenbibliothek</h1>
+      <p class="page-header__subtitle">
+        Automatisch aus dem UI-Paket generiert — {{ registry.length }} Komponenten, jederzeit aktuell.
+      </p>
+    </header>
+
+    @for (entry of registry; track entry.selector) {
+      <section class="section" [id]="entry.selector">
+        <div class="section__header">
+          <h2 class="section__title">{{ entry.name }}</h2>
+          <code class="section__selector">{{ '<' + entry.selector + '>' }}</code>
+        </div>
+
+        @if (entry.description) {
+          <p class="section__desc">{{ entry.description }}</p>
+        }
+
+        @if (entry.inputs.length > 0) {
+          <h3 class="section__subtitle">Inputs</h3>
+          <table class="props">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Typ</th>
+                <th>Default</th>
+                <th>Art</th>
+                <th>Erforderlich</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (input of entry.inputs; track input.name) {
+                <tr>
+                  <td>
+                    <code>{{ input.name }}</code>
+                  </td>
+                  <td>
+                    <code>{{ input.type ?? '—' }}</code>
+                  </td>
+                  <td>
+                    <code>{{ input.default ?? '—' }}</code>
+                  </td>
+                  <td>{{ input.twoWay ? 'model' : 'input' }}</td>
+                  <td>{{ input.required ? 'ja' : 'nein' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        @if (entry.outputs.length > 0) {
+          <h3 class="section__subtitle">Outputs</h3>
+          <div class="section__outputs">
+            @for (output of entry.outputs; track output) {
+              <ui-badge variant="info">{{ output }}</ui-badge>
+            }
+          </div>
+        }
+
+        <div class="section__demos">
+          @for (demo of entry.demos; track demo.title) {
+            <app-ui-demo-frame [title]="demo.title" [demo]="demo" />
+          }
+        </div>
+      </section>
+    }
+  </main>
+</div>

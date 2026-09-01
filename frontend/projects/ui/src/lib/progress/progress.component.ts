@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
+/** Thin progress bar with two sizes; the fill turns green at 100%. */
 @Component({
   selector: 'ui-progress',
   changeDetection: ChangeDetectionStrategy.Eager,

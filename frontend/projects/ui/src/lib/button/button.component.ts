@@ -4,6 +4,7 @@ import { SpinnerComponent } from '../spinner/spinner.component';
 export type UiButtonVariant = 'primary' | 'secondary' | 'success' | 'info' | 'danger' | 'ghost' | 'icon';
 export type UiButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
+/** Button with color variants, four sizes, full-width mode and an inline loading spinner. */
 @Component({
   selector: 'ui-button',
   changeDetection: ChangeDetectionStrategy.Eager,

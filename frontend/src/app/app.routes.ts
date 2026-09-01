@@ -69,6 +69,11 @@ export const routes: Routes = [
     loadComponent: () => import('./auth-callback/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },
   {
+    path: 'ui',
+    loadComponent: () => import('./ui-preview/ui-preview.component').then((m) => m.UiPreviewComponent),
+    // Public route - live component library preview
+  },
+  {
     path: '',
     loadComponent: () => import('./home/home.component').then((m) => m.HomeComponent),
   },

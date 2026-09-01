@@ -13,6 +13,7 @@ import {
 
 export type UiDialogAppearance = 'glass' | 'solid';
 
+/** Modal dialog with backdrop, Escape/backdrop close, glass or solid appearance and a footer slot. */
 @Component({
   selector: 'ui-dialog',
   changeDetection: ChangeDetectionStrategy.Eager,

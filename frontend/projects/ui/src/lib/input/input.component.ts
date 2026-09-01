@@ -9,6 +9,7 @@ const INPUT_VALUE_ACCESSOR = {
   multi: true,
 };
 
+/** Styled text input (ControlValueAccessor) supporting common input types. */
 @Component({
   selector: 'ui-input',
   changeDetection: ChangeDetectionStrategy.Eager,
