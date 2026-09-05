@@ -24,7 +24,7 @@
     <!-- Daily Quests -->
     <ui-card class="h-full">
       <div class="quests-header">
-        <h3 class="quests-title">📅 Tägliche Quests</h3>
+        <h3 class="quests-title">@if (testUi()) {<i class="pi pi-calendar quest-title-icon"></i>} @else {📅} Tägliche Quests</h3>
         <p class="quests-subtitle">Erfülle Tägliche Quests für wertvolle ZVC</p>
       </div>
       <div class="quests-list">
@@ -82,7 +82,7 @@
     <!-- Weekly Quests -->
     <ui-card class="h-full">
       <div class="quests-header">
-        <h3 class="quests-title">📆 Wöchentliche Quests</h3>
+        <h3 class="quests-title">@if (testUi()) {<i class="pi pi-calendar-plus quest-title-icon"></i>} @else {📆} Wöchentliche Quests</h3>
         <p class="quests-subtitle">Erfülle Wöchentliche Quests für wertvolle ZVC</p>
       </div>
       <div class="quests-list">

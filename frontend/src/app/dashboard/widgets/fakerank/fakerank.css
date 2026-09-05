@@ -9,6 +9,11 @@
   margin: 0;
   margin-bottom: -0.25rem;
 }
+
+.spray-title i.pi {
+  margin-right: 0.45rem;
+  vertical-align: -0.06em;
+}
 .spray-subtitle {
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.6);
@@ -84,8 +89,33 @@
   color: white;
 }
 
+.action-btn-text i.pi {
+  margin-right: 0.3rem;
+  font-size: 0.85em;
+}
+
 .action-btn-text.delete:hover:not(:disabled) {
   color: #f87171;
+}
+
+/* Price note lives in the action area (right side) so the left text
+   column stays aligned with sibling cards that don't show a price. */
+.fakerank-price-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+.fakerank-empty-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
 
 .fakerank-message {
@@ -307,4 +337,282 @@
 }
 .mt-4 {
   margin-top: 1rem;
+}
+
+/* Experimental UI (body.testui): larger, friendlier fakerank card */
+:host-context(body.testui) .spray-title {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--ui-text);
+}
+
+:host-context(body.testui) .spray-subtitle {
+  font-size: 1.05rem;
+  color: var(--ui-text-muted);
+}
+
+:host-context(body.testui) .fakerank-container-inline {
+  gap: 2rem;
+}
+
+:host-context(body.testui) .fakerank-info-left {
+  gap: 0.5rem;
+}
+
+:host-context(body.testui) .fakerank-preview-small {
+  padding: 0.85rem 1.1rem;
+  font-size: 1.45rem;
+  border-radius: 1rem;
+}
+
+:host-context(body.testui) .action-btn-text {
+  font-size: 1rem;
+}
+
+:host-context(body.testui) .fakerank-price-note {
+  font-size: 0.95rem;
+  color: var(--ui-warning);
+  opacity: 0.9;
+}
+
+/* Experimental UI: keep fakerank text on one line, truncate with ellipsis */
+:host-context(body.testui) .spray-title,
+:host-context(body.testui) .spray-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ============================================================
+   Experimental (testui) inline fakerank editor
+   (only rendered while body.testui is active)
+   ============================================================ */
+
+.fr-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.fr-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px dashed rgba(255, 255, 255, 0.24);
+  color: var(--ui-text, #fff);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fr-create:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.fr-create-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.fr-view {
+  position: relative;
+}
+
+.fr-chip {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 2.4rem 0.9rem 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fr-chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.fr-delete {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+  transition: all 0.15s ease;
+}
+.fr-delete:hover {
+  background: #b91c1c;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.fr-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.fr-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.fr-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  outline: none;
+  transition: all 0.2s ease;
+}
+.fr-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 500;
+}
+.fr-input:focus {
+  border-color: rgba(139, 92, 246, 0.65);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.fr-color-trigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.fr-color-trigger:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+.fr-color-trigger-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.fr-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fr-cancel {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0.5rem;
+  transition: color 0.2s ease;
+}
+.fr-cancel:hover:not(:disabled) {
+  color: #fff;
+}
+.fr-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fr-note {
+  justify-content: center;
+}
+
+/* Inline confirmation dialogs */
+.fr-dialog-body p {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.fr-dialog-body p:last-child {
+  margin-bottom: 0;
+}
+.fr-dialog-cost {
+  color: var(--ui-warning);
+}
+.fr-dialog-hint {
+  opacity: 0.6;
+  font-size: 0.85rem !important;
+}
+.fr-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Experimental (testui): separate color picker window */
+.fr-color-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+.fr-color-preview-swatch {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.fr-color-groups {
+  max-height: min(52vh, 380px);
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+.fr-color-groups .color-groups-wrapper {
+  margin-top: 0;
 }

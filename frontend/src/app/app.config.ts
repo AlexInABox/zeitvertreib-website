@@ -1,6 +1,6 @@
 import { provideRouter } from '@angular/router';
 
-import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { IMAGE_CONFIG } from '@angular/common';
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -5240,7 +5240,7 @@ const MyPreset = definePreset(
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimationsAsync(),
-    provideHttpClient(withXhr(), withInterceptors([errorInterceptor])),
+    provideHttpClient(withInterceptors([errorInterceptor])),
     providePrimeNG({
       theme: {
         preset: MyPreset,

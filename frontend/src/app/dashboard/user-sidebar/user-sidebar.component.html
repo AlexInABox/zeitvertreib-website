@@ -1,6 +1,10 @@
 <div class="sidebar-inner">
-  <!-- Hero: full-width profile picture backdrop -->
-  <div class="identity-hero">
+  <!-- Hero: full-width profile picture backdrop, links to profile -->
+  <a
+    class="identity-hero"
+    routerLink="/profile"
+    [attr.aria-label]="'Profil von ' + (userStatistics()?.username || 'Spieler')"
+  >
     <img
       class="identity-hero-avatar"
       [src]="getAvatarUrl(userStatistics()?.avatarFull)"
@@ -10,7 +14,7 @@
     />
     <div class="identity-hero-scrim"></div>
     <span class="identity-hero-name">{{ userStatistics()?.username || 'Spieler' }}</span>
-  </div>
+  </a>
 
   <!-- Stat tiles -->
   <div class="stat-tiles">

@@ -11,6 +11,7 @@ import { EasterEggService } from './services/easter-egg.service';
 import { AudioService } from './services/audio.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { CardComponent } from '@app/ui';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +22,7 @@ import { filter } from 'rxjs/operators';
     ToastComponent,
     ZvcOverlayComponent,
     SupportOverlayComponent,
+    CardComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -33,6 +35,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   title = 'zeitvertreib-website';
   showHeader = true;
+  testUiActive = false;
+  private testUiSubscription?: Subscription;
   private chiikawaSubscription?: Subscription;
   private chiikawaActivatedSubscription?: Subscription;
   private routerSubscription?: Subscription;
@@ -90,6 +94,10 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.testUiSubscription = this.easterEggService.testUiTrigger$.subscribe((isActive) => {
+      this.testUiActive = isActive;
+    });
+
     // Subscribe to chiikawa activation event (only fires on new activation, not on page load)
     this.chiikawaActivatedSubscription = this.easterEggService.chiikawaActivatedEvent$.subscribe(() => {
       // Play sound when activating chiikawa mode
@@ -117,6 +125,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.chiikawaSubscription?.unsubscribe();
+    this.testUiSubscription?.unsubscribe();
     this.chiikawaActivatedSubscription?.unsubscribe();
     this.routerSubscription?.unsubscribe();
     // Clean up audio

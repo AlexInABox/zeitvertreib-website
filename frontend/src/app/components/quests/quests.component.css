@@ -15,6 +15,12 @@
   color: white;
 }
 
+.quests-title i.pi {
+  margin-right: 0.5rem;
+  font-size: 1.2em;
+  vertical-align: -0.08em;
+}
+
 .quests-subtitle {
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.6);
@@ -182,4 +188,113 @@
     width: 100%;
     justify-content: flex-end;
   }
+}
+
+/* Experimental UI (body.testui): roomier, larger quest list */
+:host-context(body.testui) .quest-grid {
+  gap: 2.5rem;
+}
+
+:host-context(body.testui) .quests-header {
+  margin-bottom: 0.5rem;
+}
+
+:host-context(body.testui) .quests-title {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--ui-text);
+  text-shadow: none;
+}
+
+:host-context(body.testui) .quests-subtitle {
+  display: none;
+}
+
+:host-context(body.testui) .quests-list {
+  gap: 0;
+}
+
+:host-context(body.testui) .quest-row {
+  min-height: 0;
+  gap: 0.9rem;
+  padding: 1.4rem 0.1rem;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ui-divider);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:host-context(body.testui) .quest-row:hover:not(.quest-completed):not(.quest-claimed) {
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+:host-context(body.testui) .quest-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0.4rem;
+}
+
+:host-context(body.testui) .quest-completed,
+:host-context(body.testui) .quest-completed:hover {
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+:host-context(body.testui) .quest-claimed {
+  opacity: 0.45;
+}
+
+:host-context(body.testui) .quest-name {
+  font-size: 1.2rem;
+  line-height: 1.3;
+  color: var(--ui-text);
+  text-shadow: none;
+}
+
+:host-context(body.testui) .quest-completed .quest-name {
+  color: var(--ui-success);
+}
+
+:host-context(body.testui) .quest-reward {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 0.375rem;
+}
+
+:host-context(body.testui) .progress-text {
+  font-size: 1rem;
+}
+
+/* Experimental UI: truncate long quest text instead of wrapping */
+:host-context(body.testui) .quests-title,
+:host-context(body.testui) .quest-name,
+:host-context(body.testui) .progress-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+:host-context(body.testui) .quest-info {
+  flex-wrap: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+:host-context(body.testui) .quest-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+:host-context(body.testui) .quest-reward {
+  flex-shrink: 0;
+}
+
+:host-context(body.testui) .quest-action {
+  flex-shrink: 0;
+  min-width: 60px;
+  justify-content: flex-end;
 }

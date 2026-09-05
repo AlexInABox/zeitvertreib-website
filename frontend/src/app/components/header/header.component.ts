@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { AuthService, SteamUser, UserData } from '../../services/auth.service';
@@ -30,6 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   themeService = inject(ThemeService);
   private http = inject(HttpClient);
   private supportService = inject(SupportService);
+  private router = inject(Router);
 
   items: MenuItem[] | undefined;
   userLoggedIn = false;
@@ -62,6 +63,28 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.activeDropdown = null;
     if (subItem.command) {
       subItem.command({ originalEvent: event, item: subItem });
+    }
+  }
+
+  /**
+   * In the testui pager (dashboard -> games), clicking "Spiele" scrolls to the
+   * games screen without leaving the page. Everywhere else it navigates normally.
+   */
+  private openGames() {
+    const onDashboard =
+      this.router.url.split('?')[0] === '/dashboard' || this.router.url.startsWith('/dashboard');
+    const testUiActive = typeof document !== 'undefined' && document.body.classList.contains('testui');
+
+    if (!testUiActive) {
+      void this.router.navigate(['/games']);
+      return;
+    }
+
+    if (onDashboard) {
+      window.dispatchEvent(new CustomEvent('testui-open-games'));
+    } else {
+      // Land on the dashboard with a marker so it opens the games screen once loaded.
+      void this.router.navigate(['/dashboard'], { queryParams: { screen: 'games' } });
     }
   }
 
@@ -111,7 +134,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           {
             label: 'Spiele',
             icon: PrimeIcons.POWER_OFF,
-            route: '/games',
+            command: () => this.openGames(),
           },
         ],
       },

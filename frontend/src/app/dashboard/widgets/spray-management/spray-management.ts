@@ -31,6 +31,8 @@ interface SpraySlot {
 })
 export class SprayManagementComponent implements OnInit, OnDestroy {
   readonly isDonator = input(false);
+  /** Experimental UI: render PrimeIcons instead of emojis. */
+  readonly testUi = input(false);
 
   spraySlots: SpraySlot[] = [
     { id: null, name: '', imageUrl: null, isUploading: false, selectedFile: null, preview: null },

@@ -302,3 +302,48 @@
     transform: scale(0.6);
   }
 }
+
+/* Experimental UI (body.testui): align the header with the centered dashboard content */
+@media (min-width: 1025px) {
+  :host-context(body.testui) .header-container {
+    left: 50%;
+    width: calc(100% - 2.5rem);
+    max-width: 1200px;
+  }
+
+  :host-context(body.testui) .nav-item span {
+    display: inline;
+  }
+
+  :host-context(body.testui) .nav-links {
+    gap: 0.15rem;
+    margin: 0 0.75rem;
+  }
+}
+
+/* Experimental UI: hide the floating nav by default; reveal it only while the
+   pointer hovers the top area of the dashboard. */
+:host-context(body.testui) .header-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  pointer-events: auto;
+}
+
+:host-context(body.testui) .header-glass {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(-150%) scale(0.98);
+  pointer-events: none;
+}
+
+:host-context(body.testui) .header-container:hover .header-glass,
+:host-context(body.testui) .header-container:focus-within .header-glass {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}

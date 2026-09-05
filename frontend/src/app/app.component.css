@@ -2,3 +2,55 @@ app-header {
   position: sticky;
   top: 10px; /* Make the header stick to the top */
 }
+
+.experimental-ui-indicator {
+  position: fixed;
+  top: 5.5rem;
+  right: 0.75rem;
+  z-index: 60;
+  width: fit-content;
+  max-width: calc(100vw - 1.5rem);
+  border-color: color-mix(in srgb, var(--ui-info, #3b82f6) 55%, transparent);
+  opacity: 0.92;
+}
+
+.experimental-ui-indicator--no-header {
+  top: 0.75rem;
+}
+
+.experimental-ui-indicator ::ng-deep .ui-card__body {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.experimental-ui-indicator__status {
+  color: var(--ui-text-soft, #64748b);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.experimental-ui-indicator__status::before {
+  content: '';
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: var(--ui-info, #3b82f6);
+  vertical-align: 0.05rem;
+}
+
+@media (max-width: 600px) {
+  .experimental-ui-indicator {
+    top: auto;
+    right: 0.5rem;
+    bottom: 0.5rem;
+  }
+
+  .experimental-ui-indicator--no-header {
+    top: auto;
+  }
+}

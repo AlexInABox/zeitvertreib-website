@@ -1,4 +1,4 @@
-<div class="dashboard-shell relative z-10">
+<div class="dash-viewport" #pager (scroll)="onPagerScroll()">
   <!-- Loading State -->
   @if (isLoading) {
     <div class="loading-state">
@@ -20,31 +20,665 @@
     </div>
   }
 
-  <!-- Main Content -->
+  <!-- Dashboard screen -->
   @if (!isLoading && !hasError) {
-    <!-- User sidebar — source of truth -->
-    <aside class="dashboard-sidebar">
-      <app-user-sidebar [userStatistics]="userStatistics" />
-    </aside>
+    @if (testUi3Active) {
+      <!-- testui3: cinematic living-field dashboard -->
+      <section class="dash-screen">
+        <div class="m3-canvas">
+          <!-- Nav -->
+          <header class="m3-nav">
+            <div class="m3-nav-inner">
+              <a class="m3-logo" routerLink="/">
+                <span class="m3-logo-badge"
+                  ><img
+                    class="m3-star"
+                    src="/assets/logos/inverted/logo_full_1to1.svg"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                </span>
+                <span class="m3-logo-name">Zeitvertreib</span>
+              </a>
+              <div class="m3-nav-right">
+                <button type="button" class="m3-navlink" (click)="openSupport()">
+                  Unterstützen&nbsp;<span aria-hidden="true">↗</span>
+                </button>
+                <a class="m3-navlink" routerLink="/profile">{{ userStatistics.username || 'Konto' }}</a>
+                <button
+                  type="button"
+                  class="m3-theme"
+                  (click)="t2ToggleTheme()"
+                  [attr.aria-label]="t2IsDark ? 'Helles Design' : 'Dunkles Design'"
+                  [title]="t2IsDark ? 'Helles Design' : 'Dunkles Design'"
+                >
+                  <span aria-hidden="true">{{ t2IsDark ? '☀' : '☾' }}</span>
+                </button>
+              </div>
+            </div>
+          </header>
 
-    <!-- Functional area -->
-    <main class="dashboard-main">
-      <div class="functional-grid">
-        <!-- Quests -->
-        <div class="grid-item func-span-2">
-          <app-quests></app-quests>
-        </div>
+          <!-- Hero: tall cinematic runway, sticky stage, scrub-to-the-field -->
+          <section class="m3-hero">
+            <div class="m3-stage">
+              <!-- living pixel field -->
+              <div class="m3-mosaic-wrap" aria-hidden="true">
+                <div
+                  class="m3-mosaic"
+                  [style.--m3-cols]="m3Cols"
+                  [style.--m3-rows]="m3Rows"
+                >
+                  @for (cell of m3Cells; track $index) {
+                    <span
+                      class="m3-px"
+                      [class.m3-px--hot]="cell.hot"
+                      [style.background]="cell.bg"
+                      [style.animation-delay]="cell.delay + 's'"
+                      [style.animation-duration]="cell.dur + 's'"
+                      [style.--m3-base]="cell.base"
+                    ></span>
+                  }
+                </div>
+              </div>
 
-        <!-- Sprays -->
-        <div class="grid-item">
-          <app-spray-management [isDonator]="isDonator"></app-spray-management>
-        </div>
+              <!-- cinematic grading over the field -->
+              <div class="m3-grade" aria-hidden="true"></div>
+              <div class="m3-orb m3-orb--a" aria-hidden="true"></div>
+              <div class="m3-orb m3-orb--b" aria-hidden="true"></div>
 
-        <!-- Fakerank -->
-        <div class="grid-item">
-          <app-fakerank [isDonator]="isDonator"></app-fakerank>
+              <div class="m3-stage-inner">
+                <div class="m3-hero-copy">
+                  <p class="m3-eyebrow">
+                    <span class="m3-eyebrow-dot" aria-hidden="true"></span>ZTV&nbsp;//&nbsp;Server-Dashboard
+                  </p>
+                  <h1 class="m3-hero-title">
+                    <span class="m3-line m3-line--a">Dein Server.</span>
+                    <span class="m3-line m3-line--b">Deine Zahlen<span class="m3-dot">.</span></span>
+                  </h1>
+                  <p class="m3-hero-sub">
+                    Kills, Runden, Events — der komplette Server-Überblick. Klar und ohne Schnickschnack.
+                  </p>
+                  <div class="m3-hero-actions">
+                    <a class="m3-hero-link" routerLink="/games">Zu den Spielen&nbsp;<span aria-hidden="true">→</span></a>
+                    <button type="button" class="m3-hero-ghost" (click)="openSupport()">
+                      Unterstützen&nbsp;<span aria-hidden="true">↗</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Console -->
+                <div class="m3-window">
+                  <div class="m3-window-bar">
+                    <span class="m3-window-badge"
+                      ><img
+                        class="m3-star"
+                        src="/assets/logos/inverted/logo_full_1to1.svg"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span class="m3-window-name">Zeitvertreib&nbsp;·&nbsp;Konsole</span>
+                    <span class="m3-window-rank">{{ t2Rank }}</span>
+                  </div>
+                  <div class="m3-window-grid">
+                    <div class="m3-cell m3-cell--a"><span>Kills</span><strong>{{ t2Num(userStatistics.kills) }}</strong></div>
+                    <div class="m3-cell m3-cell--b"><span>Tode</span><strong>{{ t2Num(userStatistics.deaths) }}</strong></div>
+                    <div class="m3-cell m3-cell--c"><span>K&nbsp;/&nbsp;D</span><strong>{{ kdRatio }}</strong></div>
+                    <div class="m3-cell m3-cell--d"><span>Spielzeit</span><strong>{{ t2PlaytimeBig }}</strong></div>
+                  </div>
+                  <div class="m3-window-foot">
+                    <span>{{ t2Num(userStatistics.roundsplayed) }} Runden</span>
+                    <span>{{ t2Num(userStatistics.experience) }} XP</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="m3-scrollcue" aria-hidden="true">
+                <span class="m3-scrollcue-track"><i></i></span>
+                <span class="m3-scrollcue-label">Scroll</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Products grid -->
+          <section class="m3-products">
+            <h2 class="m3-h2">Werkzeuge</h2>
+            <div class="m3-tiles">
+              <a class="m3-tile m3-tile--wide" routerLink="/games">
+                <span class="m3-tile-top">
+                  <span class="m3-tile-ic m3-ic-orange"
+                    ><img
+                      class="m3-star"
+                      src="/assets/logos/inverted/logo_full_1to1.svg"
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span class="m3-tile-name">Spiele</span>
+                  <span class="m3-tile-go" aria-hidden="true">↗</span>
+                </span>
+              </a>
+              <a class="m3-tile" routerLink="/reporting">
+                <span class="m3-tile-top">
+                  <span class="m3-tile-ic m3-ic-blue"
+                    ><img
+                      class="m3-star"
+                      src="/assets/logos/inverted/logo_full_1to1.svg"
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span class="m3-tile-name">Reports</span>
+                  <span class="m3-tile-go" aria-hidden="true">↗</span>
+                </span>
+              </a>
+              <a class="m3-tile" routerLink="/profile">
+                <span class="m3-tile-top">
+                  <span class="m3-tile-ic m3-ic-sky"
+                    ><img
+                      class="m3-star"
+                      src="/assets/logos/inverted/logo_full_1to1.svg"
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span class="m3-tile-name">Profil</span>
+                  <span class="m3-tile-go" aria-hidden="true">↗</span>
+                </span>
+              </a>
+              <button type="button" class="m3-tile m3-tile--wide" (click)="openSupport()">
+                <span class="m3-tile-top">
+                  <span class="m3-tile-ic m3-ic-crimson"
+                    ><img
+                      class="m3-star"
+                      src="/assets/logos/inverted/logo_full_1to1.svg"
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span class="m3-tile-name">Unterstützen</span>
+                  <span class="m3-tile-go" aria-hidden="true">↗</span>
+                </span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Session details -->
+          <section class="m3-detail">
+            <h2 class="m3-h2">Aktivität</h2>
+            <div class="m3-split">
+              <div class="m3-split-col">
+                <h3 class="m3-split-title">Letzte Kills</h3>
+                @if (t2RecentKills.length) {
+                  <div class="m3-feed">
+                    @for (kill of t2RecentKills; track $index) {
+                      <div class="m3-feed-row">
+                        <img
+                          class="m3-feed-avatar"
+                          [src]="kill.avatarmedium || t2FallbackImg"
+                          alt=""
+                          loading="lazy"
+                          (error)="t2ImgFallback($event)"
+                        />
+                        <span class="m3-feed-name">{{ kill.displayname }}</span>
+                        <span class="m3-feed-go" aria-hidden="true">↗</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="m3-empty">Noch keine Eliminierungen erfasst.</p>
+                }
+              </div>
+              <div class="m3-split-col">
+                <h3 class="m3-split-title">Ausrüstung</h3>
+                <dl class="m3-gear">
+                  <div class="m3-gear-row"><dt>Medkits</dt><dd>{{ t2Num(userStatistics.usedmedkits) }}</dd></div>
+                  <div class="m3-gear-row"><dt>Pocket Escapes</dt><dd>{{ t2Num(userStatistics.pocketescapes) }}</dd></div>
+                  <div class="m3-gear-row"><dt>Adrenalin</dt><dd>{{ t2Num(userStatistics.usedadrenaline) }}</dd></div>
+                  <div class="m3-gear-row"><dt>Colas</dt><dd>{{ t2Num(userStatistics.usedcolas) }}</dd></div>
+                </dl>
+              </div>
+            </div>
+          </section>
+
+          <!-- Gallery -->
+          <section class="m3-gallery">
+            <div class="m3-gallery-head">
+              <div>
+                <h2 class="m3-h2">Bilder</h2>
+              </div>
+              <div class="m3-gallery-nav">
+                <span class="m3-gallery-count">{{ t2ActiveIndex + 1 }} / {{ t2GalleryImages.length }}</span>
+                <button type="button" class="m3-arrow" (click)="t2Prev()" aria-label="Zurück">←</button>
+                <button type="button" class="m3-arrow" (click)="t2Next()" aria-label="Weiter">→</button>
+              </div>
+            </div>
+            <div class="m3-stage">
+              <img class="m3-stage-img" [src]="t2ActiveStage" [alt]="'Server-Screenshot ' + (t2ActiveIndex + 1)" />
+            </div>
+            <div class="m3-thumbs">
+              @for (img of t2GalleryImages; track img; let i = $index) {
+                <button
+                  type="button"
+                  class="m3-thumb"
+                  [class.m3-thumb--on]="i === t2ActiveIndex"
+                  (click)="t2Pick(i)"
+                  [attr.aria-label]="'Screenshot ' + (i + 1)"
+                >
+                  <img [src]="'/assets/showcase/tiny/' + img" alt="" loading="lazy" />
+                </button>
+              }
+            </div>
+          </section>
+
+          <!-- Footer -->
+          <footer class="m3-footer">
+            <div class="m3-footer-inner">
+              <span class="m3-footer-brand">© 2026 Zeitvertreib</span>
+              <div class="m3-footer-links">
+                <a href="/imprint.txt">Impressum ↗</a>
+                <a href="/privacy-policy.txt">Datenschutz ↗</a>
+              </div>
+            </div>
+          </footer>
         </div>
-      </div>
-    </main>
+      </section>
+    } @else if (testUi2Active) {
+      <!-- testui2: brutalist editorial — cream paper, black strokes, flat accent -->
+      <section class="dash-screen">
+        <div class="testui2-canvas" id="t2-top">
+          <!-- Nav -->
+          <header class="t2-topbar">
+            <div class="t2-topbar-inner">
+              <div class="t2-brand">
+                <img
+                  class="t2-logo-img"
+                  src="/assets/logos/logo_full_1to1.svg"
+                  alt="Zeitvertreib"
+                  aria-hidden="true"
+                />
+                <img
+                  class="t2-logo-img t2-logo-img--inv"
+                  src="/assets/logos/inverted/logo_full_1to1.svg"
+                  alt=""
+                  aria-hidden="true"
+                />
+                <span class="t2-wordmark">Zeitvertreib</span>
+              </div>
+              <nav class="t2-nav" aria-label="Schnellnavigation">
+                <button type="button" class="t2-navlink" (click)="t2ScrollTo('t2-features')">Erkunden</button>
+                <button type="button" class="t2-navlink" (click)="t2ScrollTo('t2-gallery')">Galerie</button>
+              </nav>
+              <button
+                type="button"
+                class="t2-theme"
+                (click)="t2ToggleTheme()"
+                [attr.aria-label]="t2IsDark ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'"
+                [title]="t2IsDark ? 'Helles Design' : 'Dunkles Design'"
+              >
+                <span aria-hidden="true">{{ t2IsDark ? '☀' : '☾' }}</span>
+              </button>
+              <a class="t2-account" routerLink="/profile">
+                {{ userStatistics.username || 'Spieler' }}<span class="t2-account-arr" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </header>
+
+          <div class="t2-shell">
+            <!-- Hero -->
+            <section class="t2-hero">
+              <!-- brand star watermark -->
+              <div class="t2-hero-mark" aria-hidden="true">
+                <svg viewBox="0 0 100 100">
+                  <path
+                    d="M 49.98108,0 A 58.696649,58.69418 0 0 1 0,49.986186 58.696649,58.69418 0 0 1 49.979278,99.999996 58.696649,58.69418 0 0 1 100,49.988587 58.696649,58.69418 0 0 1 49.98108,0 Z"
+                  />
+                </svg>
+              </div>
+
+              <div class="t2-hero-copy">
+                <p class="t2-kicker">Zeitvertreib · SCP:SL · seit 2021</p>
+                <h1 class="t2-display t2-hero-title">
+                  <span>Willkommen</span>
+                  <span>zurück,</span>
+                  <span class="t2-hero-name"
+                    ><span class="t2-hero-star" aria-hidden="true">✦</span>{{ userStatistics.username || 'Spieler' }}</span
+                  >
+                </h1>
+                <p class="t2-hero-sub">
+                  Statistiken, Reports und Events. Dein kompletter Server-Überblick — offen auf dem Tisch, kein
+                  Schnickschnack.
+                </p>
+                <div class="t2-cta">
+                  <button type="button" class="t2-btn t2-btn--solid" (click)="openQuickGames()">
+                    Zu den Spielen<span class="t2-btn-arr" aria-hidden="true">↗</span>
+                  </button>
+                  <button type="button" class="t2-btn t2-btn--outline" (click)="openSupport()">Unterstützen</button>
+                </div>
+              </div>
+
+              <!-- Account ticket -->
+              <aside class="t2-ticket" aria-label="Kontokarte">
+                <div class="t2-ticket-top">
+                  <span>ZTV // Konto</span>
+                  <span>Karte 1/1</span>
+                </div>
+                <p class="t2-ticket-name">{{ userStatistics.username || 'Spieler' }}</p>
+                <dl class="t2-ticket-rows">
+                  <div class="t2-ticket-row"><dt>Rank</dt><dd>{{ t2Rank }}</dd></div>
+                  <div class="t2-ticket-row"><dt>Runden</dt><dd>{{ t2Num(userStatistics.roundsplayed) }}</dd></div>
+                  <div class="t2-ticket-row"><dt>XP</dt><dd>{{ t2Num(userStatistics.experience) }}</dd></div>
+                </dl>
+                <div class="t2-ticket-foot">
+                  @if (userStatistics.avatarFull) {
+                    <img
+                      class="t2-ticket-avatar"
+                      [src]="userStatistics.avatarFull"
+                      [alt]="'Avatar von ' + (userStatistics.username || 'Spieler')"
+                      (error)="t2ImgFallback($event)"
+                    />
+                  } @else {
+                    <span class="t2-ticket-avatar t2-ticket-avatar--fallback">{{
+                      (userStatistics.username || 'S').charAt(0)
+                    }}</span>
+                  }
+                  <span class="t2-ticket-caption">Profilbild // echtzeit</span>
+                </div>
+              </aside>
+            </section>
+
+            <!-- Black readout -->
+            <section class="t2-readout" aria-label="Kernstatistiken">
+              <div class="t2-readout-top">
+                <span>// Kernstatistiken</span>
+                <span class="t2-live">● Live</span>
+              </div>
+              <div class="t2-readout-grid">
+                <div class="t2-cell">
+                  <span class="t2-cell-label">Kills</span>
+                  <strong class="t2-cell-value">{{ t2Num(userStatistics.kills) }}</strong>
+                  <span class="t2-cell-note">Eliminierungen</span>
+                </div>
+                <div class="t2-cell">
+                  <span class="t2-cell-label">Tode</span>
+                  <strong class="t2-cell-value">{{ t2Num(userStatistics.deaths) }}</strong>
+                  <span class="t2-cell-note">auf dem Server</span>
+                </div>
+                <div class="t2-cell">
+                  <span class="t2-cell-label">K / D</span>
+                  <strong class="t2-cell-value">{{ kdRatio }}</strong>
+                  <span class="t2-cell-note">{{ t2Num(userStatistics.kills) }} : {{ t2Num(userStatistics.deaths) }}</span>
+                </div>
+                <div class="t2-cell">
+                  <span class="t2-cell-label">Spielzeit</span>
+                  <strong class="t2-cell-value">{{ t2PlaytimeBig }}</strong>
+                  <span class="t2-cell-note">{{ t2PlaytimeNote }}</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Session -->
+            <section id="t2-session" class="t2-section">
+              <header class="t2-sec-head">
+                <span class="t2-sec-tag">Abschnitt 01</span>
+                <h2 class="t2-sec-title">Session<br /><em>deine letzten Momente</em></h2>
+              </header>
+
+              <div class="t2-panels">
+                <article class="t2-panel">
+                  <header class="t2-panel-head">
+                    <h3>Letzte Kills</h3>
+                    <span class="t2-panel-count">{{ t2Num(userStatistics.lastkills.length) }}</span>
+                  </header>
+                  @if (t2RecentKills.length) {
+                    <div class="t2-feed">
+                      @for (kill of t2RecentKills; track $index; let i = $index) {
+                        <div class="t2-feed-row">
+                          <span class="t2-feed-idx">{{ i < 9 ? '0' + (i + 1) : i + 1 }}</span>
+                          <img
+                            class="t2-feed-avatar"
+                            [src]="kill.avatarmedium || t2FallbackImg"
+                            alt=""
+                            loading="lazy"
+                            (error)="t2ImgFallback($event)"
+                          />
+                          <span class="t2-feed-name">{{ kill.displayname }}</span>
+                          <span class="t2-feed-out" aria-hidden="true">↗</span>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="t2-empty">
+                      <p>Keine Eliminierungen erfasst.</p>
+                      <span>Sobald du auf dem Server aktiv bist, tauchen sie hier auf.</span>
+                    </div>
+                  }
+                </article>
+
+                <article class="t2-panel">
+                  <header class="t2-panel-head">
+                    <h3>Ausrüstung</h3>
+                    <span class="t2-panel-count">Item</span>
+                  </header>
+                  <dl class="t2-rows">
+                    <div class="t2-row"><dt>Medkits</dt><dd>{{ t2Num(userStatistics.usedmedkits) }}</dd></div>
+                    <div class="t2-row"><dt>Pocket Escapes</dt><dd>{{ t2Num(userStatistics.pocketescapes) }}</dd></div>
+                    <div class="t2-row"><dt>Adrenalin</dt><dd>{{ t2Num(userStatistics.usedadrenaline) }}</dd></div>
+                    <div class="t2-row"><dt>Colas</dt><dd>{{ t2Num(userStatistics.usedcolas) }}</dd></div>
+                  </dl>
+                  <a class="t2-panel-action" routerLink="/profile">
+                    Volles Profil ansehen<span class="t2-btn-arr" aria-hidden="true">↗</span>
+                  </a>
+                </article>
+              </div>
+            </section>
+
+            <!-- Erkunden -->
+            <section id="t2-features" class="t2-section">
+              <header class="t2-sec-head">
+                <span class="t2-sec-tag">Abschnitt 02</span>
+                <h2 class="t2-sec-title">Erkunden<br /><em>dein Server-Ökosystem</em></h2>
+              </header>
+
+              <div class="t2-biglinks">
+                <a class="t2-biglink" routerLink="/games">
+                  <span class="t2-biglink-idx">01</span>
+                  <span class="t2-biglink-body">
+                    <strong>Spiele</strong>
+                    <span>Alle Spielmodi und Events auf einen Blick.</span>
+                  </span>
+                  <span class="t2-biglink-arr" aria-hidden="true">↗</span>
+                </a>
+                <a class="t2-biglink" routerLink="/reporting">
+                  <span class="t2-biglink-idx">02</span>
+                  <span class="t2-biglink-body">
+                    <strong>Reports</strong>
+                    <span>Regelverstöße melden und Fälle nachvollziehen.</span>
+                  </span>
+                  <span class="t2-biglink-arr" aria-hidden="true">↗</span>
+                </a>
+                <a class="t2-biglink" routerLink="/profile">
+                  <span class="t2-biglink-idx">03</span>
+                  <span class="t2-biglink-body">
+                    <strong>Profil</strong>
+                    <span>Statistiken, Ränge und Verwaltung.</span>
+                  </span>
+                  <span class="t2-biglink-arr" aria-hidden="true">↗</span>
+                </a>
+                <button type="button" class="t2-biglink" (click)="openSupport()">
+                  <span class="t2-biglink-idx">04</span>
+                  <span class="t2-biglink-body">
+                    <strong>Unterstützen</strong>
+                    <span>Hilf mit, den Server am Laufen zu halten.</span>
+                  </span>
+                  <span class="t2-biglink-arr" aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- Galerie -->
+            <section id="t2-gallery" class="t2-section">
+              <header class="t2-sec-head t2-sec-head--row">
+                <div>
+                  <span class="t2-sec-tag">Abschnitt 03</span>
+                  <h2 class="t2-sec-title">Galerie<br /><em>Einblicke in den Server</em></h2>
+                </div>
+                <div class="t2-gallery-counter">
+                  <span class="t2-gallery-cur">{{ t2ActiveIndex + 1 }}</span>
+                  <span class="t2-gallery-total">/ {{ t2GalleryImages.length }}</span>
+                </div>
+              </header>
+
+              <div class="t2-stage">
+                <img
+                  class="t2-stage-img"
+                  [src]="t2ActiveStage"
+                  [alt]="'Server-Screenshot ' + (t2ActiveIndex + 1)"
+                />
+                <button type="button" class="t2-stage-btn t2-stage-btn--prev" (click)="t2Prev()" aria-label="Vorheriges Bild">
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <button type="button" class="t2-stage-btn t2-stage-btn--next" (click)="t2Next()" aria-label="Nächstes Bild">
+                  <span aria-hidden="true">›</span>
+                </button>
+                <span class="t2-stage-stamp">Aufnahme {{ t2ActiveIndex + 1 }} / {{ t2GalleryImages.length }}</span>
+              </div>
+
+              <div class="t2-thumbs">
+                @for (img of t2GalleryImages; track img; let i = $index) {
+                  <button
+                    type="button"
+                    class="t2-thumb"
+                    [class.t2-thumb--on]="i === t2ActiveIndex"
+                    (click)="t2Pick(i)"
+                    [attr.aria-label]="'Screenshot ' + (i + 1)"
+                  >
+                    <img [src]="'/assets/showcase/tiny/' + img" alt="" loading="lazy" />
+                  </button>
+                }
+              </div>
+            </section>
+
+            <!-- Closing -->
+            <section class="t2-closing">
+              <h2 class="t2-closing-title">Bereit für die<br />nächste Runde?</h2>
+              <p class="t2-closing-sub">Direkt in den Server — oder den Server unterstützen.</p>
+              <div class="t2-cta">
+                <button type="button" class="t2-btn t2-btn--solid" (click)="openQuickGames()">
+                  Jetzt spielen<span class="t2-btn-arr" aria-hidden="true">↗</span>
+                </button>
+                <button type="button" class="t2-btn t2-btn--outline" (click)="openSupport()">Unterstützen</button>
+              </div>
+            </section>
+          </div>
+
+          <!-- Footer -->
+          <footer class="t2-footer">
+            <div class="t2-footer-inner">
+              <span class="t2-footer-brand">© 2026 Zeitvertreib — alle rechte vorbehalten</span>
+              <div class="t2-footer-links">
+                <a href="/imprint.txt">Impressum ↗</a>
+                <a href="/privacy-policy.txt">Datenschutz ↗</a>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </section>
+    } @else {
+      <section class="dash-screen">
+        <div class="dashboard-shell relative z-10">
+          <!-- User sidebar — source of truth -->
+          <aside class="dashboard-sidebar">
+            <app-user-sidebar [userStatistics]="userStatistics" />
+          </aside>
+
+          <!-- Functional area -->
+          <main class="dashboard-main">
+            @if (testUiActive) {
+              <header class="dashboard-overview">
+                <p class="dashboard-kicker">Dashboard</p>
+                <h1>Willkommen zurück, {{ userStatistics.username }}</h1>
+              </header>
+            }
+
+            <div class="functional-grid">
+              <!-- Quests -->
+              <div class="grid-item func-span-2">
+                <app-quests [testUi]="testUiActive"></app-quests>
+              </div>
+
+              <!-- Sprays -->
+              <div class="grid-item">
+                <app-spray-management [isDonator]="isDonator" [testUi]="testUiActive"></app-spray-management>
+              </div>
+
+              <!-- Fakerank -->
+              <div class="grid-item">
+                <app-fakerank [isDonator]="isDonator"></app-fakerank>
+              </div>
+
+              <!-- Quick navigation (navbar shortcuts, testUI only) -->
+              @if (testUiActive) {
+              <div class="grid-item func-span-2">
+                <ui-card>
+                  <div class="quicknav-header">
+                    <h3 class="quicknav-title">Schnellzugriff</h3>
+                    <p class="quicknav-subtitle">Melden, bewerben, spielen oder die Community unterstützen</p>
+                  </div>
+                  <div class="quicknav-grid">
+                    <a class="quicknav-item" routerLink="/reporting">
+                      <span class="quicknav-icon"><i class="pi pi-flag"></i></span>
+                      <span class="quicknav-label">Melden</span>
+                    </a>
+                    <a class="quicknav-item" routerLink="/bewerben">
+                      <span class="quicknav-icon"><i class="pi pi-paperclip"></i></span>
+                      <span class="quicknav-label">Bewerben</span>
+                    </a>
+                    <button type="button" class="quicknav-item" (click)="openQuickGames()">
+                      <span class="quicknav-icon"><i class="pi pi-play"></i></span>
+                      <span class="quicknav-label">Spiele</span>
+                    </button>
+                    <button type="button" class="quicknav-item" (click)="openSupport()">
+                      <span class="quicknav-icon"><i class="pi pi-heart"></i></span>
+                      <span class="quicknav-label">Unterstützen</span>
+                    </button>
+                  </div>
+                </ui-card>
+              </div>
+              }
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- Games screen (next panel to the right, testui only) -->
+      @if (testUiActive) {
+        <section class="dash-screen dash-screen--games">
+          <app-games></app-games>
+        </section>
+      }
+    }
   }
 </div>
+
+<!-- Screen pager arrows (testui only) -->
+@if (testUiActive && !isLoading && !hasError) {
+  <button
+    type="button"
+    class="pager-arrow pager-arrow--next"
+    (click)="goNext()"
+    [class.pager-arrow--hidden]="!canGoNext"
+    aria-label="Zur Spiele-Seite"
+  >
+    <span aria-hidden="true">›</span>
+  </button>
+  <button
+    type="button"
+    class="pager-arrow pager-arrow--prev"
+    (click)="goPrev()"
+    [class.pager-arrow--hidden]="!canGoPrev"
+    aria-label="Zurück zum Dashboard"
+  >
+    <span aria-hidden="true">‹</span>
+  </button>
+}

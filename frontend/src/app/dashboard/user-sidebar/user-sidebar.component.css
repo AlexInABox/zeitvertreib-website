@@ -12,11 +12,19 @@
 /* Hero: full-bleed profile picture backdrop (spans the whole sidebar width) */
 .identity-hero {
   position: relative;
+  display: block;
   height: clamp(110px, 13vw, 160px);
   margin: -1.25rem -1.25rem 0;
   border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.identity-hero:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .identity-hero-avatar {
@@ -243,4 +251,138 @@
 .sidebar-link:hover {
   color: var(--ui-sidebar-text);
   text-decoration-color: currentColor;
+}
+
+:host-context(body.testui) .sidebar-inner {
+  gap: 1.75rem;
+}
+
+:host-context(body.testui) .identity-hero {
+  height: 224px;
+  margin: 0;
+  border-radius: 0.625rem;
+}
+
+:host-context(body.testui) .identity-hero-name {
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 1rem;
+  font-size: 1.7rem;
+}
+
+:host-context(body.testui) .stat-tiles {
+  gap: 0.75rem;
+}
+
+:host-context(body.testui) .stat-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 1.2rem 1.15rem 1.35rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background:
+    radial-gradient(130% 120% at 100% -10%, color-mix(in srgb, var(--stat-color-light, #34d399) 9%, transparent), transparent 58%),
+    var(--ui-surface-soft);
+  border: 1px solid var(--ui-border);
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+:host-context(body.testui) .stat-tile:hover {
+  border-color: color-mix(in srgb, var(--stat-color-light, #34d399) 45%, var(--ui-border));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* Thin top accent bar instead of the old colored side bar */
+:host-context(body.testui) .stat-tile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(90deg, var(--stat-color, #10b981), var(--stat-color-light, #34d399));
+}
+
+:host-context(body.testui) .stat-tile-value {
+  order: 2;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-sidebar-text);
+}
+
+:host-context(body.testui) .stat-tile-label {
+  order: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ui-sidebar-muted);
+}
+
+:host-context(body.testui) .stat-tile-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--stat-color, #10b981);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--stat-color-light, #34d399) 22%, transparent);
+}
+
+:host-context(body.testui) .info-row {
+  padding: 1rem 0.25rem;
+}
+
+:host-context(body.testui) .info-row-label {
+  font-size: 1.05rem;
+}
+
+:host-context(body.testui) .info-row-value {
+  font-size: 1.15rem;
+}
+
+:host-context(body.testui) .sidebar-links {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+:host-context(body.testui) .sidebar-link {
+  font-size: 1rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card {
+  padding: 1rem 1.1rem;
+  border-radius: 0.5rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card .discord-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card .discord-title {
+  font-size: 1.05rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card .discord-stat {
+  font-size: 0.95rem;
 }

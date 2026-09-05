@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { BadgeComponent, ButtonComponent, CardComponent, ProgressComponent, SpinnerComponent } from '@app/ui';
@@ -15,6 +15,9 @@ import type { GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
   styleUrls: ['./quests.component.css'],
 })
 export class QuestsComponent implements OnInit {
+  /** Experimental UI: render PrimeIcons instead of emojis. */
+  readonly testUi = input(false);
+
   dailyQuests: QuestProgress[] = [];
   weeklyQuests: QuestProgress[] = [];
   isLoading = true;
