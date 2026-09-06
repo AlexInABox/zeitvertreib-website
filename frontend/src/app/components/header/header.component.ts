@@ -71,8 +71,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
    * games screen without leaving the page. Everywhere else it navigates normally.
    */
   private openGames() {
-    const onDashboard =
-      this.router.url.split('?')[0] === '/dashboard' || this.router.url.startsWith('/dashboard');
+    const onDashboard = this.router.url.split('?')[0] === '/dashboard' || this.router.url.startsWith('/dashboard');
     const testUiActive = typeof document !== 'undefined' && document.body.classList.contains('testui');
 
     if (!testUiActive) {

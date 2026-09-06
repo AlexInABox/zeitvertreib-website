@@ -286,7 +286,11 @@
   border-radius: 0.5rem;
   overflow: hidden;
   background:
-    radial-gradient(130% 120% at 100% -10%, color-mix(in srgb, var(--stat-color-light, #34d399) 9%, transparent), transparent 58%),
+    radial-gradient(
+      130% 120% at 100% -10%,
+      color-mix(in srgb, var(--stat-color-light, #34d399) 9%, transparent),
+      transparent 58%
+    ),
     var(--ui-surface-soft);
   border: 1px solid var(--ui-border);
   transition:

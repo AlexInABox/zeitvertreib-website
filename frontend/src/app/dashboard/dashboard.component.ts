@@ -78,8 +78,7 @@ function buildM3Mosaic(rows: number, cols: number): M3Cell[] {
       // Diagonal field: fire accumulates toward the bottom-right corner,
       // with a soft ripple so it reads as a landscape, not noise.
       const diag = (c / (cols - 1)) * 0.62 + (r / (rows - 1)) * 0.38;
-      const ripple =
-        Math.sin(c * 0.9 + r * 0.55) * 0.08 + Math.sin((c + r) * 0.42 + 1.7) * 0.07;
+      const ripple = Math.sin(c * 0.9 + r * 0.55) * 0.08 + Math.sin((c + r) * 0.42 + 1.7) * 0.07;
       const noise = rand() * 0.34 - 0.17;
       const warmth = Math.min(1, Math.max(0, diag + ripple * 0.7 + noise));
 
@@ -289,10 +288,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   t2GalleryImages: string[] = [
-    '0.avif', '1.avif', '2.avif', '3.avif', '4.avif', '5.avif', '6.avif', '7.avif',
-    '8.gif', '9.avif', '10.avif', '11.avif', '13.avif', '14.avif', '15.avif',
-    '16.avif', '17.avif', '18.avif', '19.avif', '20.avif', '21.avif', '22.avif',
-    '23.gif', '24.avif',
+    '0.avif',
+    '1.avif',
+    '2.avif',
+    '3.avif',
+    '4.avif',
+    '5.avif',
+    '6.avif',
+    '7.avif',
+    '8.gif',
+    '9.avif',
+    '10.avif',
+    '11.avif',
+    '13.avif',
+    '14.avif',
+    '15.avif',
+    '16.avif',
+    '17.avif',
+    '18.avif',
+    '19.avif',
+    '20.avif',
+    '21.avif',
+    '22.avif',
+    '23.gif',
+    '24.avif',
   ];
   t2ActiveIndex = 0;
 
@@ -301,7 +320,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   t2Pick(index: number): void {
-    this.t2ActiveIndex = ((index % this.t2GalleryImages.length) + this.t2GalleryImages.length) % this.t2GalleryImages.length;
+    this.t2ActiveIndex =
+      ((index % this.t2GalleryImages.length) + this.t2GalleryImages.length) % this.t2GalleryImages.length;
   }
 
   t2Next(): void {
@@ -342,10 +362,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.authService
       .authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`)
-      .pipe(
-        timeout(25000),
-        retry(1),
-      )
+      .pipe(timeout(25000), retry(1))
       .subscribe({
         next: (response) => {
           if (response?.stats) {
@@ -353,8 +370,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             if (cacheKey) this.writeStatsCache(cacheKey, response.stats);
           }
           this.isLoading = false;
-          const openGamesRequested =
-            this.pendingOpenGames || this.router.url.includes('screen=games');
+          const openGamesRequested = this.pendingOpenGames || this.router.url.includes('screen=games');
           if (openGamesRequested) {
             this.pendingOpenGames = false;
             // Scroll instantly once the pager has rendered so no dashboard flash is visible.

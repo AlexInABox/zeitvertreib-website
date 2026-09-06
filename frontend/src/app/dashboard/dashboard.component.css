@@ -469,9 +469,9 @@
   --t2-muted: #6f695c;
   --t2-stroke: 2px solid #14120e;
   --t2-shadow: 6px 6px 0 #14120e;
-  --t2-display: "Archivo Black", "Arial Black", "Archivo", sans-serif;
-  --t2-body: "Archivo", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --t2-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  --t2-display: 'Archivo Black', 'Arial Black', 'Archivo', sans-serif;
+  --t2-body: 'Archivo', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --t2-mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
   color: var(--t2-ink);
 }
 
@@ -1572,7 +1572,13 @@
   color: var(--m3-text);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 :host-context(body.testui3) .m3-canvas * {
@@ -2467,7 +2473,9 @@
 /* Brand badges in the warm accent, never the old violet */
 :host-context(body.testui3) .m3-logo-badge {
   background: var(--m3-orange);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 22px rgba(255, 77, 28, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 0 22px rgba(255, 77, 28, 0.4);
 }
 
 /* ---- hero geometry: tall runway + pinned stage ---- */
@@ -2523,7 +2531,7 @@
 
 /* A slow warm scan-light sweeping across the field — the “living” pulse */
 :host-context(body.testui3) .m3-mosaic-wrap::after {
-  content: "";
+  content: '';
   position: absolute;
   z-index: 2;
   top: -25%;
@@ -2586,10 +2594,14 @@
 @keyframes m3-px-hot {
   0%,
   100% {
-    box-shadow: inset 0 0 0 1px rgba(8, 7, 6, 0.55), 0 0 0 0 rgba(255, 90, 40, 0);
+    box-shadow:
+      inset 0 0 0 1px rgba(8, 7, 6, 0.55),
+      0 0 0 0 rgba(255, 90, 40, 0);
   }
   50% {
-    box-shadow: inset 0 0 0 1px rgba(8, 7, 6, 0.3), 0 0 26px 5px rgba(255, 84, 28, 0.55);
+    box-shadow:
+      inset 0 0 0 1px rgba(8, 7, 6, 0.3),
+      0 0 26px 5px rgba(255, 84, 28, 0.55);
   }
 }
 
@@ -2610,7 +2622,13 @@
   pointer-events: none;
   background:
     radial-gradient(120% 90% at 78% 12%, rgba(10, 10, 9, 0.1), rgba(10, 10, 9, 0.62) 78%),
-    linear-gradient(180deg, rgba(10, 10, 9, 0.62), rgba(10, 10, 9, 0.12) 30%, rgba(10, 10, 9, 0.05) 62%, rgba(10, 10, 9, 0.78) 100%),
+    linear-gradient(
+      180deg,
+      rgba(10, 10, 9, 0.62),
+      rgba(10, 10, 9, 0.12) 30%,
+      rgba(10, 10, 9, 0.05) 62%,
+      rgba(10, 10, 9, 0.78) 100%
+    ),
     linear-gradient(90deg, rgba(10, 10, 9, 0.82), rgba(10, 10, 9, 0.12) 46%, rgba(10, 10, 9, 0) 100%);
 }
 
@@ -2919,7 +2937,7 @@
   width: 100%;
   height: 3px;
   background: var(--m3-acc, var(--m3-orange));
-  content: "";
+  content: '';
   transform: scaleX(0);
   transform-origin: left;
   animation: m3-cell-accent 1s 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;

@@ -31,12 +31,7 @@
             <div class="m3-nav-inner">
               <a class="m3-logo" routerLink="/">
                 <span class="m3-logo-badge"
-                  ><img
-                    class="m3-star"
-                    src="/assets/logos/inverted/logo_full_1to1.svg"
-                    alt=""
-                    aria-hidden="true"
-                  />
+                  ><img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
                 </span>
                 <span class="m3-logo-name">Zeitvertreib</span>
               </a>
@@ -63,11 +58,7 @@
             <div class="m3-stage">
               <!-- living pixel field -->
               <div class="m3-mosaic-wrap" aria-hidden="true">
-                <div
-                  class="m3-mosaic"
-                  [style.--m3-cols]="m3Cols"
-                  [style.--m3-rows]="m3Rows"
-                >
+                <div class="m3-mosaic" [style.--m3-cols]="m3Cols" [style.--m3-rows]="m3Rows">
                   @for (cell of m3Cells; track $index) {
                     <span
                       class="m3-px"
@@ -99,7 +90,9 @@
                     Kills, Runden, Events — der komplette Server-Überblick. Klar und ohne Schnickschnack.
                   </p>
                   <div class="m3-hero-actions">
-                    <a class="m3-hero-link" routerLink="/games">Zu den Spielen&nbsp;<span aria-hidden="true">→</span></a>
+                    <a class="m3-hero-link" routerLink="/games"
+                      >Zu den Spielen&nbsp;<span aria-hidden="true">→</span></a
+                    >
                     <button type="button" class="m3-hero-ghost" (click)="openSupport()">
                       Unterstützen&nbsp;<span aria-hidden="true">↗</span>
                     </button>
@@ -110,21 +103,24 @@
                 <div class="m3-window">
                   <div class="m3-window-bar">
                     <span class="m3-window-badge"
-                      ><img
-                        class="m3-star"
-                        src="/assets/logos/inverted/logo_full_1to1.svg"
-                        alt=""
-                        aria-hidden="true"
-                      />
+                      ><img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
                     </span>
                     <span class="m3-window-name">Zeitvertreib&nbsp;·&nbsp;Konsole</span>
                     <span class="m3-window-rank">{{ t2Rank }}</span>
                   </div>
                   <div class="m3-window-grid">
-                    <div class="m3-cell m3-cell--a"><span>Kills</span><strong>{{ t2Num(userStatistics.kills) }}</strong></div>
-                    <div class="m3-cell m3-cell--b"><span>Tode</span><strong>{{ t2Num(userStatistics.deaths) }}</strong></div>
-                    <div class="m3-cell m3-cell--c"><span>K&nbsp;/&nbsp;D</span><strong>{{ kdRatio }}</strong></div>
-                    <div class="m3-cell m3-cell--d"><span>Spielzeit</span><strong>{{ t2PlaytimeBig }}</strong></div>
+                    <div class="m3-cell m3-cell--a">
+                      <span>Kills</span><strong>{{ t2Num(userStatistics.kills) }}</strong>
+                    </div>
+                    <div class="m3-cell m3-cell--b">
+                      <span>Tode</span><strong>{{ t2Num(userStatistics.deaths) }}</strong>
+                    </div>
+                    <div class="m3-cell m3-cell--c">
+                      <span>K&nbsp;/&nbsp;D</span><strong>{{ kdRatio }}</strong>
+                    </div>
+                    <div class="m3-cell m3-cell--d">
+                      <span>Spielzeit</span><strong>{{ t2PlaytimeBig }}</strong>
+                    </div>
                   </div>
                   <div class="m3-window-foot">
                     <span>{{ t2Num(userStatistics.roundsplayed) }} Runden</span>
@@ -147,12 +143,7 @@
               <a class="m3-tile m3-tile--wide" routerLink="/games">
                 <span class="m3-tile-top">
                   <span class="m3-tile-ic m3-ic-orange"
-                    ><img
-                      class="m3-star"
-                      src="/assets/logos/inverted/logo_full_1to1.svg"
-                      alt=""
-                      aria-hidden="true"
-                    />
+                    ><img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
                   </span>
                   <span class="m3-tile-name">Spiele</span>
                   <span class="m3-tile-go" aria-hidden="true">↗</span>
@@ -161,12 +152,7 @@
               <a class="m3-tile" routerLink="/reporting">
                 <span class="m3-tile-top">
                   <span class="m3-tile-ic m3-ic-blue"
-                    ><img
-                      class="m3-star"
-                      src="/assets/logos/inverted/logo_full_1to1.svg"
-                      alt=""
-                      aria-hidden="true"
-                    />
+                    ><img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
                   </span>
                   <span class="m3-tile-name">Reports</span>
                   <span class="m3-tile-go" aria-hidden="true">↗</span>
@@ -175,12 +161,7 @@
               <a class="m3-tile" routerLink="/profile">
                 <span class="m3-tile-top">
                   <span class="m3-tile-ic m3-ic-sky"
-                    ><img
-                      class="m3-star"
-                      src="/assets/logos/inverted/logo_full_1to1.svg"
-                      alt=""
-                      aria-hidden="true"
-                    />
+                    ><img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
                   </span>
                   <span class="m3-tile-name">Profil</span>
                   <span class="m3-tile-go" aria-hidden="true">↗</span>
@@ -189,12 +170,7 @@
               <button type="button" class="m3-tile m3-tile--wide" (click)="openSupport()">
                 <span class="m3-tile-top">
                   <span class="m3-tile-ic m3-ic-crimson"
-                    ><img
-                      class="m3-star"
-                      src="/assets/logos/inverted/logo_full_1to1.svg"
-                      alt=""
-                      aria-hidden="true"
-                    />
+                    ><img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
                   </span>
                   <span class="m3-tile-name">Unterstützen</span>
                   <span class="m3-tile-go" aria-hidden="true">↗</span>
@@ -232,10 +208,22 @@
               <div class="m3-split-col">
                 <h3 class="m3-split-title">Ausrüstung</h3>
                 <dl class="m3-gear">
-                  <div class="m3-gear-row"><dt>Medkits</dt><dd>{{ t2Num(userStatistics.usedmedkits) }}</dd></div>
-                  <div class="m3-gear-row"><dt>Pocket Escapes</dt><dd>{{ t2Num(userStatistics.pocketescapes) }}</dd></div>
-                  <div class="m3-gear-row"><dt>Adrenalin</dt><dd>{{ t2Num(userStatistics.usedadrenaline) }}</dd></div>
-                  <div class="m3-gear-row"><dt>Colas</dt><dd>{{ t2Num(userStatistics.usedcolas) }}</dd></div>
+                  <div class="m3-gear-row">
+                    <dt>Medkits</dt>
+                    <dd>{{ t2Num(userStatistics.usedmedkits) }}</dd>
+                  </div>
+                  <div class="m3-gear-row">
+                    <dt>Pocket Escapes</dt>
+                    <dd>{{ t2Num(userStatistics.pocketescapes) }}</dd>
+                  </div>
+                  <div class="m3-gear-row">
+                    <dt>Adrenalin</dt>
+                    <dd>{{ t2Num(userStatistics.usedadrenaline) }}</dd>
+                  </div>
+                  <div class="m3-gear-row">
+                    <dt>Colas</dt>
+                    <dd>{{ t2Num(userStatistics.usedcolas) }}</dd>
+                  </div>
                 </dl>
               </div>
             </div>
@@ -291,12 +279,7 @@
           <header class="t2-topbar">
             <div class="t2-topbar-inner">
               <div class="t2-brand">
-                <img
-                  class="t2-logo-img"
-                  src="/assets/logos/logo_full_1to1.svg"
-                  alt="Zeitvertreib"
-                  aria-hidden="true"
-                />
+                <img class="t2-logo-img" src="/assets/logos/logo_full_1to1.svg" alt="Zeitvertreib" aria-hidden="true" />
                 <img
                   class="t2-logo-img t2-logo-img--inv"
                   src="/assets/logos/inverted/logo_full_1to1.svg"
@@ -342,7 +325,8 @@
                   <span>Willkommen</span>
                   <span>zurück,</span>
                   <span class="t2-hero-name"
-                    ><span class="t2-hero-star" aria-hidden="true">✦</span>{{ userStatistics.username || 'Spieler' }}</span
+                    ><span class="t2-hero-star" aria-hidden="true">✦</span
+                    >{{ userStatistics.username || 'Spieler' }}</span
                   >
                 </h1>
                 <p class="t2-hero-sub">
@@ -365,9 +349,18 @@
                 </div>
                 <p class="t2-ticket-name">{{ userStatistics.username || 'Spieler' }}</p>
                 <dl class="t2-ticket-rows">
-                  <div class="t2-ticket-row"><dt>Rank</dt><dd>{{ t2Rank }}</dd></div>
-                  <div class="t2-ticket-row"><dt>Runden</dt><dd>{{ t2Num(userStatistics.roundsplayed) }}</dd></div>
-                  <div class="t2-ticket-row"><dt>XP</dt><dd>{{ t2Num(userStatistics.experience) }}</dd></div>
+                  <div class="t2-ticket-row">
+                    <dt>Rank</dt>
+                    <dd>{{ t2Rank }}</dd>
+                  </div>
+                  <div class="t2-ticket-row">
+                    <dt>Runden</dt>
+                    <dd>{{ t2Num(userStatistics.roundsplayed) }}</dd>
+                  </div>
+                  <div class="t2-ticket-row">
+                    <dt>XP</dt>
+                    <dd>{{ t2Num(userStatistics.experience) }}</dd>
+                  </div>
                 </dl>
                 <div class="t2-ticket-foot">
                   @if (userStatistics.avatarFull) {
@@ -407,7 +400,9 @@
                 <div class="t2-cell">
                   <span class="t2-cell-label">K / D</span>
                   <strong class="t2-cell-value">{{ kdRatio }}</strong>
-                  <span class="t2-cell-note">{{ t2Num(userStatistics.kills) }} : {{ t2Num(userStatistics.deaths) }}</span>
+                  <span class="t2-cell-note"
+                    >{{ t2Num(userStatistics.kills) }} : {{ t2Num(userStatistics.deaths) }}</span
+                  >
                 </div>
                 <div class="t2-cell">
                   <span class="t2-cell-label">Spielzeit</span>
@@ -461,10 +456,22 @@
                     <span class="t2-panel-count">Item</span>
                   </header>
                   <dl class="t2-rows">
-                    <div class="t2-row"><dt>Medkits</dt><dd>{{ t2Num(userStatistics.usedmedkits) }}</dd></div>
-                    <div class="t2-row"><dt>Pocket Escapes</dt><dd>{{ t2Num(userStatistics.pocketescapes) }}</dd></div>
-                    <div class="t2-row"><dt>Adrenalin</dt><dd>{{ t2Num(userStatistics.usedadrenaline) }}</dd></div>
-                    <div class="t2-row"><dt>Colas</dt><dd>{{ t2Num(userStatistics.usedcolas) }}</dd></div>
+                    <div class="t2-row">
+                      <dt>Medkits</dt>
+                      <dd>{{ t2Num(userStatistics.usedmedkits) }}</dd>
+                    </div>
+                    <div class="t2-row">
+                      <dt>Pocket Escapes</dt>
+                      <dd>{{ t2Num(userStatistics.pocketescapes) }}</dd>
+                    </div>
+                    <div class="t2-row">
+                      <dt>Adrenalin</dt>
+                      <dd>{{ t2Num(userStatistics.usedadrenaline) }}</dd>
+                    </div>
+                    <div class="t2-row">
+                      <dt>Colas</dt>
+                      <dd>{{ t2Num(userStatistics.usedcolas) }}</dd>
+                    </div>
                   </dl>
                   <a class="t2-panel-action" routerLink="/profile">
                     Volles Profil ansehen<span class="t2-btn-arr" aria-hidden="true">↗</span>
@@ -530,15 +537,21 @@
               </header>
 
               <div class="t2-stage">
-                <img
-                  class="t2-stage-img"
-                  [src]="t2ActiveStage"
-                  [alt]="'Server-Screenshot ' + (t2ActiveIndex + 1)"
-                />
-                <button type="button" class="t2-stage-btn t2-stage-btn--prev" (click)="t2Prev()" aria-label="Vorheriges Bild">
+                <img class="t2-stage-img" [src]="t2ActiveStage" [alt]="'Server-Screenshot ' + (t2ActiveIndex + 1)" />
+                <button
+                  type="button"
+                  class="t2-stage-btn t2-stage-btn--prev"
+                  (click)="t2Prev()"
+                  aria-label="Vorheriges Bild"
+                >
                   <span aria-hidden="true">‹</span>
                 </button>
-                <button type="button" class="t2-stage-btn t2-stage-btn--next" (click)="t2Next()" aria-label="Nächstes Bild">
+                <button
+                  type="button"
+                  class="t2-stage-btn t2-stage-btn--next"
+                  (click)="t2Next()"
+                  aria-label="Nächstes Bild"
+                >
                   <span aria-hidden="true">›</span>
                 </button>
                 <span class="t2-stage-stamp">Aufnahme {{ t2ActiveIndex + 1 }} / {{ t2GalleryImages.length }}</span>
@@ -619,32 +632,32 @@
 
               <!-- Quick navigation (navbar shortcuts, testUI only) -->
               @if (testUiActive) {
-              <div class="grid-item func-span-2">
-                <ui-card>
-                  <div class="quicknav-header">
-                    <h3 class="quicknav-title">Schnellzugriff</h3>
-                    <p class="quicknav-subtitle">Melden, bewerben, spielen oder die Community unterstützen</p>
-                  </div>
-                  <div class="quicknav-grid">
-                    <a class="quicknav-item" routerLink="/reporting">
-                      <span class="quicknav-icon"><i class="pi pi-flag"></i></span>
-                      <span class="quicknav-label">Melden</span>
-                    </a>
-                    <a class="quicknav-item" routerLink="/bewerben">
-                      <span class="quicknav-icon"><i class="pi pi-paperclip"></i></span>
-                      <span class="quicknav-label">Bewerben</span>
-                    </a>
-                    <button type="button" class="quicknav-item" (click)="openQuickGames()">
-                      <span class="quicknav-icon"><i class="pi pi-play"></i></span>
-                      <span class="quicknav-label">Spiele</span>
-                    </button>
-                    <button type="button" class="quicknav-item" (click)="openSupport()">
-                      <span class="quicknav-icon"><i class="pi pi-heart"></i></span>
-                      <span class="quicknav-label">Unterstützen</span>
-                    </button>
-                  </div>
-                </ui-card>
-              </div>
+                <div class="grid-item func-span-2">
+                  <ui-card>
+                    <div class="quicknav-header">
+                      <h3 class="quicknav-title">Schnellzugriff</h3>
+                      <p class="quicknav-subtitle">Melden, bewerben, spielen oder die Community unterstützen</p>
+                    </div>
+                    <div class="quicknav-grid">
+                      <a class="quicknav-item" routerLink="/reporting">
+                        <span class="quicknav-icon"><i class="pi pi-flag"></i></span>
+                        <span class="quicknav-label">Melden</span>
+                      </a>
+                      <a class="quicknav-item" routerLink="/bewerben">
+                        <span class="quicknav-icon"><i class="pi pi-paperclip"></i></span>
+                        <span class="quicknav-label">Bewerben</span>
+                      </a>
+                      <button type="button" class="quicknav-item" (click)="openQuickGames()">
+                        <span class="quicknav-icon"><i class="pi pi-play"></i></span>
+                        <span class="quicknav-label">Spiele</span>
+                      </button>
+                      <button type="button" class="quicknav-item" (click)="openSupport()">
+                        <span class="quicknav-icon"><i class="pi pi-heart"></i></span>
+                        <span class="quicknav-label">Unterstützen</span>
+                      </button>
+                    </div>
+                  </ui-card>
+                </div>
               }
             </div>
           </main>

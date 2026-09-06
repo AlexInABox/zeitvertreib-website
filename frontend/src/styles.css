@@ -1032,8 +1032,7 @@ html.my-app-dark body.testui {
   /* Flat canvas behind the experiment: eigengrau with a slight purple hint */
   background:
     radial-gradient(1100px 760px at 12% -8%, rgba(124, 58, 237, 0.09), transparent 62%),
-    radial-gradient(900px 620px at 108% 18%, rgba(167, 139, 250, 0.06), transparent 55%),
-    #16161d;
+    radial-gradient(900px 620px at 108% 18%, rgba(167, 139, 250, 0.06), transparent 55%), #16161d;
 
   /* App header / rails follow the neutral base too */
   --header-bg: #15161d !important;
@@ -1050,8 +1049,7 @@ html.my-app-dark body.testui {
 html.my-app-dark:has(body.testui)::after {
   background:
     radial-gradient(1100px 760px at 12% -8%, rgba(124, 58, 237, 0.09), transparent 62%),
-    radial-gradient(900px 620px at 108% 18%, rgba(167, 139, 250, 0.06), transparent 55%),
-    #16161d;
+    radial-gradient(900px 620px at 108% 18%, rgba(167, 139, 250, 0.06), transparent 55%), #16161d;
   opacity: 1;
 }
 

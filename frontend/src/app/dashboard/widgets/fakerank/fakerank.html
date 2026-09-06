@@ -25,8 +25,7 @@
         </button>
         <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
       </div>
-      }
-      @if (currentFakerank && !frEditing) {
+      } @if (currentFakerank && !frEditing) {
       <div class="fr-stack" (mouseenter)="frHover = true" (mouseleave)="frHover = false">
         <div class="fr-view">
           <button
@@ -52,8 +51,7 @@
         </div>
         <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
       </div>
-      }
-      @if (frEditing) {
+      } @if (frEditing) {
       <div class="fr-editor">
         <div class="fr-input-row">
           <input
@@ -83,8 +81,7 @@
           </ui-button>
         </div>
       </div>
-      }
-      } @else {
+      } } @else {
       <!-- Classic modal flow -->
       <!-- Active Fakerank -->
       @if (currentFakerank) {
@@ -109,8 +106,7 @@
         <ui-button variant="info" (click)="openFakerankModal()" [disabled]="fakerankLoading"> ✨ Erstellen </ui-button>
         <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
       </div>
-      }
-      }
+      } }
     </div>
   </div>
   } @if (fakerankError) {
@@ -227,7 +223,9 @@
 <ui-dialog [(open)]="frCostOpen" title="Fakerank erstellen?">
   <div class="fr-dialog-body">
     <p>Möchtest du deinen Fakerank <strong>„{{ frText.trim() || '…' }}"</strong> erstellen?</p>
-    <p class="fr-dialog-cost"><i class="pi pi-dollar"></i> Das kostet <strong>{{ frCostPerWeek }} ZVC pro Woche</strong>.</p>
+    <p class="fr-dialog-cost">
+      <i class="pi pi-dollar"></i> Das kostet <strong>{{ frCostPerWeek }} ZVC pro Woche</strong>.
+    </p>
   </div>
   <div uiDialogFooter>
     <div class="fr-dialog-actions">
@@ -240,15 +238,15 @@
 <!-- Experimental (testui): delete confirmation -->
 <ui-dialog [(open)]="frDeleteOpen" title="Fakerank löschen?">
   <div class="fr-dialog-body">
-    <p>
-      Möchtest du deinen Fakerank <strong>„{{ currentFakerank }}"</strong> wirklich löschen?
-    </p>
+    <p>Möchtest du deinen Fakerank <strong>„{{ currentFakerank }}"</strong> wirklich löschen?</p>
     <p class="fr-dialog-hint">Das kann nicht rückgängig gemacht werden.</p>
   </div>
   <div uiDialogFooter>
     <div class="fr-dialog-actions">
       <ui-button variant="secondary" (click)="frDeleteOpen = false">Abbrechen</ui-button>
-      <ui-button variant="danger" (click)="frConfirmDelete()" [loading]="fakerankLoading"><i class="pi pi-trash"></i> Löschen</ui-button>
+      <ui-button variant="danger" (click)="frConfirmDelete()" [loading]="fakerankLoading"
+        ><i class="pi pi-trash"></i> Löschen</ui-button
+      >
     </div>
   </div>
 </ui-dialog>
