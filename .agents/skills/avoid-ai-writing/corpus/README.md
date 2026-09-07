@@ -51,7 +51,7 @@ without pretending that one document is enough to support a rate.
 **Nine public-domain works, 1788 to 1907**, sliced to 6,000 words each. Their
 provenance is beyond argument: nothing written in 1859 was machine-generated.
 That is also their limitation, and it is severe. Nobody runs this tool over
-*Walden*. On its own, this leg can only show the detector is not firing wildly
+_Walden_. On its own, this leg can only show the detector is not firing wildly
 on formal English prose.
 
 **Twenty-five blog posts by this repo's maintainer, 2019 to December 2022**,
@@ -137,13 +137,13 @@ current models, not an estimate of it. Nothing here has seen a 2026 model.
 
 875 human paragraphs, 779 machine paragraphs.
 
-| Threshold | FPR (95% CI) | TPR (95% CI) |
-|---|---|---|
-| score >= 3 | 16.6% (14.3–19.2) | 16.3% (13.9–19.1) |
-| score >= 5 | 4.2% (3.1–5.8) | 7.2% (5.6–9.2) |
-| score >= 10 | 0.5% (0.2–1.2) | 0.1% (0.0–0.7) |
-| score >= 15 | 0.0% (0.0–0.4) | 0.0% (0.0–0.5) |
-| score >= 25 | 0.0% (0.0–0.4) | 0.0% (0.0–0.5) |
+| Threshold   | FPR (95% CI)      | TPR (95% CI)      |
+| ----------- | ----------------- | ----------------- |
+| score >= 3  | 16.6% (14.3–19.2) | 16.3% (13.9–19.1) |
+| score >= 5  | 4.2% (3.1–5.8)    | 7.2% (5.6–9.2)    |
+| score >= 10 | 0.5% (0.2–1.2)    | 0.1% (0.0–0.7)    |
+| score >= 15 | 0.0% (0.0–0.4)    | 0.0% (0.0–0.5)    |
+| score >= 25 | 0.0% (0.0–0.4)    | 0.0% (0.0–0.5)    |
 
 **ROC-AUC, paragraph level: 0.501 pooled.** By source: HC3 0.554, RAID 0.451.
 At document level, which is closer to real use: **0.623 pooled, HC3 0.654,
@@ -169,21 +169,21 @@ detection failure, and it is the most fixable thing on this page.
 **2. The signal that exists is structural, not lexical.** Per-category firing
 rates, document level:
 
-| Category | Human | Machine | Lift |
-|---|---:|---:|---:|
-| `uniformity` | 2.1% | **25.1%** | **11.7x** |
-| `filler` | 2.4% | 8.3% | 3.4x |
-| `low-ttr` | 6.4% | 9.8% | 1.5x |
-| `chatbot` | 0.0% | 1.1% | machine-only |
-| `fnword-trigram-entropy` | 0.0% | 1.5% | machine-only |
-| `hedge-stack` | 0.0% | 1.0% | machine-only |
-| `tier1` | 8.0% | 7.4% | **0.9x** |
-| `em-dash` | 9.9% | 1.9% | **0.2x** |
+| Category                 | Human |   Machine |         Lift |
+| ------------------------ | ----: | --------: | -----------: |
+| `uniformity`             |  2.1% | **25.1%** |    **11.7x** |
+| `filler`                 |  2.4% |      8.3% |         3.4x |
+| `low-ttr`                |  6.4% |      9.8% |         1.5x |
+| `chatbot`                |  0.0% |      1.1% | machine-only |
+| `fnword-trigram-entropy` |  0.0% |      1.5% | machine-only |
+| `hedge-stack`            |  0.0% |      1.0% | machine-only |
+| `tier1`                  |  8.0% |      7.4% |     **0.9x** |
+| `em-dash`                |  9.9% |      1.9% |     **0.2x** |
 
 Rhythm uniformity is the single best discriminator in the whole engine, by an
 order of magnitude. The 112-entry vocabulary table — the thing the README
 leads with, the thing that took the most work — has a lift of **0.9**. It
-fires slightly *more often on human writing than on machine writing.*
+fires slightly _more often on human writing than on machine writing._
 
 This is what `NulightJens/humanizer-stack` argues from StoryScope (discourse
 features alone reach 93.2% F1 while professional surface rewriting moves
@@ -192,9 +192,9 @@ Measured here, on this engine, they look right.
 
 **3. `em-dash` is inverted.** It fires on 9.9% of human documents and 1.9% of
 machine ones — a lift of 0.2. On this corpus an em dash is evidence the text is
-*human*. That holds on both legs and is not a transcription artifact: the
+_human_. That holds on both legs and is not a transcription artifact: the
 maintainer's own 2019–2022 posts are full of them and RAID and HC3 generations
-are not. The rule is not wrong as *writing* advice, and the maintainer has
+are not. The rule is not wrong as _writing_ advice, and the maintainer has
 deliberately cut back on em dashes since. But as an authorship signal, on this
 evidence, it points the wrong way.
 
@@ -206,7 +206,7 @@ corpora. The skill is documented as a writing-quality tool, and none of this
 touches whether its edits improve prose.
 
 It does not license a rewrite of the pattern list either. A lift near 1.0 says
-a category does not separate *these* classes on *these* corpora; `delve` is
+a category does not separate _these_ classes on _these_ corpora; `delve` is
 still worth replacing.
 
 What it does license is a change of emphasis: the structural and stylometric
@@ -240,11 +240,13 @@ Public-domain or permissively licensed source, fetchable by URL:
 ```jsonc
 {
   "id": "short-slug",
-  "title": "...", "author": "...", "year": 1900,
-  "register": "blog",              // see REGISTERS in scripts/corpus.js
+  "title": "...",
+  "author": "...",
+  "year": 1900,
+  "register": "blog", // see REGISTERS in scripts/corpus.js
   "authorship": "human-pre-llm",
   "source": { "type": "url", "url": "https://…", "license": "public-domain", "gutenberg": true },
-  "slice": { "after": "literal marker string", "maxWords": 6000 }
+  "slice": { "after": "literal marker string", "maxWords": 6000 },
 }
 ```
 

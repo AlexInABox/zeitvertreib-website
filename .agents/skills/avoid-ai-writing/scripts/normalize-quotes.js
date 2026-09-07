@@ -21,11 +21,13 @@ function educate(s) {
   const chars = s.split('');
   for (let i = 0; i < chars.length; i += 1) {
     if (chars[i] !== '"' && chars[i] !== "'") continue;
-    let p = i - 1, n = i + 1;
+    let p = i - 1,
+      n = i + 1;
     // Emphasis delimiters are transparent when deciding a quotation's direction.
     while (p >= 0 && /[*_~]/.test(chars[p])) p -= 1;
     while (n < chars.length && /[*_~]/.test(chars[n])) n += 1;
-    const prev = chars[p] || '', next = chars[n] || '';
+    const prev = chars[p] || '',
+      next = chars[n] || '';
     // Match the checker's feet/inch carve-out. Already-curly marks stay curly.
     if (/\d/.test(prev)) continue;
     const opening = (!prev || /[\s([{—–\-“‘]/.test(prev)) && /\S/.test(next);
@@ -49,8 +51,12 @@ function inferQuotes(text) {
     counts[kind][style] += 1;
     if (!first[kind]) first[kind] = style;
   }
-  return Object.fromEntries(Object.entries(counts).map(([kind, c]) => [kind,
-    c.straight === c.curly ? first[kind] || null : c.straight > c.curly ? 'straight' : 'curly']));
+  return Object.fromEntries(
+    Object.entries(counts).map(([kind, c]) => [
+      kind,
+      c.straight === c.curly ? first[kind] || null : c.straight > c.curly ? 'straight' : 'curly',
+    ]),
+  );
 }
 
 /** Auto uses the original document when supplied; absent evidence leaves marks alone. */
@@ -60,12 +66,16 @@ function normalize(text, quotes = 'auto', reference = text) {
   const { masked, context } = markdownProse(text);
   // Word-shaped filler keeps quotes around `code` and a possessive after it directed
   // correctly. Restore by offset rather than searching for placeholder text.
-  const straight = straighten(context), curly = educate(context);
-  return context.split('').map((ch, i) => {
-    if (masked[i] === '\0') return text[i];
-    const style = convention[/["“”]/.test(ch) ? 'double' : 'single'];
-    return style === 'straight' ? straight[i] : style === 'curly' ? curly[i] : ch;
-  }).join('');
+  const straight = straighten(context),
+    curly = educate(context);
+  return context
+    .split('')
+    .map((ch, i) => {
+      if (masked[i] === '\0') return text[i];
+      const style = convention[/["“”]/.test(ch) ? 'double' : 'single'];
+      return style === 'straight' ? straight[i] : style === 'curly' ? curly[i] : ch;
+    })
+    .join('');
 }
 
 module.exports = { normalize, inferQuotes };
@@ -73,13 +83,17 @@ module.exports = { normalize, inferQuotes };
 if (require.main === module) {
   const fs = require('fs');
   const argv = process.argv.slice(2);
-  let file = null, quotes = null, reference = null, write = false;
+  let file = null,
+    quotes = null,
+    reference = null,
+    write = false;
   try {
     for (let i = 0; i < argv.length; i += 1) {
       const a = argv[i];
       if (a === '--quotes' && quotes === null) {
         quotes = argv[++i];
-        if (!['auto', 'straight', 'curly'].includes(quotes)) throw new Error('--quotes requires auto, straight or curly');
+        if (!['auto', 'straight', 'curly'].includes(quotes))
+          throw new Error('--quotes requires auto, straight or curly');
       } else if (a === '--reference' && reference === null) {
         reference = argv[++i];
         if (!reference || reference.startsWith('--')) throw new Error('--reference requires a file');
@@ -88,7 +102,10 @@ if (require.main === module) {
       else if (file === null) file = a;
       else throw new Error(`unexpected extra argument: ${a}`);
     }
-    if (!file) throw new Error('usage: normalize-quotes.js <file> [--quotes auto|straight|curly] [--reference original.md] [--write]');
+    if (!file)
+      throw new Error(
+        'usage: normalize-quotes.js <file> [--quotes auto|straight|curly] [--reference original.md] [--write]',
+      );
     if (reference && quotes && quotes !== 'auto') throw new Error('--reference requires auto quotes');
     quotes = quotes || 'auto';
     const source = fs.readFileSync(file, 'utf8');

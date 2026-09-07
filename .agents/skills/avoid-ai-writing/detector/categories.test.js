@@ -49,21 +49,13 @@ console.log(`  (${typeKeys.length} detector types, ${tableTypes.size} documented
 
 test('every detector type is documented in a CATEGORIES.md table', () => {
   const missing = typeKeys.filter((k) => !tableTypes.has(k));
-  assert.deepEqual(
-    missing,
-    [],
-    `detector types missing from CATEGORIES.md tables: ${missing.join(', ')}`
-  );
+  assert.deepEqual(missing, [], `detector types missing from CATEGORIES.md tables: ${missing.join(', ')}`);
 });
 
 test('every type referenced in the tables is a real detector type', () => {
   const keySet = new Set(typeKeys);
   const stale = [...tableTypes].filter((t) => !keySet.has(t));
-  assert.deepEqual(
-    stale,
-    [],
-    `CATEGORIES.md references types that no longer exist: ${stale.join(', ')}`
-  );
+  assert.deepEqual(stale, [], `CATEGORIES.md references types that no longer exist: ${stale.join(', ')}`);
 });
 
 // The engine's `type` total is a DERIVED fact: the true value is
@@ -95,7 +87,7 @@ for (const [rel, regex] of COUNT_SITES) {
       matches.length,
       `${rel}: ${regex} no longer matches — the sentence was reworded or ` +
         'removed. Re-point COUNT_SITES in this file at the new wording, or ' +
-        'drop the entry only if the number is gone from that file entirely.'
+        'drop the entry only if the number is gone from that file entirely.',
     );
     // Deliberately NOT asserting the regex matches exactly once. This repo
     // records corrections by quoting the superseded wording (see the 3.22.0
@@ -110,8 +102,7 @@ for (const [rel, regex] of COUNT_SITES) {
     assert.equal(
       Number(matches[0][1]),
       typeKeys.length,
-      `${rel} (${regex.source}) says ${matches[0][1]} detector types, ` +
-        `TYPE_LABELS has ${typeKeys.length}`
+      `${rel} (${regex.source}) says ${matches[0][1]} detector types, ` + `TYPE_LABELS has ${typeKeys.length}`,
     );
   });
 }

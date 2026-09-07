@@ -55,26 +55,96 @@
     }
   },
   "edges": [
-    {"type": "ROUTE", "from": "avoid-ai-writing-router", "to": "ai-writing-detector", "when": "detect_or_audit_only"},
-    {"type": "ROUTE", "from": "avoid-ai-writing-router", "to": "voice-preserving-rewriter", "when": "rewrite_returned_text"},
-    {"type": "ROUTE", "from": "avoid-ai-writing-router", "to": "file-edit-in-place", "when": "mutate_named_file"},
-    {"type": "ROUTE", "from": "avoid-ai-writing-router", "to": "preservation-verifier", "when": "compare_before_after"},
-    {"type": "ROUTE", "from": "avoid-ai-writing-router", "to": "false-positive-reviewer", "when": "consequential_authorship_interpretation"},
-    {"type": "FEED", "from": "ai-writing-detector", "to": "voice-preserving-rewriter", "when": "user_requests_rewrite_after_audit"},
-    {"type": "FEED", "from": "ai-writing-detector", "to": "file-edit-in-place", "when": "user_requests_named_file_fix_after_audit"},
-    {"type": "ESCALATE", "from": "ai-writing-detector", "to": "false-positive-reviewer", "when": "user_asks_what_flags_prove"},
-    {"type": "VERIFY", "from": "voice-preserving-rewriter", "to": "preservation-verifier", "when": "original_and_rewrite_available"},
-    {"type": "VERIFY", "from": "file-edit-in-place", "to": "preservation-verifier", "when": "before_snapshot_available"},
-    {"type": "REPAIR", "from": "preservation-verifier", "to": "voice-preserving-rewriter", "when": "returned_text_failed_preservation", "max_reentries": 1},
-    {"type": "REPAIR", "from": "preservation-verifier", "to": "file-edit-in-place", "when": "named_file_failed_preservation", "max_reentries": 1},
-    {"type": "RECHECK", "from": "preservation-verifier", "to": "ai-writing-detector", "when": "convergence_or_residual_audit_requested", "max_reentries": 1}
+    { "type": "ROUTE", "from": "avoid-ai-writing-router", "to": "ai-writing-detector", "when": "detect_or_audit_only" },
+    {
+      "type": "ROUTE",
+      "from": "avoid-ai-writing-router",
+      "to": "voice-preserving-rewriter",
+      "when": "rewrite_returned_text"
+    },
+    { "type": "ROUTE", "from": "avoid-ai-writing-router", "to": "file-edit-in-place", "when": "mutate_named_file" },
+    {
+      "type": "ROUTE",
+      "from": "avoid-ai-writing-router",
+      "to": "preservation-verifier",
+      "when": "compare_before_after"
+    },
+    {
+      "type": "ROUTE",
+      "from": "avoid-ai-writing-router",
+      "to": "false-positive-reviewer",
+      "when": "consequential_authorship_interpretation"
+    },
+    {
+      "type": "FEED",
+      "from": "ai-writing-detector",
+      "to": "voice-preserving-rewriter",
+      "when": "user_requests_rewrite_after_audit"
+    },
+    {
+      "type": "FEED",
+      "from": "ai-writing-detector",
+      "to": "file-edit-in-place",
+      "when": "user_requests_named_file_fix_after_audit"
+    },
+    {
+      "type": "ESCALATE",
+      "from": "ai-writing-detector",
+      "to": "false-positive-reviewer",
+      "when": "user_asks_what_flags_prove"
+    },
+    {
+      "type": "VERIFY",
+      "from": "voice-preserving-rewriter",
+      "to": "preservation-verifier",
+      "when": "original_and_rewrite_available"
+    },
+    {
+      "type": "VERIFY",
+      "from": "file-edit-in-place",
+      "to": "preservation-verifier",
+      "when": "before_snapshot_available"
+    },
+    {
+      "type": "REPAIR",
+      "from": "preservation-verifier",
+      "to": "voice-preserving-rewriter",
+      "when": "returned_text_failed_preservation",
+      "max_reentries": 1
+    },
+    {
+      "type": "REPAIR",
+      "from": "preservation-verifier",
+      "to": "file-edit-in-place",
+      "when": "named_file_failed_preservation",
+      "max_reentries": 1
+    },
+    {
+      "type": "RECHECK",
+      "from": "preservation-verifier",
+      "to": "ai-writing-detector",
+      "when": "convergence_or_residual_audit_requested",
+      "max_reentries": 1
+    }
   ],
   "guards": [
     {
       "name": "human_representation_preservation",
       "applies_when": "source_kind_is_visual_prompt_or_creative_brief_and_people_are_described",
       "review_lens": "agency-inclusive-visuals-specialist",
-      "protect": ["identity", "culture", "geography", "age", "body_diversity", "disability", "mobility_aids", "attire", "skin_tone_lighting", "physical_reality", "anti_stereotype_constraints"]
+      "protect": [
+        "identity",
+        "culture",
+        "geography",
+        "age",
+        "body_diversity",
+        "disability",
+        "mobility_aids",
+        "attire",
+        "skin_tone_lighting",
+        "physical_reality",
+        "anti_stereotype_constraints"
+      ]
     },
     {
       "name": "authorship_uncertainty",

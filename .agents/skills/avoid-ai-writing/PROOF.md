@@ -13,15 +13,15 @@ node scripts/self-scan.js
 
 ## Result (v3.22.0, measured 2026-07-31)
 
-| Document | Words | Raw score | Exempt score | Budget |
-|---|---:|---:|---:|---:|
-| `README.md` | 3,977 | 65 | **21** | 30 |
-| `SKILL.full.md` | 14,008 | 89 | **12** | 25 |
-| `CONTRIBUTING.md` | 527 | 3 | **1** | 15 |
-| `detector/README.md` | 593 | 2 | **2** | 15 |
-| `detector/CATEGORIES.md` | 1,064 | 1 | **1** | 15 |
-| `CHANGELOG.md` | 7,192 | 62 | **32** | 40 |
-| `PROOF.md` | 995 | 15 | **14** | 20 |
+| Document                 |  Words | Raw score | Exempt score | Budget |
+| ------------------------ | -----: | --------: | -----------: | -----: |
+| `README.md`              |  3,977 |        65 |       **21** |     30 |
+| `SKILL.full.md`          | 14,008 |        89 |       **12** |     25 |
+| `CONTRIBUTING.md`        |    527 |         3 |        **1** |     15 |
+| `detector/README.md`     |    593 |         2 |        **2** |     15 |
+| `detector/CATEGORIES.md` |  1,064 |         1 |        **1** |     15 |
+| `CHANGELOG.md`           |  7,192 |        62 |       **32** |     40 |
+| `PROOF.md`               |    995 |        15 |       **14** |     20 |
 
 The `PROOF.md` row is a snapshot and mildly self-referential: editing this page
 changes its own word count and score. CI gates the live number from
@@ -38,9 +38,9 @@ means the catalog contains the words it catalogs. That number is noise, and it
 is here so nobody has to wonder what was suppressed.
 
 **Exempt** applies the self-reference escape hatch that `SKILL.md` has always
-documented in prose: *"quoted examples are exempt from flagging. Text inside
+documented in prose: _"quoted examples are exempt from flagging. Text inside
 quotation marks, code blocks, or explicitly marked as illustrative should not
-be rewritten."* Until this scan existed, that rule was an instruction to a
+be rewritten."_ Until this scan existed, that rule was an instruction to a
 model and nothing more. `applyExemptions()` in `scripts/self-scan.js` is its
 executable form: it blanks fenced code, inline code, tables, blockquotes, and
 quoted spans, then scores what remains.
@@ -56,8 +56,8 @@ Four results worth naming rather than scrubbing.
 
 **1. `CHANGELOG.md` scores worst, and roughly half of it is unreachable by the
 exemption.** A changelog announcing a new rule lists the words that rule
-catches, unquoted and comma-separated: *bustling, intricate, ever-evolving,
-daunting, holistic, actionable, impactful, learnings, synergy, interplay*. The
+catches, unquoted and comma-separated: _bustling, intricate, ever-evolving,
+daunting, holistic, actionable, impactful, learnings, synergy, interplay_. The
 detector reads a Tier 1 vocabulary run. A reader reads a release note. The
 exemption only reaches quoted or code-fenced text, so this residue stays in the
 number.
@@ -71,7 +71,7 @@ implements exactly that. It does not exempt two near-identical forms:
   them in `CHANGELOG.md`, every one counted as a prose em dash.
 - A bulleted item whose bold lead term carries a parenthetical before the dash:
   ``- **Lingering-attention claims** (`lingering-attention`) — the share-post
-  frame…``
+frame…``
 
 Of 137 em dashes in `CHANGELOG.md` at the time of the scan, the detector carved
 out 53 and counted 84. Thirty-three of those 84 were the two shapes above.

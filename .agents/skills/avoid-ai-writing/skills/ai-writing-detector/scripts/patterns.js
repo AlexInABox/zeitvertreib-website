@@ -37,12 +37,32 @@ const AIDetector = (() => {
   // "normalization triggered" as a corroborating AI signal — humans don't
   // paste ZWSPs into their own writing.
   const CYRILLIC_LOOKALIKES = {
-    'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'х': 'x',
-    'у': 'y', 'к': 'k', 'м': 'm', 'н': 'h', 'в': 'b', 'т': 't',
-    'А': 'A', 'Е': 'E', 'О': 'O', 'Р': 'P', 'С': 'C', 'Х': 'X',
-    'У': 'Y', 'К': 'K', 'М': 'M', 'Н': 'H', 'В': 'B', 'Т': 'T',
+    а: 'a',
+    е: 'e',
+    о: 'o',
+    р: 'p',
+    с: 'c',
+    х: 'x',
+    у: 'y',
+    к: 'k',
+    м: 'm',
+    н: 'h',
+    в: 'b',
+    т: 't',
+    А: 'A',
+    Е: 'E',
+    О: 'O',
+    Р: 'P',
+    С: 'C',
+    Х: 'X',
+    У: 'Y',
+    К: 'K',
+    М: 'M',
+    Н: 'H',
+    В: 'B',
+    Т: 'T',
   };
-  const GREEK_LOOKALIKES = { 'ο': 'o', 'Ο': 'O', 'α': 'a', 'Α': 'A', 'ρ': 'p', 'Ρ': 'P' };
+  const GREEK_LOOKALIKES = { ο: 'o', Ο: 'O', α: 'a', Α: 'A', ρ: 'p', Ρ: 'P' };
 
   function normalizeText(text) {
     const flags = { zeroWidth: 0, homoglyph: 0, roleplay: 0 };
@@ -50,13 +70,19 @@ const AIDetector = (() => {
 
     // 1. Strip zero-width chars (ZWSP U+200B, ZWNJ U+200C, ZWJ U+200D,
     //    BOM U+FEFF, word joiner U+2060).
-    out = out.replace(/[​-‍﻿⁠]/g, () => { flags.zeroWidth++; return ''; });
+    out = out.replace(/[​-‍﻿⁠]/g, () => {
+      flags.zeroWidth++;
+      return '';
+    });
 
     // 2. Swap Cyrillic / Greek Latin-lookalike chars back to Latin so
     //    pattern matching catches obfuscated tokens.
     out = out.replace(/[Ѐ-ӿͰ-Ͽ]/g, (m) => {
       const swap = CYRILLIC_LOOKALIKES[m] ?? GREEK_LOOKALIKES[m];
-      if (swap) { flags.homoglyph++; return swap; }
+      if (swap) {
+        flags.homoglyph++;
+        return swap;
+      }
       return m;
     });
 
@@ -66,9 +92,13 @@ const AIDetector = (() => {
     //    artifact shape. Markdown `**bold**` is rejected by the
     //    lookbehind/lookahead; legitimate multi-word `*italic*` is
     //    preserved because the verb whitelist is narrow.
-    const ROLEPLAY_VERBS = /^(?:nods|sighs|laughs|smiles|frowns|shrugs|grins|winks|chuckles|gasps|pauses|thinks|wonders|whispers|shouts|gestures|raises|leans|turns|looks|glances|smirks|blinks|nodding|sighing|laughing|smiling|thinking|gesturing)\b/i;
+    const ROLEPLAY_VERBS =
+      /^(?:nods|sighs|laughs|smiles|frowns|shrugs|grins|winks|chuckles|gasps|pauses|thinks|wonders|whispers|shouts|gestures|raises|leans|turns|looks|glances|smirks|blinks|nodding|sighing|laughing|smiling|thinking|gesturing)\b/i;
     out = out.replace(/(?<!\*)\*([^*\n]{1,80}?)\*(?!\*)/gu, (m, inner) => {
-      if (ROLEPLAY_VERBS.test(inner)) { flags.roleplay++; return ''; }
+      if (ROLEPLAY_VERBS.test(inner)) {
+        flags.roleplay++;
+        return '';
+      }
       return m;
     });
 
@@ -77,39 +107,39 @@ const AIDetector = (() => {
 
   // ─── Tier 1: Always flag ───────────────────────────────────────────
   const TIER1 = {
-    'delve': 'explore, dig into, look at',
-    'tapestry': 'describe the actual complexity',
-    'paradigm': 'model, approach, framework',
-    'beacon': 'rewrite entirely',
-    'robust': 'strong, reliable, solid',
-    'comprehensive': 'thorough, complete, full',
+    delve: 'explore, dig into, look at',
+    tapestry: 'describe the actual complexity',
+    paradigm: 'model, approach, framework',
+    beacon: 'rewrite entirely',
+    robust: 'strong, reliable, solid',
+    comprehensive: 'thorough, complete, full',
     'cutting-edge': 'latest, newest, advanced',
-    'pivotal': 'important, key, critical',
-    'meticulous': 'careful, detailed, precise',
-    'meticulously': 'carefully, precisely',
-    'seamless': 'smooth, easy, without friction',
-    'seamlessly': 'smoothly, easily',
+    pivotal: 'important, key, critical',
+    meticulous: 'careful, detailed, precise',
+    meticulously: 'carefully, precisely',
+    seamless: 'smooth, easy, without friction',
+    seamlessly: 'smoothly, easily',
     'game-changer': 'describe what changed',
     'game-changing': 'describe what changed',
-    'nestled': 'is located, sits',
-    'vibrant': 'describe what makes it active',
-    'thriving': 'growing, active',
-    'bustling': 'busy, active',
-    'intricate': 'complex, detailed',
-    'intricacies': 'complexities, details',
+    nestled: 'is located, sits',
+    vibrant: 'describe what makes it active',
+    thriving: 'growing, active',
+    bustling: 'busy, active',
+    intricate: 'complex, detailed',
+    intricacies: 'complexities, details',
     'ever-evolving': 'changing, growing',
-    'enduring': 'lasting, long-running',
-    'daunting': 'hard, difficult',
-    'holistic': 'complete, full, whole',
-    'holistically': 'completely, fully',
-    'actionable': 'practical, useful, concrete',
-    'impactful': 'effective, significant',
-    'learnings': 'lessons, findings, takeaways',
-    'synergy': 'describe the combined effect',
-    'synergies': 'describe the combined effect',
-    'interplay': 'relationship, connection',
-    'symphony': 'describe the coordination',
-    'embrace': 'adopt, accept, use',
+    enduring: 'lasting, long-running',
+    daunting: 'hard, difficult',
+    holistic: 'complete, full, whole',
+    holistically: 'completely, fully',
+    actionable: 'practical, useful, concrete',
+    impactful: 'effective, significant',
+    learnings: 'lessons, findings, takeaways',
+    synergy: 'describe the combined effect',
+    synergies: 'describe the combined effect',
+    interplay: 'relationship, connection',
+    symphony: 'describe the coordination',
+    embrace: 'adopt, accept, use',
   };
 
   // Multi-word tier 1 phrases
@@ -150,54 +180,58 @@ const AIDetector = (() => {
     // Only match an immediately following abstract noun from this seed list.
     // Unknown nouns, mixed physical/abstract nouns, and predicative uses pass:
     // precision over recall (#56). Keep the lookahead out of the matched span.
-    { pattern: /\bload-bearing\b(?=[ \t]+(?:assumptions?|claims?|invariants?|premises?|constraints?|dependenc(?:y|ies)|arguments?|abstractions?)\b)/gi, replace: 'essential, critical, or say what breaks if you remove it' },
+    {
+      pattern:
+        /\bload-bearing\b(?=[ \t]+(?:assumptions?|claims?|invariants?|premises?|constraints?|dependenc(?:y|ies)|arguments?|abstractions?)\b)/gi,
+      replace: 'essential, critical, or say what breaks if you remove it',
+    },
   ];
 
   // ─── Tier 2: Flag in clusters (2+ per paragraph) ──────────────────
   const TIER2 = {
-    'harness': 'use, take advantage of',
-    'navigate': 'work through, handle',
-    'navigating': 'working through, handling',
-    'foster': 'encourage, support, build',
-    'elevate': 'improve, raise, strengthen',
-    'unleash': 'release, enable, unlock',
-    'streamline': 'simplify, speed up',
-    'empower': 'enable, let, allow',
-    'bolster': 'support, strengthen',
-    'spearhead': 'lead, drive, run',
-    'resonate': 'connect with, appeal to',
-    'resonates': 'connects with, appeals to',
-    'revolutionize': 'change, transform',
-    'facilitate': 'enable, help, allow',
-    'facilitates': 'enables, helps, allows',
-    'underpin': 'support, form the basis of',
-    'nuanced': 'specific, subtle, detailed',
-    'crucial': 'important, key, necessary',
-    'multifaceted': 'describe the actual facets',
-    'ecosystem': 'system, community, network',
-    'myriad': 'many, numerous',
-    'plethora': 'many, a lot of',
-    'encompass': 'include, cover, span',
-    'catalyze': 'start, trigger, accelerate',
-    'reimagine': 'rethink, redesign, rebuild',
-    'galvanize': 'motivate, rally, push',
-    'augment': 'add to, expand, supplement',
-    'cultivate': 'build, develop, grow',
-    'illuminate': 'clarify, explain, show',
-    'elucidate': 'explain, clarify',
-    'juxtapose': 'compare, contrast',
-    'transformative': 'describe what changed',
-    'transformation': 'describe what changed',
-    'cornerstone': 'foundation, basis, key part',
-    'paramount': 'most important, top priority',
-    'poised': 'ready, set, about to',
-    'burgeoning': 'growing, emerging',
-    'nascent': 'new, early-stage',
-    'quintessential': 'typical, classic, defining',
-    'overarching': 'main, central, broad',
-    'quietly': 'cut, or name the concrete contrast',
-    'underpinning': 'basis, foundation',
-    'underpinnings': 'basis, foundations',
+    harness: 'use, take advantage of',
+    navigate: 'work through, handle',
+    navigating: 'working through, handling',
+    foster: 'encourage, support, build',
+    elevate: 'improve, raise, strengthen',
+    unleash: 'release, enable, unlock',
+    streamline: 'simplify, speed up',
+    empower: 'enable, let, allow',
+    bolster: 'support, strengthen',
+    spearhead: 'lead, drive, run',
+    resonate: 'connect with, appeal to',
+    resonates: 'connects with, appeals to',
+    revolutionize: 'change, transform',
+    facilitate: 'enable, help, allow',
+    facilitates: 'enables, helps, allows',
+    underpin: 'support, form the basis of',
+    nuanced: 'specific, subtle, detailed',
+    crucial: 'important, key, necessary',
+    multifaceted: 'describe the actual facets',
+    ecosystem: 'system, community, network',
+    myriad: 'many, numerous',
+    plethora: 'many, a lot of',
+    encompass: 'include, cover, span',
+    catalyze: 'start, trigger, accelerate',
+    reimagine: 'rethink, redesign, rebuild',
+    galvanize: 'motivate, rally, push',
+    augment: 'add to, expand, supplement',
+    cultivate: 'build, develop, grow',
+    illuminate: 'clarify, explain, show',
+    elucidate: 'explain, clarify',
+    juxtapose: 'compare, contrast',
+    transformative: 'describe what changed',
+    transformation: 'describe what changed',
+    cornerstone: 'foundation, basis, key part',
+    paramount: 'most important, top priority',
+    poised: 'ready, set, about to',
+    burgeoning: 'growing, emerging',
+    nascent: 'new, early-stage',
+    quintessential: 'typical, classic, defining',
+    overarching: 'main, central, broad',
+    quietly: 'cut, or name the concrete contrast',
+    underpinning: 'basis, foundation',
+    underpinnings: 'basis, foundations',
     'paradigm-shifting': 'describe what shifted',
   };
 
@@ -210,19 +244,35 @@ const AIDetector = (() => {
   const TIER2_CONDITIONAL = [
     {
       word: 'deeply',
-      pattern: /\bdeeply\s+(?:integrated|committed|rooted|personal|human|flawed|resonant|transformative|interconnected|ingrained|embedded|meaningful)\b/i,
+      pattern:
+        /\bdeeply\s+(?:integrated|committed|rooted|personal|human|flawed|resonant|transformative|interconnected|ingrained|embedded|meaningful)\b/i,
       suggestion: 'cut, or name what specifically runs deep',
     },
   ];
 
   // ─── Tier 3: Flag by density ───────────────────────────────────────
   const TIER3 = [
-    'significant', 'significantly', 'innovative', 'innovation',
-    'effective', 'effectively', 'dynamic', 'dynamics',
-    'scalable', 'scalability', 'compelling', 'unprecedented',
-    'exceptional', 'exceptionally', 'remarkable', 'remarkably',
-    'sophisticated', 'instrumental',
-    'world-class', 'state-of-the-art', 'best-in-class',
+    'significant',
+    'significantly',
+    'innovative',
+    'innovation',
+    'effective',
+    'effectively',
+    'dynamic',
+    'dynamics',
+    'scalable',
+    'scalability',
+    'compelling',
+    'unprecedented',
+    'exceptional',
+    'exceptionally',
+    'remarkable',
+    'remarkably',
+    'sophisticated',
+    'instrumental',
+    'world-class',
+    'state-of-the-art',
+    'best-in-class',
     // `verbatim` is usually redundant with the verb it modifies ("copies X
     // verbatim" = "copies X"). It has a genuine term-of-art sense in legal,
     // research, and QA registers ("verbatim transcript"), so it lives at Tier 3:
@@ -790,13 +840,22 @@ const AIDetector = (() => {
   // narration and stays clean); the stop-list keeps idiomatic pairs
   // ("no more, no less", "no matter what") from firing. Adapted from
   // Simon Willison's LLM cliché highlighter.
-  const NO_ITEM_STOP = "(?!matter\\b|one\\b|doubt\\b|longer\\b|way\\b|less\\b|more\\b|such\\b|other\\b|means\\b)";
-  const NO_ITEM_SECOND_STOP = "(?!(?:in|on|at|of|to|for|with|from|by|is|are|was|were|be|been|being|will|would|can|could|should|shall|may|might|must|have|has|had|do|does|did)\\b)";
+  const NO_ITEM_STOP = '(?!matter\\b|one\\b|doubt\\b|longer\\b|way\\b|less\\b|more\\b|such\\b|other\\b|means\\b)';
+  const NO_ITEM_SECOND_STOP =
+    '(?!(?:in|on|at|of|to|for|with|from|by|is|are|was|were|be|been|being|will|would|can|could|should|shall|may|might|must|have|has|had|do|does|did)\\b)';
   const NEGATION_CHAIN = [
     new RegExp(
-      "(?<=^|[.!?]\\s|\\n|[:\\u2013\\u2014]\\s)No\\s+" + NO_ITEM_STOP + "[a-z'\u2019-]+(?:\\s+" + NO_ITEM_SECOND_STOP + "[a-z'\u2019-]+)?" +
-      "(?:\\s*,\\s*(?:and\\s+|or\\s+|just\\s+)?no\\s+" + NO_ITEM_STOP + "[a-z'\u2019-]+(?:\\s+" + NO_ITEM_SECOND_STOP + "[a-z'\u2019-]+)?){2,}",
-      'gm'
+      '(?<=^|[.!?]\\s|\\n|[:\\u2013\\u2014]\\s)No\\s+' +
+        NO_ITEM_STOP +
+        "[a-z'\u2019-]+(?:\\s+" +
+        NO_ITEM_SECOND_STOP +
+        "[a-z'\u2019-]+)?" +
+        '(?:\\s*,\\s*(?:and\\s+|or\\s+|just\\s+)?no\\s+' +
+        NO_ITEM_STOP +
+        "[a-z'\u2019-]+(?:\\s+" +
+        NO_ITEM_SECOND_STOP +
+        "[a-z'\u2019-]+)?){2,}",
+      'gm',
     ),
     /\b(?:did\s+not|didn['\u2019]t)\s+[a-z]+[^,.;!?\n]{0,20},\s*(?:did\s+not|didn['\u2019]t)\s+[a-z]+/gi,
     /\b(?:do\s+not|don['\u2019]t)\s+(?:just\s+)?(\w+)\s+it\b[^.!?\n]{0,60}[.!?;:,][\s'"\u201d\u2019]*(?:just\s+)?\1\s+it\b/gi,
@@ -847,11 +906,7 @@ const AIDetector = (() => {
       const marker = m[1];
       if (!open) {
         open = { char: marker[0], len: marker.length, start: m.index };
-      } else if (
-        marker[0] === open.char &&
-        marker.length >= open.len &&
-        /^[ \t]*\r?$/.test(m[2])
-      ) {
+      } else if (marker[0] === open.char && marker.length >= open.len && /^[ \t]*\r?$/.test(m[2])) {
         ranges.push([open.start, m.index + m[0].length]);
         open = null;
       }
@@ -917,9 +972,7 @@ const AIDetector = (() => {
     // before treating the delimited block as frontmatter. Leading blank lines
     // and YAML comments are valid, and the line parser accepts LF, CRLF, or CR.
     const yamlKey = /^[ \t]*(?:[A-Za-z0-9_.-]+|"[^"\r\n]+"|'[^'\r\n]+')[ \t]*:/;
-    const firstContent = lines
-      .slice(1, closingLine)
-      .find((line) => line.body.trim() && !/^[ \t]*#/.test(line.body));
+    const firstContent = lines.slice(1, closingLine).find((line) => line.body.trim() && !/^[ \t]*#/.test(line.body));
     if (!firstContent || !yamlKey.test(firstContent.body)) return null;
 
     return { start: 0, end: lines[closingLine].end };
@@ -1152,11 +1205,19 @@ const AIDetector = (() => {
     maskMatches(/[.#][a-z_][a-z0-9_.-]{0,63}-[a-z0-9_.-]{1,64}\b/gi);
     maskMatches(/@[a-z0-9_.-]{1,64}\/[a-z0-9_.-]{1,64}-[a-z0-9_.-]{1,64}(?:@[^\s,;)\]}]{1,32})?/gi);
     maskMatches(/\b[a-z0-9_.-]{1,64}-[a-z0-9_.-]{1,64}@[~^]?v?\d[a-z0-9*_.+-]{0,31}\b/gi);
-    maskMatches(/\b(?:[a-z0-9_.-]{0,64}\d[a-z0-9_.-]{0,64}-[a-z0-9_.-]{1,64}|[a-z0-9_.-]{1,64}-[a-z0-9_.-]{0,64}\d[a-z0-9_.-]{0,64})\b/gi);
+    maskMatches(
+      /\b(?:[a-z0-9_.-]{0,64}\d[a-z0-9_.-]{0,64}-[a-z0-9_.-]{1,64}|[a-z0-9_.-]{1,64}-[a-z0-9_.-]{0,64}\d[a-z0-9_.-]{0,64})\b/gi,
+    );
     maskMatches(/\b[a-z_][a-z0-9_.]{0,63}(?:-[a-z0-9_.]{1,64}){1,8}(?=[ \t]*[=:])/gi);
-    maskMatches(/\b[a-z_][a-z0-9_.]{0,63}(?:-[a-z0-9_.]{1,64}){1,8}(?=[ \t]+(?:npm[ \t]+)?(?:package|module|class|selector|config(?:uration)?[ \t]+key|key|identifier|property|setting|token|slug|command|option)\b)/gi);
-    maskMatches(/\b(?:(?:file(?:name)?|directory|folder|package|module|class|selector|config(?:uration)?[ \t]+key|identifier|property|setting|token|slug|command|option)(?:[ \t]+(?:named|called|is|was))?|key[ \t]+(?:named|called|is|was))[ \t]+(?:@[a-z0-9_.-]{1,64}\/)?[a-z_][a-z0-9_.]{0,63}(?:-[a-z0-9_.]{1,64}){1,8}\b/gi);
-    maskMatches(/\b(?:npm|pnpm|yarn)[ \t]+(?:add|install)[ \t]+(?:@[a-z0-9_.-]{1,64}\/)?[a-z0-9_.]{1,64}(?:-[a-z0-9_.]{1,64}){1,8}/gi);
+    maskMatches(
+      /\b[a-z_][a-z0-9_.]{0,63}(?:-[a-z0-9_.]{1,64}){1,8}(?=[ \t]+(?:npm[ \t]+)?(?:package|module|class|selector|config(?:uration)?[ \t]+key|key|identifier|property|setting|token|slug|command|option)\b)/gi,
+    );
+    maskMatches(
+      /\b(?:(?:file(?:name)?|directory|folder|package|module|class|selector|config(?:uration)?[ \t]+key|identifier|property|setting|token|slug|command|option)(?:[ \t]+(?:named|called|is|was))?|key[ \t]+(?:named|called|is|was))[ \t]+(?:@[a-z0-9_.-]{1,64}\/)?[a-z_][a-z0-9_.]{0,63}(?:-[a-z0-9_.]{1,64}){1,8}\b/gi,
+    );
+    maskMatches(
+      /\b(?:npm|pnpm|yarn)[ \t]+(?:add|install)[ \t]+(?:@[a-z0-9_.-]{1,64}\/)?[a-z0-9_.]{1,64}(?:-[a-z0-9_.]{1,64}){1,8}/gi,
+    );
 
     return chars.join('');
   }
@@ -1172,9 +1233,7 @@ const AIDetector = (() => {
           type: 'unnecessary-hyphenation',
           text: match[0],
           severity: 'medium',
-          suggestion: typeof entry.suggestion === 'function'
-            ? entry.suggestion(match[0])
-            : entry.suggestion,
+          suggestion: typeof entry.suggestion === 'function' ? entry.suggestion(match[0]) : entry.suggestion,
         });
       }
     }
@@ -1221,7 +1280,8 @@ const AIDetector = (() => {
   //
   // Setext headings (`Title`/`=====`) need no prefix: their text line is bare
   // and already matched by this same pattern.
-  const TITLE_CASE_HEADER = /^(?:#{1,6}[ \t]+)?([A-Z][a-z]+(?:\s+(?:[A-Z][a-z]+|and|or|of|the|in|for|to|a|an))+\s+[A-Z][a-z]+)\s*$/gm;
+  const TITLE_CASE_HEADER =
+    /^(?:#{1,6}[ \t]+)?([A-Z][a-z]+(?:\s+(?:[A-Z][a-z]+|and|or|of|the|in|for|to|a|an))+\s+[A-Z][a-z]+)\s*$/gm;
 
   // ─── Parenthetical hedging asides ──────────────────────────────────
   // "(and increasingly, X)", "(or more precisely, Y)", "(though to be
@@ -1286,13 +1346,31 @@ const AIDetector = (() => {
   const UNNECESSARY_HYPHENATION = [
     // Welded open noun phrases reported in #107. Match the complete phrase so
     // a project-specific spelling of the pair in another role is not swept in.
-    { pattern: /\bresearch-impact\s+aggregat(?:or|ion)s?\b/g, suggestion: (match) => match.replace('research-impact', 'research impact') },
-    { pattern: /\bdata-source\s+strateg(?:y|ies)\b/g, suggestion: (match) => match.replace('data-source', 'data source') },
-    { pattern: /\bPython-package\s+usage\b/g, suggestion: (match) => match.replace('Python-package', 'Python package') },
+    {
+      pattern: /\bresearch-impact\s+aggregat(?:or|ion)s?\b/g,
+      suggestion: (match) => match.replace('research-impact', 'research impact'),
+    },
+    {
+      pattern: /\bdata-source\s+strateg(?:y|ies)\b/g,
+      suggestion: (match) => match.replace('data-source', 'data source'),
+    },
+    {
+      pattern: /\bPython-package\s+usage\b/g,
+      suggestion: (match) => match.replace('Python-package', 'Python package'),
+    },
     { pattern: /\bRust-crate\s+usage\b/g, suggestion: (match) => match.replace('Rust-crate', 'Rust crate') },
-    { pattern: /\bsingle-Project\s+Manifest\b/g, suggestion: (match) => match.replace('single-Project', 'single Project') },
-    { pattern: /\btotal-downloads\s+figures?\b/g, suggestion: (match) => match.replace('total-downloads', 'total downloads') },
-    { pattern: /\blife-sciences-native\s+citation\s+count\b/g, suggestion: 'citation count from a life sciences source' },
+    {
+      pattern: /\bsingle-Project\s+Manifest\b/g,
+      suggestion: (match) => match.replace('single-Project', 'single Project'),
+    },
+    {
+      pattern: /\btotal-downloads\s+figures?\b/g,
+      suggestion: (match) => match.replace('total-downloads', 'total downloads'),
+    },
+    {
+      pattern: /\blife-sciences-native\s+citation\s+count\b/g,
+      suggestion: 'citation count from a life sciences source',
+    },
 
     // Compounds whose standard spelling is closed. Kept as a small curated
     // list rather than guessing that every noun-noun pair should close up.
@@ -1305,15 +1383,18 @@ const AIDetector = (() => {
     // real-time / long-term is intentionally narrow: "real-time analytics"
     // and "long-term plan" must not fire.
     {
-      pattern: /\bin\s+real-time(?=\s*(?:[,.!?;:]|$)|\s+(?:(?:across|as|automatically|because|but|continuously|during|dynamically|every|for|from|immediately|instantly|on|simultaneously|through|throughout|until|via|when|while|with|without)\b))/gi,
+      pattern:
+        /\bin\s+real-time(?=\s*(?:[,.!?;:]|$)|\s+(?:(?:across|as|automatically|because|but|continuously|during|dynamically|every|for|from|immediately|instantly|on|simultaneously|through|throughout|until|via|when|while|with|without)\b))/gi,
       suggestion: 'in real time',
     },
     {
-      pattern: /\b(?:for|over)\s+the\s+long-term(?=\s*(?:[,.!?;:]|$)|\s+(?:across|because|but|by|during|for|from|on|through|throughout|until|via|when|while|with|without)\b)/gi,
+      pattern:
+        /\b(?:for|over)\s+the\s+long-term(?=\s*(?:[,.!?;:]|$)|\s+(?:across|because|but|by|during|for|from|on|through|throughout|until|via|when|while|with|without)\b)/gi,
       suggestion: (match) => match.replace(/long-term/i, 'long term'),
     },
     {
-      pattern: /\b(?:functions?|functioned|functioning|operates?|operated|operating|runs?|ran|running|works?|worked|working)\s+out-of-the-box\b/gi,
+      pattern:
+        /\b(?:functions?|functioned|functioning|operates?|operated|operating|runs?|ran|running|works?|worked|working)\s+out-of-the-box\b/gi,
       suggestion: (match) => match.replace(/out-of-the-box/i, 'out of the box'),
     },
   ];
@@ -1329,11 +1410,11 @@ const AIDetector = (() => {
   }
 
   function getParagraphs(text) {
-    return text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    return text.split(/\n\s*\n/).filter((p) => p.trim().length > 0);
   }
 
   function getSentences(text) {
-    return text.split(/[.!?]+/).filter(s => s.trim().length > 5);
+    return text.split(/[.!?]+/).filter((s) => s.trim().length > 5);
   }
 
   function matchPatterns(text, patterns, category, severity) {
@@ -1370,11 +1451,12 @@ const AIDetector = (() => {
   // confident human verdict — a 50k-word LLM-generated document is
   // not "human", it's just outside our scoring window.
   function buildV2Defaults(classification, confidence) {
-    const probs = classification === 'HUMAN_ONLY'
-      ? { human: 1, mixed: 0, ai: 0 }
-      : classification === 'AI_ONLY'
-        ? { human: 0, mixed: 0, ai: 1 }
-        : { human: 0.333, mixed: 0.334, ai: 0.333 };
+    const probs =
+      classification === 'HUMAN_ONLY'
+        ? { human: 1, mixed: 0, ai: 0 }
+        : classification === 'AI_ONLY'
+          ? { human: 0, mixed: 0, ai: 1 }
+          : { human: 0.333, mixed: 0.334, ai: 0.333 };
     return {
       document_classification: classification,
       class_probabilities: probs,
@@ -1427,9 +1509,8 @@ const AIDetector = (() => {
     // lines to count as a blockquote — single-line `> ls -la` shell
     // prompts in technical docs stay in the text. Masking instead of deleting
     // keeps later issue and highlight offsets aligned with the source file.
-    const blockquotes = sourceMode === 'rendered-markdown'
-      ? maskMultilineBlockquotes(text)
-      : stripMultilineBlockquotes(text);
+    const blockquotes =
+      sourceMode === 'rendered-markdown' ? maskMultilineBlockquotes(text) : stripMultilineBlockquotes(text);
     text = blockquotes.text;
     const { quotedLines } = blockquotes;
 
@@ -1446,7 +1527,15 @@ const AIDetector = (() => {
         score: 0,
         label: 'Too short',
         issues: [],
-        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, maskedFrontmatter, maskedHtmlComments },
+        stats: {
+          wordCount,
+          contextMode,
+          contextModeFallback,
+          sourceMode,
+          sourceModeFallback,
+          maskedFrontmatter,
+          maskedHtmlComments,
+        },
         tooShort: true,
       };
     }
@@ -1456,7 +1545,15 @@ const AIDetector = (() => {
         score: 0,
         label: 'Text too long',
         issues: [],
-        stats: { wordCount, contextMode, contextModeFallback, sourceMode, sourceModeFallback, maskedFrontmatter, maskedHtmlComments },
+        stats: {
+          wordCount,
+          contextMode,
+          contextModeFallback,
+          sourceMode,
+          sourceModeFallback,
+          maskedFrontmatter,
+          maskedHtmlComments,
+        },
         tooLong: true,
       };
     }
@@ -1642,7 +1739,8 @@ const AIDetector = (() => {
         type: 'normalization-flag',
         text: `${norm.flags.zeroWidth} zero-width + ${norm.flags.homoglyph} homoglyph swap${norm.flags.homoglyph === 1 ? '' : 's'}`,
         severity: 'critical',
-        suggestion: 'Text contains invisible/lookalike chars typical of AI-humanizer bypass tools. Re-type from your own keyboard.',
+        suggestion:
+          'Text contains invisible/lookalike chars typical of AI-humanizer bypass tools. Re-type from your own keyboard.',
       });
     }
     if (norm.flags.roleplay >= 2) {
@@ -1663,7 +1761,8 @@ const AIDetector = (() => {
     // lead term and the dash — "- **Lingering-attention claims**
     // (`lingering-attention`) — the share-post frame…" is the same definition
     // typography as the bare form. Found by the self-scan (see PROOF.md, #67).
-    const SEPARATOR_DASH_RE = /^\s*(?:[-*+]|\d+[.)])\s+(?:\*\*[^*\n]+\*\*|\[[^\]\n]+\]\([^)\n]*\))(?:[ \t]*(?:\([^)\n]*\)|`[^`\n]+`))?[ \t]*—/gm;
+    const SEPARATOR_DASH_RE =
+      /^\s*(?:[-*+]|\d+[.)])\s+(?:\*\*[^*\n]+\*\*|\[[^\]\n]+\]\([^)\n]*\))(?:[ \t]*(?:\([^)\n]*\)|`[^`\n]+`))?[ \t]*—/gm;
 
     // Keep-a-Changelog version headings (`## [3.21.0] — 2026-07-30`) join a
     // label to a value exactly as a list separator does. Deliberately narrow:
@@ -1682,13 +1781,14 @@ const AIDetector = (() => {
     {
       const hasCurly = /[“”‘’]/.test(text);
       const totalEmDashes = (text.match(/—/g) || []).length;
-      const separatorEmDashes = (text.match(SEPARATOR_DASH_RE) || []).length
-        + (text.match(VERSION_HEADING_DASH_RE) || []).length;
+      const separatorEmDashes =
+        (text.match(SEPARATOR_DASH_RE) || []).length + (text.match(VERSION_HEADING_DASH_RE) || []).length;
       const hasEmDash = totalEmDashes > separatorEmDashes;
       const oxfordHit = text.match(/\b\w+,\s+\w+,\s+and\s+\w+/g);
       const hasOxford = (oxfordHit?.length || 0) >= 1;
       const doubleSpaces = (text.match(/[^.!?]  +/g) || []).length;
-      const missingApos = /\b(?:dont|wont|cant|isnt|wasnt|shouldnt|wouldnt|couldnt|youre|theyre|its\s+a\s+\w+ing)\b/i.test(text);
+      const missingApos =
+        /\b(?:dont|wont|cant|isnt|wasnt|shouldnt|wouldnt|couldnt|youre|theyre|its\s+a\s+\w+ing)\b/i.test(text);
       const clean = doubleSpaces === 0 && !missingApos;
       const signals = [hasCurly, hasEmDash, hasOxford, clean].filter(Boolean).length;
       if (signals >= 4 && wordCount >= 80) {
@@ -1696,7 +1796,8 @@ const AIDetector = (() => {
           type: 'smart-punct-signature',
           text: 'curly-quotes + em-dash + Oxford comma + zero typos',
           severity: 'high',
-          suggestion: 'Smart-punctuation signature consistent with LLM output. Humans typing into textareas rarely produce all four.',
+          suggestion:
+            'Smart-punctuation signature consistent with LLM output. Humans typing into textareas rarely produce all four.',
         });
       }
     }
@@ -1708,12 +1809,14 @@ const AIDetector = (() => {
     // signature: low variance of per-paragraph punctuation density.
     // Requires ≥4 paragraphs to be meaningful.
     if (paragraphs.length >= 4) {
-      const densities = paragraphs.map((p) => {
-        const words = (p.match(/\S+/g) || []).length;
-        if (words < 5) return null;
-        const puncts = (p.match(/[,;:—()]/g) || []).length;
-        return puncts / words;
-      }).filter((d) => d !== null);
+      const densities = paragraphs
+        .map((p) => {
+          const words = (p.match(/\S+/g) || []).length;
+          if (words < 5) return null;
+          const puncts = (p.match(/[,;:—()]/g) || []).length;
+          return puncts / words;
+        })
+        .filter((d) => d !== null);
       if (densities.length >= 4) {
         const mean = densities.reduce((a, b) => a + b, 0) / densities.length;
         const variance = densities.reduce((s, d) => s + (d - mean) ** 2, 0) / densities.length;
@@ -1726,7 +1829,8 @@ const AIDetector = (() => {
             type: 'punct-distribution',
             text: `Punctuation density uniform across paragraphs (CV=${cv.toFixed(2)})`,
             severity: 'medium',
-            suggestion: 'AI text holds punctuation density steady; human writers swing between dense and sparse paragraphs.',
+            suggestion:
+              'AI text holds punctuation density steady; human writers swing between dense and sparse paragraphs.',
           });
         }
       }
@@ -1743,14 +1847,83 @@ const AIDetector = (() => {
     // threshold flag.
     if (wordCount >= 150) {
       const FUNC_WORDS = new Set([
-        'the','a','an','and','or','but','of','to','in','on','at','by','for','with',
-        'from','as','is','was','are','were','be','been','being','have','has','had',
-        'do','does','did','will','would','should','could','may','might','must','can',
-        'this','that','these','those','it','its','they','them','their','there','here',
-        'we','our','us','i','you','your','he','she','his','her','him','not','no','so',
-        'if','then','than','when','where','which','who','what','how','why','because',
+        'the',
+        'a',
+        'an',
+        'and',
+        'or',
+        'but',
+        'of',
+        'to',
+        'in',
+        'on',
+        'at',
+        'by',
+        'for',
+        'with',
+        'from',
+        'as',
+        'is',
+        'was',
+        'are',
+        'were',
+        'be',
+        'been',
+        'being',
+        'have',
+        'has',
+        'had',
+        'do',
+        'does',
+        'did',
+        'will',
+        'would',
+        'should',
+        'could',
+        'may',
+        'might',
+        'must',
+        'can',
+        'this',
+        'that',
+        'these',
+        'those',
+        'it',
+        'its',
+        'they',
+        'them',
+        'their',
+        'there',
+        'here',
+        'we',
+        'our',
+        'us',
+        'i',
+        'you',
+        'your',
+        'he',
+        'she',
+        'his',
+        'her',
+        'him',
+        'not',
+        'no',
+        'so',
+        'if',
+        'then',
+        'than',
+        'when',
+        'where',
+        'which',
+        'who',
+        'what',
+        'how',
+        'why',
+        'because',
       ]);
-      const seq = tokens.map((t) => FUNC_WORDS.has(t) ? t : '_').filter((_, i, arr) => arr[i] !== '_' || (i > 0 && arr[i - 1] !== '_'));
+      const seq = tokens
+        .map((t) => (FUNC_WORDS.has(t) ? t : '_'))
+        .filter((_, i, arr) => arr[i] !== '_' || (i > 0 && arr[i - 1] !== '_'));
       if (seq.length >= 50) {
         const trigrams = {};
         for (let i = 0; i < seq.length - 2; i++) {
@@ -1773,7 +1946,8 @@ const AIDetector = (() => {
             type: 'fnword-trigram-entropy',
             text: `Function-word trigram entropy ${normalized.toFixed(2)} (low)`,
             severity: 'medium',
-            suggestion: 'Grammatical structure is unusually repetitive. AI sampling collapses onto narrower templates than human writing.',
+            suggestion:
+              'Grammatical structure is unusually repetitive. AI sampling collapses onto narrower templates than human writing.',
           });
         }
         // Degenerate case: single distinct trigram repeated across the
@@ -1785,7 +1959,8 @@ const AIDetector = (() => {
             type: 'fnword-trigram-entropy',
             text: 'Single function-word trigram repeated across document',
             severity: 'high',
-            suggestion: 'Grammatical structure is fully degenerate — every clause uses the same function-word skeleton.',
+            suggestion:
+              'Grammatical structure is fully degenerate — every clause uses the same function-word skeleton.',
           });
         }
       }
@@ -1797,15 +1972,17 @@ const AIDetector = (() => {
     // same sentence-length variance. Humans vary: terse paras next to
     // discursive paras. Measure variance of CV across paragraphs.
     if (paragraphs.length >= 4) {
-      const cvs = paragraphs.map((p) => {
-        const sents = getSentences(p);
-        if (sents.length < 3) return null;
-        const lens = sents.map(countWords);
-        const m = lens.reduce((a, b) => a + b, 0) / lens.length;
-        if (m === 0) return null;
-        const v = lens.reduce((s, l) => s + (l - m) ** 2, 0) / lens.length;
-        return Math.sqrt(v) / m;
-      }).filter((c) => c !== null);
+      const cvs = paragraphs
+        .map((p) => {
+          const sents = getSentences(p);
+          if (sents.length < 3) return null;
+          const lens = sents.map(countWords);
+          const m = lens.reduce((a, b) => a + b, 0) / lens.length;
+          if (m === 0) return null;
+          const v = lens.reduce((s, l) => s + (l - m) ** 2, 0) / lens.length;
+          return Math.sqrt(v) / m;
+        })
+        .filter((c) => c !== null);
       if (cvs.length >= 4) {
         const cvMean = cvs.reduce((a, b) => a + b, 0) / cvs.length;
         const cvVar = cvs.reduce((s, c) => s + (c - cvMean) ** 2, 0) / cvs.length;
@@ -1818,7 +1995,8 @@ const AIDetector = (() => {
             type: 'cross-para-burstiness',
             text: `Sentence-rhythm uniform across paragraphs (σCV=${cvStd.toFixed(2)})`,
             severity: 'medium',
-            suggestion: 'Every paragraph has the same internal rhythm. Humans vary cadence between terse and discursive paragraphs.',
+            suggestion:
+              'Every paragraph has the same internal rhythm. Humans vary cadence between terse and discursive paragraphs.',
           });
         }
       }
@@ -1873,7 +2051,8 @@ const AIDetector = (() => {
         type: 'tier3-phrase-cluster',
         text: `${distinctPhrasesHit} distinct boilerplate phrases`,
         severity: 'high',
-        suggestion: 'Several stock crypto/web3 phrases stacked in one piece. Rewrite around one specific claim or observation.',
+        suggestion:
+          'Several stock crypto/web3 phrases stacked in one piece. Rewrite around one specific claim or observation.',
       });
     }
 
@@ -1892,8 +2071,7 @@ const AIDetector = (() => {
     // Code is masked and non-tag `#` forms are subtracted first — see maskCode
     // and isSocialTag. Without them a changelog paragraph citing six issue
     // numbers, or a palette listing six hex colours, scored as a tag block.
-    const hashtagMatches = [...maskCode(text).matchAll(/(?:^|\W)#(\w[\w-]*)/g)]
-      .filter((m) => isSocialTag(m[1]));
+    const hashtagMatches = [...maskCode(text).matchAll(/(?:^|\W)#(\w[\w-]*)/g)].filter((m) => isSocialTag(m[1]));
     if (hashtagMatches.length >= 6) {
       issues.push({
         type: 'hashtag-stuff',
@@ -1921,7 +2099,8 @@ const AIDetector = (() => {
     // "advanced") that share the same surface form.
     const lines = text.split(/\r?\n/);
     const bulletRe = /^\s*(?:\*|-|•|\+)\s+(.+)$/;
-    const verbRe = /\b(?:is|are|was|were|has|have|had|will|would|should|must|do|does|did|can|could|may|might|am|been|being)\b/i;
+    const verbRe =
+      /\b(?:is|are|was|were|has|have|had|will|would|should|must|do|does|did|can|could|may|might|am|been|being)\b/i;
     const fenceRe = /^\s*(?:```|~~~)/;
     let run = [];
     let blankStreak = 0;
@@ -1937,7 +2116,8 @@ const AIDetector = (() => {
             type: 'bullet-np-list',
             text: `${run.length}-item bullet list of bare noun phrases`,
             severity: 'high',
-            suggestion: 'Convert to a prose paragraph or merge items. Long lists of bare adj+noun pairs read as AI scaffolding.',
+            suggestion:
+              'Convert to a prose paragraph or merge items. Long lists of bare adj+noun pairs read as AI scaffolding.',
           });
         }
       }
@@ -1998,8 +2178,8 @@ const AIDetector = (() => {
     // and still counts, as does a mid-sentence "**bold** — like this"
     // splice. Em dash only — the `--` substitute is never carved out.
     const rawEmDashCount = (text.match(/—|(?<=\s)--(?=\s|$)|(?<=^|\s)--(?=\s)/gm) || []).length;
-    const separatorDashCount = (text.match(SEPARATOR_DASH_RE) || []).length
-      + (text.match(VERSION_HEADING_DASH_RE) || []).length;
+    const separatorDashCount =
+      (text.match(SEPARATOR_DASH_RE) || []).length + (text.match(VERSION_HEADING_DASH_RE) || []).length;
     const emDashCount = rawEmDashCount - separatorDashCount;
     const emDashRate = emDashCount / (wordCount / 1000);
     if (emDashRate > 1) {
@@ -2013,7 +2193,7 @@ const AIDetector = (() => {
 
     // ── 23. Sentence length uniformity ───────────────────────────
     if (sentences.length >= 5) {
-      const lengths = sentences.map(s => countWords(s));
+      const lengths = sentences.map((s) => countWords(s));
       const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length;
       const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
       const stdDev = Math.sqrt(variance);
@@ -2055,16 +2235,17 @@ const AIDetector = (() => {
           type: 'low-ttr',
           text: `Vocabulary diversity ${(ttr * 100).toFixed(1)}% (${unique} unique / ${tokens.length} tokens)`,
           severity: 'low',
-          suggestion: 'Text reuses a narrow word set. Vary nouns and verbs deliberately, or check if the topic genuinely warrants the repetition.',
+          suggestion:
+            'Text reuses a narrow word set. Vary nouns and verbs deliberately, or check if the topic genuinely warrants the repetition.',
         });
       }
     }
 
     // ── 24. Paragraph length uniformity ──────────────────────────
     if (paragraphs.length >= 4) {
-      const paraLengths = paragraphs.map(p => getSentences(p).length);
+      const paraLengths = paragraphs.map((p) => getSentences(p).length);
       const avg = paraLengths.reduce((a, b) => a + b, 0) / paraLengths.length;
-      const allSimilar = paraLengths.every(l => Math.abs(l - avg) <= 1);
+      const allSimilar = paraLengths.every((l) => Math.abs(l - avg) <= 1);
       if (allSimilar && avg >= 3) {
         issues.push({
           type: 'uniformity',
@@ -2133,7 +2314,8 @@ const AIDetector = (() => {
     // comprehensive, leverage, ecosystem) legitimately overlaps with
     // systems-programming idiom. Word-count gate prevents short ESL or
     // contrived adversarial sentences from tripping the corroborator.
-    const tier1Distinct = new Set(deduped.filter((i) => i.type === 'tier1').map((i) => (i.text || '').toLowerCase())).size;
+    const tier1Distinct = new Set(deduped.filter((i) => i.type === 'tier1').map((i) => (i.text || '').toLowerCase()))
+      .size;
     const hasTier2Cluster = tier2Clusters >= 2;
     const hasTransition = deduped.some((i) => i.type === 'transition');
     const denseAIVocab = wordCount >= 150 && tier1Distinct >= 5 && hasTier2Cluster && hasTransition;
@@ -2260,7 +2442,14 @@ const AIDetector = (() => {
     for (let i = 0; i < sentences.length; i++) {
       if (hits[i].count > 0) {
         if (cur === null) {
-          cur = { startSentence: i, endSentence: i, start: sentences[i].start, end: sentences[i].end, hitCount: hits[i].count, weight: hits[i].weight };
+          cur = {
+            startSentence: i,
+            endSentence: i,
+            start: sentences[i].start,
+            end: sentences[i].end,
+            hitCount: hits[i].count,
+            weight: hits[i].weight,
+          };
         } else {
           cur.endSentence = i;
           cur.end = sentences[i].end;
@@ -2320,16 +2509,14 @@ const AIDetector = (() => {
     const hasReasoning = issues.some((i) => i.type === 'reasoning-artifact');
     const hasChatbot = issues.some((i) => i.type === 'chatbot');
     const strongCorrob =
-      (hasCutoff ? 1 : 0) +
-      (hasNormFlag ? 1 : 0) +
-      (hasReasoning && hasChatbot ? 1 : 0) +
-      (denseAIVocab ? 1 : 0);
+      (hasCutoff ? 1 : 0) + (hasNormFlag ? 1 : 0) + (hasReasoning && hasChatbot ? 1 : 0) + (denseAIVocab ? 1 : 0);
 
     // Weak (stylometric) corroborators — suggestive on their own,
     // dispositive in combination. Smart-punct-signature matches
     // Word-edited human prose so doesn't count without other support.
-    const stylometricHits = ['punct-distribution', 'cross-para-burstiness', 'fnword-trigram-entropy']
-      .filter((t) => issues.some((i) => i.type === t)).length;
+    const stylometricHits = ['punct-distribution', 'cross-para-burstiness', 'fnword-trigram-entropy'].filter((t) =>
+      issues.some((i) => i.type === t),
+    ).length;
     const hasSmartPunct = issues.some((i) => i.type === 'smart-punct-signature');
     const weakCorrob = (stylometricHits >= 2 ? 1 : 0) + (hasSmartPunct ? 1 : 0);
 
@@ -2358,7 +2545,8 @@ const AIDetector = (() => {
     // sum=1 exactly. Sub-1% drift would otherwise hide in toFixed.
     const aiSoft = Math.min(0.97, score / 100 + totalCorrob * 0.06 + strongCorrob * 0.08);
     let p;
-    if (classification === 'HUMAN_ONLY') p = { human: Math.max(0.6, 1 - aiSoft), mixed: Math.min(0.35, aiSoft * 0.8), ai: Math.min(0.1, aiSoft * 0.3) };
+    if (classification === 'HUMAN_ONLY')
+      p = { human: Math.max(0.6, 1 - aiSoft), mixed: Math.min(0.35, aiSoft * 0.8), ai: Math.min(0.1, aiSoft * 0.3) };
     else if (classification === 'AI_ONLY') p = { human: Math.max(0.02, 1 - aiSoft - 0.05), mixed: 0.1, ai: aiSoft };
     else p = { human: Math.max(0.15, 0.6 - aiSoft * 0.5), mixed: 0.5, ai: aiSoft * 0.7 };
     const rawSum = p.human + p.mixed + p.ai;
@@ -2402,7 +2590,7 @@ const AIDetector = (() => {
 
   function deduplicateIssues(issues) {
     const seen = new Set();
-    return issues.filter(issue => {
+    return issues.filter((issue) => {
       const key = `${issue.type}:${issue.text.toLowerCase()}`;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -2419,14 +2607,14 @@ const AIDetector = (() => {
   };
 
   const TYPE_LABELS = {
-    'tier1': 'AI vocabulary',
+    tier1: 'AI vocabulary',
     'tier1-clarity': 'Wordiness',
-    'tier2': 'Word cluster',
-    'tier3': 'Overused word',
-    'transition': 'AI transition',
-    'chatbot': 'Chatbot artifact',
-    'sycophantic': 'Sycophantic tone',
-    'filler': 'Filler phrase',
+    tier2: 'Word cluster',
+    tier3: 'Overused word',
+    transition: 'AI transition',
+    chatbot: 'Chatbot artifact',
+    sycophantic: 'Sycophantic tone',
+    filler: 'Filler phrase',
     'generic-conclusion': 'Generic conclusion',
     'lets-construction': '"Let\'s" opener',
     'reasoning-artifact': 'Reasoning artifact',
@@ -2443,8 +2631,8 @@ const AIDetector = (() => {
     'rhetorical-question': 'Rhetorical question',
     'confidence-calibration': 'Confidence stacking',
     'em-dash': 'Em dash overuse',
-    'uniformity': 'Rhythm uniformity',
-    'formatting': 'Formatting',
+    uniformity: 'Rhythm uniformity',
+    formatting: 'Formatting',
     'tier3-phrase': 'Boilerplate phrase',
     'tier3-phrase-cluster': 'Boilerplate cluster',
     'hashtag-stuff': 'Hashtag stuffing',

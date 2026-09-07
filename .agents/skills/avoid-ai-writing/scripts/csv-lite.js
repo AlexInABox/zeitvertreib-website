@@ -33,20 +33,52 @@ function parseCsv(text, opts = {}) {
 
     if (inQuotes) {
       if (ch === '"') {
-        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
-        inQuotes = false; i++; continue;
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i++;
+        continue;
       }
-      field += ch; i++; continue;
+      field += ch;
+      i++;
+      continue;
     }
 
-    if (ch === '"') { inQuotes = true; sawAnyQuote = true; i++; continue; }
-    if (ch === ',') { record.push(field); field = ''; i++; continue; }
-    if (ch === '\r') { i++; continue; }
-    if (ch === '\n') { record.push(field); rows.push(record); record = []; field = ''; i++; continue; }
-    field += ch; i++;
+    if (ch === '"') {
+      inQuotes = true;
+      sawAnyQuote = true;
+      i++;
+      continue;
+    }
+    if (ch === ',') {
+      record.push(field);
+      field = '';
+      i++;
+      continue;
+    }
+    if (ch === '\r') {
+      i++;
+      continue;
+    }
+    if (ch === '\n') {
+      record.push(field);
+      rows.push(record);
+      record = [];
+      field = '';
+      i++;
+      continue;
+    }
+    field += ch;
+    i++;
   }
   // Trailing record with no final newline.
-  if (field.length || record.length) { record.push(field); rows.push(record); }
+  if (field.length || record.length) {
+    record.push(field);
+    rows.push(record);
+  }
 
   const header = rows.shift() || [];
   // A byte-range request almost always cuts the final record in half, and an

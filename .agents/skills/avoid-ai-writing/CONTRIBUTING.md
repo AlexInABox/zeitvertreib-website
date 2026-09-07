@@ -6,14 +6,14 @@ keep the project coherent.
 
 ## How the repo fits together
 
-| Path | What it holds |
-|------|---------------|
-| `SKILL.md` | Entry instructions, severity tiers, output formats, and guardrails. |
-| `references/patterns.md` | Canonical pattern catalog, word tiers, context and voice profiles. |
-| `detector/patterns.js` | The deterministic engine — the executable subset of the rules. |
-| `detector/CATEGORIES.md` | The map between references/patterns.md rules and detector `type`s. Keep it current. |
-| `README.md` | The pitch and the numbered prose-pattern list. |
-| `cursor-rules/`, `plugins/` | Editor and tool integrations. |
+| Path                        | What it holds                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| `SKILL.md`                  | Entry instructions, severity tiers, output formats, and guardrails.                 |
+| `references/patterns.md`    | Canonical pattern catalog, word tiers, context and voice profiles.                  |
+| `detector/patterns.js`      | The deterministic engine — the executable subset of the rules.                      |
+| `detector/CATEGORIES.md`    | The map between references/patterns.md rules and detector `type`s. Keep it current. |
+| `README.md`                 | The pitch and the numbered prose-pattern list.                                      |
+| `cursor-rules/`, `plugins/` | Editor and tool integrations.                                                       |
 
 ## Adding or changing a rule
 
@@ -22,7 +22,7 @@ First decide which kind of rule it is:
 - **Regex-detectable** (a phrase, a character, a structural shape) → add it to
   `references/patterns.md`, add the detection to `detector/patterns.js` with a new `type`, and
   add a row to `detector/CATEGORIES.md`. Cover it with a fixture in
-  `detector/patterns.test.js` (both a true positive and a case that must *not*
+  `detector/patterns.test.js` (both a true positive and a case that must _not_
   fire).
 - **Judgment-only** (needs reading for meaning — tone, structure, name-dropping)
   → add it to `references/patterns.md` prose and list it under "Skill-only" in

@@ -140,7 +140,10 @@ async function build(spec, log = () => {}) {
   const rand = mulberry32(seed);
   const selected = [];
   for (const key of [...pool.keys()].sort()) {
-    const rows = pool.get(key).slice().sort((a, b) => a.id.localeCompare(b.id));
+    const rows = pool
+      .get(key)
+      .slice()
+      .sort((a, b) => a.id.localeCompare(b.id));
     for (let i = rows.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [rows[i], rows[j]] = [rows[j], rows[i]];
@@ -164,7 +167,9 @@ async function build(spec, log = () => {}) {
   const machineModels = Object.keys(byModel).filter((m) => m !== 'human');
   const warnings = [];
   if (machineModels.length < 5) {
-    warnings.push(`only ${machineModels.length} machine model families sampled (want >= 5): ${machineModels.join(', ')}`);
+    warnings.push(
+      `only ${machineModels.length} machine model families sampled (want >= 5): ${machineModels.join(', ')}`,
+    );
   }
   if (Object.keys(byDomain).length < 5) {
     warnings.push(`only ${Object.keys(byDomain).length} domains sampled (want >= 5)`);

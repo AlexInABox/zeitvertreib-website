@@ -138,12 +138,16 @@ test('#123: same-line and unclosed HTML comments are source-only', () => {
     const rendered = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
     assert.equal(rendered.score, baseline.score, `${name}: hidden text must not affect the score`);
     assert.equal(rendered.stats.maskedHtmlComments, 1);
-    assert.equal(rendered.issues.some((issue) => /seamless|robust|testament/i.test(issue.text || '')), false);
+    assert.equal(
+      rendered.issues.some((issue) => /seamless|robust|testament/i.test(issue.text || '')),
+      false,
+    );
   }
 });
 
 test('#123: comment markers inside fenced and inline code remain visible', () => {
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
   const cases = [
     ['fenced-unclosed', ['```html', '<!-- example marker stays open', '```', prose].join('\n')],
     ['inline-unclosed', `The guide shows \`<!-- example marker\` in code before the sample. ${prose}`],
@@ -154,7 +158,10 @@ test('#123: comment markers inside fenced and inline code remain visible', () =>
     const result = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
     assert.notEqual(result.label, 'Too short', `${name}: code must not hide later prose`);
     assert.equal(result.stats.maskedHtmlComments, 0, `${name}: code markers are not comments`);
-    assert.ok(result.issues.some((issue) => issue.type === 'transition'), `${name}: later prose must be analyzed`);
+    assert.ok(
+      result.issues.some((issue) => issue.type === 'transition'),
+      `${name}: later prose must be analyzed`,
+    );
   }
 });
 
@@ -186,7 +193,10 @@ test('#123: an indented HTML comment under a list item stays hidden', () => {
   const result = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
 
   assert.equal(result.stats.maskedHtmlComments, 1);
-  assert.equal(result.issues.some((issue) => /seamless|robust|pivotal/i.test(issue.text || '')), false);
+  assert.equal(
+    result.issues.some((issue) => /seamless|robust|pivotal/i.test(issue.text || '')),
+    false,
+  );
   assert.ok(result.issues.some((issue) => issue.type === 'transition' && issue.text === 'Moreover'));
 });
 
@@ -212,7 +222,8 @@ test('#123: list syntax inside a comment cannot hide later indented code', () =>
 
 test('#123: backticks inside an HTML comment do not protect its closing delimiter', () => {
   const commentPrefix = '<!-- plan `-->';
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
   const visibleText = `\` Furthermore, seamless robust and pivotal notes stay hidden -->\n${prose}`;
   const baseline = AIDetector.analyzeText(visibleText);
   const source = commentPrefix + visibleText;
@@ -232,9 +243,7 @@ test('#123: backticks inside an HTML comment do not protect its closing delimite
   );
   assert.deepEqual(
     result.issues.filter((issue) => Number.isInteger(issue.index)).map((issue) => issue.index),
-    baseline.issues
-      .filter((issue) => Number.isInteger(issue.index))
-      .map((issue) => issue.index + commentPrefix.length),
+    baseline.issues.filter((issue) => Number.isInteger(issue.index)).map((issue) => issue.index + commentPrefix.length),
   );
   for (const issue of result.issues.filter((candidate) => Number.isInteger(candidate.index))) {
     assert.equal(issue.index, source.indexOf(issue.text), `${issue.text}: source offset must survive masking`);
@@ -242,18 +251,26 @@ test('#123: backticks inside an HTML comment do not protect its closing delimite
 });
 
 test('#123: code delimiters in one comment cannot hide a later comment', () => {
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
   const hidden = 'Furthermore, this seamless robust paradigm is a testament to progress.';
   const text = ['<!--', '```', '-->', prose, `<!-- ${hidden} -->`].join('\n');
   const result = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
 
   assert.equal(result.stats.maskedHtmlComments, 2);
-  assert.equal(result.issues.some((issue) => /seamless|robust|paradigm|testament/i.test(issue.text || '')), false);
-  assert.ok(result.issues.some((issue) => issue.type === 'transition'), 'visible prose must still fire');
+  assert.equal(
+    result.issues.some((issue) => /seamless|robust|paradigm|testament/i.test(issue.text || '')),
+    false,
+  );
+  assert.ok(
+    result.issues.some((issue) => issue.type === 'transition'),
+    'visible prose must still fire',
+  );
 });
 
 test('#123: short HTML comments close at an overlapping delimiter', () => {
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
 
   for (const comment of ['<!-->', '<!--->']) {
     const result = AIDetector.analyzeText(`${comment}\n${prose}`, { sourceMode: 'rendered-markdown' });
@@ -265,7 +282,8 @@ test('#123: short HTML comments close at an overlapping delimiter', () => {
 
 test('#123: rendered Markdown preserves issue offsets after masked source', () => {
   const sourceOnly = '<!-- This seamless, robust paradigm should stay hidden. -->\r\n';
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
   const result = AIDetector.analyzeText(sourceOnly + prose, { sourceMode: 'rendered-markdown' });
   const transition = result.issues.find((issue) => issue.type === 'transition');
 
@@ -277,7 +295,8 @@ test('#123: rendered Markdown preserves issue offsets after masked source', () =
 
 test('#123: multiline blockquote masking preserves later source offsets', () => {
   const quote = '> This seamless landscape is a testament to progress.\r\n> Moreover, it is a robust paradigm.\r\n';
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
   const result = AIDetector.analyzeText(quote + prose, { sourceMode: 'rendered-markdown' });
   const transition = result.issues.find((issue) => issue.type === 'transition');
 
@@ -304,7 +323,8 @@ test('#123: plain mode preserves legacy blockquote paragraph scoring', () => {
   );
   assert.equal(result.stats.quotedLines, 2);
 
-  const leadingWhitespace = '\n\nMoreover, the editor checked the original document before changing the published account for the morning edition.';
+  const leadingWhitespace =
+    '\n\nMoreover, the editor checked the original document before changing the published account for the morning edition.';
   assert.equal(
     AIDetector.analyzeText(leadingWhitespace).highlight_sentence_for_ai[0].start,
     0,
@@ -313,11 +333,18 @@ test('#123: plain mode preserves legacy blockquote paragraph scoring', () => {
 });
 
 test('#123: rendered Markdown recognizes blank-first-line and CR-only frontmatter', () => {
-  const prose = 'Moreover, the editor checked the original document before changing the published account for the morning edition.';
+  const prose =
+    'Moreover, the editor checked the original document before changing the published account for the morning edition.';
   const baseline = AIDetector.analyzeText(prose);
   const cases = [
-    ['blank-first-line', ['---', '', 'title: Draft', 'description: A comprehensive and pivotal exploration', '---', ''].join('\n')],
-    ['CR-only', ['---', '', 'title: Draft', 'description: A comprehensive and pivotal exploration', '---', ''].join('\r')],
+    [
+      'blank-first-line',
+      ['---', '', 'title: Draft', 'description: A comprehensive and pivotal exploration', '---', ''].join('\n'),
+    ],
+    [
+      'CR-only',
+      ['---', '', 'title: Draft', 'description: A comprehensive and pivotal exploration', '---', ''].join('\r'),
+    ],
   ];
 
   for (const [name, sourceOnly] of cases) {
@@ -333,7 +360,9 @@ test('#123: rendered Markdown recognizes blank-first-line and CR-only frontmatte
 
 test('#123: rendered Markdown does not mistake a thematic break for frontmatter', () => {
   for (const text of [
-    ['---', '', 'Moreover, the team described a seamless and robust landscape in the final report.', '', '---'].join('\n'),
+    ['---', '', 'Moreover, the team described a seamless and robust landscape in the final report.', '', '---'].join(
+      '\n',
+    ),
     ['---', 'Moreover, the team described a seamless and robust landscape in the final report.', '---'].join('\n'),
   ]) {
     const result = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdown' });
@@ -343,7 +372,8 @@ test('#123: rendered Markdown does not mistake a thematic break for frontmatter'
 });
 
 test('#123: unknown source modes fall back visibly to plain', () => {
-  const text = '<!-- Moreover, this seamless and robust paradigm is hidden. -->\nVisible prose has enough words for the detector to score this input normally.';
+  const text =
+    '<!-- Moreover, this seamless and robust paradigm is hidden. -->\nVisible prose has enough words for the detector to score this input normally.';
   const result = AIDetector.analyzeText(text, { sourceMode: 'rendered-markdonw' });
 
   assert.equal(result.stats.sourceMode, 'plain');
@@ -364,11 +394,11 @@ test('#123: unknown source modes fall back visibly to plain', () => {
 test('repeated Tier 1 phrase does not inflate score linearly', () => {
   const single = AIDetector.analyzeText('We delve into the landscape of many things today.');
   const fivefold = AIDetector.analyzeText(
-    'We delve into the landscape. We delve into the landscape. We delve into the landscape. We delve into the landscape. We delve into the landscape of things.'
+    'We delve into the landscape. We delve into the landscape. We delve into the landscape. We delve into the landscape. We delve into the landscape of things.',
   );
   assert.ok(
     fivefold.score <= single.score + 20,
-    `repeated phrase should not 5× the score (single=${single.score}, fivefold=${fivefold.score})`
+    `repeated phrase should not 5× the score (single=${single.score}, fivefold=${fivefold.score})`,
   );
 });
 
@@ -431,8 +461,14 @@ test('em-dash carve-out stays narrow — prose dashes in a heading still fire (#
 test('hedge-stack does not fire on ordinary negation or inverted questions (#69)', () => {
   // Measured on the human-control corpus: 3 of 4 hedge-stack flags were this
   // over-match. The old pattern allowed two words between modal and adverb.
-  const frame = (s) => `The committee reviewed the proposal at length and concluded that it ${s} work as designed, given every constraint documented during the previous quarter.`;
-  for (const phrase of ['could not possibly', 'could never possibly', 'could a savage possibly', 'might a person conceivably']) {
+  const frame = (s) =>
+    `The committee reviewed the proposal at length and concluded that it ${s} work as designed, given every constraint documented during the previous quarter.`;
+  for (const phrase of [
+    'could not possibly',
+    'could never possibly',
+    'could a savage possibly',
+    'might a person conceivably',
+  ]) {
     const r = AIDetector.analyzeText(frame(phrase));
     assert.equal(r.issues.filter((i) => i.type === 'hedge-stack').length, 0, `"${phrase}" should not fire`);
   }
@@ -494,14 +530,15 @@ test('#73: em-dash overuse remains a P2 edit without affecting authorship output
 });
 
 test('em-dash detector ignores CLI flags like --save-dev', () => {
-  const text = 'Run npm install --save-dev and then npm run build --no-verify --silent. Takes about ten seconds on this machine. The package is installed into node_modules directly after the install command completes successfully.';
+  const text =
+    'Run npm install --save-dev and then npm run build --no-verify --silent. Takes about ten seconds on this machine. The package is installed into node_modules directly after the install command completes successfully.';
   const r = AIDetector.analyzeText(text);
   const emDashIssues = r.issues.filter((i) => i.type === 'em-dash');
   assert.equal(emDashIssues.length, 0, 'CLI flags should not count as em dashes');
 });
 
 test('chatbot artifacts score as P0 critical', () => {
-  const text = "I hope this helps! Let me know if you need anything else. Great question! Feel free to reach out.";
+  const text = 'I hope this helps! Let me know if you need anything else. Great question! Feel free to reach out.';
   const r = AIDetector.analyzeText(text);
   const chatbotIssues = r.issues.filter((i) => i.type === 'chatbot');
   assert.ok(chatbotIssues.length >= 2, `expected chatbot detections, got ${chatbotIssues.length}`);
@@ -547,21 +584,24 @@ test('"Interesting part of the project:" header opener flags emotional-flatline'
   // The canonical AI list-intro pattern matched "the most interesting
   // part" but missed the bare "Interesting part of X:" section-header
   // form. v3.4 covers both shapes.
-  const text = '\nInteresting part of the project:\nSome content follows that talks about the real on-chain tokenomics of the system at length.';
+  const text =
+    '\nInteresting part of the project:\nSome content follows that talks about the real on-chain tokenomics of the system at length.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('emotional-flatline'), 'expected emotional-flatline flag');
 });
 
 test('"the line I keep coming back to" flags lingering-attention', () => {
-  const text = 'Recorded with a guest yesterday. The line I keep coming back to is that agents behave like teenagers on an unbounded goal.';
+  const text =
+    'Recorded with a guest yesterday. The line I keep coming back to is that agents behave like teenagers on an unbounded goal.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('lingering-attention'), 'expected lingering-attention flag');
 });
 
 test('"I cannot stop thinking about" flags lingering-attention', () => {
-  const text = "I can't stop thinking about the runtime guardrail argument he made near the end of our conversation about agent drift.";
+  const text =
+    "I can't stop thinking about the runtime guardrail argument he made near the end of our conversation about agent drift.";
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('lingering-attention'), 'expected lingering-attention flag');
@@ -570,21 +610,24 @@ test('"I cannot stop thinking about" flags lingering-attention', () => {
 test('bare "I keep coming back to X because ..." does NOT flag lingering-attention', () => {
   // Precision carve-out: the bare verb phrase with a reason attached is
   // legitimate analytical writing, so only the noun-anchored frame fires.
-  const text = 'I keep coming back to the exit-voice framing because it predicts which engineers quit and which ones file the RFC instead.';
+  const text =
+    'I keep coming back to the exit-voice framing because it predicts which engineers quit and which ones file the RFC instead.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('lingering-attention'), 'bare reasoned form must not flag');
 });
 
 test('"real on-chain tokenomics" flags real-actual-inflation', () => {
-  const text = 'The team is researching real on-chain tokenomics and actual reward sustainability versus electricity cost across the network deployment phase.';
+  const text =
+    'The team is researching real on-chain tokenomics and actual reward sustainability versus electricity cost across the network deployment phase.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('real-actual-inflation'), 'expected real-actual-inflation flag');
 });
 
 test('hashtag-stuff does not fire on prose with 2-3 hashtags', () => {
-  const text = 'Shipped the new build last night. Catching bugs faster with the new instrumentation. Notes are in the doc, and the next push lands tomorrow. #buildinpublic #devlog';
+  const text =
+    'Shipped the new build last night. Catching bugs faster with the new instrumentation. Notes are in the doc, and the next push lands tomorrow. #buildinpublic #devlog';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('hashtag-stuff'), 'should not flag 2 hashtags as hashtag-stuff');
@@ -597,7 +640,10 @@ test('"load-bearing" flags only allowlisted attributive abstractions (#56)', () 
   const lbHits = (text) => {
     const r = AIDetector.analyzeText(text);
     assert.ok(!r.tooShort, `fixture must clear the length gate (wordCount >= 10): ${text}`);
-    return { hits: r.issues.filter((i) => /load[- ]bearing/i.test(i.text)), types: new Set(r.issues.map((i) => i.type)) };
+    return {
+      hits: r.issues.filter((i) => /load[- ]bearing/i.test(i.text)),
+      types: new Set(r.issues.map((i) => i.type)),
+    };
   };
 
   const metaphors = [
@@ -608,19 +654,46 @@ test('"load-bearing" flags only allowlisted attributive abstractions (#56)', () 
   for (const text of metaphors) {
     const { hits, types } = lbHits(text);
     assert.ok(types.has('tier1'), `expected tier1 flag for metaphor: ${text}`);
-    assert.deepEqual(hits.map((h) => [h.type, h.text]), [['tier1', 'load-bearing']],
-      `expected only the modifier in the matched span: ${text}`);
+    assert.deepEqual(
+      hits.map((h) => [h.type, h.text]),
+      [['tier1', 'load-bearing']],
+      `expected only the modifier in the matched span: ${text}`,
+    );
   }
 
   // Preserve existing construction controls while removing the noun denylist.
-  for (const noun of ['assumption', 'claim', 'invariant', 'premise', 'constraint',
-    'dependency', 'argument', 'abstraction', 'assumptions', 'claims', 'invariants',
-    'premises', 'constraints', 'dependencies', 'arguments', 'abstractions']) {
+  for (const noun of [
+    'assumption',
+    'claim',
+    'invariant',
+    'premise',
+    'constraint',
+    'dependency',
+    'argument',
+    'abstraction',
+    'assumptions',
+    'claims',
+    'invariants',
+    'premises',
+    'constraints',
+    'dependencies',
+    'arguments',
+    'abstractions',
+  ]) {
     const text = `The load-bearing ${noun} remained central to the proposal throughout the entire review.`;
-    assert.deepEqual(lbHits(text).hits.map((h) => [h.type, h.text]), [['tier1', 'load-bearing']], noun);
+    assert.deepEqual(
+      lbHits(text).hits.map((h) => [h.type, h.text]),
+      [['tier1', 'load-bearing']],
+      noun,
+    );
   }
-  assert.deepEqual(lbHits('The LOAD-BEARING claim remained central to the proposal throughout the entire review.')
-    .hits.map((h) => [h.type, h.text]), [['tier1', 'LOAD-BEARING']]);
+  assert.deepEqual(
+    lbHits('The LOAD-BEARING claim remained central to the proposal throughout the entire review.').hits.map((h) => [
+      h.type,
+      h.text,
+    ]),
+    [['tier1', 'LOAD-BEARING']],
+  );
 
   const literals = [
     'The wall in the kitchen is load-bearing and must stay in place.',
@@ -673,29 +746,101 @@ test('"load-bearing" flags only allowlisted attributive abstractions (#56)', () 
 
 test('#107: deterministic unnecessary hyphenation subclasses fire with fixes', () => {
   const cases = [
-    ['The team built a research-impact aggregator for the annual reporting workflow.', 'research-impact aggregator', 'research impact aggregator'],
-    ['The report summarizes two research-impact aggregations from the external evaluation teams.', 'research-impact aggregations', 'research impact aggregations'],
-    ['We agreed on a data-source strategy before rebuilding the ingestion pipeline.', 'data-source strategy', 'data source strategy'],
-    ['The guide compares Python-package usage across the supported deployment environments.', 'Python-package usage', 'Python package usage'],
-    ['The guide also compares Rust-crate usage across the supported deployment environments.', 'Rust-crate usage', 'Rust crate usage'],
-    ['The repository keeps a single-Project Manifest for every supported deployment environment.', 'single-Project Manifest', 'single Project Manifest'],
-    ['The audit records a total-downloads figure for every published package each month.', 'total-downloads figure', 'total downloads figure'],
-    ['The dashboard reports a life-sciences-native citation count beside each indexed article.', 'life-sciences-native citation count', 'citation count from a life sciences source'],
+    [
+      'The team built a research-impact aggregator for the annual reporting workflow.',
+      'research-impact aggregator',
+      'research impact aggregator',
+    ],
+    [
+      'The report summarizes two research-impact aggregations from the external evaluation teams.',
+      'research-impact aggregations',
+      'research impact aggregations',
+    ],
+    [
+      'We agreed on a data-source strategy before rebuilding the ingestion pipeline.',
+      'data-source strategy',
+      'data source strategy',
+    ],
+    [
+      'The guide compares Python-package usage across the supported deployment environments.',
+      'Python-package usage',
+      'Python package usage',
+    ],
+    [
+      'The guide also compares Rust-crate usage across the supported deployment environments.',
+      'Rust-crate usage',
+      'Rust crate usage',
+    ],
+    [
+      'The repository keeps a single-Project Manifest for every supported deployment environment.',
+      'single-Project Manifest',
+      'single Project Manifest',
+    ],
+    [
+      'The audit records a total-downloads figure for every published package each month.',
+      'total-downloads figure',
+      'total downloads figure',
+    ],
+    [
+      'The dashboard reports a life-sciences-native citation count beside each indexed article.',
+      'life-sciences-native citation count',
+      'citation count from a life sciences source',
+    ],
     ['The old code-base still powers the internal dashboard used by the support team.', 'code-base', 'codebase'],
-    ['- Migration note\n    The old code-base remains available while customers finish moving their applications.', 'code-base', 'codebase'],
+    [
+      '- Migration note\n    The old code-base remains available while customers finish moving their applications.',
+      'code-base',
+      'codebase',
+    ],
     ['The old data-set still feeds the internal dashboard used by the support team.', 'data-set', 'dataset'],
     ['The published time-frame leaves enough room for another review before launch.', 'time-frame', 'timeframe'],
     ['The product road-map lists every migration milestone planned for the next quarter.', 'road-map', 'roadmap'],
-    ['The service refreshes the dashboard in real-time, even during the nightly import.', 'in real-time', 'in real time'],
-    ['The service refreshes the dashboard in real-time every day during the nightly import.', 'in real-time', 'in real time'],
-    ['The service refreshes the dashboard in real-time continuously during the nightly import.', 'in real-time', 'in real time'],
-    ['The service refreshes the dashboard in real-time as new records arrive for processing.', 'in real-time', 'in real time'],
+    [
+      'The service refreshes the dashboard in real-time, even during the nightly import.',
+      'in real-time',
+      'in real time',
+    ],
+    [
+      'The service refreshes the dashboard in real-time every day during the nightly import.',
+      'in real-time',
+      'in real time',
+    ],
+    [
+      'The service refreshes the dashboard in real-time continuously during the nightly import.',
+      'in real-time',
+      'in real time',
+    ],
+    [
+      'The service refreshes the dashboard in real-time as new records arrive for processing.',
+      'in real-time',
+      'in real time',
+    ],
     ['The service refreshes the dashboard in real-time via the existing event stream.', 'in real-time', 'in real time'],
-    ['The current release works out-of-the-box on every operating system we support.', 'works out-of-the-box', 'works out of the box'],
-    ['That shortcut creates maintenance problems over the long-term, despite its early convenience.', 'over the long-term', 'over the long term'],
-    ['That shortcut creates maintenance problems over the long-term across every department.', 'over the long-term', 'over the long term'],
-    ['That shortcut creates maintenance problems over the long-term through deferred upgrades.', 'over the long-term', 'over the long term'],
-    ['The team plans to keep this compatibility layer for the long-term by design.', 'for the long-term', 'for the long term'],
+    [
+      'The current release works out-of-the-box on every operating system we support.',
+      'works out-of-the-box',
+      'works out of the box',
+    ],
+    [
+      'That shortcut creates maintenance problems over the long-term, despite its early convenience.',
+      'over the long-term',
+      'over the long term',
+    ],
+    [
+      'That shortcut creates maintenance problems over the long-term across every department.',
+      'over the long-term',
+      'over the long term',
+    ],
+    [
+      'That shortcut creates maintenance problems over the long-term through deferred upgrades.',
+      'over the long-term',
+      'over the long term',
+    ],
+    [
+      'The team plans to keep this compatibility layer for the long-term by design.',
+      'for the long-term',
+      'for the long term',
+    ],
   ];
 
   for (const [text, matched, suggestion] of cases) {
@@ -785,21 +930,21 @@ test('#107: proper nouns, identifiers, and version strings stay protected', () =
   }
 
   const prose = AIDetector.analyzeText(
-    'The old code-base still powers the internal dashboard used by the support team.'
+    'The old code-base still powers the internal dashboard used by the support team.',
   );
   assert.equal(
     prose.issues.filter((issue) => issue.type === 'unnecessary-hyphenation').length,
     1,
-    'ordinary lowercase prose must still fire'
+    'ordinary lowercase prose must still fire',
   );
 
   const keyAsAdjective = AIDetector.analyzeText(
-    'The key code-base migration remains unfinished while the support team reviews it.'
+    'The key code-base migration remains unfinished while the support team reviews it.',
   );
   assert.equal(
     keyAsAdjective.issues.filter((issue) => issue.type === 'unnecessary-hyphenation').length,
     1,
-    'an adjectival "key" must not be mistaken for an identifier cue'
+    'an adjectival "key" must not be mistaken for an identifier cue',
   );
 });
 
@@ -826,12 +971,12 @@ test('#107: punctuation-adjacent flags and single-component paths stay protected
   }
 
   const prose = AIDetector.analyzeText(
-    'Outside those literal paths, the old code-base remains ordinary prose and needs editing.'
+    'Outside those literal paths, the old code-base remains ordinary prose and needs editing.',
   );
   assert.equal(
     prose.issues.filter((issue) => issue.type === 'unnecessary-hyphenation').length,
     1,
-    'nearby prose must still fire'
+    'nearby prose must still fire',
   );
 });
 
@@ -858,29 +1003,26 @@ test('#107: frontmatter, YAML, Markdown tables, and HTML attributes stay protect
   assert.equal(hits.length, 0, `metadata should stay protected: ${JSON.stringify(hits)}`);
 
   const prose = AIDetector.analyzeText(
-    'After the metadata, the old code-base remains ordinary prose and needs editing today.'
+    'After the metadata, the old code-base remains ordinary prose and needs editing today.',
   );
   assert.equal(
     prose.issues.filter((issue) => issue.type === 'unnecessary-hyphenation').length,
     1,
-    'ordinary prose outside metadata must still fire'
+    'ordinary prose outside metadata must still fire',
   );
 
   const labelledProse = AIDetector.analyzeText(
-    'Note: the old code-base remains ordinary prose and still needs editing before publication.'
+    'Note: the old code-base remains ordinary prose and still needs editing before publication.',
   );
   assert.equal(
     labelledProse.issues.filter((issue) => issue.type === 'unnecessary-hyphenation').length,
     1,
-    'a capitalized prose label must not be mistaken for unfenced YAML'
+    'a capitalized prose label must not be mistaken for unfenced YAML',
   );
 });
 
 test('#107: adversarial filename masking remains within a linear-time budget', () => {
-  const attacks = [
-    `${'a-'.repeat(3000)}a`,
-    `${'segment/'.repeat(1000)}`,
-  ];
+  const attacks = [`${'a-'.repeat(3000)}a`, `${'segment/'.repeat(1000)}`];
   for (const attack of attacks) {
     const text = `The generated identifier below has no filename extension and must remain safe to scan. ${attack}`;
     const started = performance.now();
@@ -897,24 +1039,22 @@ test('#107: long closed quotations are masked without a length cutoff', () => {
 });
 
 test('#107: copyedit-only findings do not affect score or trinary classification', () => {
-  const clean = 'The team reviewed the release notes before publishing them to customers. Everyone checked the examples, links, headings, and migration steps before the final approval meeting.';
-  const copyedits = 'The code-base and data-set updates follow the time-frame in the road-map. The service runs in real-time, works out-of-the-box, and remains supported over the long-term for every customer.';
+  const clean =
+    'The team reviewed the release notes before publishing them to customers. Everyone checked the examples, links, headings, and migration steps before the final approval meeting.';
+  const copyedits =
+    'The code-base and data-set updates follow the time-frame in the road-map. The service runs in real-time, works out-of-the-box, and remains supported over the long-term for every customer.';
   const baseline = AIDetector.analyzeText(clean);
   const result = AIDetector.analyzeText(copyedits);
 
   assert.ok(
     result.issues.filter((issue) => issue.type === 'unnecessary-hyphenation').length >= 7,
-    'fixture must contain enough distinct copyedits to exercise the short-document threshold'
+    'fixture must contain enough distinct copyedits to exercise the short-document threshold',
   );
   assert.equal(result.score, baseline.score, 'copyedit-only issues must not change the AI score');
   assert.equal(result.label, baseline.label, 'copyedit-only issues must not change the AI label');
   assert.equal(result.document_classification, baseline.document_classification);
   assert.deepEqual(result.class_probabilities, baseline.class_probabilities);
-  assert.deepEqual(
-    result.highlight_sentence_for_ai,
-    [],
-    'copyedit-only issues must not create AI-highlight regions'
-  );
+  assert.deepEqual(result.highlight_sentence_for_ai, [], 'copyedit-only issues must not create AI-highlight regions');
 });
 
 test('"verbatim" is Tier 3: single use stays clean, overuse flags by density', () => {
@@ -922,28 +1062,28 @@ test('"verbatim" is Tier 3: single use stays clean, overuse flags by density', (
   // "verbatim" — including the legal/QA term-of-art use — never flags, and the
   // word only surfaces when the writer leans on it.
   const single = AIDetector.analyzeText(
-    'The packaging step copies the in-app resource verbatim into the extension bundle today.'
+    'The packaging step copies the in-app resource verbatim into the extension bundle today.',
   );
   assert.ok(!single.tooShort, 'single-use fixture must clear the length gate');
   assert.equal(
     single.issues.filter((i) => i.type === 'tier3' && /verbatim/i.test(i.text)).length,
     0,
-    'one "verbatim" is below the density floor and should not flag'
+    'one "verbatim" is below the density floor and should not flag',
   );
 
   // The term of art repeated once in a normal sentence also stays clean.
   const termOfArt = AIDetector.analyzeText(
-    'The verbatim transcript was entered into evidence during the second day of the hearing.'
+    'The verbatim transcript was entered into evidence during the second day of the hearing.',
   );
   assert.equal(
     termOfArt.issues.filter((i) => i.type === 'tier3' && /verbatim/i.test(i.text)).length,
     0,
-    'a single term-of-art use should not flag'
+    'a single term-of-art use should not flag',
   );
 
   // Repeated uses in a short piece clear max(3, floor(wordCount * 0.03)).
   const overused = AIDetector.analyzeText(
-    'He copied the file verbatim, read the note verbatim, typed the line verbatim, and repeated it verbatim to the room.'
+    'He copied the file verbatim, read the note verbatim, typed the line verbatim, and repeated it verbatim to the room.',
   );
   const hits = overused.issues.filter((i) => i.type === 'tier3' && /verbatim/i.test(i.text));
   assert.ok(hits.length > 0, 'repeated "verbatim" uses in a short piece should flag tier3 density');
@@ -956,7 +1096,9 @@ test('"quietly" clusters with another Tier 2 word flags tier2', () => {
   const singleTypes = new Set(single.issues.map((i) => i.type));
   assert.ok(!singleTypes.has('tier2'), 'single "quietly" should not fire tier2 on its own');
 
-  const clustered = AIDetector.analyzeText('The team quietly worked to harness new opportunities, building the platform without any announcement.');
+  const clustered = AIDetector.analyzeText(
+    'The team quietly worked to harness new opportunities, building the platform without any announcement.',
+  );
   const clusteredTypes = new Set(clustered.issues.map((i) => i.type));
   assert.ok(clusteredTypes.has('tier2'), 'expected tier2 flag when "quietly" clusters with another Tier 2 word');
 });
@@ -978,12 +1120,16 @@ test('"deeply" joins a tier2 cluster only in significance collocations', () => {
 
   // The significance collocation DOES count when a second Tier 2 word
   // shares the paragraph...
-  const clustered = AIDetector.analyzeText('The team is deeply committed to helping partners harness the new platform across every region.');
+  const clustered = AIDetector.analyzeText(
+    'The team is deeply committed to helping partners harness the new platform across every region.',
+  );
   const clusteredTypes = new Set(clustered.issues.map((i) => i.type));
   assert.ok(clusteredTypes.has('tier2'), 'expected tier2 when "deeply committed" clusters with another Tier 2 word');
 
   // ...but the collocation alone, with no second Tier 2 word, stays clean.
-  const lone = AIDetector.analyzeText('The billing module is deeply integrated with the ledger, so invoice edits show up in both places.');
+  const lone = AIDetector.analyzeText(
+    'The billing module is deeply integrated with the ledger, so invoice edits show up in both places.',
+  );
   const loneTypes = new Set(lone.issues.map((i) => i.type));
   assert.ok(!loneTypes.has('tier2'), 'lone "deeply integrated" must not fire tier2 by itself');
 });
@@ -1011,7 +1157,8 @@ test('tier3-phrase fires on per-phrase repetition (>=2 hits)', () => {
   // The same boilerplate phrase used twice in one piece. Isolates the
   // per-phrase density rule from the cluster rule — cluster needs >=3
   // distinct phrases, this one needs >=2 hits of one phrase.
-  const text = 'The integration of payments matters for adoption. The integration of identity is the next step. Both unlock material flows.';
+  const text =
+    'The integration of payments matters for adoption. The integration of identity is the next step. Both unlock material flows.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('tier3-phrase'), 'expected tier3-phrase flag for 2x repetition');
@@ -1021,7 +1168,8 @@ test('tier3-phrase-cluster fires on 3 distinct phrases at density 1 each', () =>
   // The cluster-rule boundary: each phrase appears only once, but three
   // distinct phrases stacked is the LLM-self-varies-boilerplate shape.
   // Per-phrase rule should NOT fire here; cluster rule should.
-  const text = 'The team works on decentralized compute. Their thesis is community-driven and the long-term sustainability of the network matters most. Adoption is improving.';
+  const text =
+    'The team works on decentralized compute. Their thesis is community-driven and the long-term sustainability of the network matters most. Adoption is improving.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('tier3-phrase-cluster'), 'expected tier3-phrase-cluster flag at 3 distinct phrases');
@@ -1050,7 +1198,8 @@ test('emotional-flatline opener fires at position 0 (no leading newline)', () =>
 test('bullet-np-list ignores bullets inside fenced code blocks', () => {
   // CLI flag docs / option dumps inside ``` fences are not prose AI
   // scaffolding. False-positive that would fire on most READMEs.
-  const text = "Run with one of these modes via `--mode`:\n\n```\n- unit\n- smoke\n- integration\n- e2e\n- perf\n- stress\n```\n\nDefaults to `unit` if omitted.";
+  const text =
+    'Run with one of these modes via `--mode`:\n\n```\n- unit\n- smoke\n- integration\n- e2e\n- perf\n- stress\n```\n\nDefaults to `unit` if omitted.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('bullet-np-list'), 'bullets inside code fences should not flag');
@@ -1071,7 +1220,7 @@ test('hashtag-stuff matches tags after sentence punctuation', () => {
   // LinkedIn/X trailing blocks. The prior regex char class `[\s\\]`
   // had a literal backslash and silently missed any tag not preceded
   // by whitespace.
-  const text = "Built a thing this week.\n#startup #crypto #web3 #ai #devlog #shipping #foundermode";
+  const text = 'Built a thing this week.\n#startup #crypto #web3 #ai #devlog #shipping #foundermode';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('hashtag-stuff'), 'expected hashtag-stuff on 7-tag trailing block');
@@ -1081,7 +1230,8 @@ test('hashtag-stuff excludes URL fragments from the count', () => {
   // URL anchors like example.com/page#section must not count toward
   // the hashtag threshold or every doc post with a fragment link
   // would false-positive.
-  const text = 'See the spec at example.com/api#auth and the deploy guide at example.com/ops#rollback and the troubleshooting notes at example.com/help#errors and the changelog at example.com/log#latest. Also kb.example.com/faq#section1 and forum.example.com/t/123#post-4 round out the references.';
+  const text =
+    'See the spec at example.com/api#auth and the deploy guide at example.com/ops#rollback and the troubleshooting notes at example.com/help#errors and the changelog at example.com/log#latest. Also kb.example.com/faq#section1 and forum.example.com/t/123#post-4 round out the references.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('hashtag-stuff'), 'URL fragments should not count as hashtags');
@@ -1092,7 +1242,8 @@ test('hashtag-stuff excludes issue and PR references from the count', () => {
   // paragraph routinely cites six of them, and every such paragraph scored
   // as a stuffed hashtag block. Found when this repo's own README linked an
   // issue and the detector flagged the README.
-  const text = 'The regression came in through #88 and stayed hidden until #91 landed. I reverted #92, reopened #93, and then #94 turned out to be the same bug in a different file. #95 is the follow up that fixes it, and #96 tracks the test we still owe.';
+  const text =
+    'The regression came in through #88 and stayed hidden until #91 landed. I reverted #92, reopened #93, and then #94 turned out to be the same bug in a different file. #95 is the follow up that fixes it, and #96 tracks the test we still owe.';
   const types = new Set(AIDetector.analyzeText(text).issues.map((i) => i.type));
   assert.ok(!types.has('hashtag-stuff'), 'issue references should not count as hashtags');
 });
@@ -1100,11 +1251,18 @@ test('hashtag-stuff excludes issue and PR references from the count', () => {
 test('hashtag-stuff excludes hex colours and preprocessor directives', () => {
   // `#fff` is a colour and `#include` is a directive. Both appear in
   // technical prose well past six per post.
-  const css = 'Background is #fff in light mode and #eee in dark. Body text sits at #1a2b3c, muted text at #6b7280, the link colour is #2563eb, hover is #1d4ed8, and the one accent is #f59e0b on the button.';
+  const css =
+    'Background is #fff in light mode and #eee in dark. Body text sits at #1a2b3c, muted text at #6b7280, the link colour is #2563eb, hover is #1d4ed8, and the one accent is #f59e0b on the button.';
   // 8-character RGBA values, so dropping the {8} alternative is caught.
-  const rgba = 'Palette is #1a2b3cff for body and #6b7280ee muted and #2563ebdd links and #1d4ed8cc hover and #f59e0bbb accent and #0a1b2cdd border today.';
-  const c = 'Put #include <stdio.h> first, then #include <stdlib.h>, then #include <string.h>. Add #include <unistd.h> and #include <fcntl.h> after those, and guard the block with #ifndef and #endif so it stays idempotent.';
-  for (const [label, text] of [['hex colours', css], ['rgba colours', rgba], ['directives', c]]) {
+  const rgba =
+    'Palette is #1a2b3cff for body and #6b7280ee muted and #2563ebdd links and #1d4ed8cc hover and #f59e0bbb accent and #0a1b2cdd border today.';
+  const c =
+    'Put #include <stdio.h> first, then #include <stdlib.h>, then #include <string.h>. Add #include <unistd.h> and #include <fcntl.h> after those, and guard the block with #ifndef and #endif so it stays idempotent.';
+  for (const [label, text] of [
+    ['hex colours', css],
+    ['rgba colours', rgba],
+    ['directives', c],
+  ]) {
     const types = new Set(AIDetector.analyzeText(text).issues.map((i) => i.type));
     assert.ok(!types.has('hashtag-stuff'), `${label} should not count as hashtags`);
   }
@@ -1116,9 +1274,14 @@ test('hashtag-stuff ignores hashes inside code spans and fences', () => {
   // 6 without masking and 0 with it. An earlier version of this fixture quoted
   // #88 and #fff, which the carve-outs already removed, so it passed with
   // inline masking deleted and tested nothing.
-  const inline = 'The escape rules trip people up. Write `#AI` for the tag, `#Innovation` for the category, `#Startups` for the vertical, `#Leadership` for the theme, `#Growth` for the metric, and `#FutureOfWork` when you mean the movement.';
-  const fenced = 'Here is the config we ship by default, and it has not changed in a year:\n\n```\n#alpha\n#beta\n#gamma\n#delta\n#epsilon\n#zeta\n```\n\nEverything below that line is user overridable and nothing above it is.';
-  for (const [label, text] of [['inline code', inline], ['fenced code', fenced]]) {
+  const inline =
+    'The escape rules trip people up. Write `#AI` for the tag, `#Innovation` for the category, `#Startups` for the vertical, `#Leadership` for the theme, `#Growth` for the metric, and `#FutureOfWork` when you mean the movement.';
+  const fenced =
+    'Here is the config we ship by default, and it has not changed in a year:\n\n```\n#alpha\n#beta\n#gamma\n#delta\n#epsilon\n#zeta\n```\n\nEverything below that line is user overridable and nothing above it is.';
+  for (const [label, text] of [
+    ['inline code', inline],
+    ['fenced code', fenced],
+  ]) {
     const types = new Set(AIDetector.analyzeText(text).issues.map((i) => i.type));
     assert.ok(!types.has('hashtag-stuff'), `${label} should not count as hashtags`);
   }
@@ -1129,13 +1292,22 @@ test('hashtag-stuff still counts short hex-shaped words, which are real tags', (
   // 3- and 4-digit hex to catch CSS palettes silently deleted true positives on
   // the stuffed-block shape, so only 6- and 8-char forms CONTAINING A DIGIT are
   // subtracted: #decade and #facade are a-f words, not colours.
-  const gtm = 'Great conversation on the go-to-market motion this week with the whole revenue team here.\n#b2b #e2e #saas #growth #ace #fade';
-  const family = 'Weekend was good and the whole family got outside for once this month together.\n#dad #cafe #beef #face #travel #weekend';
-  const decade = 'Reflecting on the last ten years of shipping developer tools to teams everywhere here.\n#decade #facade #deface #beaded #effaced #growth';
+  const gtm =
+    'Great conversation on the go-to-market motion this week with the whole revenue team here.\n#b2b #e2e #saas #growth #ace #fade';
+  const family =
+    'Weekend was good and the whole family got outside for once this month together.\n#dad #cafe #beef #face #travel #weekend';
+  const decade =
+    'Reflecting on the last ten years of shipping developer tools to teams everywhere here.\n#decade #facade #deface #beaded #effaced #growth';
   // Four spaces under a list marker is a paragraph continuation, not a code
   // block, which is why indented runs are not masked.
-  const listed = '- We shipped the detector and the whole team is happy with how it landed today.\n\n    #AI #Innovation #FutureOfWork #MachineLearning #Leadership #Growth';
-  for (const [label, text] of [['b2b/e2e block', gtm], ['dad/cafe block', family], ['a-f word tags', decade], ['tags under a list item', listed]]) {
+  const listed =
+    '- We shipped the detector and the whole team is happy with how it landed today.\n\n    #AI #Innovation #FutureOfWork #MachineLearning #Leadership #Growth';
+  for (const [label, text] of [
+    ['b2b/e2e block', gtm],
+    ['dad/cafe block', family],
+    ['a-f word tags', decade],
+    ['tags under a list item', listed],
+  ]) {
     const types = new Set(AIDetector.analyzeText(text).issues.map((i) => i.type));
     assert.ok(types.has('hashtag-stuff'), `${label} should still flag as hashtag stuffing`);
   }
@@ -1144,21 +1316,23 @@ test('hashtag-stuff still counts short hex-shaped words, which are real tags', (
 test('hashtag-stuff still fires on a tag block that also cites an issue', () => {
   // The carve-outs subtract non-tag forms; they must not let a real block
   // through because a `#88` sits beside it.
-  const text = 'Closed out #88 today and the release is live for everyone.\n#AI #Innovation #FutureOfWork #MachineLearning #Leadership #Growth #Startups';
+  const text =
+    'Closed out #88 today and the release is live for everyone.\n#AI #Innovation #FutureOfWork #MachineLearning #Leadership #Growth #Startups';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('hashtag-stuff'), 'expected hashtag-stuff on a 7-tag block');
   assert.equal(
     r.issues.find((i) => i.type === 'hashtag-stuff').text,
     '7 hashtags',
-    'the issue reference must not be counted as a tag'
+    'the issue reference must not be counted as a tag',
   );
 });
 
 test('hashtag-stuff still fires on tags spread inline through a post', () => {
   // Masking code and subtracting non-tag forms must not weaken the inline
   // shape, which is the one a trailing-block-only rule would miss.
-  const text = 'Loving the #AI space right now, especially #MachineLearning and #DeepLearning, plus #Startups and #Innovation and #FutureOfWork keep me busy every single day of the week.';
+  const text =
+    'Loving the #AI space right now, especially #MachineLearning and #DeepLearning, plus #Startups and #Innovation and #FutureOfWork keep me busy every single day of the week.';
   const types = new Set(AIDetector.analyzeText(text).issues.map((i) => i.type));
   assert.ok(types.has('hashtag-stuff'), 'expected hashtag-stuff on 6 inline tags');
 });
@@ -1199,7 +1373,7 @@ test('low-ttr does not fire on short texts (<200 tokens)', () => {
   // Same vocab-poor pattern but only ~50 tokens — below the sample-size
   // threshold. Avoids drowning short social posts in a stylometric flag
   // that needs more data to be reliable.
-  const text = ('The system shows the system improves the system. '.repeat(5));
+  const text = 'The system shows the system improves the system. '.repeat(5);
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('low-ttr'), 'low-ttr should not fire below 200 tokens');
@@ -1226,7 +1400,8 @@ test('ai-placeholder does not fire on legitimate bracketed content', () => {
   // Real bracketed content — citations, optional matches, code
   // references — should NOT trip the placeholder regex. The pattern
   // is gated on placeholder VERBS (Your/Insert/Add/Describe/etc.).
-  const text = 'The release notes for [v1.2.3] cover the [auth.refresh] path and reference [@example/user]. We saw it on commit [a3f7b21]. Padding text to clear the word-count gate so the analyzer runs the full pass cleanly.';
+  const text =
+    'The release notes for [v1.2.3] cover the [auth.refresh] path and reference [@example/user]. We saw it on commit [a3f7b21]. Padding text to clear the word-count gate so the analyzer runs the full pass cleanly.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('ai-placeholder'), `expected no ai-placeholder, got: ${[...types].join(', ')}`);
@@ -1258,7 +1433,9 @@ test('ai-utm-source fires on AI-tool tracking parameters', () => {
     'Reference URL: https://example.com/post?utm_source=perplexity.ai found via search.',
     'Article: https://example.com/blog?referrer=grok.com via the link.',
   ]) {
-    const r = AIDetector.analyzeText(text + ' Padding text to clear the word-count gate so the analyzer runs cleanly across all categories.');
+    const r = AIDetector.analyzeText(
+      text + ' Padding text to clear the word-count gate so the analyzer runs cleanly across all categories.',
+    );
     const types = new Set(r.issues.map((i) => i.type));
     assert.ok(types.has('ai-utm-source'), `expected ai-utm-source for: ${text.slice(0, 60)}...`);
   }
@@ -1266,7 +1443,8 @@ test('ai-utm-source fires on AI-tool tracking parameters', () => {
 
 test('ai-utm-source does not fire on benign utm_source values', () => {
   // Real marketing UTMs from non-AI sources should not flag.
-  const text = 'See https://example.com/article?utm_source=newsletter for the source. Padding text to clear the word-count gate so the analyzer runs the full pass cleanly across all categories without surprises.';
+  const text =
+    'See https://example.com/article?utm_source=newsletter for the source. Padding text to clear the word-count gate so the analyzer runs the full pass cleanly across all categories without surprises.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(!types.has('ai-utm-source'), 'newsletter UTM should not flag as AI source');
@@ -1294,30 +1472,41 @@ test('v2: Cyrillic homoglyph swap restores Tier 1 hit', () => {
   // "dеlve" uses Cyrillic 'е' (U+0435). Without normalization the token
   // 'dеlve' would not equal 'delve' and Tier 1 misses it. After
   // normalization, the Latin form fires Tier 1 AND triggers normalization-flag.
-  const text = 'In tоday’s landscape we dеlve intо the intricate tapestry оf the rоbust ecоsystem and dеep dive intо each layer with comprehensive depth.';
+  const text =
+    'In tоday’s landscape we dеlve intо the intricate tapestry оf the rоbust ecоsystem and dеep dive intо each layer with comprehensive depth.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('normalization-flag'), 'expected normalization-flag on homoglyph cluster');
-  assert.ok(r.stats.normalization.homoglyph >= 2, `expected >=2 homoglyph swaps, got ${r.stats.normalization.homoglyph}`);
+  assert.ok(
+    r.stats.normalization.homoglyph >= 2,
+    `expected >=2 homoglyph swaps, got ${r.stats.normalization.homoglyph}`,
+  );
 });
 
 test('v2: formulaic opener fires', () => {
-  const text = 'In the rapidly evolving world of decentralized finance, new protocols have emerged as critical infrastructure. The market continues to expand at an unprecedented pace each quarter without fail.';
+  const text =
+    'In the rapidly evolving world of decentralized finance, new protocols have emerged as critical infrastructure. The market continues to expand at an unprecedented pace each quarter without fail.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('formulaic-opener'), 'expected formulaic-opener flag');
 });
 
 test('v2: speculative scenario opener fires', () => {
-  const text = 'Imagine a world where every developer ships bug-free code on the first try. That is the promise this framework keeps making in its docs, and it deserves a much harder look before anyone commits a roadmap to it.';
+  const text =
+    'Imagine a world where every developer ships bug-free code on the first try. That is the promise this framework keeps making in its docs, and it deserves a much harder look before anyone commits a roadmap to it.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('speculative-opener'), 'expected speculative-opener flag');
 
   // The comma-interrupted cadence is the same tell and must also fire.
-  const interrupted = AIDetector.analyzeText('Imagine, for a moment, a world where every deploy is instant. That is the pitch, and the pricing page leans on it hard enough that the claim deserves scrutiny before anyone signs.');
+  const interrupted = AIDetector.analyzeText(
+    'Imagine, for a moment, a world where every deploy is instant. That is the pitch, and the pricing page leans on it hard enough that the claim deserves scrutiny before anyone signs.',
+  );
   const interruptedTypes = new Set(interrupted.issues.map((i) => i.type));
-  assert.ok(interruptedTypes.has('speculative-opener'), 'expected speculative-opener on "Imagine, for a moment, a world where"');
+  assert.ok(
+    interruptedTypes.has('speculative-opener'),
+    'expected speculative-opener on "Imagine, for a moment, a world where"',
+  );
 });
 
 test('v2: speculative opener leaves instructional "imagine you have" alone', () => {
@@ -1337,19 +1526,24 @@ test('v2: speculative opener leaves instructional "imagine you have" alone', () 
 });
 
 test('v2: launch-copy introduction fires', () => {
-  const text = 'Meet Flowdesk, your new favorite treasury dashboard. One screen for a full fund position, refreshed every block, with none of the spreadsheet glue that eats an operations hire alive.';
+  const text =
+    'Meet Flowdesk, your new favorite treasury dashboard. One screen for a full fund position, refreshed every block, with none of the spreadsheet glue that eats an operations hire alive.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('launch-intro'), 'expected launch-intro flag');
 
   // The 'the new home of' head is the launch-copy form the tail
   // requirement has to keep. It must still fire.
-  const homeOf = AIDetector.analyzeText('Meet Riverside, the new home of our Saturday farmers market, open from seven every weekend through October.');
+  const homeOf = AIDetector.analyzeText(
+    'Meet Riverside, the new home of our Saturday farmers market, open from seven every weekend through October.',
+  );
   const homeOfTypes = new Set(homeOf.issues.map((i) => i.type));
   assert.ok(homeOfTypes.has('launch-intro'), 'expected launch-intro on "the new home of"');
 
   // The mashup pitch is the same move and must also fire.
-  const mashup = AIDetector.analyzeText('Think Notion meets Figma, except the canvas settles on-chain. The team has shipped four releases since March and the changelog reads like a product that knows where it is going.');
+  const mashup = AIDetector.analyzeText(
+    'Think Notion meets Figma, except the canvas settles on-chain. The team has shipped four releases since March and the changelog reads like a product that knows where it is going.',
+  );
   const mashupTypes = new Set(mashup.issues.map((i) => i.type));
   assert.ok(mashupTypes.has('launch-intro'), 'expected launch-intro on "Think X meets Y"');
 });
@@ -1388,23 +1582,30 @@ test('v2: launch-copy introduction leaves ordinary narrative alone', () => {
 
   // Adjacent intros each count: the anchors are lookbehinds, so the first
   // match's terminator still anchors the second.
-  const adjacent = AIDetector.analyzeText('Think Flowdesk meets Ledgerly. Think Notion meets Figma. Two launches, one deck, and the same investor list for both companies this quarter.');
+  const adjacent = AIDetector.analyzeText(
+    'Think Flowdesk meets Ledgerly. Think Notion meets Figma. Two launches, one deck, and the same investor list for both companies this quarter.',
+  );
   const adjacentHits = adjacent.issues.filter((i) => i.type === 'launch-intro');
   assert.equal(adjacentHits.length, 2, 'expected both adjacent intros to count');
 });
 
 test('v2: dramatized crowd contrast fires on the dismissive clause', () => {
-  const text = 'We shipped it in 2022, while everyone else was still debating timelines. The migration tooling followed six months later and the audit landed before the first competitor published a spec.';
+  const text =
+    'We shipped it in 2022, while everyone else was still debating timelines. The migration tooling followed six months later and the audit landed before the first competitor published a spec.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('crowd-contrast'), 'expected crowd-contrast flag');
 
-  const thinkpieces = AIDetector.analyzeText('They built it in a weekend while the industry wrote thinkpieces about whether the category was even viable, and the launch numbers made the question moot.');
+  const thinkpieces = AIDetector.analyzeText(
+    'They built it in a weekend while the industry wrote thinkpieces about whether the category was even viable, and the launch numbers made the question moot.',
+  );
   const thinkpiecesTypes = new Set(thinkpieces.issues.map((i) => i.type));
   assert.ok(thinkpiecesTypes.has('crowd-contrast'), 'expected crowd-contrast on the thinkpieces variant');
 
   // The space form of catch-up is the same tell as the hyphenated form.
-  const catchup = AIDetector.analyzeText('The desk shipped the migration in March while everyone else played catch up on last year\u2019s roadmap and called it strategy.');
+  const catchup = AIDetector.analyzeText(
+    'The desk shipped the migration in March while everyone else played catch up on last year\u2019s roadmap and called it strategy.',
+  );
   const catchupTypes = new Set(catchup.issues.map((i) => i.type));
   assert.ok(catchupTypes.has('crowd-contrast'), 'expected crowd-contrast on the space form of catch-up');
 });
@@ -1441,7 +1642,8 @@ test('v2: crowd contrast leaves literal simultaneity alone', () => {
 });
 
 test('v2: fake-casual props fire', () => {
-  const text = '*checks notes* the proposal passed with four abstentions and nobody in the room had read the appendix before the vote.';
+  const text =
+    '*checks notes* the proposal passed with four abstentions and nobody in the room had read the appendix before the vote.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('fake-casual-prop'), 'expected fake-casual-prop flag');
@@ -1449,14 +1651,18 @@ test('v2: fake-casual props fire', () => {
   // The wink aside gets its own case, asserting on the matched text. It
   // used to share the stage-direction fixture above, which meant a
   // never-matching wink regex still left this test green.
-  const wink = AIDetector.analyzeText('The fees went up again (yes, really) and nobody sent a notice about it before the billing run.');
+  const wink = AIDetector.analyzeText(
+    'The fees went up again (yes, really) and nobody sent a notice about it before the billing run.',
+  );
   const winkHits = wink.issues.filter((i) => i.type === 'fake-casual-prop');
   assert.equal(winkHits.length, 1, 'expected exactly one wink-aside hit');
   assert.equal(winkHits[0].text, '(yes, really)', 'expected the wink aside itself to be the match');
 
   // The curly apostrophe (U+2019) is the form smart punctuation and LLMs
   // actually emit; it must fire the same as the ASCII form.
-  const curly = AIDetector.analyzeText('The ending was *chef\u2019s kiss* and nobody in the room could pretend otherwise by the time the credits rolled.');
+  const curly = AIDetector.analyzeText(
+    'The ending was *chef\u2019s kiss* and nobody in the room could pretend otherwise by the time the credits rolled.',
+  );
   const curlyTypes = new Set(curly.issues.map((i) => i.type));
   assert.ok(curlyTypes.has('fake-casual-prop'), 'expected fake-casual-prop on curly-apostrophe chef\u2019s kiss');
 });
@@ -1483,14 +1689,16 @@ test('v2: fake-casual props leave math and plain qualifiers alone', () => {
 });
 
 test('v2: parenthetical hedge fires', () => {
-  const text = 'The protocol works as intended (and increasingly, with better latency than competitors). The team has shipped consistently for six months without missing a single release cadence target.';
+  const text =
+    'The protocol works as intended (and increasingly, with better latency than competitors). The team has shipped consistently for six months without missing a single release cadence target.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('parenthetical-hedge'), 'expected parenthetical-hedge flag');
 });
 
 test('v2: social endorsement closer fires on LinkedIn-style share post', () => {
-  const text = 'Just finished Sarah\'s deep dive on why context windows leak in long agent runs. She walks through the eviction policy line by line and shows where the tokens actually go. This one is worth your time:';
+  const text =
+    "Just finished Sarah's deep dive on why context windows leak in long agent runs. She walks through the eviction policy line by line and shows where the tokens actually go. This one is worth your time:";
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('social-cta-closer'), 'expected social-cta-closer flag');
@@ -1501,16 +1709,16 @@ test('v2: social endorsement closer covers every regex branch', () => {
   // instead of shipping green. Each string is padded to clear the 10-word
   // floor and sit amid normal prose, the shape analyzeText actually sees.
   const variants = [
-    'Sarah broke down the whole eviction policy in plain terms. This one is worth your time:',          // worth-endorsement
-    'New deep dive on agent memory just dropped today. This one is a must-read for the whole team.',     // must-read
-    'I read the entire thing twice this weekend. I highly recommend giving this a read soon.',           // recommend-a-read
-    'The setup is fiddly but the payoff is huge here. Do yourself a favor and read this tonight.',       // do-yourself-a-favor
-    'The agenda is packed and the speakers are all sharp. You won\'t want to miss this one.',             // won't-want-to-miss
-    'It saved me an entire afternoon of painful debugging. Thank me later, seriously, you will.',        // thank-me-later
-    'It is the cleanest reference I have found all year. Save this one for later when you ship.',        // save-for-later
-    'Everything you need for the whole migration is in this one. Bookmark this post.',                   // bookmark-this
-    'The benchmarks completely flip the usual assumptions. Don\'t sleep on this one, honestly.',         // don't-sleep-on
-    'The framing reframed the entire debate for me cleanly. Trust me, you\'ll want to read this.',       // trust-me-you'll
+    'Sarah broke down the whole eviction policy in plain terms. This one is worth your time:', // worth-endorsement
+    'New deep dive on agent memory just dropped today. This one is a must-read for the whole team.', // must-read
+    'I read the entire thing twice this weekend. I highly recommend giving this a read soon.', // recommend-a-read
+    'The setup is fiddly but the payoff is huge here. Do yourself a favor and read this tonight.', // do-yourself-a-favor
+    "The agenda is packed and the speakers are all sharp. You won't want to miss this one.", // won't-want-to-miss
+    'It saved me an entire afternoon of painful debugging. Thank me later, seriously, you will.', // thank-me-later
+    'It is the cleanest reference I have found all year. Save this one for later when you ship.', // save-for-later
+    'Everything you need for the whole migration is in this one. Bookmark this post.', // bookmark-this
+    "The benchmarks completely flip the usual assumptions. Don't sleep on this one, honestly.", // don't-sleep-on
+    "The framing reframed the entire debate for me cleanly. Trust me, you'll want to read this.", // trust-me-you'll
   ];
   for (const text of variants) {
     const r = AIDetector.analyzeText(text);
@@ -1558,10 +1766,14 @@ test('v2: social endorsement closer leaves literal-verb human prose alone', () =
 
 test('v2: trinary output present + FN-biased for ambiguous text', () => {
   // A plain human bug-report should not get AI_ONLY even if score lifts.
-  const text = 'The build broke again this morning. Rolled back the auth refactor and tests pass now. Still need to figure out why the token refresh path hits a 401 for users on Safari but not Firefox — probably a cookie scope issue but I want to confirm before shipping a fix.';
+  const text =
+    'The build broke again this morning. Rolled back the auth refactor and tests pass now. Still need to figure out why the token refresh path hits a 401 for users on Safari but not Firefox — probably a cookie scope issue but I want to confirm before shipping a fix.';
   const r = AIDetector.analyzeText(text);
   assert.ok(r.document_classification, 'expected document_classification field');
-  assert.ok(['HUMAN_ONLY', 'MIXED'].includes(r.document_classification), `human prose got ${r.document_classification}`);
+  assert.ok(
+    ['HUMAN_ONLY', 'MIXED'].includes(r.document_classification),
+    `human prose got ${r.document_classification}`,
+  );
   assert.ok(r.class_probabilities, 'expected class_probabilities');
   const sum = r.class_probabilities.human + r.class_probabilities.mixed + r.class_probabilities.ai;
   assert.ok(Math.abs(sum - 1) < 0.02, `probabilities should sum to ~1, got ${sum}`);
@@ -1576,12 +1788,20 @@ test('v2: highly AI-marked text reaches AI_ONLY with corroborators', () => {
     'Furthermore, this pivotal moment marks a watershed for the industry. Let me think step by step about how to approach this systematically. I hope this helps!',
   ].join(' ');
   const r = AIDetector.analyzeText(text);
-  assert.equal(r.document_classification, 'AI_ONLY', `expected AI_ONLY, got ${r.document_classification} (score=${r.score})`);
-  assert.ok(['medium', 'high'].includes(r.confidence_category), `expected medium/high confidence, got ${r.confidence_category}`);
+  assert.equal(
+    r.document_classification,
+    'AI_ONLY',
+    `expected AI_ONLY, got ${r.document_classification} (score=${r.score})`,
+  );
+  assert.ok(
+    ['medium', 'high'].includes(r.confidence_category),
+    `expected medium/high confidence, got ${r.confidence_category}`,
+  );
 });
 
 test('v2: highlight_sentence_for_ai returns regions with start/end offsets', () => {
-  const text = 'In the rapidly evolving world of AI, we delve into the intricate tapestry. This is a robust, comprehensive paradigm. Plain second paragraph here is just normal prose without any of the tells. The team shipped a fix on Monday afternoon after the rollback completed successfully.';
+  const text =
+    'In the rapidly evolving world of AI, we delve into the intricate tapestry. This is a robust, comprehensive paradigm. Plain second paragraph here is just normal prose without any of the tells. The team shipped a fix on Monday afternoon after the rollback completed successfully.';
   const r = AIDetector.analyzeText(text);
   assert.ok(Array.isArray(r.highlight_sentence_for_ai), 'expected highlight array');
   if (r.highlight_sentence_for_ai.length > 0) {
@@ -1594,7 +1814,8 @@ test('v2: highlight_sentence_for_ai returns regions with start/end offsets', () 
 });
 
 test('v2: context mode "technical" suppresses Title Case header flag', () => {
-  const text = 'Strategic Negotiations And Key Partnerships\n\nThe team closed three deals this quarter. Each agreement included revenue-share terms and dispute-resolution clauses. The legal review took two weeks per contract on average.';
+  const text =
+    'Strategic Negotiations And Key Partnerships\n\nThe team closed three deals this quarter. Each agreement included revenue-share terms and dispute-resolution clauses. The legal review took two weeks per contract on average.';
   const general = AIDetector.analyzeText(text, { contextMode: 'general' });
   const technical = AIDetector.analyzeText(text, { contextMode: 'technical' });
   const generalHas = general.issues.some((i) => i.type === 'title-case-header');
@@ -1731,11 +1952,7 @@ test('#62: fences that a parity count gets wrong', () => {
     'indented fence',
   );
   // An unclosed fence runs to end of document, as renderers treat it.
-  assert.equal(
-    titleCaseHits([intro, f3, title].join('\n') + HEADING_BODY).length,
-    0,
-    'unclosed fence',
-  );
+  assert.equal(titleCaseHits([intro, f3, title].join('\n') + HEADING_BODY).length, 0, 'unclosed fence');
   // ...and a correctly closed one must not swallow what follows.
   assert.equal(
     titleCaseHits([intro, f3, 'code', f3, title].join('\n') + HEADING_BODY).length,
@@ -1853,7 +2070,8 @@ test('v2: cross-para-burstiness fires on uniform sentence rhythm', () => {
 });
 
 test('v2: invalid contextMode falls back to general with stats.contextModeFallback set', () => {
-  const text = 'Strategic Negotiations And Key Partnerships\n\nThe team closed three deals. Each agreement included revenue-share terms. Legal review took two weeks per contract.';
+  const text =
+    'Strategic Negotiations And Key Partnerships\n\nThe team closed three deals. Each agreement included revenue-share terms. Legal review took two weeks per contract.';
   const r = AIDetector.analyzeText(text, { contextMode: 'tecnical' });
   assert.equal(r.stats.contextMode, 'general', 'invalid mode coerced to general');
   assert.equal(r.stats.contextModeFallback, 'tecnical', 'fallback echoes original');
@@ -1866,7 +2084,11 @@ test('v2: trinary fields present on tooShort / tooLong / empty as UNSCORED', () 
   const empty = AIDetector.analyzeText('');
   const tooShort = AIDetector.analyzeText('Short text.');
   const tooLong = AIDetector.analyzeText('word '.repeat(10001));
-  for (const [name, r] of [['empty', empty], ['tooShort', tooShort], ['tooLong', tooLong]]) {
+  for (const [name, r] of [
+    ['empty', empty],
+    ['tooShort', tooShort],
+    ['tooLong', tooLong],
+  ]) {
     assert.equal(r.document_classification, 'UNSCORED', `${name}: expected UNSCORED, got ${r.document_classification}`);
     assert.equal(r.confidence_category, 'low', `${name}: expected low confidence`);
     assert.ok(r.class_probabilities, `${name}: missing class_probabilities`);
@@ -1887,7 +2109,10 @@ test('v2: probability fields sum to exactly 1.000 (no float drift)', () => {
   for (const t of texts) {
     const r = AIDetector.analyzeText(t);
     const sum = r.class_probabilities.human + r.class_probabilities.mixed + r.class_probabilities.ai;
-    assert.ok(Math.abs(sum - 1) < 0.0005, `probabilities should sum to exactly 1.000, got ${sum} for: ${t.slice(0, 40)}...`);
+    assert.ok(
+      Math.abs(sum - 1) < 0.0005,
+      `probabilities should sum to exactly 1.000, got ${sum} for: ${t.slice(0, 40)}...`,
+    );
   }
 });
 
@@ -1897,10 +2122,12 @@ test('v2: mid-score isolated stylometric hits do not reach AI_ONLY', () => {
   // assertion (not silently passes). Text designed to have NO strong
   // corroborators: no cutoff disclaimer, no chatbot artifact, no homoglyph,
   // no dense-vocab trifecta. Should classify HUMAN_ONLY or MIXED.
-  const text = 'The team continues making progress on the platform. The framework supports many needs. Building collaboration across teams stays important. Improving the deployment path is a goal. The setup gives everyone a foundation.';
+  const text =
+    'The team continues making progress on the platform. The framework supports many needs. Building collaboration across teams stays important. Improving the deployment path is a goal. The setup gives everyone a foundation.';
   const r = AIDetector.analyzeText(text);
   const hasCutoff = r.issues.some((i) => i.type === 'cutoff-disclaimer');
-  const hasReasonChat = r.issues.some((i) => i.type === 'reasoning-artifact') && r.issues.some((i) => i.type === 'chatbot');
+  const hasReasonChat =
+    r.issues.some((i) => i.type === 'reasoning-artifact') && r.issues.some((i) => i.type === 'chatbot');
   const hasNorm = r.issues.some((i) => i.type === 'normalization-flag');
   // Preconditions: assert the test corpus matches the no-strong-corroborator
   // shape. If these fail, the corpus drifted and the test is meaningless.
@@ -1910,7 +2137,11 @@ test('v2: mid-score isolated stylometric hits do not reach AI_ONLY', () => {
   assert.ok(r.score < 70, `precondition: corpus score should be < 70, got ${r.score}`);
   // Contract: without strong corroborators and below the score-only threshold,
   // never AI_ONLY.
-  assert.notEqual(r.document_classification, 'AI_ONLY', `no-strong-corroborator below score 70 should not be AI_ONLY, got ${r.document_classification} at score ${r.score}`);
+  assert.notEqual(
+    r.document_classification,
+    'AI_ONLY',
+    `no-strong-corroborator below score 70 should not be AI_ONLY, got ${r.document_classification} at score ${r.score}`,
+  );
 });
 
 test('v2: humanizer bypass escalates to AI_ONLY (normalization-flag corroborator)', () => {
@@ -1918,16 +2149,24 @@ test('v2: humanizer bypass escalates to AI_ONLY (normalization-flag corroborator
   const text = `In tоday's landscape we del${zwsp}ve into the intricate tap${zwsp}estry of innovátion. This seamless, robust paradigm showcases comprehensive frameworks. The framework underscores how organizations harness cutting-edge tools to navigate complexities across the ecosystem.`;
   const r = AIDetector.analyzeText(text);
   assert.equal(r.document_classification, 'AI_ONLY', `bypass should reach AI_ONLY, got ${r.document_classification}`);
-  assert.ok(['medium', 'high'].includes(r.confidence_category), `bypass should not be low-confidence, got ${r.confidence_category}`);
+  assert.ok(
+    ['medium', 'high'].includes(r.confidence_category),
+    `bypass should not be low-confidence, got ${r.confidence_category}`,
+  );
 });
 
 test('v2: canonical saturated-AI essay reaches AI_ONLY (calibration regression)', () => {
   // Regression for review finding: pre-recalibration this text scored
   // ~47/MIXED. AI_ONLY was effectively dead code. Threshold now lets
   // a saturated essay actually fire.
-  const text = 'In today\'s rapidly evolving landscape, we delve into the intricate tapestry of decentralized finance. It is important to note that this seamless, robust paradigm showcases a comprehensive framework. Moreover, this transformative ecosystem leverages cutting-edge protocols to navigate the complex multifaceted challenges of modern finance. Furthermore, the integration of innovative solutions underscores how pivotal this moment is. The future looks bright for those who embrace these emerging opportunities. By harnessing the power of blockchain technology, organizations can foster unprecedented growth and catalyze meaningful change across the ecosystem.';
+  const text =
+    "In today's rapidly evolving landscape, we delve into the intricate tapestry of decentralized finance. It is important to note that this seamless, robust paradigm showcases a comprehensive framework. Moreover, this transformative ecosystem leverages cutting-edge protocols to navigate the complex multifaceted challenges of modern finance. Furthermore, the integration of innovative solutions underscores how pivotal this moment is. The future looks bright for those who embrace these emerging opportunities. By harnessing the power of blockchain technology, organizations can foster unprecedented growth and catalyze meaningful change across the ecosystem.";
   const r = AIDetector.analyzeText(text);
-  assert.equal(r.document_classification, 'AI_ONLY', `saturated essay should AI_ONLY, got ${r.document_classification} at score ${r.score}`);
+  assert.equal(
+    r.document_classification,
+    'AI_ONLY',
+    `saturated essay should AI_ONLY, got ${r.document_classification} at score ${r.score}`,
+  );
 });
 
 test('v2: legitimate *italic phrase* is NOT stripped by roleplay rule', () => {
@@ -1942,7 +2181,8 @@ test('v2: legitimate *italic phrase* is NOT stripped by roleplay rule', () => {
 
 test('v2: *roleplay action verb* IS stripped', () => {
   // The actual chat-model artifact — verb-led action description.
-  const text = 'I think about the problem *nods thoughtfully* and consider the options *sighs deeply* before answering.';
+  const text =
+    'I think about the problem *nods thoughtfully* and consider the options *sighs deeply* before answering.';
   const norm = AIDetector.normalizeText(text);
   assert.ok(norm.flags.roleplay >= 2, `expected ≥2 roleplay strips, got ${norm.flags.roleplay}`);
 });
@@ -1954,7 +2194,11 @@ test('v2: single ZWSP does not flip to AI_ONLY (hair-trigger fix)', () => {
   const zwsp = '​';
   const text = `Our team shipped a fix on Monday${zwsp} afternoon. Tests pass and the deploy is green. Everything looks good. Plain human text with one accidental zero-width character pasted from a Notion doc.`;
   const r = AIDetector.analyzeText(text);
-  assert.notEqual(r.document_classification, 'AI_ONLY', `single ZWSP should not flip to AI_ONLY, got ${r.document_classification}`);
+  assert.notEqual(
+    r.document_classification,
+    'AI_ONLY',
+    `single ZWSP should not flip to AI_ONLY, got ${r.document_classification}`,
+  );
 });
 
 test('v2: dense-AI-vocab trifecta reaches AI_ONLY (calibration regression)', () => {
@@ -1962,9 +2206,14 @@ test('v2: dense-AI-vocab trifecta reaches AI_ONLY (calibration regression)', () 
   // still reach AI_ONLY via the dense-AI-vocab strong corroborator
   // (≥4 tier1 distinct + tier2 cluster + transition). Round-1 left this
   // class of essay stuck at MIXED.
-  const text = 'In the rapidly evolving world of decentralized finance, organizations leverage robust and comprehensive frameworks. Moreover, this seamless paradigm enables them to navigate the intricate tapestry of modern challenges. Furthermore, they harness cutting-edge tools to foster sustainable growth and catalyze transformative change. Additionally, the platform showcases meticulous attention to user experience across the ecosystem.';
+  const text =
+    'In the rapidly evolving world of decentralized finance, organizations leverage robust and comprehensive frameworks. Moreover, this seamless paradigm enables them to navigate the intricate tapestry of modern challenges. Furthermore, they harness cutting-edge tools to foster sustainable growth and catalyze transformative change. Additionally, the platform showcases meticulous attention to user experience across the ecosystem.';
   const r = AIDetector.analyzeText(text);
-  assert.equal(r.document_classification, 'AI_ONLY', `dense AI vocab should AI_ONLY, got ${r.document_classification} at score ${r.score}`);
+  assert.equal(
+    r.document_classification,
+    'AI_ONLY',
+    `dense AI vocab should AI_ONLY, got ${r.document_classification} at score ${r.score}`,
+  );
 });
 
 test('v2: blockquoted AI text does not penalize the human wrapper', () => {
@@ -1982,7 +2231,11 @@ test('v2: blockquoted AI text does not penalize the human wrapper', () => {
   ].join('\n');
   const r = AIDetector.analyzeText(text);
   assert.ok(r.stats.quotedLines >= 3, `expected quotedLines >= 3, got ${r.stats.quotedLines}`);
-  assert.notEqual(r.document_classification, 'AI_ONLY', `human wrapping AI quote should not classify AI_ONLY, got ${r.document_classification}`);
+  assert.notEqual(
+    r.document_classification,
+    'AI_ONLY',
+    `human wrapping AI quote should not classify AI_ONLY, got ${r.document_classification}`,
+  );
 });
 
 test('v2: probability sum is exactly 1 with no negative components', () => {
@@ -2007,7 +2260,9 @@ test('v2: probability sum is exactly 1 with no negative components', () => {
 });
 
 test('v2: unmappedHighlights counter surfaced in stats', () => {
-  const r = AIDetector.analyzeText('We delve into the landscape of innovation and continue to navigate the comprehensive transformation.');
+  const r = AIDetector.analyzeText(
+    'We delve into the landscape of innovation and continue to navigate the comprehensive transformation.',
+  );
   assert.equal(typeof r.stats.unmappedHighlights, 'number', 'unmappedHighlights should be numeric');
 });
 
@@ -2016,37 +2271,56 @@ test('v2: real Rust technical post does NOT classify AI_ONLY (denseAIVocab FP fi
   // denseAIVocab required only 4 tier1 + 1 tier2 cluster + transition,
   // which legitimate dense-jargon technical writing trips. Threshold
   // raised to 5 tier1 + 2 tier2 clusters + 150-word gate.
-  const text = 'Rust offers a robust and comprehensive approach to systems programming. Engineers leverage zero-cost abstractions to navigate intricate memory hierarchies without runtime overhead. The borrow checker provides meticulous compile-time guarantees that catch entire categories of bugs. Furthermore, the type system encourages a holistic approach to API design where contracts are explicit. The ecosystem around cargo, crates.io, and the Rust toolchain has matured significantly over the past five years, with libraries spanning embedded systems, web servers, and game engines.';
+  const text =
+    'Rust offers a robust and comprehensive approach to systems programming. Engineers leverage zero-cost abstractions to navigate intricate memory hierarchies without runtime overhead. The borrow checker provides meticulous compile-time guarantees that catch entire categories of bugs. Furthermore, the type system encourages a holistic approach to API design where contracts are explicit. The ecosystem around cargo, crates.io, and the Rust toolchain has matured significantly over the past five years, with libraries spanning embedded systems, web servers, and game engines.';
   const r = AIDetector.analyzeText(text);
-  assert.notEqual(r.document_classification, 'AI_ONLY', `Rust tech post should not classify AI_ONLY, got ${r.document_classification} at score ${r.score}`);
+  assert.notEqual(
+    r.document_classification,
+    'AI_ONLY',
+    `Rust tech post should not classify AI_ONLY, got ${r.document_classification} at score ${r.score}`,
+  );
 });
 
 test('v2: canonical "As an AI language model" disclaimer fires cutoff-disclaimer + AI_ONLY', () => {
   // Round-3 finding: this canonical LLM self-id phrase was missing
   // entirely from CUTOFF_DISCLAIMERS.
-  const text = 'As an AI language model, I cannot provide legal advice on this matter. However, I can suggest you consult a licensed attorney. The general principle is that contract law varies by jurisdiction and specific facts matter.';
+  const text =
+    'As an AI language model, I cannot provide legal advice on this matter. However, I can suggest you consult a licensed attorney. The general principle is that contract law varies by jurisdiction and specific facts matter.';
   const r = AIDetector.analyzeText(text);
   const types = new Set(r.issues.map((i) => i.type));
   assert.ok(types.has('cutoff-disclaimer'), 'expected cutoff-disclaimer flag on AI language model self-id');
-  assert.equal(r.document_classification, 'AI_ONLY', `expected AI_ONLY on canonical disclaimer, got ${r.document_classification}`);
-  assert.equal(r.confidence_category, 'high', `expected high confidence on canonical disclaimer, got ${r.confidence_category}`);
+  assert.equal(
+    r.document_classification,
+    'AI_ONLY',
+    `expected AI_ONLY on canonical disclaimer, got ${r.document_classification}`,
+  );
+  assert.equal(
+    r.confidence_category,
+    'high',
+    `expected high confidence on canonical disclaimer, got ${r.confidence_category}`,
+  );
 });
 
 test('v2: single-line shell prompt > is NOT stripped as blockquote', () => {
   // Blockquote strip now requires ≥2 consecutive lines.
-  const text = 'To check the directory:\n\n> ls -la\n\nThen review the output and look for any unexpected files. The team uses this command frequently when debugging deployment issues that involve filesystem permissions.';
+  const text =
+    'To check the directory:\n\n> ls -la\n\nThen review the output and look for any unexpected files. The team uses this command frequently when debugging deployment issues that involve filesystem permissions.';
   const r = AIDetector.analyzeText(text);
   assert.equal(r.stats.quotedLines, 0, `single > line should not strip, got quotedLines=${r.stats.quotedLines}`);
 });
 
 test('v2: stats.denseAIVocab and stats.tier1Distinct surface for observability', () => {
-  const r = AIDetector.analyzeText('We delve into the landscape with robust comprehensive seamless innovative cutting-edge solutions.');
+  const r = AIDetector.analyzeText(
+    'We delve into the landscape with robust comprehensive seamless innovative cutting-edge solutions.',
+  );
   assert.equal(typeof r.stats.denseAIVocab, 'boolean', 'denseAIVocab should be boolean');
   assert.equal(typeof r.stats.tier1Distinct, 'number', 'tier1Distinct should be number');
 });
 
 test('v2: backward compat — score, label, issues, stats still present', () => {
-  const r = AIDetector.analyzeText('We delve into the landscape of leveraging robust paradigms. The team continues to navigate this comprehensive transformation.');
+  const r = AIDetector.analyzeText(
+    'We delve into the landscape of leveraging robust paradigms. The team continues to navigate this comprehensive transformation.',
+  );
   assert.ok(typeof r.score === 'number', 'score still numeric');
   assert.ok(typeof r.label === 'string', 'label still string');
   assert.ok(Array.isArray(r.issues), 'issues still array');
@@ -2059,15 +2333,15 @@ test('#109: Object.prototype names in prose do not fire tier lookups', () => {
   const text =
     'The class constructor takes nine arguments in this codebase. Review the constructor before calling it, and check that its prototype chain and toString output match what the documentation describes for each valueOf call.';
   const r = AIDetector.analyzeText(text);
-  const protoHits = r.issues.filter(
-    (i) => ['constructor', 'prototype', 'tostring', 'valueof', 'hasownproperty'].includes(String(i.text).toLowerCase())
+  const protoHits = r.issues.filter((i) =>
+    ['constructor', 'prototype', 'tostring', 'valueof', 'hasownproperty'].includes(String(i.text).toLowerCase()),
   );
   assert.equal(protoHits.length, 0, `prototype-name tokens flagged: ${JSON.stringify(protoHits)}`);
 });
 
 test('#109 complement: real tier1 vocabulary still fires after the hasOwn guard', () => {
   const r = AIDetector.analyzeText(
-    'We delve into the constructor design of this system. The team continues to navigate this comprehensive transformation across every module boundary.'
+    'We delve into the constructor design of this system. The team continues to navigate this comprehensive transformation across every module boundary.',
   );
   const tier1Texts = r.issues.filter((i) => i.type === 'tier1').map((i) => String(i.text).toLowerCase());
   assert.ok(tier1Texts.includes('delve'), `expected 'delve' to still fire, got tier1=${JSON.stringify(tier1Texts)}`);
@@ -2076,7 +2350,7 @@ test('#109 complement: real tier1 vocabulary still fires after the hasOwn guard'
 
 test('performed-insight: essayist tics fire', () => {
   const r = AIDetector.analyzeText(
-    "Turns out the pricing was never the obstacle for any of the customers. That's not nothing. Sit with that for a moment before the next planning meeting, and remember that distribution is the whole game."
+    "Turns out the pricing was never the obstacle for any of the customers. That's not nothing. Sit with that for a moment before the next planning meeting, and remember that distribution is the whole game.",
   );
   const hits = r.issues.filter((i) => i.type === 'performed-insight').map((i) => i.text);
   assert.ok(hits.length >= 3, `expected >=3 performed-insight hits, got ${JSON.stringify(hits)}`);
@@ -2084,7 +2358,7 @@ test('performed-insight: essayist tics fire', () => {
 
 test('performed-insight: ordinary uses do not fire', () => {
   const r = AIDetector.analyzeText(
-    "She sat with him through the appointment and the long drive home afterward. The whole family gathered for the reunion photos on Saturday. Naming names in the report was the part of the job he liked least of all."
+    'She sat with him through the appointment and the long drive home afterward. The whole family gathered for the reunion photos on Saturday. Naming names in the report was the part of the job he liked least of all.',
   );
   const hits = r.issues.filter((i) => i.type === 'performed-insight');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2092,7 +2366,7 @@ test('performed-insight: ordinary uses do not fire', () => {
 
 test('performed-insight: determiner "sit with that <noun>" and literal "only X I trust" stay clean', () => {
   const r = AIDetector.analyzeText(
-    "Please sit with that decision overnight before you call the attorney tomorrow morning. This is the only doctor I trust with a procedure this complicated, and the referral took months to arrange."
+    'Please sit with that decision overnight before you call the attorney tomorrow morning. This is the only doctor I trust with a procedure this complicated, and the referral took months to arrange.',
   );
   const hits = r.issues.filter((i) => i.type === 'performed-insight');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2100,7 +2374,7 @@ test('performed-insight: determiner "sit with that <noun>" and literal "only X I
 
 test('performed-insight: literal punchline and naming senses stay clean', () => {
   const r = AIDetector.analyzeText(
-    "The comedian rewrote the punchline: the timing was off and the audience missed the joke completely. The storm was worth naming, the meteorologists agreed after reviewing damage reports from every coastal town."
+    'The comedian rewrote the punchline: the timing was off and the audience missed the joke completely. The storm was worth naming, the meteorologists agreed after reviewing damage reports from every coastal town.',
   );
   const hits = r.issues.filter((i) => i.type === 'performed-insight');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2108,7 +2382,7 @@ test('performed-insight: literal punchline and naming senses stay clean', () => 
 
 test('performed-insight: sentence-initial Turns out keeps a clean text and index', () => {
   const r = AIDetector.analyzeText(
-    "A stable introduction goes here. Turns out the service was already running on the host, so the whole incident closed within about fifteen minutes."
+    'A stable introduction goes here. Turns out the service was already running on the host, so the whole incident closed within about fifteen minutes.',
   );
   const hits = r.issues.filter((i) => i.type === 'performed-insight');
   assert.equal(hits.length, 1, `expected 1 hit, got ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2116,19 +2390,23 @@ test('performed-insight: sentence-initial Turns out keeps a clean text and index
   assert.equal(hits[0].index, 33, 'index must point at the phrase, not the preceding sentence boundary');
 });
 
-test('negation-chain: no-chains, didn\'t-chains, and don\'t-verb-it fire', () => {
+test("negation-chain: no-chains, didn't-chains, and don't-verb-it fire", () => {
   const r = AIDetector.analyzeText(
-    "No fluff, no filler, no jargon. No padding, no throat-clearing, no detours will survive this editing pass. They did not ask for permission, did not wait for the committee. Don't call it a pivot. Call it a correction, plain and simple, colleagues."
+    "No fluff, no filler, no jargon. No padding, no throat-clearing, no detours will survive this editing pass. They did not ask for permission, did not wait for the committee. Don't call it a pivot. Call it a correction, plain and simple, colleagues.",
   );
   const hits = r.issues.filter((i) => i.type === 'negation-chain');
   assert.equal(hits.length, 4, `expected 4 negation-chain hits, got ${JSON.stringify(hits.map((i) => i.text))}`);
   assert.equal(hits[0].text, 'No fluff, no filler, no jargon', 'no-chain must stop before trailing prose');
-  assert.equal(hits[1].text, 'No padding, no throat-clearing, no detours', 'no-chain must not consume a trailing auxiliary');
+  assert.equal(
+    hits[1].text,
+    'No padding, no throat-clearing, no detours',
+    'no-chain must not consume a trailing auxiliary',
+  );
 });
 
 test('negation-chain: idiomatic pairs stay clean', () => {
   const r = AIDetector.analyzeText(
-    "No more, no less, no matter what the final contract required from the vendor after the audit."
+    'No more, no less, no matter what the final contract required from the vendor after the audit.',
   );
   const hits = r.issues.filter((i) => i.type === 'negation-chain');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2136,7 +2414,7 @@ test('negation-chain: idiomatic pairs stay clean', () => {
 
 test('negation-chain: ordinary narration with restated subjects stays clean', () => {
   const r = AIDetector.analyzeText(
-    "I did not sleep well last night. I did not eat breakfast either, so I left home early and caught the first train into the city before sunrise."
+    'I did not sleep well last night. I did not eat breakfast either, so I left home early and caught the first train into the city before sunrise.',
   );
   const hits = r.issues.filter((i) => i.type === 'negation-chain');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2144,7 +2422,7 @@ test('negation-chain: ordinary narration with restated subjects stays clean', ()
 
 test('negation-chain: mid-sentence technical inventories stay clean', () => {
   const r = AIDetector.analyzeText(
-    "The endpoint takes no arguments, no headers, and no body when called in health-check mode. The parser accepts no flags, no options, and no positional parameters in its default configuration."
+    'The endpoint takes no arguments, no headers, and no body when called in health-check mode. The parser accepts no flags, no options, and no positional parameters in its default configuration.',
   );
   const hits = r.issues.filter((i) => i.type === 'negation-chain');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2152,7 +2430,7 @@ test('negation-chain: mid-sentence technical inventories stay clean', () => {
 
 test('negation-chain: two-item sentence-initial factual inventories stay clean', () => {
   const r = AIDetector.analyzeText(
-    "No tickets, no badges will be issued at the door for the conference this year. No maps, no lists were handed to the interns before the long field exercise began."
+    'No tickets, no badges will be issued at the door for the conference this year. No maps, no lists were handed to the interns before the long field exercise began.',
   );
   const hits = r.issues.filter((i) => i.type === 'negation-chain');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);
@@ -2160,7 +2438,7 @@ test('negation-chain: two-item sentence-initial factual inventories stay clean',
 
 test('dev-blog-boilerplate: simplicity slogans fire', () => {
   const r = AIDetector.analyzeText(
-    "The framework ships with sane defaults, and honestly it just works out of the box from the first install. The whole API is small enough to fit in your head after one afternoon of reading."
+    'The framework ships with sane defaults, and honestly it just works out of the box from the first install. The whole API is small enough to fit in your head after one afternoon of reading.',
   );
   const hits = r.issues.filter((i) => i.type === 'dev-blog-boilerplate').map((i) => i.text);
   assert.ok(hits.length >= 3, `expected >=3 dev-blog-boilerplate hits, got ${JSON.stringify(hits)}`);
@@ -2170,7 +2448,7 @@ test('dev-blog-boilerplate: simplicity slogans fire', () => {
 test('dev-blog-boilerplate: spaced and hyphenated out-of-the-box slogans fire', () => {
   for (const phrase of ['it just works out of the box', 'it just works out-of-the-box']) {
     const r = AIDetector.analyzeText(
-      `The framework claims ${phrase} for every developer who follows the documented installation steps today.`
+      `The framework claims ${phrase} for every developer who follows the documented installation steps today.`,
     );
     const hits = r.issues.filter((i) => i.type === 'dev-blog-boilerplate').map((i) => i.text);
     assert.deepEqual(hits, ['it just works'], `${phrase} must fire with an exact issue span`);
@@ -2179,7 +2457,7 @@ test('dev-blog-boilerplate: spaced and hyphenated out-of-the-box slogans fire', 
 
 test('dev-blog-boilerplate: ordinary prose stays clean', () => {
   const r = AIDetector.analyzeText(
-    "The configuration file documents every default value we chose and why we chose it. The batteries included with the flashlight were already dead when we opened the sealed package at camp. It just works out to two queries after the optimizer merges identical branches."
+    'The configuration file documents every default value we chose and why we chose it. The batteries included with the flashlight were already dead when we opened the sealed package at camp. It just works out to two queries after the optimizer merges identical branches.',
   );
   const hits = r.issues.filter((i) => i.type === 'dev-blog-boilerplate');
   assert.equal(hits.length, 0, `false positives: ${JSON.stringify(hits.map((i) => i.text))}`);

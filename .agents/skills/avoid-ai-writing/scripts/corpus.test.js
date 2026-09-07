@@ -52,7 +52,8 @@ test('leaves text without Gutenberg markers alone', () => {
 // ── HTML extraction ────────────────────────────────────────────────────
 
 test('container mode pulls the named element', () => {
-  const html = '<nav>Home About</nav><article><p>First para.</p><p>Second para.</p></article><footer>Copyright</footer>';
+  const html =
+    '<nav>Home About</nav><article><p>First para.</p><p>Second para.</p></article><footer>Copyright</footer>';
   const out = htmlToText(html, { selector: 'article' });
   assert.ok(out.includes('First para.'));
   assert.ok(out.includes('Second para.'));

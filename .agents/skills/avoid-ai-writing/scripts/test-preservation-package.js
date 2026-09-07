@@ -4,13 +4,7 @@
 const path = require('node:path');
 
 const root = path.resolve(process.argv[2] || '.');
-const validatorPath = path.join(
-  root,
-  'skills',
-  'preservation-verifier',
-  'scripts',
-  'validate.js',
-);
+const validatorPath = path.join(root, 'skills', 'preservation-verifier', 'scripts', 'validate.js');
 
 let validator;
 try {
@@ -30,9 +24,7 @@ const result = validator.validate(sample, sample);
 const residual = result && result.stats && result.stats.residual;
 
 if (!residual) {
-  console.error(
-    'packaged preservation validator did not load its residual detector; stats.residual is null',
-  );
+  console.error('packaged preservation validator did not load its residual detector; stats.residual is null');
   process.exit(1);
 }
 

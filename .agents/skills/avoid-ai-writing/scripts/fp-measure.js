@@ -96,11 +96,12 @@ function measure(opts = {}) {
 
   for (const doc of manifest.documents) {
     const rows = loadRows(doc);
-    if (rows === null) { skipped.push(doc.id); continue; }
+    if (rows === null) {
+      skipped.push(doc.id);
+      continue;
+    }
     for (const row of rows) {
-      const chunks = unit === 'document'
-        ? [row.text.replace(/\s+/g, ' ').trim()]
-        : splitUnits(row.text);
+      const chunks = unit === 'document' ? [row.text.replace(/\s+/g, ' ').trim()] : splitUnits(row.text);
       for (const [i, chunk] of chunks.entries()) {
         const r = AIDetector.analyzeText(chunk);
         if (r.tooShort || r.label === 'Text too long') continue;
@@ -150,11 +151,19 @@ function summarize({ units, skipped, unit }) {
     const tp = machine.filter((u) => u.score >= t).length;
     overall[t] = {
       fpr: { n: human.length, flagged: fp, rate: human.length ? fp / human.length : 0, ci: wilson(fp, human.length) },
-      tpr: { n: machine.length, flagged: tp, rate: machine.length ? tp / machine.length : 0, ci: wilson(tp, machine.length) },
+      tpr: {
+        n: machine.length,
+        flagged: tp,
+        rate: machine.length ? tp / machine.length : 0,
+        ci: wilson(tp, machine.length),
+      },
     };
   }
 
-  const auc = rocAuc(machine.map((u) => u.score), human.map((u) => u.score));
+  const auc = rocAuc(
+    machine.map((u) => u.score),
+    human.map((u) => u.score),
+  );
 
   // Pooling the sources hides the thing worth seeing: RAID is in-domain
   // continuation, HC3 is assistant register, and the detector behaves
@@ -178,11 +187,19 @@ function summarize({ units, skipped, unit }) {
   // A category earns its place by separating the classes. Lift is the ratio of
   // its firing rate on machine text to its rate on human text; below 1 it is
   // firing more often on human writing than on machine writing.
-  const discrimination = Object.entries(catByClass).map(([type, c]) => {
-    const hr = human.length ? c.human / human.length : 0;
-    const mr = machine.length ? c.machine / machine.length : 0;
-    return { type, humanRate: hr, machineRate: mr, lift: hr > 0 ? mr / hr : (mr > 0 ? Infinity : 0), n: c.human + c.machine };
-  }).sort((a, b) => b.machineRate - a.machineRate);
+  const discrimination = Object.entries(catByClass)
+    .map(([type, c]) => {
+      const hr = human.length ? c.human / human.length : 0;
+      const mr = machine.length ? c.machine / machine.length : 0;
+      return {
+        type,
+        humanRate: hr,
+        machineRate: mr,
+        lift: hr > 0 ? mr / hr : mr > 0 ? Infinity : 0,
+        n: c.human + c.machine,
+      };
+    })
+    .sort((a, b) => b.machineRate - a.machineRate);
 
   return {
     unit,
@@ -206,9 +223,9 @@ function report(s, units) {
   for (const t of THRESHOLDS) {
     const o = s.overall[t];
     console.log(
-      `  score >= ${String(t).padEnd(3)}`
-      + `${pct(o.fpr.rate).padStart(7)} (${pct(o.fpr.ci[0])}–${pct(o.fpr.ci[1])})`.padEnd(26)
-      + `${pct(o.tpr.rate).padStart(7)} (${pct(o.tpr.ci[0])}–${pct(o.tpr.ci[1])})`,
+      `  score >= ${String(t).padEnd(3)}` +
+        `${pct(o.fpr.rate).padStart(7)} (${pct(o.fpr.ci[0])}–${pct(o.fpr.ci[1])})`.padEnd(26) +
+        `${pct(o.tpr.rate).padStart(7)} (${pct(o.tpr.ci[0])}–${pct(o.tpr.ci[1])})`,
     );
   }
 
@@ -218,7 +235,9 @@ function report(s, units) {
   console.log('\n  ROC-AUC by source');
   for (const [src, v] of Object.entries(s.bySource)) {
     const a = v.auc === null ? 'n/a (single class)' : v.auc.toFixed(3);
-    console.log(`    ${src.padEnd(18)} human ${String(v.human).padStart(4)}  machine ${String(v.machine).padStart(4)}   AUC ${a}`);
+    console.log(
+      `    ${src.padEnd(18)} human ${String(v.human).padStart(4)}  machine ${String(v.machine).padStart(4)}   AUC ${a}`,
+    );
   }
 
   console.log('\n  TPR by generating model');
@@ -234,8 +253,8 @@ function report(s, units) {
     const h = s.byRegister.human[reg] && s.byRegister.human[reg][25];
     const m = s.byRegister.machine[reg] && s.byRegister.machine[reg][25];
     console.log(
-      `    ${reg.padEnd(18)}${String(h ? h.n : 0).padStart(7)}${(h ? pct(h.rate) : '-').padStart(8)}`
-      + `${String(m ? m.n : 0).padStart(12)}${(m ? pct(m.rate) : '-').padStart(8)}`,
+      `    ${reg.padEnd(18)}${String(h ? h.n : 0).padStart(7)}${(h ? pct(h.rate) : '-').padStart(8)}` +
+        `${String(m ? m.n : 0).padStart(12)}${(m ? pct(m.rate) : '-').padStart(8)}`,
     );
   }
 
@@ -243,7 +262,9 @@ function report(s, units) {
   console.log('    category                   human   machine    lift');
   for (const d of s.discrimination.slice(0, 16)) {
     const lift = d.lift === Infinity ? '  inf' : d.lift.toFixed(1).padStart(5);
-    console.log(`    ${d.type.padEnd(26)}${pct(d.humanRate).padStart(6)}${pct(d.machineRate).padStart(10)}${lift.padStart(8)}`);
+    console.log(
+      `    ${d.type.padEnd(26)}${pct(d.humanRate).padStart(6)}${pct(d.machineRate).padStart(10)}${lift.padStart(8)}`,
+    );
   }
 
   if (s.skipped.length) {

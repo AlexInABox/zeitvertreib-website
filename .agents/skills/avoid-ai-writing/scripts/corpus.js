@@ -47,19 +47,19 @@ const CACHE = path.join(CORPUS_DIR, 'cache');
  * be checked.
  */
 const REGISTERS = [
-  'blog',              // personal or company blog prose
-  'technical-blog',    // architecture, code-adjacent long form
-  'docs',              // README, reference, how-to
-  'essay-literary',    // long-form literary essay
-  'academic',          // papers, lectures, scholarly argument
-  'social',            // LinkedIn, X, short form
-  'email',             // newsletters, correspondence
-  'conversational',    // issue and PR comments, chat, DMs
+  'blog', // personal or company blog prose
+  'technical-blog', // architecture, code-adjacent long form
+  'docs', // README, reference, how-to
+  'essay-literary', // long-form literary essay
+  'academic', // papers, lectures, scholarly argument
+  'social', // LinkedIn, X, short form
+  'email', // newsletters, correspondence
+  'conversational', // issue and PR comments, chat, DMs
 ];
 
 const AUTHORSHIP = [
-  'human-pre-llm',     // written before generative models were available
-  'human-attested',    // author states no AI assistance
+  'human-pre-llm', // written before generative models were available
+  'human-attested', // author states no AI assistance
 ];
 
 function sha256(text) {
@@ -183,7 +183,10 @@ function loadRows(doc) {
   if (doc.source.type !== 'dataset') {
     return [{ id: doc.id, text, register: doc.register, class: doc.class || 'human', model: null, domain: null }];
   }
-  return text.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+  return text
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
 }
 
 function cachePath(doc) {
@@ -271,7 +274,9 @@ function cmdVerify() {
   for (const doc of m.documents) {
     const text = loadText(doc);
     if (text === null) {
-      console.log(`  MISSING   ${doc.id}${doc.source.type === 'local' ? ` (expected at ${doc.source.path})` : ' (run: node scripts/corpus.js fetch)'}`);
+      console.log(
+        `  MISSING   ${doc.id}${doc.source.type === 'local' ? ` (expected at ${doc.source.path})` : ' (run: node scripts/corpus.js fetch)'}`,
+      );
       missing++;
       continue;
     }
@@ -361,20 +366,26 @@ function cmdAddLocal(args) {
     added: new Date().toISOString().slice(0, 10),
   });
   writeManifest(m);
-  console.log(`added ${id} (${(text.match(/\S+/g) || []).length} words). Text stays at ${abs}; only its hash is committed.`);
+  console.log(
+    `added ${id} (${(text.match(/\S+/g) || []).length} words). Text stays at ${abs}; only its hash is committed.`,
+  );
   return 0;
 }
 
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   switch (cmd) {
-    case 'fetch': process.exit(await cmdFetch(rest.includes('--force')));
+    case 'fetch':
+      process.exit(await cmdFetch(rest.includes('--force')));
       break;
-    case 'verify': process.exit(cmdVerify());
+    case 'verify':
+      process.exit(cmdVerify());
       break;
-    case 'list': process.exit(cmdList());
+    case 'list':
+      process.exit(cmdList());
       break;
-    case 'add-local': process.exit(cmdAddLocal(rest));
+    case 'add-local':
+      process.exit(cmdAddLocal(rest));
       break;
     default:
       console.error('usage: node scripts/corpus.js <list|fetch|verify|add-local>');
@@ -384,4 +395,14 @@ async function main() {
 
 if (require.main === module) main();
 
-module.exports = { readManifest, loadText, loadRows, sha256, REGISTERS, AUTHORSHIP, stripGutenberg, htmlToText, applySlice };
+module.exports = {
+  readManifest,
+  loadText,
+  loadRows,
+  sha256,
+  REGISTERS,
+  AUTHORSHIP,
+  stripGutenberg,
+  htmlToText,
+  applySlice,
+};

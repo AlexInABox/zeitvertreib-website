@@ -51,7 +51,8 @@ test('fenced code removed → error', () => {
 });
 
 test('blockquote reworded → error', () => {
-  const before = 'He said:\n\n> The system is slow and it is getting slower.\n> We need to fix it.\n\nThat is the claim.';
+  const before =
+    'He said:\n\n> The system is slow and it is getting slower.\n> We need to fix it.\n\nThat is the claim.';
   const after = 'He said:\n\n> The system is slow and getting slower.\n> We need to fix it.\n\nThat is the claim.';
   const r = validate(before, after, { skipResidual: true });
   assert.ok(codes(r).includes('blockquote-modified'));
@@ -224,18 +225,20 @@ test('halved text → shrink warning', () => {
 
 test('rewrite that adds AI patterns → residual error', () => {
   const before = 'The team shipped the parser on Tuesday. It reads 40MB files without the old memory spike.';
-  const after = 'The team leveraged a robust, comprehensive approach to delve into the landscape of parsing. '
-    + 'It is important to note that this is a testament to their seamless, cutting-edge paradigm. '
-    + 'Great question! I hope this helps!';
+  const after =
+    'The team leveraged a robust, comprehensive approach to delve into the landscape of parsing. ' +
+    'It is important to note that this is a testament to their seamless, cutting-edge paradigm. ' +
+    'Great question! I hope this helps!';
   const r = validate(before, after);
   assert.equal(r.ok, false);
   assert.ok(codes(r).includes('residual-grew'), formatResult(r));
 });
 
 test('rewrite that removes AI patterns → clean', () => {
-  const before = 'We leverage a robust and comprehensive framework to delve into the ever-evolving landscape '
-    + 'of developer tooling, showcasing a seamless and cutting-edge paradigm. It is important to note that '
-    + 'this is a testament to the team.';
+  const before =
+    'We leverage a robust and comprehensive framework to delve into the ever-evolving landscape ' +
+    'of developer tooling, showcasing a seamless and cutting-edge paradigm. It is important to note that ' +
+    'this is a testament to the team.';
   const after = 'We use a reliable framework to study developer tooling. The team built it in six weeks.';
   const r = validate(before, after);
   assert.equal(r.ok, true, formatResult(r));
@@ -243,7 +246,8 @@ test('rewrite that removes AI patterns → clean', () => {
 });
 
 test('identical input and output is always clean', () => {
-  const text = '---\ntitle: Test\n---\n\n# Heading\n\nBody with `code`, a https://example.com link, and ./a/path.js.\n\n> A quote.\n> Second line.\n\n| a | b |\n|---|---|\n| 1 | 2 |\n';
+  const text =
+    '---\ntitle: Test\n---\n\n# Heading\n\nBody with `code`, a https://example.com link, and ./a/path.js.\n\n> A quote.\n> Second line.\n\n| a | b |\n|---|---|\n| 1 | 2 |\n';
   const r = validate(text, text);
   assert.equal(r.ok, true, formatResult(r));
   assert.equal(r.warnings.length, 0, formatResult(r));

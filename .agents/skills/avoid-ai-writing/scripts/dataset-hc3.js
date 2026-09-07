@@ -79,7 +79,11 @@ async function build(spec, log = () => {}) {
     for (const line of lines) {
       if (!line.trim()) continue;
       let rec;
-      try { rec = JSON.parse(line); } catch (e) { continue; }
+      try {
+        rec = JSON.parse(line);
+      } catch (e) {
+        continue;
+      }
       const human = (rec.human_answers || []).find((a) => wordCount(a) >= minWords);
       const machine = (rec.chatgpt_answers || []).find((a) => wordCount(a) >= minWords);
       // Keep only records where BOTH sides clear the floor, so the pairing
@@ -98,12 +102,22 @@ async function build(spec, log = () => {}) {
     const domain = file.replace('.jsonl', '');
     for (const [i, r] of take.entries()) {
       selected.push({
-        id: `hc3-${domain}-${i}-h`, model: 'human', domain, register: cfg.register,
-        class: 'human', paired: `hc3-${domain}-${i}`, text: r.human.trim(),
+        id: `hc3-${domain}-${i}-h`,
+        model: 'human',
+        domain,
+        register: cfg.register,
+        class: 'human',
+        paired: `hc3-${domain}-${i}`,
+        text: r.human.trim(),
       });
       selected.push({
-        id: `hc3-${domain}-${i}-m`, model: 'chatgpt-2022-12', domain, register: cfg.register,
-        class: 'machine', paired: `hc3-${domain}-${i}`, text: r.machine.trim(),
+        id: `hc3-${domain}-${i}-m`,
+        model: 'chatgpt-2022-12',
+        domain,
+        register: cfg.register,
+        class: 'machine',
+        paired: `hc3-${domain}-${i}`,
+        text: r.machine.trim(),
       });
     }
     log(`  ${file}: ${records.length} paired records available, ${take.length} taken`);
@@ -121,7 +135,9 @@ async function build(spec, log = () => {}) {
   const warnings = [];
   if ((byClass.machine || 0) < 200) warnings.push(`${byClass.machine || 0} machine units (want >= 200)`);
   if (Object.keys(byDomain).length < 4) warnings.push(`only ${Object.keys(byDomain).length} domains`);
-  warnings.push('single model family (ChatGPT, Dec 2022) — a TPR here is an upper bound, not an estimate for current models');
+  warnings.push(
+    'single model family (ChatGPT, Dec 2022) — a TPR here is an upper bound, not an estimate for current models',
+  );
   for (const w of warnings) log(`  NOTE: ${w}`);
 
   return {

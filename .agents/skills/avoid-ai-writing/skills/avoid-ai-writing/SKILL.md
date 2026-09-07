@@ -12,13 +12,14 @@ You are editing content to remove AI writing patterns ("AI-isms") that make text
 
 ## What this skill is and isn't
 
-This is a **writing-quality tool**, not a verdict. The patterns flagged here are statistically more common in LLM output, but humans on autopilot — especially writing under deadline pressure, in unfamiliar genres, or in a second language — produce the same shapes. Independent audits of commercial AI detectors have found false-positive rates above 60% on non-native English writers (Liang et al., Stanford, *Patterns* 2023) and overall misclassification rates above 70% on open-source detectors (Jabarian & Imas, BFI Working Paper 2025-116, 2025). Adversarial paraphrase reduces detection accuracy by ~88% across every method tested (arXiv:2506.07001, 2025).
+This is a **writing-quality tool**, not a verdict. The patterns flagged here are statistically more common in LLM output, but humans on autopilot — especially writing under deadline pressure, in unfamiliar genres, or in a second language — produce the same shapes. Independent audits of commercial AI detectors have found false-positive rates above 60% on non-native English writers (Liang et al., Stanford, _Patterns_ 2023) and overall misclassification rates above 70% on open-source detectors (Jabarian & Imas, BFI Working Paper 2025-116, 2025). Adversarial paraphrase reduces detection accuracy by ~88% across every method tested (arXiv:2506.07001, 2025).
 
 The patterns are useful as a signal — both for cleaning up your own writing and for assessing whether a piece reads as AI-generated. Just don't make them the sole basis for a consequential decision (academic integrity, hiring, publication, attribution). Several rules here also fire on second-language writing, deadline-pressed humans, and technical genres that compress vocabulary by design. Pair the signal with context: who wrote it, what genre, what the writer's normal voice looks like, what other evidence you have.
 
 In short: signals, not proof. Worth acting on; not worth ruining someone's day over.
 
 <!-- reference-loading:start -->
+
 Before auditing or rewriting any text, read [references/patterns.md](references/patterns.md) in full. It contains the word tiers, pattern catalog, and context/voice profiles. These rules and their exceptions are required for quick passes as well as full audits. Resolve bundled command and example paths from this skill directory.
 <!-- reference-loading:end -->
 
@@ -29,6 +30,7 @@ This skill operates in one of three modes:
 **`rewrite`** (default) — Flag AI-isms and rewrite the text to fix them.
 
 **`detect`** — Flag AI-isms only. No rewriting. Use this mode when:
+
 - The writer wants to see what's flagged and decide what to fix themselves
 - The flagged patterns might be intentional (AI patterns aren't always bad — they can be effective in small doses)
 - You're auditing text you don't want altered (published content, someone else's writing, reference material)
@@ -40,7 +42,7 @@ Trigger detect mode when the user says "detect," "flag only," "audit only," "jus
 
 **Invocation.** Natural language is enough ("rewrite this in a blunt voice for LinkedIn," "edit `post.md` in place," "scan this, don't rewrite"). Power users can also pass explicit options, which map to the sections below: `[--mode rewrite|detect|edit]`, `[--voice casual|professional|technical|warm|blunt]`, `[--context linkedin|blog|technical-blog|investor-email|docs|casual]`, `[--file PATH]`, `[--iterate N]` (max 2), `[--style CONFIG|GUIDE]`.
 
-**Iterate to convergence (optional).** Rewrite mode already runs one corrective second pass (see Output format) — that built-in pass *is* pass 2, so `--iterate` does not stack on top of it. When the writer asks to "iterate," "keep going until it's clean," or passes `--iterate N`, repeat the audit→rewrite cycle until no patterns remain or **N passes** are reached. Cap **N at 2**: a rewrite plus one corrective pass clears the flagged patterns, and a third pass costs a full regeneration while rarely finding more. Report how many passes it took ("converged in 2 passes").
+**Iterate to convergence (optional).** Rewrite mode already runs one corrective second pass (see Output format) — that built-in pass _is_ pass 2, so `--iterate` does not stack on top of it. When the writer asks to "iterate," "keep going until it's clean," or passes `--iterate N`, repeat the audit→rewrite cycle until no patterns remain or **N passes** are reached. Cap **N at 2**: a rewrite plus one corrective pass clears the flagged patterns, and a third pass costs a full regeneration while rarely finding more. Report how many passes it took ("converged in 2 passes").
 
 ---
 
@@ -72,6 +74,7 @@ In **edit** mode, your job is to:
 Not all AI-isms are equal. When doing a quick pass or triaging a large document, prioritize by tier:
 
 ### P0 — Credibility killers (fix immediately)
+
 - Cutoff disclaimers ("As of my last update")
 - Chatbot artifacts ("I hope this helps!", "Great question!")
 - Vague attributions without sources ("Experts believe")
@@ -79,6 +82,7 @@ Not all AI-isms are equal. When doing a quick pass or triaging a large document,
 - Hashtag stuffing on `linkedin` and `investor-email` posts (severity varies by profile — same rule, lower priority on `blog`/`technical-blog` where a launch post may legitimately stack tags; see the context-profile table below)
 
 ### P1 — Obvious AI smell (fix before publishing)
+
 - Word-list violations (delve, leverage, harness, robust, etc.)
 - Template phrases and slot-fill constructions
 - "Let's" transition openers
@@ -97,6 +101,7 @@ Not all AI-isms are equal. When doing a quick pass or triaging a large document,
 - Tier 3 phrase clustering (≥3 distinct boilerplate phrases in one piece)
 
 ### P2 — Stylistic polish (fix when time allows)
+
 - Em dash frequency (above 1 per 1,000 words). This is writing-quality guidance, not evidence of machine authorship: usage has varied by model generation and vendor, so do not score or invert it as an authorship signal.
 - Generic conclusions ("The future looks bright")
 - Repeated setup/reversal punchlines when they replace concrete claims (isolated or supported reversals pass)
@@ -115,7 +120,7 @@ Use P0+P1 for quick passes. Full audit covers all three tiers.
 
 ## Self-reference escape hatch
 
-When writing *about* AI writing patterns (blog posts, tutorials, skill documentation like this file), quoted examples are exempt from flagging. Text inside quotation marks, code blocks, or explicitly marked as illustrative ("for example, AI might write...") should not be rewritten. Only flag patterns that appear in the author's own prose, not in cited examples of bad writing.
+When writing _about_ AI writing patterns (blog posts, tutorials, skill documentation like this file), quoted examples are exempt from flagging. Text inside quotation marks, code blocks, or explicitly marked as illustrative ("for example, AI might write...") should not be rewritten. Only flag patterns that appear in the author's own prose, not in cited examples of bad writing.
 
 ---
 
@@ -131,7 +136,7 @@ When writing *about* AI writing patterns (blog posts, tutorials, skill documenta
 
 **Fallback: a named guide from memory.** If someone passes `--style "APA"` or `"Chicago"` with no config, you may apply it from general knowledge as best-effort, not as a feature. Open with a status line such as `Applying APA from general knowledge (not verified; no compliance claim).`, apply the register and mechanics you know, and make no compliance claim. Do **not** reproduce the guide's copyrighted text, and note that your knowledge may reflect an older edition. Paywalled guides (Chicago, APA, MLA, AP) are never bundled in any form.
 
-**Resolving `--style <arg>`.** A path, or a bare name matching `examples/<name>.json`, loads that config (apply and verify); anything else is the named-guide fallback above. When a guide's mechanics conflict with the AI-ism catalog the guide wins the mechanic (for example, CMOS keeps deliberate em dashes); still flag the AI *habit* such as em-dash stacking. A bare de-AI request (no `--style`) is unchanged; don't apply a guide to a genre it wasn't written for.
+**Resolving `--style <arg>`.** A path, or a bare name matching `examples/<name>.json`, loads that config (apply and verify); anything else is the named-guide fallback above. When a guide's mechanics conflict with the AI-ism catalog the guide wins the mechanic (for example, CMOS keeps deliberate em dashes); still flag the AI _habit_ such as em-dash stacking. A bare de-AI request (no `--style`) is unchanged; don't apply a guide to a genre it wasn't written for.
 
 ## Output format
 
@@ -186,6 +191,7 @@ It exits non-zero when a rewrite altered a fenced code block, YAML frontmatter, 
 The goal is writing that sounds like a person wrote it. Direct. Specific. The writing should demonstrate confidence, not assert it.
 
 Five principles for human-sounding rewrites:
+
 1. **Vary sentence length** — mix short with long. Fragments are fine.
 2. **Be concrete** — replace vague claims with numbers, names, dates, or examples.
 3. **Have a voice** — where appropriate, use first person, state preferences, show reactions.
@@ -200,15 +206,15 @@ The replacement table provides defaults, not mandates. If a flagged word is clea
 
 ### Never inject these
 
-The instruction above — put voice back on purpose — has a predictable failure mode: the model reaches for a stock kit of "human" moves and installs a personality the author never had. That trades one detectable register for a louder one. An independent stress test of `blader/humanizer` found exactly this: generic AI phrasing replaced by a recognizable *humanizer* voice of fragments and staccato rhythm. A new fingerprint, not the absence of one.
+The instruction above — put voice back on purpose — has a predictable failure mode: the model reaches for a stock kit of "human" moves and installs a personality the author never had. That trades one detectable register for a louder one. An independent stress test of `blader/humanizer` found exactly this: generic AI phrasing replaced by a recognizable _humanizer_ voice of fragments and staccato rhythm. A new fingerprint, not the absence of one.
 
 None of the following may be **added** to a text that did not already contain it. Every one is a rewrite failure even when the result scores clean:
 
 - **Fake first person.** "I've seen this a hundred times," "in my experience," "I'll admit" dropped into prose that had no author presence. Voice comes from the author or not at all. If the source has no `I`, the rewrite has no `I`.
-- **Manufactured stakes.** "In a world where," "now more than ever," "the stakes have never been higher." Covered as a detection rule under Speculative scenario openers; listed again here because the rewrite side is where it gets *introduced*.
+- **Manufactured stakes.** "In a world where," "now more than ever," "the stakes have never been higher." Covered as a detection rule under Speculative scenario openers; listed again here because the rewrite side is where it gets _introduced_.
 - **Forced contrarianism.** "Everyone says X, but they're wrong," "the conventional wisdom is backwards." Only legitimate when the source actually argued it. Inventing a foil is inventing a claim.
 - **Performed candor.** "Let's be honest," "real talk," "here's the thing." See Narrated candor and Infomercial engagement hooks. A rewrite that adds one is failing two rules at once.
-- **Em-dash theatrics.** Dashes staged for drama the content has not earned. The rule elsewhere is a rate ceiling; this is about *adding* dashes during a rewrite, which should never happen.
+- **Em-dash theatrics.** Dashes staged for drama the content has not earned. The rule elsewhere is a rate ceiling; this is about _adding_ dashes during a rewrite, which should never happen.
 - **Staccato conversion.** Chopping ordinary sentences into fragments to manufacture rhythm. Vary sentence length by varying the sentences, not by breaking them.
 - **Invented specifics.** A number, name, date, tool, or mechanism the source never contained. Specificity is the most tempting fix because it always reads better, and a fabricated specific is worse than the vague phrasing it replaced. If the concrete detail is missing, flag the gap and leave it. Never fill it.
 

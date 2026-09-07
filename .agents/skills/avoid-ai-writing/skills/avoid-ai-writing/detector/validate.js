@@ -47,7 +47,8 @@ const AIDetectorValidate = (() => {
   // Tracking parameters this skill is documented to strip (SKILL.md,
   // "AI-tool URL parameters"). Kept in sync with the `ai-utm-source`
   // detector category in patterns.js.
-  const AI_URL_PARAMS = /[?&](?:utm_source=(?:chatgpt\.com|openai(?:\.com)?|copilot\.com|claude\.ai|perplexity\.ai|gemini\.google\.com|grok\.com)|referrer=grok\.com)\b/gi;
+  const AI_URL_PARAMS =
+    /[?&](?:utm_source=(?:chatgpt\.com|openai(?:\.com)?|copilot\.com|claude\.ai|perplexity\.ai|gemini\.google\.com|grok\.com)|referrer=grok\.com)\b/gi;
 
   function extractAll(re, text) {
     const out = [];
@@ -79,7 +80,12 @@ const AIDetectorValidate = (() => {
   function normalizeTable(block) {
     return block
       .split('\n')
-      .map((row) => row.trim().replace(/\s*\|\s*/g, '|').replace(/-{2,}/g, '-'))
+      .map((row) =>
+        row
+          .trim()
+          .replace(/\s*\|\s*/g, '|')
+          .replace(/-{2,}/g, '-'),
+      )
       .join('\n');
   }
 
@@ -208,7 +214,10 @@ const AIDetectorValidate = (() => {
     const newQuotes = extractAll(BLOCKQUOTE_BLOCK, newProse).map(normalizeQuote);
     const lostQuotes = missingFrom(origQuotes, newQuotes);
     if (lostQuotes.length) {
-      err('blockquote-modified', `Blockquote content was modified or removed (${lostQuotes.length} block(s)). Quoted material is attributed to someone else.`);
+      err(
+        'blockquote-modified',
+        `Blockquote content was modified or removed (${lostQuotes.length} block(s)). Quoted material is attributed to someone else.`,
+      );
     }
 
     // ── Tables: reference content, not prose. ──
@@ -226,14 +235,8 @@ const AIDetectorValidate = (() => {
     }
 
     // ── URLs, compared with AI tracking parameters stripped from both sides. ──
-    const origUrls = [
-      ...extractAll(URL, origProse),
-      ...extractAll(MD_LINK_TARGET, origProse),
-    ].map(normalizeUrl);
-    const newUrls = [
-      ...extractAll(URL, newProse),
-      ...extractAll(MD_LINK_TARGET, newProse),
-    ].map(normalizeUrl);
+    const origUrls = [...extractAll(URL, origProse), ...extractAll(MD_LINK_TARGET, origProse)].map(normalizeUrl);
+    const newUrls = [...extractAll(URL, newProse), ...extractAll(MD_LINK_TARGET, newProse)].map(normalizeUrl);
     const lostUrls = missingFrom(origUrls, newUrls);
     if (lostUrls.length) {
       err('url-missing', `URL removed or altered: ${sample(lostUrls)}`);
@@ -251,22 +254,34 @@ const AIDetectorValidate = (() => {
     for (const [, hashes, text] of original.matchAll(MD_HEADING)) origHeadings.push({ level: hashes.length, text });
     for (const [, hashes, text] of rewritten.matchAll(MD_HEADING)) newHeadings.push({ level: hashes.length, text });
     if (origHeadings.length !== newHeadings.length) {
-      err('heading-count', `Heading count changed: ${origHeadings.length} → ${newHeadings.length}. Restructuring the document is out of scope for a rewrite.`);
+      err(
+        'heading-count',
+        `Heading count changed: ${origHeadings.length} → ${newHeadings.length}. Restructuring the document is out of scope for a rewrite.`,
+      );
     } else {
       const levelDrift = origHeadings.findIndex((h, i) => h.level !== newHeadings[i].level);
       if (levelDrift !== -1) {
-        err('heading-level', `Heading nesting changed at heading #${levelDrift + 1}: h${origHeadings[levelDrift].level} → h${newHeadings[levelDrift].level}.`);
+        err(
+          'heading-level',
+          `Heading nesting changed at heading #${levelDrift + 1}: h${origHeadings[levelDrift].level} → h${newHeadings[levelDrift].level}.`,
+        );
       }
       const reworded = origHeadings.filter((h, i) => h.text !== newHeadings[i].text);
       if (reworded.length) {
-        warn('heading-text', `${reworded.length} heading(s) reworded. Expected when fixing Title Case or removing emoji; check nothing else moved.`);
+        warn(
+          'heading-text',
+          `${reworded.length} heading(s) reworded. Expected when fixing Title Case or removing emoji; check nothing else moved.`,
+        );
       }
     }
 
     // ── Numbers: SKILL.md says preserve specific technical details. ──
     const lostNumbers = missingFrom(extractAll(NUMBER, origProse), extractAll(NUMBER, newProse));
     if (lostNumbers.length) {
-      warn('number-missing', `Figures present in the original are absent from the rewrite: ${sample(lostNumbers)}. Legitimate when a numeral was spelled out; a fabrication risk otherwise.`);
+      warn(
+        'number-missing',
+        `Figures present in the original are absent from the rewrite: ${sample(lostNumbers)}. Legitimate when a numeral was spelled out; a fabrication risk otherwise.`,
+      );
     }
 
     // ── Volume: a rewrite that halves the text probably dropped content. ──
@@ -274,7 +289,10 @@ const AIDetectorValidate = (() => {
     const newWords = wordCount(rewritten);
     const maxShrink = options.maxShrinkRatio == null ? 0.4 : options.maxShrinkRatio;
     if (origWords > 0 && newWords / origWords < 1 - maxShrink) {
-      warn('large-shrink', `Rewrite dropped ${Math.round((1 - newWords / origWords) * 100)}% of the words (${origWords} → ${newWords}). Check for lost content.`);
+      warn(
+        'large-shrink',
+        `Rewrite dropped ${Math.round((1 - newWords / origWords) * 100)}% of the words (${origWords} → ${newWords}). Check for lost content.`,
+      );
     }
 
     // ── Residual patterns: the rewrite must not introduce new tells. ──
@@ -298,7 +316,10 @@ const AIDetectorValidate = (() => {
           scoreAfter: after.score,
         };
         if (after.issues.length > before.issues.length) {
-          err('residual-grew', `Rewrite introduced AI patterns: ${before.issues.length} → ${after.issues.length} flagged issues. A rewrite may leave patterns behind; it may not add them.`);
+          err(
+            'residual-grew',
+            `Rewrite introduced AI patterns: ${before.issues.length} → ${after.issues.length} flagged issues. A rewrite may leave patterns behind; it may not add them.`,
+          );
         }
       }
     }
@@ -343,10 +364,7 @@ if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.m
     console.error('usage: node detector/validate.js <original-file> <rewritten-file>');
     process.exit(2);
   }
-  const result = AIDetectorValidate.validate(
-    fs.readFileSync(origPath, 'utf8'),
-    fs.readFileSync(newPath, 'utf8'),
-  );
+  const result = AIDetectorValidate.validate(fs.readFileSync(origPath, 'utf8'), fs.readFileSync(newPath, 'utf8'));
   console.log(AIDetectorValidate.formatResult(result));
   process.exit(result.ok ? 0 : 1);
 }

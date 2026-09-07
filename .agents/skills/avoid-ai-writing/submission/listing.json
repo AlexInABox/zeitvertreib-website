@@ -17,7 +17,15 @@
     "termsOfServiceURL": "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/TERMS.md",
     "version": "3.33.2",
     "packageName": "avoid-ai-writing",
-    "capabilities": ["AI-pattern audit","Detect-only review","Voice-preserving rewrite","Targeted file editing","Preservation verification","False-positive review","Multi-step writing cleanup"],
+    "capabilities": [
+      "AI-pattern audit",
+      "Detect-only review",
+      "Voice-preserving rewrite",
+      "Targeted file editing",
+      "Preservation verification",
+      "False-positive review",
+      "Multi-step writing cleanup"
+    ],
     "starterPrompts": [
       "Scan this text for AI writing patterns and flag only, without rewriting it.",
       "Rewrite this draft to remove AI-isms while preserving my voice, facts, and structure.",
@@ -32,8 +40,8 @@
     "subtitleCharacters": 26,
     "descriptionCharacters": 566,
     "developerNameCharacters": 14,
-    "starterPromptCharacters": [75,85,75],
-    "capabilityCharacters": [16,18,24,21,25,21,26]
+    "starterPromptCharacters": [75, 85, 75],
+    "capabilityCharacters": [16, 18, 24, 21, 25, 21, 26]
   },
   "publisherIdentity": {
     "packagePublisher": "Conor Bronsdon",

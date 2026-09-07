@@ -168,10 +168,12 @@ function main() {
     console.log('| Document | Words | Raw score | Exempt score | Budget |');
     console.log('|---|---:|---:|---:|---:|');
     for (const r of rows) {
-      console.log(`| \`${r.file}\` | ${r.words.toLocaleString()} | ${r.rawScore} | **${r.exemptScore}** | ${r.budget} |`);
+      console.log(
+        `| \`${r.file}\` | ${r.words.toLocaleString()} | ${r.rawScore} | **${r.exemptScore}** | ${r.budget} |`,
+      );
     }
   } else {
-    console.log('\nself-scan — this skill\'s detector against this skill\'s docs\n');
+    console.log("\nself-scan — this skill's detector against this skill's docs\n");
     console.log('  file                      words    raw  exempt  budget');
     for (const r of rows) {
       const flag = r.overBudget ? '  OVER' : '';
@@ -181,12 +183,14 @@ function main() {
     }
     const over = rows.filter((r) => r.overBudget);
     console.log(
-      `\n  raw counts every quoted example as a violation; exempt applies SKILL.md's\n`
-      + `  self-reference escape hatch. Budgets gate the exempt column only.\n`,
+      `\n  raw counts every quoted example as a violation; exempt applies SKILL.md's\n` +
+        `  self-reference escape hatch. Budgets gate the exempt column only.\n`,
     );
     if (over.length) {
       for (const r of over) {
-        console.log(`  ${r.file} is over budget (${r.exemptScore} > ${r.budget}). Top categories: ${r.topTypes.map(([t, n]) => `${t}×${n}`).join(', ') || 'none'}`);
+        console.log(
+          `  ${r.file} is over budget (${r.exemptScore} > ${r.budget}). Top categories: ${r.topTypes.map(([t, n]) => `${t}×${n}`).join(', ') || 'none'}`,
+        );
       }
     }
   }

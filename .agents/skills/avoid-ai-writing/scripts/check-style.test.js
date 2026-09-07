@@ -9,12 +9,20 @@ const { spawnSync } = require('child_process');
 const { check, resolveConfig } = require('./check-style.js');
 
 let passed = 0;
-const t = (name, fn) => { fn(); passed += 1; process.stdout.write(`  ✓ ${name}\n`); };
+const t = (name, fn) => {
+  fn();
+  passed += 1;
+  process.stdout.write(`  ✓ ${name}\n`);
+};
 
 // --- quotes (hard) ---
 t('quotes:straight flags curly marks; a clean doc passes', () => {
   assert.strictEqual(check('# ok\n\nplain "straight" text', { quotes: 'straight' }).hard.length, 0);
-  assert.ok(check('# ok\n\nuse the “retry” option', { quotes: 'straight' }).hard.some((x) => x.rule === 'quotes-should-be-straight'));
+  assert.ok(
+    check('# ok\n\nuse the “retry” option', { quotes: 'straight' }).hard.some(
+      (x) => x.rule === 'quotes-should-be-straight',
+    ),
+  );
 });
 t('quotes:curly flags straight quotes and apostrophes', () => {
   const r = check('She said "hi" and it\'s fine.', { quotes: 'curly' });
@@ -27,11 +35,17 @@ t('quotes:curly carves out feet/inch primes (5\'11")', () => {
 
 // --- latinAbbrev (hard): never (Google) vs parentheses (Chicago) ---
 t('latinAbbrev:never flags any e.g./i.e.', () => {
-  assert.ok(check('Retry, e.g. 3 times.', { latinAbbrev: 'never' }).hard.some((x) => x.rule === 'latin-abbrev-not-allowed'));
+  assert.ok(
+    check('Retry, e.g. 3 times.', { latinAbbrev: 'never' }).hard.some((x) => x.rule === 'latin-abbrev-not-allowed'),
+  );
   assert.strictEqual(check('Retry, for example 3 times.', { latinAbbrev: 'never' }).hard.length, 0);
 });
 t('latinAbbrev:parentheses flags outside parens, not inside (must-not-fire)', () => {
-  assert.ok(check('Retry, e.g. 3 times.', { latinAbbrev: 'parentheses' }).hard.some((x) => x.rule === 'latin-abbrev-outside-parens'));
+  assert.ok(
+    check('Retry, e.g. 3 times.', { latinAbbrev: 'parentheses' }).hard.some(
+      (x) => x.rule === 'latin-abbrev-outside-parens',
+    ),
+  );
   assert.strictEqual(check('Retry a few times (e.g., 3).', { latinAbbrev: 'parentheses' }).hard.length, 0);
 });
 
@@ -47,7 +61,11 @@ t('a proper-noun heading is NOT a hard violation', () => {
   assert.strictEqual(check('# Deploying to Google Cloud\n\ntext', { headings: 'sentence' }).hard.length, 0);
 });
 t('headings:title flags a fully-lowercase heading as advisory', () => {
-  assert.ok(check('# a plain heading\n\ntext', { headings: 'title' }).advisory.some((x) => x.rule === 'heading-may-need-title-case'));
+  assert.ok(
+    check('# a plain heading\n\ntext', { headings: 'title' }).advisory.some(
+      (x) => x.rule === 'heading-may-need-title-case',
+    ),
+  );
 });
 
 // --- config validation: unrecognized keys/values become warnings ---
@@ -64,7 +82,11 @@ t('a valid config produces no warnings', () => {
 t('frontmatter that closes is skipped; unterminated frontmatter does NOT swallow the doc', () => {
   assert.strictEqual(check('---\ntitle: "x"\n---\n# ok\n\nRun `git --force`.', { quotes: 'straight' }).hard.length, 0);
   // no closing --- : the body must still be checked, not silently blanked
-  assert.ok(check('---\nx\n\nuse the “retry” option', { quotes: 'straight' }).hard.some((x) => x.rule === 'quotes-should-be-straight'));
+  assert.ok(
+    check('---\nx\n\nuse the “retry” option', { quotes: 'straight' }).hard.some(
+      (x) => x.rule === 'quotes-should-be-straight',
+    ),
+  );
 });
 t('empty/omitted mechanics check nothing and warn nothing', () => {
   const r = check('anything "here" it\'s fine', {});
@@ -73,7 +95,10 @@ t('empty/omitted mechanics check nothing and warn nothing', () => {
 });
 t('markdown link titles and reference definitions are syntax, not curly-quote violations', () => {
   // Link titles MUST use straight quotes; flagging them hard-fails a correct document.
-  assert.strictEqual(check('See the [docs](https://x.example "The Title") for more.', { quotes: 'curly' }).hard.length, 0);
+  assert.strictEqual(
+    check('See the [docs](https://x.example "The Title") for more.', { quotes: 'curly' }).hard.length,
+    0,
+  );
   assert.strictEqual(check('[1]: https://x.example "Ref Title"', { quotes: 'curly' }).hard.length, 0);
   // A real straight quote in prose on the same line is still caught.
   assert.ok(check('He said "hi" in [docs](https://x.example "T").', { quotes: 'curly' }).hard.length > 0);
@@ -82,7 +107,11 @@ t('a parenthetical that wraps across lines keeps its latinAbbrev carve-out', () 
   const wrapped = 'A long aside (this parenthetical wraps,\ne.g. across two lines) ends here.';
   assert.strictEqual(check(wrapped, { latinAbbrev: 'parentheses' }).hard.length, 0);
   // Still fires once the parenthetical has closed.
-  assert.ok(check('An aside (closed here).\ne.g. now outside.', { latinAbbrev: 'parentheses' }).hard.some((x) => x.rule === 'latin-abbrev-outside-parens'));
+  assert.ok(
+    check('An aside (closed here).\ne.g. now outside.', { latinAbbrev: 'parentheses' }).hard.some(
+      (x) => x.rule === 'latin-abbrev-outside-parens',
+    ),
+  );
 });
 t('a stray "(" does not suppress later latinAbbrev findings past the paragraph', () => {
   // Regression: paren depth carried document-wide, so one ":(" silenced every later
@@ -95,7 +124,10 @@ t('a link whose URL contains parentheses does not corrupt the paren balance', ()
   const wiki = '(We cite [Foo](https://en.wikipedia.org/wiki/Foo_(bar)), e.g. this one.)';
   assert.strictEqual(check(wiki, { latinAbbrev: 'parentheses' }).hard.length, 0);
   // ...and its straight-quoted title is still masked for quotes:curly.
-  assert.strictEqual(check('[Foo](https://en.wikipedia.org/wiki/Foo_(bar) "The Title")', { quotes: 'curly' }).hard.length, 0);
+  assert.strictEqual(
+    check('[Foo](https://en.wikipedia.org/wiki/Foo_(bar) "The Title")', { quotes: 'curly' }).hard.length,
+    0,
+  );
 });
 t('an unclosed "](" is left alone rather than swallowing the rest of the line', () => {
   assert.ok(check('weird ]( text with "quotes" here.', { quotes: 'curly' }).hard.length > 0);
@@ -131,7 +163,7 @@ t('prose containing a comparison is not mistaken for an HTML tag', () => {
   // Regression: a loose "<letter ... >" mask swallowed everything between the brackets,
   // hiding real violations in ordinary technical prose.
   assert.ok(check('For n<N, the "tail" sum > epsilon.', { quotes: 'curly' }).hard.length > 0);
-  assert.ok(check('if a<b it isn\'t > c.', { quotes: 'curly' }).hard.length > 0);
+  assert.ok(check("if a<b it isn't > c.", { quotes: 'curly' }).hard.length > 0);
   assert.ok(check('When x<y (e.g. small) > z holds.', { latinAbbrev: 'never' }).hard.length > 0);
 });
 t('a UTF-8 BOM does not hide the frontmatter', () => {
@@ -145,7 +177,11 @@ t('nested and mismatched fences do not leak code as prose (no false hard violati
   const tilde = '# ok\n\n```\n~~~\ninner “q”\n~~~\n```\n\nclean text';
   assert.strictEqual(check(tilde, { quotes: 'straight' }).hard.length, 0);
   // Prose after a properly closed fence is still checked.
-  assert.ok(check('# ok\n\n```\ncode\n```\n\nuse the “retry” option', { quotes: 'straight' }).hard.some((x) => x.rule === 'quotes-should-be-straight'));
+  assert.ok(
+    check('# ok\n\n```\ncode\n```\n\nuse the “retry” option', { quotes: 'straight' }).hard.some(
+      (x) => x.rule === 'quotes-should-be-straight',
+    ),
+  );
 });
 
 // --- resolution (filename / path / unknown / traversal); no guide aliases ---
@@ -156,7 +192,7 @@ t('resolveConfig: filename, path, unknown, traversal (no guide aliases)', () => 
   assert.strictEqual(resolveConfig('technical'), EX('technical.json'));
   assert.strictEqual(resolveConfig('prose'), EX('prose.json'));
   assert.strictEqual(resolveConfig(EX('technical.json')), EX('technical.json'));
-  assert.strictEqual(resolveConfig('cmos'), null);   // no guide alias resolution
+  assert.strictEqual(resolveConfig('cmos'), null); // no guide alias resolution
   assert.strictEqual(resolveConfig('no-such-guide'), null);
   assert.strictEqual(resolveConfig('../package'), null); // bare names can't traverse
 });
@@ -166,8 +202,12 @@ t('a bare name is not shadowed by a same-named file in the working directory', (
   fs.writeFileSync(path.join(dir, 'technical'), '# not a config');
   const cwd = process.cwd();
   process.chdir(dir);
-  try { assert.strictEqual(resolveConfig('technical'), EX('technical.json')); }
-  finally { process.chdir(cwd); fs.rmSync(dir, { recursive: true, force: true }); }
+  try {
+    assert.strictEqual(resolveConfig('technical'), EX('technical.json'));
+  } finally {
+    process.chdir(cwd);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // --- shipped example configs are generic (no guide names/aliases), parse, and apply ---
@@ -209,7 +249,10 @@ const cliRaw = (files, argv) => {
   return r.status;
 };
 t('CLI: a second file, an unknown flag, and a missing --config value each exit 2', () => {
-  assert.strictEqual(cliRaw({ 'a.md': '# ok\n\ntext', 'b.md': '# ok\n\ntext' }, ['a.md', 'b.md', '--config', 'technical']), 2);
+  assert.strictEqual(
+    cliRaw({ 'a.md': '# ok\n\ntext', 'b.md': '# ok\n\ntext' }, ['a.md', 'b.md', '--config', 'technical']),
+    2,
+  );
   assert.strictEqual(cliRaw({ 'a.md': '# ok\n\ntext' }, ['a.md', '--config', 'technical', '--bogus']), 2);
   assert.strictEqual(cliRaw({ 'a.md': '# ok\n\ntext' }, ['a.md', '--config']), 2);
 });
@@ -218,7 +261,10 @@ t('CLI: a config whose mechanics is null or an array exits 2, not a false-green 
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cs-mech-'));
     fs.writeFileSync(path.join(dir, 'a.md'), '# ok\n\ntext');
     fs.writeFileSync(path.join(dir, 'c.json'), cfgJson);
-    const r = spawnSync('node', [path.join(__dirname, 'check-style.js'), 'a.md', '--config', 'c.json'], { cwd: dir, encoding: 'utf8' });
+    const r = spawnSync('node', [path.join(__dirname, 'check-style.js'), 'a.md', '--config', 'c.json'], {
+      cwd: dir,
+      encoding: 'utf8',
+    });
     fs.rmSync(dir, { recursive: true, force: true });
     return r.status;
   };
@@ -261,7 +307,10 @@ t('a document opening with --- then a blank line is not frontmatter (must-fire)'
   assert.ok(check('---\n\nHe said "hi".\n\n---\n\nmore', { quotes: 'curly' }).hard.length > 0);
 });
 t('real frontmatter still masks, including a quoted value', () => {
-  assert.strictEqual(check('---\ntitle: "Straight quotes are yaml"\n---\n\nplain text', { quotes: 'curly' }).hard.length, 0);
+  assert.strictEqual(
+    check('---\ntitle: "Straight quotes are yaml"\n---\n\nplain text', { quotes: 'curly' }).hard.length,
+    0,
+  );
 });
 
 // --- bare-name containment is by construction (no separator reaches that branch) ---

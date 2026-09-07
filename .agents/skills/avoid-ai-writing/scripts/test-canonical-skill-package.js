@@ -28,29 +28,33 @@ function run(args) {
 }
 
 try {
- for (skillRoot of bundleRoots) {
-  assert.ok(fs.readFileSync(path.join(skillRoot, "references/patterns.md"), "utf8").includes("## What to remove or fix"));
-  const styleFixture = path.join(fixtureRoot, 'technical.md');
-  const beforeFixture = path.join(fixtureRoot, 'before.md');
-  const afterFixture = path.join(fixtureRoot, 'after.md');
-  fs.writeFileSync(styleFixture, '# API behavior\n\nUse the parser for each request.\n');
-  fs.writeFileSync(beforeFixture, '# Release note\n\nThe parser keeps `config.json` unchanged.\n');
-  fs.copyFileSync(beforeFixture, afterFixture);
+  for (skillRoot of bundleRoots) {
+    assert.ok(
+      fs.readFileSync(path.join(skillRoot, 'references/patterns.md'), 'utf8').includes('## What to remove or fix'),
+    );
+    const styleFixture = path.join(fixtureRoot, 'technical.md');
+    const beforeFixture = path.join(fixtureRoot, 'before.md');
+    const afterFixture = path.join(fixtureRoot, 'after.md');
+    fs.writeFileSync(styleFixture, '# API behavior\n\nUse the parser for each request.\n');
+    fs.writeFileSync(beforeFixture, '# Release note\n\nThe parser keeps `config.json` unchanged.\n');
+    fs.copyFileSync(beforeFixture, afterFixture);
 
-  const style = run(['scripts/check-style.js', styleFixture, '--config', 'examples/technical.json']);
-  fs.writeFileSync(styleFixture, 'Say "hello" in [docs](url "Title").\n');
-  assert.strictEqual(run(['scripts/normalize-quotes.js', styleFixture, '--quotes', 'curly']),
-    'Say “hello” in [docs](url "Title").');
-  run(['scripts/normalize-quotes.js', styleFixture, '--quotes', 'curly', '--write']);
-  const marks = run(['scripts/check-style.js', styleFixture, '--config', 'examples/prose.json']);
-  fs.writeFileSync(styleFixture, 'Say "hello" in [docs](url "Title").\n');
-  const referenceFixture = path.join(fixtureRoot, 'reference.md');
-  fs.writeFileSync(referenceFixture, 'Say “welcome.”\n');
-  run(['scripts/normalize-quotes.js', styleFixture, '--reference', referenceFixture, '--write']);
-  assert.strictEqual(fs.readFileSync(styleFixture, 'utf8'), 'Say “hello” in [docs](url "Title").\n');
-  const preservation = run(['detector/validate.js', beforeFixture, afterFixture]);
-  console.log(JSON.stringify({ ok: true, cwd: path.relative(root, skillRoot), style, marks, preservation }, null, 2));
- }
+    const style = run(['scripts/check-style.js', styleFixture, '--config', 'examples/technical.json']);
+    fs.writeFileSync(styleFixture, 'Say "hello" in [docs](url "Title").\n');
+    assert.strictEqual(
+      run(['scripts/normalize-quotes.js', styleFixture, '--quotes', 'curly']),
+      'Say “hello” in [docs](url "Title").',
+    );
+    run(['scripts/normalize-quotes.js', styleFixture, '--quotes', 'curly', '--write']);
+    const marks = run(['scripts/check-style.js', styleFixture, '--config', 'examples/prose.json']);
+    fs.writeFileSync(styleFixture, 'Say "hello" in [docs](url "Title").\n');
+    const referenceFixture = path.join(fixtureRoot, 'reference.md');
+    fs.writeFileSync(referenceFixture, 'Say “welcome.”\n');
+    run(['scripts/normalize-quotes.js', styleFixture, '--reference', referenceFixture, '--write']);
+    assert.strictEqual(fs.readFileSync(styleFixture, 'utf8'), 'Say “hello” in [docs](url "Title").\n');
+    const preservation = run(['detector/validate.js', beforeFixture, afterFixture]);
+    console.log(JSON.stringify({ ok: true, cwd: path.relative(root, skillRoot), style, marks, preservation }, null, 2));
+  }
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
 }

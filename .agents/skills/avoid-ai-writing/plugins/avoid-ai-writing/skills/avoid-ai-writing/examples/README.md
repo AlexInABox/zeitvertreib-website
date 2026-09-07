@@ -5,8 +5,8 @@ applies **register/voice** directives and removes AI tells, on top of whatever
 **mechanics** you enforce. The preferred way in is a **config file**
 (`--style ./house.json`, or a bare name matching `examples/<name>.json`): it is applied, and
 the checkable subset of its mechanics is verified deterministically (see the table below for
-which rules gate the exit code and which are advisory). The files here are *examples of that
-format*; copy one and edit it.
+which rules gate the exit code and which are advisory). The files here are _examples of that
+format_; copy one and edit it.
 
 ## Where encoded guides live
 
@@ -38,10 +38,7 @@ A config is JSON with two parts:
 {
   "name": "My house style",
   "genre": "technical documentation",
-  "register": [
-    "Second person, active voice, present tense.",
-    "No hype."
-  ],
+  "register": ["Second person, active voice, present tense.", "No hype."],
   "mechanics": {
     "quotes": "straight",
     "headings": "sentence",
@@ -60,21 +57,21 @@ A config is JSON with two parts:
 - **`mechanics`** (object) — output rules, of which the checkable subset is verified by
   `node scripts/check-style.js <file> --config <config.json>`:
 
-| key | values | how it's checked |
-|---|---|---|
-| `quotes` | `straight` \| `curly` | **hard** — flags the wrong mark form in prose |
-| `latinAbbrev` | `never` \| `parentheses` \| `any` | **hard** — `never` flags any `e.g.`/`i.e.`; `parentheses` flags them outside parentheses; `any` is unchecked |
-| `headings` | `sentence` \| `title` | advisory — proper nouns make sentence vs. title case ambiguous, so it can't be verified deterministically |
-| `emDash` | `sparing` \| `deliberate` | advisory — `sparing` flags a rate over ~1 per 1,000 words; `deliberate` is unchecked |
-| `spellNumbersUpTo` | number | advisory — flags numerals at or below the threshold in prose |
-| `serialComma` | `true` \| `false` | model-applied only; not machine-checked |
+| key                | values                            | how it's checked                                                                                             |
+| ------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `quotes`           | `straight` \| `curly`             | **hard** — flags the wrong mark form in prose                                                                |
+| `latinAbbrev`      | `never` \| `parentheses` \| `any` | **hard** — `never` flags any `e.g.`/`i.e.`; `parentheses` flags them outside parentheses; `any` is unchecked |
+| `headings`         | `sentence` \| `title`             | advisory — proper nouns make sentence vs. title case ambiguous, so it can't be verified deterministically    |
+| `emDash`           | `sparing` \| `deliberate`         | advisory — `sparing` flags a rate over ~1 per 1,000 words; `deliberate` is unchecked                         |
+| `spellNumbersUpTo` | number                            | advisory — flags numerals at or below the threshold in prose                                                 |
+| `serialComma`      | `true` \| `false`                 | model-applied only; not machine-checked                                                                      |
 
 Unrecognized keys or values are reported as **warnings** (a config the tool couldn't fully
 apply) rather than silently ignored; omitted keys do nothing.
 
 Before checking, the checker skips closed YAML frontmatter, fenced/inline/indented code,
 link destinations and titles, reference identifiers, HTML tags and comments, and escaped
-punctuation. Link titles use straight quotes as *syntax*. List paragraph continuations stay
+punctuation. Link titles use straight quotes as _syntax_. List paragraph continuations stay
 checked; extra indentation can start code inside an item. A leading thematic break followed
 by a blank line is prose, not frontmatter. The `latinAbbrev` parenthesis carve-out carries
 across wrapped lines but resets at a paragraph break, so an unclosed `(` disables that rule

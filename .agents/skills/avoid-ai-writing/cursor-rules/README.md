@@ -17,10 +17,11 @@ By default the rule activates on `.md`, `.mdx`, `.txt`, `.rst`, and `.adoc` file
 ## Trigger phrases
 
 Once installed, ask Cursor:
-- *"Remove AI-isms from this section."*
-- *"Audit this draft for AI writing patterns."*
-- *"Make this sound less like AI."*
-- *"Run avoid-ai-writing in detect mode."* (flag without rewriting)
+
+- _"Remove AI-isms from this section."_
+- _"Audit this draft for AI writing patterns."_
+- _"Make this sound less like AI."_
+- _"Run avoid-ai-writing in detect mode."_ (flag without rewriting)
 
 ## Old Cursor projects
 

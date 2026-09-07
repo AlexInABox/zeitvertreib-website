@@ -55,22 +55,55 @@ const KNOWN = {
   serialComma: 'boolean',
 };
 
-const SMALL = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with', 'vs', 'nor', 'so', 'yet']);
-const majorWords = (h) => h.replace(/[*_`]/g, '').trim().split(/\s+/).slice(1)
-  .map((w) => w.replace(/[^A-Za-z]/g, ''))
-  .filter((b) => b && b !== b.toUpperCase() && !SMALL.has(b.toLowerCase())); // drop acronyms + minor words
+const SMALL = new Set([
+  'a',
+  'an',
+  'and',
+  'as',
+  'at',
+  'but',
+  'by',
+  'for',
+  'in',
+  'of',
+  'on',
+  'or',
+  'the',
+  'to',
+  'with',
+  'vs',
+  'nor',
+  'so',
+  'yet',
+]);
+const majorWords = (h) =>
+  h
+    .replace(/[*_`]/g, '')
+    .trim()
+    .split(/\s+/)
+    .slice(1)
+    .map((w) => w.replace(/[^A-Za-z]/g, ''))
+    .filter((b) => b && b !== b.toUpperCase() && !SMALL.has(b.toLowerCase())); // drop acronyms + minor words
 const isTitleCase = (h) => majorWords(h).filter((b) => /^[A-Z]/.test(b)).length >= 2;
-const looksSentenceCase = (h) => { const w = majorWords(h); return w.length >= 1 && w.every((b) => /^[a-z]/.test(b)); };
+const looksSentenceCase = (h) => {
+  const w = majorWords(h);
+  return w.length >= 1 && w.every((b) => /^[a-z]/.test(b));
+};
 
 /** Returns { hard, advisory, warnings } for the config's mechanics; register is not checked. */
 function check(text, mechanics) {
   const m = mechanics || {};
   const warnings = [];
   for (const [k, v] of Object.entries(m)) {
-    if (!(k in KNOWN)) { warnings.push({ rule: 'unknown-key', detail: k }); continue; }
+    if (!(k in KNOWN)) {
+      warnings.push({ rule: 'unknown-key', detail: k });
+      continue;
+    }
     const spec = KNOWN[k];
-    if (Array.isArray(spec)) { if (!spec.includes(v)) warnings.push({ rule: 'unknown-value', detail: `${k}: ${JSON.stringify(v)}` }); }
-    else if (typeof v !== spec) warnings.push({ rule: 'unknown-value', detail: `${k}: ${JSON.stringify(v)} (expected ${spec})` });
+    if (Array.isArray(spec)) {
+      if (!spec.includes(v)) warnings.push({ rule: 'unknown-value', detail: `${k}: ${JSON.stringify(v)}` });
+    } else if (typeof v !== spec)
+      warnings.push({ rule: 'unknown-value', detail: `${k}: ${JSON.stringify(v)} (expected ${spec})` });
   }
 
   const { prose, paraBreak } = markdownProse(text);
@@ -81,21 +114,28 @@ function check(text, mechanics) {
   const heads = prose.map((l, i) => [i + 1, l.match(/^#{1,6}\s+(.*)$/)]).filter(([, h]) => h);
 
   if (m.quotes === 'straight') {
-    prose.forEach((l, i) => { if (/[“”‘’]/.test(l)) hard.push({ line: i + 1, rule: 'quotes-should-be-straight' }); });
+    prose.forEach((l, i) => {
+      if (/[“”‘’]/.test(l)) hard.push({ line: i + 1, rule: 'quotes-should-be-straight' });
+    });
   } else if (m.quotes === 'curly') {
     prose.forEach((l, i) => {
       const c = l.replace(/(\d)['"]/g, '$1'); // carve out feet/inch primes (5'11")
       if (/"/.test(c)) hard.push({ line: i + 1, rule: 'double-quote-should-be-curly' });
-      if (/[A-Za-z]'[A-Za-z]|[A-Za-z]'(?!\w)|(^|\s)'/.test(c)) hard.push({ line: i + 1, rule: 'apostrophe-should-be-curly' });
+      if (/[A-Za-z]'[A-Za-z]|[A-Za-z]'(?!\w)|(^|\s)'/.test(c))
+        hard.push({ line: i + 1, rule: 'apostrophe-should-be-curly' });
     });
   }
 
   // Heading case is ADVISORY: proper nouns make sentence vs title case ambiguous, so it
   // can't be verified deterministically without false positives on ordinary headings.
   if (m.headings === 'sentence') {
-    heads.forEach(([ln, h]) => { if (isTitleCase(h[1])) advisory.push({ line: ln, rule: 'heading-may-need-sentence-case' }); });
+    heads.forEach(([ln, h]) => {
+      if (isTitleCase(h[1])) advisory.push({ line: ln, rule: 'heading-may-need-sentence-case' });
+    });
   } else if (m.headings === 'title') {
-    heads.forEach(([ln, h]) => { if (looksSentenceCase(h[1])) advisory.push({ line: ln, rule: 'heading-may-need-title-case' }); });
+    heads.forEach(([ln, h]) => {
+      if (looksSentenceCase(h[1])) advisory.push({ line: ln, rule: 'heading-may-need-title-case' });
+    });
   }
 
   if (m.latinAbbrev === 'parentheses' || m.latinAbbrev === 'never') {
@@ -105,11 +145,17 @@ function check(text, mechanics) {
     // document. That trades an unbounded silent false negative for a paragraph-wide one.
     let depth = 0;
     prose.forEach((l, i) => {
-      if (paraBreak[i]) { depth = 0; return; }
+      if (paraBreak[i]) {
+        depth = 0;
+        return;
+      }
       const re = /\b(e\.g\.|i\.e\.)/gi;
       let mm;
       while ((mm = re.exec(l)) !== null) {
-        if (m.latinAbbrev === 'never') { hard.push({ line: i + 1, rule: 'latin-abbrev-not-allowed' }); continue; }
+        if (m.latinAbbrev === 'never') {
+          hard.push({ line: i + 1, rule: 'latin-abbrev-not-allowed' });
+          continue;
+        }
         const before = l.slice(0, mm.index);
         const at = depth + (before.match(/\(/g) || []).length - (before.match(/\)/g) || []).length;
         if (at <= 0) hard.push({ line: i + 1, rule: 'latin-abbrev-outside-parens' });
@@ -141,33 +187,64 @@ if (require.main === module) {
   // equalled the config value (e.g. a real file `technical` with `--config technical`)
   // unreachable, and silently ignored a second file argument.
   const argv = process.argv.slice(2);
-  let cfgArg = null, json = false, file = null;
+  let cfgArg = null,
+    json = false,
+    file = null;
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--config') {
       const nx = argv[i + 1];
-      if (nx !== undefined && !nx.startsWith('--')) { cfgArg = nx; i += 1; } // else: missing value
-    } else if (a === '--json') { json = true; }
-    else if (a.startsWith('--')) { console.error(`unknown flag: ${a}`); process.exit(2); }
-    else if (file === null) { file = a; }
-    else { console.error(`unexpected extra argument: ${a}`); process.exit(2); }
+      if (nx !== undefined && !nx.startsWith('--')) {
+        cfgArg = nx;
+        i += 1;
+      } // else: missing value
+    } else if (a === '--json') {
+      json = true;
+    } else if (a.startsWith('--')) {
+      console.error(`unknown flag: ${a}`);
+      process.exit(2);
+    } else if (file === null) {
+      file = a;
+    } else {
+      console.error(`unexpected extra argument: ${a}`);
+      process.exit(2);
+    }
   }
-  if (!file || !cfgArg) { console.error('usage: check-style.js <file> --config <config.json|name> [--json]'); process.exit(2); }
+  if (!file || !cfgArg) {
+    console.error('usage: check-style.js <file> --config <config.json|name> [--json]');
+    process.exit(2);
+  }
   const cfgPath = resolveConfig(cfgArg);
   if (!cfgPath) {
-    console.error(`config not found: "${cfgArg}"\nPass a path to a JSON config, or a name matching a file in examples/ (for example, --config technical). See examples/README.md.`);
+    console.error(
+      `config not found: "${cfgArg}"\nPass a path to a JSON config, or a name matching a file in examples/ (for example, --config technical). See examples/README.md.`,
+    );
     process.exit(2);
   }
   let config;
-  try { config = JSON.parse(fs.readFileSync(cfgPath, 'utf8')); }
-  catch (e) { console.error(`could not read config "${cfgPath}": ${e.message}`); process.exit(2); }
-  if (!config || typeof config !== 'object' || typeof config.mechanics !== 'object'
-      || config.mechanics === null || Array.isArray(config.mechanics)) {
-    console.error(`config "${cfgPath}" has no "mechanics" object`); process.exit(2);
+  try {
+    config = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  } catch (e) {
+    console.error(`could not read config "${cfgPath}": ${e.message}`);
+    process.exit(2);
+  }
+  if (
+    !config ||
+    typeof config !== 'object' ||
+    typeof config.mechanics !== 'object' ||
+    config.mechanics === null ||
+    Array.isArray(config.mechanics)
+  ) {
+    console.error(`config "${cfgPath}" has no "mechanics" object`);
+    process.exit(2);
   }
   let text;
-  try { text = fs.readFileSync(file, 'utf8'); }
-  catch (e) { console.error(`could not read file "${file}": ${e.message}`); process.exit(2); }
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch (e) {
+    console.error(`could not read file "${file}": ${e.message}`);
+    process.exit(2);
+  }
   const r = check(text, config.mechanics);
   if (json) {
     console.log(JSON.stringify(r, null, 2));
@@ -176,7 +253,9 @@ if (require.main === module) {
     console.log(`${config.name || cfgPath}: ${r.hard.length} hard, ${r.advisory.length} advisory${w}`);
     r.warnings.forEach((x) => console.log(`  ! ${x.rule}: ${x.detail}`));
     r.hard.forEach((x) => console.log(`  L${x.line || '-'}  ${x.rule}`));
-    r.advisory.forEach((x) => console.log(`  L${x.line || '-'}  ${x.rule} (advisory)${x.detail ? `: ${x.detail}` : ''}`));
+    r.advisory.forEach((x) =>
+      console.log(`  L${x.line || '-'}  ${x.rule} (advisory)${x.detail ? `: ${x.detail}` : ''}`),
+    );
   }
   process.exit(r.hard.length > 0 ? 1 : 0);
 }

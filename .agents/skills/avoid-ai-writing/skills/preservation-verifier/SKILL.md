@@ -60,7 +60,7 @@ node scripts/validate.js before.md after.md
 For programmatic use:
 
 ```js
-const { validate } = require("./scripts/validate.js");
+const { validate } = require('./scripts/validate.js');
 ```
 
 The validator checks protected structures and reports blocking errors separately from warnings. Never claim it ran unless the current host executed it.
