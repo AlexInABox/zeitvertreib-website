@@ -80,11 +80,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private updateMenuItems() {
     this.items = [
       {
-        label: 'Startseite',
-        icon: PrimeIcons.HOME,
-        route: '/',
-      },
-      {
         label: 'Dashboard',
         icon: PrimeIcons.USER,
         route: '/dashboard',

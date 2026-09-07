@@ -1,0 +1,55 @@
+<header class="m3-nav">
+  <div class="m3-nav-box">
+    <a class="m3-logo" routerLink="/" aria-label="Zeitvertreib Startseite">
+      <img class="m3-logo-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
+      <span class="m3-logo-name">Zeitvertreib</span>
+    </a>
+
+    <nav class="m3-nav-links" aria-label="Hauptnavigation">
+      <a
+        class="m3-navlink"
+        routerLink="/dashboard"
+        [attr.aria-current]="currentUrl.startsWith('/dashboard') ? 'page' : null"
+        ><span class="m3-navlabel">Dashboard</span></a
+      >
+      <a
+        class="m3-navlink"
+        routerLink="/reporting"
+        [attr.aria-current]="currentUrl.startsWith('/reporting') ? 'page' : null"
+        ><span class="m3-navlabel">Reports</span></a
+      >
+      <a class="m3-navlink" routerLink="/cases" [attr.aria-current]="currentUrl.startsWith('/cases') ? 'page' : null"
+        ><span class="m3-navlabel">Cases</span></a
+      >
+      <a class="m3-navlink" routerLink="/zeit" [attr.aria-current]="currentUrl.startsWith('/zeit') ? 'page' : null"
+        ><span class="m3-navlabel">Z.E.I.T.</span></a
+      >
+      <a
+        class="m3-navlink"
+        routerLink="/permissions"
+        [attr.aria-current]="currentUrl.startsWith('/permissions') ? 'page' : null"
+        ><span class="m3-navlabel">Permissions</span></a
+      >
+      @if (showAdvent) {
+        <a
+          class="m3-navlink"
+          routerLink="/advent"
+          [attr.aria-current]="currentUrl.startsWith('/advent') ? 'page' : null"
+          ><span class="m3-navlabel">Adventskalender</span></a
+        >
+      }
+    </nav>
+
+    <div class="m3-nav-actions">
+      @if (user) {
+        <a class="m3-navlink m3-nav-user" routerLink="/profile">
+          <span class="m3-navlabel">{{ user.username || 'Konto' }}</span>
+        </a>
+      } @else {
+        <a class="m3-navlink m3-nav-user" routerLink="/login">
+          <span class="m3-navlabel">Login</span>
+        </a>
+      }
+    </div>
+  </div>
+</header>

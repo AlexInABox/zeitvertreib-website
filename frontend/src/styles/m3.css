@@ -1,0 +1,900 @@
+/* ============================================================
+   Zeitvertreib m3 — global design system
+   Extracted from the dashboard redesign so every page can adopt
+   the same language: dark violet canvas, hairlines, sharp corners,
+   brand-purple accents.
+
+   One accent hue (brand purple) + one violet-tinted neutral set.
+   No other hues on the page; status colors are the exception.
+   ============================================================ */
+
+:root {
+  /* ---- Layout: wide content container + edge gutter ------------- */
+  --m3-gutter: clamp(1rem, 3vw, 2.5rem);
+  --m3-content: min(1600px, calc(100% - (2 * var(--m3-gutter))));
+
+  /* ---- Zeitvertreib palette --------------------------------------
+     Sampled from the brand logo gradient
+     (public/assets/logos/logo_full_color_1to1.avif):
+     deep violet #4d03a0 -> core purple #7202a4 -> magenta #951079. */
+  --m3-accent: #a13de6; /* bright brand purple — links, chips, focus */
+  --m3-accent-deep: #4d03a0; /* brand gradient stop */
+  --m3-accent-core: #7202a4; /* brand purple — badge fills (white text) */
+  --m3-accent-magenta: #951079; /* brand gradient stop */
+
+  --m3-bg: #0d0b12; /* violet-tinted near-black canvas */
+  --m3-panel: #15121e; /* raised surface */
+  --m3-line: #282235; /* hairlines */
+  --m3-line-soft: rgba(233, 227, 247, 0.09);
+  --m3-soft: rgba(233, 227, 247, 0.05);
+  --m3-text: #f1edf9; /* violet-tinged off-white */
+  --m3-muted: #a49bba;
+
+  /* ---- Fontpack ---------------------------------------------------
+     Display: Archivo Black — filled by default, hollow as an outlined
+     variant of the same heavy face. Outline strokes on a regular-weight
+     face (Inter) break apart; heavy stems keep the hollow legible.
+     Text: Inter for body, data and UI. */
+  --m3-font-display: 'Archivo Black', 'Archivo', sans-serif;
+  --m3-font-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.m3-display,
+.m3-hero-title,
+.m3-h2 {
+  font-family: var(--m3-font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* The hollow display variant — an outline of the heavy face. */
+.m3-display--hollow {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--m3-text);
+}
+
+@supports not (-webkit-text-stroke: 1px #000) {
+  .m3-display--hollow {
+    color: var(--m3-text);
+  }
+}
+
+/* --- Canvas: page frame ------------------------------------------ */
+.m3-canvas {
+  min-height: 100vh;
+  position: relative;
+  background: var(--m3-bg);
+  color: var(--m3-text);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--m3-font-text);
+}
+
+/* Vertical hairlines at the content edges, touching the very top of
+   the page and running down through the navbar to the bottom. */
+.m3-canvas::before,
+.m3-canvas::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--m3-line);
+  pointer-events: none;
+  z-index: 40;
+}
+
+.m3-canvas::before {
+  left: max(var(--m3-gutter), calc(50% - 800px));
+}
+
+.m3-canvas::after {
+  right: max(var(--m3-gutter), calc(50% - 800px));
+}
+
+/* --- Nav: contained widget, full-width hairline underneath ------- */
+.m3-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--m3-bg);
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--m3-line);
+}
+
+.m3-nav-box {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  max-width: var(--m3-content);
+  margin: 0 auto;
+  min-height: 3.25rem;
+  padding: 0 1.25rem;
+  padding-right: 0; /* Needed since the last element at the very right of the navbar would look centered otherwise. */
+}
+
+.m3-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.m3-logo-star {
+  display: block;
+  width: 26px;
+  height: auto;
+}
+
+.m3-logo-name {
+  color: var(--m3-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-box: trim-both cap alphabetic;
+}
+
+.m3-nav-links {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.m3-nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+.m3-navlink {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 0.85rem;
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--m3-line);
+  color: var(--m3-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.m3-navlink:hover {
+  color: var(--m3-text);
+}
+
+/* Optically center the label: the box hugs cap-height..baseline, so flex
+   centering aligns the glyphs, not the line-box. Ignored where unsupported. */
+.m3-navlabel {
+  text-box: trim-both cap alphabetic;
+}
+
+.m3-navlink[aria-current='page'] {
+  color: var(--m3-accent);
+}
+
+.m3-navlink:focus-visible {
+  outline: 2px solid var(--m3-accent);
+  outline-offset: -2px;
+}
+
+.m3-nav-actions {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.m3-nav-actions .m3-navlink {
+  border-left: 1px solid var(--m3-line);
+}
+
+/* The last nav item closes its own cell on the right */
+.m3-nav-links .m3-navlink:last-child {
+  border-right: 1px solid var(--m3-line);
+}
+
+.m3-nav-user {
+  justify-content: center;
+  max-width: 14ch;
+}
+
+.m3-nav-user .m3-navlabel {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* symmetric padding so descenders survive the trim + clip combo and the
+     cap band stays optically centered */
+  padding-block: 0.2em;
+}
+
+/* --- Hero: plain canvas, copy + console --------------------------- */
+.m3-hero {
+  border-bottom: 1px solid var(--m3-line-soft);
+}
+
+.m3-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.78fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  max-width: var(--m3-content);
+  margin: 0 auto;
+  padding: clamp(4.5rem, 9vw, 7.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vw, 6.5rem);
+}
+
+.m3-hero-copy {
+  position: relative;
+  z-index: 7;
+  max-width: 46rem;
+}
+
+.m3-hero-title {
+  margin: 0;
+  font-size: clamp(2.75rem, 6.5vw, 5.25rem);
+  line-height: 0.94;
+}
+
+.m3-line {
+  display: block;
+}
+
+.m3-line--a {
+  color: var(--m3-text);
+  animation: m3-line-in 0.9s 0.18s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.m3-line--b {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--m3-text);
+  animation: m3-line-in 0.9s 0.3s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+/* the outlined second line must never render invisible */
+@supports not (-webkit-text-stroke: 1px #000) {
+  .m3-line--b {
+    color: var(--m3-text);
+  }
+}
+
+@keyframes m3-line-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 2.2rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes m3-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.m3-hero-sub {
+  display: block;
+  margin: 1.7rem 0 0;
+  max-width: 40ch;
+  color: var(--m3-muted);
+  font-size: clamp(1rem, 1.5vw, 1.18rem);
+  font-weight: 400;
+  line-height: 1.55;
+  animation: m3-in-up 0.9s 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.m3-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.6rem;
+  margin-top: 2.4rem;
+  animation: m3-in-up 0.9s 0.58s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.m3-hero-ghost {
+  background: transparent;
+  border: 1px solid var(--m3-line);
+  color: var(--m3-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.7rem 1.2rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.m3-hero-ghost:hover {
+  color: var(--m3-text);
+  border-color: var(--m3-text);
+  background: var(--m3-soft);
+}
+
+.m3-hero-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--m3-accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.7rem 1.4rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.m3-hero-play:hover {
+  background: #b45cf0;
+}
+
+.m3-hero-play:active {
+  background: #9335cf;
+}
+
+/* --- Console window ------------------------------------------------ */
+.m3-window {
+  position: relative;
+  z-index: 7;
+  justify-self: end;
+  width: min(520px, 100%);
+  padding: 0;
+  border: 1px solid rgba(233, 227, 247, 0.1);
+  background: linear-gradient(160deg, rgba(26, 21, 38, 0.78), rgba(15, 12, 21, 0.82));
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.m3-window-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.35rem;
+  border-bottom: 1px solid rgba(233, 227, 247, 0.09);
+}
+
+/* Freestanding white star — no backdrop. */
+.m3-window-badge {
+  display: block;
+  flex: none;
+}
+
+.m3-window-badge .m3-star {
+  display: block;
+  width: 1.15rem;
+  height: auto;
+}
+
+.m3-window-name {
+  color: var(--m3-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.m3-window-rank {
+  margin-left: auto;
+  padding: 0.28rem 0.6rem;
+  border: 1px solid rgba(161, 61, 230, 0.55);
+  color: var(--m3-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+/* Live indicator: a quiet pulsing dot, top right in the window bar. */
+.m3-live {
+  position: relative;
+  margin-left: auto;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e5484d;
+}
+
+.m3-live::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid #e5484d;
+  opacity: 0;
+  animation: m3-live-ping 2.4s ease-out infinite;
+}
+
+@keyframes m3-live-ping {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.m3-window-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 0;
+  background: rgba(233, 227, 247, 0.09);
+  border-bottom: 1px solid rgba(233, 227, 247, 0.09);
+}
+
+.m3-cell {
+  position: relative;
+  padding: 1.5rem 1.55rem 1.45rem;
+  background: rgba(15, 12, 21, 0.6);
+}
+
+.m3-cell span {
+  display: block;
+  color: var(--m3-muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.m3-cell strong {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--m3-text);
+  font-size: clamp(2rem, 3.4vw, 2.7rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.m3-window-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  margin-top: 0;
+  padding: 1rem 1.35rem;
+  color: var(--m3-muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Window extension: attached readout row under the console, whole row is the link.
+   Icon in its own compartment, readouts evenly centered. */
+.m3-window-ext {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  border-top: 1px solid var(--m3-line);
+  color: var(--m3-muted);
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.m3-window-ext:hover {
+  color: var(--m3-text);
+  background: var(--m3-soft);
+}
+
+.m3-ext-icon {
+  display: grid;
+  place-items: center;
+  padding: 0 1.15rem;
+  border-right: 1px solid var(--m3-line);
+}
+
+.m3-window-ext .m3-discord {
+  width: 1.3rem;
+  height: auto;
+}
+
+.m3-ext-cells {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.85rem 0;
+}
+
+.m3-ext-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.m3-ext-key {
+  color: var(--m3-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.m3-ext-val {
+  color: var(--m3-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Sections ------------------------------------------------------ */
+.m3-section {
+  max-width: var(--m3-content);
+  margin: 0 auto;
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1.25rem, 4vw, 2.5rem) 0;
+}
+
+/* Divider: hairline stretched rail to rail between stacked sections. */
+.m3-divider {
+  height: 1px;
+  margin: clamp(2.5rem, 6vw, 4rem) max(var(--m3-gutter), calc(50% - 800px)) 0;
+  background: var(--m3-line);
+}
+
+.m3-h2 {
+  margin: 0 0 2.4rem;
+  font-size: clamp(2rem, 4.6vw, 3.8rem);
+  line-height: 1.05;
+}
+
+/* --- Split panels (hairline grid) ---------------------------------- */
+.m3-split {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 1px;
+  background: var(--m3-line);
+  border: 1px solid var(--m3-line);
+}
+
+.m3-split-col {
+  padding: clamp(1.5rem, 2.6vw, 2.4rem);
+  background: var(--m3-bg);
+  min-width: 0;
+}
+
+.m3-split-title {
+  margin: 0 0 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--m3-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.m3-feed {
+  display: flex;
+  flex-direction: column;
+}
+
+.m3-feed-row {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--m3-line-soft);
+}
+
+.m3-feed-row:first-child {
+  border-top: 0;
+}
+
+.m3-feed-avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border: 1px solid var(--m3-line);
+  background: var(--m3-panel);
+}
+
+.m3-feed-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.m3-gear {
+  margin: 0;
+}
+
+.m3-gear-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--m3-line-soft);
+}
+
+.m3-gear-row:first-child {
+  border-top: 0;
+}
+
+.m3-gear-row dt {
+  color: var(--m3-muted);
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.m3-gear-row dd {
+  margin: 0;
+  color: var(--m3-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.m3-empty {
+  color: var(--m3-muted);
+  font-size: 0.95rem;
+}
+
+/* --- Gallery -------------------------------------------------------- */
+.m3-gallery-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.m3-gallery-head .m3-h2 {
+  margin-bottom: 2rem;
+}
+
+.m3-gallery-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+}
+
+.m3-gallery-count {
+  margin-right: 0.6rem;
+  color: var(--m3-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.m3-arrow {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--m3-line);
+  background: var(--m3-soft);
+  color: var(--m3-text);
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.m3-arrow:hover {
+  background: var(--m3-panel);
+  border-color: var(--m3-muted);
+}
+
+.m3-gallery .m3-stage {
+  position: relative;
+  border: 1px solid var(--m3-line);
+  background: #0e0c13;
+  overflow: hidden;
+}
+
+.m3-stage-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* Crossfade: the front layer holds the incoming image and fades over the
+   previous one (behind layer), with a faint settle scale for the morph. */
+.m3-stage-img--front {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  opacity: 0;
+  animation: m3-stage-fade 0.9s ease both;
+}
+
+@keyframes m3-stage-fade {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.m3-thumbs {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scrollbar-width: none;
+}
+
+.m3-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.m3-thumb {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 68px;
+  padding: 0;
+  border: 1px solid var(--m3-line);
+  background: #0e0c13;
+  cursor: pointer;
+  opacity: 0.5;
+  overflow: hidden;
+  transition:
+    opacity 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.m3-thumb:hover {
+  opacity: 0.85;
+}
+
+.m3-thumb--on {
+  opacity: 1;
+  border-color: var(--m3-accent);
+}
+
+.m3-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Footer --------------------------------------------------------- */
+.m3-footer {
+  border-top: 1px solid var(--m3-line);
+}
+
+.m3-footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: var(--m3-content);
+  margin: 0 auto;
+  padding: 1.5rem clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.m3-footer-brand {
+  color: var(--m3-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.m3-footer-links {
+  display: flex;
+  gap: 1.4rem;
+}
+
+.m3-footer-links a {
+  color: var(--m3-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.m3-footer-links a:hover {
+  color: var(--m3-text);
+}
+
+/* --- Responsive ------------------------------------------------------ */
+@media (max-width: 1080px) {
+  .m3-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+  }
+
+  .m3-hero-copy {
+    max-width: 40rem;
+  }
+
+  .m3-window {
+    justify-self: start;
+    width: min(560px, 100%);
+  }
+}
+
+@media (max-width: 720px) {
+  .m3-nav-user {
+    display: none;
+  }
+
+  .m3-nav-box {
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .m3-hero-title {
+    font-size: clamp(2.2rem, 9.5vw, 3.2rem);
+  }
+
+  .m3-window-rank {
+    display: none;
+  }
+
+  .m3-cell {
+    padding: 1.1rem 1.1rem 1.05rem;
+  }
+
+  .m3-cell strong {
+    font-size: 1.7rem;
+  }
+}
+
+/* --- Reduced motion --------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .m3-line,
+  .m3-line--a,
+  .m3-line--b,
+  .m3-hero-sub,
+  .m3-hero-actions {
+    animation: none;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .m3-live::after {
+    animation: none;
+  }
+
+  .m3-stage-img--front {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -14,8 +14,8 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Changed
 
-- The website dashboard has been redesigned into a new cinematic server overview
-- The website is now only available in dark mode
+- The website dashboard has been redesigned: live server stats, kills and playtime at a glance, and a Steam launch button
+- New landing page in the dashboard design; the website is now dark-mode only
 
 ### Removed
 

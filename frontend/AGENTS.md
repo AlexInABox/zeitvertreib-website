@@ -6,6 +6,7 @@ Angular 22 Single Page Application (SPA) using PrimeNG 21 (no Tailwind CSS). Ser
 
 > [!IMPORTANT]
 > **Always load the `angular-developer` skill (`.agents/skills/angular-developer/`) before editing frontend code.**
+> **Always load the `avoid-ai-writing` skill (`.agents/skills/avoid-ai-writing/`) before writing or editing user-facing copy** (UI text, landing/dashboard sections, empty states, error messages).
 > Refer to [`CONVENTIONS.md`](file:///home/bet/Projects/zeitvertreib-website/frontend/CONVENTIONS.md) for frontend coding standards (Signals reactivity, PrimeNG controls, modern Angular control flow syntax, shared types).
 
 ## Dev & Commands

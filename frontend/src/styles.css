@@ -1,5 +1,6 @@
 @import 'primeicons/primeicons.css';
 @import '../projects/ui/src/lib/tokens/tokens.css';
+@import './styles/m3.css';
 @media (orientation: portrait) {
   .floatingchat-container-wrap,
   .floatingchat-container-wrap-mo498,

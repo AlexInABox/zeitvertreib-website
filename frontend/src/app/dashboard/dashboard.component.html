@@ -21,35 +21,7 @@
 
 @if (!isLoading && !hasError) {
   <div class="m3-canvas">
-    <!-- Nav -->
-    <header class="m3-nav">
-      <div class="m3-nav-box">
-        <a class="m3-logo" routerLink="/" aria-label="Zeitvertreib Startseite">
-          <img class="m3-logo-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
-          <span class="m3-logo-name">Zeitvertreib</span>
-        </a>
-
-        <nav class="m3-nav-links" aria-label="Hauptnavigation">
-          <a class="m3-navlink" routerLink="/"><span class="m3-navlabel">Startseite</span></a>
-          <a class="m3-navlink" routerLink="/dashboard" aria-current="page"
-            ><span class="m3-navlabel">Dashboard</span></a
-          >
-          <a class="m3-navlink" routerLink="/reporting"><span class="m3-navlabel">Reports</span></a>
-          <a class="m3-navlink" routerLink="/cases"><span class="m3-navlabel">Cases</span></a>
-          <a class="m3-navlink" routerLink="/zeit"><span class="m3-navlabel">Z.E.I.T.</span></a>
-          <a class="m3-navlink" routerLink="/permissions"><span class="m3-navlabel">Permissions</span></a>
-          @if (showAdvent) {
-            <a class="m3-navlink" routerLink="/advent"><span class="m3-navlabel">Adventskalender</span></a>
-          }
-        </nav>
-
-        <div class="m3-nav-actions">
-          <a class="m3-navlink m3-nav-user" routerLink="/profile">
-            <span class="m3-navlabel">{{ userStatistics.username || 'Konto' }}</span>
-          </a>
-        </div>
-      </div>
-    </header>
+    <app-m3-nav />
 
     <!-- Hero -->
     <section class="m3-hero">
@@ -98,7 +70,7 @@
     </section>
 
     <!-- Activity -->
-    <section class="m3-detail">
+    <section class="m3-section">
       <h2 class="m3-h2">Aktivität</h2>
       <div class="m3-split">
         <div class="m3-split-col">
@@ -147,7 +119,7 @@
     </section>
 
     <!-- Gallery -->
-    <section class="m3-gallery">
+    <section class="m3-section m3-gallery">
       <div class="m3-gallery-head">
         <div>
           <h2 class="m3-h2">Bilder</h2>
@@ -176,17 +148,6 @@
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="m3-footer">
-      <div class="m3-footer-inner">
-        <span class="m3-footer-brand">© 2026 Zeitvertreib</span>
-        <div class="m3-footer-links">
-          <a href="/bewerben">Bewerben</a>
-          <a href="https://dsc.gg/zeit" target="_blank" rel="noopener">Discord</a>
-          <a href="/imprint.txt">Impressum</a>
-          <a href="/privacy-policy.txt">Datenschutz</a>
-        </div>
-      </div>
-    </footer>
+    <app-m3-footer />
   </div>
 }

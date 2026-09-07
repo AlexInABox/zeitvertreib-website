@@ -24,6 +24,11 @@ Monorepo for the Zeitvertreib SCP:SL server: web platform + SCP:SL plugins. See 
 - **Humans must write all C# game logic.**
 - AI is permitted only to review existing C# code for obvious logic errors, inconsistencies, and style.
 
+## Writing Quality Policy
+
+- **NO AI-SOUNDING PROSE IN USER-FACING COPY.** Load the `avoid-ai-writing` skill (`.agents/skills/avoid-ai-writing/`) before writing or editing any user-facing prose: UI copy, landing/dashboard text, `documentation/`, `CHANGELOG.md`, Discord bot messages.
+- Audit the draft against the skill's pattern catalog (`references/patterns.md`) and rewrite until clean. Prose only — code, tables, and quoted material are exempt.
+
 ## Build Order
 
 `types` must be built **before** frontend/backend/plugins:

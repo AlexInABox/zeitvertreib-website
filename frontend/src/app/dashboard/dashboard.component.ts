@@ -4,7 +4,10 @@ import { environment } from '../../environments/environment';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { SupportService } from '../services/support.service';
+import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
+import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
 import { ButtonComponent, SpinnerComponent } from '@app/ui';
+import { SHOWCASE_IMAGES } from '../utils/showcase';
 import { retry, timeout } from 'rxjs';
 
 interface Statistics {
@@ -27,7 +30,7 @@ interface Statistics {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterModule, ButtonComponent, SpinnerComponent],
+  imports: [RouterModule, M3NavComponent, M3FooterComponent, ButtonComponent, SpinnerComponent],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./dashboard.component.css'],
@@ -88,18 +91,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return pos && pos > 0 ? `#${pos}` : '—';
   }
 
-  /** Seasonal nav link: advent calendar from Nov 15 through December (German timezone). */
-  get showAdvent(): boolean {
-    try {
-      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-      const month = now.getMonth() + 1;
-      const day = now.getDate();
-      return month === 12 || (month === 11 && day >= 15);
-    } catch {
-      return false;
-    }
-  }
-
   /** Compact playtime for the big stat number (avoids overlong "Xh Ym" strings). */
   get playtimeBig(): string {
     const seconds = this.userStatistics.playtime || 0;
@@ -129,32 +120,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ---- gallery ------------------------------------------------------------
 
-  galleryImages: string[] = [
-    '0.avif',
-    '1.avif',
-    '2.avif',
-    '3.avif',
-    '4.avif',
-    '5.avif',
-    '6.avif',
-    '7.avif',
-    '8.gif',
-    '9.avif',
-    '10.avif',
-    '11.avif',
-    '13.avif',
-    '14.avif',
-    '15.avif',
-    '16.avif',
-    '17.avif',
-    '18.avif',
-    '19.avif',
-    '20.avif',
-    '21.avif',
-    '22.avif',
-    '23.gif',
-    '24.avif',
-  ];
+  galleryImages = SHOWCASE_IMAGES;
+
   activeImageIndex = 0;
 
   get activeImage(): string {

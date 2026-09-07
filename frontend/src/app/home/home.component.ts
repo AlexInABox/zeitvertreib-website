@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-
-import { AnimateOnScrollModule } from 'primeng/animateonscroll';
-import { ImageModule } from 'primeng/image';
-import { PanelModule } from 'primeng/panel';
-import { CardModule } from 'primeng/card';
-import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
+import { RouterModule } from '@angular/router';
+import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
+import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
+import { SHOWCASE_IMAGES } from '../utils/showcase';
 
 interface Player {
   Name: string;
@@ -15,9 +13,14 @@ interface Player {
   AvatarUrl?: string;
 }
 
+interface DiscordInviteResponse {
+  approximate_member_count: number;
+  approximate_presence_count: number;
+}
+
 @Component({
   selector: 'app-home',
-  imports: [AnimateOnScrollModule, ImageModule, PanelModule, CardModule, DiscordStatsComponent],
+  imports: [RouterModule, M3NavComponent, M3FooterComponent],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./home.component.css'],
@@ -25,67 +28,40 @@ interface Player {
 export class HomeComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
 
-  images: string[] = [
-    '0.avif',
-    '1.avif',
-    '2.avif',
-    '3.avif',
-    '4.avif',
-    '5.avif',
-    '6.avif',
-    '7.avif',
-    '8.gif',
-    '9.avif',
-    '10.avif',
-    '11.avif',
-    '13.avif',
-    '14.avif',
-    '15.avif',
-    '16.avif',
-    '17.avif',
-    '18.avif',
-    '19.avif',
-    '20.avif',
-    '21.avif',
-    '22.avif',
-    '23.gif',
-    '24.avif',
-  ];
+  /** Direct-connect deep link into the server. */
+  readonly steamUrl = 'steam://rungameid/700330//+connect 92.119.167.107:7100';
+
   players: Player[] = [];
-  isLoading = true;
   private intervalId: any;
-  private boundScrollHandler: (() => void) | null = null;
-  lightboxOpen = false;
-  currentImageIndex = 0;
-  showGalleryBadge = true;
-  private imageCache: Map<string, boolean> = new Map();
 
-  get currentImage(): string {
-    return this.images[this.currentImageIndex];
-  }
+  discordMembers = 0;
+  discordOnline = 0;
 
-  ngOnInit() {
+  galleryImages = SHOWCASE_IMAGES;
+  activeImageIndex = 0;
+  stageBehind = `/assets/showcase/full/${SHOWCASE_IMAGES[0]}`;
+
+  private slideshowTimer: any;
+  private lastManual = 0;
+  private readonly manualResumeDelay = 8000;
+  private readonly slideInterval = 5000;
+
+  ngOnInit(): void {
     this.fetchPlayerlist();
-    // Refresh playerlist every 10 seconds
-    this.intervalId = setInterval(() => {
-      this.fetchPlayerlist();
-    }, 10000);
-
-    // Setup scroll listener to hide badge when gallery is visible
-    this.boundScrollHandler = this.handleScroll.bind(this);
-    window.addEventListener('scroll', this.boundScrollHandler);
+    this.intervalId = setInterval(() => this.fetchPlayerlist(), 10000);
+    this.fetchDiscordStats();
+    this.startSlideshow();
+    // Immersive m3 chrome: hides the global header/site footer while mounted.
+    document.body.classList.add('m3-active');
   }
 
-  ngOnDestroy() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-    if (this.boundScrollHandler) {
-      window.removeEventListener('scroll', this.boundScrollHandler);
-    }
+  ngOnDestroy(): void {
+    clearInterval(this.intervalId);
+    clearInterval(this.slideshowTimer);
+    document.body.classList.remove('m3-active');
   }
 
-  fetchPlayerlist() {
+  private fetchPlayerlist(): void {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const apiUrl = isLocalhost
       ? 'https://dev.zeitvertreib.vip/api/playerlist'
@@ -94,13 +70,30 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.http.get<Player[]>(apiUrl).subscribe({
       next: (data) => {
         this.players = data;
-        this.isLoading = false;
+      },
+      error: () => {},
+    });
+  }
+
+  private fetchDiscordStats(): void {
+    this.http.get<DiscordInviteResponse>('https://discord.com/api/v9/invites/MhQ4Wp7GfS?with_counts=true').subscribe({
+      next: (data) => {
+        this.discordMembers = data.approximate_member_count;
+        this.discordOnline = data.approximate_presence_count;
       },
       error: (error) => {
-        console.error('Error fetching playerlist:', error);
-        this.isLoading = false;
+        console.error('Error fetching Discord stats:', error);
       },
     });
+  }
+
+  /** German thousands separator for the readouts. */
+  fmt(value: number): string {
+    return value.toLocaleString('de-DE');
+  }
+
+  get playerCount(): number {
+    return this.players.length;
   }
 
   get alivePlayers(): Player[] {
@@ -111,90 +104,42 @@ export class HomeComponent implements OnInit, OnDestroy {
     return this.players.filter((p) => p.Team === 'Dead');
   }
 
-  get playerCount(): number {
-    return this.players.length;
+  /** Front layer of the crossfade stage; re-keyed on change so the fade replays. */
+  get stageFront(): string {
+    return this.imageSrc(this.activeImageIndex);
   }
 
-  get aliveCount(): number {
-    return this.alivePlayers.length;
+  private imageSrc(index: number): string {
+    return `/assets/showcase/full/${this.galleryImages[index]}`;
   }
 
-  openLightbox(index: number) {
-    this.currentImageIndex = index;
-    this.lightboxOpen = true;
-    document.body.style.overflow = 'hidden';
-    this.preloadImage(this.images[index], 'full');
-    this.preloadImage(this.images[(index + 1) % this.images.length], 'full');
-    this.preloadImage(this.images[(index - 1 + this.images.length) % this.images.length], 'full');
+  pickImage(index: number, manual = true): void {
+    const len = this.galleryImages.length;
+    if (manual) this.lastManual = Date.now();
+    this.stageBehind = this.imageSrc(this.activeImageIndex);
+    this.activeImageIndex = ((index % len) + len) % len;
+    this.preload(this.imageSrc((this.activeImageIndex + 1) % len));
   }
 
-  closeLightbox() {
-    this.lightboxOpen = false;
-    document.body.style.overflow = '';
+  nextImage(): void {
+    this.pickImage(this.activeImageIndex + 1);
   }
 
-  nextImage(event: Event) {
-    event.stopPropagation();
-    this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length;
-    const nextIdx = (this.currentImageIndex + 1) % this.images.length;
-    const nextNextIdx = (this.currentImageIndex + 2) % this.images.length;
-    this.preloadImage(this.images[nextIdx], 'full');
-    this.preloadImage(this.images[nextNextIdx], 'full');
+  prevImage(): void {
+    this.pickImage(this.activeImageIndex - 1);
   }
 
-  previousImage(event: Event) {
-    event.stopPropagation();
-    this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
-    const prevIdx = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
-    const prevPrevIdx = (this.currentImageIndex - 2 + this.images.length) % this.images.length;
-    this.preloadImage(this.images[prevIdx], 'full');
-    this.preloadImage(this.images[prevPrevIdx], 'full');
-  }
-
-  private preloadImage(filename: string, folder: 'tiny' | 'full'): void {
-    if (filename.endsWith('.mp4')) {
-      return;
-    }
-
-    const cacheKey = `${folder}/${filename}`;
-    // Don't preload if already cached
-    if (this.imageCache.has(cacheKey)) {
-      return;
-    }
-
+  private preload(src: string): void {
     const img = new Image();
-    img.onerror = () => {
-      console.warn(`Failed to preload image: ${cacheKey}`);
-      this.imageCache.set(cacheKey, false);
-    };
-    img.onload = () => {
-      this.imageCache.set(cacheKey, true);
-    };
-    img.src = `/assets/showcase/${folder}/${filename}`;
+    img.src = src;
   }
 
-  scrollToGallery(event: Event) {
-    event.preventDefault();
-    const gallerySection = document.getElementById('gallery-section');
-    if (gallerySection) {
-      gallerySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
-
-  handleScroll() {
-    const gallerySection = document.getElementById('gallery-section');
-    if (gallerySection) {
-      const rect = gallerySection.getBoundingClientRect();
-      // Hide badge when gallery section is in viewport (top of section is visible)
-      this.showGalleryBadge = rect.top > window.innerHeight * 0.3;
-    }
-  }
-
-  get yearsSinceFounding(): number {
-    const foundingDate = new Date(2021, 8, 19); // September 19, 2021 (month is 0-indexed)
-    const now = new Date();
-    const diffTime = now.getTime() - foundingDate.getTime();
-    const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
-    return Math.floor(diffYears);
+  /** Auto-advance the gallery; pauses after manual interaction, skips under reduced motion. */
+  private startSlideshow(): void {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.slideshowTimer = setInterval(() => {
+      if (Date.now() - this.lastManual < this.manualResumeDelay) return;
+      this.pickImage(this.activeImageIndex + 1, false);
+    }, this.slideInterval);
   }
 }
