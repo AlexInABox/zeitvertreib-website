@@ -30,19 +30,23 @@
         </a>
 
         <nav class="m3-nav-links" aria-label="Hauptnavigation">
-          <a class="m3-navlink" routerLink="/">Startseite</a>
-          <a class="m3-navlink" routerLink="/dashboard" aria-current="page">Dashboard</a>
-          <a class="m3-navlink" routerLink="/reporting">Reports</a>
-          <a class="m3-navlink" routerLink="/cases">Cases</a>
-          <a class="m3-navlink" routerLink="/zeit">Z.E.I.T.</a>
-          <a class="m3-navlink" routerLink="/permissions">Permissions</a>
+          <a class="m3-navlink" routerLink="/"><span class="m3-navlabel">Startseite</span></a>
+          <a class="m3-navlink" routerLink="/dashboard" aria-current="page"
+            ><span class="m3-navlabel">Dashboard</span></a
+          >
+          <a class="m3-navlink" routerLink="/reporting"><span class="m3-navlabel">Reports</span></a>
+          <a class="m3-navlink" routerLink="/cases"><span class="m3-navlabel">Cases</span></a>
+          <a class="m3-navlink" routerLink="/zeit"><span class="m3-navlabel">Z.E.I.T.</span></a>
+          <a class="m3-navlink" routerLink="/permissions"><span class="m3-navlabel">Permissions</span></a>
           @if (showAdvent) {
-            <a class="m3-navlink" routerLink="/advent">Adventskalender</a>
+            <a class="m3-navlink" routerLink="/advent"><span class="m3-navlabel">Adventskalender</span></a>
           }
         </nav>
 
         <div class="m3-nav-actions">
-          <a class="m3-navlink m3-nav-user" routerLink="/profile">{{ userStatistics.username || 'Konto' }}</a>
+          <a class="m3-navlink m3-nav-user" routerLink="/profile">
+            <span class="m3-navlabel">{{ userStatistics.username || 'Konto' }}</span>
+          </a>
         </div>
       </div>
     </header>

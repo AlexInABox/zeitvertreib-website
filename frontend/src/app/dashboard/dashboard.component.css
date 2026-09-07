@@ -105,6 +105,7 @@
   margin: 0 auto;
   min-height: 3.25rem;
   padding: 0 1.25rem;
+  padding-right: 0; /* Needes since the last element at the very right of the navbar would look centered otherwise. */
 }
 
 .m3-logo {
@@ -127,6 +128,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-box: trim-both cap alphabetic;
 }
 
 .m3-nav-links {
@@ -164,6 +166,12 @@
   color: var(--m3-text);
 }
 
+/* Optically center the label: the box hugs cap-height..baseline, so flex
+   centering aligns the glyphs, not the line-box. Ignored where unsupported. */
+.m3-navlabel {
+  text-box: trim-both cap alphabetic;
+}
+
 .m3-navlink[aria-current='page'] {
   color: var(--m3-accent);
 }
@@ -183,10 +191,28 @@
   border-left: 1px solid var(--m3-line);
 }
 
+/* The last nav item closes its own cell on the right */
+.m3-nav-links .m3-navlink:last-child {
+  border-right: 1px solid var(--m3-line);
+}
+
 .m3-nav-user {
-  max-width: 14ch;
+  justify-content: center;
+}
+
+.m3-nav-user .m3-navlabel {
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  /* symmetric padding so descenders survive the trim + clip combo and the
+     cap band stays optically centered */
+  padding-block: 0.2em;
+}
+
+.m3-nav-user {
+  max-width: 14ch;
 }
 
 /* --- Hero: plain canvas, copy + console --- */
