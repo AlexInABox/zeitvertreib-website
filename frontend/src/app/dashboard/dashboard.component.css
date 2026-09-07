@@ -304,6 +304,36 @@
   background: rgba(233, 227, 247, 0.05);
 }
 
+.m3-hero-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--m3-accent-deep), var(--m3-accent-magenta));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.7rem 1.4rem;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 12px 32px -14px rgba(114, 2, 164, 0.9);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.m3-hero-play:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px -14px rgba(114, 2, 164, 1);
+}
+
+.m3-hero-play:active {
+  transform: translateY(0);
+}
+
 /* --- Console window --- */
 .m3-window {
   position: relative;
