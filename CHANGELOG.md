@@ -10,6 +10,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
+## [31]
+
+### Changed
+
+- The website dashboard has been redesigned into a new cinematic server overview
+- The website is now only available in dark mode
+
+### Removed
+
+- The web games section (slot machine, lucky wheel, chicken cross, roulette and lootbox) has been removed from the website
+
 ## [30]
 
 ### Added

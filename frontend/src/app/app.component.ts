@@ -6,12 +6,10 @@ import { DomainWarningComponent } from './components/domain-warning/domain-warni
 import { ToastComponent } from './components/toast/toast.component';
 import { ZvcOverlayComponent } from './components/zvc-overlay/zvc-overlay.component';
 import { SupportOverlayComponent } from './components/support-overlay/support-overlay.component';
-import { ThemeService } from './services/theme.service';
 import { EasterEggService } from './services/easter-egg.service';
 import { AudioService } from './services/audio.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { CardComponent } from '@app/ui';
 
 @Component({
   selector: 'app-root',
@@ -22,21 +20,17 @@ import { CardComponent } from '@app/ui';
     ToastComponent,
     ZvcOverlayComponent,
     SupportOverlayComponent,
-    CardComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, OnDestroy {
-  private themeService = inject(ThemeService);
   private easterEggService = inject(EasterEggService);
   private router = inject(Router);
 
   title = 'zeitvertreib-website';
   showHeader = true;
-  testUiActive = false;
-  private testUiSubscription?: Subscription;
   private chiikawaSubscription?: Subscription;
   private chiikawaActivatedSubscription?: Subscription;
   private routerSubscription?: Subscription;
@@ -87,15 +81,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.chiikawaSubscription = this.easterEggService.chiikawaTrigger$.subscribe((isActive) => {
       if (isActive) {
         this.applyChiikawaImages();
-        // Switch to light mode for better visibility (fromChiikawa = true to prevent disabling chiikawa)
-        this.themeService.setDarkMode(false, true);
       } else {
         this.resetChiikawaImages();
       }
-    });
-
-    this.testUiSubscription = this.easterEggService.testUiTrigger$.subscribe((isActive) => {
-      this.testUiActive = isActive;
     });
 
     // Subscribe to chiikawa activation event (only fires on new activation, not on page load)
@@ -125,7 +113,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.chiikawaSubscription?.unsubscribe();
-    this.testUiSubscription?.unsubscribe();
     this.chiikawaActivatedSubscription?.unsubscribe();
     this.routerSubscription?.unsubscribe();
     // Clean up audio

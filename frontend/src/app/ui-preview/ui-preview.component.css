@@ -54,62 +54,6 @@
   color: var(--ui-text);
 }
 
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.theme-toggle__input {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-}
-
-.theme-toggle__track {
-  position: relative;
-  flex-shrink: 0;
-  width: 34px;
-  height: 20px;
-  border-radius: var(--ui-radius-full);
-  background: var(--ui-surface-hover);
-  border: 1px solid var(--ui-border-strong);
-  transition: var(--ui-transition);
-}
-
-.theme-toggle__thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--ui-text-soft);
-  transition: var(--ui-transition);
-}
-
-.theme-toggle__input:checked + .theme-toggle__track {
-  background: var(--ui-primary-grad);
-  border-color: transparent;
-}
-
-.theme-toggle__input:checked + .theme-toggle__track .theme-toggle__thumb {
-  transform: translateX(14px);
-  background: var(--ui-primary-contrast);
-}
-
-.theme-toggle__input:focus-visible + .theme-toggle__track {
-  box-shadow: 0 0 0 2px var(--ui-focus-ring-glow);
-}
-
-.theme-toggle__label {
-  font-size: 0.78rem;
-  color: var(--ui-text-soft);
-}
-
 .content {
   flex: 1;
   min-width: 0;

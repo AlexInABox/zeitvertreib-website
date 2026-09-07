@@ -132,21 +132,6 @@ export class ZvcOverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.easterEggService.triggerChiikawa();
       return;
     }
-    if (trimmed.toLowerCase() === 'testui') {
-      this.redeemCode = '';
-      this.easterEggService.triggerTestUi();
-      return;
-    }
-    if (trimmed.toLowerCase() === 'testui2') {
-      this.redeemCode = '';
-      this.easterEggService.triggerTestUi2();
-      return;
-    }
-    if (trimmed.toLowerCase() === 'testui3') {
-      this.redeemCode = '';
-      this.easterEggService.triggerTestUi3();
-      return;
-    }
 
     this.codeRedemptionLoading = true;
     this.codeRedemptionMessage = '';

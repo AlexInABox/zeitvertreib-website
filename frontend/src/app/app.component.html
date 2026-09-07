@@ -2,15 +2,6 @@
 <app-toast />
 <app-zvc-overlay />
 <app-support-overlay />
-@if (testUiActive) {
-  <ui-card
-    class="experimental-ui-indicator"
-    [class.experimental-ui-indicator--no-header]="!showHeader"
-    [padded]="false"
-  >
-    <span class="experimental-ui-indicator__status">UI TEST PREVIEW</span>
-  </ui-card>
-}
 @if (showHeader) {
   <div class="fixed top-0 left-0 w-full z-50">
     <app-header />

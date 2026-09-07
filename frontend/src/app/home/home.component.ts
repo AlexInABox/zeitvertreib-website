@@ -6,7 +6,6 @@ import { ImageModule } from 'primeng/image';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
 import { DiscordStatsComponent } from '../components/discord-stats/discord-stats.component';
-import { ThemeService } from '../services/theme.service';
 
 interface Player {
   Name: string;
@@ -25,7 +24,6 @@ interface Player {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
-  private themeService = inject(ThemeService);
 
   images: string[] = [
     '0.avif',
@@ -61,10 +59,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   showGalleryBadge = true;
   private imageCache: Map<string, boolean> = new Map();
-
-  get isDark() {
-    return this.themeService.isDark;
-  }
 
   get currentImage(): string {
     return this.images[this.currentImageIndex];

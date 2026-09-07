@@ -5,7 +5,6 @@ import { HttpClient } from '@angular/common/http';
 import { ButtonComponent, CardComponent, DialogComponent } from '@app/ui';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
-import { EasterEggService } from '../../../services/easter-egg.service';
 import { NotificationCenterService } from '../../../services/notification-center.service';
 import type {
   FakerankGetResponse,
@@ -42,8 +41,8 @@ export class FakerankComponent implements OnInit {
   showFakerankPrivacyText = false;
   showFakerankRulesText = false;
 
-  // Experimental (body.testui) inline editor state
-  testUiActive = false;
+  // Inline editor state (part of the dashboard design)
+  testUiActive = true;
   frEditing = false;
   frText = '';
   frColor: FakerankColor = 'default';
@@ -87,16 +86,12 @@ export class FakerankComponent implements OnInit {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private easterEggService = inject(EasterEggService);
   private notificationCenter = inject(NotificationCenterService);
 
   ngOnInit(): void {
     this.isFakerankBanned = this.authService.isFakerankBanned();
     this.fakerankBanReason = this.authService.getFakerankBanReason();
     this.fakerankBannedBy = this.authService.getFakerankBannedBy();
-
-    this.testUiActive = this.easterEggService.isTestUiActive();
-    this.easterEggService.testUiTrigger$.subscribe((active) => (this.testUiActive = active));
 
     this.loadFakerank();
     this.loadFakerankColorsByRole();

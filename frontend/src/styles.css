@@ -878,245 +878,31 @@ body.chiikawa img {
 }
 
 /* =============================
-   Dashboard split layout
-   The dashboard adds `dashboard-layout` to <html>. The user sidebar hugs the
-   left edge and spans the full height; the global header is re-centered over
-   the functional (right) column to keep the layout symmetrical.
+    Immersive dashboard (m3)
+   The dashboard mounts its own cinematic nav, so the global chrome
+   (header, site footer, page gradient) is hidden while it is active.
+   The `m3-active` class is added/removed by the dashboard component.
    ============================= */
-html.dashboard-layout {
-  --sidebar-w: clamp(320px, 38vw, 480px);
-  --header-left: calc(50% + var(--sidebar-w) / 2);
-  --header-width: calc(100% - var(--sidebar-w) - 2rem);
-  --header-max-width: 1200px;
+body.m3-active {
+  background: #0a0a09;
 }
 
-/* Sidebar is position:fixed, so neutralize the global header top-padding */
-html.dashboard-layout .pt-5_5rem {
-  padding-top: 0;
-}
-
-/* Keep the dashboard header compact over the narrower functional column */
-html.dashboard-layout .nav-item span {
+body.m3-active app-header {
   display: none;
 }
 
-html.dashboard-layout .nav-links {
-  gap: 0.1rem;
-  margin: 0 0.3rem;
-}
-
-@media (min-width: 1700px) {
-  html.dashboard-layout .nav-item span {
-    display: inline;
-  }
-
-  html.dashboard-layout .nav-links {
-    gap: 0.15rem;
-    margin: 0 0.75rem;
-  }
-}
-
-@media (max-width: 1024px) {
-  html.dashboard-layout {
-    --header-left: 50%;
-    --header-width: calc(100% - 2.5rem);
-    --header-max-width: 1400px;
-  }
-
-  html.dashboard-layout .pt-5_5rem {
-    padding-top: 5.5rem;
-  }
-}
-
-/* ============================================================
-   Experimental testUI — "Graphite" dark theme
-   A modern, minimal alternative palette for dark mode. Applies
-   only while the experimental UI is active (body.testui) AND dark
-   mode is on; the default app theme stays untouched.
-   ============================================================ */
-html.my-app-dark body.testui {
-  color-scheme: dark;
-
-  /* Single restrained accent (indigo) — no purple/magenta gradient */
-  --ui-primary: #6d7dff;
-  --ui-primary-contrast: #ffffff;
-  --ui-primary-grad: linear-gradient(180deg, #6d7dff 0%, #5a68f0 100%);
-  --ui-primary-grad-hover: linear-gradient(180deg, #8290ff 0%, #6471f2 100%);
-  --ui-primary-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 14px rgba(93, 106, 244, 0.18);
-  --ui-primary-shadow-hover: 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 18px rgba(93, 106, 244, 0.28);
-  --ui-violet: #7f8bfa;
-  --ui-violet-soft: #9ca6ff;
-  --ui-violet-pale: #c3caff;
-  --ui-fuchsia: #8b94fa;
-
-  /* Text */
-  --ui-text: #eef1f6;
-  --ui-text-soft: rgba(238, 241, 246, 0.82);
-  --ui-text-muted: rgba(238, 241, 246, 0.58);
-  --ui-text-faint: rgba(238, 241, 246, 0.4);
-
-  /* Surfaces — flat graphite with hairline borders */
-  --ui-surface: #1d1f28;
-  --ui-surface-hover: #242630;
-  --ui-surface-active: #2c2f3a;
-  --ui-surface-soft: #22242d;
-  --ui-surface-subtle: #191b23;
-  --ui-border: rgba(255, 255, 255, 0.09);
-  --ui-border-strong: rgba(255, 255, 255, 0.16);
-  --ui-border-soft: rgba(255, 255, 255, 0.11);
-  --ui-divider: rgba(255, 255, 255, 0.08);
-  --ui-header-bg: rgba(255, 255, 255, 0.02);
-  --ui-input-bg: #121319;
-  --ui-input-bg-focus: #171924;
-  --ui-input-border: rgba(255, 255, 255, 0.1);
-
-  /* Focus ring */
-  --ui-focus-ring: rgba(129, 140, 248, 0.55);
-  --ui-focus-ring-glow: rgba(129, 140, 248, 0.12);
-
-  /* Status colors */
-  --ui-danger: #fb7185;
-  --ui-danger-bg: rgba(251, 113, 133, 0.12);
-  --ui-danger-bg-hover: rgba(251, 113, 133, 0.22);
-  --ui-danger-border: rgba(251, 113, 133, 0.28);
-  --ui-danger-solid: #e11d48;
-  --ui-danger-solid-hover: #be123c;
-  --ui-success: #34d399;
-  --ui-success-bg: rgba(52, 211, 153, 0.12);
-  --ui-success-border: rgba(52, 211, 153, 0.26);
-  --ui-success-fill: linear-gradient(90deg, #10b981, #34d399);
-  --ui-warning: #fbbf24;
-  --ui-warning-bg: rgba(251, 191, 36, 0.12);
-  --ui-warning-border: rgba(251, 191, 36, 0.26);
-  --ui-info: #7ba7ff;
-  --ui-info-bg: rgba(123, 167, 255, 0.12);
-  --ui-info-border: rgba(123, 167, 255, 0.26);
-  --ui-pink: #f9a8d4;
-  --ui-pink-bg: rgba(249, 168, 212, 0.12);
-  --ui-pink-border: rgba(249, 168, 212, 0.26);
-
-  /* Progress */
-  --ui-progress-track: rgba(255, 255, 255, 0.08);
-  --ui-progress-fill: linear-gradient(90deg, #5a68f0, #7f8bfa);
-
-  /* Radius — crisp and less round in the experiment */
-  --ui-radius-xs: 0.125rem;
-  --ui-radius-sm: 0.375rem;
-  --ui-radius-md: 0.5rem;
-  --ui-radius-lg: 0.75rem;
-
-  /* Effects — no frosted-glass blur in the experiment */
-  --ui-blur: 0px;
-
-  /* Dialog */
-  --ui-overlay-bg: rgba(5, 6, 9, 0.62);
-  --ui-dialog-bg: #1b1d26;
-  --ui-dialog-border: rgba(255, 255, 255, 0.09);
-  --ui-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --ui-dialog-color: #eef1f6;
-
-  /* Sidebar / profile rail */
-  --ui-sidebar-bg-grad: linear-gradient(180deg, #1a1c25, #13141c);
-  --ui-sidebar-border: rgba(255, 255, 255, 0.08);
-  --ui-sidebar-text: #eef1f6;
-  --ui-sidebar-text-soft: rgba(238, 241, 246, 0.85);
-  --ui-sidebar-muted: rgba(238, 241, 246, 0.5);
-  --ui-sidebar-surface: rgba(255, 255, 255, 0.05);
-  --ui-sidebar-surface-hover: rgba(255, 255, 255, 0.09);
-  --ui-sidebar-divider: rgba(255, 255, 255, 0.07);
-  --ui-sidebar-shadow: none;
-  --ui-sidebar-info: #93b4ff;
-  --ui-sidebar-danger: #fb7185;
-  --ui-sidebar-success: #34d399;
-
-  /* Flat canvas behind the experiment: eigengrau with a slight purple hint */
-  background:
-    radial-gradient(1100px 760px at 12% -8%, rgba(124, 58, 237, 0.09), transparent 62%),
-    radial-gradient(900px 620px at 108% 18%, rgba(167, 139, 250, 0.06), transparent 55%), #16161d;
-
-  /* App header / rails follow the neutral base too */
-  --header-bg: #15161d !important;
-  --header-bg-rgb: 21, 22, 29 !important;
-  --p-menubar-background-rgb: 21, 22, 29;
-  --surface-a: #171820 !important;
-  --surface-b: #1b1c24 !important;
-  --text-color: #eef1f6 !important;
-}
-
-/* testUI dark: also replace the app's FIXED page gradient (html::after,
-   painted at z-index:0 behind the body) with the eigengrau canvas so no
-   purple/blue gradient bleeds through anywhere in the experiment. */
-html.my-app-dark:has(body.testui)::after {
-  background:
-    radial-gradient(1100px 760px at 12% -8%, rgba(124, 58, 237, 0.09), transparent 62%),
-    radial-gradient(900px 620px at 108% 18%, rgba(167, 139, 250, 0.06), transparent 55%), #16161d;
-  opacity: 1;
-}
-
-/* testUI polish: de-pill badges (calmer, chip-like instead of capsules) */
-html.my-app-dark body.testui ui-badge .ui-badge,
-html.my-app-dark body.testui .ui-badge {
-  border-radius: 0.4rem;
-}
-
-/* testUI: reclaim the reserved header space — content sits higher while the
-   auto-hidden nav is collapsed. The nav floats above the content when shown. */
-body.testui .pt-5_5rem {
-  padding-top: 0.5rem !important;
-}
-body.testui .dashboard-shell {
-  padding-top: 2.5rem !important;
-}
-
-/* testUI2 (brutalist experiment): full-bleed, hide standard app chrome */
-body.testui2 {
-  background: #ede9df;
-}
-body.testui2 app-header {
-  display: none;
-}
-body.testui2 .pt-5_5rem {
+body.m3-active .pt-5_5rem {
   padding-top: 0 !important;
 }
-/* The legal footer lives in index.html below the router outlet — redundant on the page */
-body.testui2 .site-footer {
+
+/* The legal footer lives in index.html below the router outlet — the
+   dashboard ships its own footer instead. */
+body.m3-active .site-footer {
   display: none;
 }
-/* Neutralize the fixed gradient layers (light + dark) behind the immersive canvas */
-html:has(body.testui2)::before,
-html:has(body.testui2)::after {
-  background: #ede9df !important;
-}
-body.testui2 ::selection {
-  background: #a21caf;
-  color: #f6eefb;
-}
-/* testUI2 — dark */
-html.my-app-dark:has(body.testui2)::before,
-html.my-app-dark:has(body.testui2)::after {
-  background: #0e0f12 !important;
-}
-html.my-app-dark body.testui2 {
-  background: #0e0f12;
-}
-html.my-app-dark body.testui2 ::selection {
-  background: #c453e0;
-  color: #14120e;
-}
-/* testUI3: third experiment flag — hide standard chrome while building */
-body.testui3 {
-  background: #101013;
-}
-body.testui3 app-header {
-  display: none;
-}
-body.testui3 .pt-5_5rem {
-  padding-top: 0 !important;
-}
-body.testui3 .site-footer {
-  display: none;
-}
-html:has(body.testui3)::before,
-html:has(body.testui3)::after {
-  background: #101013 !important;
+
+/* Replace the fixed page gradient layers with the dashboard's dark canvas */
+html:has(body.m3-active)::before,
+html:has(body.m3-active)::after {
+  background: #0a0a09 !important;
 }

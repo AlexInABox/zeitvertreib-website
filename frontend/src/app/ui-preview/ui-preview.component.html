@@ -1,11 +1,6 @@
 <div class="page">
   <aside class="sidebar">
     <div class="sidebar__brand">@app/ui</div>
-    <label class="theme-toggle">
-      <input class="theme-toggle__input" type="checkbox" [checked]="isDark()" (change)="toggleTheme()" />
-      <span class="theme-toggle__track"><span class="theme-toggle__thumb"></span></span>
-      <span class="theme-toggle__label">Dark Mode</span>
-    </label>
     <nav class="sidebar__nav">
       @for (entry of registry; track entry.selector) {
         <button type="button" class="sidebar__link" (click)="scrollTo(entry.selector)">{{ entry.selector }}</button>

@@ -2,18 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@
 import { MenuItem, PrimeIcons } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { AuthService, SteamUser, UserData } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { ThemeService } from '../../services/theme.service';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { NotificationCenterComponent } from '../notification-center/notification-center.component';
-
-import { SupportService } from '../../services/support.service';
 
 @Component({
   selector: 'app-header',
@@ -27,10 +23,6 @@ import { SupportService } from '../../services/support.service';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
-  themeService = inject(ThemeService);
-  private http = inject(HttpClient);
-  private supportService = inject(SupportService);
-  private router = inject(Router);
 
   items: MenuItem[] | undefined;
   userLoggedIn = false;
@@ -41,10 +33,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   activeDropdown: string | null = null;
   private authSubscription?: Subscription;
   private userDataSubscription?: Subscription;
-
-  get logoSrc(): string {
-    return this.themeService.isDark() ? 'inverted/logo_full_1to1.svg' : 'logo_full_1to1.svg';
-  }
 
   toggleDropdown(label: string | undefined, event: Event) {
     // Only toggle on click if we are on a small screen or touch device
@@ -63,27 +51,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.activeDropdown = null;
     if (subItem.command) {
       subItem.command({ originalEvent: event, item: subItem });
-    }
-  }
-
-  /**
-   * In the testui pager (dashboard -> games), clicking "Spiele" scrolls to the
-   * games screen without leaving the page. Everywhere else it navigates normally.
-   */
-  private openGames() {
-    const onDashboard = this.router.url.split('?')[0] === '/dashboard' || this.router.url.startsWith('/dashboard');
-    const testUiActive = typeof document !== 'undefined' && document.body.classList.contains('testui');
-
-    if (!testUiActive) {
-      void this.router.navigate(['/games']);
-      return;
-    }
-
-    if (onDashboard) {
-      window.dispatchEvent(new CustomEvent('testui-open-games'));
-    } else {
-      // Land on the dashboard with a marker so it opens the games screen once loaded.
-      void this.router.navigate(['/dashboard'], { queryParams: { screen: 'games' } });
     }
   }
 
@@ -110,10 +77,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleTheme() {
-    this.themeService.toggleDarkMode();
-  }
-
   private updateMenuItems() {
     this.items = [
       {
@@ -122,37 +85,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         route: '/',
       },
       {
-        label: 'Dashboard & Spiele',
+        label: 'Dashboard',
         icon: PrimeIcons.USER,
-        items: [
-          {
-            label: 'Dashboard',
-            icon: PrimeIcons.USER,
-            route: '/dashboard',
-          },
-          {
-            label: 'Spiele',
-            icon: PrimeIcons.POWER_OFF,
-            command: () => this.openGames(),
-          },
-        ],
-      },
-      {
-        label: 'Spenden',
-        icon: PrimeIcons.HEART,
-
-        items: [
-          {
-            label: 'Unterstützen',
-            icon: PrimeIcons.HEART,
-            command: () => this.supportService.expand(true),
-          },
-          {
-            label: 'Paysafecard',
-            icon: PrimeIcons.CREDIT_CARD,
-            route: '/paysafecard',
-          },
-        ],
+        route: '/dashboard',
       },
       {
         label: 'Hilfe!',
@@ -179,12 +114,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
             route: '/reporting',
           },
         ],
-      },
-
-      {
-        label: 'Bewerben',
-        icon: PrimeIcons.PAPERCLIP,
-        url: '/bewerben',
       },
     ];
 

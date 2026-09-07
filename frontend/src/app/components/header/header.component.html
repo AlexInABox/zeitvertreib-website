@@ -1,14 +1,8 @@
 <div class="header-container">
   <div class="header-glass">
-    <!-- Start: Logo & Theme Toggle -->
+    <!-- Start: Logo -->
     <div class="flex items-center">
-      <img
-        id="logo-svg"
-        src="/assets/logos/{{ logoSrc }}"
-        alt="Logo"
-        (click)="toggleTheme()"
-        title="Darkmode umschalten"
-      />
+      <img id="logo-svg" src="/assets/logos/inverted/logo_full_1to1.svg" alt="Logo" />
     </div>
 
     <!-- Center: Navigation Links (Always Horizontal) -->
@@ -61,13 +55,8 @@
       }
     </div>
 
-    <!-- End: Discord, Notifications, Profile -->
+    <!-- End: Notifications, Profile -->
     <div class="flex items-center gap-3">
-      <!-- Discord Join -->
-      <a href="https://dsc.gg/zeit" target="_blank" class="hidden sm:block">
-        <p-button label="Discord" icon="pi pi-discord" styleClass="discord-btn-text"></p-button>
-      </a>
-
       <!-- Notifications -->
       @if (userLoggedIn) {
         <app-notification-center />
