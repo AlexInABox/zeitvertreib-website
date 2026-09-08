@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, input } 
 
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { ButtonComponent, CardComponent, DialogComponent, SpinnerComponent } from '@app/ui';
+import { ButtonComponent, DialogComponent, SpinnerComponent } from '@app/ui';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import type {
@@ -24,7 +24,7 @@ interface SpraySlot {
 @Component({
   selector: 'app-spray-management',
   standalone: true,
-  imports: [FormsModule, ButtonComponent, CardComponent, DialogComponent, SpinnerComponent],
+  imports: [FormsModule, ButtonComponent, DialogComponent, SpinnerComponent],
   templateUrl: './spray-management.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./spray-management.css'],

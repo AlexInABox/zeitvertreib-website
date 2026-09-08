@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { environment } from '../../environments/environment';
 
 import { RouterModule } from '@angular/router';
@@ -7,8 +7,16 @@ import { SupportService } from '../services/support.service';
 import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
 import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
 import { ButtonComponent, SpinnerComponent } from '@app/ui';
+import { FakerankComponent } from './widgets/fakerank/fakerank';
+import { SprayManagementComponent } from './widgets/spray-management/spray-management';
+import { BirthdayCardComponent } from './user-sidebar/birthday-card/birthday-card.component';
 import { SHOWCASE_IMAGES } from '../utils/showcase';
 import { retry, timeout } from 'rxjs';
+import type {
+  ClaimQuestRewardResponse,
+  GetQuestsResponse,
+  QuestProgress,
+} from '@zeitvertreib/types';
 
 interface Statistics {
   username: string;
@@ -30,7 +38,16 @@ interface Statistics {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterModule, M3NavComponent, M3FooterComponent, ButtonComponent, SpinnerComponent],
+  imports: [
+    RouterModule,
+    M3NavComponent,
+    M3FooterComponent,
+    ButtonComponent,
+    SpinnerComponent,
+    FakerankComponent,
+    SprayManagementComponent,
+    BirthdayCardComponent,
+  ],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./dashboard.component.css'],
@@ -59,21 +76,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
   errorMessage = '';
   isDonator = false;
 
+  dailyQuests: QuestProgress[] = [];
+  weeklyQuests: QuestProgress[] = [];
+  questsLoading = true;
+  claimingQuestId: number | null = null;
+
+  /** Ticks for the quest reset countdowns; refreshed twice a minute. */
+  private readonly questClock = signal(Date.now());
+  private questClockInterval: ReturnType<typeof setInterval> | null = null;
+
   private authService = inject(AuthService);
   private supportService = inject(SupportService);
 
   constructor() {
     this.loadUserStats();
+    this.loadQuests();
   }
 
   ngOnInit(): void {
     this.isDonator = this.authService.isDonator();
     // Immersive dashboard: hides the global header/site chrome while mounted.
     document.body.classList.add('m3-active');
+    this.questClockInterval = setInterval(() => this.questClock.set(Date.now()), 30_000);
   }
 
   ngOnDestroy(): void {
     document.body.classList.remove('m3-active');
+    if (this.questClockInterval !== null) {
+      clearInterval(this.questClockInterval);
+      this.questClockInterval = null;
+    }
   }
 
   // ---- derived stats ------------------------------------------------------
@@ -109,6 +141,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.userStatistics.lastkills.slice(0, 6);
   }
 
+  get recentDeaths(): Statistics['lastkillers'] {
+    return this.userStatistics.lastkillers.slice(0, 6);
+  }
+
   readonly fallbackImg = '/assets/logos/logo_full_color_1to1.avif';
 
   onImgFallback(event: Event): void {
@@ -116,6 +152,83 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (img && img.src !== this.fallbackImg) {
       img.src = this.fallbackImg;
     }
+  }
+
+  // ---- quests -------------------------------------------------------------
+
+  /** Daily quests reset at midnight UTC (cron '0 0 * * *' wipes progress). */
+  dailyResetCountdown(): string {
+    const now = new Date(this.questClock());
+    const reset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    return this.formatCountdown(reset - now.getTime());
+  }
+
+  /** Weekly quests reset Monday 00:00 UTC (ISO weeks, cron '0 0 * * MON'). */
+  weeklyResetCountdown(): string {
+    const now = new Date(this.questClock());
+    const daysUntilMonday = ((8 - now.getUTCDay()) % 7) || 7;
+    const reset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilMonday);
+    return this.formatCountdown(reset - now.getTime());
+  }
+
+  private formatCountdown(ms: number): string {
+    const totalMinutes = Math.max(0, Math.floor(ms / 60_000));
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    if (days > 0) return `noch ${days}T ${hours}h`;
+    if (hours > 0) return minutes > 0 ? `noch ${hours}h ${minutes}m` : `noch ${hours}h`;
+    return `noch ${minutes}m`;
+  }
+
+  questPercent(quest: QuestProgress): number {
+    if (quest.targetValue === 0) return 0;
+    return Math.min((quest.currentProgress / quest.targetValue) * 100, 100);
+  }
+
+  /** Progress readout; playtime quests count in minutes instead of seconds. */
+  questProgressText(quest: QuestProgress): string {
+    if (quest.category.includes('playtime')) {
+      return `${Math.floor(quest.currentProgress / 60)} / ${Math.floor(quest.targetValue / 60)}`;
+    }
+    return `${quest.currentProgress} / ${quest.targetValue}`;
+  }
+
+  claimReward(quest: QuestProgress): void {
+    if (this.claimingQuestId !== null) return;
+
+    this.claimingQuestId = quest.id;
+    this.authService
+      .authenticatedPost<ClaimQuestRewardResponse>(`${environment.apiUrl}/quests/claim-reward`, {
+        questId: quest.id,
+      })
+      .subscribe({
+        next: () => {
+          quest.claimedAt = Math.floor(Date.now() / 1000);
+          this.claimingQuestId = null;
+        },
+        error: (error) => {
+          console.error('Fehler beim Abholen der Quest-Belohnung:', error);
+          this.claimingQuestId = null;
+        },
+      });
+  }
+
+  private loadQuests(): void {
+    this.questsLoading = true;
+    this.authService
+      .authenticatedGet<GetQuestsResponse>(`${environment.apiUrl}/quests`)
+      .subscribe({
+        next: (response) => {
+          this.dailyQuests = response?.dailyQuests ?? [];
+          this.weeklyQuests = response?.weeklyQuests ?? [];
+          this.questsLoading = false;
+        },
+        error: (error) => {
+          console.error('Fehler beim Laden der Quests:', error);
+          this.questsLoading = false;
+        },
+      });
   }
 
   // ---- gallery ------------------------------------------------------------

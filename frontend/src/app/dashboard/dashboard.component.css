@@ -22,31 +22,217 @@
 }
 
 /* ============================================================
-   Welcome card — right third of the inner area between the
-   canvas hairlines. It stretches from the navbar's bottom
-   hairline down to the footer's top hairline; those two lines
-   plus the right canvas hairline close the box, so the card
-   itself only draws its left edge.
+   Layout — canvas is a column so the dashboard fills the space
+   between navbar and footer without scrolling on 1080p.
+   Left: interactive / deferred data. Right: user data.
    ============================================================ */
 
-/* Column layout so the card can fill the space between nav and footer. */
 .dash-canvas {
   display: flex;
   flex-direction: column;
 }
 
-.dash-welcome {
+.dash-main {
   flex: 1;
-  width: calc(min(1600px, 100% - (2 * var(--m3-gutter))) / 3);
-  margin-left: auto;
-  margin-right: max(var(--m3-gutter), calc(50% - 800px));
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: var(--m3-content);
+  margin: 0 auto;
+}
+
+/* Micro label shared by panel titles, cells and groups. */
+.dash-panel-title,
+.dash-quest-label {
+  margin: 0;
+  color: var(--m3-muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   Left two thirds: hairline-framed grid of panels.
+   ============================================================ */
+
+.dash-primary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--m3-line);
+}
+
+.dash-feeds {
+  flex: 1.1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--m3-line);
+}
+
+.dash-feed-panel {
+  min-height: 0;
+  padding: 1.4rem 1.6rem;
+  background: var(--m3-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-feed {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rows stretch evenly so the feed fills the panel without gaps. */
+.dash-feed .m3-feed-row {
+  flex: 1;
+  min-height: 2.75rem;
+}
+
+/* ---- Quests ------------------------------------------------ */
+
+.dash-quests-panel {
+  flex: 1;
+  min-height: 0;
+  padding: 1.4rem 1.6rem;
+  background: var(--m3-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-quest-groups {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+.dash-quest-group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dash-quest-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dash-quest-reset {
+  color: var(--m3-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dash-quest-group .m3-empty {
+  margin: 0.6rem 0 0;
+}
+
+.dash-quest {
+  min-height: 2.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.55rem 0;
+}
+
+.dash-quest-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.dash-quest-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  color: var(--m3-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.dash-quest-count {
+  flex: none;
+  color: var(--m3-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-quest-claim {
+  flex: none;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(161, 61, 230, 0.55);
+  background: transparent;
+  color: var(--m3-accent);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.dash-quest-claim:hover:not(:disabled) {
+  background: var(--m3-accent);
+  color: #fff;
+}
+
+.dash-quest-claim:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dash-quest-bar {
+  margin-top: 0.45rem;
+  height: 3px;
+  background: var(--m3-line);
+}
+
+.dash-quest-bar i {
+  display: block;
+  height: 100%;
+  background: var(--m3-accent);
+}
+
+/* ============================================================
+   Right third: the user — identity, stats, personalization.
+   ============================================================ */
+
+.dash-welcome {
+  flex: 0 0 calc(100% / 3);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding: 2.25rem 1.75rem 1.5rem;
   border-left: 1px solid var(--m3-line);
   background: var(--m3-soft);
 }
 
 /* Avatar + greeting row: the text centers against the avatar,
-   while the row itself stays pinned to the top of the card. */
+   while the row itself stays pinned to the top of the column. */
 .dash-welcome-row {
   display: flex;
   align-items: center;
@@ -87,9 +273,84 @@
   line-height: 2rem;
 }
 
-@media (max-width: 720px) {
+/* ---- Widget shells ---------------------------------------- */
+
+.dash-widget {
+  padding: 1.1rem 1.2rem;
+  background: var(--m3-panel);
+  border: 1px solid var(--m3-line);
+}
+
+.dash-widget--flush {
+  padding: 0;
+}
+
+/* ---- Personal stat cells ---------------------------------- */
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--m3-line);
+}
+
+.dash-stat {
+  padding: 1rem 1.1rem 0.9rem;
+  background: var(--m3-panel);
+}
+
+.dash-stat span {
+  display: block;
+  color: var(--m3-muted);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.dash-stat strong {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--m3-text);
+  font-family: var(--m3-font-display);
+  font-size: clamp(1.2rem, 1.4vw, 1.55rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Gear readout ----------------------------------------- */
+
+.dash-gear-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-gear-list .m3-gear-row {
+  align-items: center;
+  padding: 0.45rem 0;
+}
+
+/* ============================================================
+   Responsive — below 1080p width the columns stack.
+   ============================================================ */
+
+@media (max-width: 1080px) {
+  .dash-main {
+    flex-direction: column;
+  }
+
+  .dash-primary {
+    margin-right: 0;
+    margin-bottom: clamp(1.25rem, 2.5vw, 2.5rem);
+  }
+
   .dash-welcome {
-    width: auto;
-    margin-left: max(var(--m3-gutter), calc(50% - 800px));
+    flex: none;
+  }
+
+  .dash-quest-groups {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 }

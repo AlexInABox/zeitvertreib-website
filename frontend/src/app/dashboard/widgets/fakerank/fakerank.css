@@ -3,11 +3,12 @@
 }
 
 .spray-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--m3-muted, rgba(255, 255, 255, 0.65));
   margin: 0;
-  margin-bottom: -0.25rem;
 }
 
 .spray-title i.pi {
@@ -15,15 +16,15 @@
   vertical-align: -0.06em;
 }
 .spray-subtitle {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
+  font-size: 0.78rem;
+  color: var(--m3-muted, rgba(255, 255, 255, 0.55));
+  margin: 0.15rem 0 0;
 }
 
 .fakerank-container-inline {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.5rem;
 }
 
@@ -60,10 +61,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--m3-soft, rgba(255, 255, 255, 0.03));
   padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  border: 1px solid var(--m3-line, rgba(255, 255, 255, 0.1));
   text-align: center;
 }
 
@@ -119,8 +120,9 @@
 }
 
 .fakerank-message {
+  margin-top: 0.75rem;
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: 0;
   text-align: center;
   font-size: 0.85rem;
 }
@@ -139,7 +141,7 @@
   gap: 1rem;
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 1rem;
 }
 :host-context(html.my-app-dark) .fakerank-preview-container {
@@ -215,7 +217,7 @@
 .color-option-btn {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 0;
   border: 2px solid transparent;
   cursor: pointer;
   transition: transform 0.2s;
@@ -243,7 +245,7 @@
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: 0;
   color: inherit;
   font-size: 0.95rem;
   transition: all 0.2s;
@@ -296,7 +298,7 @@
 .info-box-inline {
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 1rem;
   margin-left: 1.5rem;
   animation: slideDown 0.2s ease-out;
@@ -362,7 +364,7 @@
 :host-context(body.testui) .fakerank-preview-small {
   padding: 0.85rem 1.1rem;
   font-size: 1.45rem;
-  border-radius: 1rem;
+  border-radius: 0;
 }
 
 :host-context(body.testui) .action-btn-text {
@@ -404,10 +406,10 @@
   gap: 0.55rem;
   width: 100%;
   padding: 0.95rem 1rem;
-  border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1.5px dashed rgba(255, 255, 255, 0.24);
-  color: var(--ui-text, #fff);
+  border-radius: 0;
+  background: var(--m3-soft, rgba(255, 255, 255, 0.04));
+  border: 1.5px dashed rgba(233, 227, 247, 0.28);
+  color: var(--m3-text, #fff);
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
@@ -416,8 +418,8 @@
   transition: all 0.2s ease;
 }
 .fr-create:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: var(--m3-panel, rgba(255, 255, 255, 0.08));
+  border-color: var(--m3-text, rgba(255, 255, 255, 0.5));
 }
 .fr-create-icon {
   font-size: 1.25rem;
@@ -432,7 +434,7 @@
   display: block;
   width: 100%;
   padding: 0.9rem 2.4rem 0.9rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0;
   text-align: center;
   font-family: inherit;
   font-weight: 800;
@@ -441,14 +443,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--m3-soft, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--m3-line, rgba(255, 255, 255, 0.1));
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .fr-chip:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.24);
+  background: var(--m3-panel, rgba(255, 255, 255, 0.07));
+  border-color: var(--m3-muted, rgba(255, 255, 255, 0.24));
 }
 
 .fr-delete {
@@ -461,7 +463,7 @@
   justify-content: center;
   height: 34px;
   padding: 0 0.6rem;
-  border-radius: 0.5rem;
+  border-radius: 0;
   border: 1px solid rgba(248, 113, 113, 0.4);
   background: rgba(248, 113, 113, 0.12);
   color: #fca5a5;
@@ -495,25 +497,25 @@
   flex: 1;
   min-width: 0;
   padding: 0.8rem 0.9rem;
-  border-radius: 0.5rem;
+  border-radius: 0;
   text-align: center;
   font-family: inherit;
   font-weight: 700;
   font-size: 1.15rem;
   letter-spacing: 0.5px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--m3-text, #fff);
+  background: var(--m3-soft, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--m3-line, rgba(255, 255, 255, 0.18));
   outline: none;
   transition: all 0.2s ease;
 }
 .fr-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--m3-muted, rgba(255, 255, 255, 0.35));
   font-weight: 500;
 }
 .fr-input:focus {
-  border-color: rgba(139, 92, 246, 0.65);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--m3-accent, rgba(139, 92, 246, 0.65));
+  background: var(--m3-panel, rgba(255, 255, 255, 0.07));
 }
 
 .fr-color-trigger {
@@ -522,20 +524,20 @@
   align-items: center;
   justify-content: center;
   width: 54px;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0;
+  border: 1px solid var(--m3-line, rgba(255, 255, 255, 0.16));
+  background: var(--m3-soft, rgba(255, 255, 255, 0.04));
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .fr-color-trigger:hover {
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--m3-muted, rgba(255, 255, 255, 0.45));
+  background: var(--m3-panel, rgba(255, 255, 255, 0.08));
 }
 .fr-color-trigger-dot {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: 0;
   border: 2px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
@@ -604,7 +606,7 @@
   flex: 0 0 auto;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 .fr-color-groups {

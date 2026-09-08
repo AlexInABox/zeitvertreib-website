@@ -1,5 +1,4 @@
-<ui-card>
-  @if (isFakerankBanned) {
+@if (isFakerankBanned) {
   <div class="spray-ban-warning">
     <div class="spray-ban-icon">@if (testUiActive) {<i class="pi pi-ban"></i>} @else {⛔}</div>
     <div class="spray-ban-content">
@@ -114,7 +113,6 @@
   } @if (fakerankSuccess) {
   <div class="fakerank-message fakerank-success">{{ fakerankSuccess }}</div>
   }
-</ui-card>
 
 <!-- Modal -->
 <ui-dialog [(open)]="fakerankModalOpen" title="Fakerank konfigurieren">

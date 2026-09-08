@@ -1,6 +1,5 @@
-<ui-card>
-  <!-- Spray Ban Warning -->
-  @if (isSprayBanned) {
+<!-- Spray Ban Warning -->
+@if (isSprayBanned) {
   <div class="spray-ban-warning">
     <div class="spray-ban-icon">@if (testUi()) {<i class="pi pi-ban"></i>} @else {🔨}</div>
     <div class="spray-ban-content">
@@ -103,7 +102,6 @@
   } @if (spraySuccess) {
   <div class="spray-message-compact spray-success">{{ spraySuccess }}</div>
   }
-</ui-card>
 
 <!-- Preview Modal -->
 <ui-dialog [(open)]="previewModalOpen" title="Spray konfigurieren" (close)="closePreviewModal(true)">
