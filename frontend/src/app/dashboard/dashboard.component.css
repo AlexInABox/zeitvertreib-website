@@ -20,3 +20,76 @@
   text-align: center;
   backdrop-filter: blur(5px);
 }
+
+/* ============================================================
+   Welcome card — right third of the inner area between the
+   canvas hairlines. It stretches from the navbar's bottom
+   hairline down to the footer's top hairline; those two lines
+   plus the right canvas hairline close the box, so the card
+   itself only draws its left edge.
+   ============================================================ */
+
+/* Column layout so the card can fill the space between nav and footer. */
+.dash-canvas {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-welcome {
+  flex: 1;
+  width: calc(min(1600px, 100% - (2 * var(--m3-gutter))) / 3);
+  margin-left: auto;
+  margin-right: max(var(--m3-gutter), calc(50% - 800px));
+  padding: 2.25rem 1.75rem 1.5rem;
+  border-left: 1px solid var(--m3-line);
+  background: var(--m3-soft);
+}
+
+/* Avatar + greeting row: the text centers against the avatar,
+   while the row itself stays pinned to the top of the card. */
+.dash-welcome-row {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.dash-welcome-avatar {
+  flex: none;
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border: 1px solid var(--m3-line);
+  background: var(--m3-panel);
+}
+
+.dash-welcome-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.dash-welcome-hello {
+  color: var(--m3-muted);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+.dash-welcome-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--m3-text);
+  font-family: var(--m3-font-display);
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+  line-height: 2rem;
+}
+
+@media (max-width: 720px) {
+  .dash-welcome {
+    width: auto;
+    margin-left: max(var(--m3-gutter), calc(50% - 800px));
+  }
+}

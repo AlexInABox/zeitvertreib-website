@@ -20,133 +20,24 @@
 }
 
 @if (!isLoading && !hasError) {
-  <div class="m3-canvas">
+  <div class="m3-canvas dash-canvas">
     <app-m3-nav />
 
-    <!-- Hero -->
-    <section class="m3-hero">
-      <div class="m3-hero-inner">
-        <div class="m3-hero-copy">
-          <h1 class="m3-hero-title">
-            <span class="m3-line m3-line--a">Dein Server.</span>
-            <span class="m3-line m3-line--b">Deine Zahlen.</span>
-          </h1>
-          <p class="m3-hero-sub">Deine Kills, Runden und Spielzeit auf einen Blick.</p>
-          <div class="m3-hero-actions">
-            <a class="m3-hero-play" href="steam://rungameid/700330//+connect 92.119.167.107:7100">Spielen</a>
-            <button type="button" class="m3-hero-ghost" (click)="openSupport()">Unterstützen</button>
-          </div>
-        </div>
-
-        <!-- Console -->
-        <div class="m3-window">
-          <div class="m3-window-bar">
-            <span class="m3-window-badge">
-              <img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
-            </span>
-            <span class="m3-window-name">Server-Konsole</span>
-            <span class="m3-window-rank">{{ rank }}</span>
-          </div>
-          <div class="m3-window-grid">
-            <div class="m3-cell">
-              <span>Kills</span><strong>{{ num(userStatistics.kills) }}</strong>
-            </div>
-            <div class="m3-cell">
-              <span>Tode</span><strong>{{ num(userStatistics.deaths) }}</strong>
-            </div>
-            <div class="m3-cell">
-              <span>K&nbsp;/&nbsp;D</span><strong>{{ kdRatio }}</strong>
-            </div>
-            <div class="m3-cell">
-              <span>Spielzeit</span><strong>{{ playtimeBig }}</strong>
-            </div>
-          </div>
-          <div class="m3-window-foot">
-            <span>{{ num(userStatistics.roundsplayed) }} Runden</span>
-            <span>{{ num(userStatistics.experience) }} XP</span>
-          </div>
+    <!-- Welcome card: right third of the content area between the canvas hairlines -->
+    <aside class="dash-welcome">
+      <div class="dash-welcome-row">
+        <img
+          class="dash-welcome-avatar"
+          [src]="userStatistics.avatarFull || fallbackImg"
+          [alt]="userStatistics.username"
+          (error)="onImgFallback($event)"
+        />
+        <div class="dash-welcome-lines">
+          <span class="dash-welcome-hello">Willkommen zurück,</span>
+          <span class="dash-welcome-name">{{ userStatistics.username }}</span>
         </div>
       </div>
-    </section>
-
-    <!-- Activity -->
-    <section class="m3-section">
-      <h2 class="m3-h2">Aktivität</h2>
-      <div class="m3-split">
-        <div class="m3-split-col">
-          <h3 class="m3-split-title">Letzte Kills</h3>
-          @if (recentKills.length) {
-            <div class="m3-feed">
-              @for (kill of recentKills; track $index) {
-                <div class="m3-feed-row">
-                  <img
-                    class="m3-feed-avatar"
-                    [src]="kill.avatarmedium || fallbackImg"
-                    alt=""
-                    loading="lazy"
-                    (error)="onImgFallback($event)"
-                  />
-                  <span class="m3-feed-name">{{ kill.displayname }}</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="m3-empty">Noch keine Eliminierungen erfasst.</p>
-          }
-        </div>
-        <div class="m3-split-col">
-          <h3 class="m3-split-title">Ausrüstung</h3>
-          <dl class="m3-gear">
-            <div class="m3-gear-row">
-              <dt>Medkits</dt>
-              <dd>{{ num(userStatistics.usedmedkits) }}</dd>
-            </div>
-            <div class="m3-gear-row">
-              <dt>Pocket Escapes</dt>
-              <dd>{{ num(userStatistics.pocketescapes) }}</dd>
-            </div>
-            <div class="m3-gear-row">
-              <dt>Adrenalin</dt>
-              <dd>{{ num(userStatistics.usedadrenaline) }}</dd>
-            </div>
-            <div class="m3-gear-row">
-              <dt>Colas</dt>
-              <dd>{{ num(userStatistics.usedcolas) }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-    </section>
-
-    <!-- Gallery -->
-    <section class="m3-section m3-gallery">
-      <div class="m3-gallery-head">
-        <div>
-          <h2 class="m3-h2">Bilder</h2>
-        </div>
-        <div class="m3-gallery-nav">
-          <span class="m3-gallery-count">{{ activeImageIndex + 1 }} / {{ galleryImages.length }}</span>
-          <button type="button" class="m3-arrow" (click)="prevImage()" aria-label="Zurück">←</button>
-          <button type="button" class="m3-arrow" (click)="nextImage()" aria-label="Weiter">→</button>
-        </div>
-      </div>
-      <div class="m3-stage">
-        <img class="m3-stage-img" [src]="activeImage" [alt]="'Server-Screenshot ' + (activeImageIndex + 1)" />
-      </div>
-      <div class="m3-thumbs">
-        @for (img of galleryImages; track img; let i = $index) {
-          <button
-            type="button"
-            class="m3-thumb"
-            [class.m3-thumb--on]="i === activeImageIndex"
-            (click)="pickImage(i)"
-            [attr.aria-label]="'Screenshot ' + (i + 1)"
-          >
-            <img [src]="'/assets/showcase/tiny/' + img" alt="" loading="lazy" />
-          </button>
-        }
-      </div>
-    </section>
+    </aside>
 
     <app-m3-footer />
   </div>
