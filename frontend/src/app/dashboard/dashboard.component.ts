@@ -12,11 +12,7 @@ import { SprayManagementComponent } from './widgets/spray-management/spray-manag
 import { BirthdayCardComponent } from './user-sidebar/birthday-card/birthday-card.component';
 import { SHOWCASE_IMAGES } from '../utils/showcase';
 import { retry, timeout } from 'rxjs';
-import type {
-  ClaimQuestRewardResponse,
-  GetQuestsResponse,
-  QuestProgress,
-} from '@zeitvertreib/types';
+import type { ClaimQuestRewardResponse, GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
 
 interface Statistics {
   username: string;
@@ -166,7 +162,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Weekly quests reset Monday 00:00 UTC (ISO weeks, cron '0 0 * * MON'). */
   weeklyResetCountdown(): string {
     const now = new Date(this.questClock());
-    const daysUntilMonday = ((8 - now.getUTCDay()) % 7) || 7;
+    const daysUntilMonday = (8 - now.getUTCDay()) % 7 || 7;
     const reset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilMonday);
     return this.formatCountdown(reset - now.getTime());
   }
@@ -216,19 +212,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private loadQuests(): void {
     this.questsLoading = true;
-    this.authService
-      .authenticatedGet<GetQuestsResponse>(`${environment.apiUrl}/quests`)
-      .subscribe({
-        next: (response) => {
-          this.dailyQuests = response?.dailyQuests ?? [];
-          this.weeklyQuests = response?.weeklyQuests ?? [];
-          this.questsLoading = false;
-        },
-        error: (error) => {
-          console.error('Fehler beim Laden der Quests:', error);
-          this.questsLoading = false;
-        },
-      });
+    this.authService.authenticatedGet<GetQuestsResponse>(`${environment.apiUrl}/quests`).subscribe({
+      next: (response) => {
+        this.dailyQuests = response?.dailyQuests ?? [];
+        this.weeklyQuests = response?.weeklyQuests ?? [];
+        this.questsLoading = false;
+      },
+      error: (error) => {
+        console.error('Fehler beim Laden der Quests:', error);
+        this.questsLoading = false;
+      },
+    });
   }
 
   // ---- gallery ------------------------------------------------------------

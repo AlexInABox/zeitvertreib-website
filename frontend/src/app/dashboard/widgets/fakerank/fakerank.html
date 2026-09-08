@@ -1,118 +1,116 @@
 @if (isFakerankBanned) {
-  <div class="spray-ban-warning">
-    <div class="spray-ban-icon">@if (testUiActive) {<i class="pi pi-ban"></i>} @else {⛔}</div>
-    <div class="spray-ban-content">
-      <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
-      <p class="spray-ban-reason"><strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}</p>
-      <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
-    </div>
+<div class="spray-ban-warning">
+  <div class="spray-ban-icon">@if (testUiActive) {<i class="pi pi-ban"></i>} @else {⛔}</div>
+  <div class="spray-ban-content">
+    <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
+    <p class="spray-ban-reason"><strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}</p>
+    <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
   </div>
-  } @if (!isFakerankBanned) {
-  <div class="fakerank-container-inline">
-    <div class="fakerank-info-left">
-      <h3 class="spray-title">@if (testUiActive) {<i class="pi pi-star-fill"></i>} @else {✨} Fakerank</h3>
-      <p class="spray-subtitle">Dein eigener Rang!</p>
+</div>
+} @if (!isFakerankBanned) {
+<div class="fakerank-container-inline">
+  <div class="fakerank-info-left">
+    <h3 class="spray-title">@if (testUiActive) {<i class="pi pi-star-fill"></i>} @else {✨} Fakerank</h3>
+    <p class="spray-subtitle">Dein eigener Rang!</p>
+  </div>
+  <div class="fakerank-action-right">
+    @if (testUiActive) {
+    <!-- Experimental inline editor -->
+    @if (!currentFakerank && !frEditing) {
+    <div class="fr-stack">
+      <button type="button" class="fr-create" (click)="frBeginCreate()">
+        <span class="fr-create-icon"><i class="pi pi-star-fill"></i></span>
+        <span>Fakerank erstellen</span>
+      </button>
+      <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
     </div>
-    <div class="fakerank-action-right">
-      @if (testUiActive) {
-      <!-- Experimental inline editor -->
-      @if (!currentFakerank && !frEditing) {
-      <div class="fr-stack">
-        <button type="button" class="fr-create" (click)="frBeginCreate()">
-          <span class="fr-create-icon"><i class="pi pi-star-fill"></i></span>
-          <span>Fakerank erstellen</span>
-        </button>
-        <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
-      </div>
-      } @if (currentFakerank && !frEditing) {
-      <div class="fr-stack" (mouseenter)="frHover = true" (mouseleave)="frHover = false">
-        <div class="fr-view">
-          <button
-            type="button"
-            class="fr-chip"
-            [style.color]="getColorHex(currentFakerankColor)"
-            [attr.title]="'Klicken zum Bearbeiten: ' + currentFakerank"
-            (click)="frStartEdit()"
-          >
-            {{ currentFakerank }}
-          </button>
-          @if (frHover && !fakerankLoading) {
-          <button
-            type="button"
-            class="fr-delete"
-            (click)="frAskDelete()"
-            aria-label="Fakerank löschen"
-            title="Fakerank löschen"
-          >
-            <i class="pi pi-trash"></i>
-          </button>
-          }
-        </div>
-        <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
-      </div>
-      } @if (frEditing) {
-      <div class="fr-editor">
-        <div class="fr-input-row">
-          <input
-            type="text"
-            class="fr-input"
-            [(ngModel)]="frText"
-            maxlength="50"
-            [style.color]="getColorHex(frColor)"
-            placeholder="Dein Rangname..."
-            (keydown.enter)="$event.preventDefault(); frRequestSave()"
-            (keydown.escape)="frCancel()"
-          />
-          <button
-            type="button"
-            class="fr-color-trigger"
-            (click)="frOpenColors()"
-            [attr.title]="'Farbe wählen (' + getColorName(frColor) + ')'"
-            aria-label="Farbe wählen"
-          >
-            <span class="fr-color-trigger-dot" [style.background-color]="getColorHex(frColor)"></span>
-          </button>
-        </div>
-        <div class="fr-actions">
-          <button type="button" class="fr-cancel" (click)="frCancel()" [disabled]="fakerankLoading">Abbrechen</button>
-          <ui-button variant="info" size="sm" (click)="frRequestSave()" [disabled]="fakerankLoading || !frText.trim()">
-            <i class="pi pi-save"></i> Speichern
-          </ui-button>
-        </div>
-      </div>
-      } } @else {
-      <!-- Classic modal flow -->
-      <!-- Active Fakerank -->
-      @if (currentFakerank) {
-      <div class="fakerank-active-stacked">
-        <div class="fakerank-preview-small" [style.color]="getColorHex(currentFakerankColor)">
+    } @if (currentFakerank && !frEditing) {
+    <div class="fr-stack" (mouseenter)="frHover = true" (mouseleave)="frHover = false">
+      <div class="fr-view">
+        <button
+          type="button"
+          class="fr-chip"
+          [style.color]="getColorHex(currentFakerankColor)"
+          [attr.title]="'Klicken zum Bearbeiten: ' + currentFakerank"
+          (click)="frStartEdit()"
+        >
           {{ currentFakerank }}
-        </div>
-        <div class="fakerank-buttons-row">
-          <button (click)="openFakerankModal()" class="action-btn-text" [disabled]="fakerankLoading">
-            ✏️ Bearbeiten
-          </button>
-          <button (click)="deleteFakerank()" class="action-btn-text delete" [disabled]="fakerankLoading">
-            🗑️ Löschen
-          </button>
-        </div>
-        <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+        </button>
+        @if (frHover && !fakerankLoading) {
+        <button
+          type="button"
+          class="fr-delete"
+          (click)="frAskDelete()"
+          aria-label="Fakerank löschen"
+          title="Fakerank löschen"
+        >
+          <i class="pi pi-trash"></i>
+        </button>
+        }
       </div>
-      }
-      <!-- No Fakerank -->
-      @if (!currentFakerank) {
-      <div class="fakerank-empty-inline">
-        <ui-button variant="info" (click)="openFakerankModal()" [disabled]="fakerankLoading"> ✨ Erstellen </ui-button>
-        <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
-      </div>
-      } }
+      <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
     </div>
+    } @if (frEditing) {
+    <div class="fr-editor">
+      <div class="fr-input-row">
+        <input
+          type="text"
+          class="fr-input"
+          [(ngModel)]="frText"
+          maxlength="50"
+          [style.color]="getColorHex(frColor)"
+          placeholder="Dein Rangname..."
+          (keydown.enter)="$event.preventDefault(); frRequestSave()"
+          (keydown.escape)="frCancel()"
+        />
+        <button
+          type="button"
+          class="fr-color-trigger"
+          (click)="frOpenColors()"
+          [attr.title]="'Farbe wählen (' + getColorName(frColor) + ')'"
+          aria-label="Farbe wählen"
+        >
+          <span class="fr-color-trigger-dot" [style.background-color]="getColorHex(frColor)"></span>
+        </button>
+      </div>
+      <div class="fr-actions">
+        <button type="button" class="fr-cancel" (click)="frCancel()" [disabled]="fakerankLoading">Abbrechen</button>
+        <ui-button variant="info" size="sm" (click)="frRequestSave()" [disabled]="fakerankLoading || !frText.trim()">
+          <i class="pi pi-save"></i> Speichern
+        </ui-button>
+      </div>
+    </div>
+    } } @else {
+    <!-- Classic modal flow -->
+    <!-- Active Fakerank -->
+    @if (currentFakerank) {
+    <div class="fakerank-active-stacked">
+      <div class="fakerank-preview-small" [style.color]="getColorHex(currentFakerankColor)">{{ currentFakerank }}</div>
+      <div class="fakerank-buttons-row">
+        <button (click)="openFakerankModal()" class="action-btn-text" [disabled]="fakerankLoading">
+          ✏️ Bearbeiten
+        </button>
+        <button (click)="deleteFakerank()" class="action-btn-text delete" [disabled]="fakerankLoading">
+          🗑️ Löschen
+        </button>
+      </div>
+      <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+    </div>
+    }
+    <!-- No Fakerank -->
+    @if (!currentFakerank) {
+    <div class="fakerank-empty-inline">
+      <ui-button variant="info" (click)="openFakerankModal()" [disabled]="fakerankLoading"> ✨ Erstellen </ui-button>
+      <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+    </div>
+    } }
   </div>
-  } @if (fakerankError) {
-  <div class="fakerank-message fakerank-error">{{ fakerankError }}</div>
-  } @if (fakerankSuccess) {
-  <div class="fakerank-message fakerank-success">{{ fakerankSuccess }}</div>
-  }
+</div>
+} @if (fakerankError) {
+<div class="fakerank-message fakerank-error">{{ fakerankError }}</div>
+} @if (fakerankSuccess) {
+<div class="fakerank-message fakerank-success">{{ fakerankSuccess }}</div>
+}
 
 <!-- Modal -->
 <ui-dialog [(open)]="fakerankModalOpen" title="Fakerank konfigurieren">
