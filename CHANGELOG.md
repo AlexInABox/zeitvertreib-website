@@ -15,11 +15,15 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 ### Changed
 
 - The website dashboard has been redesigned: live server stats, kills and playtime at a glance, and a Steam launch button
-- New landing page in the dashboard design; the website is now dark-mode only
+- New landing page; the website is now dark-mode only
 
 ### Removed
 
 - The web games section (slot machine, lucky wheel, chicken cross, roulette and lootbox) has been removed from the website
+
+### Fixed
+
+- The dashboard feed for recent kills and deaths shows data again
 
 ## [30]
 

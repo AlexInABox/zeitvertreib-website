@@ -321,6 +321,11 @@
 
 /* ---- Gear readout ----------------------------------------- */
 
+.dash-gear {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
 .dash-gear-list {
   display: flex;
   flex-direction: column;
@@ -329,6 +334,21 @@
 .dash-gear-list .m3-gear-row {
   align-items: center;
   padding: 0.45rem 0;
+}
+
+/* ---- First/last seen footer ------------------------------- */
+
+.dash-seen {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--m3-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  margin-left: 0.35rem;
+  margin-right: 0.35rem;
 }
 
 /* ============================================================

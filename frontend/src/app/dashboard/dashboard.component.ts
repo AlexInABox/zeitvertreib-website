@@ -28,6 +28,8 @@ interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
+  firstSeen?: number;
+  lastSeen?: number;
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -63,6 +65,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     pocketescapes: 0,
     usedadrenaline: 0,
     snakehighscore: 0,
+    firstSeen: 0,
+    lastSeen: 0,
     lastkillers: [],
     lastkills: [],
   };
@@ -131,6 +135,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** German thousands separator for mono readouts. */
   num(value: number | null | undefined): string {
     return (value ?? 0).toLocaleString('de-DE');
+  }
+
+  /** German date readout for the "first seen / last seen" footer. */
+  seenDate(value: number | null | undefined): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   get recentKills(): Statistics['lastkills'] {

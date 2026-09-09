@@ -220,6 +220,11 @@
         <div class="dash-widget">
           <app-birthday-card />
         </div>
+
+        <footer class="dash-seen">
+          <span>Erstmals gesehen: {{ seenDate(userStatistics.firstSeen) }}</span>
+          <span>Zuletzt gesehen: {{ seenDate(userStatistics.lastSeen) }}</span>
+        </footer>
       </aside>
     </main>
 

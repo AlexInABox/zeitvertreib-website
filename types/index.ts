@@ -54,6 +54,8 @@ export interface PlayerData {
   luckyWheelWins?: number;
   luckyWheelLosses?: number;
   username?: string;
+  firstSeen?: number;
+  lastSeen?: number;
 }
 
 // ============================================================================
@@ -130,6 +132,8 @@ export interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
+  firstSeen?: number;
+  lastSeen?: number;
   fakerank_until?: number;
   fakerankadmin_until?: number;
   fakerankoverride_until?: number;

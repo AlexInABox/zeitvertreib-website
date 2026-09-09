@@ -9,6 +9,7 @@ const MAIN_STEAM_ID = '76561198354414854';
 const MIN_STEAM64 = 76561197960265728n;
 const MAX_STEAM64 = 76561202255233023n;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_STEAM_AVATAR = 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg';
 
 function mulberry32(seed) {
   return function () {
@@ -355,6 +356,10 @@ const insertNotification = db.prepare(
 
 const insertSpray = db.prepare('INSERT INTO sprays (userid, name, sha256, uploaded_at) VALUES (?, ?, ?, ?)');
 
+const insertSteamCache = db.prepare(
+  'INSERT INTO steam_cache (steam_id, username, avatar_url, last_updated) VALUES (?, ?, ?, ?)',
+);
+
 const insertCase = db.prepare(`
   INSERT INTO cases (id, title, description, category, created_by_discord_id, created_at, last_updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -423,6 +428,8 @@ db.transaction(() => {
       last_seen: now - randInt(0, 14) * DAY_MS,
     });
 
+    insertSteamCache.run(player.id, player.username, DEFAULT_STEAM_AVATAR, nowSec);
+
     if (player.discordId) {
       const [username, displayName] =
         player.discordId === MAIN_DISCORD_ID ? ['unknown', 'unknown'] : pick(DISCORD_NAMES);
@@ -456,8 +463,20 @@ db.transaction(() => {
     }
   }
 
+  // General kill history across all players.
   for (let i = 0; i < 50; i++) {
     insertKill.run(pick(players).id, pick(players).id, nowSec - randInt(0, 30 * 24 * 3600));
+  }
+
+  // Guarantee the main player has distinct recent victims and killers so the
+  // dashboard's "Letzte Kills" / "Letzte Tode" feeds are populated.
+  const mainPlayerId = players[0].id;
+  const otherPlayers = [...players.filter((p) => p.id !== mainPlayerId)].sort(() => rng() - 0.5);
+  const victims = otherPlayers.slice(0, 8);
+  const killers = otherPlayers.slice(8, 16);
+  for (let i = 0; i < 8; i++) {
+    insertKill.run(mainPlayerId, victims[i].id, nowSec - randInt(0, 7 * 24 * 3600));
+    insertKill.run(killers[i].id, mainPlayerId, nowSec - randInt(0, 7 * 24 * 3600));
   }
 
   for (let i = 0; i < 10; i++) {
