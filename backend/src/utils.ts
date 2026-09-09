@@ -353,6 +353,11 @@ async function refreshDiscordCache(discordId: string, env: Env): Promise<void> {
 }
 
 // Database helpers
+function toEpochMs(value: Date | number | null | undefined): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  return value instanceof Date ? value.getTime() : value;
+}
+
 export async function getPlayerData(
   steamId: string,
   db: ReturnType<typeof drizzle>,
@@ -386,8 +391,8 @@ export async function getPlayerData(
         fakerankadmin_until: result.fakerankadminUntil ?? undefined,
         fakerankoverride_until: result.fakerankoverrideUntil ?? undefined,
         redeemed_codes: result.redeemedCodes ?? undefined,
-        firstSeen: result.firstSeen ? result.firstSeen.getTime() : undefined,
-        lastSeen: result.lastSeen ? result.lastSeen.getTime() : undefined,
+        firstSeen: toEpochMs(result.firstSeen),
+        lastSeen: toEpochMs(result.lastSeen),
       } as PlayerData;
     }
 
