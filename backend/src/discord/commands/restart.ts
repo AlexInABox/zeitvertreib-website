@@ -57,6 +57,8 @@ export class RestartCommand extends BaseCommand {
     }
 
     const busyLabel = BUSY_STATE_LABELS[state.currentState] ?? `macht gerade ${state.currentState}`;
-    await helpers.reply(`⛔ Der Server ${busyLabel}. Ein Restart wird deshalb nicht ausgelöst. Warte, bis er online oder offline ist.`);
+    await helpers.reply(
+      `⛔ Der Server ${busyLabel}. Ein Restart wird deshalb nicht ausgelöst. Warte, bis er online oder offline ist.`,
+    );
   }
 }

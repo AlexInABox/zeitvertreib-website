@@ -41,10 +41,14 @@ export class ReinstallCommand extends BaseCommand {
     );
 
     if (!response.ok) {
-      await helpers.reply('⚠️ Die Neuinstallation wurde ausgelöst, aber ich konnte die Statusprüfung nicht starten. Beobachte das Panel oder nutze `/restart` in ein paar Minuten.');
+      await helpers.reply(
+        '⚠️ Die Neuinstallation wurde ausgelöst, aber ich konnte die Statusprüfung nicht starten. Beobachte das Panel oder nutze `/restart` in ein paar Minuten.',
+      );
       return;
     }
 
-    await helpers.reply('♻️ **Neuinstallation ausgelöst!** Ich prüfe den Status und starte den Server, sobald er fertig ist.');
+    await helpers.reply(
+      '♻️ **Neuinstallation ausgelöst!** Ich prüfe den Status und starte den Server, sobald er fertig ist.',
+    );
   }
 }
