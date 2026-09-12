@@ -707,6 +707,18 @@ export async function isTeam(steamId: string, env: Env): Promise<boolean> {
   return discordInfoResult.teamSince > 0;
 }
 
+export async function isTeamByDiscordId(discordId: string, env: Env): Promise<boolean> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const discordInfoResult = await db
+    .select()
+    .from(discordInfo)
+    .where(eq(discordInfo.discordId, discordId))
+    .get();
+  if (!discordInfoResult) return false;
+
+  return discordInfoResult.teamSince > 0;
+}
+
 export async function isDonator(steamId: string, env: Env): Promise<boolean> {
   const db = drizzle(env.ZEITVERTREIB_DATA);
   let id = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;

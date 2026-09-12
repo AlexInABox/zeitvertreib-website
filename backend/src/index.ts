@@ -34,6 +34,7 @@ import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
+import { ReinstallManager } from './discord/reinstall-manager.js';
 import { handleGetPlayerlist, handleUpdatePlayerlist } from './routes/playerlist.js';
 import { handleDiscordTrackerUpdate, handleDiscordTrackerDelete } from './routes/discord-tracker.js';
 import { handleGetAdventCalendar, handleRedeemAdventDoor } from './routes/adventcalendar.js';
@@ -367,3 +368,4 @@ export default {
 
 // Export PlayerlistStorage for Durable Object
 export { PlayerlistStorage };
+export { ReinstallManager };
