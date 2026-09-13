@@ -1,6 +1,5 @@
 import { BaseCommand } from '../base-command.js';
 import { triggerReinstall } from '../../services/pterodactyl.js';
-import { isTeamByDiscordId } from '../../utils.js';
 
 export class ReinstallCommand extends BaseCommand {
   override name = 'reinstall';
@@ -14,12 +13,6 @@ export class ReinstallCommand extends BaseCommand {
 
     if (!discordId) {
       await helpers.reply('❌ Konnte Benutzer-ID nicht ermitteln!');
-      return;
-    }
-
-    const teamMember = await isTeamByDiscordId(discordId, env);
-    if (!teamMember) {
-      await helpers.reply('⛔ Nur Teammitglieder dürfen diesen Befehl nutzen.');
       return;
     }
 

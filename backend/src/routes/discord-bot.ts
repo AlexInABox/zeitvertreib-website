@@ -8,7 +8,7 @@ import { Routes, InteractionType } from 'discord-api-types/v10';
 import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
 import { AwsClient } from 'aws4fetch';
-import { createResponse } from '../utils.js';
+import { createResponse, isTeamByDiscordId } from '../utils.js';
 import { appendNotification } from '../notifications.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
@@ -104,6 +104,27 @@ export async function handleDiscordBotInteractions(
           }
         })(),
       );
+    }
+
+    // Team-only commands: access control happens here, before the defer, so the
+    // no-access message can be sent as an ephemeral initial response. Once the
+    // interaction was deferred publicly, a later edit can't switch to ephemeral.
+    if (command.name === 'restart' || command.name === 'reinstall') {
+      const actorId = interaction.member?.user?.id || interaction.user?.id;
+      const isTeam = actorId ? await isTeamByDiscordId(actorId, env) : false;
+      if (!isTeam) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '⛔ Nur Teammitglieder können diesen Befehl nutzen.',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
     }
 
     return createResponse(

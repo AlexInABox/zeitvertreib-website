@@ -1,7 +1,6 @@
 import { EmbedBuilder } from '@discordjs/builders';
 import { BaseCommand } from '../base-command.js';
 import { getServerState, sendPowerSignal } from '../../services/pterodactyl.js';
-import { isTeamByDiscordId } from '../../utils.js';
 
 const BUSY_STATE_LABELS: Record<string, string> = {
   starting: 'Der Server startet gerade.',
@@ -26,15 +25,6 @@ export class RestartCommand extends BaseCommand {
     if (!discordId) {
       await helpers.reply({
         embeds: [embedFor('Fehler', 'Deine Benutzer-ID konnte nicht ermittelt werden.', 0xff0000).toJSON()],
-      });
-      return;
-    }
-
-    const teamMember = await isTeamByDiscordId(discordId, env);
-    if (!teamMember) {
-      await helpers.reply({
-        embeds: [embedFor('Kein Zugriff', 'Nur Teammitglieder können den Server neu starten.', 0xff0000).toJSON()],
-        flags: 64, // Ephemeral
       });
       return;
     }
