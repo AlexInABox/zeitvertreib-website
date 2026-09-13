@@ -12,6 +12,10 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 
 ## [31]
 
+### Added
+
+- Team members can now restart or reinstall the game server right from Discord (`/restart` and `/reinstall`), helping the team get the server back up quickly after crashes or lag outbreaks.
+
 ### Changed
 
 - The website dashboard has been redesigned: live server stats, kills and playtime at a glance, and a Steam launch button
