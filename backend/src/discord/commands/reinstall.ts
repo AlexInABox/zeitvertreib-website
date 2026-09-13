@@ -1,5 +1,6 @@
 import { BaseCommand } from '../base-command.js';
 import { triggerReinstall } from '../../services/pterodactyl.js';
+import { isTeamByDiscordId } from '../../utils.js';
 
 export class ReinstallCommand extends BaseCommand {
   override name = 'reinstall';
@@ -13,6 +14,14 @@ export class ReinstallCommand extends BaseCommand {
 
     if (!discordId) {
       await helpers.reply('❌ Konnte Benutzer-ID nicht ermitteln!');
+      return;
+    }
+
+    // Fail-closed guard. The router already approves this before deferring, but the
+    // command must never rely on the caller having done its own checks.
+    const teamMember = await isTeamByDiscordId(discordId, env);
+    if (!teamMember) {
+      await helpers.reply('⛔ Nur Teammitglieder können diesen Befehl nutzen.');
       return;
     }
 

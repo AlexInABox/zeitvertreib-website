@@ -80,6 +80,28 @@ export async function handleDiscordBotInteractions(
       return createResponse({ error: 'Unknown Command' }, 400, origin);
     }
 
+    // Team-only commands: access control happens here, BEFORE anything executes.
+    // The command itself only runs inside waitUntil, but that registration happens
+    // in this request, so the check must come first in this block. Once the
+    // interaction was deferred publicly, a later edit can't switch to ephemeral.
+    if (command.name === 'restart' || command.name === 'reinstall') {
+      const actorId = interaction.member?.user?.id || interaction.user?.id;
+      const isTeam = actorId ? await isTeamByDiscordId(actorId, env) : false;
+      if (!isTeam) {
+        return createResponse(
+          {
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: '⛔ Nur Teammitglieder können diesen Befehl nutzen.',
+              flags: 64, // Ephemeral
+            },
+          },
+          200,
+          origin,
+        );
+      }
+    }
+
     // Configure REST with custom fetch for proxying
     const rest = new REST({ version: '10' }).setToken(env.DISCORD_TOKEN);
 
@@ -106,27 +128,9 @@ export async function handleDiscordBotInteractions(
       );
     }
 
-    // Team-only commands: access control happens here, before the defer, so the
-    // no-access message can be sent as an ephemeral initial response. Once the
+    // Team-only commands: access control happens here, so the
+    // no-access message can be sent as an ephemeral response. Once the
     // interaction was deferred publicly, a later edit can't switch to ephemeral.
-    if (command.name === 'restart' || command.name === 'reinstall') {
-      const actorId = interaction.member?.user?.id || interaction.user?.id;
-      const isTeam = actorId ? await isTeamByDiscordId(actorId, env) : false;
-      if (!isTeam) {
-        return createResponse(
-          {
-            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-              content: '⛔ Nur Teammitglieder können diesen Befehl nutzen.',
-              flags: 64, // Ephemeral
-            },
-          },
-          200,
-          origin,
-        );
-      }
-    }
-
     return createResponse(
       {
         type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
