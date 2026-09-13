@@ -24,7 +24,9 @@ export class RestartCommand extends BaseCommand {
     const discordId = interaction.member?.user?.id || interaction.user?.id;
 
     if (!discordId) {
-      await helpers.reply({ embeds: [embedFor('Fehler', 'Deine Benutzer-ID konnte nicht ermittelt werden.', 0xff0000).toJSON()] });
+      await helpers.reply({
+        embeds: [embedFor('Fehler', 'Deine Benutzer-ID konnte nicht ermittelt werden.', 0xff0000).toJSON()],
+      });
       return;
     }
 
