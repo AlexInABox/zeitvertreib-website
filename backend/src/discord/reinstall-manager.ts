@@ -3,9 +3,9 @@ import { Routes } from 'discord-api-types/v10';
 import { proxyFetch } from '../proxy.js';
 import { getServerState, sendPowerSignal, type PterodactylServerState } from '../services/pterodactyl.js';
 
-const INITIAL_DELAY_MS = 20 * 1000;
-const POLL_INTERVAL_MS = 10 * 1000;
-const MAX_WAIT_MS = 2 * 60 * 1000;
+const INITIAL_DELAY_MS = 2 * 1000;
+const POLL_INTERVAL_MS = 2 * 1000;
+const MAX_WAIT_MS = 30 * 1000;
 
 interface ReinstallTask {
   interactionToken: string;
