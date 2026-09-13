@@ -26,7 +26,7 @@ function pterodactylHeaders(env: Env, withJsonBody = false): Record<string, stri
 
 export async function getServerState(env: Env): Promise<PterodactylServerState> {
   const resourcesResponse = await proxyFetch(
-    `${PTERODACTYL_PANEL_URL}/api/client/servers/${PTERODACTYL_SERVER_ID}/resources`,
+    `${PTERODACTYL_PANEL_URL}/api/client/servers/elytra/${PTERODACTYL_SERVER_ID}/resources`,
     {
       headers: pterodactylHeaders(env),
     },
@@ -40,7 +40,7 @@ export async function getServerState(env: Env): Promise<PterodactylServerState> 
   }
 
   const detailsResponse = await proxyFetch(
-    `${PTERODACTYL_PANEL_URL}/api/client/servers/${PTERODACTYL_SERVER_ID}`,
+    `${PTERODACTYL_PANEL_URL}/api/client/servers/elytra/${PTERODACTYL_SERVER_ID}`,
     {
       headers: pterodactylHeaders(env),
     },
@@ -65,7 +65,7 @@ export async function getServerState(env: Env): Promise<PterodactylServerState> 
 
 export async function sendPowerSignal(env: Env, signal: 'start' | 'stop' | 'restart' | 'kill'): Promise<boolean> {
   const response = await proxyFetch(
-    `${PTERODACTYL_PANEL_URL}/api/client/servers/${PTERODACTYL_SERVER_ID}/power`,
+    `${PTERODACTYL_PANEL_URL}/api/client/servers/elytra/${PTERODACTYL_SERVER_ID}/power`,
     {
       method: 'POST',
       headers: pterodactylHeaders(env, true),
@@ -79,7 +79,7 @@ export async function sendPowerSignal(env: Env, signal: 'start' | 'stop' | 'rest
 
 export async function triggerReinstall(env: Env): Promise<boolean> {
   const response = await proxyFetch(
-    `${PTERODACTYL_PANEL_URL}/api/client/servers/${PTERODACTYL_SERVER_ID}/settings/reinstall`,
+    `${PTERODACTYL_PANEL_URL}/api/client/servers/elytra/${PTERODACTYL_SERVER_ID}/settings/reinstall`,
     {
       method: 'POST',
       headers: pterodactylHeaders(env, true),
