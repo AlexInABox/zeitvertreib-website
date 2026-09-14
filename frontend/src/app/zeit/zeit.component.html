@@ -81,7 +81,12 @@
                   (keyup.enter)="applyApiKey()"
                 />
               </div>
-              <button type="button" class="m3-btn m3-btn--ghost" (click)="applyApiKey()" [disabled]="!partnerApiKey.trim()">
+              <button
+                type="button"
+                class="m3-btn m3-btn--ghost"
+                (click)="applyApiKey()"
+                [disabled]="!partnerApiKey.trim()"
+              >
                 Anwenden
               </button>
             </div>

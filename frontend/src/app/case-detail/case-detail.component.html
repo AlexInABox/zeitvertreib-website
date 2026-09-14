@@ -48,10 +48,16 @@
               class="case-creator"
               (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
               [title]="
-                isTeam ? 'Zum Profil von ' + caseData?.createdBy?.username : 'Erstellt von ' + caseData?.createdBy?.username
+                isTeam
+                  ? 'Zum Profil von ' + caseData?.createdBy?.username
+                  : 'Erstellt von ' + caseData?.createdBy?.username
               "
             >
-              <img [src]="caseData?.createdBy?.avatarUrl" [alt]="caseData?.createdBy?.username" class="case-creator-avatar" />
+              <img
+                [src]="caseData?.createdBy?.avatarUrl"
+                [alt]="caseData?.createdBy?.username"
+                class="case-creator-avatar"
+              />
               <span class="case-creator-name">{{ caseData?.createdBy?.username }}</span>
             </button>
           }
@@ -418,9 +424,7 @@
                             [class.case-chip-remove--confirming]="pendingRemoveUser === user.steamId"
                             (click)="onRemoveLinkedUser(user.steamId, $event)"
                             [disabled]="isManagingLinkedUsers"
-                            [title]="
-                              pendingRemoveUser === user.steamId ? 'Erneut klicken zum Bestätigen' : 'Entfernen'
-                            "
+                            [title]="pendingRemoveUser === user.steamId ? 'Erneut klicken zum Bestätigen' : 'Entfernen'"
                             aria-label="Nutzer entfernen"
                           >
                             <app-icon [name]="pendingRemoveUser === user.steamId ? 'check' : 'times'" />
@@ -599,11 +603,7 @@
                       </span>
                     }
 
-                    <button
-                      type="button"
-                      class="m3-btn m3-btn--ghost m3-btn--wide"
-                      (click)="toggleManualReportEntry()"
-                    >
+                    <button type="button" class="m3-btn m3-btn--ghost m3-btn--wide" (click)="toggleManualReportEntry()">
                       <app-icon [name]="showManualReportEntry ? 'times' : 'plus'" />
                       {{ showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report per ID verknüpfen' }}
                     </button>

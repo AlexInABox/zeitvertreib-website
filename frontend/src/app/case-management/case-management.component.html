@@ -17,9 +17,7 @@
           <span class="m3-panel-title">Fall suchen</span>
         </div>
         <div class="m3-panel-body m3-stack">
-          <p class="cases-hint">
-            Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt.
-          </p>
+          <p class="cases-hint">Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt.</p>
 
           <div class="cases-lookup-row">
             <div class="m3-field cases-lookup-field">
@@ -464,7 +462,11 @@
           </div>
         }
         @if (
-          searchMode === 'steamId' && steamIdResults !== null && steamIdResults.length === 0 && !isSearching && !searchError
+          searchMode === 'steamId' &&
+          steamIdResults !== null &&
+          steamIdResults.length === 0 &&
+          !isSearching &&
+          !searchError
         ) {
           <div class="m3-state">
             <app-icon class="m3-state-icon" name="search" />

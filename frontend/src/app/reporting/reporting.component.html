@@ -187,12 +187,7 @@
                 <div class="m3-notice m3-notice--error report-notice">
                   <app-icon name="exclamation-triangle" />
                   <span>{{ errorMessage }}</span>
-                  <button
-                    type="button"
-                    class="report-notice-action"
-                    (click)="errorMessage = ''"
-                    aria-label="Schließen"
-                  >
+                  <button type="button" class="report-notice-action" (click)="errorMessage = ''" aria-label="Schließen">
                     <app-icon name="times" />
                   </button>
                 </div>
