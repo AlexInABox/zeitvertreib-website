@@ -1,315 +1,379 @@
-<div class="reporting-page">
-  <!-- ===== LIST VIEW ===== -->
-  @if (!selectedReport) {
-    <div class="page-hero">
-      <h1>Reports</h1>
-      <p class="hero-description">
-        Wähle <u>deinen</u> aktiven Report aus und lade Beweise hoch, um das Team zu unterstützen.
-      </p>
-    </div>
-    <!-- Loading -->
-    @if (isLoading) {
-      <div class="centered-state">
-        <div class="spinner-ring"></div>
-        <span>Reports werden geladen…</span>
-      </div>
-    }
-    <!-- Error -->
-    @if (loadError && !isLoading) {
-      <div class="notice-banner notice-error">
-        <i class="pi pi-exclamation-triangle"></i>
-        <span>{{ loadError }}</span>
-        <button (click)="loadReports()"><i class="pi pi-refresh"></i> Erneut versuchen</button>
-      </div>
-    }
-    <!-- Empty state -->
-    @if (!isLoading && !loadError && reports.length === 0) {
-      <div class="empty-state">
-        <p>Momentan gibt es keine laufenden Reports...</p>
-      </div>
-    }
-    <!-- Report list -->
-    @if (!isLoading && !loadError && reports.length > 0) {
-      <div class="report-list">
-        @for (report of reports; track report.id) {
-          <div class="report-card" (click)="selectReport(report)">
-            <div class="report-card-meta">
-              <span class="report-id">#{{ report.id }}</span>
-              <span class="report-time">{{ formatTimestamp(report.createdAt) }}</span>
-            </div>
-            <div class="report-card-players">
-              <div class="player-entry">
-                @if (report.reporter.avatarUrl) {
-                  <img [src]="report.reporter.avatarUrl" class="avatar" alt="" />
-                }
-                @if (!report.reporter.avatarUrl) {
-                  <div class="avatar-placeholder"><i class="pi pi-user"></i></div>
-                }
-                <div class="player-details">
-                  <span class="player-role">Reporter</span>
-                  <span class="player-name">{{ report.reporter.username }}</span>
-                </div>
-              </div>
-              <i class="pi pi-arrow-right arrow-divider"></i>
-              <div class="player-entry">
-                @if (report.reported.avatarUrl) {
-                  <img [src]="report.reported.avatarUrl" class="avatar" alt="" />
-                }
-                @if (!report.reported.avatarUrl) {
-                  <div class="avatar-placeholder"><i class="pi pi-user"></i></div>
-                }
-                <div class="player-details">
-                  <span class="player-role">Gemeldet</span>
-                  <span class="player-name">{{ report.reported.username }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="report-card-reason">
-              <i class="pi pi-comment"></i>
-              <span>{{ report.reason }}</span>
-            </div>
-            <div class="report-card-cta">
-              <i class="pi pi-upload"></i>
-              <span>Beweis hochladen</span>
-              <i class="pi pi-chevron-right cta-arrow"></i>
-            </div>
-          </div>
-        }
-      </div>
-    }
-  }
+<div class="m3-canvas m3-canvas--fill">
+  <app-m3-nav />
 
-  <!-- ===== UPLOAD VIEW ===== -->
-  @if (selectedReport) {
-    <div class="upload-view">
-      <button class="ghost-btn" (click)="backToList()" [disabled]="isFetchingMedalClip || isUploading">
-        <i class="pi pi-arrow-left"></i> Zurück zur Übersicht
-      </button>
-      <!-- Report summary -->
-      <div class="summary-card">
-        <div class="summary-header">
-          <span class="report-id">#{{ selectedReport.id }}</span>
-          <span class="report-time">{{ formatTimestamp(selectedReport.createdAt) }}</span>
+  <main class="m3-page">
+    <!-- ===== LIST VIEW ===== -->
+    @if (!selectedReport) {
+      <header class="m3-page-head">
+        <span class="m3-eyebrow">Moderation</span>
+        <h1 class="m3-page-title">Reports.</h1>
+        <p class="m3-page-lead">
+          Wähle <u>deinen</u> aktiven Report aus und lade Beweise hoch, um das Team zu unterstützen.
+        </p>
+      </header>
+
+      <!-- Loading -->
+      @if (isLoading) {
+        <div class="m3-state">
+          <span class="m3-spinner" aria-hidden="true"></span>
+          <span>Reports werden geladen…</span>
         </div>
-        <div class="report-card-players">
-          <div class="player-entry">
-            @if (selectedReport.reporter.avatarUrl) {
-              <img [src]="selectedReport.reporter.avatarUrl" class="avatar" alt="" />
-            }
-            @if (!selectedReport.reporter.avatarUrl) {
-              <div class="avatar-placeholder"><i class="pi pi-user"></i></div>
-            }
-            <div class="player-details">
-              <span class="player-role">Reporter</span>
-              <span class="player-name">{{ selectedReport.reporter.username }}</span>
-            </div>
-          </div>
-          <i class="pi pi-arrow-right arrow-divider"></i>
-          <div class="player-entry">
-            @if (selectedReport.reported.avatarUrl) {
-              <img [src]="selectedReport.reported.avatarUrl" class="avatar" alt="" />
-            }
-            @if (!selectedReport.reported.avatarUrl) {
-              <div class="avatar-placeholder"><i class="pi pi-user"></i></div>
-            }
-            <div class="player-details">
-              <span class="player-role">Gemeldet</span>
-              <span class="player-name">{{ selectedReport.reported.username }}</span>
-            </div>
-          </div>
+      }
+
+      <!-- Error -->
+      @if (loadError && !isLoading) {
+        <div class="m3-notice m3-notice--error report-notice">
+          <app-icon name="exclamation-triangle" />
+          <span>{{ loadError }}</span>
+          <button type="button" class="report-notice-action" (click)="loadReports()">
+            <app-icon name="refresh" />
+            Erneut versuchen
+          </button>
         </div>
-        <div class="report-card-reason">
-          <i class="pi pi-comment"></i>
-          <span>{{ selectedReport.reason }}</span>
+      }
+
+      <!-- Empty state -->
+      @if (!isLoading && !loadError && reports.length === 0) {
+        <div class="m3-state">
+          <app-icon class="m3-state-icon" name="flag" />
+          <p>Momentan gibt es keine laufenden Reports.</p>
         </div>
-      </div>
-      <!-- Upload box -->
-      @if (!uploadDone) {
-        <div class="upload-box">
-          <div class="upload-box-header">
-            <i class="pi pi-upload"></i>
-            <span>Beweise hochladen</span>
-          </div>
-          <!-- Upload Mode Toggle -->
-          <div class="upload-mode-toggle">
-            <button
-              class="mode-btn"
-              [class.active]="uploadMode === 'file'"
-              (click)="uploadMode = 'file'; errorMessage = ''"
-              [disabled]="isFetchingMedalClip || isUploading"
-            >
-              <i class="pi pi-file"></i>
-              <span>Datei</span>
+      }
+
+      <!-- Report list -->
+      @if (!isLoading && !loadError && reports.length > 0) {
+        <div class="report-grid m3-hairgrid m3-hairgrid--2">
+          @for (report of reports; track report.id) {
+            <button type="button" class="report-card" (click)="selectReport(report)">
+              <span class="report-card-top">
+                <span class="m3-chip m3-chip--brand">#{{ report.id }}</span>
+                <span class="report-time">{{ formatTimestamp(report.createdAt) }}</span>
+              </span>
+
+              <span class="report-players">
+                <span class="report-player">
+                  @if (report.reporter.avatarUrl) {
+                    <img [src]="report.reporter.avatarUrl" class="report-avatar" alt="" loading="lazy" />
+                  } @else {
+                    <span class="report-avatar report-avatar--empty"><app-icon name="user" /></span>
+                  }
+                  <span class="report-player-lines">
+                    <em>Reporter</em>
+                    <strong>{{ report.reporter.username }}</strong>
+                  </span>
+                </span>
+
+                <app-icon class="report-divider" name="arrow-right" />
+
+                <span class="report-player">
+                  @if (report.reported.avatarUrl) {
+                    <img [src]="report.reported.avatarUrl" class="report-avatar" alt="" loading="lazy" />
+                  } @else {
+                    <span class="report-avatar report-avatar--empty"><app-icon name="user" /></span>
+                  }
+                  <span class="report-player-lines">
+                    <em>Gemeldet</em>
+                    <strong>{{ report.reported.username }}</strong>
+                  </span>
+                </span>
+              </span>
+
+              <span class="report-reason">
+                <app-icon name="flag" />
+                <span>{{ report.reason }}</span>
+              </span>
+
+              <span class="report-cta">
+                <app-icon name="upload" />
+                <span>Beweis hochladen</span>
+                <app-icon class="report-cta-arrow" name="chevron-right" />
+              </span>
             </button>
-            <button
-              class="mode-btn"
-              [class.active]="uploadMode === 'medal'"
-              (click)="uploadMode = 'medal'; errorMessage = ''"
-              [disabled]="isFetchingMedalClip || isUploading"
-            >
-              <img src="/assets/medal/medal_logo.avif" alt="Medal" class="medal-logo" />
-              <span>Medal Clip</span>
-            </button>
-          </div>
-          <!-- Error message (shared between modes) -->
-          @if (errorMessage) {
-            <div class="notice-banner notice-error">
-              <i class="pi pi-exclamation-triangle"></i>
-              <span>{{ errorMessage }}</span>
-              <button (click)="errorMessage = ''"><i class="pi pi-times"></i></button>
-            </div>
           }
-          <!-- File Upload Mode -->
-          @if (uploadMode === 'file') {
-            <p class="upload-hint">
-              Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV) &middot; Max. 100 MB
-            </p>
-            <!-- Drop zone -->
-            <div
-              class="upload-zone"
-              (click)="fileInput.click()"
-              (dragover)="$event.preventDefault()"
-              (drop)="$event.preventDefault(); onFileSelect($event)"
-            >
-              <i class="pi pi-cloud-upload"></i>
-              <span>Klicken oder Datei hierher ziehen</span>
-              <input
-                #fileInput
-                type="file"
-                hidden
-                accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
-                (change)="onFileSelect($event)"
-              />
+        </div>
+      }
+    }
+
+    <!-- ===== UPLOAD VIEW ===== -->
+    @if (selectedReport) {
+      <div class="report-detail">
+        <div class="report-detail-head">
+          <button
+            type="button"
+            class="m3-btn m3-btn--ghost"
+            (click)="backToList()"
+            [disabled]="isFetchingMedalClip || isUploading"
+          >
+            <app-icon name="arrow-left" />
+            Zurück zur Übersicht
+          </button>
+        </div>
+
+        <!-- Report summary -->
+        <section class="m3-panel">
+          <div class="m3-panel-head">
+            <span class="m3-panel-title">Report #{{ selectedReport.id }}</span>
+            <span class="report-time">{{ formatTimestamp(selectedReport.createdAt) }}</span>
+          </div>
+
+          <div class="m3-panel-body report-players">
+            <div class="report-player">
+              @if (selectedReport.reporter.avatarUrl) {
+                <img [src]="selectedReport.reporter.avatarUrl" class="report-avatar" alt="" />
+              } @else {
+                <span class="report-avatar report-avatar--empty"><app-icon name="user" /></span>
+              }
+              <span class="report-player-lines">
+                <em>Reporter</em>
+                <strong>{{ selectedReport.reporter.username }}</strong>
+              </span>
             </div>
-            <!-- File list -->
-            @if (files.length > 0) {
-              <div class="file-list">
-                @for (f of files; track $index; let i = $index) {
-                  <div class="file-item">
-                    <i [class]="getFileIcon(f.file.name)"></i>
-                    <span class="file-name">{{ f.file.name }}</span>
-                    <span class="file-size">{{ formatFileSize(f.file.size) }}</span>
-                    @if (f.status === 'pending') {
-                      <button class="icon-btn" (click)="removeFile(i)" [disabled]="isUploading" title="Entfernen">
-                        <i class="pi pi-times"></i>
-                      </button>
-                    }
-                    @if (f.status === 'uploading') {
-                      <span class="status-badge status-uploading">{{ f.progress | number: '1.0-0' }}%</span>
-                    }
-                    @if (f.status === 'done') {
-                      <span class="status-badge status-done"><i class="pi pi-check"></i></span>
-                    }
-                    @if (f.status === 'error') {
-                      <span class="status-badge status-error" [title]="f.errorMessage || ''"
-                        ><i class="pi pi-times-circle"></i
-                      ></span>
-                    }
-                    @if (f.status === 'uploading') {
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="f.progress"></div>
+
+            <app-icon class="report-divider" name="arrow-right" />
+
+            <div class="report-player">
+              @if (selectedReport.reported.avatarUrl) {
+                <img [src]="selectedReport.reported.avatarUrl" class="report-avatar" alt="" />
+              } @else {
+                <span class="report-avatar report-avatar--empty"><app-icon name="user" /></span>
+              }
+              <span class="report-player-lines">
+                <em>Gemeldet</em>
+                <strong>{{ selectedReport.reported.username }}</strong>
+              </span>
+            </div>
+          </div>
+
+          <p class="report-reason report-reason--padded">
+            <app-icon name="flag" />
+            <span>{{ selectedReport.reason }}</span>
+          </p>
+        </section>
+
+        <!-- Upload box -->
+        @if (!uploadDone) {
+          <section class="m3-panel">
+            <div class="m3-panel-head">
+              <span class="m3-panel-title">Beweise hochladen</span>
+            </div>
+
+            <div class="m3-panel-body m3-stack">
+              <!-- Upload mode toggle -->
+              <div class="m3-pills">
+                <button
+                  type="button"
+                  class="m3-pill"
+                  [class.m3-pill--on]="uploadMode === 'file'"
+                  (click)="uploadMode = 'file'; errorMessage = ''"
+                  [disabled]="isFetchingMedalClip || isUploading"
+                >
+                  <app-icon name="file" />
+                  <span>Datei</span>
+                </button>
+                <button
+                  type="button"
+                  class="m3-pill"
+                  [class.m3-pill--on]="uploadMode === 'medal'"
+                  (click)="uploadMode = 'medal'; errorMessage = ''"
+                  [disabled]="isFetchingMedalClip || isUploading"
+                >
+                  <img src="/assets/medal/medal_logo.avif" alt="" class="report-medal" />
+                  <span>Medal Clip</span>
+                </button>
+              </div>
+
+              <!-- Shared error notice -->
+              @if (errorMessage) {
+                <div class="m3-notice m3-notice--error report-notice">
+                  <app-icon name="exclamation-triangle" />
+                  <span>{{ errorMessage }}</span>
+                  <button
+                    type="button"
+                    class="report-notice-action"
+                    (click)="errorMessage = ''"
+                    aria-label="Schließen"
+                  >
+                    <app-icon name="times" />
+                  </button>
+                </div>
+              }
+
+              <!-- File upload mode -->
+              @if (uploadMode === 'file') {
+                <p class="report-hint">
+                  Bilder (JPG, PNG, GIF, WebP) und Videos (MP4, WebM, MOV, AVI, MKV) &middot; Max. 100 MB
+                </p>
+
+                <div
+                  class="report-drop"
+                  (click)="fileInput.click()"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="$event.preventDefault(); onFileSelect($event)"
+                >
+                  <app-icon name="cloud-upload" />
+                  <span>Klicken oder Datei hierher ziehen</span>
+                  <input
+                    #fileInput
+                    type="file"
+                    hidden
+                    accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi,.mkv"
+                    (change)="onFileSelect($event)"
+                  />
+                </div>
+
+                <!-- File list -->
+                @if (files.length > 0) {
+                  <div class="m3-rows report-files">
+                    @for (f of files; track $index; let i = $index) {
+                      <div class="report-file">
+                        <app-icon class="report-file-icon" [name]="fileIcon(f.file.name)" />
+                        <span class="report-file-name">{{ f.file.name }}</span>
+                        <span class="report-file-size">{{ formatFileSize(f.file.size) }}</span>
+
+                        @if (f.status === 'pending') {
+                          <button
+                            type="button"
+                            class="m3-btn m3-btn--icon report-file-remove"
+                            (click)="removeFile(i)"
+                            [disabled]="isUploading"
+                            aria-label="Entfernen"
+                          >
+                            <app-icon name="times" />
+                          </button>
+                        }
+                        @if (f.status === 'uploading') {
+                          <span class="report-file-status report-file-status--busy">
+                            {{ f.progress | number: '1.0-0' }}%
+                          </span>
+                        }
+                        @if (f.status === 'done') {
+                          <span class="report-file-status report-file-status--ok"><app-icon name="check" /></span>
+                        }
+                        @if (f.status === 'error') {
+                          <span class="report-file-status report-file-status--error" [title]="f.errorMessage || ''">
+                            <app-icon name="exclamation-circle" />
+                          </span>
+                        }
+
+                        @if (f.status === 'uploading') {
+                          <div class="m3-track report-file-track">
+                            <i [style.width.%]="f.progress"></i>
+                          </div>
+                        }
                       </div>
                     }
                   </div>
                 }
-              </div>
-            }
-            <!-- Upload button -->
-            <button class="primary-btn" [disabled]="files.length === 0 || isUploading" (click)="uploadAll()">
-              @if (!isUploading) {
-                <i class="pi pi-upload"></i>
+
+                <!-- Upload button -->
+                <button
+                  type="button"
+                  class="m3-btn m3-btn--wide"
+                  [disabled]="files.length === 0 || isUploading"
+                  (click)="uploadAll()"
+                >
+                  <app-icon name="upload" [class.spin]="isUploading" />
+                  {{ isUploading ? 'Lädt hoch…' : 'Hochladen' }}
+                </button>
               }
-              @if (isUploading) {
-                <i class="pi pi-spinner pi-spin"></i>
-              }
-              {{ isUploading ? 'L\u00e4dt hoch\u2026' : 'Hochladen' }}
-            </button>
-          }
-          <!-- Medal Clip Upload Mode -->
-          @if (uploadMode === 'medal') {
-            <p class="upload-hint">Medal.tv Clip-URL einfügen und hochladen &middot; Max. 100 MB</p>
-            <div class="medal-input-wrapper">
-              <input
-                type="text"
-                [(ngModel)]="medalClipUrl"
-                (ngModelChange)="onMedalUrlChange()"
-                placeholder="https://medal.tv/games/.../clips/..."
-                class="medal-input"
-                [class.invalid]="medalUrlInvalid"
-                [disabled]="isFetchingMedalClip"
-              />
-              @if (medalUrlInvalid) {
-                <span class="medal-url-error">
-                  <i class="pi pi-exclamation-circle"></i>
-                  Bitte gib eine gültige URL ein
-                </span>
+
+              <!-- Medal clip upload mode -->
+              @if (uploadMode === 'medal') {
+                <p class="report-hint">Medal.tv Clip-URL einfügen und hochladen &middot; Max. 100 MB</p>
+
+                <div class="report-medal-field">
+                  <input
+                    type="text"
+                    [(ngModel)]="medalClipUrl"
+                    (ngModelChange)="onMedalUrlChange()"
+                    placeholder="https://medal.tv/games/.../clips/..."
+                    class="m3-input"
+                    [class.report-input--invalid]="medalUrlInvalid"
+                    [disabled]="isFetchingMedalClip"
+                  />
+                  @if (medalUrlInvalid) {
+                    <span class="report-inline-error">
+                      <app-icon name="exclamation-circle" />
+                      Bitte gib eine gültige URL ein
+                    </span>
+                  }
+                </div>
+
+                <!-- Integrity check retry prompt -->
+                @if (medalRetryPromptMessage) {
+                  <div class="m3-notice m3-notice--warn report-notice">
+                    <app-icon name="exclamation-triangle" />
+                    <span>{{ medalRetryPromptMessage }}</span>
+                    <span class="report-notice-actions">
+                      <button type="button" class="report-notice-action" (click)="retryMedalClip()">
+                        <app-icon name="refresh" />
+                        Erneut versuchen
+                      </button>
+                      <button
+                        type="button"
+                        class="report-notice-action"
+                        (click)="cancelMedalRetry()"
+                        aria-label="Abbrechen"
+                      >
+                        <app-icon name="times" />
+                      </button>
+                    </span>
+                  </div>
+                }
+
+                <!-- Medal progress -->
+                @if (isFetchingMedalClip) {
+                  <div class="report-medal-progress">
+                    <div class="report-medal-status">
+                      <app-icon class="spin" name="loader" />
+                      <span>{{ medalStatusMessage }}</span>
+                    </div>
+                    <div class="m3-track report-medal-track">
+                      <i [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"></i>
+                    </div>
+                    <span class="report-medal-eta">{{ medalETA }}</span>
+                  </div>
+                }
+
+                <button
+                  type="button"
+                  class="m3-btn m3-btn--wide"
+                  [disabled]="!medalClipUrl.trim() || medalUrlInvalid || isFetchingMedalClip"
+                  (click)="uploadMedalClip()"
+                >
+                  <app-icon name="cloud-download" [class.spin]="isFetchingMedalClip" />
+                  {{ isFetchingMedalClip ? 'Wird hochgeladen…' : 'Medal Clip hochladen' }}
+                </button>
               }
             </div>
-            <!-- Integrity check retry prompt -->
-            @if (medalRetryPromptMessage) {
-              <div class="notice-banner notice-warn">
-                <i class="pi pi-exclamation-triangle"></i>
-                <span>{{ medalRetryPromptMessage }}</span>
-                <div class="notice-actions">
-                  <button (click)="retryMedalClip()"><i class="pi pi-refresh"></i> Erneut versuchen</button>
-                  <button (click)="cancelMedalRetry()"><i class="pi pi-times"></i></button>
-                </div>
-              </div>
-            }
-            <!-- Medal progress -->
-            @if (isFetchingMedalClip) {
-              <div class="medal-progress-container">
-                <div class="progress-info">
-                  <i class="pi pi-spin pi-spinner"></i>
-                  <span>{{ medalStatusMessage }}</span>
-                </div>
-                <div class="medal-progress-bar-wrapper">
-                  <div
-                    class="medal-progress-fill"
-                    [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
-                  ></div>
-                  <span class="medal-progress-text">{{ medalETA }}</span>
-                </div>
-              </div>
-            }
-            <button
-              class="primary-btn"
-              [disabled]="!medalClipUrl.trim() || medalUrlInvalid || isFetchingMedalClip"
-              (click)="uploadMedalClip()"
-            >
-              @if (!isFetchingMedalClip) {
-                <i class="pi pi-cloud-download"></i>
-              }
-              @if (isFetchingMedalClip) {
-                <i class="pi pi-spinner pi-spin"></i>
-              }
-              {{ isFetchingMedalClip ? 'Wird hochgeladen\u2026' : 'Medal Clip hochladen' }}
+          </section>
+        }
+
+        <!-- Success state -->
+        @if (uploadDone) {
+          <div class="m3-state report-done">
+            <app-icon
+              class="report-done-icon"
+              [name]="allUploadsSuccessful ? 'check-circle' : 'exclamation-triangle'"
+              [class.report-done-icon--warn]="!allUploadsSuccessful"
+            />
+            <h3>{{ allUploadsSuccessful ? 'Erfolgreich hochgeladen!' : 'Upload fehlgeschlagen' }}</h3>
+            <p>
+              {{
+                allUploadsSuccessful
+                  ? 'Vielen Dank! Dein Beweis wurde übermittelt.'
+                  : 'Dein Beweis konnte nicht hochgeladen werden.'
+              }}
+            </p>
+            <button type="button" class="m3-btn m3-btn--ghost" (click)="backToList()">
+              <app-icon name="list" />
+              Zurück zu Reports
             </button>
-          }
-        </div>
-      }
-      <!-- Success state -->
-      @if (uploadDone) {
-        <div class="success-box">
-          @if (allUploadsSuccessful) {
-            <i class="pi pi-check-circle success-icon"></i>
-          }
-          @if (!allUploadsSuccessful) {
-            <i class="pi pi-exclamation-triangle warn-icon"></i>
-          }
-          <h2>{{ allUploadsSuccessful ? 'Erfolgreich hochgeladen!' : 'Upload fehlgeschlagen' }}</h2>
-          <p>
-            {{
-              allUploadsSuccessful
-                ? 'Vielen Dank! Dein Beweis wurde übermittelt.'
-                : 'Dein Beweis konnte nicht hochgeladen werden.'
-            }}
-          </p>
-          <button class="ghost-btn" style="align-self: center" (click)="backToList()">
-            <i class="pi pi-list"></i> Zurück zu Reports
-          </button>
-        </div>
-      }
-    </div>
-  }
+          </div>
+        }
+      </div>
+    }
+  </main>
+
+  <app-m3-footer />
 </div>

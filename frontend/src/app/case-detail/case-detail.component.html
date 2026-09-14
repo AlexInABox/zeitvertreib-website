@@ -1,212 +1,222 @@
-<div class="case-detail-page">
-  <!-- Loading State -->
-  @if (isLoading) {
-    <div class="state-card">
-      <div class="loading-spinner"></div>
-      <p>Fall wird geladen...</p>
-    </div>
-  }
+<div class="m3-canvas m3-canvas--fill">
+  <app-m3-nav />
 
-  <!-- Error State -->
-  @if (hasError && !isLoading) {
-    <div class="state-card">
-      <app-icon class="state-icon-danger" name="exclamation-triangle" />
-      <h3>Ein Fehler ist aufgetreten</h3>
-      <p class="state-text">{{ errorMessage }}</p>
-      <button class="btn btn-secondary-soft" (click)="loadCaseData()">
-        <app-icon name="refresh" /> Erneut versuchen
-      </button>
-    </div>
-  }
-
-  <!-- Main Content -->
-  @if (!isLoading && !hasError && caseData) {
-    <!-- Case Hero -->
-    <div class="dense-card">
-      <div class="card-header">
-        <div class="hero-left">
-          <button class="btn-icon btn-icon-secondary" (click)="goBack()" title="Zurück zu Fällen">
-            <app-icon name="arrow-left" />
-          </button>
-          <div class="hero-title-group">
-            <h1 class="hero-title">{{ caseData?.title || formatCaseName(caseId) }}</h1>
-            @if (caseData?.title) {
-              <span class="case-id-tag">#{{ caseId }}</span>
-            }
-          </div>
-        </div>
-        <div class="hero-actions">
-          @if (isTeam && !isEditingMetadata) {
-            <button class="btn btn-secondary-soft" (click)="startEditingMetadata()">
-              <app-icon name="pencil" /> Bearbeiten
-            </button>
-          }
-        </div>
-      </div>
-
-      <div class="dense-body hero-body">
-        <div class="hero-meta-row">
-          <span class="badge badge-rule">{{ caseData!.category }}</span>
-          @if (caseData?.createdBy) {
-            <span
-              class="creator-chip"
-              (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
-              [title]="
-                isTeam
-                  ? 'Zum Profil von ' + caseData?.createdBy?.username
-                  : 'Erstellt von ' + caseData?.createdBy?.username
-              "
-            >
-              <img
-                [src]="caseData?.createdBy?.avatarUrl"
-                [alt]="caseData?.createdBy?.username"
-                class="creator-avatar"
-              />
-              <span class="creator-name">{{ caseData?.createdBy?.username }}</span>
-            </span>
-          }
-          <span class="meta-item" [title]="'Erstellt: ' + formatDate(caseData.createdAt)">
-            <app-icon name="calendar" /> {{ formatDate(caseData.createdAt) }}
-          </span>
-        </div>
-
-        @if (caseData?.description && !isEditingMetadata) {
-          <p class="hero-description">{{ caseData?.description }}</p>
-        }
-      </div>
-    </div>
-
-    <!-- Metadata Editor -->
-    @if (isEditingMetadata) {
-      <div class="dense-card">
-        <div class="card-header">
-          <div class="card-title">
-            <app-icon class="card-icon icon-purple" name="pencil" />
-            <div>
-              <h2>Fall bearbeiten</h2>
-              <span class="card-subtitle">Titel, Beschreibung & Kategorie anpassen</span>
-            </div>
-          </div>
-        </div>
-        <div class="dense-body editor-body">
-          <div class="form-field">
-            <label for="editTitle">Titel</label>
-            <input
-              id="editTitle"
-              type="text"
-              class="dense-input"
-              [(ngModel)]="editedTitle"
-              placeholder="z.B. Wichtiger Fall"
-            />
-          </div>
-          <div class="form-field">
-            <label for="editDescription">Beschreibung</label>
-            <textarea
-              id="editDescription"
-              class="dense-input"
-              [(ngModel)]="editedDescription"
-              placeholder="Beschreibe diesen Fall..."
-              rows="3"
-            ></textarea>
-          </div>
-          <div class="form-field">
-            <label for="editCategory">Kategorie</label>
-            <div class="filter-select-wrapper">
-              <select id="editCategory" class="dense-input filter-select" [(ngModel)]="editedCategory">
-                @for (category of availableCategories; track category) {
-                  <option [ngValue]="category">{{ category }}</option>
-                }
-              </select>
-              <app-icon class="filter-select-chevron" name="chevron-down" />
-            </div>
-          </div>
-        </div>
-        <div class="editor-footer">
-          <button class="btn btn-secondary-soft" (click)="cancelEditingMetadata()" [disabled]="isSavingMetadata">
-            <app-icon name="times" /> Abbrechen
-          </button>
-          <button class="btn btn-primary" (click)="saveMetadata()" [disabled]="isSavingMetadata">
-            <app-icon [class.spin]="isSavingMetadata" [name]="isSavingMetadata ? 'loader' : 'check'" /> Speichern
-          </button>
-        </div>
+  <main class="m3-page">
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="m3-state">
+        <span class="m3-spinner" aria-hidden="true"></span>
+        <span>Fall wird geladen…</span>
       </div>
     }
 
-    <!-- Content Grid -->
-    <div class="case-grid" [class.no-side]="!(isTeam || caseData?.linkedReportIds?.length)">
-      <!-- Main column: Files -->
-      <div class="grid-col main-col">
-        @if ((caseData?.files?.length ?? 0) > 0) {
-          <div class="dense-card files-card">
-            <div class="card-header">
-              <div class="card-title">
-                <app-icon class="card-icon icon-purple" name="folder-open" />
-                <div>
-                  <h2>Dateien</h2>
-                  <span class="card-subtitle">
-                    {{ filteredFiles.length }} von {{ caseData!.files.length }} · {{ getTotalSize() }}
-                  </span>
-                </div>
-              </div>
+    <!-- Error State -->
+    @if (hasError && !isLoading) {
+      <div class="m3-state">
+        <app-icon class="m3-state-icon m3-state-icon--danger" name="exclamation-triangle" />
+        <h2>Ein Fehler ist aufgetreten</h2>
+        <p>{{ errorMessage }}</p>
+        <button type="button" class="m3-btn m3-btn--ghost" (click)="loadCaseData()">
+          <app-icon name="refresh" />
+          Erneut versuchen
+        </button>
+      </div>
+    }
+
+    <!-- Main Content -->
+    @if (!isLoading && !hasError && caseData) {
+      <div class="case-back">
+        <button type="button" class="m3-btn m3-btn--ghost" (click)="goBack()">
+          <app-icon name="arrow-left" />
+          Zurück zu Fällen
+        </button>
+      </div>
+
+      <!-- Case head -->
+      <header class="m3-page-head case-head">
+        <span class="m3-eyebrow">Fall #{{ caseId }}</span>
+        <h1 class="m3-page-title case-head-title">{{ caseData?.title || formatCaseName(caseId) }}</h1>
+
+        <div class="case-head-meta">
+          @if (caseData!.category) {
+            <span class="m3-chip m3-chip--brand">{{ caseData!.category }}</span>
+          }
+
+          @if (caseData?.createdBy) {
+            <button
+              type="button"
+              class="case-creator"
+              (click)="navigateToCreatorProfile(caseData?.createdBy?.discordId!)"
+              [title]="
+                isTeam ? 'Zum Profil von ' + caseData?.createdBy?.username : 'Erstellt von ' + caseData?.createdBy?.username
+              "
+            >
+              <img [src]="caseData?.createdBy?.avatarUrl" [alt]="caseData?.createdBy?.username" class="case-creator-avatar" />
+              <span class="case-creator-name">{{ caseData?.createdBy?.username }}</span>
+            </button>
+          }
+
+          <span class="case-meta-item" [title]="'Erstellt: ' + formatDate(caseData.createdAt)">
+            <app-icon name="calendar" />
+            {{ formatDate(caseData.createdAt) }}
+          </span>
+
+          @if (isTeam && !isEditingMetadata) {
+            <button type="button" class="m3-btn m3-btn--ghost case-edit" (click)="startEditingMetadata()">
+              <app-icon name="pencil" />
+              Bearbeiten
+            </button>
+          }
+        </div>
+
+        @if (caseData?.description && !isEditingMetadata) {
+          <p class="m3-page-lead">{{ caseData?.description }}</p>
+        }
+      </header>
+
+      <!-- Metadata editor -->
+      @if (isEditingMetadata) {
+        <section class="m3-panel case-editor">
+          <div class="m3-panel-head">
+            <span class="m3-panel-title">Fall bearbeiten</span>
+            <span class="case-hint">Titel, Beschreibung &amp; Kategorie anpassen</span>
+          </div>
+
+          <div class="m3-panel-body m3-stack">
+            <div class="case-field">
+              <label for="editTitle">Titel</label>
+              <input
+                id="editTitle"
+                type="text"
+                class="m3-input"
+                [(ngModel)]="editedTitle"
+                placeholder="z.B. Wichtiger Fall"
+              />
             </div>
-            <div class="files-toolbar">
-              <div class="search-wrapper">
-                <app-icon class="search-icon" name="search" />
-                <input
-                  type="text"
-                  class="dense-input search-input"
-                  [(ngModel)]="searchQuery"
-                  (input)="filterFiles()"
-                  placeholder="Suche nach Dateinamen..."
-                />
-                @if (searchQuery) {
-                  <button type="button" class="btn-icon btn-icon-secondary clear-btn" (click)="clearSearch()">
-                    <app-icon name="times" />
-                  </button>
-                }
-              </div>
-              <div class="filter-select-wrapper">
-                <select class="dense-input filter-select" [ngModel]="sortBy" (ngModelChange)="onSortChange($event)">
-                  @for (option of sortOptions; track option.value) {
-                    <option [value]="option.value">{{ option.label }}</option>
+
+            <div class="case-field">
+              <label for="editDescription">Beschreibung</label>
+              <textarea
+                id="editDescription"
+                class="m3-input"
+                [(ngModel)]="editedDescription"
+                placeholder="Beschreibe diesen Fall..."
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="case-field">
+              <label for="editCategory">Kategorie</label>
+              <div class="case-select">
+                <select id="editCategory" class="m3-select" [(ngModel)]="editedCategory">
+                  @for (category of availableCategories; track category) {
+                    <option [ngValue]="category">{{ category }}</option>
                   }
                 </select>
-                <app-icon class="filter-select-chevron" name="chevron-down" />
+                <app-icon class="case-select-chevron" name="chevron-down" />
               </div>
             </div>
-            @if (filteredFiles.length > 0) {
-              <div class="files-grid-wrap">
-                <div class="files-grid">
+          </div>
+
+          <div class="case-editor-footer">
+            <button
+              type="button"
+              class="m3-btn m3-btn--ghost"
+              (click)="cancelEditingMetadata()"
+              [disabled]="isSavingMetadata"
+            >
+              <app-icon name="times" />
+              Abbrechen
+            </button>
+            <button type="button" class="m3-btn" (click)="saveMetadata()" [disabled]="isSavingMetadata">
+              <app-icon [class.spin]="isSavingMetadata" [name]="isSavingMetadata ? 'loader' : 'check'" />
+              Speichern
+            </button>
+          </div>
+        </section>
+      }
+
+      <!-- Content grid -->
+      <div class="case-grid" [class.case-grid--no-side]="!(isTeam || caseData?.linkedReportIds?.length)">
+        <!-- Main column: files -->
+        <div class="case-main">
+          @if ((caseData?.files?.length ?? 0) > 0) {
+            <section class="m3-panel">
+              <div class="m3-panel-head">
+                <span class="m3-panel-title">Dateien</span>
+                <span class="m3-chip">
+                  {{ filteredFiles.length }} / {{ caseData!.files.length }} · {{ getTotalSize() }}
+                </span>
+              </div>
+
+              <div class="case-files-toolbar">
+                <div class="m3-field case-files-search">
+                  <app-icon name="search" />
+                  <input
+                    type="text"
+                    class="m3-input"
+                    [(ngModel)]="searchQuery"
+                    (input)="filterFiles()"
+                    placeholder="Suche nach Dateinamen..."
+                  />
+                  @if (searchQuery) {
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--icon case-clear"
+                      (click)="clearSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
+                  }
+                </div>
+
+                <div class="case-select case-files-sort">
+                  <select class="m3-select" [ngModel]="sortBy" (ngModelChange)="onSortChange($event)">
+                    @for (option of sortOptions; track option.value) {
+                      <option [value]="option.value">{{ option.label }}</option>
+                    }
+                  </select>
+                  <app-icon class="case-select-chevron" name="chevron-down" />
+                </div>
+              </div>
+
+              @if (filteredFiles.length > 0) {
+                <div class="case-file-grid">
                   @for (file of filteredFiles; track file.name) {
                     <div
-                      class="file-card"
+                      class="case-file"
                       (click)="openViewer(file.name)"
                       [title]="isViewableFile(file.name) ? 'Datei öffnen' : ''"
                     >
-                      @if (isImageFile(file.name)) {
-                        <div class="file-thumb">
+                      <span class="case-file-thumb">
+                        @if (isImageFile(file.name)) {
                           <img [src]="file.url" [alt]="file.name" loading="lazy" />
-                        </div>
-                      }
-                      @if (isVideoFile(file.name)) {
-                        <div class="file-thumb">
+                        }
+                        @if (isVideoFile(file.name)) {
                           <video [src]="file.url + '#t=0.1'" preload="metadata" muted playsinline></video>
-                        </div>
-                      }
-                      <div class="file-info">
-                        <span class="file-name" [title]="file.name">{{ file.name }}</span>
-                        <span class="file-meta">
+                        }
+                        @if (!isImageFile(file.name) && !isVideoFile(file.name)) {
+                          <app-icon class="case-file-thumb-icon" [name]="fileIcon(file.name)" />
+                        }
+                      </span>
+
+                      <span class="case-file-info">
+                        <span class="case-file-name" [title]="file.name">{{ file.name }}</span>
+                        <span class="case-file-meta">
                           {{ getFileType(file.name) }} · {{ formatFileSize(file.size) }} ·
                           {{ formatDate(file.createdAt) }}
                         </span>
-                      </div>
-                      <div class="file-actions">
+                      </span>
+
+                      <span class="case-file-actions">
                         @if (isViewableFile(file.name)) {
                           <button
                             type="button"
-                            class="btn-icon btn-icon-secondary"
+                            class="m3-btn m3-btn--icon case-file-btn"
                             (click)="openViewer(file.name, $event)"
                             title="Datei öffnen"
+                            aria-label="Datei öffnen"
                           >
                             <app-icon name="eye" />
                           </button>
@@ -215,429 +225,450 @@
                           [href]="file.url"
                           target="_blank"
                           download
-                          class="btn-icon btn-icon-secondary"
+                          class="m3-btn m3-btn--icon case-file-btn"
                           (click)="$event.stopPropagation()"
                           title="Datei herunterladen"
+                          aria-label="Datei herunterladen"
                         >
                           <app-icon name="download" />
                         </a>
-                      </div>
+                      </span>
                     </div>
                   }
                 </div>
-              </div>
-            }
-            <!-- Empty Search Results -->
-            @if (filteredFiles.length === 0) {
-              <div class="empty-inline">
-                <app-icon name="search" />
-                <span>Keine Dateien entsprechen deiner Suche "{{ searchQuery }}".</span>
-                <button type="button" class="btn btn-sm btn-secondary-soft" (click)="clearSearch()">
-                  Zurücksetzen
-                </button>
-              </div>
-            }
-          </div>
-        }
+              }
 
-        <!-- Empty State (no files at all) -->
-        @if ((caseData?.files?.length ?? 0) === 0) {
-          <div class="state-card state-hint">
-            <app-icon class="state-icon-muted" name="inbox" />
-            <p>Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
-          </div>
-        }
-      </div>
+              @if (filteredFiles.length === 0) {
+                <div class="m3-state m3-state--plain case-files-empty">
+                  <app-icon class="m3-state-icon" name="search" />
+                  <p>Keine Dateien entsprechen deiner Suche „{{ searchQuery }}“.</p>
+                  <button type="button" class="m3-btn m3-btn--ghost" (click)="clearSearch()">Zurücksetzen</button>
+                </div>
+              }
+            </section>
+          }
 
-      <!-- Side column: Upload & Verknüpfungen -->
-      @if (isTeam || caseData?.linkedReportIds?.length) {
-        <div class="grid-col side-col">
-          <!-- File Upload -->
-          @if (isTeam) {
-            <div class="dense-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <app-icon class="card-icon icon-purple" name="cloud-upload" />
-                  <div>
-                    <h2>Hochladen</h2>
-                    <span class="card-subtitle">Datei oder Medal.tv Clip</span>
+          @if ((caseData?.files?.length ?? 0) === 0) {
+            <div class="m3-state">
+              <app-icon class="m3-state-icon" name="inbox" />
+              <p>Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
+            </div>
+          }
+        </div>
+
+        <!-- Side column: upload & links -->
+        @if (isTeam || caseData?.linkedReportIds?.length) {
+          <aside class="case-side">
+            <!-- File upload -->
+            @if (isTeam) {
+              <section class="m3-panel">
+                <div class="m3-panel-head">
+                  <span class="m3-panel-title">Hochladen</span>
+                </div>
+
+                <div class="m3-panel-body m3-stack">
+                  <div class="m3-pills">
+                    <button
+                      type="button"
+                      class="m3-pill"
+                      [class.m3-pill--on]="uploadMode === 'file'"
+                      (click)="uploadMode = 'file'"
+                    >
+                      <app-icon name="file" />
+                      <span>Datei</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="m3-pill"
+                      [class.m3-pill--on]="uploadMode === 'medal'"
+                      (click)="uploadMode = 'medal'"
+                    >
+                      <img src="/assets/medal/medal_logo.avif" alt="" class="case-medal" />
+                      <span>Medal Clip</span>
+                    </button>
                   </div>
-                </div>
-              </div>
-              <div class="dense-body upload-body">
-                <div class="upload-mode-toggle">
-                  <button
-                    type="button"
-                    class="mode-pill"
-                    [class.active]="uploadMode === 'file'"
-                    (click)="uploadMode = 'file'"
-                  >
-                    <app-icon name="file" /> Datei
-                  </button>
-                  <button
-                    type="button"
-                    class="mode-pill"
-                    [class.active]="uploadMode === 'medal'"
-                    (click)="uploadMode = 'medal'"
-                  >
-                    <img src="/assets/medal/medal_logo.avif" alt="Medal" class="medal-logo" /> Medal Clip
-                  </button>
-                </div>
-                <!-- File Upload Mode -->
-                @if (uploadMode === 'file') {
-                  <div class="upload-row upload-row-vertical">
-                    <div class="file-input-wrapper">
+
+                  <!-- File upload mode -->
+                  @if (uploadMode === 'file') {
+                    <div class="m3-stack">
                       <input
                         type="file"
-                        id="fileInput"
-                        class="file-input"
+                        id="caseFileInput"
+                        class="case-hidden-input"
                         (change)="onFileSelected($event)"
                         [disabled]="isUploading"
                       />
-                      <label for="fileInput" class="file-input-label">
+                      <label for="caseFileInput" class="case-pick">
                         <app-icon name="paperclip" />
                         @if (!selectedFile) {
                           <span>Datei auswählen</span>
                         }
                         @if (selectedFile) {
-                          <span class="file-name">{{ selectedFile.name }}</span>
+                          <span class="case-pick-name">{{ selectedFile.name }}</span>
                         }
                       </label>
-                    </div>
-                    <button
-                      class="btn btn-primary btn-full"
-                      (click)="uploadFile()"
-                      [disabled]="!selectedFile || isUploading"
-                    >
-                      <app-icon [class.spin]="isUploading" [name]="isUploading ? 'loader' : 'upload'" /> Hochladen
-                    </button>
-                  </div>
-                }
-                <!-- Medal Clip Upload Mode -->
-                @if (uploadMode === 'medal') {
-                  <div class="upload-row upload-row-vertical">
-                    <input
-                      type="text"
-                      class="dense-input"
-                      [(ngModel)]="medalClipUrl"
-                      (ngModelChange)="onMedalUrlChange()"
-                      placeholder="https://medal.tv/games/.../clips/..."
-                      [class.invalid]="medalUrlInvalid"
-                      [disabled]="isFetchingMedalClip"
-                    />
-                    @if (medalUrlInvalid) {
-                      <span class="msg-error"
-                        ><app-icon name="exclamation-circle" /> Bitte gib eine gültige URL ein</span
-                      >
-                    }
-                    <button
-                      class="btn btn-primary btn-full"
-                      (click)="uploadMedalClip()"
-                      [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
-                    >
-                      <app-icon name="cloud-download" /> Medal Clip hochladen
-                    </button>
-                  </div>
-                }
-                <!-- File Upload Progress Bar -->
-                @if (isUploading && uploadMode === 'file') {
-                  <div class="upload-progress">
-                    <div class="progress-info">
-                      <span><app-icon class="spin" name="loader" /> {{ uploadStatusMessage }}</span>
-                      <span class="progress-eta">{{ uploadETA }}</span>
-                    </div>
-                    <div class="progress-bar-track">
-                      <div class="progress-bar-fill" [style.width.%]="uploadProgress"></div>
-                    </div>
-                  </div>
-                }
-                <!-- Medal Clip Progress -->
-                @if (isFetchingMedalClip && uploadMode === 'medal') {
-                  <div class="upload-progress">
-                    <div class="progress-info">
-                      <span><app-icon class="spin" name="loader" /> {{ medalStatusMessage }}</span>
-                      <span class="progress-eta">{{ medalETA }}</span>
-                    </div>
-                    <div class="progress-bar-track">
-                      <div
-                        class="progress-bar-fill"
-                        [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
-                      ></div>
-                    </div>
-                  </div>
-                }
-                @if (!isUploading && !isFetchingMedalClip) {
-                  <span class="search-hint">
-                    <app-icon name="info" />
-                    @if (uploadMode === 'file') {
-                      Bilder, Videos, Audio, PDF, TXT, Archive
-                    }
-                    @if (uploadMode === 'medal') {
-                      Medal.tv Clip-URL einfügen und Video direkt hochladen
-                    }
-                  </span>
-                }
-              </div>
-            </div>
-          }
 
-          <!-- Linked Users -->
-          @if (isTeam) {
-            <div class="dense-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <app-icon class="card-icon icon-purple" name="users" />
-                  <div>
-                    <h2>Verknüpfte Nutzer</h2>
-                    <span class="card-subtitle">Beteiligte Spieler</span>
-                  </div>
-                </div>
-                <span class="badge badge-neutral">{{ caseData?.linkedUsers?.length || 0 }}</span>
-              </div>
-              <div class="dense-body">
-                @if (caseData?.linkedUsers?.length) {
-                  <div class="chip-list chip-list-vertical">
-                    @for (user of caseData?.linkedUsers; track user.steamId) {
-                      <span
-                        class="user-chip"
-                        [class.confirming]="pendingRemoveUser === user.steamId"
-                        (click)="navigateToUserProfile(user.steamId)"
-                        title="Zum Profil"
+                      <button
+                        type="button"
+                        class="m3-btn m3-btn--wide"
+                        (click)="uploadFile()"
+                        [disabled]="!selectedFile || isUploading"
                       >
-                        <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
-                        <span class="chip-name">{{ user.username }}</span>
-                        <button
-                          type="button"
-                          class="chip-remove"
-                          [class.confirming]="pendingRemoveUser === user.steamId"
-                          (click)="onRemoveLinkedUser(user.steamId, $event)"
-                          [disabled]="isManagingLinkedUsers"
-                          [title]="pendingRemoveUser === user.steamId ? 'Erneut klicken zum Bestätigen' : 'Entfernen'"
-                        >
-                          <app-icon [name]="pendingRemoveUser === user.steamId ? 'check' : 'times'" />
-                        </button>
+                        <app-icon [class.spin]="isUploading" [name]="isUploading ? 'loader' : 'upload'" />
+                        Hochladen
+                      </button>
+                    </div>
+                  }
+
+                  <!-- Medal clip mode -->
+                  @if (uploadMode === 'medal') {
+                    <div class="m3-stack">
+                      <input
+                        type="text"
+                        class="m3-input"
+                        [(ngModel)]="medalClipUrl"
+                        (ngModelChange)="onMedalUrlChange()"
+                        placeholder="https://medal.tv/games/.../clips/..."
+                        [class.case-input--invalid]="medalUrlInvalid"
+                        [disabled]="isFetchingMedalClip"
+                      />
+                      @if (medalUrlInvalid) {
+                        <span class="case-msg case-msg--error">
+                          <app-icon name="exclamation-circle" />
+                          Bitte gib eine gültige URL ein
+                        </span>
+                      }
+                      <button
+                        type="button"
+                        class="m3-btn m3-btn--wide"
+                        (click)="uploadMedalClip()"
+                        [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
+                      >
+                        <app-icon name="cloud-download" />
+                        Medal Clip hochladen
+                      </button>
+                    </div>
+                  }
+
+                  <!-- Progress -->
+                  @if (isUploading && uploadMode === 'file') {
+                    <div class="case-progress">
+                      <span class="case-progress-info">
+                        <app-icon class="spin" name="loader" />
+                        {{ uploadStatusMessage }}
                       </span>
-                    }
-                  </div>
-                } @else {
-                  <span class="side-empty">Keine Nutzer verknüpft</span>
-                }
-                <div class="inline-add inline-add-block">
-                  <input
-                    type="text"
-                    class="inline-add-input inline-add-input--block"
-                    [(ngModel)]="newLinkedSteamId"
-                    placeholder="Steam-ID hinzufügen…"
-                    (keydown.enter)="addLinkedUser()"
-                    [disabled]="isManagingLinkedUsers"
-                    autocomplete="off"
-                  />
-                  <button
-                    type="button"
-                    class="btn-icon btn-icon-secondary inline-add-btn"
-                    (click)="addLinkedUser()"
-                    [disabled]="isManagingLinkedUsers || !newLinkedSteamId.trim()"
-                    title="Nutzer verknüpfen"
-                  >
-                    <app-icon [class.spin]="isManagingLinkedUsers" [name]="isManagingLinkedUsers ? 'loader' : 'plus'" />
-                  </button>
-                </div>
-                @if (linkedUserError) {
-                  <span class="msg-error"><app-icon name="exclamation-circle" /> {{ linkedUserError }}</span>
-                }
-              </div>
-            </div>
-          }
+                      <div class="m3-track"><i [style.width.%]="uploadProgress"></i></div>
+                      <span class="case-progress-eta">{{ uploadETA }}</span>
+                    </div>
+                  }
 
-          <!-- Linked Reports -->
-          <div class="dense-card">
-            <div class="card-header">
-              <div class="card-title">
-                <app-icon class="card-icon icon-blue" name="flag" />
-                <div>
-                  <h2>Verknüpfte Reports</h2>
-                  <span class="card-subtitle">{{
-                    isTeam ? 'Meldungen zu diesem Fall' : 'Zu diesem Fall gemeldet'
-                  }}</span>
-                </div>
-              </div>
-              <span class="badge badge-neutral">{{ caseData?.linkedReportIds?.length || 0 }}</span>
-            </div>
-            <div class="dense-body">
-              @if (caseData?.linkedReportIds?.length) {
-                <div class="chip-list chip-list-vertical">
-                  @for (reportId of caseData?.linkedReportIds; track reportId) {
-                    <span
-                      class="report-chip"
-                      [class.confirming]="pendingRemoveReport === reportId"
-                      (click)="copyReportIdToClipboard(reportId)"
-                      title="Report-ID kopieren"
-                    >
-                      <app-icon class="chip-report-icon" name="flag" />
-                      <span class="chip-name">Report #{{ reportId }}</span>
-                      @if (isTeam) {
-                        <button
-                          type="button"
-                          class="chip-remove"
-                          [class.confirming]="pendingRemoveReport === reportId"
-                          (click)="onRemoveLinkedReport(reportId, $event)"
-                          [disabled]="isLinkingReport"
-                          [title]="
-                            pendingRemoveReport === reportId ? 'Erneut klicken zum Bestätigen' : 'Verknüpfung entfernen'
-                          "
-                        >
-                          <app-icon [name]="pendingRemoveReport === reportId ? 'check' : 'times'" />
-                        </button>
+                  @if (isFetchingMedalClip && uploadMode === 'medal') {
+                    <div class="case-progress">
+                      <span class="case-progress-info">
+                        <app-icon class="spin" name="loader" />
+                        {{ medalStatusMessage }}
+                      </span>
+                      <div class="m3-track">
+                        <i
+                          [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
+                        ></i>
+                      </div>
+                      <span class="case-progress-eta">{{ medalETA }}</span>
+                    </div>
+                  }
+
+                  @if (!isUploading && !isFetchingMedalClip) {
+                    <span class="case-hint">
+                      <app-icon name="info" />
+                      @if (uploadMode === 'file') {
+                        Bilder, Videos, Audio, PDF, TXT, Archive
+                      }
+                      @if (uploadMode === 'medal') {
+                        Medal.tv Clip-URL einfügen und Video direkt hochladen
                       }
                     </span>
                   }
                 </div>
-              } @else {
-                <span class="side-empty">Keine Reports verknüpft</span>
-              }
+              </section>
+            }
 
-              @if (isTeam) {
-                <div class="report-search-section">
+            <!-- Linked users -->
+            @if (isTeam) {
+              <section class="m3-panel">
+                <div class="m3-panel-head">
+                  <span class="m3-panel-title">Verknüpfte Nutzer</span>
+                  <span class="m3-chip">{{ caseData?.linkedUsers?.length || 0 }}</span>
+                </div>
+
+                <div class="m3-panel-body m3-stack">
                   @if (caseData?.linkedUsers?.length) {
-                    <span class="section-hint">Reports eines Nutzers suchen:</span>
-                    <div class="report-search-row">
+                    <div class="case-chips">
                       @for (user of caseData?.linkedUsers; track user.steamId) {
+                        <span
+                          class="case-chip case-chip--user"
+                          [class.case-chip--confirming]="pendingRemoveUser === user.steamId"
+                          (click)="navigateToUserProfile(user.steamId)"
+                          title="Zum Profil"
+                        >
+                          <img [src]="user.avatarUrl" [alt]="user.username" class="case-chip-avatar" />
+                          <span class="case-chip-name">{{ user.username }}</span>
+                          <button
+                            type="button"
+                            class="case-chip-remove"
+                            [class.case-chip-remove--confirming]="pendingRemoveUser === user.steamId"
+                            (click)="onRemoveLinkedUser(user.steamId, $event)"
+                            [disabled]="isManagingLinkedUsers"
+                            [title]="
+                              pendingRemoveUser === user.steamId ? 'Erneut klicken zum Bestätigen' : 'Entfernen'
+                            "
+                            aria-label="Nutzer entfernen"
+                          >
+                            <app-icon [name]="pendingRemoveUser === user.steamId ? 'check' : 'times'" />
+                          </button>
+                        </span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="case-empty">Keine Nutzer verknüpft</span>
+                  }
+
+                  <div class="case-inline-add">
+                    <input
+                      type="text"
+                      class="m3-input"
+                      [(ngModel)]="newLinkedSteamId"
+                      placeholder="Steam-ID hinzufügen…"
+                      (keydown.enter)="addLinkedUser()"
+                      [disabled]="isManagingLinkedUsers"
+                      autocomplete="off"
+                    />
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--icon"
+                      (click)="addLinkedUser()"
+                      [disabled]="isManagingLinkedUsers || !newLinkedSteamId.trim()"
+                      title="Nutzer verknüpfen"
+                      aria-label="Nutzer verknüpfen"
+                    >
+                      <app-icon
+                        [class.spin]="isManagingLinkedUsers"
+                        [name]="isManagingLinkedUsers ? 'loader' : 'plus'"
+                      />
+                    </button>
+                  </div>
+
+                  @if (linkedUserError) {
+                    <span class="case-msg case-msg--error">
+                      <app-icon name="exclamation-circle" />
+                      {{ linkedUserError }}
+                    </span>
+                  }
+                </div>
+              </section>
+            }
+
+            <!-- Linked reports -->
+            <section class="m3-panel">
+              <div class="m3-panel-head">
+                <span class="m3-panel-title">Verknüpfte Reports</span>
+                <span class="m3-chip">{{ caseData?.linkedReportIds?.length || 0 }}</span>
+              </div>
+
+              <div class="m3-panel-body m3-stack">
+                @if (caseData?.linkedReportIds?.length) {
+                  <div class="case-chips">
+                    @for (reportId of caseData?.linkedReportIds; track reportId) {
+                      <span
+                        class="case-chip case-chip--report"
+                        [class.case-chip--confirming]="pendingRemoveReport === reportId"
+                        (click)="copyReportIdToClipboard(reportId)"
+                        title="Report-ID kopieren"
+                      >
+                        <app-icon class="case-chip-icon" name="flag" />
+                        <span class="case-chip-name">Report #{{ reportId }}</span>
+                        @if (isTeam) {
+                          <button
+                            type="button"
+                            class="case-chip-remove"
+                            [class.case-chip-remove--confirming]="pendingRemoveReport === reportId"
+                            (click)="onRemoveLinkedReport(reportId, $event)"
+                            [disabled]="isLinkingReport"
+                            [title]="
+                              pendingRemoveReport === reportId
+                                ? 'Erneut klicken zum Bestätigen'
+                                : 'Verknüpfung entfernen'
+                            "
+                            aria-label="Verknüpfung entfernen"
+                          >
+                            <app-icon [name]="pendingRemoveReport === reportId ? 'check' : 'times'" />
+                          </button>
+                        }
+                      </span>
+                    }
+                  </div>
+                } @else {
+                  <span class="case-empty">Keine Reports verknüpft</span>
+                }
+
+                @if (isTeam) {
+                  <div class="case-report-search m3-stack">
+                    @if (caseData?.linkedUsers?.length) {
+                      <span class="case-hint">Reports eines Nutzers suchen:</span>
+                      <div class="case-quick-search">
+                        @for (user of caseData?.linkedUsers; track user.steamId) {
+                          <button
+                            type="button"
+                            class="case-quick-btn"
+                            (click)="searchReportsBySteamId(user.steamId)"
+                            [disabled]="isSearchingReports || isLinkingReport"
+                            [title]="'Reports für ' + user.username + ' suchen'"
+                          >
+                            <img [src]="user.avatarUrl" [alt]="user.username" class="case-chip-avatar" />
+                            <span>{{ user.username }}</span>
+                          </button>
+                        }
+                      </div>
+                    }
+
+                    @if (showManualReportEntry) {
+                      <div class="case-inline-add">
+                        <input
+                          type="text"
+                          class="m3-input"
+                          [(ngModel)]="newLinkedReportId"
+                          placeholder="Report-ID eingeben…"
+                          (keydown.enter)="linkReport()"
+                          [disabled]="isLinkingReport"
+                          autocomplete="off"
+                          inputmode="numeric"
+                        />
                         <button
                           type="button"
-                          class="quick-search-btn"
-                          (click)="searchReportsBySteamId(user.steamId)"
-                          [disabled]="isSearchingReports || isLinkingReport"
-                          [title]="'Reports für ' + user.username + ' suchen'"
+                          class="m3-btn m3-btn--icon"
+                          (click)="linkReport()"
+                          [disabled]="isLinkingReport || !newLinkedReportId.trim()"
+                          title="Report verknüpfen"
+                          aria-label="Report verknüpfen"
                         >
-                          <img [src]="user.avatarUrl" [alt]="user.username" class="chip-avatar" />
-                          <span>{{ user.username }}</span>
+                          <app-icon [class.spin]="isLinkingReport" [name]="isLinkingReport ? 'loader' : 'check'" />
                         </button>
-                      }
-                    </div>
-                  }
-                  @if (showManualReportEntry) {
-                    <div class="inline-add inline-add-block">
-                      <input
-                        type="text"
-                        class="inline-add-input inline-add-input--block"
-                        [(ngModel)]="newLinkedReportId"
-                        placeholder="Report-ID eingeben…"
-                        (keydown.enter)="linkReport()"
-                        [disabled]="isLinkingReport"
-                        autocomplete="off"
-                        inputmode="numeric"
-                      />
-                      <button
-                        type="button"
-                        class="btn-icon btn-icon-secondary inline-add-btn"
-                        (click)="linkReport()"
-                        [disabled]="isLinkingReport || !newLinkedReportId.trim()"
-                        title="Report verknüpfen"
-                      >
-                        <app-icon [class.spin]="isLinkingReport" [name]="isLinkingReport ? 'loader' : 'check'" />
-                      </button>
-                    </div>
-                  }
-                  @if (reportSearchDropdownOpen && reportSearchResults.length) {
-                    <div class="report-search-dropdown">
-                      @for (report of reportSearchResults; track report.id) {
-                        <div
-                          class="report-search-item"
-                          (click)="selectReportFromSearch(report.id)"
-                          (keydown.enter)="selectReportFromSearch(report.id)"
-                          (keydown.space)="selectReportFromSearch(report.id)"
-                          role="button"
-                          tabindex="0"
-                          title="Report #{{ report.id }} verknüpfen"
-                        >
-                          <div class="report-search-item-main">
-                            <span class="report-search-id">#{{ report.id }}</span>
-                            <span class="report-search-sep">·</span>
-                            <span class="report-search-reason">{{ report.reason }}</span>
-                          </div>
-                          <div class="report-search-item-meta">
-                            <span class="report-search-users"
-                              >{{ report.reporter.username }} → {{ report.reported.username }}</span
-                            >
-                            <span class="report-search-date">{{ formatDate(report.createdAt) }}</span>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  }
-                  @if (reportSearchError && reportSearchDropdownOpen) {
-                    <span class="msg-error"><app-icon name="exclamation-circle" /> {{ reportSearchError }}</span>
-                  }
-                  @if (reportLinkError) {
-                    <span class="msg-error"><app-icon name="exclamation-circle" /> {{ reportLinkError }}</span>
-                  }
-                  @if (reportLinkSuccess) {
-                    <span class="msg-success"><app-icon name="check-circle" /> {{ reportLinkSuccess }}</span>
-                  }
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-secondary-soft btn-full"
-                    (click)="toggleManualReportEntry()"
-                  >
-                    <app-icon [name]="showManualReportEntry ? 'times' : 'plus'" />
-                    {{ showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report per ID verknüpfen' }}
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      }
-    </div>
-  }
+                      </div>
+                    }
 
-  <!-- Media Viewer Modal -->
-  @if (viewerOpen) {
-    <div class="media-viewer-overlay" (click)="closeViewer()">
-      <div class="media-viewer-content" (click)="$event.stopPropagation()">
-        <div class="viewer-header">
-          <h2 class="viewer-title">{{ viewerFileName }}</h2>
-          <div class="viewer-actions">
-            <a
-              [href]="viewerFileUrl"
-              target="_blank"
-              download
-              class="btn btn-secondary-soft viewer-download-btn"
-              title="Herunterladen"
-            >
-              <app-icon name="download" /> Download
-            </a>
-            <button
-              type="button"
-              class="btn-icon btn-icon-secondary viewer-close-btn"
-              (click)="closeViewer()"
-              title="Schließen"
-            >
-              <app-icon name="times" />
-            </button>
-          </div>
-        </div>
-        <div class="viewer-body">
-          @if (viewerMediaType === 'image') {
-            <div class="image-viewer">
-              <img [src]="viewerFileUrl" [alt]="viewerFileName" />
-            </div>
-          }
-          @if (viewerMediaType === 'video') {
-            <div class="video-viewer">
-              <video controls [src]="viewerFileUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
-            </div>
-          }
-          @if (viewerMediaType === 'audio') {
-            <div class="audio-viewer">
-              <div class="audio-player-wrapper">
-                <app-icon class="audio-icon" name="volume" />
-                <audio controls [src]="viewerFileUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
+                    @if (reportSearchDropdownOpen && reportSearchResults.length) {
+                      <div class="case-results">
+                        @for (report of reportSearchResults; track report.id) {
+                          <div
+                            class="case-result"
+                            (click)="selectReportFromSearch(report.id)"
+                            (keydown.enter)="selectReportFromSearch(report.id)"
+                            (keydown.space)="selectReportFromSearch(report.id)"
+                            role="button"
+                            tabindex="0"
+                            title="Report #{{ report.id }} verknüpfen"
+                          >
+                            <span class="case-result-main">
+                              <span class="case-result-id m3-mono">#{{ report.id }}</span>
+                              <span class="case-result-reason">{{ report.reason }}</span>
+                            </span>
+                            <span class="case-result-meta">
+                              <span>{{ report.reporter.username }} → {{ report.reported.username }}</span>
+                              <span class="m3-mono">{{ formatDate(report.createdAt) }}</span>
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    @if (reportSearchError && reportSearchDropdownOpen) {
+                      <span class="case-msg case-msg--error">
+                        <app-icon name="exclamation-circle" />
+                        {{ reportSearchError }}
+                      </span>
+                    }
+                    @if (reportLinkError) {
+                      <span class="case-msg case-msg--error">
+                        <app-icon name="exclamation-circle" />
+                        {{ reportLinkError }}
+                      </span>
+                    }
+                    @if (reportLinkSuccess) {
+                      <span class="case-msg case-msg--ok">
+                        <app-icon name="check-circle" />
+                        {{ reportLinkSuccess }}
+                      </span>
+                    }
+
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--ghost m3-btn--wide"
+                      (click)="toggleManualReportEntry()"
+                    >
+                      <app-icon [name]="showManualReportEntry ? 'times' : 'plus'" />
+                      {{ showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report per ID verknüpfen' }}
+                    </button>
+                  </div>
+                }
               </div>
+            </section>
+          </aside>
+        }
+      </div>
+    }
+
+    <!-- Media Viewer Modal -->
+    @if (viewerOpen) {
+      <div class="media-viewer-overlay" (click)="closeViewer()">
+        <div class="media-viewer-content" (click)="$event.stopPropagation()">
+          <div class="viewer-header">
+            <h2 class="viewer-title">{{ viewerFileName }}</h2>
+            <div class="viewer-actions">
+              <a
+                [href]="viewerFileUrl"
+                target="_blank"
+                download
+                class="m3-btn m3-btn--ghost viewer-download-btn"
+                title="Herunterladen"
+              >
+                <app-icon name="download" />
+                Download
+              </a>
+              <button
+                type="button"
+                class="m3-btn m3-btn--icon viewer-close-btn"
+                (click)="closeViewer()"
+                title="Schließen"
+                aria-label="Schließen"
+              >
+                <app-icon name="times" />
+              </button>
             </div>
-          }
+          </div>
+
+          <div class="viewer-body">
+            @if (viewerMediaType === 'image') {
+              <div class="image-viewer">
+                <img [src]="viewerFileUrl" [alt]="viewerFileName" />
+              </div>
+            }
+            @if (viewerMediaType === 'video') {
+              <div class="video-viewer">
+                <video controls [src]="viewerFileUrl">Dein Browser unterstützt das Video-Tag nicht.</video>
+              </div>
+            }
+            @if (viewerMediaType === 'audio') {
+              <div class="audio-viewer">
+                <div class="audio-player-wrapper">
+                  <app-icon class="audio-icon" name="volume" />
+                  <audio controls [src]="viewerFileUrl">Dein Browser unterstützt das Audio-Tag nicht.</audio>
+                </div>
+              </div>
+            }
+          </div>
         </div>
       </div>
-    </div>
-  }
+    }
+  </main>
+
+  <app-m3-footer />
 </div>

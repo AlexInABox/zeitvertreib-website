@@ -1,7 +1,10 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { IconComponent } from '../components/icon/icon.component';
+import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
+import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
 import { IngamePermission, INGAME_PERMISSIONS, DEFAULT_ROLE_GRANTS } from './permission-matrix.data';
 
 export interface Role {
@@ -13,12 +16,12 @@ export interface Role {
 @Component({
   standalone: true,
   selector: 'app-permission-matrix',
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent, M3NavComponent, M3FooterComponent],
   templateUrl: './permission-matrix.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./permission-matrix.component.css'],
 })
-export class PermissionMatrixComponent implements OnInit {
+export class PermissionMatrixComponent implements OnInit, OnDestroy {
   private sanitizer = inject(DomSanitizer);
 
   roles: Role[] = [
@@ -42,6 +45,9 @@ export class PermissionMatrixComponent implements OnInit {
   activePermCode: string | null = null;
 
   ngOnInit() {
+    // Immersive m3 chrome: hides the global header/site footer while mounted.
+    document.body.classList.add('m3-active');
+
     this.roleGrants['owner'] = this.permissions.map((p) => p.code);
 
     this.permissions.forEach((p) => {
@@ -56,6 +62,10 @@ export class PermissionMatrixComponent implements OnInit {
     this.roles.forEach((role) => {
       role.count = this.permissions.filter((p) => this.assignments[p.code][role.id]).length;
     });
+  }
+
+  ngOnDestroy() {
+    document.body.classList.remove('m3-active');
   }
 
   get visiblePermissions(): IngamePermission[] {
@@ -161,8 +171,8 @@ export class PermissionMatrixComponent implements OnInit {
     // Enforce theme background styles for the capture
     const isDark =
       document.documentElement.classList.contains('my-app-dark') || document.body.classList.contains('my-app-dark');
-    clone.style.background = isDark ? '#18181b' : '#ffffff';
-    clone.style.color = isDark ? '#f3f4f6' : '#1f2937';
+    clone.style.background = isDark ? '#0d0b12' : '#ffffff';
+    clone.style.color = isDark ? '#f1edf9' : '#1f2937';
 
     // Strip sticky layout so cells render inline on the canvas/SVG grid
     const stickyCells = clone.querySelectorAll('.sticky-col');
@@ -175,8 +185,8 @@ export class PermissionMatrixComponent implements OnInit {
     const headers = clone.querySelectorAll('thead th');
     headers.forEach((h: any) => {
       h.style.position = 'static';
-      h.style.background = isDark ? '#18181b' : '#f1f5f9';
-      h.style.color = isDark ? '#f3f4f6' : '#1f2937';
+      h.style.background = isDark ? '#15121e' : '#f1f5f9';
+      h.style.color = isDark ? '#f1edf9' : '#1f2937';
     });
 
     hostEl.appendChild(clone);

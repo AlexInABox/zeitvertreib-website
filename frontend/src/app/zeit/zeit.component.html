@@ -1,377 +1,396 @@
-<div class="zeit-page">
-  <!-- Search / Landing View -->
-  @if (!userData && !isLoading) {
-    <div class="search-view">
-      <div class="search-hero">
-        <h1>Z.E.I.T.</h1>
-        <p class="hero-subtitle">Zentrale Erfassungs- und Informations-Tabelle</p>
-        <p class="hero-description">Abfrage von Spielerdaten anhand einer Steam-ID oder Discord-ID.</p>
-      </div>
-      <div class="search-card">
-        <div class="search-type-toggle">
-          <button class="toggle-btn" [class.active]="searchType === 'steamid'" (click)="searchType = 'steamid'">
-            <i class="pi pi-desktop"></i> Steam-ID
-          </button>
-          <button class="toggle-btn" [class.active]="searchType === 'discordid'" (click)="searchType = 'discordid'">
-            <i class="pi pi-discord"></i> Discord-ID
-          </button>
+<div class="m3-canvas m3-canvas--fill">
+  <app-m3-nav />
+
+  <main class="m3-page">
+    <!-- ===== SEARCH VIEW ===== -->
+    @if (!userData && !isLoading) {
+      <header class="m3-page-head">
+        <span class="m3-eyebrow">Zentrale Erfassungs- und Informations-Tabelle</span>
+        <h1 class="m3-page-title">Z.E.I.T.</h1>
+        <p class="m3-page-lead">Abfrage von Spielerdaten anhand einer Steam-ID oder Discord-ID.</p>
+      </header>
+
+      <section class="m3-panel zeit-search">
+        <div class="m3-panel-head">
+          <span class="m3-panel-title">Abfrage</span>
         </div>
-        <div class="search-input-wrapper">
-          <i class="pi pi-search search-icon"></i>
-          <input
-            type="text"
-            class="search-input"
-            [(ngModel)]="searchInput"
-            [placeholder]="
-              searchType === 'steamid'
-                ? 'Steam-ID eingeben (z. B. 76561198...)'
-                : 'Discord-ID eingeben (z. B. 123456789...)'
-            "
-            (keyup.enter)="performSearch()"
-          />
-        </div>
-        <button class="search-btn" [disabled]="!canQuery || !searchInputValid" (click)="performSearch()">
-          <i class="pi pi-search"></i> Abfragen
-        </button>
-        @if (!canQuery) {
-          <div class="access-notice">
-            <div class="notice-content">
-              <div class="notice-icon"><i class="pi pi-lock"></i></div>
-              <div class="notice-text">
-                @if (!isLoggedIn || !isTeamMember) {
-                  <p>Du musst ein angemeldetes <b>Teammitglied</b> sein, um Abfragen auszuführen.</p>
-                }
-              </div>
-            </div>
-            <button class="api-key-link" (click)="toggleApiKeyInput()">
-              <span>Registrierter Zeitvertreib-Partner? Hier klicken, um deinen API-Key zu verwenden.</span>
+
+        <div class="m3-panel-body m3-stack">
+          <div class="m3-pills">
+            <button
+              type="button"
+              class="m3-pill"
+              [class.m3-pill--on]="searchType === 'steamid'"
+              (click)="searchType = 'steamid'"
+            >
+              <app-icon name="desktop" />
+              <span>Steam-ID</span>
+            </button>
+            <button
+              type="button"
+              class="m3-pill"
+              [class.m3-pill--on]="searchType === 'discordid'"
+              (click)="searchType = 'discordid'"
+            >
+              <app-icon name="discord" />
+              <span>Discord-ID</span>
             </button>
           </div>
-        }
-        @if (showApiKeyInput && !canQuery) {
-          <div class="api-key-section">
-            <div class="api-key-input-wrapper">
+
+          <div class="zeit-input-row">
+            <div class="m3-field zeit-input-field">
+              <app-icon name="search" />
               <input
-                type="password"
-                class="api-key-input"
-                [(ngModel)]="partnerApiKey"
-                placeholder="API-Key eingeben..."
-                (keyup.enter)="applyApiKey()"
+                type="text"
+                class="m3-input"
+                [(ngModel)]="searchInput"
+                [placeholder]="
+                  searchType === 'steamid'
+                    ? 'Steam-ID eingeben (z. B. 76561198...)'
+                    : 'Discord-ID eingeben (z. B. 123456789...)'
+                "
+                (keyup.enter)="performSearch()"
               />
-              <button class="api-key-apply-btn" (click)="applyApiKey()" [disabled]="!partnerApiKey.trim()">
+            </div>
+            <button type="button" class="m3-btn" [disabled]="!canQuery || !searchInputValid" (click)="performSearch()">
+              <app-icon name="search" />
+              Abfragen
+            </button>
+          </div>
+
+          @if (!canQuery) {
+            <div class="m3-notice">
+              <app-icon name="lock" />
+              <span>Du musst ein angemeldetes <b>Teammitglied</b> sein, um Abfragen auszuführen.</span>
+            </div>
+
+            <button type="button" class="zeit-textlink" (click)="toggleApiKeyInput()">
+              Registrierter Zeitvertreib-Partner? Hier klicken, um deinen API-Key zu verwenden.
+            </button>
+          }
+
+          @if (showApiKeyInput && !canQuery) {
+            <div class="zeit-input-row">
+              <div class="m3-field zeit-input-field">
+                <app-icon name="lock" />
+                <input
+                  type="password"
+                  class="m3-input"
+                  [(ngModel)]="partnerApiKey"
+                  placeholder="API-Key eingeben..."
+                  (keyup.enter)="applyApiKey()"
+                />
+              </div>
+              <button type="button" class="m3-btn m3-btn--ghost" (click)="applyApiKey()" [disabled]="!partnerApiKey.trim()">
                 Anwenden
               </button>
             </div>
-          </div>
-        }
-        @if (apiKeyApplied) {
-          <div class="api-key-active">
-            <i class="pi pi-check-circle"></i>
-            <span>Partner API-Key aktiv</span>
-            <button class="remove-key-btn" (click)="removeApiKey()">
-              <i class="pi pi-times"></i>
-            </button>
-          </div>
-        }
-        @if (errorMessage) {
-          <div class="error-message">
-            <i class="pi pi-exclamation-triangle"></i>
-            <span>{{ errorMessage }}</span>
-          </div>
-        }
-      </div>
-    </div>
-  }
+          }
 
-  <!-- Loading State -->
-  @if (isLoading) {
-    <div class="loading-state">
-      <div class="spinner-ring"></div>
-      <p>Daten werden abgerufen…</p>
-    </div>
-  }
+          @if (apiKeyApplied) {
+            <div class="zeit-key-row">
+              <span class="m3-chip m3-chip--brand">
+                <app-icon name="check-circle" />
+                Partner API-Key aktiv
+              </span>
+              <button type="button" class="zeit-textlink" (click)="removeApiKey()">Entfernen</button>
+            </div>
+          }
 
-  <!-- Result View -->
-  @if (userData && !isLoading) {
-    <div class="result-view">
-      <button class="back-btn" (click)="resetSearch()"><i class="pi pi-arrow-left"></i> Neue Abfrage</button>
-      <div class="result-wrapper">
-        <!-- Profile Card -->
-        <div class="card profile-card">
-          <div class="card-header">
-            <span class="card-icon"><i class="pi pi-user"></i></span>
-            <div class="card-title-group">
-              <h2>Profil</h2>
-              <span class="card-subtitle">Spielerinformationen</span>
-            </div>
-          </div>
-          <div class="profile-content">
-            @if (userData.steam.avatar) {
-              <a [href]="userData.steam.avatar" target="_blank" class="avatar-link">
-                <img [src]="userData.steam.avatar" class="avatar" [alt]="userData.steam.username" />
-              </a>
-            }
-            <div class="profile-info">
-              <div class="username-row">
-                <span class="username">{{ userData.steam.username }}</span>
-                @if (userData.cedmodActivelyBanned) {
-                  <span class="badge danger"><i class="pi pi-ban"></i> GEBANNT</span>
-                }
-                @if (userData.cedmodWarns.length > 0) {
-                  <span class="badge warning">
-                    <i class="pi pi-exclamation-triangle"></i>
-                    {{ userData.cedmodWarns.length }} {{ userData.cedmodWarns.length === 1 ? 'WARN' : 'WARNS' }}
-                  </span>
-                }
-              </div>
-              <span class="steamid">{{ userData.steam.id }}</span>
-              @if (userData.fakerank) {
-                <div class="fakerank-display">
-                  <span class="fakerank-label">Fakerank:</span>
-                  <span class="fakerank-text" [style.color]="getFakerankColorHex(userData.fakerank.color)">
-                    {{ userData.fakerank.text }}
-                  </span>
-                </div>
-              }
-            </div>
-          </div>
-          @if (userData.discord) {
-            <div class="profile-footer">
-              <div class="discord-profile">
-                <div class="discord-brand">
-                  <i class="pi pi-discord"></i>
-                  <span>Verknüpftes Discord-Konto</span>
-                </div>
-                <div class="discord-user">
-                  @if (userData.discord.avatar) {
-                    <img [src]="userData.discord.avatar" class="discord-avatar" />
-                  }
-                  <div class="discord-details">
-                    <span class="discord-username">{{ userData.discord.username }}</span>
-                    <span class="discord-id">{{ userData.discord.id }}</span>
-                  </div>
-                </div>
-              </div>
+          @if (errorMessage) {
+            <div class="m3-notice m3-notice--error">
+              <app-icon name="exclamation-triangle" />
+              <span>{{ errorMessage }}</span>
             </div>
           }
         </div>
-        <!-- Stats Card -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-icon"><i class="pi pi-chart-bar"></i></span>
-            <div class="card-title-group">
-              <h2>Statistiken</h2>
-              <span class="card-subtitle">Spielaktivität</span>
+      </section>
+    }
+
+    <!-- ===== LOADING ===== -->
+    @if (isLoading) {
+      <div class="m3-state">
+        <span class="m3-spinner" aria-hidden="true"></span>
+        <span>Daten werden abgerufen…</span>
+      </div>
+    }
+
+    <!-- ===== RESULT VIEW ===== -->
+    @if (userData && !isLoading) {
+      <div class="zeit-back">
+        <button type="button" class="m3-btn m3-btn--ghost" (click)="resetSearch()">
+          <app-icon name="arrow-left" />
+          Neue Abfrage
+        </button>
+      </div>
+
+      <header class="m3-page-head">
+        <span class="m3-eyebrow">Spielerdaten</span>
+        <h1 class="m3-page-title">{{ userData.steam.username }}</h1>
+        <p class="m3-page-lead m3-mono">{{ userData.steam.id }}</p>
+      </header>
+
+      <div class="zeit-layout">
+        <div class="zeit-top">
+          <!-- Profile -->
+          <section class="m3-panel">
+            <div class="m3-panel-head">
+              <span class="m3-panel-title">Profil</span>
+              <span class="zeit-flags">
+                @if (userData.cedmodActivelyBanned) {
+                  <span class="m3-chip m3-chip--danger"><app-icon name="ban" /> Gebannt</span>
+                }
+                @if (userData.cedmodWarns.length > 0) {
+                  <span class="m3-chip m3-chip--warn">
+                    <app-icon name="exclamation-triangle" />
+                    {{ userData.cedmodWarns.length }}
+                    {{ userData.cedmodWarns.length === 1 ? 'Warn' : 'Warns' }}
+                  </span>
+                }
+              </span>
             </div>
-          </div>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-label">ZV-Coins</span>
-              <span class="stat-value">{{ formatNumber(userData.zvc) }}</span>
+
+            <div class="m3-panel-body zeit-profile">
+              @if (userData.steam.avatar) {
+                <a [href]="userData.steam.avatar" target="_blank" rel="noopener" class="zeit-avatar-link">
+                  <img [src]="userData.steam.avatar" class="zeit-avatar" [alt]="userData.steam.username" />
+                </a>
+              }
+
+              <div class="zeit-profile-lines">
+                <span class="zeit-name">{{ userData.steam.username }}</span>
+                @if (userData.fakerank) {
+                  <span class="zeit-fakerank">
+                    <em>Fakerank</em>
+                    <strong [style.color]="getFakerankColorHex(userData.fakerank.color)">
+                      {{ userData.fakerank.text }}
+                    </strong>
+                  </span>
+                }
+              </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Spielzeit</span>
-              <span class="stat-value">{{ formatPlaytime(userData.playtime) }}</span>
+
+            @if (userData.discord) {
+              <div class="zeit-discord">
+                <span class="zeit-discord-brand">
+                  <app-icon name="discord" />
+                  Verknüpftes Discord-Konto
+                </span>
+                <span class="zeit-discord-user">
+                  @if (userData.discord.avatar) {
+                    <img [src]="userData.discord.avatar" class="zeit-discord-avatar" alt="" />
+                  }
+                  <span class="zeit-discord-lines">
+                    <strong>{{ userData.discord.username }}</strong>
+                    <em class="m3-mono">{{ userData.discord.id }}</em>
+                  </span>
+                </span>
+              </div>
+            }
+          </section>
+
+          <!-- Stats -->
+          <section class="m3-panel">
+            <div class="m3-panel-head">
+              <span class="m3-panel-title">Statistiken</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Gespielte Runden</span>
-              <span class="stat-value">{{ formatNumber(userData.roundsplayed) }}</span>
+            <div class="m3-stats">
+              <div class="m3-stat">
+                <span>ZV-Coins</span>
+                <strong>{{ formatNumber(userData.zvc) }}</strong>
+              </div>
+              <div class="m3-stat">
+                <span>Spielzeit</span>
+                <strong>{{ formatPlaytime(userData.playtime) }}</strong>
+              </div>
+              <div class="m3-stat">
+                <span>Runden</span>
+                <strong>{{ formatNumber(userData.roundsplayed) }}</strong>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
-        <!-- Fakerank Bans Card -->
-        @if (userData.fakerankBanned || userData.sprayBanned) {
-          <div class="card">
-            <div class="card-header">
-              <span class="card-icon"><i class="pi pi-ban"></i></span>
-              <div class="card-title-group">
-                <h2>Sperren</h2>
-                <span class="card-subtitle">Aktive Einschränkungen</span>
+
+        <div class="zeit-stack">
+          <!-- Fakerank / spray restrictions -->
+          @if (userData.fakerankBanned || userData.sprayBanned) {
+            <section class="m3-panel">
+              <div class="m3-panel-head">
+                <span class="m3-panel-title">Sperren</span>
+                <span class="m3-chip m3-chip--danger">
+                  {{ (userData.fakerankBanned ? 1 : 0) + (userData.sprayBanned ? 1 : 0) }} aktiv
+                </span>
               </div>
-            </div>
-            <div class="bans-content">
-              @if (userData.fakerankBanned) {
-                <div class="ban-item">
-                  <div class="ban-header">
-                    <span class="ban-badge fakerank-ban">Fakerank-Sperre</span>
-                  </div>
-                  @if (userData.fakerankBanReason) {
-                    <div class="ban-detail">
-                      <span class="ban-detail-label">Grund</span>
-                      <span class="ban-detail-value">{{ userData.fakerankBanReason }}</span>
-                    </div>
-                  }
-                  @if (userData.fakerankBannedByDiscordId) {
-                    <div class="ban-detail">
-                      <span class="ban-detail-label">Gesperrt von</span>
-                      <span class="ban-detail-value mono">{{ userData.fakerankBannedByDiscordId }}</span>
-                    </div>
-                  }
-                </div>
-              }
-              @if (userData.sprayBanned) {
-                <div class="ban-item">
-                  <div class="ban-header">
-                    <span class="ban-badge spray-ban">Spray-Sperre</span>
-                  </div>
-                  @if (userData.sprayBanReason) {
-                    <div class="ban-detail">
-                      <span class="ban-detail-label">Grund</span>
-                      <span class="ban-detail-value">{{ userData.sprayBanReason }}</span>
-                    </div>
-                  }
-                  @if (userData.sprayBannedByDiscordId) {
-                    <div class="ban-detail">
-                      <span class="ban-detail-label">Gesperrt von</span>
-                      <span class="ban-detail-value mono">{{ userData.sprayBannedByDiscordId }}</span>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
-        <!-- CedMod Bans Card -->
-        @if (userData.cedmodBans.length > 0) {
-          <div class="card">
-            <div class="card-header">
-              <span class="card-icon"><i class="pi pi-ban"></i></span>
-              <div class="card-title-group">
-                <h2>CedMod Bans</h2>
-                <span class="card-subtitle"
-                  >{{ userData.cedmodBans.length }}
-                  {{ userData.cedmodBans.length === 1 ? 'Eintrag' : 'Einträge' }}</span
-                >
-              </div>
-            </div>
-            <div class="ban-list">
-              @for (ban of userData.cedmodBans; track ban.id) {
-                <div class="ban-row">
-                  <div class="ban-row-top">
-                    <div class="ban-main">
-                      <span class="ban-id">#{{ ban.id }}</span>
-                      <span class="ban-reason">{{ ban.reason }}</span>
-                    </div>
-                    @if (userData.cedmodActivelyBanned) {
-                      <span class="ban-status active">
-                        <i class="pi pi-clock"></i>
-                        {{ getBanStatus(ban.bannedAt, ban.duration) }}
+
+              <div class="m3-rows">
+                @if (userData.fakerankBanned) {
+                  <div class="m3-item zeit-ban">
+                    <span class="m3-chip m3-chip--danger"><app-icon name="ban" /> Fakerank</span>
+                    <span class="zeit-ban-main">
+                      <em>Grund</em>
+                      <strong>{{ userData.fakerankBanReason || 'Kein Grund angegeben' }}</strong>
+                    </span>
+                    @if (userData.fakerankBannedByDiscordId) {
+                      <span class="zeit-ban-meta">
+                        <em>Gesperrt von</em>
+                        <strong class="m3-mono">{{ userData.fakerankBannedByDiscordId }}</strong>
                       </span>
                     }
                   </div>
-                  <div class="ban-meta">
-                    <span class="ban-meta-item"><i class="pi pi-user"></i>{{ ban.issuer }}</span>
-                    <span class="ban-meta-item"><i class="pi pi-calendar"></i>{{ formatTimestamp(ban.bannedAt) }}</span>
-                    <span class="ban-meta-item"><i class="pi pi-hourglass"></i>{{ formatDuration(ban.duration) }}</span>
+                }
+
+                @if (userData.sprayBanned) {
+                  <div class="m3-item zeit-ban">
+                    <span class="m3-chip m3-chip--danger"><app-icon name="ban" /> Sprays</span>
+                    <span class="zeit-ban-main">
+                      <em>Grund</em>
+                      <strong>{{ userData.sprayBanReason || 'Kein Grund angegeben' }}</strong>
+                    </span>
+                    @if (userData.sprayBannedByDiscordId) {
+                      <span class="zeit-ban-meta">
+                        <em>Gesperrt von</em>
+                        <strong class="m3-mono">{{ userData.sprayBannedByDiscordId }}</strong>
+                      </span>
+                    }
                   </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-        <!-- CedMod Warns Card -->
-        @if (userData.cedmodWarns.length > 0) {
-          <div class="card">
-            <div class="card-header">
-              <span class="card-icon"><i class="pi pi-exclamation-triangle"></i></span>
-              <div class="card-title-group">
-                <h2>CedMod Warns</h2>
-                <span class="card-subtitle"
-                  >{{ userData.cedmodWarns.length }}
-                  {{ userData.cedmodWarns.length === 1 ? 'Eintrag' : 'Einträge' }}</span
-                >
+                }
               </div>
-            </div>
-            <div class="warn-list">
-              @for (warn of userData.cedmodWarns; track warn.id) {
-                <div class="warn-row">
-                  <div class="warn-main">
-                    <span class="warn-id">#{{ warn.id }}</span>
-                    <span class="warn-reason">{{ warn.reason }}</span>
-                  </div>
-                  <div class="warn-meta">
-                    <span class="warn-meta-item"><i class="pi pi-user"></i>{{ warn.issuer }}</span>
-                    <span class="warn-meta-item"
-                      ><i class="pi pi-calendar"></i>{{ formatTimestamp(warn.warnedAt) }}</span
-                    >
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-        <!-- Linked Cases Card -->
-        @if (userData.linkedCases.length > 0) {
-          <div class="card">
-            <div class="card-header">
-              <span class="card-icon"><i class="pi pi-folder-open"></i></span>
-              <div class="card-title-group">
-                <h2>Verlinkte Cases</h2>
-                <span class="card-subtitle"
-                  >{{ userData.linkedCases.length }} {{ userData.linkedCases.length === 1 ? 'Fall' : 'Fälle' }}</span
-                >
+            </section>
+          }
+
+          <!-- CedMod bans -->
+          @if (userData.cedmodBans.length > 0) {
+            <section class="m3-panel">
+              <div class="m3-panel-head">
+                <span class="m3-panel-title">CedMod Bans</span>
+                <span class="m3-chip">
+                  {{ userData.cedmodBans.length }}
+                  {{ userData.cedmodBans.length === 1 ? 'Eintrag' : 'Einträge' }}
+                </span>
               </div>
-            </div>
-            <div class="cases-list">
-              @for (caseItem of userData.linkedCases; track caseItem.caseId) {
-                <a [routerLink]="['/cases', caseItem.caseId]" class="case-item">
-                  <div class="case-item-main">
-                    <div class="case-item-text">
-                      <span class="case-id">Fall #{{ caseItem.caseId }}</span>
-                      <span class="case-title">{{ caseItem.title }}</span>
-                    </div>
+
+              <div class="m3-rows">
+                @for (ban of userData.cedmodBans; track ban.id) {
+                  <div class="m3-item zeit-record">
+                    <span class="zeit-record-top">
+                      <span class="zeit-record-main">
+                        <span class="zeit-record-id m3-mono">#{{ ban.id }}</span>
+                        <span class="zeit-record-reason">{{ ban.reason }}</span>
+                      </span>
+                      @if (userData.cedmodActivelyBanned) {
+                        <span class="m3-chip m3-chip--warn">
+                          <app-icon name="clock" />
+                          {{ getBanStatus(ban.bannedAt, ban.duration) }}
+                        </span>
+                      }
+                    </span>
+                    <span class="zeit-record-meta">
+                      <span><app-icon name="user" /> {{ ban.issuer }}</span>
+                      <span><app-icon name="calendar" /> {{ formatTimestamp(ban.bannedAt) }}</span>
+                      <span><app-icon name="hourglass" /> {{ formatDuration(ban.duration) }}</span>
+                    </span>
                   </div>
-                  <div class="case-item-meta">
-                    <span class="case-category-badge">{{ caseItem.category }}</span>
-                    <span class="case-date">{{ formatTimestamp(caseItem.createdAt) }}</span>
-                  </div>
-                  <i class="pi pi-arrow-right case-arrow"></i>
-                </a>
-              }
-            </div>
-          </div>
-        }
-        <!-- Empty Cases Notice -->
-        @if (userData.linkedCases.length === 0) {
-          <div class="card empty-card">
-            <div class="card-header">
-              <span class="card-icon"><i class="pi pi-folder"></i></span>
-              <div class="card-title-group">
-                <h2>Cases</h2>
-                <span class="card-subtitle">Keine verlinkten Cases</span>
+                }
               </div>
-            </div>
-          </div>
-        }
-        <!-- Sprays Card -->
-        @if (userData.sprays.length > 0) {
-          <div class="card">
-            <div class="card-header">
-              <span class="card-icon"><i class="pi pi-palette"></i></span>
-              <div class="card-title-group">
-                <h2>Sprays</h2>
-                <span class="card-subtitle"
-                  >{{ userData.sprays.length }} {{ userData.sprays.length === 1 ? 'Spray' : 'Sprays' }}</span
-                >
+            </section>
+          }
+
+          <!-- CedMod warns -->
+          @if (userData.cedmodWarns.length > 0) {
+            <section class="m3-panel">
+              <div class="m3-panel-head">
+                <span class="m3-panel-title">CedMod Warns</span>
+                <span class="m3-chip">
+                  {{ userData.cedmodWarns.length }}
+                  {{ userData.cedmodWarns.length === 1 ? 'Eintrag' : 'Einträge' }}
+                </span>
               </div>
-              @if (userData.sprayBanned) {
-                <span class="badge danger">Gesperrt</span>
-              }
-            </div>
-            <div class="sprays-grid">
-              @for (spray of userData.sprays; track spray.id) {
-                <div class="spray-card">
-                  <img [src]="spray.full_res" [alt]="spray.name" class="spray-image" />
-                  <div class="spray-meta">
-                    <span class="spray-name">{{ spray.name }}</span>
-                    <span class="spray-id">ID: {{ spray.id }}</span>
+
+              <div class="m3-rows">
+                @for (warn of userData.cedmodWarns; track warn.id) {
+                  <div class="m3-item zeit-record">
+                    <span class="zeit-record-main">
+                      <span class="zeit-record-id m3-mono">#{{ warn.id }}</span>
+                      <span class="zeit-record-reason">{{ warn.reason }}</span>
+                    </span>
+                    <span class="zeit-record-meta">
+                      <span><app-icon name="user" /> {{ warn.issuer }}</span>
+                      <span><app-icon name="calendar" /> {{ formatTimestamp(warn.warnedAt) }}</span>
+                    </span>
                   </div>
-                </div>
-              }
+                }
+              </div>
+            </section>
+          }
+
+          <!-- Linked cases -->
+          <section class="m3-panel">
+            <div class="m3-panel-head">
+              <span class="m3-panel-title">Verlinkte Cases</span>
+              <span class="m3-chip">
+                {{ userData.linkedCases.length }}
+                {{ userData.linkedCases.length === 1 ? 'Fall' : 'Fälle' }}
+              </span>
             </div>
-          </div>
-        }
+
+            @if (userData.linkedCases.length > 0) {
+              <div class="m3-rows">
+                @for (caseItem of userData.linkedCases; track caseItem.caseId) {
+                  <a [routerLink]="['/cases', caseItem.caseId]" class="m3-item m3-item--action zeit-case">
+                    <span class="zeit-case-main">
+                      <span class="zeit-case-id m3-mono">#{{ caseItem.caseId }}</span>
+                      <span class="zeit-case-title">{{ caseItem.title }}</span>
+                    </span>
+                    <span class="zeit-case-meta">
+                      @if (caseItem.category) {
+                        <span class="m3-chip">{{ caseItem.category }}</span>
+                      }
+                      <span class="zeit-case-date m3-mono">{{ formatTimestamp(caseItem.createdAt) }}</span>
+                      <app-icon class="zeit-case-arrow" name="arrow-right" />
+                    </span>
+                  </a>
+                }
+              </div>
+            } @else {
+              <div class="m3-state m3-state--plain zeit-empty">
+                <app-icon class="m3-state-icon" name="folder" />
+                <p>Keine verlinkten Cases.</p>
+              </div>
+            }
+          </section>
+
+          <!-- Sprays -->
+          @if (userData.sprays.length > 0) {
+            <section class="m3-panel">
+              <div class="m3-panel-head">
+                <span class="m3-panel-title">Sprays</span>
+                <span class="zeit-flags">
+                  <span class="m3-chip">
+                    {{ userData.sprays.length }} {{ userData.sprays.length === 1 ? 'Spray' : 'Sprays' }}
+                  </span>
+                  @if (userData.sprayBanned) {
+                    <span class="m3-chip m3-chip--danger">Gesperrt</span>
+                  }
+                </span>
+              </div>
+
+              <div class="zeit-sprays">
+                @for (spray of userData.sprays; track spray.id) {
+                  <div class="zeit-spray">
+                    <img [src]="spray.full_res" [alt]="spray.name" class="zeit-spray-image" loading="lazy" />
+                    <span class="zeit-spray-meta">
+                      <strong>{{ spray.name }}</strong>
+                      <em class="m3-mono">ID: {{ spray.id }}</em>
+                    </span>
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
       </div>
-    </div>
-  }
+    }
+  </main>
+
+  <app-m3-footer />
 </div>

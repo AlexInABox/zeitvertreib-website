@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -16,11 +16,13 @@ import type {
 } from '@zeitvertreib/types';
 import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
 import { MedalService } from '../services/medal.service';
-import { IconComponent } from '../components/icon/icon.component';
+import { IconComponent, type IconName } from '../components/icon/icon.component';
+import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
+import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
 
 @Component({
   selector: 'app-case-detail',
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, M3NavComponent, M3FooterComponent],
   templateUrl: './case-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-detail.component.css'],
@@ -29,7 +31,7 @@ import { IconComponent } from '../components/icon/icon.component';
     '(document:keydown.escape)': 'onEscapeKey()',
   },
 })
-export class CaseDetailComponent implements OnInit {
+export class CaseDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -219,6 +221,9 @@ export class CaseDetailComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Immersive m3 chrome: hides the global header/site footer while mounted.
+    document.body.classList.add('m3-active');
+
     this.authService.currentUserData$.subscribe(() => {
       this.isTeam = this.authService.isTeam();
     });
@@ -436,6 +441,11 @@ export class CaseDetailComponent implements OnInit {
   isVideoFile(filename: string): boolean {
     const ext = this.getFileExtension(filename);
     return ['mp4', 'webm', 'mov'].includes(ext);
+  }
+
+  /** Icon shown in the thumbnail slot of files that have no visual preview. */
+  fileIcon(filename: string): IconName {
+    return ['mp3', 'wav', 'ogg'].includes(this.getFileExtension(filename)) ? 'volume' : 'file';
   }
 
   getMediaType(filename: string): 'image' | 'video' | 'audio' | null {
@@ -923,5 +933,9 @@ export class CaseDetailComponent implements OnInit {
     this.fileUploader.onProgressItem = () => {};
     this.fileUploader.onSuccessItem = () => {};
     this.fileUploader.onErrorItem = () => {};
+  }
+
+  ngOnDestroy() {
+    document.body.classList.remove('m3-active');
   }
 }

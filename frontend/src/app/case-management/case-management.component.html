@@ -1,399 +1,497 @@
-<div class="cases-page">
-  <!-- Public Case Lookup (when not team member) -->
-  @if (!isLoading && !isTeam) {
-    <div class="public-lookup-container">
-      <ui-card
-        class="lookup-card"
-        title="Fall suchen"
-        subtitle="Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt"
-      >
-        <app-icon uiCardIcon class="icon-purple" name="search" />
-        <div class="lookup-input-wrapper">
-          <input
-            type="text"
-            class="ui-field lookup-input"
-            [(ngModel)]="lookupCaseId"
-            placeholder="z.B. abc123456z"
-            maxlength="10"
-            (keypress)="onLookupKeyPress($event)"
-            [disabled]="isLookingUp"
-          />
-          <ui-button (click)="lookupCase()" [disabled]="isLookingUp">
-            <app-icon name="arrow-right" /> Suchen
-          </ui-button>
+<div class="m3-canvas m3-canvas--fill">
+  <app-m3-nav />
+
+  <main class="m3-page">
+    <!-- ===== PUBLIC LOOKUP (non-team) ===== -->
+    @if (!isLoading && !isTeam) {
+      <header class="m3-page-head">
+        <span class="m3-eyebrow">Transparenz</span>
+        <h1 class="m3-page-title">Fälle.</h1>
+        <p class="m3-page-lead">
+          Fallakten der Zeitvertreib-Moderation sind öffentlich. Gib eine Fall-ID ein, um den Eintrag zu öffnen.
+        </p>
+      </header>
+
+      <section class="m3-panel cases-lookup">
+        <div class="m3-panel-head">
+          <span class="m3-panel-title">Fall suchen</span>
         </div>
-        @if (lookupError) {
-          <div class="dense-notice notice-error">
-            <app-icon name="exclamation-circle" />
-            <span>{{ lookupError }}</span>
-          </div>
-        }
-      </ui-card>
-    </div>
-  }
+        <div class="m3-panel-body m3-stack">
+          <p class="cases-hint">
+            Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt.
+          </p>
 
-  <!-- Loading State -->
-  @if (isLoading) {
-    <div class="state-card">
-      <ui-spinner />
-      <p>Fälle werden geladen...</p>
-    </div>
-  }
-
-  <!-- Error State -->
-  @if (hasError && !isLoading) {
-    <div class="state-card">
-      <app-icon class="state-icon-danger" name="exclamation-triangle" />
-      <h3>Ein Fehler ist aufgetreten</h3>
-      <p class="state-text">{{ errorMessage }}</p>
-      <ui-button variant="secondary" (click)="loadCases()"><app-icon name="refresh" /> Erneut versuchen</ui-button>
-    </div>
-  }
-
-  <!-- Main Content -->
-  @if (!isLoading && !hasError && isTeam) {
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="page-title-group">
-        <div>
-          <h1 class="page-title">Fallverwaltung</h1>
-          <span class="page-meta">
-            {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }} · {{ getRecentCasesCount() }} kürzlich erstellt
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Toolbar -->
-    <ui-card [padded]="false">
-      <div class="toolbar-body">
-        <div class="toolbar-row">
-          <div class="mode-pills">
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'all'"
-              (click)="setSearchMode('all')"
-              type="button"
-            >
-              <app-icon name="list" /> Alle Fälle
-            </button>
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'steamId'"
-              (click)="setSearchMode('steamId')"
-              type="button"
-            >
-              <app-icon name="id-card" /> Steam-ID
-            </button>
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'discordId'"
-              (click)="setSearchMode('discordId')"
-              type="button"
-            >
-              <app-icon name="discord" /> Discord-ID
-            </button>
-            <button
-              class="mode-pill"
-              [class.active]="searchMode === 'caseId'"
-              (click)="setSearchMode('caseId')"
-              type="button"
-            >
-              <app-icon name="folder-open" /> Fall-ID
-            </button>
-          </div>
-          <div class="toolbar-filters">
-            @if (searchMode === 'all') {
-              <div class="filter-select-wrapper">
-                <select
-                  class="ui-field filter-select"
-                  [ngModel]="sortBy + ':' + sortOrder"
-                  (ngModelChange)="onSortChange($event)"
-                >
-                  @for (option of sortOptions; track option.sortBy + option.sortOrder) {
-                    <option [value]="option.sortBy + ':' + option.sortOrder">{{ option.label }}</option>
-                  }
-                </select>
-                <app-icon class="filter-select-chevron" name="chevron-down" />
-              </div>
-              <div class="filter-select-wrapper">
-                <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="ui-field filter-select">
-                  <option [ngValue]="null">Alle Kategorien</option>
-                  @for (category of availableCategories; track category) {
-                    <option [ngValue]="category">{{ category }}</option>
-                  }
-                </select>
-                <app-icon class="filter-select-chevron" name="chevron-down" />
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- "Alle Fälle" — local text filter -->
-        @if (searchMode === 'all') {
-          <div class="search-row">
-            <div class="search-wrapper">
-              <app-icon class="search-icon" name="search" />
+          <div class="cases-lookup-row">
+            <div class="m3-field cases-lookup-field">
+              <app-icon name="search" />
               <input
                 type="text"
-                class="ui-field search-input"
-                [(ngModel)]="searchQuery"
-                (input)="filterCases()"
-                placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
-              />
-              @if (searchQuery) {
-                <ui-button variant="icon" class="clear-btn" (click)="clearSearch()">
-                  <app-icon name="times" />
-                </ui-button>
-              }
-            </div>
-            @if (!searchQuery) {
-              <span class="search-hint">
-                <app-icon name="info" />
-                Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
-              </span>
-            } @else {
-              <span class="search-hint hint-active">
-                <app-icon name="filter" />
-                {{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser Seite
-              </span>
-            }
-          </div>
-        }
-
-        <!-- "Steam-ID" — server-side search across all cases -->
-        @if (searchMode === 'steamId') {
-          <div class="search-row">
-            <div class="search-wrapper">
-              <app-icon class="search-icon" name="id-card" />
-              <input
-                type="text"
-                class="ui-field search-input"
-                [(ngModel)]="steamIdQuery"
-                (input)="onSteamIdQueryChange()"
-                placeholder="Steam-ID eingeben (z.B. 76561198…)"
-              />
-              @if (isSearching) {
-                <app-icon class="search-spinner spin" name="loader" />
-              }
-              @if (steamIdQuery && !isSearching) {
-                <ui-button variant="icon" class="clear-btn" (click)="clearSteamIdSearch()">
-                  <app-icon name="times" />
-                </ui-button>
-              }
-            </div>
-            @if (!steamIdQuery) {
-              <span class="search-hint">
-                <app-icon name="info" />
-                Durchsucht alle Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse erscheinen automatisch
-                nach 600 ms.
-              </span>
-            }
-            @if (searchError) {
-              <span class="search-hint hint-error"> <app-icon name="exclamation-circle" /> {{ searchError }} </span>
-            }
-            @if (steamIdResults !== null && !isSearching && !searchError && steamIdQuery) {
-              <span class="search-hint hint-active">
-                <app-icon name="server" />
-                {{ steamIdResultCount }} {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
-                (serverweite Suche)
-              </span>
-            }
-          </div>
-        }
-
-        <!-- "Discord-ID" — server-side search by creator Discord ID -->
-        @if (searchMode === 'discordId') {
-          <div class="search-row">
-            <div class="search-wrapper">
-              <app-icon class="search-icon" name="discord" />
-              <input
-                type="text"
-                class="ui-field search-input"
-                [(ngModel)]="discordIdQuery"
-                (input)="onDiscordIdQueryChange()"
-                placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
-              />
-              @if (isSearching && discordIdQuery) {
-                <app-icon class="search-spinner spin" name="loader" />
-              }
-              @if (discordIdQuery && !isSearching) {
-                <ui-button variant="icon" class="clear-btn" (click)="clearDiscordIdSearch()">
-                  <app-icon name="times" />
-                </ui-button>
-              }
-            </div>
-            @if (!discordIdQuery) {
-              <span class="search-hint">
-                <app-icon name="info" />
-                Filtert alle Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch nach 600 ms.
-              </span>
-            }
-            @if (searchError) {
-              <span class="search-hint hint-error"> <app-icon name="exclamation-circle" /> {{ searchError }} </span>
-            }
-            @if (discordIdQuery && !isSearching && !searchError && discordIdResults !== null) {
-              <span class="search-hint hint-active">
-                <app-icon name="server" />
-                {{ discordIdResultCount }} {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
-                (serverweite Suche)
-              </span>
-            }
-          </div>
-        }
-
-        <!-- "Fall-ID" — direct navigation to case detail -->
-        @if (searchMode === 'caseId') {
-          <div class="search-row">
-            <div class="search-wrapper">
-              <app-icon class="search-icon" name="folder-open" />
-              <input
-                type="text"
-                class="ui-field search-input search-input--with-btn"
-                [(ngModel)]="caseIdQuery"
-                (keypress)="onCaseIdKeyPress($event)"
-                (input)="caseIdError = ''"
-                placeholder="Fall-ID eingeben (z.B. abc1230000)"
+                class="m3-input"
+                [(ngModel)]="lookupCaseId"
+                placeholder="z.B. abc123456z"
                 maxlength="10"
+                (keypress)="onLookupKeyPress($event)"
+                [disabled]="isLookingUp"
               />
-              <ui-button variant="icon" class="submit-btn" (click)="submitCaseIdSearch()" [disabled]="!caseIdQuery">
-                <app-icon name="arrow-right" />
-              </ui-button>
             </div>
-            @if (!caseIdQuery && !caseIdError) {
-              <span class="search-hint">
-                <app-icon name="info" />
-                Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil
-                drücken zum Öffnen.
-              </span>
-            }
-            @if (caseIdError) {
-              <span class="search-hint hint-error"> <app-icon name="exclamation-circle" /> {{ caseIdError }} </span>
-            }
+            <button type="button" class="m3-btn" (click)="lookupCase()" [disabled]="isLookingUp">
+              <app-icon name="arrow-right" />
+              Suchen
+            </button>
           </div>
-        }
-      </div>
-    </ui-card>
 
-    <!-- Create Case -->
-    <button class="create-case-row" (click)="createNewCase()"><app-icon name="plus" /> Neuen Fall erstellen</button>
-
-    <!-- Cases List -->
-    @if (displayedCases.length > 0) {
-      <ui-card [padded]="false">
-        <div class="cases-list">
-          @for (item of displayedCases; track item.caseId) {
-            <div class="case-row" role="button" tabindex="0" (click)="openCase(item)" (keydown.enter)="openCase(item)">
-              <span class="case-id-tag">#{{ item.caseId }}</span>
-              <div class="row-main">
-                <span class="row-title">{{ item.title || formatCaseName(item.caseId) }}</span>
-                @if (item.description) {
-                  <span class="row-desc">{{ item.description }}</span>
-                }
-              </div>
-              <div class="row-meta">
-                @if (item.category) {
-                  <ui-badge variant="rule">{{ item.category }}</ui-badge>
-                }
-                @if (item.linkedSteamIds.length > 0) {
-                  <ui-badge variant="neutral" [title]="item.linkedSteamIds.length + ' verknüpfte Nutzer'">
-                    <app-icon name="users" /> {{ item.linkedSteamIds.length }}
-                  </ui-badge>
-                }
-                @if (item.createdBy) {
-                  <span
-                    class="creator-chip"
-                    (click)="navigateToCreatorProfile(item.createdBy.discordId, $event)"
-                    [title]="'Erstellt von ' + item.createdBy.username"
-                  >
-                    <img [src]="item.createdBy.avatarUrl" [alt]="item.createdBy.username" class="creator-avatar" />
-                    <span class="creator-name">{{ item.createdBy.username }}</span>
-                  </span>
-                }
-                <span
-                  class="meta-date"
-                  [title]="
-                    item.lastUpdatedAt !== item.createdAt
-                      ? 'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)
-                      : 'Erstellt: ' + formatDate(item.createdAt)
-                  "
-                >
-                  {{ formatDate(item.createdAt) }}
-                </span>
-                <app-icon class="row-arrow" name="chevron-right" />
-              </div>
+          @if (lookupError) {
+            <div class="m3-notice m3-notice--error">
+              <app-icon name="exclamation-circle" />
+              <span>{{ lookupError }}</span>
             </div>
           }
         </div>
-      </ui-card>
+      </section>
     }
 
-    <!-- Pagination -->
-    @if (showPagination) {
-      <div class="pagination-section">
-        <ui-button variant="icon" (click)="prevPage()" [disabled]="!hasPreviousPage">
-          <app-icon name="chevron-left" />
-        </ui-button>
-        <span class="page-info">Seite {{ page }} von {{ totalPages }}</span>
-        <ui-button variant="icon" (click)="nextPage()" [disabled]="!hasNextPage">
-          <app-icon name="chevron-right" />
-        </ui-button>
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="m3-state">
+        <span class="m3-spinner" aria-hidden="true"></span>
+        <span>Fälle werden geladen…</span>
       </div>
     }
 
-    <!-- Empty States -->
-    @if (searchMode === 'discordId' && !discordIdQuery && !isLoading) {
-      <div class="state-card state-hint">
-        <app-icon class="state-icon-muted" name="discord" />
-        <p>Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.</p>
+    <!-- Error State -->
+    @if (hasError && !isLoading) {
+      <div class="m3-state">
+        <app-icon class="m3-state-icon m3-state-icon--danger" name="exclamation-triangle" />
+        <h2>Ein Fehler ist aufgetreten</h2>
+        <p>{{ errorMessage }}</p>
+        <button type="button" class="m3-btn m3-btn--ghost" (click)="loadCases()">
+          <app-icon name="refresh" />
+          Erneut versuchen
+        </button>
       </div>
     }
-    @if (
-      searchMode === 'discordId' &&
-      discordIdQuery &&
-      !isSearching &&
-      discordIdResults !== null &&
-      discordIdResults.length === 0 &&
-      !searchError
-    ) {
-      <div class="state-card">
-        <app-icon class="state-icon-muted" name="search" />
-        <h3>Keine Fälle gefunden</h3>
-        <p class="state-text">
-          Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
+
+    <!-- ===== TEAM VIEW ===== -->
+    @if (!isLoading && !hasError && isTeam) {
+      <header class="m3-page-head">
+        <span class="m3-eyebrow">Moderation</span>
+        <h1 class="m3-page-title">Fallverwaltung.</h1>
+        <p class="m3-page-lead">
+          {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }} · {{ getRecentCasesCount() }} kürzlich erstellt
         </p>
-        <ui-button variant="secondary" (click)="clearDiscordIdSearch()">
-          <app-icon name="times" /> Suche zurücksetzen
-        </ui-button>
+      </header>
+
+      <div class="cases-stack">
+        <!-- Toolbar -->
+        <section class="m3-panel">
+          <div class="m3-panel-body m3-stack">
+            <div class="cases-toolbar-row">
+              <div class="m3-pills cases-modes">
+                <button
+                  type="button"
+                  class="m3-pill"
+                  [class.m3-pill--on]="searchMode === 'all'"
+                  (click)="setSearchMode('all')"
+                >
+                  <app-icon name="list" />
+                  <span>Alle Fälle</span>
+                </button>
+                <button
+                  type="button"
+                  class="m3-pill"
+                  [class.m3-pill--on]="searchMode === 'steamId'"
+                  (click)="setSearchMode('steamId')"
+                >
+                  <app-icon name="id-card" />
+                  <span>Steam-ID</span>
+                </button>
+                <button
+                  type="button"
+                  class="m3-pill"
+                  [class.m3-pill--on]="searchMode === 'discordId'"
+                  (click)="setSearchMode('discordId')"
+                >
+                  <app-icon name="discord" />
+                  <span>Discord-ID</span>
+                </button>
+                <button
+                  type="button"
+                  class="m3-pill"
+                  [class.m3-pill--on]="searchMode === 'caseId'"
+                  (click)="setSearchMode('caseId')"
+                >
+                  <app-icon name="folder-open" />
+                  <span>Fall-ID</span>
+                </button>
+              </div>
+
+              @if (searchMode === 'all') {
+                <div class="cases-filters">
+                  <div class="cases-select">
+                    <select
+                      class="m3-select"
+                      [ngModel]="sortBy + ':' + sortOrder"
+                      (ngModelChange)="onSortChange($event)"
+                    >
+                      @for (option of sortOptions; track option.sortBy + option.sortOrder) {
+                        <option [value]="option.sortBy + ':' + option.sortOrder">{{ option.label }}</option>
+                      }
+                    </select>
+                    <app-icon class="cases-select-chevron" name="chevron-down" />
+                  </div>
+
+                  <div class="cases-select">
+                    <select class="m3-select" [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()">
+                      <option [ngValue]="null">Alle Kategorien</option>
+                      @for (category of availableCategories; track category) {
+                        <option [ngValue]="category">{{ category }}</option>
+                      }
+                    </select>
+                    <app-icon class="cases-select-chevron" name="chevron-down" />
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- "Alle Fälle" — local text filter -->
+            @if (searchMode === 'all') {
+              <div class="cases-search">
+                <div class="m3-field cases-search-field">
+                  <app-icon name="search" />
+                  <input
+                    type="text"
+                    class="m3-input"
+                    [(ngModel)]="searchQuery"
+                    (input)="filterCases()"
+                    placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
+                  />
+                  @if (searchQuery) {
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--icon cases-clear"
+                      (click)="clearSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
+                  }
+                </div>
+
+                @if (!searchQuery) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
+                  </span>
+                } @else {
+                  <span class="cases-hint cases-hint--active">
+                    <app-icon name="filter" />
+                    {{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser Seite
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- "Steam-ID" — server-side search across all cases -->
+            @if (searchMode === 'steamId') {
+              <div class="cases-search">
+                <div class="m3-field cases-search-field">
+                  <app-icon name="id-card" />
+                  <input
+                    type="text"
+                    class="m3-input"
+                    [(ngModel)]="steamIdQuery"
+                    (input)="onSteamIdQueryChange()"
+                    placeholder="Steam-ID eingeben (z.B. 76561198…)"
+                  />
+                  @if (isSearching) {
+                    <app-icon class="cases-trail cases-trail--spin spin" name="loader" />
+                  }
+                  @if (steamIdQuery && !isSearching) {
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--icon cases-clear"
+                      (click)="clearSteamIdSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
+                  }
+                </div>
+
+                @if (!steamIdQuery) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Durchsucht alle Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse erscheinen
+                    automatisch nach 600 ms.
+                  </span>
+                }
+                @if (searchError) {
+                  <span class="cases-hint cases-hint--error">
+                    <app-icon name="exclamation-circle" />
+                    {{ searchError }}
+                  </span>
+                }
+                @if (steamIdResults !== null && !isSearching && !searchError && steamIdQuery) {
+                  <span class="cases-hint cases-hint--active">
+                    <app-icon name="server" />
+                    {{ steamIdResultCount }} {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
+                    (serverweite Suche)
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- "Discord-ID" — server-side search by creator Discord ID -->
+            @if (searchMode === 'discordId') {
+              <div class="cases-search">
+                <div class="m3-field cases-search-field">
+                  <app-icon name="discord" />
+                  <input
+                    type="text"
+                    class="m3-input"
+                    [(ngModel)]="discordIdQuery"
+                    (input)="onDiscordIdQueryChange()"
+                    placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
+                  />
+                  @if (isSearching && discordIdQuery) {
+                    <app-icon class="cases-trail cases-trail--spin spin" name="loader" />
+                  }
+                  @if (discordIdQuery && !isSearching) {
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--icon cases-clear"
+                      (click)="clearDiscordIdSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
+                  }
+                </div>
+
+                @if (!discordIdQuery) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Filtert alle Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch nach 600 ms.
+                  </span>
+                }
+                @if (searchError) {
+                  <span class="cases-hint cases-hint--error">
+                    <app-icon name="exclamation-circle" />
+                    {{ searchError }}
+                  </span>
+                }
+                @if (discordIdQuery && !isSearching && !searchError && discordIdResults !== null) {
+                  <span class="cases-hint cases-hint--active">
+                    <app-icon name="server" />
+                    {{ discordIdResultCount }} {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
+                    (serverweite Suche)
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- "Fall-ID" — direct navigation to case detail -->
+            @if (searchMode === 'caseId') {
+              <div class="cases-search">
+                <div class="m3-field cases-search-field">
+                  <app-icon name="folder-open" />
+                  <input
+                    type="text"
+                    class="m3-input"
+                    [(ngModel)]="caseIdQuery"
+                    (keypress)="onCaseIdKeyPress($event)"
+                    (input)="caseIdError = ''"
+                    placeholder="Fall-ID eingeben (z.B. abc1230000)"
+                    maxlength="10"
+                  />
+                  @if (caseIdQuery) {
+                    <button
+                      type="button"
+                      class="m3-btn m3-btn--icon cases-clear"
+                      (click)="submitCaseIdSearch()"
+                      [disabled]="!caseIdQuery"
+                      aria-label="Fall öffnen"
+                    >
+                      <app-icon name="arrow-right" />
+                    </button>
+                  }
+                </div>
+
+                @if (!caseIdQuery && !caseIdError) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil
+                    drücken zum Öffnen.
+                  </span>
+                }
+                @if (caseIdError) {
+                  <span class="cases-hint cases-hint--error">
+                    <app-icon name="exclamation-circle" />
+                    {{ caseIdError }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- Create case -->
+        <button type="button" class="cases-create" (click)="createNewCase()">
+          <app-icon name="plus" />
+          Neuen Fall erstellen
+        </button>
+
+        <!-- Cases list -->
+        @if (displayedCases.length > 0) {
+          <section class="m3-panel">
+            <div class="m3-rows">
+              @for (item of displayedCases; track item.caseId) {
+                <div
+                  class="m3-item m3-item--action case-row"
+                  role="button"
+                  tabindex="0"
+                  (click)="openCase(item)"
+                  (keydown.enter)="openCase(item)"
+                >
+                  <span class="case-id m3-mono">#{{ item.caseId }}</span>
+
+                  <span class="case-main">
+                    <span class="case-title">{{ item.title || formatCaseName(item.caseId) }}</span>
+                    @if (item.description) {
+                      <span class="case-desc">{{ item.description }}</span>
+                    }
+                  </span>
+
+                  <span class="case-meta">
+                    @if (item.category) {
+                      <span class="m3-chip">{{ item.category }}</span>
+                    }
+                    @if (item.linkedSteamIds.length > 0) {
+                      <span class="m3-chip" [title]="item.linkedSteamIds.length + ' verknüpfte Nutzer'">
+                        <app-icon name="users" />
+                        {{ item.linkedSteamIds.length }}
+                      </span>
+                    }
+                    @if (item.createdBy) {
+                      <button
+                        type="button"
+                        class="case-creator"
+                        (click)="navigateToCreatorProfile(item.createdBy.discordId, $event)"
+                        [title]="'Erstellt von ' + item.createdBy.username"
+                      >
+                        <img
+                          [src]="item.createdBy.avatarUrl"
+                          [alt]="item.createdBy.username"
+                          class="case-creator-avatar"
+                        />
+                        <span class="case-creator-name">{{ item.createdBy.username }}</span>
+                      </button>
+                    }
+                    <span
+                      class="case-date m3-mono"
+                      [title]="
+                        item.lastUpdatedAt !== item.createdAt
+                          ? 'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)
+                          : 'Erstellt: ' + formatDate(item.createdAt)
+                      "
+                    >
+                      {{ formatDate(item.createdAt) }}
+                    </span>
+                    <app-icon class="case-arrow" name="chevron-right" />
+                  </span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Pagination -->
+        @if (showPagination) {
+          <div class="cases-pagination">
+            <button
+              type="button"
+              class="m3-btn m3-btn--icon"
+              (click)="prevPage()"
+              [disabled]="!hasPreviousPage"
+              aria-label="Vorherige Seite"
+            >
+              <app-icon name="chevron-left" />
+            </button>
+            <span class="cases-page-info">Seite {{ page }} von {{ totalPages }}</span>
+            <button
+              type="button"
+              class="m3-btn m3-btn--icon"
+              (click)="nextPage()"
+              [disabled]="!hasNextPage"
+              aria-label="Nächste Seite"
+            >
+              <app-icon name="chevron-right" />
+            </button>
+          </div>
+        }
+
+        <!-- Empty states -->
+        @if (searchMode === 'discordId' && !discordIdQuery && !isLoading) {
+          <div class="m3-state">
+            <app-icon class="m3-state-icon" name="discord" />
+            <p>Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.</p>
+          </div>
+        }
+        @if (
+          searchMode === 'discordId' &&
+          discordIdQuery &&
+          !isSearching &&
+          discordIdResults !== null &&
+          discordIdResults.length === 0 &&
+          !searchError
+        ) {
+          <div class="m3-state">
+            <app-icon class="m3-state-icon" name="search" />
+            <h3>Keine Fälle gefunden</h3>
+            <p>
+              Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
+            </p>
+            <button type="button" class="m3-btn m3-btn--ghost" (click)="clearDiscordIdSearch()">
+              <app-icon name="times" />
+              Suche zurücksetzen
+            </button>
+          </div>
+        }
+        @if (searchMode === 'steamId' && !steamIdQuery && !isSearching) {
+          <div class="m3-state">
+            <app-icon class="m3-state-icon" name="id-card" />
+            <p>Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
+          </div>
+        }
+        @if (
+          searchMode === 'steamId' && steamIdResults !== null && steamIdResults.length === 0 && !isSearching && !searchError
+        ) {
+          <div class="m3-state">
+            <app-icon class="m3-state-icon" name="search" />
+            <h3>Keine Fälle gefunden</h3>
+            <p>
+              Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
+            </p>
+            <button type="button" class="m3-btn m3-btn--ghost" (click)="clearSteamIdSearch()">
+              <app-icon name="times" />
+              Suche zurücksetzen
+            </button>
+          </div>
+        }
+        @if (searchMode === 'all' && cases.length === 0 && !isLoading) {
+          <div class="m3-state">
+            <app-icon class="m3-state-icon" name="inbox" />
+            <h3>Noch keine Fälle vorhanden</h3>
+            <p>Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
+            <button type="button" class="m3-btn" (click)="createNewCase()">
+              <app-icon name="plus" />
+              Ersten Fall erstellen
+            </button>
+          </div>
+        }
       </div>
     }
-    @if (searchMode === 'steamId' && !steamIdQuery && !isSearching) {
-      <div class="state-card state-hint">
-        <app-icon class="state-icon-muted" name="id-card" />
-        <p>Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
-      </div>
-    }
-    @if (
-      searchMode === 'steamId' && steamIdResults !== null && steamIdResults.length === 0 && !isSearching && !searchError
-    ) {
-      <div class="state-card">
-        <app-icon class="state-icon-muted" name="search" />
-        <h3>Keine Fälle gefunden</h3>
-        <p class="state-text">
-          Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
-        </p>
-        <ui-button variant="secondary" (click)="clearSteamIdSearch()">
-          <app-icon name="times" /> Suche zurücksetzen
-        </ui-button>
-      </div>
-    }
-    @if (searchMode === 'all' && cases.length === 0 && !isLoading) {
-      <div class="state-card">
-        <app-icon class="state-icon-muted" name="inbox" />
-        <h3>Noch keine Fälle vorhanden</h3>
-        <p class="state-text">Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
-        <ui-button (click)="createNewCase()"> <app-icon name="plus" /> Ersten Fall erstellen </ui-button>
-      </div>
-    }
-  }
+  </main>
+
+  <app-m3-footer />
 </div>

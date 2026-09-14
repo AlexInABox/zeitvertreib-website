@@ -1,562 +1,287 @@
-/* ================================================
-   CASE MANAGEMENT — Dense layout (profile design language)
-   ================================================ */
+/* Cases page-specific styles — the shared m3 design system lives in
+   src/styles/m3.css */
 
-.cases-page {
-  min-height: calc(100vh - 180px);
-  padding: 2rem 1.25rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  box-sizing: border-box;
+.cases-stack {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.icon-purple {
-  color: #a78bfa;
-}
-
 /* ================================================
-   NOTICES
+   Public lookup
    ================================================ */
 
-.dense-notice {
-  font-size: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  line-height: 1.4;
+.cases-lookup {
+  max-width: 44rem;
 }
 
-.notice-error {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #f87171;
-}
-
-/* ================================================
-   PAGE HEADER
-   ================================================ */
-
-.page-header {
+.cases-lookup-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.page-title-group {
-  display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0.75rem;
-  min-width: 0;
 }
 
-.page-title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: white;
-  line-height: 1.2;
-}
-
-.page-meta {
-  font-size: 0.725rem;
-  color: rgba(255, 255, 255, 0.45);
-  display: block;
-  margin-top: 0.1rem;
-}
-
-/* ================================================
-   CREATE CASE ENTITY
-   ================================================ */
-
-.create-case-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.55rem 0.875rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed rgba(255, 255, 255, 0.14);
-  border-radius: 0.5rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
-}
-
-.create-case-row app-icon {
-  font-size: 0.75rem;
-}
-
-.create-case-row:hover {
-  background: rgba(167, 139, 250, 0.08);
-  border-color: rgba(167, 139, 250, 0.4);
-  color: #c4b5fd;
-}
-
-/* ================================================
-   TOOLBAR (mode pills / sort / category)
-   ================================================ */
-
-.toolbar-body {
-  padding: 0.75rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.toolbar-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.mode-pills {
-  display: flex;
-  gap: 0.375rem;
-  flex-wrap: wrap;
-}
-
-.mode-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  font-family: inherit;
-}
-
-.mode-pill app-icon {
-  font-size: 0.75rem;
-}
-
-.mode-pill:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-}
-
-.mode-pill.active {
-  background: rgba(167, 139, 250, 0.15);
-  border-color: rgba(167, 139, 250, 0.4);
-  color: #c4b5fd;
-}
-
-.toolbar-filters {
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.filter-select-wrapper {
-  position: relative;
-  min-width: 170px;
-}
-
-.filter-select {
-  appearance: none;
-  padding-right: 2rem;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.filter-select option {
-  background: #17171d;
-  color: white;
-}
-
-.filter-select-chevron {
-  position: absolute;
-  right: 0.625rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.4);
-  pointer-events: none;
-}
-
-/* ================================================
-   SEARCH ROWS
-   ================================================ */
-
-.search-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.35);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.search-spinner {
-  position: absolute;
-  right: 0.75rem;
-  font-size: 0.8125rem;
-  color: #a78bfa;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.search-input {
-  padding-left: 2.25rem !important;
-  padding-right: 2.5rem !important;
-  height: 2.125rem;
-}
-
-.search-input--with-btn {
-  padding-right: 2.75rem !important;
-}
-
-.clear-btn {
-  position: absolute;
-  right: 0.375rem;
-  z-index: 2;
-}
-
-.submit-btn {
-  position: absolute;
-  right: 0.3125rem;
-  z-index: 2;
-}
-
-.search-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.725rem;
-  line-height: 1.4;
-}
-
-.search-hint app-icon {
-  font-size: 0.725rem;
-  flex-shrink: 0;
-}
-
-.hint-active {
-  color: #c4b5fd;
-}
-
-.hint-active app-icon,
-.hint-error app-icon {
-  flex-shrink: 0;
-}
-
-.hint-error {
-  color: #f87171;
-}
-
-/* ================================================
-   CASE LIST
-   ================================================ */
-
-.cases-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  animation: list-in 0.25s ease-out;
-}
-
-@keyframes list-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.case-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.875rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.case-row:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(167, 139, 250, 0.3);
-}
-
-.case-id-tag {
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #a78bfa;
-  background: rgba(167, 139, 250, 0.12);
-  padding: 0.15rem 0.4rem;
-  border-radius: 0.25rem;
-  flex-shrink: 0;
-}
-
-.row-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+.cases-lookup-field {
   flex: 1;
-  min-width: 0;
-}
-
-.row-title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: white;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.row-desc {
-  font-size: 0.725rem;
-  color: rgba(255, 255, 255, 0.4);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.row-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.meta-date {
-  font-size: 0.725rem;
-  color: rgba(255, 255, 255, 0.35);
-  font-family: ui-monospace, monospace;
-  cursor: help;
-}
-
-.row-arrow {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.3);
-  transition:
-    transform 0.15s ease,
-    color 0.15s ease;
-}
-
-.case-row:hover .row-arrow {
-  transform: translateX(3px);
-  color: #a78bfa;
-}
-
-.creator-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.15rem 0.45rem 0.15rem 0.2rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  cursor: pointer;
-  max-width: 160px;
-  transition: all 0.15s ease;
-}
-
-.creator-chip:hover {
-  background: rgba(167, 139, 250, 0.12);
-  border-color: rgba(167, 139, 250, 0.35);
-}
-
-.creator-avatar {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.creator-name {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ================================================
-   PAGINATION
+   Toolbar
    ================================================ */
 
-.pagination-section {
+.cases-toolbar-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.cases-modes {
+  flex: 1 1 26rem;
+}
+
+.cases-filters {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.25rem 0;
 }
 
-.page-info {
-  font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 500;
-  white-space: nowrap;
+.cases-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 11.5rem;
+}
+
+.cases-select-chevron {
+  position: absolute;
+  right: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--m3-muted);
+  pointer-events: none;
 }
 
 /* ================================================
-   STATES (loading / error / empty)
+   Search rows
    ================================================ */
 
-.state-card {
+.cases-search {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
-  padding: 2.5rem 2rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 0.875rem;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.8125rem;
-  text-align: center;
+  gap: 0.45rem;
 }
 
-.state-card p {
-  margin: 0;
+.cases-search-field .m3-input {
+  padding-right: 2.9rem;
 }
 
-.state-card h3 {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: white;
+.cases-clear {
+  position: absolute;
+  right: 0.3rem;
+  width: 1.95rem;
+  height: 1.95rem;
+  border: 0;
+  font-size: 0.95rem;
 }
 
-.state-text {
-  max-width: 420px;
+.cases-trail {
+  position: absolute;
+  right: 0.95rem;
+  font-size: 0.95rem;
+  color: var(--m3-accent);
+}
+
+.cases-hint {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: var(--m3-muted);
+  font-size: 0.78rem;
   line-height: 1.5;
 }
 
-.state-icon-danger {
-  font-size: 1.5rem;
-  color: #f87171;
+.cases-hint app-icon {
+  flex: none;
+  margin-top: 0.15rem;
 }
 
-.state-icon-muted {
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.3);
+.cases-hint--active {
+  color: var(--m3-accent);
 }
 
-.state-hint {
-  padding: 1.5rem 2rem;
-  opacity: 0.75;
-}
-
-.state-hint .state-icon-muted {
-  font-size: 1.125rem;
+.cases-hint--error {
+  color: #f0716f;
 }
 
 /* ================================================
-   PUBLIC CASE LOOKUP
+   Create case
    ================================================ */
 
-.public-lookup-container {
+.cases-create {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
-}
-
-.lookup-card {
-  max-width: 480px;
+  gap: 0.55rem;
   width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px dashed var(--m3-line);
+  background: none;
+  color: var(--m3-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
-.lookup-input-wrapper {
-  display: flex;
-  gap: 0.5rem;
-  align-items: stretch;
-}
-
-.lookup-input {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  text-transform: lowercase;
-  letter-spacing: 0.05em;
+.cases-create:hover {
+  color: var(--m3-accent);
+  border-color: rgba(161, 61, 230, 0.5);
+  background: rgba(161, 61, 230, 0.05);
 }
 
 /* ================================================
-   RESPONSIVE
+   Case rows
+   ================================================ */
+
+.case-id {
+  flex: none;
+  padding: 0.22rem 0.5rem;
+  border: 1px solid rgba(161, 61, 230, 0.55);
+  color: var(--m3-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.case-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.case-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--m3-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.case-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--m3-muted);
+  font-size: 0.78rem;
+}
+
+.case-meta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.case-creator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 11rem;
+  padding: 0.18rem 0.55rem 0.18rem 0.25rem;
+  border: 1px solid var(--m3-line);
+  border-radius: 9999px;
+  background: none;
+  color: var(--m3-muted);
+  font-family: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.case-creator:hover {
+  color: var(--m3-text);
+  border-color: rgba(161, 61, 230, 0.55);
+  background: var(--m3-soft);
+}
+
+.case-creator-avatar {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.case-creator-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.case-date {
+  color: var(--m3-muted);
+  font-size: 0.72rem;
+  cursor: help;
+}
+
+.case-arrow {
+  font-size: 0.9rem;
+  color: var(--m3-muted);
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.case-row:hover .case-arrow {
+  transform: translateX(3px);
+  color: var(--m3-accent);
+}
+
+/* ================================================
+   Pagination
+   ================================================ */
+
+.cases-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.cases-page-info {
+  color: var(--m3-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================
+   Responsive
    ================================================ */
 
 @media (max-width: 900px) {
-  .row-desc {
-    display: none;
+  .case-row {
+    flex-wrap: wrap;
   }
 
-  .toolbar-filters {
-    margin-left: 0;
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .cases-page {
-    padding: 1.25rem 0.75rem;
-  }
-
-  .creator-name {
-    display: none;
-  }
-
-  .creator-chip {
-    padding: 0.15rem 0.2rem;
+  .case-meta {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
 
-@media (max-width: 640px) {
-  .row-meta ui-badge[data-variant='neutral'] {
-    display: none;
-  }
-
-  .meta-date {
-    display: none;
-  }
-
-  .lookup-input-wrapper {
+@media (max-width: 620px) {
+  .cases-lookup-row {
     flex-direction: column;
   }
 }

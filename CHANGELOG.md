@@ -20,6 +20,8 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 
 - The website dashboard has been redesigned: live server stats, kills and playtime at a glance, and a Steam launch button
 - New landing page; the website is now dark-mode only
+- The Reports, Cases, Z.E.I.T. and Permissions pages now use the same design as the landing page and dashboard
+- The login page matches the new design as well
 
 ### Removed
 

@@ -1,40 +1,45 @@
-<div class="login-container">
-  <div class="login-card-wrapper">
-    <div class="login-card">
-      <div class="card-header">
-        <div class="logo-container">
-          <img src="/assets/logos/logo_full_1to1.svg" alt="Zeitvertreib Logo" class="logo-image" />
-          <div class="logo-glow"></div>
-        </div>
-        <h1 class="welcome-title">
-          <span class="brand-name">Zeitvertreib</span>
-        </h1>
-      </div>
+<div class="m3-canvas m3-canvas--fill">
+  <app-m3-nav />
 
-      <div class="card-content">
-        <p class="description-text">
+  <main class="m3-page login-page">
+    <div class="login-layout">
+      <!-- Copy -->
+      <div class="login-copy">
+        <img class="login-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
+        <span class="m3-eyebrow">Anmeldung</span>
+        <h1 class="m3-page-title">Zeitvertreib.</h1>
+        <p class="m3-page-lead">
           Melde dich mit deinem Discord-Account an, um dein Zeitvertreib-Konto zu verknüpfen.
         </p>
-
-        <div class="info-box">
-          <i class="pi pi-info-circle info-icon"></i>
-          <p class="info-text">
-            Dein Discord-Account muss mit Steam verknüpft sein, um Zugriff auf deine Statistiken und Features zu
-            erhalten.
-          </p>
-        </div>
-
-        <div class="button-container">
-          <p-button
-            label="Mit Discord anmelden"
-            icon="pi pi-discord"
-            size="large"
-            styleClass="discord-login-btn"
-            (onClick)="login()"
-          ></p-button>
-          <div class="button-glow"></div>
-        </div>
       </div>
+
+      <!-- Login panel -->
+      <section class="m3-panel login-panel">
+        <div class="m3-panel-head">
+          <span class="m3-panel-title">Konto verknüpfen</span>
+          <span class="m3-chip m3-chip--brand">
+            <app-icon name="discord" />
+            Discord
+          </span>
+        </div>
+
+        <div class="m3-panel-body m3-stack">
+          <div class="m3-notice">
+            <app-icon name="info" />
+            <span>
+              Dein Discord-Account muss mit Steam verknüpft sein, um Zugriff auf deine Statistiken und Features zu
+              erhalten.
+            </span>
+          </div>
+
+          <button type="button" class="m3-btn m3-btn--wide" (click)="login()">
+            <app-icon name="discord" />
+            Mit Discord anmelden
+          </button>
+        </div>
+      </section>
     </div>
-  </div>
+  </main>
+
+  <app-m3-footer />
 </div>
