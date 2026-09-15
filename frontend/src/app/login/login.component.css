@@ -28,6 +28,43 @@
   margin-bottom: 1.6rem;
 }
 
+/* Feature preview under the lead: hairline rows, term left, detail right. */
+.login-perks {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--m3-line);
+}
+
+.login-perks li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--m3-line);
+}
+
+.login-perk-name {
+  color: var(--m3-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.login-perk-text {
+  color: var(--m3-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .login-perks li {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
 .login-panel {
   justify-self: end;
   width: min(30rem, 100%);
