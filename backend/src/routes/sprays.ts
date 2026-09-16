@@ -643,7 +643,7 @@ export async function collectZvcForSpraySlotsAndCleanup(db: any, env: Env, ctx: 
   console.log('Collecting ZVC for spray slots...');
 
   // 1. Fetch all sprays
-  const allSprays = await db.select().from(sprays).run();
+  const allSprays = await db.select().from(sprays).all();
 
   // 2. Group sprays by userid
   const spraysByUser: Record<string, typeof allSprays> = {};
