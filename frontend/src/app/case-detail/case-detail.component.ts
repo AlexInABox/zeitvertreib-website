@@ -17,12 +17,12 @@ import type {
 import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
 import { MedalService } from '../services/medal.service';
 import { IconComponent, type IconName } from '../components/icon/icon.component';
-import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
-import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
 @Component({
   selector: 'app-case-detail',
-  imports: [FormsModule, IconComponent, M3NavComponent, M3FooterComponent],
+  imports: [FormsModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './case-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./case-detail.component.css'],
@@ -221,9 +221,6 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Immersive m3 chrome: hides the global header/site footer while mounted.
-    document.body.classList.add('m3-active');
-
     this.authService.currentUserData$.subscribe(() => {
       this.isTeam = this.authService.isTeam();
     });
@@ -935,7 +932,5 @@ export class CaseDetailComponent implements OnInit, OnDestroy {
     this.fileUploader.onErrorItem = () => {};
   }
 
-  ngOnDestroy() {
-    document.body.classList.remove('m3-active');
-  }
+  ngOnDestroy() {}
 }

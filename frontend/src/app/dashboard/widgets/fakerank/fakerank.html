@@ -1,6 +1,6 @@
 @if (isFakerankBanned) {
 <div class="spray-ban-warning">
-  <div class="spray-ban-icon">@if (testUiActive) {<i class="pi pi-ban"></i>} @else {⛔}</div>
+  <div class="spray-ban-icon">@if (testUiActive) {<app-icon name="ban" />} @else {<app-icon name="ban" />}</div>
   <div class="spray-ban-content">
     <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
     <p class="spray-ban-reason"><strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}</p>
@@ -10,7 +10,7 @@
 } @if (!isFakerankBanned) {
 <div class="fakerank-container-inline">
   <div class="fakerank-info-left">
-    <h3 class="spray-title">@if (testUiActive) {<i class="pi pi-star-fill"></i>} @else {✨} Fakerank</h3>
+    <h3 class="spray-title">@if (testUiActive) {<app-icon name="star" />} @else {<app-icon name="star" />} Fakerank</h3>
     <p class="spray-subtitle">Dein eigener Rang!</p>
   </div>
   <div class="fakerank-action-right">
@@ -19,10 +19,10 @@
     @if (!currentFakerank && !frEditing) {
     <div class="fr-stack">
       <button type="button" class="fr-create" (click)="frBeginCreate()">
-        <span class="fr-create-icon"><i class="pi pi-star-fill"></i></span>
+        <span class="fr-create-icon"><app-icon name="star" /></span>
         <span>Fakerank erstellen</span>
       </button>
-      <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
+      <span class="fakerank-price-note fr-note"><app-icon name="dollar" /> {{ frCostPerWeek }} ZVC / Woche</span>
     </div>
     } @if (currentFakerank && !frEditing) {
     <div class="fr-stack" (mouseenter)="frHover = true" (mouseleave)="frHover = false">
@@ -44,11 +44,11 @@
           aria-label="Fakerank löschen"
           title="Fakerank löschen"
         >
-          <i class="pi pi-trash"></i>
+          <app-icon name="trash" />
         </button>
         }
       </div>
-      <span class="fakerank-price-note fr-note"><i class="pi pi-dollar"></i> {{ frCostPerWeek }} ZVC / Woche</span>
+      <span class="fakerank-price-note fr-note"><app-icon name="dollar" /> {{ frCostPerWeek }} ZVC / Woche</span>
     </div>
     } @if (frEditing) {
     <div class="fr-editor">
@@ -75,9 +75,9 @@
       </div>
       <div class="fr-actions">
         <button type="button" class="fr-cancel" (click)="frCancel()" [disabled]="fakerankLoading">Abbrechen</button>
-        <ui-button variant="info" size="sm" (click)="frRequestSave()" [disabled]="fakerankLoading || !frText.trim()">
-          <i class="pi pi-save"></i> Speichern
-        </ui-button>
+        <button type="button" class="jule-btn" (click)="frRequestSave()" [disabled]="fakerankLoading || !frText.trim()">
+          <app-icon name="save" /> Speichern
+        </button>
       </div>
     </div>
     } } @else {
@@ -88,20 +88,22 @@
       <div class="fakerank-preview-small" [style.color]="getColorHex(currentFakerankColor)">{{ currentFakerank }}</div>
       <div class="fakerank-buttons-row">
         <button (click)="openFakerankModal()" class="action-btn-text" [disabled]="fakerankLoading">
-          ✏️ Bearbeiten
+          <app-icon name="pencil" /> Bearbeiten
         </button>
         <button (click)="deleteFakerank()" class="action-btn-text delete" [disabled]="fakerankLoading">
-          🗑️ Löschen
+          <app-icon name="trash" /> Löschen
         </button>
       </div>
-      <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+      <span class="fakerank-price-note"><app-icon name="dollar" /> {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
     </div>
     }
     <!-- No Fakerank -->
     @if (!currentFakerank) {
     <div class="fakerank-empty-inline">
-      <ui-button variant="info" (click)="openFakerankModal()" [disabled]="fakerankLoading"> ✨ Erstellen </ui-button>
-      <span class="fakerank-price-note">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+      <button type="button" class="jule-btn" (click)="openFakerankModal()" [disabled]="fakerankLoading">
+        <app-icon name="star" /> Erstellen
+      </button>
+      <span class="fakerank-price-note"><app-icon name="dollar" /> {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
     </div>
     } }
   </div>
@@ -113,7 +115,7 @@
 }
 
 <!-- Modal -->
-<ui-dialog [(open)]="fakerankModalOpen" title="Fakerank konfigurieren">
+<jule-dialog [(open)]="fakerankModalOpen" title="Fakerank konfigurieren">
   <div class="fakerank-preview-container">
     <span class="preview-label">Vorschau:</span>
     <div class="preview-rank-box" [style.color]="getColorHex(fakerankModalColor)">
@@ -138,7 +140,7 @@
         <div class="color-group-header">
           <span class="color-group-title"
             >{{ group.groupName }} @if (group.isLocked) {
-            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}">🔒</span>
+            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}"><app-icon name="lock" /></span>
             }</span
           >
         </div>
@@ -159,7 +161,7 @@
       }
     </div>
   </div>
-  <div class="checkbox-group mt-2">
+  <div class="checkbox-group">
     <div class="checkbox-item">
       <input type="checkbox" id="frPrivacy" [(ngModel)]="acceptedFakerankPrivacy" />
       <label for="frPrivacy"
@@ -203,52 +205,55 @@
     </div>
     }
   </div>
-  <div uiDialogFooter>
-    <ui-button
-      variant="info"
-      full
+  <div juleDialogFooter>
+    <button
+      type="button"
+      class="jule-btn fr-btn-full"
       (click)="saveFakerank()"
       [disabled]="fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules"
     >
-      💾 Speichern
-    </ui-button>
+      <app-icon name="save" /> Speichern
+    </button>
   </div>
-</ui-dialog>
+</jule-dialog>
 
 <!-- Experimental (testui): cost confirmation for a brand-new fakerank -->
-<ui-dialog [(open)]="frCostOpen" title="Fakerank erstellen?">
+<jule-dialog [(open)]="frCostOpen" title="Fakerank erstellen?">
   <div class="fr-dialog-body">
     <p>Möchtest du deinen Fakerank <strong>„{{ frText.trim() || '…' }}"</strong> erstellen?</p>
     <p class="fr-dialog-cost">
-      <i class="pi pi-dollar"></i> Das kostet <strong>{{ frCostPerWeek }} ZVC pro Woche</strong>.
+      <app-icon name="dollar" /> Das kostet <strong>{{ frCostPerWeek }} ZVC pro Woche</strong>.
     </p>
   </div>
-  <div uiDialogFooter>
+  <div juleDialogFooter>
     <div class="fr-dialog-actions">
-      <ui-button variant="secondary" (click)="frCostOpen = false">Abbrechen</ui-button>
-      <ui-button variant="info" (click)="frConfirmCreate()">Ja, erstellen</ui-button>
+      <button type="button" class="jule-btn jule-btn--ghost" (click)="frCostOpen = false">Abbrechen</button>
+      <button type="button" class="jule-btn" (click)="frConfirmCreate()">Ja, erstellen</button>
     </div>
   </div>
-</ui-dialog>
+</jule-dialog>
 
 <!-- Experimental (testui): delete confirmation -->
-<ui-dialog [(open)]="frDeleteOpen" title="Fakerank löschen?">
+<jule-dialog [(open)]="frDeleteOpen" title="Fakerank löschen?">
   <div class="fr-dialog-body">
     <p>Möchtest du deinen Fakerank <strong>„{{ currentFakerank }}"</strong> wirklich löschen?</p>
     <p class="fr-dialog-hint">Das kann nicht rückgängig gemacht werden.</p>
   </div>
-  <div uiDialogFooter>
+  <div juleDialogFooter>
     <div class="fr-dialog-actions">
-      <ui-button variant="secondary" (click)="frDeleteOpen = false">Abbrechen</ui-button>
-      <ui-button variant="danger" (click)="frConfirmDelete()" [loading]="fakerankLoading"
-        ><i class="pi pi-trash"></i> Löschen</ui-button
-      >
+      <button type="button" class="jule-btn jule-btn--ghost" (click)="frDeleteOpen = false">Abbrechen</button>
+      <button type="button" class="jule-btn jule-btn--danger" (click)="frConfirmDelete()" [disabled]="fakerankLoading">
+        @if (fakerankLoading) {
+        <span class="jule-spinner jule-spinner--sm" aria-hidden="true"></span>
+        }
+        <app-icon name="trash" /> Löschen
+      </button>
     </div>
   </div>
-</ui-dialog>
+</jule-dialog>
 
 <!-- Experimental (testui): color picker (separate window so the card height stays stable) -->
-<ui-dialog [(open)]="frColorOpen" title="Farbe wählen" [maxWidth]="'440px'">
+<jule-dialog [(open)]="frColorOpen" title="Farbe wählen" [maxWidth]="'440px'">
   <div class="fr-color-preview-row">
     <span class="fr-color-preview-swatch" [style.background-color]="getColorHex(frColor)"></span>
     <span>Aktuelle Farbe: <strong>{{ getColorName(frColor) }}</strong></span>
@@ -260,7 +265,7 @@
         <div class="color-group-header">
           <span class="color-group-title"
             >{{ group.groupName }} @if (group.isLocked) {
-            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}"><i class="pi pi-lock"></i></span>
+            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}"><app-icon name="lock" /></span>
             }</span
           >
         </div>
@@ -281,9 +286,9 @@
       }
     </div>
   </div>
-  <div uiDialogFooter>
+  <div juleDialogFooter>
     <div class="fr-dialog-actions">
-      <ui-button variant="info" (click)="frColorOpen = false">Fertig</ui-button>
+      <button type="button" class="jule-btn" (click)="frColorOpen = false">Fertig</button>
     </div>
   </div>
-</ui-dialog>
+</jule-dialog>

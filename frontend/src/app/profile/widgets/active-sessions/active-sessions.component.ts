@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { SessionsService, SessionInfo } from '../../../services/sessions.service';
 import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
+import { IconComponent, type IconName } from '../../../components/icon/icon.component';
 
+/** Lists the account's active login sessions with per-session revoke. */
 @Component({
   selector: 'app-active-sessions',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './active-sessions.component.html',
   styleUrls: ['./active-sessions.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -64,11 +65,11 @@ export class ActiveSessionsComponent implements OnInit {
     });
   }
 
-  getDeviceIcon(userAgent: string): string {
+  getDeviceIcon(userAgent: string): IconName {
     const ua = userAgent.toLowerCase();
-    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return '📱';
-    if (ua.includes('tablet') || ua.includes('ipad')) return '📱';
-    return '💻';
+    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return 'smartphone';
+    if (ua.includes('tablet') || ua.includes('ipad')) return 'smartphone';
+    return 'desktop';
   }
 
   getBrowserName(userAgent: string): string {

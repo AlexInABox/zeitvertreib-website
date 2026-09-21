@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectionStrategy, input, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { IconComponent } from '../icon/icon.component';
 
 interface DiscordInviteResponse {
   approximate_member_count: number;
@@ -9,7 +10,7 @@ interface DiscordInviteResponse {
 @Component({
   selector: 'app-discord-stats',
   standalone: true,
-  imports: [],
+  imports: [IconComponent],
   templateUrl: './discord-stats.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./discord-stats.component.css'],

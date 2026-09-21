@@ -20,7 +20,7 @@ werden, sind (nicht abschließend):
 - Nutzungs- und Profildaten: Benutzername, Avatar-URL, Spielstatistiken, Spiel-spezifische Daten
 - Verbindungsdaten: IP-Adresse, User-Agent
 - Sitzungsdaten: Session-IDs, Login-Token, Login-Secrets (temporär)
-- Zahlungs- und Spendenbezogene Daten: Spenden- bzw. Transaktionsdaten, Paysafe-Übermittlungen (sofern eingereicht)
+- Zahlungs- und Spendenbezogene Daten: Spenden- bzw. Transaktionsdaten
 - Moderationsdaten: Bans, Gründe, Moderator-IDs
 - Dateien/Uploads: hochgeladene Sprays, Fälle und zugehörige Metadaten
 
@@ -29,7 +29,7 @@ Die Daten werden u. a. zu folgenden Zwecken verarbeitet:
 - Verwaltung von Sessions und Sicherheit
 - Bereitstellung von personalisierten Funktionen (z. B. Spielerstatistiken, Leaderboards, Fakerank)
 - Moderation und Missbrauchsprävention
-- Verarbeitung von Spenden und Paysafe-Einreichungen
+- Verarbeitung von Spenden
 - Erfüllung rechtlicher Pflichten und zur Verteidigung gegen Missbrauch
 
 
@@ -51,7 +51,6 @@ Beispiele aus dem System:
 - Steam (OAuth): Übermittlung der Steam-ID und öffentlich verfügbarer Profildaten zur Authentifizierung
 - Discord (Bot API): Abfrage von Discord-Benutzerinformationen (z. B. zur Moderation/Verknüpfung)
 - Stripe: Zahlungsschnittstelle zur Spendenabwicklung und -benachrichtigung
-- Paysafe-Provider: zur Verifikation eingereichter Kartencodes (falls genutzt)
 - Cloudflare (D1, KV) als Hosting- und Datenspeicher
 
 Die genannten Dienste haben eigene Datenschutzbestimmungen; bitte prüfen Sie die jeweiligen Texte
@@ -121,7 +120,7 @@ verschlüsselte Verbindungen (HTTPS), sichere Cookies, sowie die Nutzung von gep
 	Authentifizierung, zur Erkennung von Missbrauch und zur Möglichkeit, Sessions zu beenden.
 - `login_secrets`: Temporäre Speicherung von geheimen Login-Tokens zur einmaligen Anmeldung;
 	Einträge laufen zeitlich ab und werden gelöscht.
-- `paysafe_card_submissions`, `donations`: Speicherung von Zahlungs- und Spenden-bezogenen Daten
+- `donations`: Speicherung von Zahlungs- und Spenden-bezogenen Daten
 	zwecks Bearbeitung und Abrechnung.
 - Moderations-Tabellen (z. B. `spray_bans`, `fakerank_bans`): Speicherung von Ban-Informationen
 	inklusive Moderator-ID zur Nachvollziehbarkeit von Moderationsentscheidungen.
@@ -159,4 +158,4 @@ E-Mail: webmaster@zeitvertreib.vip
 Postalisch: Zeitvertreib – Alexander Betke, c/o Online-Impressum.de #6455, Europaring 90, 53757 Sankt Augustin
 
 
-Zuletzt aktualisiert: 16.02.2026
+Zuletzt aktualisiert: 21.09.2026

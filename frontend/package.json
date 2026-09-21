@@ -5,12 +5,7 @@
     "start": "ng serve --configuration local",
     "build": "ng build --configuration production",
     "build:dev": "ng build --configuration dev",
-    "build:local": "ng build --configuration local",
-    "ui:registry": "node tools/generate-ui-registry.mjs",
-    "prestart": "npm run ui:registry",
-    "prebuild": "npm run ui:registry",
-    "prebuild:dev": "npm run ui:registry",
-    "prebuild:local": "npm run ui:registry"
+    "build:local": "ng build --configuration local"
   },
   "private": true,
   "dependencies": {
@@ -22,7 +17,6 @@
     "@angular/platform-browser": "^22.1.1",
     "@angular/platform-browser-dynamic": "^22.1.1",
     "@angular/router": "^22.1.1",
-    "@primeuix/themes": "^2.0.3",
     "@zeitvertreib/types": "file:../types",
     "chart.js": "^4.5.1",
     "gifuct-js": "^2.1.2",
@@ -30,8 +24,6 @@
     "html-to-image": "^1.11.13",
     "jspdf": "^4.2.1",
     "ng2-file-upload": "^10.0.0",
-    "primeicons": "^7.0.0",
-    "primeng": "^21.1.1",
     "rxjs": "~7.8.2",
     "tslib": "^2.8.1",
     "zone.js": "~0.16.0"

@@ -7,8 +7,8 @@ import type { GetReportsResponse, ReportFileUploadGetResponse } from '@zeitvertr
 import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
 import { MedalService } from '../services/medal.service';
 import { IconComponent, type IconName } from '../components/icon/icon.component';
-import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
-import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
 type Report = GetReportsResponse['reports'][number];
 
@@ -22,7 +22,7 @@ interface FileUploadItem {
 @Component({
   selector: 'app-reporting',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileUploadModule, IconComponent, M3NavComponent, M3FooterComponent],
+  imports: [CommonModule, FormsModule, FileUploadModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './reporting.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./reporting.component.css'],
@@ -59,13 +59,9 @@ export class ReportingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     void this.loadReports();
-    // Immersive m3 chrome: hides the global header/site footer while mounted.
-    document.body.classList.add('m3-active');
   }
 
-  ngOnDestroy(): void {
-    document.body.classList.remove('m3-active');
-  }
+  ngOnDestroy(): void {}
 
   async loadReports(): Promise<void> {
     this.isLoading = true;

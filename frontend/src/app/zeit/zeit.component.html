@@ -1,26 +1,26 @@
-<div class="m3-canvas m3-canvas--fill">
-  <app-m3-nav />
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-  <main class="m3-page">
+  <main class="jule-page">
     <!-- ===== SEARCH VIEW ===== -->
     @if (!userData && !isLoading) {
-      <header class="m3-page-head">
-        <span class="m3-eyebrow">Zentrale Erfassungs- und Informations-Tabelle</span>
-        <h1 class="m3-page-title">Z.E.I.T.</h1>
-        <p class="m3-page-lead">Abfrage von Spielerdaten anhand einer Steam-ID oder Discord-ID.</p>
+      <header class="jule-page-head">
+        <span class="jule-eyebrow">Zentrale Erfassungs- und Informations-Tabelle</span>
+        <h1 class="jule-page-title">Z.E.I.T.</h1>
+        <p class="jule-page-lead">Abfrage von Spielerdaten anhand einer Steam-ID oder Discord-ID.</p>
       </header>
 
-      <section class="m3-panel zeit-search">
-        <div class="m3-panel-head">
-          <span class="m3-panel-title">Abfrage</span>
+      <section class="jule-panel zeit-search">
+        <div class="jule-panel-head">
+          <span class="jule-panel-title">Abfrage</span>
         </div>
 
-        <div class="m3-panel-body m3-stack">
-          <div class="m3-pills">
+        <div class="jule-panel-body jule-stack">
+          <div class="jule-pills">
             <button
               type="button"
-              class="m3-pill"
-              [class.m3-pill--on]="searchType === 'steamid'"
+              class="jule-pill"
+              [class.jule-pill--on]="searchType === 'steamid'"
               (click)="searchType = 'steamid'"
             >
               <app-icon name="desktop" />
@@ -28,8 +28,8 @@
             </button>
             <button
               type="button"
-              class="m3-pill"
-              [class.m3-pill--on]="searchType === 'discordid'"
+              class="jule-pill"
+              [class.jule-pill--on]="searchType === 'discordid'"
               (click)="searchType = 'discordid'"
             >
               <app-icon name="discord" />
@@ -38,11 +38,11 @@
           </div>
 
           <div class="zeit-input-row">
-            <div class="m3-field zeit-input-field">
+            <div class="jule-field zeit-input-field">
               <app-icon name="search" />
               <input
                 type="text"
-                class="m3-input"
+                class="jule-input"
                 [(ngModel)]="searchInput"
                 [placeholder]="
                   searchType === 'steamid'
@@ -52,14 +52,19 @@
                 (keyup.enter)="performSearch()"
               />
             </div>
-            <button type="button" class="m3-btn" [disabled]="!canQuery || !searchInputValid" (click)="performSearch()">
+            <button
+              type="button"
+              class="jule-btn"
+              [disabled]="!canQuery || !searchInputValid"
+              (click)="performSearch()"
+            >
               <app-icon name="search" />
               Abfragen
             </button>
           </div>
 
           @if (!canQuery) {
-            <div class="m3-notice">
+            <div class="jule-notice">
               <app-icon name="lock" />
               <span>Du musst ein angemeldetes <b>Teammitglied</b> sein, um Abfragen auszuführen.</span>
             </div>
@@ -71,11 +76,11 @@
 
           @if (showApiKeyInput && !canQuery) {
             <div class="zeit-input-row">
-              <div class="m3-field zeit-input-field">
+              <div class="jule-field zeit-input-field">
                 <app-icon name="lock" />
                 <input
                   type="password"
-                  class="m3-input"
+                  class="jule-input"
                   [(ngModel)]="partnerApiKey"
                   placeholder="API-Key eingeben..."
                   (keyup.enter)="applyApiKey()"
@@ -83,7 +88,7 @@
               </div>
               <button
                 type="button"
-                class="m3-btn m3-btn--ghost"
+                class="jule-btn jule-btn--ghost"
                 (click)="applyApiKey()"
                 [disabled]="!partnerApiKey.trim()"
               >
@@ -94,7 +99,7 @@
 
           @if (apiKeyApplied) {
             <div class="zeit-key-row">
-              <span class="m3-chip m3-chip--brand">
+              <span class="jule-chip jule-chip--brand">
                 <app-icon name="check-circle" />
                 Partner API-Key aktiv
               </span>
@@ -103,7 +108,7 @@
           }
 
           @if (errorMessage) {
-            <div class="m3-notice m3-notice--error">
+            <div class="jule-notice jule-notice--error">
               <app-icon name="exclamation-triangle" />
               <span>{{ errorMessage }}</span>
             </div>
@@ -114,8 +119,8 @@
 
     <!-- ===== LOADING ===== -->
     @if (isLoading) {
-      <div class="m3-state">
-        <span class="m3-spinner" aria-hidden="true"></span>
+      <div class="jule-state">
+        <span class="jule-spinner" aria-hidden="true"></span>
         <span>Daten werden abgerufen…</span>
       </div>
     }
@@ -123,30 +128,30 @@
     <!-- ===== RESULT VIEW ===== -->
     @if (userData && !isLoading) {
       <div class="zeit-back">
-        <button type="button" class="m3-btn m3-btn--ghost" (click)="resetSearch()">
+        <button type="button" class="jule-btn jule-btn--ghost" (click)="resetSearch()">
           <app-icon name="arrow-left" />
           Neue Abfrage
         </button>
       </div>
 
-      <header class="m3-page-head">
-        <span class="m3-eyebrow">Spielerdaten</span>
-        <h1 class="m3-page-title">{{ userData.steam.username }}</h1>
-        <p class="m3-page-lead m3-mono">{{ userData.steam.id }}</p>
+      <header class="jule-page-head">
+        <span class="jule-eyebrow">Spielerdaten</span>
+        <h1 class="jule-page-title">{{ userData.steam.username }}</h1>
+        <p class="jule-page-lead jule-mono">{{ userData.steam.id }}</p>
       </header>
 
       <div class="zeit-layout">
         <div class="zeit-top">
           <!-- Profile -->
-          <section class="m3-panel">
-            <div class="m3-panel-head">
-              <span class="m3-panel-title">Profil</span>
+          <section class="jule-panel">
+            <div class="jule-panel-head">
+              <span class="jule-panel-title">Profil</span>
               <span class="zeit-flags">
                 @if (userData.cedmodActivelyBanned) {
-                  <span class="m3-chip m3-chip--danger"><app-icon name="ban" /> Gebannt</span>
+                  <span class="jule-chip jule-chip--danger"><app-icon name="ban" /> Gebannt</span>
                 }
                 @if (userData.cedmodWarns.length > 0) {
-                  <span class="m3-chip m3-chip--warn">
+                  <span class="jule-chip jule-chip--warn">
                     <app-icon name="exclamation-triangle" />
                     {{ userData.cedmodWarns.length }}
                     {{ userData.cedmodWarns.length === 1 ? 'Warn' : 'Warns' }}
@@ -155,7 +160,7 @@
               </span>
             </div>
 
-            <div class="m3-panel-body zeit-profile">
+            <div class="jule-panel-body zeit-profile">
               @if (userData.steam.avatar) {
                 <a [href]="userData.steam.avatar" target="_blank" rel="noopener" class="zeit-avatar-link">
                   <img [src]="userData.steam.avatar" class="zeit-avatar" [alt]="userData.steam.username" />
@@ -187,7 +192,7 @@
                   }
                   <span class="zeit-discord-lines">
                     <strong>{{ userData.discord.username }}</strong>
-                    <em class="m3-mono">{{ userData.discord.id }}</em>
+                    <em class="jule-mono">{{ userData.discord.id }}</em>
                   </span>
                 </span>
               </div>
@@ -195,20 +200,20 @@
           </section>
 
           <!-- Stats -->
-          <section class="m3-panel">
-            <div class="m3-panel-head">
-              <span class="m3-panel-title">Statistiken</span>
+          <section class="jule-panel">
+            <div class="jule-panel-head">
+              <span class="jule-panel-title">Statistiken</span>
             </div>
-            <div class="m3-stats">
-              <div class="m3-stat">
+            <div class="jule-stats">
+              <div class="jule-stat">
                 <span>ZV-Coins</span>
                 <strong>{{ formatNumber(userData.zvc) }}</strong>
               </div>
-              <div class="m3-stat">
+              <div class="jule-stat">
                 <span>Spielzeit</span>
                 <strong>{{ formatPlaytime(userData.playtime) }}</strong>
               </div>
-              <div class="m3-stat">
+              <div class="jule-stat">
                 <span>Runden</span>
                 <strong>{{ formatNumber(userData.roundsplayed) }}</strong>
               </div>
@@ -219,18 +224,18 @@
         <div class="zeit-stack">
           <!-- Fakerank / spray restrictions -->
           @if (userData.fakerankBanned || userData.sprayBanned) {
-            <section class="m3-panel">
-              <div class="m3-panel-head">
-                <span class="m3-panel-title">Sperren</span>
-                <span class="m3-chip m3-chip--danger">
+            <section class="jule-panel">
+              <div class="jule-panel-head">
+                <span class="jule-panel-title">Sperren</span>
+                <span class="jule-chip jule-chip--danger">
                   {{ (userData.fakerankBanned ? 1 : 0) + (userData.sprayBanned ? 1 : 0) }} aktiv
                 </span>
               </div>
 
-              <div class="m3-rows">
+              <div class="jule-rows">
                 @if (userData.fakerankBanned) {
-                  <div class="m3-item zeit-ban">
-                    <span class="m3-chip m3-chip--danger"><app-icon name="ban" /> Fakerank</span>
+                  <div class="jule-item zeit-ban">
+                    <span class="jule-chip jule-chip--danger"><app-icon name="ban" /> Fakerank</span>
                     <span class="zeit-ban-main">
                       <em>Grund</em>
                       <strong>{{ userData.fakerankBanReason || 'Kein Grund angegeben' }}</strong>
@@ -238,15 +243,15 @@
                     @if (userData.fakerankBannedByDiscordId) {
                       <span class="zeit-ban-meta">
                         <em>Gesperrt von</em>
-                        <strong class="m3-mono">{{ userData.fakerankBannedByDiscordId }}</strong>
+                        <strong class="jule-mono">{{ userData.fakerankBannedByDiscordId }}</strong>
                       </span>
                     }
                   </div>
                 }
 
                 @if (userData.sprayBanned) {
-                  <div class="m3-item zeit-ban">
-                    <span class="m3-chip m3-chip--danger"><app-icon name="ban" /> Sprays</span>
+                  <div class="jule-item zeit-ban">
+                    <span class="jule-chip jule-chip--danger"><app-icon name="ban" /> Sprays</span>
                     <span class="zeit-ban-main">
                       <em>Grund</em>
                       <strong>{{ userData.sprayBanReason || 'Kein Grund angegeben' }}</strong>
@@ -254,7 +259,7 @@
                     @if (userData.sprayBannedByDiscordId) {
                       <span class="zeit-ban-meta">
                         <em>Gesperrt von</em>
-                        <strong class="m3-mono">{{ userData.sprayBannedByDiscordId }}</strong>
+                        <strong class="jule-mono">{{ userData.sprayBannedByDiscordId }}</strong>
                       </span>
                     }
                   </div>
@@ -265,25 +270,25 @@
 
           <!-- CedMod bans -->
           @if (userData.cedmodBans.length > 0) {
-            <section class="m3-panel">
-              <div class="m3-panel-head">
-                <span class="m3-panel-title">CedMod Bans</span>
-                <span class="m3-chip">
+            <section class="jule-panel">
+              <div class="jule-panel-head">
+                <span class="jule-panel-title">CedMod Bans</span>
+                <span class="jule-chip">
                   {{ userData.cedmodBans.length }}
                   {{ userData.cedmodBans.length === 1 ? 'Eintrag' : 'Einträge' }}
                 </span>
               </div>
 
-              <div class="m3-rows">
+              <div class="jule-rows">
                 @for (ban of userData.cedmodBans; track ban.id) {
-                  <div class="m3-item zeit-record">
+                  <div class="jule-item zeit-record">
                     <span class="zeit-record-top">
                       <span class="zeit-record-main">
-                        <span class="zeit-record-id m3-mono">#{{ ban.id }}</span>
+                        <span class="zeit-record-id jule-mono">#{{ ban.id }}</span>
                         <span class="zeit-record-reason">{{ ban.reason }}</span>
                       </span>
                       @if (userData.cedmodActivelyBanned) {
-                        <span class="m3-chip m3-chip--warn">
+                        <span class="jule-chip jule-chip--warn">
                           <app-icon name="clock" />
                           {{ getBanStatus(ban.bannedAt, ban.duration) }}
                         </span>
@@ -302,20 +307,20 @@
 
           <!-- CedMod warns -->
           @if (userData.cedmodWarns.length > 0) {
-            <section class="m3-panel">
-              <div class="m3-panel-head">
-                <span class="m3-panel-title">CedMod Warns</span>
-                <span class="m3-chip">
+            <section class="jule-panel">
+              <div class="jule-panel-head">
+                <span class="jule-panel-title">CedMod Warns</span>
+                <span class="jule-chip">
                   {{ userData.cedmodWarns.length }}
                   {{ userData.cedmodWarns.length === 1 ? 'Eintrag' : 'Einträge' }}
                 </span>
               </div>
 
-              <div class="m3-rows">
+              <div class="jule-rows">
                 @for (warn of userData.cedmodWarns; track warn.id) {
-                  <div class="m3-item zeit-record">
+                  <div class="jule-item zeit-record">
                     <span class="zeit-record-main">
-                      <span class="zeit-record-id m3-mono">#{{ warn.id }}</span>
+                      <span class="zeit-record-id jule-mono">#{{ warn.id }}</span>
                       <span class="zeit-record-reason">{{ warn.reason }}</span>
                     </span>
                     <span class="zeit-record-meta">
@@ -329,36 +334,36 @@
           }
 
           <!-- Linked cases -->
-          <section class="m3-panel">
-            <div class="m3-panel-head">
-              <span class="m3-panel-title">Verlinkte Cases</span>
-              <span class="m3-chip">
+          <section class="jule-panel">
+            <div class="jule-panel-head">
+              <span class="jule-panel-title">Verlinkte Cases</span>
+              <span class="jule-chip">
                 {{ userData.linkedCases.length }}
                 {{ userData.linkedCases.length === 1 ? 'Fall' : 'Fälle' }}
               </span>
             </div>
 
             @if (userData.linkedCases.length > 0) {
-              <div class="m3-rows">
+              <div class="jule-rows">
                 @for (caseItem of userData.linkedCases; track caseItem.caseId) {
-                  <a [routerLink]="['/cases', caseItem.caseId]" class="m3-item m3-item--action zeit-case">
+                  <a [routerLink]="['/cases', caseItem.caseId]" class="jule-item jule-item--action zeit-case">
                     <span class="zeit-case-main">
-                      <span class="zeit-case-id m3-mono">#{{ caseItem.caseId }}</span>
+                      <span class="zeit-case-id jule-mono">#{{ caseItem.caseId }}</span>
                       <span class="zeit-case-title">{{ caseItem.title }}</span>
                     </span>
                     <span class="zeit-case-meta">
                       @if (caseItem.category) {
-                        <span class="m3-chip">{{ caseItem.category }}</span>
+                        <span class="jule-chip">{{ caseItem.category }}</span>
                       }
-                      <span class="zeit-case-date m3-mono">{{ formatTimestamp(caseItem.createdAt) }}</span>
+                      <span class="zeit-case-date jule-mono">{{ formatTimestamp(caseItem.createdAt) }}</span>
                       <app-icon class="zeit-case-arrow" name="arrow-right" />
                     </span>
                   </a>
                 }
               </div>
             } @else {
-              <div class="m3-state m3-state--plain zeit-empty">
-                <app-icon class="m3-state-icon" name="folder" />
+              <div class="jule-state jule-state--plain zeit-empty">
+                <app-icon class="jule-state-icon" name="folder" />
                 <p>Keine verlinkten Cases.</p>
               </div>
             }
@@ -366,15 +371,15 @@
 
           <!-- Sprays -->
           @if (userData.sprays.length > 0) {
-            <section class="m3-panel">
-              <div class="m3-panel-head">
-                <span class="m3-panel-title">Sprays</span>
+            <section class="jule-panel">
+              <div class="jule-panel-head">
+                <span class="jule-panel-title">Sprays</span>
                 <span class="zeit-flags">
-                  <span class="m3-chip">
+                  <span class="jule-chip">
                     {{ userData.sprays.length }} {{ userData.sprays.length === 1 ? 'Spray' : 'Sprays' }}
                   </span>
                   @if (userData.sprayBanned) {
-                    <span class="m3-chip m3-chip--danger">Gesperrt</span>
+                    <span class="jule-chip jule-chip--danger">Gesperrt</span>
                   }
                 </span>
               </div>
@@ -385,7 +390,7 @@
                     <img [src]="spray.full_res" [alt]="spray.name" class="zeit-spray-image" loading="lazy" />
                     <span class="zeit-spray-meta">
                       <strong>{{ spray.name }}</strong>
-                      <em class="m3-mono">ID: {{ spray.id }}</em>
+                      <em class="jule-mono">ID: {{ spray.id }}</em>
                     </span>
                   </div>
                 }
@@ -397,5 +402,5 @@
     }
   </main>
 
-  <app-m3-footer />
+  <app-jule-footer />
 </div>

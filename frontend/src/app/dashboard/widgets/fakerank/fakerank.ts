@@ -2,7 +2,8 @@ import { Component, OnInit, inject, ChangeDetectionStrategy, input } from '@angu
 
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { ButtonComponent, DialogComponent } from '@app/ui';
+import { IconComponent } from '../../../components/icon/icon.component';
+import { JuleDialogComponent } from '../../../components/jule-dialog/jule-dialog.component';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationCenterService } from '../../../services/notification-center.service';
@@ -17,7 +18,7 @@ import type {
 @Component({
   selector: 'app-fakerank',
   standalone: true,
-  imports: [FormsModule, ButtonComponent, DialogComponent],
+  imports: [FormsModule, IconComponent, JuleDialogComponent],
   templateUrl: './fakerank.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./fakerank.css'],

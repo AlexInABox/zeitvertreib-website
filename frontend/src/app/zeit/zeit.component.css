@@ -1,5 +1,5 @@
-/* Z.E.I.T. page-specific styles — the shared m3 design system lives in
-   src/styles/m3.css */
+/* Z.E.I.T. page-specific styles — the shared JULE design spec lives in
+   src/styles/jule.css */
 
 /* ================================================
    Search view
@@ -24,7 +24,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
@@ -100,8 +100,8 @@
   width: 84px;
   height: 84px;
   object-fit: cover;
-  border: 1px solid var(--m3-line);
-  background: var(--m3-bg);
+  border: 1px solid var(--jule-line);
+  background: var(--jule-bg);
 }
 
 .zeit-profile-lines {
@@ -113,8 +113,8 @@
 
 .zeit-name {
   overflow-wrap: anywhere;
-  color: var(--m3-text);
-  font-family: var(--m3-font-display);
+  color: var(--jule-text);
+  font-family: var(--jule-font-display);
   font-weight: 400;
   font-size: 1.6rem;
   letter-spacing: -0.02em;
@@ -128,7 +128,7 @@
 }
 
 .zeit-fakerank em {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.65rem;
   font-style: normal;
   font-weight: 600;
@@ -149,14 +149,14 @@
   flex-wrap: wrap;
   gap: 0.9rem;
   padding: 1rem 1.35rem;
-  border-top: 1px solid var(--m3-line);
+  border-top: 1px solid var(--jule-line);
 }
 
 .zeit-discord-brand {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -165,7 +165,7 @@
 
 .zeit-discord-brand app-icon {
   font-size: 1rem;
-  color: var(--m3-text);
+  color: var(--jule-text);
 }
 
 .zeit-discord-user {
@@ -180,7 +180,7 @@
   width: 32px;
   height: 32px;
   object-fit: cover;
-  border: 1px solid var(--m3-line);
+  border: 1px solid var(--jule-line);
 }
 
 .zeit-discord-lines {
@@ -194,13 +194,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.9rem;
   font-weight: 600;
 }
 
 .zeit-discord-lines em {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.72rem;
   font-style: normal;
 }
@@ -231,7 +231,7 @@
 
 .zeit-ban-main em,
 .zeit-ban-meta em {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.62rem;
   font-style: normal;
   font-weight: 600;
@@ -241,7 +241,7 @@
 
 .zeit-ban-main strong,
 .zeit-ban-meta strong {
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.88rem;
   font-weight: 500;
   overflow-wrap: anywhere;
@@ -273,13 +273,13 @@
 
 .zeit-record-id {
   flex: none;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.72rem;
 }
 
 .zeit-record-reason {
   overflow-wrap: anywhere;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.88rem;
   font-weight: 500;
 }
@@ -288,7 +288,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem 1.1rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.75rem;
 }
 
@@ -312,7 +312,7 @@
 
 .zeit-case-id {
   flex: none;
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -321,7 +321,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -334,13 +334,13 @@
 }
 
 .zeit-case-date {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.72rem;
 }
 
 .zeit-case-arrow {
   font-size: 0.85rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   transition:
     transform 0.2s ease,
     color 0.2s ease;
@@ -348,7 +348,7 @@
 
 .zeit-case:hover .zeit-case-arrow {
   transform: translateX(3px);
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
 .zeit-empty {
@@ -363,13 +363,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: 1px;
-  background: var(--m3-line);
+  background: var(--jule-line);
 }
 
 .zeit-spray {
   display: flex;
   flex-direction: column;
-  background: var(--m3-panel);
+  background: var(--jule-panel);
 }
 
 .zeit-spray-image {
@@ -377,7 +377,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  background: var(--m3-bg);
+  background: var(--jule-bg);
 }
 
 .zeit-spray-meta {
@@ -392,13 +392,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
 .zeit-spray-meta em {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.7rem;
   font-style: normal;
 }
@@ -418,7 +418,7 @@
     flex-direction: column;
   }
 
-  .zeit-case-meta .m3-chip,
+  .zeit-case-meta .jule-chip,
   .zeit-case-date {
     display: none;
   }

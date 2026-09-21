@@ -1,10 +1,11 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../components/icon/icon.component';
 
+/** Shows an active coin-sending restriction on a viewed account. */
 @Component({
   selector: 'app-coin-restriction',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './coin-restriction.component.html',
   styleUrls: ['./coin-restriction.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,

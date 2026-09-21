@@ -1,27 +1,23 @@
 <!-- Loading State -->
 @if (isLoading) {
-  <div class="loading-state">
-    <div class="text-center text-white">
-      <ui-spinner [size]="40" class="mx-auto mb-4" />
-      <p class="text-xl font-medium">Lade Statistiken...</p>
-    </div>
+  <div class="dash-state">
+    <span class="jule-spinner dash-state-spinner" aria-hidden="true"></span>
+    <p class="dash-state-text">Lade Statistiken…</p>
   </div>
 }
 
 <!-- Error State -->
 @if (hasError && !isLoading) {
-  <div class="error-state">
-    <div class="error-message max-w-md mx-auto">
-      <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
-      <p class="mb-4">{{ errorMessage }}</p>
-      <ui-button variant="success" (click)="refreshStats()">Erneut versuchen</ui-button>
-    </div>
+  <div class="dash-state">
+    <h3 class="dash-state-title">Fehler beim Laden</h3>
+    <p class="dash-state-text">{{ errorMessage }}</p>
+    <button type="button" class="jule-btn" (click)="refreshStats()">Erneut versuchen</button>
   </div>
 }
 
 @if (!isLoading && !hasError) {
-  <div class="m3-canvas dash-canvas">
-    <app-m3-nav />
+  <div class="jule-canvas dash-canvas">
+    <app-jule-nav />
 
     <main class="dash-main">
       <!-- Left: interactive / deferred data -->
@@ -31,18 +27,18 @@
             <h2 class="dash-panel-title">Letzte Kills</h2>
             <div class="dash-feed">
               @for (kill of recentKills; track $index) {
-                <div class="m3-feed-row">
+                <div class="jule-feed-row">
                   <img
-                    class="m3-feed-avatar"
+                    class="jule-feed-avatar"
                     [src]="kill.avatarmedium || fallbackImg"
                     [alt]="kill.displayname"
                     loading="lazy"
                     (error)="onImgFallback($event)"
                   />
-                  <span class="m3-feed-name">{{ kill.displayname }}</span>
+                  <span class="jule-feed-name">{{ kill.displayname }}</span>
                 </div>
               } @empty {
-                <p class="m3-empty">Noch keine Eliminierungen erfasst.</p>
+                <p class="jule-empty">Noch keine Eliminierungen erfasst.</p>
               }
             </div>
           </section>
@@ -51,18 +47,18 @@
             <h2 class="dash-panel-title">Letzte Tode</h2>
             <div class="dash-feed">
               @for (killer of recentDeaths; track $index) {
-                <div class="m3-feed-row">
+                <div class="jule-feed-row">
                   <img
-                    class="m3-feed-avatar"
+                    class="jule-feed-avatar"
                     [src]="killer.avatarmedium || fallbackImg"
                     [alt]="killer.displayname"
                     loading="lazy"
                     (error)="onImgFallback($event)"
                   />
-                  <span class="m3-feed-name">{{ killer.displayname }}</span>
+                  <span class="jule-feed-name">{{ killer.displayname }}</span>
                 </div>
               } @empty {
-                <p class="m3-empty">Noch keine Tode erfasst.</p>
+                <p class="jule-empty">Noch keine Tode erfasst.</p>
               }
             </div>
           </section>
@@ -77,7 +73,7 @@
                 <span class="dash-quest-reset">{{ dailyResetCountdown() }}</span>
               </div>
               @if (questsLoading) {
-                <p class="m3-empty">Lade Quests...</p>
+                <p class="jule-empty">Lade Quests...</p>
               } @else {
                 @for (quest of dailyQuests; track quest.id) {
                   <div class="dash-quest">
@@ -101,7 +97,7 @@
                     </div>
                   </div>
                 } @empty {
-                  <p class="m3-empty">Keine Aufgaben offen.</p>
+                  <p class="jule-empty">Keine Aufgaben offen.</p>
                 }
               }
             </div>
@@ -134,7 +130,7 @@
                     </div>
                   </div>
                 } @empty {
-                  <p class="m3-empty">Keine Aufgaben offen.</p>
+                  <p class="jule-empty">Keine Aufgaben offen.</p>
                 }
               }
             </div>
@@ -185,24 +181,24 @@
         </div>
 
         <div class="dash-widget dash-gear">
-          <dl class="m3-gear dash-gear-list">
-            <div class="m3-gear-row">
+          <dl class="jule-gear dash-gear-list">
+            <div class="jule-gear-row">
               <dt>Medkits</dt>
               <dd>{{ num(userStatistics.usedmedkits) }}</dd>
             </div>
-            <div class="m3-gear-row">
+            <div class="jule-gear-row">
               <dt>Colas</dt>
               <dd>{{ num(userStatistics.usedcolas) }}</dd>
             </div>
-            <div class="m3-gear-row">
+            <div class="jule-gear-row">
               <dt>Pocket Escapes</dt>
               <dd>{{ num(userStatistics.pocketescapes) }}</dd>
             </div>
-            <div class="m3-gear-row">
+            <div class="jule-gear-row">
               <dt>Adrenalin</dt>
               <dd>{{ num(userStatistics.usedadrenaline) }}</dd>
             </div>
-            <div class="m3-gear-row">
+            <div class="jule-gear-row">
               <dt>Snake Highscore</dt>
               <dd>{{ num(userStatistics.snakehighscore) }}</dd>
             </div>
@@ -228,6 +224,6 @@
       </aside>
     </main>
 
-    <app-m3-footer />
+    <app-jule-footer />
   </div>
 }

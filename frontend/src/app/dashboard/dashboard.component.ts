@@ -4,9 +4,8 @@ import { environment } from '../../environments/environment';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { SupportService } from '../services/support.service';
-import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
-import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
-import { ButtonComponent, SpinnerComponent } from '@app/ui';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import { FakerankComponent } from './widgets/fakerank/fakerank';
 import { SprayManagementComponent } from './widgets/spray-management/spray-management';
 import { BirthdayCardComponent } from './user-sidebar/birthday-card/birthday-card.component';
@@ -38,10 +37,8 @@ interface Statistics {
   selector: 'app-dashboard',
   imports: [
     RouterModule,
-    M3NavComponent,
-    M3FooterComponent,
-    ButtonComponent,
-    SpinnerComponent,
+    JuleNavComponent,
+    JuleFooterComponent,
     FakerankComponent,
     SprayManagementComponent,
     BirthdayCardComponent,
@@ -96,12 +93,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.isDonator = this.authService.isDonator();
     // Immersive dashboard: hides the global header/site chrome while mounted.
-    document.body.classList.add('m3-active');
     this.questClockInterval = setInterval(() => this.questClock.set(Date.now()), 30_000);
   }
 
   ngOnDestroy(): void {
-    document.body.classList.remove('m3-active');
     if (this.questClockInterval !== null) {
       clearInterval(this.questClockInterval);
       this.questClockInterval = null;

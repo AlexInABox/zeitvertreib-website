@@ -1,5 +1,5 @@
-/* Permissions page-specific styles — the shared m3 design system lives in
-   src/styles/m3.css */
+/* Permissions page-specific styles — the shared JULE design spec lives in
+   src/styles/jule.css */
 
 /* ================================================
    Toolbar
@@ -11,7 +11,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1.35rem;
-  border-bottom: 1px solid var(--m3-line);
+  border-bottom: 1px solid var(--jule-line);
 }
 
 .matrix-search {
@@ -29,7 +29,7 @@
   position: absolute;
   right: 0.85rem;
   font-size: 0.85rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   pointer-events: none;
 }
 
@@ -42,7 +42,7 @@
 
 .matrix-count {
   margin-right: 0.4rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -77,9 +77,9 @@
   top: 0;
   z-index: 3;
   padding: 0.8rem 1rem;
-  background: var(--m3-panel);
-  border-bottom: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  background: var(--jule-panel);
+  border-bottom: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -89,19 +89,19 @@
 
 .matrix-table thead .sticky-col {
   z-index: 4;
-  background: var(--m3-panel);
+  background: var(--jule-panel);
 }
 
 .matrix-table th.role-header {
   width: 80px;
   min-width: 80px;
-  border-left: 1px solid var(--m3-line);
+  border-left: 1px solid var(--jule-line);
   text-align: center;
 }
 
 .matrix-table th.role-header .role-name {
   display: block;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -112,7 +112,7 @@
 .matrix-table th.role-header .role-count {
   display: block;
   margin-top: 0.2rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -137,7 +137,7 @@
   left: 214px;
   width: 260px;
   min-width: 260px;
-  box-shadow: 1px 0 0 var(--m3-line);
+  box-shadow: 1px 0 0 var(--jule-line);
 }
 
 .matrix-table td.sticky-col {
@@ -150,7 +150,7 @@
 /* ---- Rows -------------------------------------------------- */
 
 .matrix-table tbody tr {
-  background-color: var(--m3-bg);
+  background-color: var(--jule-bg);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
@@ -160,7 +160,7 @@
 }
 
 .matrix-table tbody tr:hover {
-  background-color: var(--m3-panel);
+  background-color: var(--jule-panel);
 }
 
 .matrix-table tbody tr.row-active {
@@ -169,26 +169,26 @@
 
 .matrix-table td {
   padding: 0.7rem 1rem;
-  border-bottom: 1px solid var(--m3-line-soft);
+  border-bottom: 1px solid var(--jule-line-soft);
   vertical-align: middle;
   box-sizing: border-box;
 }
 
 .matrix-table td.col-code {
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .matrix-table td.col-name {
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .matrix-table td.col-desc {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.8rem;
 }
 
@@ -199,7 +199,7 @@
   min-width: 80px;
   height: 2.9rem;
   padding: 0;
-  border-left: 1px solid var(--m3-line-soft);
+  border-left: 1px solid var(--jule-line-soft);
   text-align: center;
   vertical-align: middle;
   transition: background-color 0.15s ease;
@@ -210,7 +210,7 @@
 }
 
 .matrix-table td.perm-cell.col-active {
-  background-color: var(--m3-soft);
+  background-color: var(--jule-soft);
 }
 
 .matrix-table td.perm-cell.granted.col-active {
@@ -222,7 +222,7 @@
   width: 0.85rem;
   height: 0.85rem;
   vertical-align: middle;
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
@@ -233,7 +233,7 @@
 
 .no-results {
   padding: 3rem 1rem !important;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   text-align: center;
   font-size: 0.9rem;
 }
@@ -255,8 +255,8 @@
   align-items: center;
   gap: 1.5rem;
   padding: 1rem 1.35rem;
-  border-top: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  border-top: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   font-size: 0.78rem;
 }
 
@@ -284,5 +284,5 @@
 }
 
 .legend-block.denied {
-  border: 1px solid var(--m3-line);
+  border: 1px solid var(--jule-line);
 }

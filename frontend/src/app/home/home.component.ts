@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
-import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
-import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import { SHOWCASE_IMAGES } from '../utils/showcase';
 
 interface Player {
@@ -20,7 +20,7 @@ interface DiscordInviteResponse {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterModule, M3NavComponent, M3FooterComponent],
+  imports: [RouterModule, JuleNavComponent, JuleFooterComponent],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./home.component.css'],
@@ -51,14 +51,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.intervalId = setInterval(() => this.fetchPlayerlist(), 10000);
     this.fetchDiscordStats();
     this.startSlideshow();
-    // Immersive m3 chrome: hides the global header/site footer while mounted.
-    document.body.classList.add('m3-active');
   }
 
   ngOnDestroy(): void {
     clearInterval(this.intervalId);
     clearInterval(this.slideshowTimer);
-    document.body.classList.remove('m3-active');
   }
 
   private fetchPlayerlist(): void {

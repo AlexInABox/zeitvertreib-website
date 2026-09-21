@@ -1,24 +1,24 @@
-<div class="m3-canvas m3-canvas--fill">
-  <app-m3-nav />
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-  <main class="m3-page">
-    <header class="m3-page-head">
-      <span class="m3-eyebrow">Remote-Admin</span>
-      <h1 class="m3-page-title">Rechte-Matrix.</h1>
-      <p class="m3-page-lead">
+  <main class="jule-page">
+    <header class="jule-page-head">
+      <span class="jule-eyebrow">Remote-Admin</span>
+      <h1 class="jule-page-title">Rechte-Matrix.</h1>
+      <p class="jule-page-lead">
         Referenztabelle der Remote-Admin-Berechtigungsknoten und der Rollen, die diese besitzen.
       </p>
     </header>
 
-    <section class="m3-panel">
+    <section class="jule-panel">
       <!-- Toolbar -->
       <div class="matrix-toolbar">
-        <div class="m3-field matrix-search">
+        <div class="jule-field matrix-search">
           <app-icon name="search" />
           <input
             id="search-input"
             type="text"
-            class="m3-input"
+            class="jule-input"
             placeholder="Suchen..."
             [(ngModel)]="searchText"
             autocomplete="off"
@@ -26,7 +26,7 @@
         </div>
 
         <div class="matrix-select">
-          <select class="m3-select" [(ngModel)]="selectedCategory">
+          <select class="jule-select" [(ngModel)]="selectedCategory">
             <option value="all">Kategorie: Alle</option>
             @for (cat of categories; track cat) {
               <option [value]="cat">Kategorie: {{ cat }}</option>
@@ -36,13 +36,23 @@
         </div>
 
         <div class="matrix-actions">
-          <span class="matrix-count m3-mono">{{ visiblePermissions.length }} / {{ permissions.length }}</span>
+          <span class="matrix-count jule-mono">{{ visiblePermissions.length }} / {{ permissions.length }}</span>
 
-          <button type="button" class="m3-btn m3-btn--ghost" (click)="exportTable('png')" title="Als PNG exportieren">
+          <button
+            type="button"
+            class="jule-btn jule-btn--ghost"
+            (click)="exportTable('png')"
+            title="Als PNG exportieren"
+          >
             <app-icon name="image" />
             PNG
           </button>
-          <button type="button" class="m3-btn m3-btn--ghost" (click)="exportTable('svg')" title="Als SVG exportieren">
+          <button
+            type="button"
+            class="jule-btn jule-btn--ghost"
+            (click)="exportTable('svg')"
+            title="Als SVG exportieren"
+          >
             <app-icon name="code" />
             SVG
           </button>
@@ -50,7 +60,7 @@
           @if (isFilterActive) {
             <button
               type="button"
-              class="m3-btn m3-btn--icon"
+              class="jule-btn jule-btn--icon"
               (click)="resetFilters()"
               title="Zurücksetzen"
               aria-label="Filter zurücksetzen"
@@ -150,5 +160,5 @@
     </section>
   </main>
 
-  <app-m3-footer />
+  <app-jule-footer />
 </div>

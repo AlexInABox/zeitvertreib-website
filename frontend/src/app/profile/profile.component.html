@@ -1,87 +1,90 @@
-<div class="profile-page">
-  <!-- VIEWING ANOTHER USER (or manage view) -->
-  @if (viewedSteamId) {
-    <div class="profile-container">
-      <app-profile-hero [user]="viewedUser" [isManageView]="isManageView" [isSelf]="false"></app-profile-hero>
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-      <div class="profile-grid">
-        <!-- LEFT COLUMN: Moderation & Cases -->
-        <div class="grid-column main-column">
-          @if (viewedUser?.moderation) {
-            <app-moderation-summary
-              [moderation]="viewedUser?.moderation"
-              [casesCount]="viewedUser?.cases?.length || 0"
-            ></app-moderation-summary>
-          }
-
-          @if (isManageView && viewedUser) {
-            <app-user-cases
-              [cases]="viewedUser.cases || []"
-              title="Verlinkte Cases"
-              subtitle="Zugewiesene Fälle"
-              iconClass="pi-folder-open icon-purple"
-            ></app-user-cases>
-
-            <app-user-cases
-              [cases]="viewedUser.createdCases || []"
-              title="Erstellte Cases"
-              subtitle="Selbst erstellte Fälle"
-              iconClass="pi-file-edit icon-blue"
-              [isCreatedCases]="true"
-            ></app-user-cases>
-          }
-        </div>
-
-        <!-- RIGHT COLUMN: Sprays & Restrictions -->
-        <div class="grid-column side-column">
-          @if (viewedUser?.sprays && viewedUser?.sprays!.length > 0) {
-            <app-sprays-list
-              [sprays]="viewedUser?.sprays || []"
-              [sprayBanned]="viewedUser?.sprayBanned || false"
-              [isManageView]="isManageView"
-              [steamId]="viewedUser?.steamId"
-              (sprayDeleted)="onSprayDeleted($event)"
-              (sprayUpdated)="onSprayUpdated($event)"
-            ></app-sprays-list>
-          }
-
-          @if (viewedUser?.coinRestriction) {
-            <app-coin-restriction [coinRestriction]="viewedUser?.coinRestriction"></app-coin-restriction>
-          }
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- VIEWING LOGGED-IN USER PROFILE -->
-  @if (!viewedSteamId) {
-    @if (!currentUser) {
-      <div class="loading-state-card">
-        <div class="loading-spinner"></div>
-        <p>Lade Benutzerprofil...</p>
-      </div>
-    }
-
-    @if (currentUser) {
-      <div class="profile-container">
-        <app-profile-hero [user]="currentUser" [isSelf]="true" (onLogout)="logout()"></app-profile-hero>
+  <main class="jule-page">
+    <!-- VIEWING ANOTHER USER (or manage view) -->
+    @if (viewedSteamId) {
+      <div class="profile-stack">
+        <app-profile-hero [user]="viewedUser" [isManageView]="isManageView" [isSelf]="false" />
 
         <div class="profile-grid">
-          <!-- LEFT COLUMN: Integrations & Active Sessions -->
-          <div class="grid-column main-column">
-            <div class="integrations-grid">
-              <app-minecraft-link [userId]="currentUser.steamId"></app-minecraft-link>
-            </div>
+          <!-- LEFT COLUMN: Moderation & Cases -->
+          <div class="profile-col">
+            @if (viewedUser?.moderation) {
+              <app-moderation-summary
+                [moderation]="viewedUser?.moderation"
+                [casesCount]="viewedUser?.cases?.length || 0"
+              ></app-moderation-summary>
+            }
 
-            <app-active-sessions></app-active-sessions>
+            @if (isManageView && viewedUser) {
+              <app-user-cases
+                [cases]="viewedUser.cases || []"
+                title="Verlinkte Cases"
+                subtitle="Zugewiesene Fälle"
+                iconName="folder-open"
+              ></app-user-cases>
+
+              <app-user-cases
+                [cases]="viewedUser.createdCases || []"
+                title="Erstellte Cases"
+                subtitle="Selbst erstellte Fälle"
+                iconName="file"
+                [isCreatedCases]="true"
+              ></app-user-cases>
+            }
           </div>
 
-          <!-- RIGHT COLUMN: Security & Data Hub -->
-          <div class="grid-column side-column">
-            <app-data-management [userId]="currentUser.steamId"></app-data-management>
+          <!-- RIGHT COLUMN: Sprays & Restrictions -->
+          <div class="profile-col">
+            @if (viewedUser?.sprays && viewedUser?.sprays!.length > 0) {
+              <app-sprays-list
+                [sprays]="viewedUser?.sprays || []"
+                [sprayBanned]="viewedUser?.sprayBanned || false"
+                [isManageView]="isManageView"
+                [steamId]="viewedUser?.steamId"
+                (sprayDeleted)="onSprayDeleted($event)"
+                (sprayUpdated)="onSprayUpdated($event)"
+              ></app-sprays-list>
+            }
+
+            @if (viewedUser?.coinRestriction) {
+              <app-coin-restriction [coinRestriction]="viewedUser?.coinRestriction"></app-coin-restriction>
+            }
           </div>
         </div>
       </div>
     }
-  }
+
+    <!-- VIEWING LOGGED-IN USER PROFILE -->
+    @if (!viewedSteamId) {
+      @if (!currentUser) {
+        <div class="jule-state">
+          <span class="jule-spinner" aria-hidden="true"></span>
+          <span>Lade Benutzerprofil…</span>
+        </div>
+      }
+
+      @if (currentUser) {
+        <div class="profile-stack">
+          <app-profile-hero [user]="currentUser" [isSelf]="true" (onLogout)="logout()"></app-profile-hero>
+
+          <div class="profile-grid">
+            <!-- LEFT COLUMN: Integrations & Active Sessions -->
+            <div class="profile-col">
+              <app-minecraft-link [userId]="currentUser.steamId"></app-minecraft-link>
+              <app-active-sessions></app-active-sessions>
+            </div>
+
+            <!-- RIGHT COLUMN: Security & Data Hub -->
+            <div class="profile-col">
+              <app-data-management [userId]="currentUser.steamId"></app-data-management>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </main>
+
+  <app-jule-footer />
 </div>

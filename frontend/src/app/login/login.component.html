@@ -1,14 +1,14 @@
-<div class="m3-canvas m3-canvas--fill">
-  <app-m3-nav />
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-  <main class="m3-page login-page">
+  <main class="jule-page login-page">
     <div class="login-layout">
       <!-- Copy -->
       <div class="login-copy">
         <img class="login-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
-        <span class="m3-eyebrow">Anmeldung</span>
-        <h1 class="m3-page-title">Zeitvertreib.</h1>
-        <p class="m3-page-lead">
+        <span class="jule-eyebrow">Anmeldung</span>
+        <h1 class="jule-page-title">Zeitvertreib.</h1>
+        <p class="jule-page-lead">
           Melde dich über Discord an und sieh, was der Server über dich weiß. Danach stellst du ein, wie du im Spiel
           auftauchst.
         </p>
@@ -34,17 +34,17 @@
       </div>
 
       <!-- Login panel -->
-      <section class="m3-panel login-panel">
-        <div class="m3-panel-head">
-          <span class="m3-panel-title">Konto verknüpfen</span>
-          <span class="m3-chip m3-chip--brand">
+      <section class="jule-panel login-panel">
+        <div class="jule-panel-head">
+          <span class="jule-panel-title">Konto verknüpfen</span>
+          <span class="jule-chip jule-chip--brand">
             <app-icon name="discord" />
             Discord
           </span>
         </div>
 
-        <div class="m3-panel-body m3-stack">
-          <div class="m3-notice">
+        <div class="jule-panel-body jule-stack">
+          <div class="jule-notice">
             <app-icon name="info" />
             <span>
               Dein Discord-Account muss mit Steam verknüpft sein, um Zugriff auf deine Statistiken und Features zu
@@ -52,7 +52,7 @@
             </span>
           </div>
 
-          <button type="button" class="m3-btn m3-btn--wide" (click)="login()">
+          <button type="button" class="jule-btn jule-btn--wide" (click)="login()">
             <app-icon name="discord" />
             Mit Discord anmelden
           </button>
@@ -61,5 +61,5 @@
     </div>
   </main>
 
-  <app-m3-footer />
+  <app-jule-footer />
 </div>

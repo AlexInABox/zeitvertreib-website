@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, input } 
 
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { ButtonComponent, DialogComponent, SpinnerComponent } from '@app/ui';
+import { IconComponent } from '../../../components/icon/icon.component';
+import { JuleDialogComponent } from '../../../components/jule-dialog/jule-dialog.component';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import type {
@@ -24,14 +25,14 @@ interface SpraySlot {
 @Component({
   selector: 'app-spray-management',
   standalone: true,
-  imports: [FormsModule, ButtonComponent, DialogComponent, SpinnerComponent],
+  imports: [FormsModule, IconComponent, JuleDialogComponent],
   templateUrl: './spray-management.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./spray-management.css'],
 })
 export class SprayManagementComponent implements OnInit, OnDestroy {
   readonly isDonator = input(false);
-  /** Experimental UI: render PrimeIcons instead of emojis. */
+  /** Experimental UI flag. */
   readonly testUi = input(false);
 
   spraySlots: SpraySlot[] = [

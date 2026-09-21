@@ -3,14 +3,14 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService, SteamUser } from '../../services/auth.service';
 import { Subscription, filter } from 'rxjs';
 
-/** The shared m3 navbar: brand, hairline-divided link strip, account cell. */
+/** The shared JULE navbar: brand, hairline-divided link strip, account cell. */
 @Component({
-  selector: 'app-m3-nav',
+  selector: 'app-jule-nav',
   imports: [RouterModule],
-  templateUrl: './m3-nav.component.html',
+  templateUrl: './jule-nav.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
 })
-export class M3NavComponent implements OnInit, OnDestroy {
+export class JuleNavComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
 

@@ -1,56 +1,74 @@
-<div class="no-link-container">
-  <div class="no-link-card">
-    <div class="icon-wrapper">
-      <i class="pi pi-exclamation-triangle"></i>
-    </div>
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-    <h1>Discord-Steam Verknüpfung fehlt</h1>
+  <main class="jule-page">
+    <header class="jule-page-head">
+      <span class="jule-eyebrow">Konto</span>
+      <h1 class="jule-page-title">Discord-Steam Verknüpfung fehlt.</h1>
+      <p class="jule-page-lead">
+        Um Zeitvertreib nutzen zu können, muss dein Discord-Account mit Steam verbunden sein. Nur so können wir deine
+        Spielstatistiken abrufen.
+      </p>
+    </header>
 
-    <p class="description">
-      Um Zeitvertreib nutzen zu können, muss dein Discord-Account mit Steam verbunden sein. Nur so können wir deine
-      Spielstatistiken abrufen.
-    </p>
+    <section class="jule-panel no-link-panel">
+      <div class="jule-panel-body jule-stack">
+        <div class="jule-notice jule-notice--warn">
+          <app-icon name="exclamation-triangle" />
+          <span>Ohne verknüpftes Steam-Konto bleiben Stats, Missionen und Sprays gesperrt.</span>
+        </div>
 
-    <div class="info-box">
-      <h2>So verknüpfst du Discord mit Steam:</h2>
-      <div class="steps">
-        <div class="step">
-          <span class="num">1</span>
-          <div class="step-text">
-            <strong>Discord Einstellungen öffnen</strong>
-            <span>Zahnrad-Symbol neben deinem Namen</span>
-          </div>
+        <div>
+          <span class="jule-panel-title">So verknüpfst du Discord mit Steam</span>
+
+          <ol class="no-link-steps">
+            <li class="no-link-step">
+              <span class="no-link-num jule-mono">1</span>
+              <span class="no-link-step-text">
+                <strong>Discord Einstellungen öffnen</strong>
+                <span>Zahnrad-Symbol neben deinem Namen</span>
+              </span>
+            </li>
+            <li class="no-link-step">
+              <span class="no-link-num jule-mono">2</span>
+              <span class="no-link-step-text">
+                <strong>Zu "Verbindungen" navigieren</strong>
+                <span>Im linken Menü findest du "Verbindungen"</span>
+              </span>
+            </li>
+            <li class="no-link-step">
+              <span class="no-link-num jule-mono">3</span>
+              <span class="no-link-step-text">
+                <strong>Steam hinzufügen</strong>
+                <span>Klicke auf das Steam-Logo und folge den Schritten</span>
+              </span>
+            </li>
+          </ol>
         </div>
-        <div class="step">
-          <span class="num">2</span>
-          <div class="step-text">
-            <strong>Zu "Verbindungen" navigieren</strong>
-            <span>Im linken Menü findest du "Verbindungen"</span>
-          </div>
+
+        <div class="jule-cluster no-link-actions">
+          <button type="button" class="jule-btn" (click)="goToLogin()">
+            <app-icon name="refresh" />
+            Erneut versuchen
+          </button>
+          <button type="button" class="jule-btn jule-btn--ghost" (click)="goHome()">
+            <app-icon name="arrow-left" />
+            Zur Startseite
+          </button>
         </div>
-        <div class="step">
-          <span class="num">3</span>
-          <div class="step-text">
-            <strong>Steam hinzufügen</strong>
-            <span>Klicke auf das Steam-Logo und folge den Schritten</span>
-          </div>
-        </div>
+
+        <a
+          class="no-link-help"
+          href="https://support.discord.com/hc/de/articles/8063233404823"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <app-icon name="info" />
+          Discord Hilfe-Artikel
+        </a>
       </div>
-    </div>
+    </section>
+  </main>
 
-    <div class="buttons">
-      <p-button label="Erneut versuchen" icon="pi pi-refresh" styleClass="retry-btn" (onClick)="goToLogin()"></p-button>
-      <p-button label="Zur Startseite" icon="pi pi-home" styleClass="home-btn" (onClick)="goHome()"></p-button>
-    </div>
-
-    <a
-      href="https://support.discord.com/hc/de/articles/8063233404823"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="help-link"
-    >
-      <i class="pi pi-question-circle"></i>
-      Discord Hilfe-Artikel
-    </a>
-  </div>
+  <app-jule-footer />
 </div>

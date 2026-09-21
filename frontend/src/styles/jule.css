@@ -1,5 +1,5 @@
 /* ============================================================
-   Zeitvertreib m3 — global design system
+   Zeitvertreib JULE — global design spec
    Extracted from the dashboard redesign so every page can adopt
    the same language: dark violet canvas, hairlines, sharp corners,
    brand-purple accents.
@@ -10,86 +10,86 @@
 
 :root {
   /* ---- Layout: wide content container + edge gutter ------------- */
-  --m3-gutter: clamp(1rem, 3vw, 2.5rem);
-  --m3-content: min(1600px, calc(100% - (2 * var(--m3-gutter))));
+  --jule-gutter: clamp(1rem, 3vw, 2.5rem);
+  --jule-content: min(1600px, calc(100% - (2 * var(--jule-gutter))));
 
   /* ---- Zeitvertreib palette --------------------------------------
      Sampled from the brand logo gradient
      (public/assets/logos/logo_full_color_1to1.avif):
      deep violet #4d03a0 -> core purple #7202a4 -> magenta #951079. */
-  --m3-accent: #a13de6; /* bright brand purple — links, chips, focus */
-  --m3-accent-deep: #4d03a0; /* brand gradient stop */
-  --m3-accent-core: #7202a4; /* brand purple — badge fills (white text) */
-  --m3-accent-magenta: #951079; /* brand gradient stop */
+  --jule-accent: #a13de6; /* bright brand purple — links, chips, focus */
+  --jule-accent-deep: #4d03a0; /* brand gradient stop */
+  --jule-accent-core: #7202a4; /* brand purple — badge fills (white text) */
+  --jule-accent-magenta: #951079; /* brand gradient stop */
 
-  --m3-bg: #0d0b12; /* violet-tinted near-black canvas */
-  --m3-panel: #15121e; /* raised surface */
-  --m3-line: #282235; /* hairlines */
-  --m3-line-soft: rgba(233, 227, 247, 0.09);
-  --m3-soft: rgba(233, 227, 247, 0.05);
-  --m3-text: #f1edf9; /* violet-tinged off-white */
-  --m3-muted: #a49bba;
+  --jule-bg: #0d0b12; /* violet-tinted near-black canvas */
+  --jule-panel: #15121e; /* raised surface */
+  --jule-line: #282235; /* hairlines */
+  --jule-line-soft: rgba(233, 227, 247, 0.09);
+  --jule-soft: rgba(233, 227, 247, 0.05);
+  --jule-text: #f1edf9; /* violet-tinged off-white */
+  --jule-muted: #a49bba;
 
   /* ---- Fontpack ---------------------------------------------------
      Display: Archivo Black — filled by default, hollow as an outlined
      variant of the same heavy face. Outline strokes on a regular-weight
      face (Inter) break apart; heavy stems keep the hollow legible.
      Text: Inter for body, data and UI. */
-  --m3-font-display: 'Archivo Black', 'Archivo', sans-serif;
-  --m3-font-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --jule-font-display: 'Archivo Black', 'Archivo', sans-serif;
+  --jule-font-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.m3-display,
-.m3-hero-title,
-.m3-h2 {
-  font-family: var(--m3-font-display);
+.jule-display,
+.jule-hero-title,
+.jule-h2 {
+  font-family: var(--jule-font-display);
   font-weight: 400;
   letter-spacing: -0.02em;
 }
 
 /* The hollow display variant — an outline of the heavy face. */
-.m3-display--hollow {
+.jule-display--hollow {
   color: transparent;
-  -webkit-text-stroke: 2px var(--m3-text);
+  -webkit-text-stroke: 2px var(--jule-text);
 }
 
 @supports not (-webkit-text-stroke: 1px #000) {
-  .m3-display--hollow {
-    color: var(--m3-text);
+  .jule-display--hollow {
+    color: var(--jule-text);
   }
 }
 
 /* --- Canvas: page frame ------------------------------------------ */
-.m3-canvas {
+.jule-canvas {
   min-height: 100vh;
   position: relative;
-  background: var(--m3-bg);
-  color: var(--m3-text);
+  background: var(--jule-bg);
+  color: var(--jule-text);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
-  font-family: var(--m3-font-text);
+  font-family: var(--jule-font-text);
 }
 
 /* Vertical hairlines at the content edges, touching the very top of
    the page and running down through the navbar to the bottom. */
-.m3-canvas::before,
-.m3-canvas::after {
+.jule-canvas::before,
+.jule-canvas::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
   width: 1px;
-  background: var(--m3-line);
+  background: var(--jule-line);
   pointer-events: none;
   z-index: 40;
 }
 
-.m3-canvas::before {
-  left: max(var(--m3-gutter), calc(50% - 800px));
+.jule-canvas::before {
+  left: max(var(--jule-gutter), calc(50% - 800px));
 }
 
-.m3-canvas::after {
-  right: max(var(--m3-gutter), calc(50% - 800px));
+.jule-canvas::after {
+  right: max(var(--jule-gutter), calc(50% - 800px));
 }
 
 /* --- Footer rail --------------------------------------------------------
@@ -98,7 +98,7 @@
    is pushed to the bottom of the page instead of floating mid-screen. The
    landing page always runs past the fold and the dashboard carries its own
    full-height layout, so neither opts in. */
-.m3-canvas--fill {
+.jule-canvas--fill {
   display: flex;
   flex-direction: column;
 }
@@ -106,43 +106,43 @@
 /* The nav host steps aside so the sticky <header> stays a child of the
    canvas — that is the box it sticks to. Wrapping it in a block-level flex
    item would clip its travel and stop the navbar from sticking. */
-.m3-canvas--fill > app-m3-nav {
+.jule-canvas--fill > app-jule-nav {
   display: contents;
 }
 
-.m3-canvas--fill > .m3-page {
+.jule-canvas--fill > .jule-page {
   flex: 1 0 auto;
   /* width keeps the max-width + margin:auto centering below intact; a flex
      item with auto cross-axis margins would otherwise shrink to fit. */
   width: 100%;
 }
 
-.m3-canvas--fill > app-m3-footer {
+.jule-canvas--fill > app-jule-footer {
   flex: none;
 }
 
 /* --- Nav: contained widget, full-width hairline underneath ------- */
-.m3-nav {
+.jule-nav {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--m3-bg);
+  background: var(--jule-bg);
   padding: 0 clamp(1rem, 3vw, 2rem);
-  border-bottom: 1px solid var(--m3-line);
+  border-bottom: 1px solid var(--jule-line);
 }
 
-.m3-nav-box {
+.jule-nav-box {
   display: flex;
   align-items: stretch;
   gap: 1rem;
-  max-width: var(--m3-content);
+  max-width: var(--jule-content);
   margin: 0 auto;
   min-height: 3.25rem;
   padding: 0 1.25rem;
   padding-right: 0; /* Needed since the last element at the very right of the navbar would look centered otherwise. */
 }
 
-.m3-logo {
+.jule-logo {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -150,14 +150,14 @@
   text-decoration: none;
 }
 
-.m3-logo-star {
+.jule-logo-star {
   display: block;
   width: 26px;
   height: auto;
 }
 
-.m3-logo-name {
-  color: var(--m3-text);
+.jule-logo-name {
+  color: var(--jule-text);
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -165,7 +165,7 @@
   text-box: trim-both cap alphabetic;
 }
 
-.m3-nav-links {
+.jule-nav-links {
   display: flex;
   align-items: stretch;
   flex: 1;
@@ -174,19 +174,19 @@
   scrollbar-width: none;
 }
 
-.m3-nav-links::-webkit-scrollbar {
+.jule-nav-links::-webkit-scrollbar {
   display: none;
 }
 
-.m3-navlink {
+.jule-navlink {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   padding: 0 0.85rem;
   background: none;
   border: 0;
-  border-left: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  border-left: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 500;
@@ -196,46 +196,46 @@
   transition: color 0.2s ease;
 }
 
-.m3-navlink:hover {
-  color: var(--m3-text);
+.jule-navlink:hover {
+  color: var(--jule-text);
 }
 
 /* Optically center the label: the box hugs cap-height..baseline, so flex
    centering aligns the glyphs, not the line-box. Ignored where unsupported. */
-.m3-navlabel {
+.jule-navlabel {
   text-box: trim-both cap alphabetic;
 }
 
-.m3-navlink[aria-current='page'] {
-  color: var(--m3-accent);
+.jule-navlink[aria-current='page'] {
+  color: var(--jule-accent);
 }
 
-.m3-navlink:focus-visible {
-  outline: 2px solid var(--m3-accent);
+.jule-navlink:focus-visible {
+  outline: 2px solid var(--jule-accent);
   outline-offset: -2px;
 }
 
-.m3-nav-actions {
+.jule-nav-actions {
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
 }
 
-.m3-nav-actions .m3-navlink {
-  border-left: 1px solid var(--m3-line);
+.jule-nav-actions .jule-navlink {
+  border-left: 1px solid var(--jule-line);
 }
 
 /* The last nav item closes its own cell on the right */
-.m3-nav-links .m3-navlink:last-child {
-  border-right: 1px solid var(--m3-line);
+.jule-nav-links .jule-navlink:last-child {
+  border-right: 1px solid var(--jule-line);
 }
 
-.m3-nav-user {
+.jule-nav-user {
   justify-content: center;
   max-width: 14ch;
 }
 
-.m3-nav-user .m3-navlabel {
+.jule-nav-user .jule-navlabel {
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
@@ -247,55 +247,55 @@
 }
 
 /* --- Hero: plain canvas, copy + console --------------------------- */
-.m3-hero {
-  border-bottom: 1px solid var(--m3-line-soft);
+.jule-hero {
+  border-bottom: 1px solid var(--jule-line-soft);
 }
 
-.m3-hero-inner {
+.jule-hero-inner {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.78fr);
   align-items: center;
   gap: clamp(2rem, 5vw, 4.5rem);
-  max-width: var(--m3-content);
+  max-width: var(--jule-content);
   margin: 0 auto;
   padding: clamp(4.5rem, 9vw, 7.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(4rem, 8vw, 6.5rem);
 }
 
-.m3-hero-copy {
+.jule-hero-copy {
   position: relative;
   z-index: 7;
   max-width: 46rem;
 }
 
-.m3-hero-title {
+.jule-hero-title {
   margin: 0;
   font-size: clamp(2.75rem, 6.5vw, 5.25rem);
   line-height: 0.94;
 }
 
-.m3-line {
+.jule-line {
   display: block;
 }
 
-.m3-line--a {
-  color: var(--m3-text);
-  animation: m3-line-in 0.9s 0.18s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+.jule-line--a {
+  color: var(--jule-text);
+  animation: jule-line-in 0.9s 0.18s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
-.m3-line--b {
+.jule-line--b {
   color: transparent;
-  -webkit-text-stroke: 2px var(--m3-text);
-  animation: m3-line-in 0.9s 0.3s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+  -webkit-text-stroke: 2px var(--jule-text);
+  animation: jule-line-in 0.9s 0.3s cubic-bezier(0.2, 0.75, 0.2, 1) both;
 }
 
 /* the outlined second line must never render invisible */
 @supports not (-webkit-text-stroke: 1px #000) {
-  .m3-line--b {
-    color: var(--m3-text);
+  .jule-line--b {
+    color: var(--jule-text);
   }
 }
 
-@keyframes m3-line-in {
+@keyframes jule-line-in {
   from {
     opacity: 0;
     transform: translate3d(0, 2.2rem, 0);
@@ -306,7 +306,7 @@
   }
 }
 
-@keyframes m3-in-up {
+@keyframes jule-in-up {
   from {
     opacity: 0;
     transform: translate3d(0, 1rem, 0);
@@ -317,30 +317,30 @@
   }
 }
 
-.m3-hero-sub {
+.jule-hero-sub {
   display: block;
   margin: 1.7rem 0 0;
   max-width: 40ch;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: clamp(1rem, 1.5vw, 1.18rem);
   font-weight: 400;
   line-height: 1.55;
-  animation: m3-in-up 0.9s 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: jule-in-up 0.9s 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-.m3-hero-actions {
+.jule-hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 1.6rem;
   margin-top: 2.4rem;
-  animation: m3-in-up 0.9s 0.58s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: jule-in-up 0.9s 0.58s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-.m3-hero-ghost {
+.jule-hero-ghost {
   background: transparent;
-  border: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  border: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 500;
@@ -353,17 +353,17 @@
     background 0.2s ease;
 }
 
-.m3-hero-ghost:hover {
-  color: var(--m3-text);
-  border-color: var(--m3-text);
-  background: var(--m3-soft);
+.jule-hero-ghost:hover {
+  color: var(--jule-text);
+  border-color: var(--jule-text);
+  background: var(--jule-soft);
 }
 
-.m3-hero-play {
+.jule-hero-play {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--m3-accent);
+  background: var(--jule-accent);
   color: #fff;
   font-family: inherit;
   font-size: 0.9rem;
@@ -374,16 +374,16 @@
   transition: background 0.2s ease;
 }
 
-.m3-hero-play:hover {
+.jule-hero-play:hover {
   background: #b45cf0;
 }
 
-.m3-hero-play:active {
+.jule-hero-play:active {
   background: #9335cf;
 }
 
 /* --- Console window ------------------------------------------------ */
-.m3-window {
+.jule-window {
   position: relative;
   z-index: 7;
   justify-self: end;
@@ -396,7 +396,7 @@
   backdrop-filter: blur(16px);
 }
 
-.m3-window-bar {
+.jule-window-bar {
   display: flex;
   align-items: center;
   gap: 0.85rem;
@@ -405,30 +405,30 @@
 }
 
 /* Freestanding white star — no backdrop. */
-.m3-window-badge {
+.jule-window-badge {
   display: block;
   flex: none;
 }
 
-.m3-window-badge .m3-star {
+.jule-window-badge .jule-star {
   display: block;
   width: 1.15rem;
   height: auto;
 }
 
-.m3-window-name {
-  color: var(--m3-text);
+.jule-window-name {
+  color: var(--jule-text);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.m3-window-rank {
+.jule-window-rank {
   margin-left: auto;
   padding: 0.28rem 0.6rem;
   border: 1px solid rgba(161, 61, 230, 0.55);
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   font-size: 0.72rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -436,7 +436,7 @@
 }
 
 /* Live indicator: a quiet pulsing dot, top right in the window bar. */
-.m3-live {
+.jule-live {
   position: relative;
   margin-left: auto;
   flex: none;
@@ -446,17 +446,17 @@
   background: #e5484d;
 }
 
-.m3-live::after {
+.jule-live::after {
   content: '';
   position: absolute;
   inset: -4px;
   border-radius: 50%;
   border: 1px solid #e5484d;
   opacity: 0;
-  animation: m3-live-ping 2.4s ease-out infinite;
+  animation: jule-live-ping 2.4s ease-out infinite;
 }
 
-@keyframes m3-live-ping {
+@keyframes jule-live-ping {
   0% {
     transform: scale(0.4);
     opacity: 0.7;
@@ -471,7 +471,7 @@
   }
 }
 
-.m3-window-grid {
+.jule-window-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1px;
@@ -480,25 +480,25 @@
   border-bottom: 1px solid rgba(233, 227, 247, 0.09);
 }
 
-.m3-cell {
+.jule-cell {
   position: relative;
   padding: 1.5rem 1.55rem 1.45rem;
   background: rgba(15, 12, 21, 0.6);
 }
 
-.m3-cell span {
+.jule-cell span {
   display: block;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
-.m3-cell strong {
+.jule-cell strong {
   display: block;
   margin-top: 0.55rem;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: clamp(2rem, 3.4vw, 2.7rem);
   font-weight: 650;
   letter-spacing: -0.03em;
@@ -506,13 +506,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-.m3-window-foot {
+.jule-window-foot {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1.4rem;
   margin-top: 0;
   padding: 1rem 1.35rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.76rem;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -520,36 +520,36 @@
 
 /* Window extension: attached readout row under the console, whole row is the link.
    Icon in its own compartment, readouts evenly centered. */
-.m3-window-ext {
+.jule-window-ext {
   display: flex;
   align-items: stretch;
   padding: 0;
-  border-top: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  border-top: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   text-decoration: none;
   transition:
     color 0.2s ease,
     background 0.2s ease;
 }
 
-.m3-window-ext:hover {
-  color: var(--m3-text);
-  background: var(--m3-soft);
+.jule-window-ext:hover {
+  color: var(--jule-text);
+  background: var(--jule-soft);
 }
 
-.m3-ext-icon {
+.jule-ext-icon {
   display: grid;
   place-items: center;
   padding: 0 1.15rem;
-  border-right: 1px solid var(--m3-line);
+  border-right: 1px solid var(--jule-line);
 }
 
-.m3-window-ext .m3-discord {
+.jule-window-ext .jule-discord {
   width: 1.3rem;
   height: auto;
 }
 
-.m3-ext-cells {
+.jule-ext-cells {
   flex: 1;
   display: flex;
   align-items: center;
@@ -557,14 +557,14 @@
   padding: 0.85rem 0;
 }
 
-.m3-ext-cell {
+.jule-ext-cell {
   display: inline-flex;
   align-items: baseline;
   gap: 0.5rem;
 }
 
-.m3-ext-key {
-  color: var(--m3-muted);
+.jule-ext-key {
+  color: var(--jule-muted);
   font-size: 0.65rem;
   font-weight: 600;
   font-style: normal;
@@ -572,84 +572,84 @@
   text-transform: uppercase;
 }
 
-.m3-ext-val {
-  color: var(--m3-text);
+.jule-ext-val {
+  color: var(--jule-text);
   font-size: 0.95rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 /* --- Sections ------------------------------------------------------ */
-.m3-section {
-  max-width: var(--m3-content);
+.jule-section {
+  max-width: var(--jule-content);
   margin: 0 auto;
   padding: clamp(3.5rem, 8vw, 6rem) clamp(1.25rem, 4vw, 2.5rem) 0;
 }
 
 /* Divider: hairline stretched rail to rail between stacked sections. */
-.m3-divider {
+.jule-divider {
   height: 1px;
-  margin: clamp(2.5rem, 6vw, 4rem) max(var(--m3-gutter), calc(50% - 800px)) 0;
-  background: var(--m3-line);
+  margin: clamp(2.5rem, 6vw, 4rem) max(var(--jule-gutter), calc(50% - 800px)) 0;
+  background: var(--jule-line);
 }
 
-.m3-h2 {
+.jule-h2 {
   margin: 0 0 2.4rem;
   font-size: clamp(2rem, 4.6vw, 3.8rem);
   line-height: 1.05;
 }
 
 /* --- Split panels (hairline grid) ---------------------------------- */
-.m3-split {
+.jule-split {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
   gap: 1px;
-  background: var(--m3-line);
-  border: 1px solid var(--m3-line);
+  background: var(--jule-line);
+  border: 1px solid var(--jule-line);
 }
 
-.m3-split-col {
+.jule-split-col {
   padding: clamp(1.5rem, 2.6vw, 2.4rem);
-  background: var(--m3-bg);
+  background: var(--jule-bg);
   min-width: 0;
 }
 
-.m3-split-title {
+.jule-split-title {
   margin: 0 0 1.2rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
-.m3-feed {
+.jule-feed {
   display: flex;
   flex-direction: column;
 }
 
-.m3-feed-row {
+.jule-feed-row {
   display: grid;
   grid-template-columns: 40px 1fr;
   align-items: center;
   gap: 0.9rem;
   padding: 0.7rem 0;
-  border-top: 1px solid var(--m3-line-soft);
+  border-top: 1px solid var(--jule-line-soft);
 }
 
-.m3-feed-row:first-child {
+.jule-feed-row:first-child {
   border-top: 0;
 }
 
-.m3-feed-avatar {
+.jule-feed-avatar {
   width: 40px;
   height: 40px;
   object-fit: cover;
-  border: 1px solid var(--m3-line);
-  background: var(--m3-panel);
+  border: 1px solid var(--jule-line);
+  background: var(--jule-panel);
 }
 
-.m3-feed-name {
+.jule-feed-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -657,77 +657,77 @@
   font-weight: 500;
 }
 
-.m3-gear {
+.jule-gear {
   margin: 0;
 }
 
-.m3-gear-row {
+.jule-gear-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 0;
-  border-top: 1px solid var(--m3-line-soft);
+  border-top: 1px solid var(--jule-line-soft);
 }
 
-.m3-gear-row:first-child {
+.jule-gear-row:first-child {
   border-top: 0;
 }
 
-.m3-gear-row dt {
-  color: var(--m3-muted);
+.jule-gear-row dt {
+  color: var(--jule-muted);
   font-size: 0.95rem;
   font-weight: 400;
 }
 
-.m3-gear-row dd {
+.jule-gear-row dd {
   margin: 0;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 1.1rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.m3-empty {
-  color: var(--m3-muted);
+.jule-empty {
+  color: var(--jule-muted);
   font-size: 0.95rem;
 }
 
 /* --- Gallery -------------------------------------------------------- */
-.m3-gallery-head {
+.jule-gallery-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.5rem;
 }
 
-.m3-gallery-head .m3-h2 {
+.jule-gallery-head .jule-h2 {
   margin-bottom: 2rem;
 }
 
-.m3-gallery-nav {
+.jule-gallery-nav {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 2rem;
 }
 
-.m3-gallery-count {
+.jule-gallery-count {
   margin-right: 0.6rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.85rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
-.m3-arrow {
+.jule-arrow {
   display: grid;
   place-items: center;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--m3-line);
-  background: var(--m3-soft);
-  color: var(--m3-text);
+  border: 1px solid var(--jule-line);
+  background: var(--jule-soft);
+  color: var(--jule-text);
   font-size: 1rem;
   cursor: pointer;
   transition:
@@ -735,19 +735,19 @@
     border-color 0.2s ease;
 }
 
-.m3-arrow:hover {
-  background: var(--m3-panel);
-  border-color: var(--m3-muted);
+.jule-arrow:hover {
+  background: var(--jule-panel);
+  border-color: var(--jule-muted);
 }
 
-.m3-gallery .m3-stage {
+.jule-gallery .jule-stage {
   position: relative;
-  border: 1px solid var(--m3-line);
+  border: 1px solid var(--jule-line);
   background: #0e0c13;
   overflow: hidden;
 }
 
-.m3-stage-img {
+.jule-stage-img {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -756,15 +756,15 @@
 
 /* Crossfade: the front layer holds the incoming image and fades over the
    previous one (behind layer), with a faint settle scale for the morph. */
-.m3-stage-img--front {
+.jule-stage-img--front {
   position: absolute;
   inset: 0;
   height: 100%;
   opacity: 0;
-  animation: m3-stage-fade 0.9s ease both;
+  animation: jule-stage-fade 0.9s ease both;
 }
 
-@keyframes m3-stage-fade {
+@keyframes jule-stage-fade {
   from {
     opacity: 0;
     transform: scale(1.02);
@@ -775,7 +775,7 @@
   }
 }
 
-.m3-thumbs {
+.jule-thumbs {
   display: flex;
   gap: 0.6rem;
   margin-top: 0.8rem;
@@ -784,16 +784,16 @@
   scrollbar-width: none;
 }
 
-.m3-thumbs::-webkit-scrollbar {
+.jule-thumbs::-webkit-scrollbar {
   display: none;
 }
 
-.m3-thumb {
+.jule-thumb {
   flex: 0 0 auto;
   width: 120px;
   height: 68px;
   padding: 0;
-  border: 1px solid var(--m3-line);
+  border: 1px solid var(--jule-line);
   background: #0e0c13;
   cursor: pointer;
   opacity: 0.5;
@@ -803,16 +803,16 @@
     border-color 0.2s ease;
 }
 
-.m3-thumb:hover {
+.jule-thumb:hover {
   opacity: 0.85;
 }
 
-.m3-thumb--on {
+.jule-thumb--on {
   opacity: 1;
-  border-color: var(--m3-accent);
+  border-color: var(--jule-accent);
 }
 
-.m3-thumb img {
+.jule-thumb img {
   display: block;
   width: 100%;
   height: 100%;
@@ -820,128 +820,128 @@
 }
 
 /* --- Footer --------------------------------------------------------- */
-.m3-footer {
-  border-top: 1px solid var(--m3-line);
+.jule-footer {
+  border-top: 1px solid var(--jule-line);
 }
 
-.m3-footer-inner {
+.jule-footer-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  max-width: var(--m3-content);
+  max-width: var(--jule-content);
   margin: 0 auto;
   padding: 1.5rem clamp(1.25rem, 4vw, 2.5rem);
 }
 
-.m3-footer-brand {
-  color: var(--m3-muted);
+.jule-footer-brand {
+  color: var(--jule-muted);
   font-size: 0.85rem;
   font-weight: 500;
 }
 
-.m3-footer-links {
+.jule-footer-links {
   display: flex;
   gap: 1.4rem;
 }
 
-.m3-footer-links a {
-  color: var(--m3-muted);
+.jule-footer-links a {
+  color: var(--jule-muted);
   font-size: 0.85rem;
   font-weight: 500;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.m3-footer-links a:hover {
-  color: var(--m3-text);
+.jule-footer-links a:hover {
+  color: var(--jule-text);
 }
 
 /* ============================================================
-   Page primitives — shared by every m3 subpage
+   Page primitives — shared by every JULE subpage
    (Reports, Cases, Z.E.I.T., Permissions).
    Same language as the landing page and the dashboard: dark
    violet canvas, hairline frames, sharp corners, one accent.
    ============================================================ */
 
 /* --- Page frame ------------------------------------------------------ */
-.m3-page {
-  max-width: var(--m3-content);
+.jule-page {
+  max-width: var(--jule-content);
   margin: 0 auto;
   padding: clamp(2.5rem, 5.5vw, 4.25rem) clamp(1.25rem, 4vw, 2.5rem) clamp(3.5rem, 7vw, 5.5rem);
 }
 
-.m3-page-head {
+.jule-page-head {
   max-width: 64rem;
   margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
-.m3-page-title {
+.jule-page-title {
   margin: 0;
-  font-family: var(--m3-font-display);
+  font-family: var(--jule-font-display);
   font-weight: 400;
   font-size: clamp(2.25rem, 5.2vw, 3.8rem);
   letter-spacing: -0.02em;
   line-height: 1;
-  color: var(--m3-text);
+  color: var(--jule-text);
 }
 
-.m3-page-lead {
+.jule-page-lead {
   max-width: 54rem;
   margin: 1.25rem 0 0;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: clamp(1rem, 1.4vw, 1.1rem);
   line-height: 1.6;
 }
 
 /* Micro label — same recipe as the dashboard's panel titles. */
-.m3-eyebrow {
+.jule-eyebrow {
   display: block;
   margin-bottom: 0.85rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
-.m3-h3 {
+.jule-h3 {
   margin: 0;
-  font-family: var(--m3-font-display);
+  font-family: var(--jule-font-display);
   font-weight: 400;
   font-size: 1.15rem;
   letter-spacing: -0.01em;
-  color: var(--m3-text);
+  color: var(--jule-text);
 }
 
 /* --- Panels ---------------------------------------------------------- */
-.m3-panel {
-  background: var(--m3-panel);
-  border: 1px solid var(--m3-line);
+.jule-panel {
+  background: var(--jule-panel);
+  border: 1px solid var(--jule-line);
 }
 
-.m3-panel--canvas {
-  background: var(--m3-bg);
+.jule-panel--canvas {
+  background: var(--jule-bg);
 }
 
-.m3-panel-head {
+.jule-panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem 1rem;
   padding: 1.05rem 1.35rem;
-  border-bottom: 1px solid var(--m3-line);
+  border-bottom: 1px solid var(--jule-line);
 }
 
-.m3-panel-body {
+.jule-panel-body {
   padding: 1.35rem;
 }
 
-.m3-panel-title {
+.jule-panel-title {
   margin: 0;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -949,19 +949,19 @@
 }
 
 /* --- Hairline list rows ---------------------------------------------- */
-.m3-rows {
+.jule-rows {
   display: flex;
   flex-direction: column;
 }
 
-.m3-item {
+.jule-item {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
   padding: 0.95rem 1.35rem;
   border: 0;
-  border-top: 1px solid var(--m3-line-soft);
+  border-top: 1px solid var(--jule-line-soft);
   background: none;
   color: inherit;
   font-family: inherit;
@@ -971,48 +971,48 @@
   transition: background 0.2s ease;
 }
 
-.m3-item:first-child {
+.jule-item:first-child {
   border-top: 0;
 }
 
-.m3-item--action {
+.jule-item--action {
   cursor: pointer;
 }
 
-.m3-item--action:hover {
-  background: var(--m3-soft);
+.jule-item--action:hover {
+  background: var(--jule-soft);
 }
 
 /* --- Hairline card grids --------------------------------------------- */
-.m3-hairgrid {
+.jule-hairgrid {
   display: grid;
   gap: 1px;
-  background: var(--m3-line);
-  border: 1px solid var(--m3-line);
+  background: var(--jule-line);
+  border: 1px solid var(--jule-line);
 }
 
-.m3-hairgrid--2 {
+.jule-hairgrid--2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.m3-hairgrid--3 {
+.jule-hairgrid--3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.m3-hairgrid > * {
+.jule-hairgrid > * {
   min-width: 0;
-  background: var(--m3-bg);
+  background: var(--jule-bg);
 }
 
 /* --- Buttons --------------------------------------------------------- */
-.m3-btn {
+.jule-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
   padding: 0.7rem 1.3rem;
   border: 1px solid transparent;
-  background: var(--m3-accent);
+  background: var(--jule-accent);
   color: #fff;
   font-family: inherit;
   font-size: 0.85rem;
@@ -1026,68 +1026,68 @@
     color 0.2s ease;
 }
 
-.m3-btn:hover:not(:disabled) {
+.jule-btn:hover:not(:disabled) {
   background: #b45cf0;
 }
 
-.m3-btn:active:not(:disabled) {
+.jule-btn:active:not(:disabled) {
   background: #9335cf;
 }
 
-.m3-btn:disabled {
+.jule-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.m3-btn--ghost {
+.jule-btn--ghost {
   background: transparent;
-  border-color: var(--m3-line);
-  color: var(--m3-muted);
+  border-color: var(--jule-line);
+  color: var(--jule-muted);
 }
 
-.m3-btn--ghost:hover:not(:disabled) {
-  background: var(--m3-soft);
-  border-color: var(--m3-muted);
-  color: var(--m3-text);
+.jule-btn--ghost:hover:not(:disabled) {
+  background: var(--jule-soft);
+  border-color: var(--jule-muted);
+  color: var(--jule-text);
 }
 
-.m3-btn--danger {
+.jule-btn--danger {
   background: transparent;
   border-color: rgba(229, 72, 77, 0.45);
   color: #f0716f;
 }
 
-.m3-btn--danger:hover:not(:disabled) {
+.jule-btn--danger:hover:not(:disabled) {
   background: rgba(229, 72, 77, 0.12);
 }
 
-.m3-btn--icon {
+.jule-btn--icon {
   width: 2.35rem;
   height: 2.35rem;
   padding: 0;
   background: transparent;
-  border-color: var(--m3-line);
-  color: var(--m3-muted);
+  border-color: var(--jule-line);
+  color: var(--jule-muted);
 }
 
-.m3-btn--icon:hover:not(:disabled) {
-  background: var(--m3-soft);
-  border-color: var(--m3-muted);
-  color: var(--m3-text);
+.jule-btn--icon:hover:not(:disabled) {
+  background: var(--jule-soft);
+  border-color: var(--jule-muted);
+  color: var(--jule-text);
 }
 
-.m3-btn--wide {
+.jule-btn--wide {
   width: 100%;
 }
 
 /* --- Fields ---------------------------------------------------------- */
-.m3-input,
-.m3-select {
+.jule-input,
+.jule-select {
   width: 100%;
   padding: 0.68rem 0.9rem;
   background: rgba(233, 227, 247, 0.03);
-  border: 1px solid var(--m3-line);
-  color: var(--m3-text);
+  border: 1px solid var(--jule-line);
+  color: var(--jule-text);
   font-family: inherit;
   font-size: 0.9rem;
   transition:
@@ -1095,70 +1095,70 @@
     background 0.2s ease;
 }
 
-.m3-input::placeholder {
-  color: var(--m3-muted);
+.jule-input::placeholder {
+  color: var(--jule-muted);
 }
 
-.m3-input:focus,
-.m3-select:focus {
+.jule-input:focus,
+.jule-select:focus {
   outline: none;
-  border-color: var(--m3-accent);
+  border-color: var(--jule-accent);
   background: rgba(233, 227, 247, 0.06);
 }
 
-.m3-select {
+.jule-select {
   appearance: none;
   padding-right: 2.2rem;
   cursor: pointer;
 }
 
-.m3-select option {
-  background: var(--m3-panel);
-  color: var(--m3-text);
+.jule-select option {
+  background: var(--jule-panel);
+  color: var(--jule-text);
 }
 
-.m3-field {
+.jule-field {
   position: relative;
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.m3-field > app-icon {
+.jule-field > app-icon {
   position: absolute;
   left: 0.85rem;
   font-size: 0.95rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   pointer-events: none;
 }
 
-.m3-field > .m3-input,
-.m3-field > .m3-select {
+.jule-field > .jule-input,
+.jule-field > .jule-select {
   padding-left: 2.4rem;
 }
 
-.m3-field--plain > .m3-input {
+.jule-field--plain > .jule-input {
   padding-left: 0.9rem;
 }
 
-.m3-field-trail {
+.jule-field-trail {
   position: absolute;
   right: 0.85rem;
   display: inline-flex;
   align-items: center;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.95rem;
   pointer-events: none;
 }
 
 /* --- Chips ----------------------------------------------------------- */
-.m3-chip {
+.jule-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   padding: 0.22rem 0.5rem;
-  border: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  border: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.09em;
@@ -1167,40 +1167,40 @@
   white-space: nowrap;
 }
 
-.m3-chip app-icon {
+.jule-chip app-icon {
   font-size: 0.8rem;
 }
 
-.m3-chip--brand {
+.jule-chip--brand {
   border-color: rgba(161, 61, 230, 0.55);
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
-.m3-chip--danger {
+.jule-chip--danger {
   border-color: rgba(229, 72, 77, 0.5);
   color: #f0716f;
 }
 
-.m3-chip--warn {
+.jule-chip--warn {
   border-color: rgba(234, 179, 8, 0.45);
   color: #eab308;
 }
 
-.m3-chip--ok {
+.jule-chip--ok {
   border-color: rgba(52, 211, 153, 0.45);
   color: #34d399;
 }
 
 /* --- Segmented pills ------------------------------------------------- */
-.m3-pills {
+.jule-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
-  background: var(--m3-line);
-  border: 1px solid var(--m3-line);
+  background: var(--jule-line);
+  border: 1px solid var(--jule-line);
 }
 
-.m3-pill {
+.jule-pill {
   flex: 1 1 auto;
   display: inline-flex;
   align-items: center;
@@ -1208,8 +1208,8 @@
   gap: 0.45rem;
   padding: 0.6rem 1rem;
   border: 0;
-  background: var(--m3-bg);
-  color: var(--m3-muted);
+  background: var(--jule-bg);
+  color: var(--jule-muted);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
@@ -1220,47 +1220,47 @@
     background 0.2s ease;
 }
 
-.m3-pill:hover {
-  color: var(--m3-text);
-  background: var(--m3-soft);
+.jule-pill:hover {
+  color: var(--jule-text);
+  background: var(--jule-soft);
 }
 
-.m3-pill--on {
-  color: var(--m3-accent);
+.jule-pill--on {
+  color: var(--jule-accent);
 }
 
-.m3-pill app-icon,
-.m3-pill img {
+.jule-pill app-icon,
+.jule-pill img {
   font-size: 0.9rem;
 }
 
 /* --- Stat tiles ------------------------------------------------------ */
-.m3-stats {
+.jule-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: 1px;
-  background: var(--m3-line);
+  background: var(--jule-line);
 }
 
-.m3-stat {
+.jule-stat {
   padding: 1.05rem 1.2rem 0.95rem;
-  background: var(--m3-panel);
+  background: var(--jule-panel);
 }
 
-.m3-stat span {
+.jule-stat span {
   display: block;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.m3-stat strong {
+.jule-stat strong {
   display: block;
   margin-top: 0.45rem;
-  color: var(--m3-text);
-  font-family: var(--m3-font-display);
+  color: var(--jule-text);
+  font-family: var(--jule-font-display);
   font-weight: 400;
   font-size: clamp(1.25rem, 2vw, 1.7rem);
   letter-spacing: -0.03em;
@@ -1269,133 +1269,146 @@
 }
 
 /* --- Notices --------------------------------------------------------- */
-.m3-notice {
+.jule-notice {
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.8rem 1rem;
-  border: 1px solid var(--m3-line);
-  background: var(--m3-soft);
-  color: var(--m3-muted);
+  border: 1px solid var(--jule-line);
+  background: var(--jule-soft);
+  color: var(--jule-muted);
   font-size: 0.82rem;
   line-height: 1.5;
 }
 
-.m3-notice > app-icon {
+.jule-notice > app-icon {
   margin-top: 0.15rem;
   flex: none;
   font-size: 0.95rem;
 }
 
-.m3-notice--error {
+.jule-notice--error {
   border-color: rgba(229, 72, 77, 0.35);
   background: rgba(229, 72, 77, 0.07);
   color: #f0716f;
 }
 
-.m3-notice--warn {
+.jule-notice--warn {
   border-color: rgba(234, 179, 8, 0.35);
   background: rgba(234, 179, 8, 0.07);
   color: #eab308;
 }
 
-.m3-notice--ok {
+.jule-notice--ok {
   border-color: rgba(52, 211, 153, 0.35);
   background: rgba(52, 211, 153, 0.07);
   color: #34d399;
 }
 
 /* --- Loading / empty / error blocks ---------------------------------- */
-.m3-state {
+.jule-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.85rem;
   padding: clamp(3rem, 7vw, 5rem) 1.5rem;
-  border: 1px dashed var(--m3-line);
-  color: var(--m3-muted);
+  border: 1px dashed var(--jule-line);
+  color: var(--jule-muted);
   font-size: 0.9rem;
   text-align: center;
 }
 
-.m3-state--plain {
+.jule-state--plain {
   border: 0;
 }
 
-.m3-state h2,
-.m3-state h3 {
+.jule-state h2,
+.jule-state h3 {
   margin: 0;
-  color: var(--m3-text);
-  font-family: var(--m3-font-display);
+  color: var(--jule-text);
+  font-family: var(--jule-font-display);
   font-weight: 400;
   font-size: 1.25rem;
   letter-spacing: -0.01em;
 }
 
-.m3-state p {
+.jule-state p {
   margin: 0;
   max-width: 46ch;
   line-height: 1.55;
 }
 
-.m3-state-icon {
+.jule-state-icon {
   font-size: 1.75rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
 }
 
-.m3-state-icon--danger {
+.jule-state-icon--danger {
   color: #f0716f;
 }
 
 /* --- Spinner / progress ---------------------------------------------- */
-.m3-spinner {
+.jule-spinner {
   width: 2.25rem;
   height: 2.25rem;
-  border: 2px solid var(--m3-line);
-  border-top-color: var(--m3-accent);
+  border: 2px solid var(--jule-line);
+  border-top-color: var(--jule-accent);
   border-radius: 50%;
-  animation: m3-spin 0.8s linear infinite;
+  animation: jule-spin 0.8s linear infinite;
 }
 
-@keyframes m3-spin {
+@keyframes jule-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.m3-track {
-  height: 3px;
-  background: var(--m3-line);
+/* Inline spinner for buttons and compact rows. */
+.jule-spinner--sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
 }
 
-.m3-track i {
+.jule-spinner--xs {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-width: 2px;
+}
+
+.jule-track {
+  height: 3px;
+  background: var(--jule-line);
+}
+
+.jule-track i {
   display: block;
   height: 100%;
-  background: var(--m3-accent);
+  background: var(--jule-accent);
   transition: width 0.3s ease;
 }
 
 /* --- Table ----------------------------------------------------------- */
-.m3-table-scroll {
+.jule-table-scroll {
   max-width: 100%;
   overflow: auto;
 }
 
-.m3-table {
+.jule-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
 }
 
-.m3-table th {
+.jule-table th {
   position: sticky;
   top: 0;
   z-index: 2;
   padding: 0.7rem 0.9rem;
-  background: var(--m3-panel);
-  border-bottom: 1px solid var(--m3-line);
-  color: var(--m3-muted);
+  background: var(--jule-panel);
+  border-bottom: 1px solid var(--jule-line);
+  color: var(--jule-muted);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -1404,29 +1417,29 @@
   white-space: nowrap;
 }
 
-.m3-table td {
+.jule-table td {
   padding: 0.65rem 0.9rem;
-  border-bottom: 1px solid var(--m3-line-soft);
-  color: var(--m3-text);
+  border-bottom: 1px solid var(--jule-line-soft);
+  color: var(--jule-text);
 }
 
 /* --- Small helpers --------------------------------------------------- */
-.m3-mono {
+.jule-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-variant-numeric: tabular-nums;
 }
 
-.m3-muted {
-  color: var(--m3-muted);
+.jule-muted {
+  color: var(--jule-muted);
 }
 
-.m3-stack {
+.jule-stack {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.m3-cluster {
+.jule-cluster {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1434,84 +1447,89 @@
 }
 
 @media (max-width: 720px) {
-  .m3-hairgrid--2,
-  .m3-hairgrid--3 {
+  .jule-hairgrid--2,
+  .jule-hairgrid--3 {
     grid-template-columns: 1fr;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .m3-spinner {
+  .jule-spinner {
     animation-duration: 2.4s;
   }
 }
 
 /* --- Responsive ------------------------------------------------------ */
 @media (max-width: 1080px) {
-  .m3-hero-inner {
+  .jule-hero-inner {
     grid-template-columns: 1fr;
     gap: 2.75rem;
   }
 
-  .m3-hero-copy {
+  .jule-hero-copy {
     max-width: 40rem;
   }
 
-  .m3-window {
+  .jule-window {
     justify-self: start;
     width: min(560px, 100%);
   }
 }
 
 @media (max-width: 720px) {
-  .m3-nav-user {
+  .jule-nav-user {
     display: none;
   }
 
-  .m3-nav-box {
+  .jule-nav-box {
     gap: 0.5rem;
     padding: 0.4rem 0.75rem;
   }
 }
 
 @media (max-width: 640px) {
-  .m3-hero-title {
+  .jule-hero-title {
     font-size: clamp(2.2rem, 9.5vw, 3.2rem);
   }
 
-  .m3-window-rank {
+  .jule-window-rank {
     display: none;
   }
 
-  .m3-cell {
+  .jule-cell {
     padding: 1.1rem 1.1rem 1.05rem;
   }
 
-  .m3-cell strong {
+  .jule-cell strong {
     font-size: 1.7rem;
   }
 }
 
 /* --- Reduced motion --------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .m3-line,
-  .m3-line--a,
-  .m3-line--b,
-  .m3-hero-sub,
-  .m3-hero-actions {
+  .jule-line,
+  .jule-line--a,
+  .jule-line--b,
+  .jule-hero-sub,
+  .jule-hero-actions {
     animation: none;
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
   }
 
-  .m3-live::after {
+  .jule-live::after {
     animation: none;
   }
 
-  .m3-stage-img--front {
+  .jule-stage-img--front {
     animation: none;
     opacity: 1;
     transform: none;
   }
+}
+
+/* --- Modal scroll lock ------------------------------------------------ */
+body.jule-modal-open {
+  overflow: hidden;
 }

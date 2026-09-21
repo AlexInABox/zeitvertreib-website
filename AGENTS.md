@@ -10,7 +10,7 @@ Monorepo for the Zeitvertreib SCP:SL server: web platform + SCP:SL plugins. See 
 ## Repo Layout
 
 - `backend/` — Cloudflare Worker API (TypeScript). Drizzle ORM + D1 (SQLite), KV, Durable Objects. Entrypoint `src/index.ts`.
-- `frontend/` — Angular 22 SPA (PrimeNG, no Tailwind). Entrypoint `src/main.ts`.
+- `frontend/` — Angular 22 SPA (JULE design spec, no Tailwind, no PrimeNG). Entrypoint `src/main.ts`.
 - `types/` — `@zeitvertreib/types` (`file:../types`). Consumed via direct `.ts` source. `npm run build` generates C# API bindings (`dist/csharp/Api.cs`, `dist/csharp/DiscordTracker.cs`).
 - `overwatch/` — Discord moderation bot (Node, Docker image).
 - `proxied/` — Express CORS proxy for Medal clips (Docker image).

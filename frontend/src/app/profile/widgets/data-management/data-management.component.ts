@@ -1,13 +1,15 @@
 import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TakeoutService } from '../../../services/takeout.service';
 import { DeletionService } from '../../../services/deletion.service';
+import { IconComponent } from '../../../components/icon/icon.component';
+import { JuleDialogComponent } from '../../../components/jule-dialog/jule-dialog.component';
 
+/** GDPR data hub: request a data export or release the account for deletion. */
 @Component({
   selector: 'app-data-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, IconComponent, JuleDialogComponent],
   templateUrl: './data-management.component.html',
   styleUrls: ['./data-management.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,

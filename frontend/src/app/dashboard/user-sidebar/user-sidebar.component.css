@@ -15,7 +15,6 @@
   display: block;
   height: clamp(110px, 13vw, 160px);
   margin: -1.25rem -1.25rem 0;
-  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
   text-decoration: none;
@@ -23,7 +22,7 @@
 }
 
 .identity-hero:focus-visible {
-  outline: 2px solid var(--ui-focus-ring);
+  outline: 2px solid var(--jule-accent);
   outline-offset: 2px;
 }
 
@@ -37,7 +36,7 @@
 .identity-hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.65) 100%);
+  background: linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--jule-bg) 85%, transparent) 100%);
 }
 
 .identity-hero-name {
@@ -49,7 +48,6 @@
   font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.2;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -65,9 +63,8 @@
 .stat-tile {
   position: relative;
   padding: 0.75rem 0.875rem;
-  border-radius: 0.75rem;
-  background: var(--ui-sidebar-surface);
-  border: 1px solid var(--ui-sidebar-divider);
+  background: var(--jule-panel);
+  border: 1px solid var(--jule-line);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -81,15 +78,14 @@
   top: 0.5rem;
   bottom: 0.5rem;
   width: 3px;
-  border-radius: 3px;
-  background: linear-gradient(145deg, var(--stat-color, #10b981), var(--stat-color-light, #34d399));
+  background: var(--stat-color, var(--jule-accent));
 }
 
 .stat-tile-value {
   font-weight: 700;
   font-size: 1.125rem;
   line-height: 1.2;
-  color: var(--ui-sidebar-text);
+  color: var(--jule-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -101,14 +97,14 @@
   text-transform: uppercase;
   letter-spacing: 0.4px;
   line-height: 1.3;
-  color: var(--ui-sidebar-muted);
+  color: var(--jule-muted);
 }
 
 /* Info rows */
 .info-section {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--ui-sidebar-divider);
+  border-top: 1px solid var(--jule-line);
 }
 
 .info-row {
@@ -117,7 +113,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.125rem;
-  border-bottom: 1px solid var(--ui-sidebar-divider);
+  border-bottom: 1px solid var(--jule-line);
 }
 
 .info-row:last-child {
@@ -126,42 +122,25 @@
 
 .info-row-label {
   font-size: 0.8125rem;
-  color: var(--ui-sidebar-muted);
+  color: var(--jule-muted);
 }
 
 .info-row-value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--ui-sidebar-text);
+  color: var(--jule-text);
 }
 
-/* Discord — compact CTA card (light: translucent, dark text) */
+/* Discord — compact CTA card */
 :host ::ng-deep .discord-stats-card {
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.14), rgba(88, 101, 242, 0.08));
-  border-color: rgba(88, 101, 242, 0.35);
   padding: 0.625rem 0.875rem;
-  border-radius: 0.75rem;
   gap: 0.625rem;
-}
-
-:host ::ng-deep .discord-stats-card:hover {
-  background: linear-gradient(135deg, rgba(88, 101, 242, 0.22), rgba(88, 101, 242, 0.14));
-  border-color: rgba(88, 101, 242, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(88, 101, 242, 0.25);
 }
 
 :host ::ng-deep .discord-stats-card .discord-icon {
   width: 34px;
   height: 34px;
-  border-radius: 0.5rem;
-  background: rgba(88, 101, 242, 0.18);
-  color: #4338ca;
-}
-
-:host ::ng-deep .discord-stats-card .discord-icon svg {
-  width: 18px;
-  height: 18px;
+  font-size: 1.25rem;
 }
 
 :host ::ng-deep .discord-stats-card .discord-info {
@@ -180,50 +159,8 @@
   font-size: 0.75rem;
 }
 
-:host ::ng-deep .discord-stats-card .discord-title,
-:host ::ng-deep .discord-stats-card .discord-count,
-:host ::ng-deep .discord-stats-card .discord-stat {
-  color: #3730a3;
-}
-
-:host ::ng-deep .discord-stats-card .discord-dot.members {
-  background: #5865f2;
-}
-
 :host ::ng-deep .discord-stats-card .discord-join {
   font-size: 0.75rem;
-  color: #4338ca;
-}
-
-/* Dark: solid discord blue with white text */
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card {
-  background: linear-gradient(135deg, #5865f2, #404eed);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card:hover {
-  background: linear-gradient(135deg, #5865f2, #404eed);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 24px rgba(88, 101, 242, 0.35);
-}
-
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card .discord-icon {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card .discord-title,
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card .discord-count,
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card .discord-stat {
-  color: #ffffff;
-}
-
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card .discord-dot.members {
-  background: #ffffff;
-}
-
-:host-context(.my-app-dark) ::ng-deep .discord-stats-card .discord-join {
-  color: #ffffff;
 }
 
 /* Links */
@@ -232,15 +169,15 @@
   flex-direction: column;
   gap: 0.5rem;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--ui-sidebar-divider);
+  border-top: 1px solid var(--jule-line);
 }
 
 .sidebar-link {
-  color: var(--ui-sidebar-text-soft);
+  color: var(--jule-muted);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: underline;
-  text-decoration-color: var(--ui-sidebar-divider);
+  text-decoration-color: var(--jule-line);
   text-underline-offset: 4px;
   width: fit-content;
   transition:
@@ -249,10 +186,11 @@
 }
 
 .sidebar-link:hover {
-  color: var(--ui-sidebar-text);
+  color: var(--jule-text);
   text-decoration-color: currentColor;
 }
 
+/* Experimental UI (body.testui): larger, friendlier sidebar */
 :host-context(body.testui) .sidebar-inner {
   gap: 1.75rem;
 }
@@ -260,7 +198,6 @@
 :host-context(body.testui) .identity-hero {
   height: 224px;
   margin: 0;
-  border-radius: 0.625rem;
 }
 
 :host-context(body.testui) .identity-hero-name {
@@ -283,26 +220,17 @@
   gap: 0.5rem;
   min-width: 0;
   padding: 1.2rem 1.15rem 1.35rem;
-  border-radius: 0.5rem;
   overflow: hidden;
-  background:
-    radial-gradient(
-      130% 120% at 100% -10%,
-      color-mix(in srgb, var(--stat-color-light, #34d399) 9%, transparent),
-      transparent 58%
-    ),
-    var(--ui-surface-soft);
-  border: 1px solid var(--ui-border);
+  background: var(--jule-panel);
+  border: 1px solid var(--jule-line);
   transition:
     border-color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.2s ease;
 }
 
 :host-context(body.testui) .stat-tile:hover {
-  border-color: color-mix(in srgb, var(--stat-color-light, #34d399) 45%, var(--ui-border));
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  border-color: var(--stat-color, var(--jule-accent));
+  background: var(--jule-soft);
 }
 
 /* Thin top accent bar instead of the old colored side bar */
@@ -312,9 +240,10 @@
   left: 0;
   right: 0;
   top: 0;
+  bottom: auto;
+  width: auto;
   height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: linear-gradient(90deg, var(--stat-color, #10b981), var(--stat-color-light, #34d399));
+  background: var(--stat-color, var(--jule-accent));
 }
 
 :host-context(body.testui) .stat-tile-value {
@@ -324,7 +253,7 @@
   font-weight: 800;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  color: var(--ui-sidebar-text);
+  color: var(--jule-text);
 }
 
 :host-context(body.testui) .stat-tile-label {
@@ -336,16 +265,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.09em;
-  color: var(--ui-sidebar-muted);
+  color: var(--jule-muted);
 }
 
 :host-context(body.testui) .stat-tile-label::before {
   content: '';
   width: 6px;
   height: 6px;
-  border-radius: 2px;
-  background: var(--stat-color, #10b981);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--stat-color-light, #34d399) 22%, transparent);
+  background: var(--stat-color, var(--jule-accent));
 }
 
 :host-context(body.testui) .info-row {
@@ -374,13 +301,12 @@
 
 :host-context(body.testui) ::ng-deep .discord-stats-card {
   padding: 1rem 1.1rem;
-  border-radius: 0.5rem;
 }
 
 :host-context(body.testui) ::ng-deep .discord-stats-card .discord-icon {
   width: 44px;
   height: 44px;
-  border-radius: 0.75rem;
+  font-size: 1.5rem;
 }
 
 :host-context(body.testui) ::ng-deep .discord-stats-card .discord-title {

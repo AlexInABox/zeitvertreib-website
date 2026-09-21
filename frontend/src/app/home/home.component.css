@@ -1,13 +1,13 @@
-/* Startseite page-specific styles — the shared m3 design system lives in
-   src/styles/m3.css */
+/* Startseite page-specific styles — the shared JULE design spec lives in
+   src/styles/jule.css */
 
 /* Three readout cells in the live console */
-.m3-window-grid--3 {
+.jule-window-grid--3 {
   grid-template-columns: repeat(3, 1fr);
 }
 
 /* LGBTQIA+ statement */
-.m3-pride-bar {
+.jule-pride-bar {
   width: 4.5rem;
   height: 4px;
   margin-bottom: 2.4rem;
@@ -22,91 +22,91 @@
   );
 }
 
-.m3-pride-copy {
+.jule-pride-copy {
   max-width: 52rem;
   margin: 0;
   font-size: 1.3rem;
   line-height: 1.6;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
 }
 
 /* Transparency: right-aligned header, public-record readout rows */
-.m3-trans-head {
+.jule-trans-head {
   text-align: right;
 }
 
-.m3-trans-lead {
+.jule-trans-lead {
   max-width: 52rem;
   margin: 0 0 0 auto;
   font-size: 1.3rem;
   line-height: 1.6;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
 }
 
-.m3-trans-rows {
+.jule-trans-rows {
   margin: 3rem 0 0;
 }
 
-.m3-trans-row {
+.jule-trans-row {
   padding: 1.3rem 0;
-  border-top: 1px solid var(--m3-line);
+  border-top: 1px solid var(--jule-line);
 }
 
-.m3-trans-row:last-child {
-  border-bottom: 1px solid var(--m3-line);
+.jule-trans-row:last-child {
+  border-bottom: 1px solid var(--jule-line);
 }
 
-.m3-trans-key {
+.jule-trans-key {
   display: inline;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-.m3-trans-key::after {
+.jule-trans-key::after {
   content: ' — ';
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-weight: 400;
 }
 
-.m3-trans-val {
+.jule-trans-val {
   display: inline;
   margin: 0;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
-.m3-pride-grid {
+.jule-pride-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   margin-top: 2.4rem;
   padding-top: 2rem;
-  border-top: 1px solid var(--m3-line);
+  border-top: 1px solid var(--jule-line);
 }
 
-.m3-pride-item strong {
+.jule-pride-item strong {
   display: block;
   margin-bottom: 0.4rem;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-.m3-pride-item span {
-  color: var(--m3-muted);
+.jule-pride-item span {
+  color: var(--jule-muted);
   font-size: 0.92rem;
   line-height: 1.5;
 }
 
 @media (max-width: 640px) {
-  .m3-pride-grid {
+  .jule-pride-grid {
     grid-template-columns: 1fr;
   }
 }
 
 /* Discord ghost CTA is a link, not a button */
-.m3-hero-ghost--link {
+.jule-hero-ghost--link {
   text-decoration: none;
 }

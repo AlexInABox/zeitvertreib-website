@@ -1,118 +1,62 @@
-.header-right-actions {
+.as-actions {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.6rem;
 }
 
-.btn-toggle-ip {
-  background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: 0.375rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.725rem;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
+.as-toggle {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+}
+
+.as-loading {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  transition: all 0.15s ease;
+  gap: 0.6rem;
+  color: var(--jule-muted);
+  font-size: 0.85rem;
 }
 
-.btn-toggle-ip:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: white;
+.as-spinner {
+  width: 1rem;
+  height: 1rem;
 }
 
-.sessions-table {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.5rem;
+.as-row--current {
+  background: rgba(52, 211, 153, 0.06);
 }
 
-.session-row-dense {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 0.5rem;
-  transition: background 0.15s ease;
-}
-
-.session-row-dense:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.session-row-dense.is-current {
-  background: rgba(34, 197, 94, 0.06);
-  border-color: rgba(34, 197, 94, 0.2);
-}
-
-.session-row-dense.is-stale {
+.as-row--stale {
   opacity: 0.65;
 }
 
-.device-icon-box {
-  font-size: 1.125rem;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 0.375rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.as-device {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--jule-line);
+  color: var(--jule-muted);
+  font-size: 0.95rem;
 }
 
-.session-info-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.session-name-row {
+.as-name-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.browser-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: white;
+.as-warn {
+  color: #eab308;
 }
 
-.session-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.725rem;
-  color: rgba(255, 255, 255, 0.45);
+.as-revoke {
+  color: #f0716f;
 }
 
-.ip-address {
-  font-family: ui-monospace, monospace;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.meta-dot {
-  opacity: 0.4;
-}
-
-.text-warning {
-  color: #facc15;
-}
-
-.empty-state-inline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1.5rem;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.8125rem;
+.as-revoke:hover:not(:disabled) {
+  border-color: rgba(229, 72, 77, 0.6);
+  color: #f0716f;
 }

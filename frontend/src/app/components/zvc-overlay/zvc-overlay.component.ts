@@ -17,6 +17,7 @@ import { Subscription } from 'rxjs';
 import { ZvcService } from '../../services/zvc.service';
 import { AuthService } from '../../services/auth.service';
 import { EasterEggService } from '../../services/easter-egg.service';
+import { IconComponent } from '../icon/icon.component';
 
 type DigitColumn = {
   key: string;
@@ -37,7 +38,7 @@ type OdometerColumn = DigitColumn | SeparatorColumn;
 @Component({
   selector: 'app-zvc-overlay',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './zvc-overlay.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zvc-overlay.component.css'],

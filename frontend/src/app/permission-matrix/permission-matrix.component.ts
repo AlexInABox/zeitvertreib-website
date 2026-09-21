@@ -3,8 +3,8 @@ import { Component, OnDestroy, OnInit, ChangeDetectionStrategy, inject } from '@
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { IconComponent } from '../components/icon/icon.component';
-import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
-import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import { IngamePermission, INGAME_PERMISSIONS, DEFAULT_ROLE_GRANTS } from './permission-matrix.data';
 
 export interface Role {
@@ -16,7 +16,7 @@ export interface Role {
 @Component({
   standalone: true,
   selector: 'app-permission-matrix',
-  imports: [FormsModule, IconComponent, M3NavComponent, M3FooterComponent],
+  imports: [FormsModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './permission-matrix.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./permission-matrix.component.css'],
@@ -45,9 +45,6 @@ export class PermissionMatrixComponent implements OnInit, OnDestroy {
   activePermCode: string | null = null;
 
   ngOnInit() {
-    // Immersive m3 chrome: hides the global header/site footer while mounted.
-    document.body.classList.add('m3-active');
-
     this.roleGrants['owner'] = this.permissions.map((p) => p.code);
 
     this.permissions.forEach((p) => {
@@ -64,9 +61,7 @@ export class PermissionMatrixComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
-    document.body.classList.remove('m3-active');
-  }
+  ngOnDestroy() {}
 
   get visiblePermissions(): IngamePermission[] {
     let list = [...this.permissions];
@@ -168,9 +163,8 @@ export class PermissionMatrixComponent implements OnInit, OnDestroy {
     clone.style.overflow = 'visible';
     clone.style.display = 'table';
 
-    // Enforce theme background styles for the capture
-    const isDark =
-      document.documentElement.classList.contains('my-app-dark') || document.body.classList.contains('my-app-dark');
+    // Enforce the JULE canvas colours for the capture (dark only)
+    const isDark = true;
     clone.style.background = isDark ? '#0d0b12' : '#ffffff';
     clone.style.color = isDark ? '#f1edf9' : '#1f2937';
 

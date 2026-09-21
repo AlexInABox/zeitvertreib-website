@@ -1,22 +1,22 @@
-<div class="m3-canvas m3-canvas--fill">
-  <app-m3-nav />
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-  <main class="m3-page">
+  <main class="jule-page">
     <!-- Loading State -->
     @if (isLoading) {
-      <div class="m3-state">
-        <span class="m3-spinner" aria-hidden="true"></span>
+      <div class="jule-state">
+        <span class="jule-spinner" aria-hidden="true"></span>
         <span>Fall wird geladen…</span>
       </div>
     }
 
     <!-- Error State -->
     @if (hasError && !isLoading) {
-      <div class="m3-state">
-        <app-icon class="m3-state-icon m3-state-icon--danger" name="exclamation-triangle" />
+      <div class="jule-state">
+        <app-icon class="jule-state-icon jule-state-icon--danger" name="exclamation-triangle" />
         <h2>Ein Fehler ist aufgetreten</h2>
         <p>{{ errorMessage }}</p>
-        <button type="button" class="m3-btn m3-btn--ghost" (click)="loadCaseData()">
+        <button type="button" class="jule-btn jule-btn--ghost" (click)="loadCaseData()">
           <app-icon name="refresh" />
           Erneut versuchen
         </button>
@@ -26,20 +26,20 @@
     <!-- Main Content -->
     @if (!isLoading && !hasError && caseData) {
       <div class="case-back">
-        <button type="button" class="m3-btn m3-btn--ghost" (click)="goBack()">
+        <button type="button" class="jule-btn jule-btn--ghost" (click)="goBack()">
           <app-icon name="arrow-left" />
           Zurück zu Fällen
         </button>
       </div>
 
       <!-- Case head -->
-      <header class="m3-page-head case-head">
-        <span class="m3-eyebrow">Fall #{{ caseId }}</span>
-        <h1 class="m3-page-title case-head-title">{{ caseData?.title || formatCaseName(caseId) }}</h1>
+      <header class="jule-page-head case-head">
+        <span class="jule-eyebrow">Fall #{{ caseId }}</span>
+        <h1 class="jule-page-title case-head-title">{{ caseData?.title || formatCaseName(caseId) }}</h1>
 
         <div class="case-head-meta">
           @if (caseData!.category) {
-            <span class="m3-chip m3-chip--brand">{{ caseData!.category }}</span>
+            <span class="jule-chip jule-chip--brand">{{ caseData!.category }}</span>
           }
 
           @if (caseData?.createdBy) {
@@ -68,7 +68,7 @@
           </span>
 
           @if (isTeam && !isEditingMetadata) {
-            <button type="button" class="m3-btn m3-btn--ghost case-edit" (click)="startEditingMetadata()">
+            <button type="button" class="jule-btn jule-btn--ghost case-edit" (click)="startEditingMetadata()">
               <app-icon name="pencil" />
               Bearbeiten
             </button>
@@ -76,25 +76,25 @@
         </div>
 
         @if (caseData?.description && !isEditingMetadata) {
-          <p class="m3-page-lead">{{ caseData?.description }}</p>
+          <p class="jule-page-lead">{{ caseData?.description }}</p>
         }
       </header>
 
       <!-- Metadata editor -->
       @if (isEditingMetadata) {
-        <section class="m3-panel case-editor">
-          <div class="m3-panel-head">
-            <span class="m3-panel-title">Fall bearbeiten</span>
+        <section class="jule-panel case-editor">
+          <div class="jule-panel-head">
+            <span class="jule-panel-title">Fall bearbeiten</span>
             <span class="case-hint">Titel, Beschreibung &amp; Kategorie anpassen</span>
           </div>
 
-          <div class="m3-panel-body m3-stack">
+          <div class="jule-panel-body jule-stack">
             <div class="case-field">
               <label for="editTitle">Titel</label>
               <input
                 id="editTitle"
                 type="text"
-                class="m3-input"
+                class="jule-input"
                 [(ngModel)]="editedTitle"
                 placeholder="z.B. Wichtiger Fall"
               />
@@ -104,7 +104,7 @@
               <label for="editDescription">Beschreibung</label>
               <textarea
                 id="editDescription"
-                class="m3-input"
+                class="jule-input"
                 [(ngModel)]="editedDescription"
                 placeholder="Beschreibe diesen Fall..."
                 rows="3"
@@ -114,7 +114,7 @@
             <div class="case-field">
               <label for="editCategory">Kategorie</label>
               <div class="case-select">
-                <select id="editCategory" class="m3-select" [(ngModel)]="editedCategory">
+                <select id="editCategory" class="jule-select" [(ngModel)]="editedCategory">
                   @for (category of availableCategories; track category) {
                     <option [ngValue]="category">{{ category }}</option>
                   }
@@ -127,14 +127,14 @@
           <div class="case-editor-footer">
             <button
               type="button"
-              class="m3-btn m3-btn--ghost"
+              class="jule-btn jule-btn--ghost"
               (click)="cancelEditingMetadata()"
               [disabled]="isSavingMetadata"
             >
               <app-icon name="times" />
               Abbrechen
             </button>
-            <button type="button" class="m3-btn" (click)="saveMetadata()" [disabled]="isSavingMetadata">
+            <button type="button" class="jule-btn" (click)="saveMetadata()" [disabled]="isSavingMetadata">
               <app-icon [class.spin]="isSavingMetadata" [name]="isSavingMetadata ? 'loader' : 'check'" />
               Speichern
             </button>
@@ -147,20 +147,20 @@
         <!-- Main column: files -->
         <div class="case-main">
           @if ((caseData?.files?.length ?? 0) > 0) {
-            <section class="m3-panel">
-              <div class="m3-panel-head">
-                <span class="m3-panel-title">Dateien</span>
-                <span class="m3-chip">
+            <section class="jule-panel">
+              <div class="jule-panel-head">
+                <span class="jule-panel-title">Dateien</span>
+                <span class="jule-chip">
                   {{ filteredFiles.length }} / {{ caseData!.files.length }} · {{ getTotalSize() }}
                 </span>
               </div>
 
               <div class="case-files-toolbar">
-                <div class="m3-field case-files-search">
+                <div class="jule-field case-files-search">
                   <app-icon name="search" />
                   <input
                     type="text"
-                    class="m3-input"
+                    class="jule-input"
                     [(ngModel)]="searchQuery"
                     (input)="filterFiles()"
                     placeholder="Suche nach Dateinamen..."
@@ -168,7 +168,7 @@
                   @if (searchQuery) {
                     <button
                       type="button"
-                      class="m3-btn m3-btn--icon case-clear"
+                      class="jule-btn jule-btn--icon case-clear"
                       (click)="clearSearch()"
                       aria-label="Suche löschen"
                     >
@@ -178,7 +178,7 @@
                 </div>
 
                 <div class="case-select case-files-sort">
-                  <select class="m3-select" [ngModel]="sortBy" (ngModelChange)="onSortChange($event)">
+                  <select class="jule-select" [ngModel]="sortBy" (ngModelChange)="onSortChange($event)">
                     @for (option of sortOptions; track option.value) {
                       <option [value]="option.value">{{ option.label }}</option>
                     }
@@ -219,7 +219,7 @@
                         @if (isViewableFile(file.name)) {
                           <button
                             type="button"
-                            class="m3-btn m3-btn--icon case-file-btn"
+                            class="jule-btn jule-btn--icon case-file-btn"
                             (click)="openViewer(file.name, $event)"
                             title="Datei öffnen"
                             aria-label="Datei öffnen"
@@ -231,7 +231,7 @@
                           [href]="file.url"
                           target="_blank"
                           download
-                          class="m3-btn m3-btn--icon case-file-btn"
+                          class="jule-btn jule-btn--icon case-file-btn"
                           (click)="$event.stopPropagation()"
                           title="Datei herunterladen"
                           aria-label="Datei herunterladen"
@@ -245,18 +245,18 @@
               }
 
               @if (filteredFiles.length === 0) {
-                <div class="m3-state m3-state--plain case-files-empty">
-                  <app-icon class="m3-state-icon" name="search" />
+                <div class="jule-state jule-state--plain case-files-empty">
+                  <app-icon class="jule-state-icon" name="search" />
                   <p>Keine Dateien entsprechen deiner Suche „{{ searchQuery }}“.</p>
-                  <button type="button" class="m3-btn m3-btn--ghost" (click)="clearSearch()">Zurücksetzen</button>
+                  <button type="button" class="jule-btn jule-btn--ghost" (click)="clearSearch()">Zurücksetzen</button>
                 </div>
               }
             </section>
           }
 
           @if ((caseData?.files?.length ?? 0) === 0) {
-            <div class="m3-state">
-              <app-icon class="m3-state-icon" name="inbox" />
+            <div class="jule-state">
+              <app-icon class="jule-state-icon" name="inbox" />
               <p>Dieser Fall enthält noch keine Dateien. Lade Dateien hoch, um zu beginnen.</p>
             </div>
           }
@@ -267,17 +267,17 @@
           <aside class="case-side">
             <!-- File upload -->
             @if (isTeam) {
-              <section class="m3-panel">
-                <div class="m3-panel-head">
-                  <span class="m3-panel-title">Hochladen</span>
+              <section class="jule-panel">
+                <div class="jule-panel-head">
+                  <span class="jule-panel-title">Hochladen</span>
                 </div>
 
-                <div class="m3-panel-body m3-stack">
-                  <div class="m3-pills">
+                <div class="jule-panel-body jule-stack">
+                  <div class="jule-pills">
                     <button
                       type="button"
-                      class="m3-pill"
-                      [class.m3-pill--on]="uploadMode === 'file'"
+                      class="jule-pill"
+                      [class.jule-pill--on]="uploadMode === 'file'"
                       (click)="uploadMode = 'file'"
                     >
                       <app-icon name="file" />
@@ -285,8 +285,8 @@
                     </button>
                     <button
                       type="button"
-                      class="m3-pill"
-                      [class.m3-pill--on]="uploadMode === 'medal'"
+                      class="jule-pill"
+                      [class.jule-pill--on]="uploadMode === 'medal'"
                       (click)="uploadMode = 'medal'"
                     >
                       <img src="/assets/medal/medal_logo.avif" alt="" class="case-medal" />
@@ -296,7 +296,7 @@
 
                   <!-- File upload mode -->
                   @if (uploadMode === 'file') {
-                    <div class="m3-stack">
+                    <div class="jule-stack">
                       <input
                         type="file"
                         id="caseFileInput"
@@ -316,7 +316,7 @@
 
                       <button
                         type="button"
-                        class="m3-btn m3-btn--wide"
+                        class="jule-btn jule-btn--wide"
                         (click)="uploadFile()"
                         [disabled]="!selectedFile || isUploading"
                       >
@@ -328,10 +328,10 @@
 
                   <!-- Medal clip mode -->
                   @if (uploadMode === 'medal') {
-                    <div class="m3-stack">
+                    <div class="jule-stack">
                       <input
                         type="text"
-                        class="m3-input"
+                        class="jule-input"
                         [(ngModel)]="medalClipUrl"
                         (ngModelChange)="onMedalUrlChange()"
                         placeholder="https://medal.tv/games/.../clips/..."
@@ -346,7 +346,7 @@
                       }
                       <button
                         type="button"
-                        class="m3-btn m3-btn--wide"
+                        class="jule-btn jule-btn--wide"
                         (click)="uploadMedalClip()"
                         [disabled]="!medalClipUrl || medalUrlInvalid || isFetchingMedalClip"
                       >
@@ -363,7 +363,7 @@
                         <app-icon class="spin" name="loader" />
                         {{ uploadStatusMessage }}
                       </span>
-                      <div class="m3-track"><i [style.width.%]="uploadProgress"></i></div>
+                      <div class="jule-track"><i [style.width.%]="uploadProgress"></i></div>
                       <span class="case-progress-eta">{{ uploadETA }}</span>
                     </div>
                   }
@@ -374,7 +374,7 @@
                         <app-icon class="spin" name="loader" />
                         {{ medalStatusMessage }}
                       </span>
-                      <div class="m3-track">
+                      <div class="jule-track">
                         <i
                           [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"
                         ></i>
@@ -400,13 +400,13 @@
 
             <!-- Linked users -->
             @if (isTeam) {
-              <section class="m3-panel">
-                <div class="m3-panel-head">
-                  <span class="m3-panel-title">Verknüpfte Nutzer</span>
-                  <span class="m3-chip">{{ caseData?.linkedUsers?.length || 0 }}</span>
+              <section class="jule-panel">
+                <div class="jule-panel-head">
+                  <span class="jule-panel-title">Verknüpfte Nutzer</span>
+                  <span class="jule-chip">{{ caseData?.linkedUsers?.length || 0 }}</span>
                 </div>
 
-                <div class="m3-panel-body m3-stack">
+                <div class="jule-panel-body jule-stack">
                   @if (caseData?.linkedUsers?.length) {
                     <div class="case-chips">
                       @for (user of caseData?.linkedUsers; track user.steamId) {
@@ -439,7 +439,7 @@
                   <div class="case-inline-add">
                     <input
                       type="text"
-                      class="m3-input"
+                      class="jule-input"
                       [(ngModel)]="newLinkedSteamId"
                       placeholder="Steam-ID hinzufügen…"
                       (keydown.enter)="addLinkedUser()"
@@ -448,7 +448,7 @@
                     />
                     <button
                       type="button"
-                      class="m3-btn m3-btn--icon"
+                      class="jule-btn jule-btn--icon"
                       (click)="addLinkedUser()"
                       [disabled]="isManagingLinkedUsers || !newLinkedSteamId.trim()"
                       title="Nutzer verknüpfen"
@@ -472,13 +472,13 @@
             }
 
             <!-- Linked reports -->
-            <section class="m3-panel">
-              <div class="m3-panel-head">
-                <span class="m3-panel-title">Verknüpfte Reports</span>
-                <span class="m3-chip">{{ caseData?.linkedReportIds?.length || 0 }}</span>
+            <section class="jule-panel">
+              <div class="jule-panel-head">
+                <span class="jule-panel-title">Verknüpfte Reports</span>
+                <span class="jule-chip">{{ caseData?.linkedReportIds?.length || 0 }}</span>
               </div>
 
-              <div class="m3-panel-body m3-stack">
+              <div class="jule-panel-body jule-stack">
                 @if (caseData?.linkedReportIds?.length) {
                   <div class="case-chips">
                     @for (reportId of caseData?.linkedReportIds; track reportId) {
@@ -515,7 +515,7 @@
                 }
 
                 @if (isTeam) {
-                  <div class="case-report-search m3-stack">
+                  <div class="case-report-search jule-stack">
                     @if (caseData?.linkedUsers?.length) {
                       <span class="case-hint">Reports eines Nutzers suchen:</span>
                       <div class="case-quick-search">
@@ -538,7 +538,7 @@
                       <div class="case-inline-add">
                         <input
                           type="text"
-                          class="m3-input"
+                          class="jule-input"
                           [(ngModel)]="newLinkedReportId"
                           placeholder="Report-ID eingeben…"
                           (keydown.enter)="linkReport()"
@@ -548,7 +548,7 @@
                         />
                         <button
                           type="button"
-                          class="m3-btn m3-btn--icon"
+                          class="jule-btn jule-btn--icon"
                           (click)="linkReport()"
                           [disabled]="isLinkingReport || !newLinkedReportId.trim()"
                           title="Report verknüpfen"
@@ -572,12 +572,12 @@
                             title="Report #{{ report.id }} verknüpfen"
                           >
                             <span class="case-result-main">
-                              <span class="case-result-id m3-mono">#{{ report.id }}</span>
+                              <span class="case-result-id jule-mono">#{{ report.id }}</span>
                               <span class="case-result-reason">{{ report.reason }}</span>
                             </span>
                             <span class="case-result-meta">
                               <span>{{ report.reporter.username }} → {{ report.reported.username }}</span>
-                              <span class="m3-mono">{{ formatDate(report.createdAt) }}</span>
+                              <span class="jule-mono">{{ formatDate(report.createdAt) }}</span>
                             </span>
                           </div>
                         }
@@ -603,7 +603,11 @@
                       </span>
                     }
 
-                    <button type="button" class="m3-btn m3-btn--ghost m3-btn--wide" (click)="toggleManualReportEntry()">
+                    <button
+                      type="button"
+                      class="jule-btn jule-btn--ghost jule-btn--wide"
+                      (click)="toggleManualReportEntry()"
+                    >
                       <app-icon [name]="showManualReportEntry ? 'times' : 'plus'" />
                       {{ showManualReportEntry ? 'Manuelle Eingabe abbrechen' : 'Report per ID verknüpfen' }}
                     </button>
@@ -627,7 +631,7 @@
                 [href]="viewerFileUrl"
                 target="_blank"
                 download
-                class="m3-btn m3-btn--ghost viewer-download-btn"
+                class="jule-btn jule-btn--ghost viewer-download-btn"
                 title="Herunterladen"
               >
                 <app-icon name="download" />
@@ -635,7 +639,7 @@
               </a>
               <button
                 type="button"
-                class="m3-btn m3-btn--icon viewer-close-btn"
+                class="jule-btn jule-btn--icon viewer-close-btn"
                 (click)="closeViewer()"
                 title="Schließen"
                 aria-label="Schließen"
@@ -670,5 +674,5 @@
     }
   </main>
 
-  <app-m3-footer />
+  <app-jule-footer />
 </div>

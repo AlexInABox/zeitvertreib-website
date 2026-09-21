@@ -1,28 +1,28 @@
-<div class="m3-canvas m3-canvas--fill">
-  <app-m3-nav />
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-  <main class="m3-page">
+  <main class="jule-page">
     <!-- ===== LIST VIEW ===== -->
     @if (!selectedReport) {
-      <header class="m3-page-head">
-        <span class="m3-eyebrow">Moderation</span>
-        <h1 class="m3-page-title">Reports.</h1>
-        <p class="m3-page-lead">
+      <header class="jule-page-head">
+        <span class="jule-eyebrow">Moderation</span>
+        <h1 class="jule-page-title">Reports.</h1>
+        <p class="jule-page-lead">
           Wähle <u>deinen</u> aktiven Report aus und lade Beweise hoch, um das Team zu unterstützen.
         </p>
       </header>
 
       <!-- Loading -->
       @if (isLoading) {
-        <div class="m3-state">
-          <span class="m3-spinner" aria-hidden="true"></span>
+        <div class="jule-state">
+          <span class="jule-spinner" aria-hidden="true"></span>
           <span>Reports werden geladen…</span>
         </div>
       }
 
       <!-- Error -->
       @if (loadError && !isLoading) {
-        <div class="m3-notice m3-notice--error report-notice">
+        <div class="jule-notice jule-notice--error report-notice">
           <app-icon name="exclamation-triangle" />
           <span>{{ loadError }}</span>
           <button type="button" class="report-notice-action" (click)="loadReports()">
@@ -34,19 +34,19 @@
 
       <!-- Empty state -->
       @if (!isLoading && !loadError && reports.length === 0) {
-        <div class="m3-state">
-          <app-icon class="m3-state-icon" name="flag" />
+        <div class="jule-state">
+          <app-icon class="jule-state-icon" name="flag" />
           <p>Momentan gibt es keine laufenden Reports.</p>
         </div>
       }
 
       <!-- Report list -->
       @if (!isLoading && !loadError && reports.length > 0) {
-        <div class="report-grid m3-hairgrid m3-hairgrid--2">
+        <div class="report-grid jule-hairgrid jule-hairgrid--2">
           @for (report of reports; track report.id) {
             <button type="button" class="report-card" (click)="selectReport(report)">
               <span class="report-card-top">
-                <span class="m3-chip m3-chip--brand">#{{ report.id }}</span>
+                <span class="jule-chip jule-chip--brand">#{{ report.id }}</span>
                 <span class="report-time">{{ formatTimestamp(report.createdAt) }}</span>
               </span>
 
@@ -100,7 +100,7 @@
         <div class="report-detail-head">
           <button
             type="button"
-            class="m3-btn m3-btn--ghost"
+            class="jule-btn jule-btn--ghost"
             (click)="backToList()"
             [disabled]="isFetchingMedalClip || isUploading"
           >
@@ -110,13 +110,13 @@
         </div>
 
         <!-- Report summary -->
-        <section class="m3-panel">
-          <div class="m3-panel-head">
-            <span class="m3-panel-title">Report #{{ selectedReport.id }}</span>
+        <section class="jule-panel">
+          <div class="jule-panel-head">
+            <span class="jule-panel-title">Report #{{ selectedReport.id }}</span>
             <span class="report-time">{{ formatTimestamp(selectedReport.createdAt) }}</span>
           </div>
 
-          <div class="m3-panel-body report-players">
+          <div class="jule-panel-body report-players">
             <div class="report-player">
               @if (selectedReport.reporter.avatarUrl) {
                 <img [src]="selectedReport.reporter.avatarUrl" class="report-avatar" alt="" />
@@ -152,18 +152,18 @@
 
         <!-- Upload box -->
         @if (!uploadDone) {
-          <section class="m3-panel">
-            <div class="m3-panel-head">
-              <span class="m3-panel-title">Beweise hochladen</span>
+          <section class="jule-panel">
+            <div class="jule-panel-head">
+              <span class="jule-panel-title">Beweise hochladen</span>
             </div>
 
-            <div class="m3-panel-body m3-stack">
+            <div class="jule-panel-body jule-stack">
               <!-- Upload mode toggle -->
-              <div class="m3-pills">
+              <div class="jule-pills">
                 <button
                   type="button"
-                  class="m3-pill"
-                  [class.m3-pill--on]="uploadMode === 'file'"
+                  class="jule-pill"
+                  [class.jule-pill--on]="uploadMode === 'file'"
                   (click)="uploadMode = 'file'; errorMessage = ''"
                   [disabled]="isFetchingMedalClip || isUploading"
                 >
@@ -172,8 +172,8 @@
                 </button>
                 <button
                   type="button"
-                  class="m3-pill"
-                  [class.m3-pill--on]="uploadMode === 'medal'"
+                  class="jule-pill"
+                  [class.jule-pill--on]="uploadMode === 'medal'"
                   (click)="uploadMode = 'medal'; errorMessage = ''"
                   [disabled]="isFetchingMedalClip || isUploading"
                 >
@@ -184,7 +184,7 @@
 
               <!-- Shared error notice -->
               @if (errorMessage) {
-                <div class="m3-notice m3-notice--error report-notice">
+                <div class="jule-notice jule-notice--error report-notice">
                   <app-icon name="exclamation-triangle" />
                   <span>{{ errorMessage }}</span>
                   <button type="button" class="report-notice-action" (click)="errorMessage = ''" aria-label="Schließen">
@@ -218,7 +218,7 @@
 
                 <!-- File list -->
                 @if (files.length > 0) {
-                  <div class="m3-rows report-files">
+                  <div class="jule-rows report-files">
                     @for (f of files; track $index; let i = $index) {
                       <div class="report-file">
                         <app-icon class="report-file-icon" [name]="fileIcon(f.file.name)" />
@@ -228,7 +228,7 @@
                         @if (f.status === 'pending') {
                           <button
                             type="button"
-                            class="m3-btn m3-btn--icon report-file-remove"
+                            class="jule-btn jule-btn--icon report-file-remove"
                             (click)="removeFile(i)"
                             [disabled]="isUploading"
                             aria-label="Entfernen"
@@ -251,7 +251,7 @@
                         }
 
                         @if (f.status === 'uploading') {
-                          <div class="m3-track report-file-track">
+                          <div class="jule-track report-file-track">
                             <i [style.width.%]="f.progress"></i>
                           </div>
                         }
@@ -263,7 +263,7 @@
                 <!-- Upload button -->
                 <button
                   type="button"
-                  class="m3-btn m3-btn--wide"
+                  class="jule-btn jule-btn--wide"
                   [disabled]="files.length === 0 || isUploading"
                   (click)="uploadAll()"
                 >
@@ -282,7 +282,7 @@
                     [(ngModel)]="medalClipUrl"
                     (ngModelChange)="onMedalUrlChange()"
                     placeholder="https://medal.tv/games/.../clips/..."
-                    class="m3-input"
+                    class="jule-input"
                     [class.report-input--invalid]="medalUrlInvalid"
                     [disabled]="isFetchingMedalClip"
                   />
@@ -296,7 +296,7 @@
 
                 <!-- Integrity check retry prompt -->
                 @if (medalRetryPromptMessage) {
-                  <div class="m3-notice m3-notice--warn report-notice">
+                  <div class="jule-notice jule-notice--warn report-notice">
                     <app-icon name="exclamation-triangle" />
                     <span>{{ medalRetryPromptMessage }}</span>
                     <span class="report-notice-actions">
@@ -323,7 +323,7 @@
                       <app-icon class="spin" name="loader" />
                       <span>{{ medalStatusMessage }}</span>
                     </div>
-                    <div class="m3-track report-medal-track">
+                    <div class="jule-track report-medal-track">
                       <i [style.width.%]="medalDownloadProgress > 0 ? medalDownloadProgress : medalUploadProgress"></i>
                     </div>
                     <span class="report-medal-eta">{{ medalETA }}</span>
@@ -332,7 +332,7 @@
 
                 <button
                   type="button"
-                  class="m3-btn m3-btn--wide"
+                  class="jule-btn jule-btn--wide"
                   [disabled]="!medalClipUrl.trim() || medalUrlInvalid || isFetchingMedalClip"
                   (click)="uploadMedalClip()"
                 >
@@ -346,7 +346,7 @@
 
         <!-- Success state -->
         @if (uploadDone) {
-          <div class="m3-state report-done">
+          <div class="jule-state report-done">
             <app-icon
               class="report-done-icon"
               [name]="allUploadsSuccessful ? 'check-circle' : 'exclamation-triangle'"
@@ -360,7 +360,7 @@
                   : 'Dein Beweis konnte nicht hochgeladen werden.'
               }}
             </p>
-            <button type="button" class="m3-btn m3-btn--ghost" (click)="backToList()">
+            <button type="button" class="jule-btn jule-btn--ghost" (click)="backToList()">
               <app-icon name="list" />
               Zurück zu Reports
             </button>
@@ -370,5 +370,5 @@
     }
   </main>
 
-  <app-m3-footer />
+  <app-jule-footer />
 </div>

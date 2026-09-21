@@ -20,12 +20,14 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 
 - The website dashboard has been redesigned: live server stats, kills and playtime at a glance, and a Steam launch button
 - New landing page; the website is now dark-mode only
-- The Reports, Cases, Z.E.I.T. and Permissions pages now use the same design as the landing page and dashboard
-- The login page matches the new design as well
+- The Reports, Cases, Z.E.I.T., Permissions and Advent calendar pages now use the same design as the landing page and dashboard
+- The login flow, including the missing-Steam-link notice, now matches the new design as well
+- The profile page, including its data export and account deletion controls, now matches the new design as well
 
 ### Removed
 
 - The web games section (slot machine, lucky wheel, chicken cross, roulette and lootbox) has been removed from the website
+- Paysafecard donations have been removed from the website and the Discord bot
 
 ### Fixed
 

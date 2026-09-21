@@ -1,11 +1,12 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { IconComponent, type IconName } from '../../../components/icon/icon.component';
 
+/** Case list widget, reused for linked and self-created cases. */
 @Component({
   selector: 'app-user-cases',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule, IconComponent],
   templateUrl: './user-cases.component.html',
   styleUrls: ['./user-cases.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -14,7 +15,7 @@ export class UserCasesComponent {
   cases = input<any[]>([]);
   title = input<string>('Cases');
   subtitle = input<string>('Zugewiesene Fälle');
-  iconClass = input<string>('pi-folder-open icon-purple');
+  iconName = input<IconName>('folder-open');
   isCreatedCases = input<boolean>(false);
 
   getDateDisplay(timestamp?: number): string {

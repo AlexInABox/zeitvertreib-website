@@ -1,5 +1,5 @@
-/* Cases page-specific styles — the shared m3 design system lives in
-   src/styles/m3.css */
+/* Cases page-specific styles — the shared JULE design spec lives in
+   src/styles/jule.css */
 
 .cases-stack {
   display: flex;
@@ -58,7 +58,7 @@
   position: absolute;
   right: 0.85rem;
   font-size: 0.85rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   pointer-events: none;
 }
 
@@ -72,7 +72,7 @@
   gap: 0.45rem;
 }
 
-.cases-search-field .m3-input {
+.cases-search-field .jule-input {
   padding-right: 2.9rem;
 }
 
@@ -89,14 +89,14 @@
   position: absolute;
   right: 0.95rem;
   font-size: 0.95rem;
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
 .cases-hint {
   display: inline-flex;
   align-items: flex-start;
   gap: 0.4rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.78rem;
   line-height: 1.5;
 }
@@ -107,7 +107,7 @@
 }
 
 .cases-hint--active {
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
 .cases-hint--error {
@@ -125,9 +125,9 @@
   gap: 0.55rem;
   width: 100%;
   padding: 0.8rem 1rem;
-  border: 1px dashed var(--m3-line);
+  border: 1px dashed var(--jule-line);
   background: none;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 500;
@@ -139,7 +139,7 @@
 }
 
 .cases-create:hover {
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   border-color: rgba(161, 61, 230, 0.5);
   background: rgba(161, 61, 230, 0.05);
 }
@@ -152,7 +152,7 @@
   flex: none;
   padding: 0.22rem 0.5rem;
   border: 1px solid rgba(161, 61, 230, 0.55);
-  color: var(--m3-accent);
+  color: var(--jule-accent);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -169,7 +169,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -178,7 +178,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.78rem;
 }
 
@@ -195,10 +195,9 @@
   gap: 0.4rem;
   max-width: 11rem;
   padding: 0.18rem 0.55rem 0.18rem 0.25rem;
-  border: 1px solid var(--m3-line);
-  border-radius: 9999px;
+  border: 1px solid var(--jule-line);
   background: none;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-family: inherit;
   font-size: 0.72rem;
   cursor: pointer;
@@ -209,9 +208,9 @@
 }
 
 .case-creator:hover {
-  color: var(--m3-text);
+  color: var(--jule-text);
   border-color: rgba(161, 61, 230, 0.55);
-  background: var(--m3-soft);
+  background: var(--jule-soft);
 }
 
 .case-creator-avatar {
@@ -229,14 +228,14 @@
 }
 
 .case-date {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.72rem;
   cursor: help;
 }
 
 .case-arrow {
   font-size: 0.9rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   transition:
     transform 0.2s ease,
     color 0.2s ease;
@@ -244,7 +243,7 @@
 
 .case-row:hover .case-arrow {
   transform: translateX(3px);
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
 /* ================================================
@@ -259,7 +258,7 @@
 }
 
 .cases-page-info {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.82rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;

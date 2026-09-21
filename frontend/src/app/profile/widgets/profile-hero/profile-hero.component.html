@@ -1,70 +1,74 @@
-<div class="profile-hero">
-  <div class="hero-main">
-    <a [href]="user()?.avatarUrl" target="_blank" class="avatar-wrapper" title="Avatar im neuen Tab öffnen">
+<section class="jule-panel pf-hero">
+  <div class="pf-hero-main">
+    <a
+      [href]="user()?.avatarUrl"
+      target="_blank"
+      rel="noopener"
+      class="pf-avatar-link"
+      title="Avatar im neuen Tab öffnen"
+    >
       @if (user()?.avatarUrl) {
-        <img [src]="user()?.avatarUrl" alt="Avatar" class="hero-avatar" />
-      }
-      @if (!user()?.avatarUrl) {
-        <div class="hero-avatar-placeholder">
-          <i class="pi pi-user"></i>
-        </div>
+        <img [src]="user()?.avatarUrl" alt="Avatar" class="pf-avatar" />
+      } @else {
+        <span class="pf-avatar pf-avatar--empty"><app-icon name="user" /></span>
       }
     </a>
-    <div class="hero-identity">
-      <div class="identity-header">
-        <h1 class="username">{{ user()?.username || user()?.steamId }}</h1>
+
+    <div class="pf-hero-id">
+      <div class="pf-hero-name-row">
+        <h1 class="pf-hero-name">{{ user()?.username || user()?.steamId }}</h1>
         @if (isManageView()) {
-          <span class="badge badge-admin"><i class="pi pi-shield"></i> Admin-Ansicht</span>
+          <span class="jule-chip jule-chip--brand"><app-icon name="shield" /> Admin-Ansicht</span>
         }
       </div>
-      <div class="steamid-row">
-        <code class="steamid-text">{{ user()?.steamId }}</code>
-        <button class="btn-copy" (click)="copySteamId()" title="SteamID kopieren">
-          <i class="pi" [class.pi-copy]="!copiedSteamId" [class.pi-check]="copiedSteamId"></i>
-          <span>{{ copiedSteamId ? 'Kopiert!' : 'Kopieren' }}</span>
+      <div class="pf-hero-sid">
+        <code class="pf-sid jule-mono">{{ user()?.steamId }}</code>
+        <button type="button" class="jule-btn jule-btn--ghost pf-copy" (click)="copySteamId()">
+          <app-icon [name]="copiedSteamId ? 'check' : 'copy'" />
+          {{ copiedSteamId ? 'Kopiert' : 'Kopieren' }}
         </button>
       </div>
     </div>
   </div>
 
-  <!-- HERO STATS -->
-  <div class="hero-stats-group">
-    <div class="hero-stats">
+  <div class="pf-hero-side">
+    <div class="jule-stats pf-hero-stats">
       @if (user()?.coins !== undefined) {
-        <div class="hero-stat-pill">
-          <span class="pill-label">Coins</span>
-          <span class="pill-value coin-value"><i class="pi pi-dollar"></i> {{ user()?.coins }}</span>
+        <div class="jule-stat">
+          <span>Coins</span>
+          <strong>{{ user()?.coins }}</strong>
         </div>
       }
       @if (user()?.discordId || user()?.discordAvatarUrl) {
-        <div class="hero-stat-pill">
-          <span class="pill-label">Discord</span>
-          <div class="pill-value discord-value">
+        <div class="jule-stat">
+          <span>Discord</span>
+          <strong class="pf-discord">
             @if (user()?.discordAvatarUrl) {
-              <img [src]="user()?.discordAvatarUrl" alt="Discord Avatar" class="discord-avatar" />
+              <img [src]="user()?.discordAvatarUrl" alt="" class="pf-discord-avatar" />
             }
-            <span class="discord-id">{{ user()?.discordId || 'Verbunden' }}</span>
-          </div>
+            {{ user()?.discordId || 'Verbunden' }}
+          </strong>
         </div>
       }
       @if (user()?.firstSeen) {
-        <div class="hero-stat-pill">
-          <span class="pill-label">Zuerst gesehen</span>
-          <span class="pill-value date-pill">{{ getDateDisplay(user()?.firstSeen) }}</span>
+        <div class="jule-stat">
+          <span>Zuerst gesehen</span>
+          <strong class="pf-date">{{ getDateDisplay(user()?.firstSeen) }}</strong>
         </div>
       }
       @if (user()?.lastSeen) {
-        <div class="hero-stat-pill">
-          <span class="pill-label">Zuletzt gesehen</span>
-          <span class="pill-value date-pill">{{ getDateDisplay(user()?.lastSeen) }}</span>
+        <div class="jule-stat">
+          <span>Zuletzt gesehen</span>
+          <strong class="pf-date">{{ getDateDisplay(user()?.lastSeen) }}</strong>
         </div>
       }
     </div>
 
     @if (isSelf()) {
-      <div class="hero-actions">
-        <button class="btn btn-danger-soft" (click)="logout()"><i class="pi pi-sign-out"></i> Abmelden</button>
-      </div>
+      <button type="button" class="jule-btn jule-btn--danger" (click)="logout()">
+        <app-icon name="logout" />
+        Abmelden
+      </button>
     }
   </div>
-</div>
+</section>

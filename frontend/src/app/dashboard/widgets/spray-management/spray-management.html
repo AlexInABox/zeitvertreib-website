@@ -1,7 +1,7 @@
 <!-- Spray Ban Warning -->
 @if (isSprayBanned) {
 <div class="spray-ban-warning">
-  <div class="spray-ban-icon">@if (testUi()) {<i class="pi pi-ban"></i>} @else {🔨}</div>
+  <div class="spray-ban-icon">@if (testUi()) {<app-icon name="ban" />} @else {<app-icon name="ban" />}</div>
   <div class="spray-ban-content">
     <h4 class="spray-ban-title">Du wurdest von Spray-Uploads gebannt</h4>
     <p class="spray-ban-reason"><strong>Grund:</strong> {{ sprayBanReason }}</p>
@@ -16,7 +16,7 @@
 } @if (!isSprayBanned) {
 <div class="sprays-container-inline">
   <div class="sprays-info-left">
-    <h3 class="spray-title">@if (testUi()) {<i class="pi pi-image"></i>} @else {🖼️} Sprays</h3>
+    <h3 class="spray-title">@if (testUi()) {<app-icon name="image" />} @else {<app-icon name="image" />} Sprays</h3>
     <p class="spray-subtitle">Bis zu {{ isDonator() ? 3 : 2 }} Sprays hochladen</p>
   </div>
   <div class="sprays-action-right">
@@ -27,7 +27,7 @@
         @if (i === 2 && !isDonator()) {
         <div class="spray-locked-mini">
           <span class="locked-icon-mini" title="Exklusiv für Unterstützer!"
-            >@if (testUi()) {<i class="pi pi-lock"></i>} @else {🔒}</span
+            >@if (testUi()) {<app-icon name="lock" />} @else {<app-icon name="lock" />}</span
           >
         </div>
         }
@@ -41,8 +41,9 @@
             [disabled]="slot.isUploading"
             title="Löschen"
           >
-            @if (!slot.isUploading) { @if (testUi()) {<i class="pi pi-trash"></i>} @else {🗑️} } @if (slot.isUploading) {
-            <ui-spinner size="sm" variant="light" />
+            @if (!slot.isUploading) { @if (testUi()) {<app-icon name="trash" />} @else {<app-icon name="trash" />} } @if
+            (slot.isUploading) {
+            <span class="jule-spinner jule-spinner--sm" aria-hidden="true"></span>
             }
           </button>
         </div>
@@ -56,7 +57,7 @@
         <!-- Uploading State -->
         @if (slot.isUploading && !slot.id) {
         <div class="spray-uploading-mini">
-          <ui-spinner size="sm" variant="light" />
+          <span class="jule-spinner jule-spinner--sm" aria-hidden="true"></span>
         </div>
         }
         <!-- Empty Paid Slot -->
@@ -71,7 +72,7 @@
             style="display: none"
           />
           <label [for]="'spray' + i" class="spray-upload-btn-mini" title="Kostenpflichtiger Slot (100 ZVC/Woche)">
-            @if (testUi()) {<i class="pi pi-money-bill"></i>} @else {💰}
+            @if (testUi()) {<app-icon name="dollar" />} @else {<app-icon name="dollar" />}
           </label>
         </div>
         }
@@ -87,7 +88,7 @@
             style="display: none"
           />
           <label [for]="'spray' + i" class="spray-upload-btn-mini" title="Bild wählen">
-            @if (testUi()) {<i class="pi pi-upload"></i>} @else {📁}
+            @if (testUi()) {<app-icon name="upload" />} @else {<app-icon name="upload" />}
           </label>
         </div>
         }
@@ -103,7 +104,7 @@
 }
 
 <!-- Preview Modal -->
-<ui-dialog [(open)]="previewModalOpen" title="Spray konfigurieren" (close)="closePreviewModal(true)">
+<jule-dialog [(open)]="previewModalOpen" title="Spray konfigurieren" (close)="closePreviewModal(true)">
   <div class="spray-preview-container-modal-centered">
     <div class="preview-image-box-modal">
       <img [src]="previewModalUrl" alt="Spray Preview" class="preview-large-image-modal" />
@@ -114,7 +115,7 @@
     <input
       id="sprayName"
       type="text"
-      class="spray-input"
+      class="jule-input"
       [(ngModel)]="previewModalName"
       placeholder="z.B. Mein cooles Spray"
       maxlength="20"
@@ -124,7 +125,7 @@
     <div class="input-error-hint">Nur Buchstaben, Zahlen, Unterstriche und Leerzeichen erlaubt.</div>
     }
   </div>
-  <div class="checkbox-group mt-2">
+  <div class="checkbox-group">
     <div class="checkbox-item">
       <input type="checkbox" id="privacyCheck" [(ngModel)]="acceptedPrivacy" />
       <label for="privacyCheck">
@@ -169,18 +170,19 @@
     </div>
     }
   </div>
-  <div uiDialogFooter>
-    <ui-button
-      variant="info"
-      full
+  <div juleDialogFooter>
+    <button
+      type="button"
+      class="jule-btn spray-submit"
       (click)="confirmUploadFromModal()"
       [disabled]="previewModalUploading || !isNameValid(previewModalName) || !acceptedPrivacy || !acceptedRules"
     >
       @if (!previewModalUploading) {
-      <span>🚀 Jetzt hochladen</span>
+      <app-icon name="upload" />
+      <span>Jetzt hochladen</span>
       } @if (previewModalUploading) {
-      <ui-spinner size="sm" variant="light" />
+      <span class="jule-spinner jule-spinner--sm" aria-hidden="true"></span>
       }
-    </ui-button>
+    </button>
   </div>
-</ui-dialog>
+</jule-dialog>

@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../services/notification.service';
+import { IconComponent, IconName } from '../icon/icon.component';
 
 @Component({
   selector: 'app-toast',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './toast.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./toast.component.css'],
@@ -17,13 +18,13 @@ export class ToastComponent {
     this.notificationService.removeToast(id);
   }
 
-  getIconEmoji(severity: string): string {
-    const emojis: Record<string, string> = {
-      success: '✅',
-      error: '❌',
-      warn: '⚠️',
-      info: 'ℹ️',
+  getIconEmoji(severity: string): IconName {
+    const icons: Record<string, IconName> = {
+      success: 'check-circle',
+      error: 'exclamation-circle',
+      warn: 'exclamation-triangle',
+      info: 'info',
     };
-    return emojis[severity] || 'ℹ️';
+    return icons[severity] || 'info';
   }
 }

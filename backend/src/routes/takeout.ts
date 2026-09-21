@@ -11,7 +11,6 @@ import {
   sprays,
   sprayBans,
   deletedSprays,
-  paysafeCardSubmissions,
   fakeranks,
   fakerankBans,
   deletedFakeranks,
@@ -139,7 +138,6 @@ interface TakeoutDataResult {
   fakeranks: Record<string, unknown>[];
   fakerankBans: Record<string, unknown> | null;
   deletedFakeranks: Record<string, unknown>[];
-  paysafeCardSubmissions: Record<string, unknown>[];
   donations: Record<string, unknown>[];
   sessions: Record<string, unknown>[];
   steamCache: Record<string, unknown> | null;
@@ -186,11 +184,7 @@ async function collectUserData(
     .where(eq(deletedFakeranks.uploadedByUserid, userid))
     .all();
 
-  // Paysafe and donations are linked by discordId
-  const paysafeResult = discordId
-    ? await db.select().from(paysafeCardSubmissions).where(eq(paysafeCardSubmissions.discordId, discordId)).all()
-    : [];
-
+  // Donations are linked by discordId
   const donationsResult = discordId
     ? await db.select().from(donations).where(eq(donations.discordId, discordId)).all()
     : [];
@@ -218,11 +212,6 @@ async function collectUserData(
     fakeranks: fakeranksResult,
     fakerankBans: fakerankBansResult ?? null,
     deletedFakeranks: deletedFakeranksResult,
-    paysafeCardSubmissions: paysafeResult.map((p) => ({
-      ...p,
-      // Mask the card code for security - only show last 4 digits
-      cardCode: p.cardCode ? `****${p.cardCode.slice(-4)}` : null,
-    })),
     donations: donationsResult,
     sessions: sessionsResult.map((s) => ({
       ...s,

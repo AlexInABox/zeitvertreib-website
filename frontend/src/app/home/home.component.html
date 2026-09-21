@@ -1,61 +1,61 @@
-<div class="m3-canvas">
-  <app-m3-nav />
+<div class="jule-canvas">
+  <app-jule-nav />
 
   <!-- Hero -->
-  <section class="m3-hero">
-    <div class="m3-hero-inner">
-      <div class="m3-hero-copy">
-        <h1 class="m3-hero-title">
-          <span class="m3-line m3-line--a">Zeitvertreib.</span>
-          <span class="m3-line m3-line--b">Seit 2021.</span>
+  <section class="jule-hero">
+    <div class="jule-hero-inner">
+      <div class="jule-hero-copy">
+        <h1 class="jule-hero-title">
+          <span class="jule-line jule-line--a">Zeitvertreib.</span>
+          <span class="jule-line jule-line--b">Seit 2021.</span>
         </h1>
-        <p class="m3-hero-sub">Ein deutschsprachiger SCP: Secret Laboratory Server und Safespace.</p>
-        <div class="m3-hero-actions">
-          <a class="m3-hero-play" [href]="steamUrl">Spielen</a>
-          <a class="m3-hero-ghost" href="/dashboard">Dashboard</a>
+        <p class="jule-hero-sub">Ein deutschsprachiger SCP: Secret Laboratory Server und Safespace.</p>
+        <div class="jule-hero-actions">
+          <a class="jule-hero-play" [href]="steamUrl">Spielen</a>
+          <a class="jule-hero-ghost" href="/dashboard">Dashboard</a>
         </div>
       </div>
 
       <!-- Live console -->
-      <div class="m3-window">
-        <div class="m3-window-bar">
-          <span class="m3-window-badge">
-            <img class="m3-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
+      <div class="jule-window">
+        <div class="jule-window-bar">
+          <span class="jule-window-badge">
+            <img class="jule-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
           </span>
-          <span class="m3-window-name">Server-Status</span>
-          <span class="m3-live" role="status" aria-label="Server live"></span>
+          <span class="jule-window-name">Server-Status</span>
+          <span class="jule-live" role="status" aria-label="Server live"></span>
         </div>
-        <div class="m3-window-grid m3-window-grid--3">
-          <div class="m3-cell">
+        <div class="jule-window-grid jule-window-grid--3">
+          <div class="jule-cell">
             <span>Spieler</span><strong>{{ playerCount }}</strong>
           </div>
-          <div class="m3-cell">
+          <div class="jule-cell">
             <span>Lebend</span><strong>{{ alivePlayers.length }}</strong>
           </div>
-          <div class="m3-cell">
+          <div class="jule-cell">
             <span>Tote</span><strong>{{ deadPlayers.length }}</strong>
           </div>
         </div>
-        <div class="m3-window-foot">
+        <div class="jule-window-foot">
           <span>92.119.167.107:7100</span>
         </div>
-        <a class="m3-window-ext" href="https://discord.gg/MhQ4Wp7GfS" target="_blank" rel="noopener noreferrer">
-          <span class="m3-ext-icon">
-            <svg class="m3-discord" viewBox="0 0 126.644 96" aria-hidden="true" focusable="false">
+        <a class="jule-window-ext" href="https://discord.gg/MhQ4Wp7GfS" target="_blank" rel="noopener noreferrer">
+          <span class="jule-ext-icon">
+            <svg class="jule-discord" viewBox="0 0 126.644 96" aria-hidden="true" focusable="false">
               <path
                 fill="currentColor"
                 d="M81.15,0c-1.2376,2.1973-2.3489,4.4704-3.3591,6.794-9.5975-1.4396-19.3718-1.4396-28.9945,0-.985-2.3236-2.1216-4.5967-3.3591-6.794-9.0166,1.5407-17.8059,4.2431-26.1405,8.0568C2.779,32.5304-1.6914,56.3725.5312,79.8863c9.6732,7.1476,20.5083,12.603,32.0505,16.0884,2.6014-3.4854,4.8998-7.1981,6.8698-11.0623-3.738-1.3891-7.3497-3.1318-10.8098-5.1523.9092-.6567,1.7932-1.3386,2.6519-1.9953,20.281,9.547,43.7696,9.547,64.0758,0,.8587.7072,1.7427,1.3891,2.6519,1.9953-3.4601,2.0457-7.0718,3.7632-10.835,5.1776,1.97,3.8642,4.2683,7.5769,6.8698,11.0623,11.5419-3.4854,22.3769-8.9156,32.0509-16.0631,2.626-27.2771-4.496-50.9172-18.817-71.8548C98.9811,4.2684,90.1918,1.5659,81.1752.0505l-.0252-.0505ZM42.2802,65.4144c-6.2383,0-11.4159-5.6575-11.4159-12.6535s4.9755-12.6788,11.3907-12.6788,11.5169,5.708,11.4159,12.6788c-.101,6.9708-5.026,12.6535-11.3907,12.6535ZM84.3576,65.4144c-6.2637,0-11.3907-5.6575-11.3907-12.6535s4.9755-12.6788,11.3907-12.6788,11.4917,5.708,11.3906,12.6788c-.101,6.9708-5.026,12.6535-11.3906,12.6535Z"
               />
             </svg>
           </span>
-          <span class="m3-ext-cells">
-            <span class="m3-ext-cell">
-              <em class="m3-ext-key">Mitglieder</em>
-              <strong class="m3-ext-val">{{ fmt(discordMembers) }}</strong>
+          <span class="jule-ext-cells">
+            <span class="jule-ext-cell">
+              <em class="jule-ext-key">Mitglieder</em>
+              <strong class="jule-ext-val">{{ fmt(discordMembers) }}</strong>
             </span>
-            <span class="m3-ext-cell">
-              <em class="m3-ext-key">Online</em>
-              <strong class="m3-ext-val">{{ fmt(discordOnline) }}</strong>
+            <span class="jule-ext-cell">
+              <em class="jule-ext-key">Online</em>
+              <strong class="jule-ext-val">{{ fmt(discordOnline) }}</strong>
             </span>
           </span>
         </a>
@@ -64,60 +64,62 @@
   </section>
 
   <!-- LGBTQIA+ -->
-  <section class="m3-section m3-pride">
-    <div class="m3-pride-bar" aria-hidden="true"></div>
-    <h2 class="m3-h2">LGBTQIA+</h2>
-    <p class="m3-pride-copy">
+  <section class="jule-section jule-pride">
+    <div class="jule-pride-bar" aria-hidden="true"></div>
+    <h2 class="jule-h2">LGBTQIA+</h2>
+    <p class="jule-pride-copy">
       Zeitvertreib steht für Vielfalt, Transparenz und Tolleranz. Jede Person ist hier willkommen, unabhängig von
       Hautfarbe, Religion oder Sexualität. <br />Unsere Moderation greift konsequent durch, damit der Server ein
       geschützter Raum bleibt. Für LGBTQIA+. Für alle.
     </p>
-    <div class="m3-pride-grid">
-      <div class="m3-pride-item">
+    <div class="jule-pride-grid">
+      <div class="jule-pride-item">
         <strong>Moderation</strong>
         <span>Unser Team ist, sowohl in-game als auch auf Discord, sehr präsent!</span>
       </div>
-      <div class="m3-pride-item">
+      <div class="jule-pride-item">
         <strong>Konsequente Regeln</strong>
         <span>Diskriminierung hat keinen Platz. Ohne Ausnahme.</span>
       </div>
-      <div class="m3-pride-item">
+      <div class="jule-pride-item">
         <strong>Safe Space</strong>
         <span>Ein Server, an dem du einfach du sein kannst.</span>
       </div>
     </div>
   </section>
 
-  <div class="m3-divider" aria-hidden="true"></div>
+  <div class="jule-divider" aria-hidden="true"></div>
 
   <!-- Transparenz -->
-  <section class="m3-section m3-trans">
-    <div class="m3-trans-head">
-      <h2 class="m3-h2">Transparenz.</h2>
-      <p class="m3-trans-lead">
+  <section class="jule-section jule-trans">
+    <div class="jule-trans-head">
+      <h2 class="jule-h2">Transparenz.</h2>
+      <p class="jule-trans-lead">
         Zeitvertreib ist 2021 aus der Intransparenz anderer SCP-Communities entstanden. Deswegen liegt bei uns alles
         offen.
       </p>
     </div>
-    <dl class="m3-trans-rows">
-      <div class="m3-trans-row">
-        <dt class="m3-trans-key">Bestrafungslogs</dt>
-        <dd class="m3-trans-val">Banns, Warns und Mutes. Seit Konzeption öffentlich einsehbar.</dd>
+    <dl class="jule-trans-rows">
+      <div class="jule-trans-row">
+        <dt class="jule-trans-key">Bestrafungslogs</dt>
+        <dd class="jule-trans-val">Banns, Warns und Mutes. Seit Konzeption öffentlich einsehbar.</dd>
       </div>
-      <div class="m3-trans-row">
-        <dt class="m3-trans-key">Serverlogs</dt>
-        <dd class="m3-trans-val">Ebenfalls offen: Ihr seht, ob wir Channels löschen oder plötzlich korrupt werden.</dd>
+      <div class="jule-trans-row">
+        <dt class="jule-trans-key">Serverlogs</dt>
+        <dd class="jule-trans-val">
+          Ebenfalls offen: Ihr seht, ob wir Channels löschen oder plötzlich korrupt werden.
+        </dd>
       </div>
-      <div class="m3-trans-row">
-        <dt class="m3-trans-key">Entscheidungen</dt>
-        <dd class="m3-trans-val">
+      <div class="jule-trans-row">
+        <dt class="jule-trans-key">Entscheidungen</dt>
+        <dd class="jule-trans-val">
           Entbannungen laufen nach der Zeitvertreib-Verfassung als öffentliche, anonyme Live-Umfragen im Team. Jede
           autoritäre Entscheidung bleibt nachvollziehbar.
         </dd>
       </div>
-      <div class="m3-trans-row">
-        <dt class="m3-trans-key">Regeländerungen</dt>
-        <dd class="m3-trans-val">
+      <div class="jule-trans-row">
+        <dt class="jule-trans-key">Regeländerungen</dt>
+        <dd class="jule-trans-val">
           Nur per Volksentscheid auf dem Discord. Es braucht eine 60%-Mehrheit, sonst ändert sich nichts.
         </dd>
       </div>
@@ -125,33 +127,33 @@
   </section>
 
   <!-- Gallery -->
-  <section class="m3-section m3-gallery">
-    <div class="m3-gallery-head">
+  <section class="jule-section jule-gallery">
+    <div class="jule-gallery-head">
       <div>
-        <h2 class="m3-h2">Bilder</h2>
+        <h2 class="jule-h2">Bilder</h2>
       </div>
-      <div class="m3-gallery-nav">
-        <span class="m3-gallery-count">{{ activeImageIndex + 1 }} / {{ galleryImages.length }}</span>
-        <button type="button" class="m3-arrow" (click)="prevImage()" aria-label="Zurück">←</button>
-        <button type="button" class="m3-arrow" (click)="nextImage()" aria-label="Weiter">→</button>
+      <div class="jule-gallery-nav">
+        <span class="jule-gallery-count">{{ activeImageIndex + 1 }} / {{ galleryImages.length }}</span>
+        <button type="button" class="jule-arrow" (click)="prevImage()" aria-label="Zurück">←</button>
+        <button type="button" class="jule-arrow" (click)="nextImage()" aria-label="Weiter">→</button>
       </div>
     </div>
-    <div class="m3-stage">
-      <img class="m3-stage-img" [src]="stageBehind" alt="" aria-hidden="true" />
+    <div class="jule-stage">
+      <img class="jule-stage-img" [src]="stageBehind" alt="" aria-hidden="true" />
       @for (src of [stageFront]; track src) {
         <img
-          class="m3-stage-img m3-stage-img--front"
+          class="jule-stage-img jule-stage-img--front"
           [src]="src"
           [alt]="'Server-Screenshot ' + (activeImageIndex + 1)"
         />
       }
     </div>
-    <div class="m3-thumbs">
+    <div class="jule-thumbs">
       @for (img of galleryImages; track img; let i = $index) {
         <button
           type="button"
-          class="m3-thumb"
-          [class.m3-thumb--on]="i === activeImageIndex"
+          class="jule-thumb"
+          [class.jule-thumb--on]="i === activeImageIndex"
           (click)="pickImage(i)"
           [attr.aria-label]="'Screenshot ' + (i + 1)"
         >
@@ -161,5 +163,5 @@
     </div>
   </section>
 
-  <app-m3-footer />
+  <app-jule-footer />
 </div>

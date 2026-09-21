@@ -6,14 +6,14 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ZeitService } from '../services/zeit.service';
 import { IconComponent } from '../components/icon/icon.component';
-import { M3NavComponent } from '../components/m3-nav/m3-nav.component';
-import { M3FooterComponent } from '../components/m3-footer/m3-footer.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import type { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib/types';
 
 @Component({
   standalone: true,
   selector: 'app-zeit',
-  imports: [FormsModule, RouterModule, IconComponent, M3NavComponent, M3FooterComponent],
+  imports: [FormsModule, RouterModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './zeit.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zeit.component.css'],
@@ -72,9 +72,6 @@ export class ZeitComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit() {
-    // Immersive m3 chrome: hides the global header/site footer while mounted.
-    document.body.classList.add('m3-active');
-
     this.authSubscription = this.authService.currentUser$.subscribe((user: any) => {
       this.isLoggedIn = !!user;
     });
@@ -107,7 +104,6 @@ export class ZeitComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    document.body.classList.remove('m3-active');
     this.authSubscription?.unsubscribe();
     this.userDataSubscription?.unsubscribe();
     this.queryParamSubscription?.unsubscribe();

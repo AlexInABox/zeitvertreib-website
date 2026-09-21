@@ -14,44 +14,58 @@ Always load the `angular-developer` skill before editing frontend code:
 
 ---
 
-## 2. UI Library (`@app/ui`)
+## 2. Design Spec (JULE)
 
-Reusable UI primitives live in the self-curated library at `projects/ui/` and are imported via the
-`@app/ui` path alias (see [`projects/ui/README.md`](file:///home/bet/Projects/zeitvertreib/frontend/projects/ui/README.md)).
+JULE is the **only** design spec in this codebase. The full description lives in
+[`JULE.md`](JULE.md); the tokens and primitives live in `src/styles/jule.css`.
 
 ### ✅ DO (Correct)
 
-```ts
-import { ButtonComponent, CardComponent, BadgeComponent } from '@app/ui';
-```
-
 ```html
-<ui-card title="Titel" subtitle="Untertitel">
-  <ui-button variant="primary">Speichern</ui-button>
-</ui-card>
+<section class="jule-panel">
+  <div class="jule-panel-head">
+    <span class="jule-panel-title">Titel</span>
+    <span class="jule-chip jule-chip--ok">Aktiv</span>
+  </div>
+  <div class="jule-panel-body">
+    <button type="button" class="jule-btn" (click)="save()">Speichern</button>
+  </div>
+</section>
 ```
 
 ### Component rules
 
-- All library components are **standalone**, use signal inputs, `ChangeDetectionStrategy.Eager`, and the `ui-` prefix.
-- **Never hardcode hex/rgba in page or component styles** — reference the design tokens
-  (`var(--ui-surface)`, `var(--ui-primary-grad)`, `var(--ui-focus-ring)`, …) defined in
-  `projects/ui/src/lib/tokens/tokens.css`. Add new tokens there instead of inlining values.
-- If a UI pattern exists in the library, use it — do **not** copy-paste a local `.btn`, `.badge`,
-  `.dense-card`, `.dense-input`, `.loading-spinner`, `.progress-track`, or modal overlay recipe.
-- Pages may keep page-specific layout styles (positioning, spacing, bespoke visuals) in their own
-  stylesheet; primitives (buttons, cards, badges, inputs, spinners, progress, dialogs) come from the library.
-- For native fields that need page-specific styling (e.g. icon-inside-input), apply the global
-  `.ui-field` utility class instead of duplicating an input recipe.
+- Use the `jule-*` classes: `jule-canvas`, `jule-page`, `jule-panel`, `jule-panel-head`,
+  `jule-panel-body`, `jule-btn` (+ `--ghost`, `--danger`, `--icon`, `--wide`), `jule-input`,
+  `jule-select`, `jule-chip`, `jule-notice`, `jule-state`, `jule-spinner`, `jule-stats`,
+  `jule-gear`, `jule-rows`, `jule-item`, `jule-hairgrid`, `jule-table`, `jule-mono`.
+- **Never hardcode hex/rgba in page or component styles** — reference the JULE tokens
+  (`var(--jule-bg)`, `var(--jule-panel)`, `var(--jule-line)`, `var(--jule-text)`,
+  `var(--jule-muted)`, `var(--jule-accent)`, `var(--jule-font-display)`, …). Add a token to
+  `jule.css` instead of inlining a value. Status colours (`#34d399`, `#eab308`, `#f0716f`)
+  are the only sanctioned exception.
+- **Corners stay sharp.** No `border-radius` on cards, buttons, inputs, panels or chips.
+  Only avatars and small dots are round.
+- No glass effects, no drop-shadowed cards. Separation is hairline borders and flat surfaces.
+- Shared UI lives at `src/app/components/jule-nav/`, `jule-footer/`, `jule-dialog/` and
+  `icon/`. Icons come from `app-icon`; list available names in
+  `src/app/components/icon/icon.component.ts`.
+- Page-specific layout (positioning, spacing, bespoke visuals) may live in the page's own
+  stylesheet; primitives do not.
 
 ---
 
-## 3. PrimeNG Phase-out
+## 3. No other design specs
 
-PrimeNG is being removed from this codebase. **Do not import new PrimeNG modules or use `p-*`
-components in templates.** Prefer the `@app/ui` library (section 2) or plain custom CSS.
-Existing PrimeNG imports (`ButtonModule`, `CardModule`, `PrimeIcons`, `pi pi-*` icon classes) are
-migrated to the library incrementally.
+PrimeNG, PrimeIcons and the former `@app/ui` component library have been removed. Do not
+reintroduce them, and do not add a second token set or theme.
+
+- **Do not** import `primeng`, `primeicons` or `@primeuix/*`, and do not use `p-*`
+  components or `pi pi-*` icon classes.
+- **Do not** add another `--something-*` token system or a light/dark theme switch. The app
+  is dark-mode only; `JULE.md` is the spec.
+- Use a JULE primitive before writing a new component; if a primitive is missing, add it to
+  `jule.css` and document it in `JULE.md`.
 
 ---
 

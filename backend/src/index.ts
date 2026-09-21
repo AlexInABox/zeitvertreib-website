@@ -48,7 +48,6 @@ import {
   handleUnlinkCaseFromReport,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
-import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
 import { handleStripeCheckout, handleStripeWebhook } from './routes/stripe.js';
 import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.js';
 import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
@@ -186,10 +185,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Ko-fi webhook
   'POST:/kofi/webhook': handleKofiWebhook,
-
-  // Paysafe routes
-  'POST:/paysafe': handlePostPaysafe,
-  'GET:/paysafe': handleGetPaysafe,
 
   // Stripe routes
   'POST:/stripe/checkout': handleStripeCheckout,

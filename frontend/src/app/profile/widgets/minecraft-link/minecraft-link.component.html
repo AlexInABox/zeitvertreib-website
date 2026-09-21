@@ -1,91 +1,75 @@
-<div class="dense-card integration-card">
-  <div class="card-header">
-    <div class="card-title">
-      <i class="pi pi-box card-icon icon-green"></i>
-      <div>
-        <h2>Minecraft Account</h2>
-        <span class="card-subtitle">Server-Verknüpfung</span>
+<section class="jule-panel">
+  <div class="jule-panel-head">
+    <div class="pf-head">
+      <app-icon name="box" />
+      <div class="pf-head-copy">
+        <h2 class="pf-title">Minecraft Account</h2>
+        <span class="pf-sub">Server-Verknüpfung</span>
       </div>
     </div>
     @if (minecraftLinked) {
-      <span class="badge badge-success">Verlinkt</span>
-    }
-    @if (!minecraftLinked && !loadingMinecraftLink) {
-      <span class="badge badge-neutral">Nicht verlinkt</span>
+      <span class="jule-chip jule-chip--ok">Verlinkt</span>
+    } @else if (!loadingMinecraftLink) {
+      <span class="jule-chip">Nicht verlinkt</span>
     }
   </div>
 
   @if (loadingMinecraftLink) {
-    <div class="card-loading-inline">
-      <div class="loading-spinner small"></div>
-      <span>Lade Status...</span>
+    <div class="jule-panel-body mc-loading">
+      <span class="jule-spinner mc-spinner" aria-hidden="true"></span>
+      <span>Lade Status…</span>
     </div>
-  }
-
-  @if (!loadingMinecraftLink) {
-    <div class="dense-body integration-body">
-      <div class="integration-content">
-        @if (minecraftLinked) {
-          <div class="minecraft-linked-box">
-            <div class="uuid-display-row">
-              <span class="info-label">UUID</span>
-              <code class="uuid-code">{{ minecraftUuid }}</code>
-              <button class="btn-icon btn-icon-secondary" (click)="copyUuid()" title="UUID kopieren">
-                <i class="pi" [class.pi-copy]="!copiedUuid" [class.pi-check]="copiedUuid"></i>
-              </button>
-            </div>
-            <button
-              class="btn btn-danger-outline btn-full"
-              (click)="unlinkMinecraft()"
-              [disabled]="minecraftUnlinkLoading"
-            >
-              @if (!minecraftUnlinkLoading) {
-                <span><i class="pi pi-times"></i> Verknüpfung trennen</span>
-              }
-              @if (minecraftUnlinkLoading) {
-                <span>Entknüpfe...</span>
-              }
-            </button>
-          </div>
-        }
-
-        @if (!minecraftLinked) {
-          <div class="minecraft-unlinked-box">
-            <p class="dense-help-text">Gib deinen 8-stelligen Ingame Link-Code ein:</p>
-            <div class="input-action-group">
-              <input
-                type="text"
-                class="dense-input code-input"
-                [(ngModel)]="minecraftLinkCode"
-                placeholder="XXXX-XXXX"
-                maxlength="9"
-                [disabled]="minecraftLinkLoading"
-                (input)="onMinecraftCodeInput($event)"
-                (keyup.enter)="submitMinecraftLinkCode()"
-              />
-              <button
-                class="btn btn-primary btn-link-mc"
-                (click)="submitMinecraftLinkCode()"
-                [disabled]="minecraftLinkLoading"
-              >
-                @if (!minecraftLinkLoading) {
-                  <span><i class="pi pi-link"></i> Verknüpfen</span>
-                }
-                @if (minecraftLinkLoading) {
-                  <span>Prüfe...</span>
-                }
-              </button>
-            </div>
-          </div>
-        }
-      </div>
+  } @else {
+    <div class="jule-panel-body jule-stack">
+      @if (minecraftLinked) {
+        <div class="mc-uuid-row">
+          <span class="pf-sub">UUID</span>
+          <code class="mc-uuid jule-mono">{{ minecraftUuid }}</code>
+          <button type="button" class="jule-btn jule-btn--icon" (click)="copyUuid()" title="UUID kopieren">
+            <app-icon [name]="copiedUuid ? 'check' : 'copy'" />
+          </button>
+        </div>
+        <button
+          type="button"
+          class="jule-btn jule-btn--danger mc-full"
+          (click)="unlinkMinecraft()"
+          [disabled]="minecraftUnlinkLoading"
+        >
+          <app-icon name="times" />
+          {{ minecraftUnlinkLoading ? 'Entknüpfe…' : 'Verknüpfung trennen' }}
+        </button>
+      } @else {
+        <p class="mc-help">Gib deinen 8-stelligen Ingame Link-Code ein:</p>
+        <div class="mc-input-row">
+          <input
+            type="text"
+            class="jule-input mc-code"
+            [(ngModel)]="minecraftLinkCode"
+            placeholder="XXXX-XXXX"
+            maxlength="9"
+            [disabled]="minecraftLinkLoading"
+            (input)="onMinecraftCodeInput($event)"
+            (keyup.enter)="submitMinecraftLinkCode()"
+          />
+          <button type="button" class="jule-btn" (click)="submitMinecraftLinkCode()" [disabled]="minecraftLinkLoading">
+            <app-icon name="link" />
+            {{ minecraftLinkLoading ? 'Prüfe…' : 'Verknüpfen' }}
+          </button>
+        </div>
+      }
 
       @if (minecraftLinkError) {
-        <div class="dense-notice notice-error"><i class="pi pi-exclamation-circle"></i> {{ minecraftLinkError }}</div>
+        <div class="jule-notice jule-notice--error">
+          <app-icon name="exclamation-circle" />
+          <span>{{ minecraftLinkError }}</span>
+        </div>
       }
       @if (minecraftLinkSuccess) {
-        <div class="dense-notice notice-success"><i class="pi pi-check-circle"></i> {{ minecraftLinkSuccess }}</div>
+        <div class="jule-notice jule-notice--ok">
+          <app-icon name="check-circle" />
+          <span>{{ minecraftLinkSuccess }}</span>
+        </div>
       }
     </div>
   }
-</div>
+</section>

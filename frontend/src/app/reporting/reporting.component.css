@@ -1,5 +1,5 @@
-/* Reports page-specific styles — the shared m3 design system lives in
-   src/styles/m3.css */
+/* Reports page-specific styles — the shared JULE design spec lives in
+   src/styles/jule.css */
 
 /* ================================================
    Report list
@@ -11,7 +11,7 @@
   gap: 0.95rem;
   padding: 1.25rem 1.35rem;
   border: 0;
-  background: var(--m3-bg);
+  background: var(--jule-bg);
   color: inherit;
   font-family: inherit;
   font-size: inherit;
@@ -21,7 +21,7 @@
 }
 
 .report-card:hover {
-  background: var(--m3-panel);
+  background: var(--jule-panel);
 }
 
 .report-card-top {
@@ -32,7 +32,7 @@
 }
 
 .report-time {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.72rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -63,14 +63,14 @@
   width: 40px;
   height: 40px;
   object-fit: cover;
-  border: 1px solid var(--m3-line);
-  background: var(--m3-panel);
+  border: 1px solid var(--jule-line);
+  background: var(--jule-panel);
 }
 
 .report-avatar--empty {
   display: grid;
   place-items: center;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 1.1rem;
 }
 
@@ -82,7 +82,7 @@
 }
 
 .report-player-lines em {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.62rem;
   font-style: normal;
   font-weight: 600;
@@ -95,14 +95,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.92rem;
   font-weight: 600;
 }
 
 .report-divider {
   flex: none;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.85rem;
   opacity: 0.6;
 }
@@ -115,7 +115,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.85rem;
   line-height: 1.55;
 }
@@ -137,8 +137,8 @@
   gap: 0.55rem;
   margin-top: auto;
   padding-top: 0.9rem;
-  border-top: 1px solid var(--m3-line-soft);
-  color: var(--m3-accent);
+  border-top: 1px solid var(--jule-line-soft);
+  color: var(--jule-accent);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -216,7 +216,7 @@
 
 .report-hint {
   margin: 0;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -229,9 +229,9 @@
   align-items: center;
   gap: 0.7rem;
   padding: 2.5rem 1.5rem;
-  border: 1px dashed var(--m3-line);
+  border: 1px dashed var(--jule-line);
   background: rgba(233, 227, 247, 0.02);
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.9rem;
   cursor: pointer;
   transition:
@@ -248,17 +248,17 @@
 .report-drop:hover {
   border-color: rgba(161, 61, 230, 0.55);
   background: rgba(161, 61, 230, 0.05);
-  color: var(--m3-text);
+  color: var(--jule-text);
 }
 
 .report-drop:hover app-icon {
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
 /* ---- File rows --------------------------------------------- */
 
 .report-files {
-  border: 1px solid var(--m3-line);
+  border: 1px solid var(--jule-line);
 }
 
 .report-file {
@@ -267,7 +267,7 @@
   align-items: center;
   gap: 0.85rem;
   padding: 0.85rem 1.1rem;
-  border-top: 1px solid var(--m3-line-soft);
+  border-top: 1px solid var(--jule-line-soft);
   overflow: hidden;
 }
 
@@ -278,7 +278,7 @@
 .report-file-icon {
   flex: none;
   font-size: 1.1rem;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
 }
 
 .report-file-name {
@@ -287,14 +287,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.88rem;
   font-weight: 500;
 }
 
 .report-file-size {
   flex: none;
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
 }
@@ -316,7 +316,7 @@
 }
 
 .report-file-status--busy {
-  color: var(--m3-accent);
+  color: var(--jule-accent);
 }
 
 .report-file-status--ok {
@@ -374,7 +374,7 @@
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  color: var(--m3-text);
+  color: var(--jule-text);
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -384,7 +384,7 @@
 }
 
 .report-medal-eta {
-  color: var(--m3-muted);
+  color: var(--jule-muted);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }

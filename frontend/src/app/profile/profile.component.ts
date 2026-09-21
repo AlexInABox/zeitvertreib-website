@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService, SteamUser } from '../services/auth.service';
 import { environment } from '../../environments/environment';
@@ -14,13 +13,13 @@ import { ModerationSummaryComponent } from './widgets/moderation-summary/moderat
 import { UserCasesComponent } from './widgets/user-cases/user-cases.component';
 import { SpraysListComponent } from './widgets/sprays-list/sprays-list.component';
 import { CoinRestrictionComponent } from './widgets/coin-restriction/coin-restriction.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
 @Component({
   standalone: true,
   selector: 'app-profile',
   imports: [
-    CommonModule,
-    RouterModule,
     ProfileHeroComponent,
     MinecraftLinkComponent,
     ActiveSessionsComponent,
@@ -29,6 +28,8 @@ import { CoinRestrictionComponent } from './widgets/coin-restriction/coin-restri
     UserCasesComponent,
     SpraysListComponent,
     CoinRestrictionComponent,
+    JuleNavComponent,
+    JuleFooterComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],

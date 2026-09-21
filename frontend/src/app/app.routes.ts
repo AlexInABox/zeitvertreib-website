@@ -14,11 +14,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'paysafecard',
-    loadComponent: () => import('./paysafecard/paysafecard.component').then((m) => m.PaysafecardComponent),
-    canActivate: [authGuard],
-  },
-  {
     path: 'zeit',
     loadComponent: () => import('./zeit/zeit.component').then((m) => m.ZeitComponent),
     // No guard - accessible to everyone, query locked in component
@@ -62,11 +57,6 @@ export const routes: Routes = [
   {
     path: 'auth/callback',
     loadComponent: () => import('./auth-callback/auth-callback.component').then((m) => m.AuthCallbackComponent),
-  },
-  {
-    path: 'ui',
-    loadComponent: () => import('./ui-preview/ui-preview.component').then((m) => m.UiPreviewComponent),
-    // Public route - live component library preview
   },
   {
     path: '',

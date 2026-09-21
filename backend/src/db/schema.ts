@@ -157,18 +157,6 @@ export const discordCache = sqliteTable('discord_cache', {
   lastUpdated: integer('last_updated').notNull().default(0),
 });
 
-export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  discordId: text('discord_id').notNull(),
-  cardCode: text('card_code').notNull(),
-  submittedAt: integer('submitted_at').notNull().default(0),
-  processedAt: integer('processed_at').notNull().default(0),
-  status: text('status', { enum: ['pending', 'approved', 'rejected'] })
-    .notNull()
-    .default('pending'),
-  amount: numeric('amount').notNull(),
-});
-
 export const fakeranks = sqliteTable('fakeranks', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userid: text('userid').notNull(),
