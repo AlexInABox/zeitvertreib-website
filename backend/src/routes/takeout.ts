@@ -1,27 +1,20 @@
 import type { TakeoutGetResponse, TakeoutPostRequest } from '@zeitvertreib/types';
 import { validateSession, createResponse } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, sql, lt, or, isNull } from 'drizzle-orm';
-import {
-  lastTakeoutRequests,
-  playerdata,
-  discordInfo,
-  kills,
-  adventCalendar,
-  sprays,
-  sprayBans,
-  deletedSprays,
-  fakeranks,
-  fakerankBans,
-  deletedFakeranks,
-  donations,
-  sessions,
-  steamCache,
-  birthdays,
-} from '../db/schema.js';
+import { eq, sql, type SQL } from 'drizzle-orm';
+import { lastTakeoutRequests, playerdata } from '../db/schema.js';
 import { SMTPClient, Message } from 'emailjs';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+// Tables that must never be included in a takeout, even when a row references the user.
+// login_secrets holds credentials (login links) and must not leave the database.
+const BANNED_TAKEOUT_TABLES = new Set<string>(['login_secrets']);
+
+// Columns whose values are credentials/tokens and are replaced with a truncated preview.
+const MASKED_TAKEOUT_COLUMNS: Record<string, string[]> = {
+  sessions: ['id'],
+};
 
 // Simple email syntax validation
 function isValidEmail(email: string): boolean {
@@ -128,99 +121,108 @@ export async function handlePostTakeout(request: Request, env: Env): Promise<Res
 }
 
 interface TakeoutDataResult {
-  playerdata: Record<string, unknown> | null;
-  discordInfo: Record<string, unknown> | null;
-  kills: { asAttacker: Record<string, unknown>[]; asTarget: Record<string, unknown>[] };
-  adventCalendar: Record<string, unknown> | null;
-  sprays: Record<string, unknown>[];
-  sprayBans: Record<string, unknown> | null;
-  deletedSprays: Record<string, unknown>[];
-  fakeranks: Record<string, unknown>[];
-  fakerankBans: Record<string, unknown> | null;
-  deletedFakeranks: Record<string, unknown>[];
-  donations: Record<string, unknown>[];
-  sessions: Record<string, unknown>[];
-  steamCache: Record<string, unknown> | null;
-  birthdays: Record<string, unknown> | null;
+  [tableName: string]: Record<string, unknown>[];
+}
+
+// The introspection helpers below deliberately use raw SQL: Drizzle's typed query builder cannot
+// enumerate tables/columns at runtime. The equivalent exception to CONVENTIONS.md section 2.
+async function getExportableTableNames(db: ReturnType<typeof drizzle<Record<string, unknown>>>): Promise<string[]> {
+  const rows = await db.all<{ name: string }>(
+    sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`,
+  );
+
+  const tableNames: string[] = [];
+  for (const row of rows) {
+    const name = row.name;
+    // Internal bookkeeping tables (KV, drizzle migrations) start with an underscore. D1 rejects
+    // queries against them, and they hold no user data.
+    if (name.startsWith('_')) continue;
+    if (BANNED_TAKEOUT_TABLES.has(name)) continue;
+    tableNames.push(name);
+  }
+  return tableNames;
+}
+
+async function getTableColumns(
+  db: ReturnType<typeof drizzle<Record<string, unknown>>>,
+  tableName: string,
+): Promise<string[]> {
+  const rows = await db.all<{ name: string }>(sql`PRAGMA table_info(${sql.identifier(tableName)})`);
+
+  const columns: string[] = [];
+  for (const row of rows) {
+    columns.push(row.name);
+  }
+  return columns;
+}
+
+async function collectTableRows(
+  db: ReturnType<typeof drizzle<Record<string, unknown>>>,
+  tableName: string,
+  identifiers: string[],
+): Promise<Record<string, unknown>[]> {
+  const columns = await getTableColumns(db, tableName);
+  if (columns.length === 0) {
+    return [];
+  }
+
+  // A row belongs to the user when any of its columns holds the steam id or the discord id.
+  const matches: SQL[] = [];
+  for (const column of columns) {
+    for (const identifier of identifiers) {
+      matches.push(sql`${sql.identifier(column)} = ${identifier}`);
+    }
+  }
+
+  return db.all<Record<string, unknown>>(
+    sql`SELECT * FROM ${sql.identifier(tableName)} WHERE ${sql.join(matches, sql` OR `)}`,
+  );
+}
+
+function maskSensitiveColumns(tableName: string, rows: Record<string, unknown>[]): Record<string, unknown>[] {
+  const maskedColumns = MASKED_TAKEOUT_COLUMNS[tableName];
+  if (!maskedColumns || maskedColumns.length === 0) {
+    return rows;
+  }
+
+  return rows.map((row) => {
+    const masked = { ...row };
+    for (const column of maskedColumns) {
+      const value = masked[column];
+      if (typeof value === 'string') {
+        masked[column] = `${value.slice(0, 8)}...`;
+      }
+    }
+    return masked;
+  });
 }
 
 async function collectUserData(
   db: ReturnType<typeof drizzle<Record<string, unknown>>>,
   userid: string,
 ): Promise<TakeoutDataResult> {
-  // Collect data from all relevant tables
-  const playerdataResult = await db.select().from(playerdata).where(eq(playerdata.id, userid)).get();
+  const playerdataResult = await db
+    .select({ discordId: playerdata.discordId })
+    .from(playerdata)
+    .where(eq(playerdata.id, userid))
+    .get();
 
-  // Get discordId from playerdata for discord-related lookups
-  const discordId = playerdataResult?.discordId ?? null;
+  const identifiers: string[] = [userid];
+  const discordId = playerdataResult?.discordId;
+  if (discordId && discordId !== userid) {
+    identifiers.push(discordId);
+  }
 
-  const discordInfoResult = discordId
-    ? await db.select().from(discordInfo).where(eq(discordInfo.discordId, discordId)).get()
-    : null;
+  const tableNames = await getExportableTableNames(db);
+  const takeoutData: TakeoutDataResult = {};
 
-  const killsAsAttacker = await db.select().from(kills).where(eq(kills.attacker, userid)).all();
+  for (const tableName of tableNames) {
+    const rows = await collectTableRows(db, tableName, identifiers);
+    if (rows.length === 0) continue;
+    takeoutData[tableName] = maskSensitiveColumns(tableName, rows);
+  }
 
-  const killsAsTarget = await db.select().from(kills).where(eq(kills.target, userid)).all();
-
-  const adventCalendarResult = await db.select().from(adventCalendar).where(eq(adventCalendar.userId, userid)).get();
-
-  const spraysResult = await db.select().from(sprays).where(eq(sprays.userid, userid)).all();
-
-  const sprayBansResult = await db.select().from(sprayBans).where(eq(sprayBans.userid, userid)).get();
-
-  const deletedSpraysResult = await db
-    .select()
-    .from(deletedSprays)
-    .where(eq(deletedSprays.uploadedByUserid, userid))
-    .all();
-
-  const fakeranksResult = await db.select().from(fakeranks).where(eq(fakeranks.userid, userid)).all();
-
-  const fakerankBansResult = await db.select().from(fakerankBans).where(eq(fakerankBans.userid, userid)).get();
-
-  const deletedFakeranksResult = await db
-    .select()
-    .from(deletedFakeranks)
-    .where(eq(deletedFakeranks.uploadedByUserid, userid))
-    .all();
-
-  // Donations are linked by discordId
-  const donationsResult = discordId
-    ? await db.select().from(donations).where(eq(donations.discordId, discordId)).all()
-    : [];
-
-  // Sessions for this user
-  const sessionsResult = await db.select().from(sessions).where(eq(sessions.userid, userid)).all();
-
-  // Steam cache
-  const steamCacheResult = await db.select().from(steamCache).where(eq(steamCache.steamId, userid)).get();
-
-  // Birthday data
-  const birthdaysResult = await db.select().from(birthdays).where(eq(birthdays.userid, userid)).get();
-
-  return {
-    playerdata: playerdataResult ?? null,
-    discordInfo: discordInfoResult ?? null,
-    kills: {
-      asAttacker: killsAsAttacker,
-      asTarget: killsAsTarget,
-    },
-    adventCalendar: adventCalendarResult ?? null,
-    sprays: spraysResult,
-    sprayBans: sprayBansResult ?? null,
-    deletedSprays: deletedSpraysResult,
-    fakeranks: fakeranksResult,
-    fakerankBans: fakerankBansResult ?? null,
-    deletedFakeranks: deletedFakeranksResult,
-    donations: donationsResult,
-    sessions: sessionsResult.map((s) => ({
-      ...s,
-      // Mask the session id for security
-      id: `${s.id.slice(0, 8)}...`,
-    })),
-    steamCache: steamCacheResult ?? null,
-    birthdays: birthdaysResult ?? null,
-  };
+  return takeoutData;
 }
 
 async function sendTakeoutEmail(

@@ -32,6 +32,7 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 ### Fixed
 
 - The dashboard feed for recent kills and deaths shows data again
+- Data exports now cover every stored record linked to your Steam or Discord account, instead of a fixed set of tables
 
 ## [30]
 
