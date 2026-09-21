@@ -57,7 +57,6 @@ export const playerdata = sqliteTable('playerdata', {
   rouletteWins: integer('rouletteWins').notNull().default(0),
   rouletteLosses: integer('rouletteLosses').notNull().default(0),
   lootboxVouchers: integer('lootbox_vouchers').notNull().default(0),
-  migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
   firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
   lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
 });
