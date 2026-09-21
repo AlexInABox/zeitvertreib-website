@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MinecraftLinkService } from '../../../services/minecraft-link.service';
 import { AuthService } from '../../../services/auth.service';
+import { IconComponent } from '../../../components/icon/icon.component';
 
+/** Links the signed-in account to a Minecraft account via an in-game link code. */
 @Component({
   selector: 'app-minecraft-link',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './minecraft-link.component.html',
   styleUrls: ['./minecraft-link.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,

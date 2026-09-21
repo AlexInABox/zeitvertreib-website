@@ -34,6 +34,7 @@ import { handleSwapped } from './routes/swapped.js';
 import { handleDiscordLogin, handleDiscordCallback } from './routes/discord.js';
 import { handleDiscordBotInteractions } from './routes/discord-bot.js';
 import { PlayerlistStorage } from './discord/playerlist-storage.js';
+import { ReinstallManager } from './discord/reinstall-manager.js';
 import { handleGetPlayerlist, handleUpdatePlayerlist } from './routes/playerlist.js';
 import { handleDiscordTrackerUpdate, handleDiscordTrackerDelete } from './routes/discord-tracker.js';
 import { handleGetAdventCalendar, handleRedeemAdventDoor } from './routes/adventcalendar.js';
@@ -47,7 +48,6 @@ import {
   handleUnlinkCaseFromReport,
 } from './routes/cases.js';
 import { handleKofiWebhook } from './routes/kofi.js';
-import { handlePostPaysafe, handleGetPaysafe } from './routes/paysafe.js';
 import { handleStripeCheckout, handleStripeWebhook } from './routes/stripe.js';
 import { updateDonationsLeaderboard } from './routes/cron/donations-leaderboard.js';
 import { handleGetSessions, handleDeleteSessions } from './routes/sessions.js';
@@ -185,10 +185,6 @@ const routes: Record<string, (request: Request, env: Env, ctx: ExecutionContext)
 
   // Ko-fi webhook
   'POST:/kofi/webhook': handleKofiWebhook,
-
-  // Paysafe routes
-  'POST:/paysafe': handlePostPaysafe,
-  'GET:/paysafe': handleGetPaysafe,
 
   // Stripe routes
   'POST:/stripe/checkout': handleStripeCheckout,
@@ -367,3 +363,4 @@ export default {
 
 // Export PlayerlistStorage for Durable Object
 export { PlayerlistStorage };
+export { ReinstallManager };

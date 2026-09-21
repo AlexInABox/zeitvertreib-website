@@ -9,7 +9,7 @@
     "wrangler:dev": "wrangler dev --ip 127.0.0.1",
     "watch:dev": "tsc --watch --project tsconfig.json",
     "db:init": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --command 'SELECT 1;' && npx drizzle-kit push",
-    "db:devscript": "wrangler d1 execute ZEITVERTREIB_DATA -e dev --local --file ./devscripts/giveallfakerankadmin.sql",
+    "db:seed": "npm run db:init && node devscripts/seed-dev-data.mjs",
     "prepare": "ts-patch install"
   },
   "devDependencies": {

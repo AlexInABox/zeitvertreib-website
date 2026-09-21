@@ -1,64 +1,229 @@
-<div class="dashboard-container">
-  <div class="relative z-10">
-    <!-- Loading State -->
-    @if (isLoading) {
-      <div class="loading-state">
-        <div class="text-center text-white">
-          <div class="loading-spinner mx-auto mb-4"></div>
-          <p class="text-xl font-medium">Lade Statistiken...</p>
-        </div>
-      </div>
-    }
-
-    <!-- Error State -->
-    @if (hasError && !isLoading) {
-      <div class="error-state">
-        <div class="error-message max-w-md mx-auto">
-          <h3 class="text-xl font-bold mb-2">Fehler beim Laden</h3>
-          <p class="mb-4">{{ errorMessage }}</p>
-          <button (click)="refreshStats()" class="refresh-button">Erneut versuchen</button>
-        </div>
-      </div>
-    }
-
-    <!-- Main Content -->
-    @if (!isLoading && !hasError) {
-      <div class="dashboard-grid">
-        <!-- Left Column -->
-        <div class="column">
-          <!-- Stats Overview -->
-          <div class="grid-item">
-            <app-stats-overview [userStatistics]="userStatistics"></app-stats-overview>
-          </div>
-          <!-- Quests Cards -->
-          <div class="grid-item">
-            <app-quests></app-quests>
-          </div>
-          <div class="grid zvcoins-subgrid grid-cols-1 md:grid-cols-2 gap-2">
-            <!-- Custom Sprays -->
-            <div class="grid-item spray-card-container">
-              <app-spray-management [isDonator]="isDonator"></app-spray-management>
-            </div>
-            <!-- Lootbox Card -->
-            <div class="grid-item min-w-0 lootbox-grid-item">
-              <app-lootbox
-                [balance]="userStatistics.experience || 0"
-                (balanceChange)="onBalanceChange($event)"
-              ></app-lootbox>
-            </div>
-            <!-- Fakerank -->
-            <div class="grid-item fakerank-container">
-              <app-fakerank [isDonator]="isDonator"></app-fakerank>
-            </div>
-          </div>
-        </div>
-        <!-- Right Column -->
-        <div class="column">
-          <div class="grid-item">
-            <app-player-info-card [userStatistics]="userStatistics"></app-player-info-card>
-          </div>
-        </div>
-      </div>
-    }
+<!-- Loading State -->
+@if (isLoading) {
+  <div class="dash-state">
+    <span class="jule-spinner dash-state-spinner" aria-hidden="true"></span>
+    <p class="dash-state-text">Lade Statistiken…</p>
   </div>
-</div>
+}
+
+<!-- Error State -->
+@if (hasError && !isLoading) {
+  <div class="dash-state">
+    <h3 class="dash-state-title">Fehler beim Laden</h3>
+    <p class="dash-state-text">{{ errorMessage }}</p>
+    <button type="button" class="jule-btn" (click)="refreshStats()">Erneut versuchen</button>
+  </div>
+}
+
+@if (!isLoading && !hasError) {
+  <div class="jule-canvas dash-canvas">
+    <app-jule-nav />
+
+    <main class="dash-main">
+      <!-- Left: interactive / deferred data -->
+      <section class="dash-primary">
+        <div class="dash-feeds">
+          <section class="dash-feed-panel">
+            <h2 class="dash-panel-title">Letzte Kills</h2>
+            <div class="dash-feed">
+              @for (kill of recentKills; track $index) {
+                <div class="jule-feed-row">
+                  <img
+                    class="jule-feed-avatar"
+                    [src]="kill.avatarmedium || fallbackImg"
+                    [alt]="kill.displayname"
+                    loading="lazy"
+                    (error)="onImgFallback($event)"
+                  />
+                  <span class="jule-feed-name">{{ kill.displayname }}</span>
+                </div>
+              } @empty {
+                <p class="jule-empty">Noch keine Eliminierungen erfasst.</p>
+              }
+            </div>
+          </section>
+
+          <section class="dash-feed-panel">
+            <h2 class="dash-panel-title">Letzte Tode</h2>
+            <div class="dash-feed">
+              @for (killer of recentDeaths; track $index) {
+                <div class="jule-feed-row">
+                  <img
+                    class="jule-feed-avatar"
+                    [src]="killer.avatarmedium || fallbackImg"
+                    [alt]="killer.displayname"
+                    loading="lazy"
+                    (error)="onImgFallback($event)"
+                  />
+                  <span class="jule-feed-name">{{ killer.displayname }}</span>
+                </div>
+              } @empty {
+                <p class="jule-empty">Noch keine Tode erfasst.</p>
+              }
+            </div>
+          </section>
+        </div>
+
+        <section class="dash-quests-panel">
+          <h2 class="dash-panel-title">Missionen</h2>
+          <div class="dash-quest-groups">
+            <div class="dash-quest-group">
+              <div class="dash-quest-head">
+                <span class="dash-quest-label">Heute</span>
+                <span class="dash-quest-reset">{{ dailyResetCountdown() }}</span>
+              </div>
+              @if (questsLoading) {
+                <p class="jule-empty">Lade Quests...</p>
+              } @else {
+                @for (quest of dailyQuests; track quest.id) {
+                  <div class="dash-quest">
+                    <div class="dash-quest-top">
+                      <span class="dash-quest-name">{{ quest.description }}</span>
+                      @if (quest.isCompleted && !quest.claimedAt) {
+                        <button
+                          type="button"
+                          class="dash-quest-claim"
+                          [disabled]="claimingQuestId !== null"
+                          (click)="claimReward(quest)"
+                        >
+                          +{{ num(quest.coinReward) }} ZVC
+                        </button>
+                      } @else {
+                        <span class="dash-quest-count">{{ questProgressText(quest) }}</span>
+                      }
+                    </div>
+                    <div class="dash-quest-bar">
+                      <i [style.width.%]="questPercent(quest)"></i>
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="jule-empty">Keine Aufgaben offen.</p>
+                }
+              }
+            </div>
+
+            <div class="dash-quest-group">
+              <div class="dash-quest-head">
+                <span class="dash-quest-label">Diese Woche</span>
+                <span class="dash-quest-reset">{{ weeklyResetCountdown() }}</span>
+              </div>
+              @if (!questsLoading) {
+                @for (quest of weeklyQuests; track quest.id) {
+                  <div class="dash-quest">
+                    <div class="dash-quest-top">
+                      <span class="dash-quest-name">{{ quest.description }}</span>
+                      @if (quest.isCompleted && !quest.claimedAt) {
+                        <button
+                          type="button"
+                          class="dash-quest-claim"
+                          [disabled]="claimingQuestId !== null"
+                          (click)="claimReward(quest)"
+                        >
+                          +{{ num(quest.coinReward) }} ZVC
+                        </button>
+                      } @else {
+                        <span class="dash-quest-count">{{ questProgressText(quest) }}</span>
+                      }
+                    </div>
+                    <div class="dash-quest-bar">
+                      <i [style.width.%]="questPercent(quest)"></i>
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="jule-empty">Keine Aufgaben offen.</p>
+                }
+              }
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- Right: everything we know about / is defined by the user -->
+      <aside class="dash-welcome">
+        <div class="dash-welcome-row">
+          <img
+            class="dash-welcome-avatar"
+            [src]="userStatistics.avatarFull || fallbackImg"
+            [alt]="userStatistics.username"
+            (error)="onImgFallback($event)"
+          />
+          <div class="dash-welcome-lines">
+            <span class="dash-welcome-hello">Willkommen zurück,</span>
+            <span class="dash-welcome-name">{{ userStatistics.username }}</span>
+          </div>
+        </div>
+
+        <div class="dash-widget dash-widget--flush dash-stats">
+          <div class="dash-stat">
+            <span>Kills</span>
+            <strong>{{ num(userStatistics.kills) }}</strong>
+          </div>
+          <div class="dash-stat">
+            <span>Tode</span>
+            <strong>{{ num(userStatistics.deaths) }}</strong>
+          </div>
+          <div class="dash-stat">
+            <span>K/D</span>
+            <strong>{{ kdRatio }}</strong>
+          </div>
+          <div class="dash-stat">
+            <span>Spielzeit</span>
+            <strong>{{ playtimeBig }}</strong>
+          </div>
+          <div class="dash-stat">
+            <span>Runden</span>
+            <strong>{{ num(userStatistics.roundsplayed) }}</strong>
+          </div>
+          <div class="dash-stat">
+            <span>ZVC</span>
+            <strong>{{ num(userStatistics.experience) }}</strong>
+          </div>
+        </div>
+
+        <div class="dash-widget dash-gear">
+          <dl class="jule-gear dash-gear-list">
+            <div class="jule-gear-row">
+              <dt>Medkits</dt>
+              <dd>{{ num(userStatistics.usedmedkits) }}</dd>
+            </div>
+            <div class="jule-gear-row">
+              <dt>Colas</dt>
+              <dd>{{ num(userStatistics.usedcolas) }}</dd>
+            </div>
+            <div class="jule-gear-row">
+              <dt>Pocket Escapes</dt>
+              <dd>{{ num(userStatistics.pocketescapes) }}</dd>
+            </div>
+            <div class="jule-gear-row">
+              <dt>Adrenalin</dt>
+              <dd>{{ num(userStatistics.usedadrenaline) }}</dd>
+            </div>
+            <div class="jule-gear-row">
+              <dt>Snake Highscore</dt>
+              <dd>{{ num(userStatistics.snakehighscore) }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="dash-widget">
+          <app-fakerank [isDonator]="isDonator" />
+        </div>
+
+        <div class="dash-widget">
+          <app-spray-management [isDonator]="isDonator" [testUi]="true" />
+        </div>
+
+        <div class="dash-widget">
+          <app-birthday-card />
+        </div>
+
+        <footer class="dash-seen">
+          <span>Erstmals gesehen: {{ seenDate(userStatistics.firstSeen) }}</span>
+          <span>Zuletzt gesehen: {{ seenDate(userStatistics.lastSeen) }}</span>
+        </footer>
+      </aside>
+    </main>
+
+    <app-jule-footer />
+  </div>
+}

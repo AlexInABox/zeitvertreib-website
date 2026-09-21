@@ -1,36 +1,35 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService, SteamUser } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 
 import { ProfileHeroComponent } from './widgets/profile-hero/profile-hero.component';
 import { MinecraftLinkComponent } from './widgets/minecraft-link/minecraft-link.component';
-import { BirthdayCardComponent } from './widgets/birthday-card/birthday-card.component';
 import { ActiveSessionsComponent } from './widgets/active-sessions/active-sessions.component';
 import { DataManagementComponent } from './widgets/data-management/data-management.component';
 import { ModerationSummaryComponent } from './widgets/moderation-summary/moderation-summary.component';
 import { UserCasesComponent } from './widgets/user-cases/user-cases.component';
 import { SpraysListComponent } from './widgets/sprays-list/sprays-list.component';
 import { CoinRestrictionComponent } from './widgets/coin-restriction/coin-restriction.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
 @Component({
   standalone: true,
   selector: 'app-profile',
   imports: [
-    CommonModule,
-    RouterModule,
     ProfileHeroComponent,
     MinecraftLinkComponent,
-    BirthdayCardComponent,
     ActiveSessionsComponent,
     DataManagementComponent,
     ModerationSummaryComponent,
     UserCasesComponent,
     SpraysListComponent,
     CoinRestrictionComponent,
+    JuleNavComponent,
+    JuleFooterComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],

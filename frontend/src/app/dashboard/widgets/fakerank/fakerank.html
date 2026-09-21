@@ -1,169 +1,294 @@
-<div id="fakerank-card" class="stats-card p-6 rounded-2xl auto-height">
-  @if (isFakerankBanned) {
-  <div class="spray-ban-warning mb-4">
-    <div class="spray-ban-icon">⛔</div>
-    <div class="spray-ban-content">
-      <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
-      <p class="spray-ban-reason"><strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}</p>
-      <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
-    </div>
+@if (isFakerankBanned) {
+<div class="spray-ban-warning">
+  <div class="spray-ban-icon">@if (testUiActive) {<app-icon name="ban" />} @else {<app-icon name="ban" />}</div>
+  <div class="spray-ban-content">
+    <h4 class="spray-ban-title">Du wurdest von Fakeranks gebannt</h4>
+    <p class="spray-ban-reason"><strong>Grund:</strong> {{ fakerankBanReason || 'Kein Grund angegeben' }}</p>
+    <p class="spray-ban-mod"><strong>Gebannt von:</strong> {{ fakerankBannedBy }}</p>
   </div>
-  } @if (!isFakerankBanned) {
-  <div class="fakerank-container-inline">
-    <div class="fakerank-info-left">
-      <h3 class="spray-title">✨ Fakerank</h3>
-      <p class="spray-subtitle">Dein persönlicher Rang in-game!</p>
-      <div>
-        <span class="fakerank-cost-badge">🪙 {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
-      </div>
-    </div>
-    <div class="fakerank-action-right">
-      <!-- Active Fakerank -->
-      @if (currentFakerank) {
-      <div class="fakerank-active-stacked">
-        <div class="fakerank-preview-small" [style.color]="getColorHex(currentFakerankColor)">
-          {{ currentFakerank }}
-        </div>
-        <div class="fakerank-buttons-row">
-          <button (click)="openFakerankModal()" class="action-btn-text" [disabled]="fakerankLoading">
-            ✏️ Bearbeiten
-          </button>
-          <button (click)="deleteFakerank()" class="action-btn-text delete" [disabled]="fakerankLoading">
-            🗑️ Löschen
-          </button>
-        </div>
-      </div>
-      }
-      <!-- No Fakerank -->
-      @if (!currentFakerank) {
-      <div class="fakerank-empty-inline">
-        <button (click)="openFakerankModal()" class="fakerank-create-btn-small" [disabled]="fakerankLoading">
-          ✨ Erstellen
-        </button>
-      </div>
-      }
-    </div>
-  </div>
-  } @if (fakerankError) {
-  <div class="fakerank-message fakerank-error mt-3">{{ fakerankError }}</div>
-  } @if (fakerankSuccess) {
-  <div class="fakerank-message fakerank-success mt-3">{{ fakerankSuccess }}</div>
-  }
 </div>
-
-<!-- Modal -->
-@if (fakerankModalOpen) {
-<div class="preview-overlay" (click)="closeFakerankModal()">
-  <div class="preview-modal compact-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3 class="preview-title">Fakerank konfigurieren</h3>
-      <button class="modal-close-btn" (click)="closeFakerankModal()">✕</button>
+} @if (!isFakerankBanned) {
+<div class="fakerank-container-inline">
+  <div class="fakerank-info-left">
+    <h3 class="spray-title">@if (testUiActive) {<app-icon name="star" />} @else {<app-icon name="star" />} Fakerank</h3>
+    <p class="spray-subtitle">Dein eigener Rang!</p>
+  </div>
+  <div class="fakerank-action-right">
+    @if (testUiActive) {
+    <!-- Experimental inline editor -->
+    @if (!currentFakerank && !frEditing) {
+    <div class="fr-stack">
+      <button type="button" class="fr-create" (click)="frBeginCreate()">
+        <span class="fr-create-icon"><app-icon name="star" /></span>
+        <span>Fakerank erstellen</span>
+      </button>
+      <span class="fakerank-price-note fr-note"><app-icon name="dollar" /> {{ frCostPerWeek }} ZVC / Woche</span>
     </div>
-    <div class="modal-body compact-body custom-scrollbar">
-      <!-- Preview Area -->
-      <div class="fakerank-preview-container">
-        <span class="preview-label">Vorschau:</span>
-        <div class="preview-rank-box" [style.color]="getColorHex(fakerankModalColor)">
-          {{ fakerankModalText || 'Dein Rangname' }}
-        </div>
+    } @if (currentFakerank && !frEditing) {
+    <div class="fr-stack" (mouseenter)="frHover = true" (mouseleave)="frHover = false">
+      <div class="fr-view">
+        <button
+          type="button"
+          class="fr-chip"
+          [style.color]="getColorHex(currentFakerankColor)"
+          [attr.title]="'Klicken zum Bearbeiten: ' + currentFakerank"
+          (click)="frStartEdit()"
+        >
+          {{ currentFakerank }}
+        </button>
+        @if (frHover && !fakerankLoading) {
+        <button
+          type="button"
+          class="fr-delete"
+          (click)="frAskDelete()"
+          aria-label="Fakerank löschen"
+          title="Fakerank löschen"
+        >
+          <app-icon name="trash" />
+        </button>
+        }
       </div>
-      <div class="preview-input-group">
-        <label>Rangname (max. 50 Zeichen)</label>
+      <span class="fakerank-price-note fr-note"><app-icon name="dollar" /> {{ frCostPerWeek }} ZVC / Woche</span>
+    </div>
+    } @if (frEditing) {
+    <div class="fr-editor">
+      <div class="fr-input-row">
         <input
           type="text"
-          [(ngModel)]="fakerankModalText"
+          class="fr-input"
+          [(ngModel)]="frText"
           maxlength="50"
-          class="fakerank-input"
-          placeholder="Tippe deinen Rangnamen ein..."
+          [style.color]="getColorHex(frColor)"
+          placeholder="Dein Rangname..."
+          (keydown.enter)="$event.preventDefault(); frRequestSave()"
+          (keydown.escape)="frCancel()"
         />
-      </div>
-      <div class="preview-input-group">
-        <label
-          >Farbe wählen <span class="selected-color-name-inline">({{ getColorName(fakerankModalColor) }})</span></label
+        <button
+          type="button"
+          class="fr-color-trigger"
+          (click)="frOpenColors()"
+          [attr.title]="'Farbe wählen (' + getColorName(frColor) + ')'"
+          aria-label="Farbe wählen"
         >
-        <div class="color-groups-wrapper">
-          @for (group of groupedColors; track group.groupName) {
-          <div class="color-group">
-            <div class="color-group-header">
-              <span class="color-group-title"
-                >{{ group.groupName }} @if (group.isLocked) {
-                <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}">🔒</span>
-                }</span
-              >
-            </div>
-            <div class="color-grid">
-              @for (c of group.colors; track c.key) {
-              <button
-                (click)="selectColor(c.key)"
-                class="color-option-btn"
-                [class.selected]="fakerankModalColor === c.key"
-                [class.disabled]="!isColorAllowed(c.key)"
-                [style.background-color]="c.hex"
-                [disabled]="!isColorAllowed(c.key)"
-                [title]="c.name + (!isColorAllowed(c.key) && group.requiredRole ? ' (' + group.requiredRole + ')' : '')"
-              ></button>
-              }
-            </div>
-          </div>
+          <span class="fr-color-trigger-dot" [style.background-color]="getColorHex(frColor)"></span>
+        </button>
+      </div>
+      <div class="fr-actions">
+        <button type="button" class="fr-cancel" (click)="frCancel()" [disabled]="fakerankLoading">Abbrechen</button>
+        <button type="button" class="jule-btn" (click)="frRequestSave()" [disabled]="fakerankLoading || !frText.trim()">
+          <app-icon name="save" /> Speichern
+        </button>
+      </div>
+    </div>
+    } } @else {
+    <!-- Classic modal flow -->
+    <!-- Active Fakerank -->
+    @if (currentFakerank) {
+    <div class="fakerank-active-stacked">
+      <div class="fakerank-preview-small" [style.color]="getColorHex(currentFakerankColor)">{{ currentFakerank }}</div>
+      <div class="fakerank-buttons-row">
+        <button (click)="openFakerankModal()" class="action-btn-text" [disabled]="fakerankLoading">
+          <app-icon name="pencil" /> Bearbeiten
+        </button>
+        <button (click)="deleteFakerank()" class="action-btn-text delete" [disabled]="fakerankLoading">
+          <app-icon name="trash" /> Löschen
+        </button>
+      </div>
+      <span class="fakerank-price-note"><app-icon name="dollar" /> {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+    </div>
+    }
+    <!-- No Fakerank -->
+    @if (!currentFakerank) {
+    <div class="fakerank-empty-inline">
+      <button type="button" class="jule-btn" (click)="openFakerankModal()" [disabled]="fakerankLoading">
+        <app-icon name="star" /> Erstellen
+      </button>
+      <span class="fakerank-price-note"><app-icon name="dollar" /> {{ isDonator() ? '10' : '100' }} ZVC / Woche</span>
+    </div>
+    } }
+  </div>
+</div>
+} @if (fakerankError) {
+<div class="fakerank-message fakerank-error">{{ fakerankError }}</div>
+} @if (fakerankSuccess) {
+<div class="fakerank-message fakerank-success">{{ fakerankSuccess }}</div>
+}
+
+<!-- Modal -->
+<jule-dialog [(open)]="fakerankModalOpen" title="Fakerank konfigurieren">
+  <div class="fakerank-preview-container">
+    <span class="preview-label">Vorschau:</span>
+    <div class="preview-rank-box" [style.color]="getColorHex(fakerankModalColor)">
+      {{ fakerankModalText || 'Dein Rangname' }}
+    </div>
+  </div>
+  <div class="preview-input-group">
+    <label>Rangname (max. 50 Zeichen)</label>
+    <input
+      type="text"
+      [(ngModel)]="fakerankModalText"
+      maxlength="50"
+      class="fakerank-input"
+      placeholder="Tippe deinen Rangnamen ein..."
+    />
+  </div>
+  <div class="preview-input-group">
+    <label>Farbe wählen <span class="selected-color-name-inline">({{ getColorName(fakerankModalColor) }})</span></label>
+    <div class="color-groups-wrapper">
+      @for (group of groupedColors; track group.groupName) {
+      <div class="color-group">
+        <div class="color-group-header">
+          <span class="color-group-title"
+            >{{ group.groupName }} @if (group.isLocked) {
+            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}"><app-icon name="lock" /></span>
+            }</span
+          >
+        </div>
+        <div class="color-grid">
+          @for (c of group.colors; track c.key) {
+          <button
+            (click)="selectColor(c.key)"
+            class="color-option-btn"
+            [class.selected]="fakerankModalColor === c.key"
+            [class.disabled]="!isColorAllowed(c.key)"
+            [style.background-color]="c.hex"
+            [disabled]="!isColorAllowed(c.key)"
+            [title]="c.name + (!isColorAllowed(c.key) && group.requiredRole ? ' (' + group.requiredRole + ')' : '')"
+          ></button>
           }
         </div>
       </div>
-      <div class="checkbox-group mt-2">
-        <div class="checkbox-item">
-          <input type="checkbox" id="frPrivacy" [(ngModel)]="acceptedFakerankPrivacy" />
-          <label for="frPrivacy"
-            >Ich akzeptiere die
-            <span
-              class="text-link"
-              (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()"
-              >Datenschutzhinweise</span
-            ></label
-          >
-        </div>
-        @if (showFakerankPrivacyText) {
-        <div class="info-box-inline">
-          <div class="info-content">
-            <ul>
-              <li>
-                <strong>Öffentliche Sichtbarkeit:</strong> Dein Fakerank wird für andere Spieler im Spiel sichtbar sein.
-              </li>
-              <li>
-                <strong>Speicherung:</strong> Der Text und die Farbe werden mit deinem Profil verknüpft gespeichert.
-              </li>
-            </ul>
-          </div>
-        </div>
-        }
-        <div class="checkbox-item">
-          <input type="checkbox" id="frRules" [(ngModel)]="acceptedFakerankRules" />
-          <label for="frRules"
-            >Ich respektiere die
-            <span class="text-link" (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()"
-              >Inhaltsregeln</span
-            ></label
-          >
-        </div>
-        @if (showFakerankRulesText) {
-        <div class="info-box-inline">
-          <div class="info-content">
-            <ul>
-              <li>Keine beleidigenden, rassistischen, sexistischen oder anderweitig diskriminierenden Begriffe.</li>
-              <li>Keine Nachahmung von Team-Rängen (z.B. "Admin", "Moderator", "Owner").</li>
-              <li>Keine Werbung oder Links in Fakeranks.</li>
-              <li>Verstöße können zum permanenten Ausschluss von diesem Feature führen.</li>
-            </ul>
-          </div>
-        </div>
-        }
-      </div>
-      <button
-        class="btn-save-fakerank mt-4"
-        (click)="saveFakerank()"
-        [disabled]="fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules"
+      }
+    </div>
+  </div>
+  <div class="checkbox-group">
+    <div class="checkbox-item">
+      <input type="checkbox" id="frPrivacy" [(ngModel)]="acceptedFakerankPrivacy" />
+      <label for="frPrivacy"
+        >Ich akzeptiere die
+        <span class="text-link" (click)="showFakerankPrivacyText = !showFakerankPrivacyText; $event.preventDefault()"
+          >Datenschutzhinweise</span
+        ></label
       >
-        💾 Speichern
+    </div>
+    @if (showFakerankPrivacyText) {
+    <div class="info-box-inline">
+      <div class="info-content">
+        <ul>
+          <li>
+            <strong>Öffentliche Sichtbarkeit:</strong> Dein Fakerank wird für andere Spieler im Spiel sichtbar sein.
+          </li>
+          <li><strong>Speicherung:</strong> Der Text und die Farbe werden mit deinem Profil verknüpft gespeichert.</li>
+        </ul>
+      </div>
+    </div>
+    }
+    <div class="checkbox-item">
+      <input type="checkbox" id="frRules" [(ngModel)]="acceptedFakerankRules" />
+      <label for="frRules"
+        >Ich respektiere die
+        <span class="text-link" (click)="showFakerankRulesText = !showFakerankRulesText; $event.preventDefault()"
+          >Inhaltsregeln</span
+        ></label
+      >
+    </div>
+    @if (showFakerankRulesText) {
+    <div class="info-box-inline">
+      <div class="info-content">
+        <ul>
+          <li>Keine beleidigenden, rassistischen, sexistischen oder anderweitig diskriminierenden Begriffe.</li>
+          <li>Keine Nachahmung von Team-Rängen (z.B. "Admin", "Moderator", "Owner").</li>
+          <li>Keine Werbung oder Links in Fakeranks.</li>
+          <li>Verstöße können zum permanenten Ausschluss von diesem Feature führen.</li>
+        </ul>
+      </div>
+    </div>
+    }
+  </div>
+  <div juleDialogFooter>
+    <button
+      type="button"
+      class="jule-btn fr-btn-full"
+      (click)="saveFakerank()"
+      [disabled]="fakerankLoading || !fakerankModalText.trim() || !acceptedFakerankPrivacy || !acceptedFakerankRules"
+    >
+      <app-icon name="save" /> Speichern
+    </button>
+  </div>
+</jule-dialog>
+
+<!-- Experimental (testui): cost confirmation for a brand-new fakerank -->
+<jule-dialog [(open)]="frCostOpen" title="Fakerank erstellen?">
+  <div class="fr-dialog-body">
+    <p>Möchtest du deinen Fakerank <strong>„{{ frText.trim() || '…' }}"</strong> erstellen?</p>
+    <p class="fr-dialog-cost">
+      <app-icon name="dollar" /> Das kostet <strong>{{ frCostPerWeek }} ZVC pro Woche</strong>.
+    </p>
+  </div>
+  <div juleDialogFooter>
+    <div class="fr-dialog-actions">
+      <button type="button" class="jule-btn jule-btn--ghost" (click)="frCostOpen = false">Abbrechen</button>
+      <button type="button" class="jule-btn" (click)="frConfirmCreate()">Ja, erstellen</button>
+    </div>
+  </div>
+</jule-dialog>
+
+<!-- Experimental (testui): delete confirmation -->
+<jule-dialog [(open)]="frDeleteOpen" title="Fakerank löschen?">
+  <div class="fr-dialog-body">
+    <p>Möchtest du deinen Fakerank <strong>„{{ currentFakerank }}"</strong> wirklich löschen?</p>
+    <p class="fr-dialog-hint">Das kann nicht rückgängig gemacht werden.</p>
+  </div>
+  <div juleDialogFooter>
+    <div class="fr-dialog-actions">
+      <button type="button" class="jule-btn jule-btn--ghost" (click)="frDeleteOpen = false">Abbrechen</button>
+      <button type="button" class="jule-btn jule-btn--danger" (click)="frConfirmDelete()" [disabled]="fakerankLoading">
+        @if (fakerankLoading) {
+        <span class="jule-spinner jule-spinner--sm" aria-hidden="true"></span>
+        }
+        <app-icon name="trash" /> Löschen
       </button>
     </div>
   </div>
-</div>
-}
+</jule-dialog>
+
+<!-- Experimental (testui): color picker (separate window so the card height stays stable) -->
+<jule-dialog [(open)]="frColorOpen" title="Farbe wählen" [maxWidth]="'440px'">
+  <div class="fr-color-preview-row">
+    <span class="fr-color-preview-swatch" [style.background-color]="getColorHex(frColor)"></span>
+    <span>Aktuelle Farbe: <strong>{{ getColorName(frColor) }}</strong></span>
+  </div>
+  <div class="fr-color-groups">
+    <div class="color-groups-wrapper">
+      @for (group of groupedColors; track group.groupName) {
+      <div class="color-group">
+        <div class="color-group-header">
+          <span class="color-group-title"
+            >{{ group.groupName }} @if (group.isLocked) {
+            <span class="locked-icon" title="Benötigt: {{ group.requiredRole }}"><app-icon name="lock" /></span>
+            }</span
+          >
+        </div>
+        <div class="color-grid">
+          @for (c of group.colors; track c.key) {
+          <button
+            (click)="frPickColor(c.key)"
+            class="color-option-btn"
+            [class.selected]="frColor === c.key"
+            [class.disabled]="!isColorAllowed(c.key)"
+            [style.background-color]="c.hex"
+            [disabled]="!isColorAllowed(c.key)"
+            [title]="c.name + (!isColorAllowed(c.key) && group.requiredRole ? ' (' + group.requiredRole + ')' : '')"
+          ></button>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  <div juleDialogFooter>
+    <div class="fr-dialog-actions">
+      <button type="button" class="jule-btn" (click)="frColorOpen = false">Fertig</button>
+    </div>
+  </div>
+</jule-dialog>

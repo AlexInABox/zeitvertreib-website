@@ -22,36 +22,37 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.3s ease-out;
   pointer-events: auto;
-  background-color: #fff;
-  border-left: 4px solid;
+  background-color: var(--jule-panel);
+  border: 1px solid var(--jule-line);
+  border-left: 3px solid var(--jule-line);
 
   &.toast-success {
-    border-left-color: #22c55e;
-    background-color: #f0fdf4;
+    border-left-color: #34d399;
+    background-color: rgba(52, 211, 153, 0.07);
   }
 
   &.toast-error {
-    border-left-color: #ef4444;
-    background-color: #fef2f2;
+    border-left-color: #f0716f;
+    background-color: rgba(229, 72, 77, 0.07);
   }
 
   &.toast-warn {
-    border-left-color: #f59e0b;
-    background-color: #fffbeb;
+    border-left-color: #eab308;
+    background-color: rgba(234, 179, 8, 0.07);
   }
 
   &.toast-info {
-    border-left-color: #3b82f6;
-    background-color: #eff6ff;
+    border-left-color: var(--jule-accent);
+    background-color: rgba(161, 61, 230, 0.07);
   }
 }
 
 .toast-icon {
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.1rem;
   flex-shrink: 0;
   line-height: 1.5;
 }
@@ -66,21 +67,22 @@
   font-size: 14px;
   margin-bottom: 4px;
   word-break: break-word;
+  color: var(--jule-text);
 
   .toast-error & {
-    color: #991b1b;
+    color: #f0716f;
   }
 
   .toast-success & {
-    color: #166534;
+    color: #34d399;
   }
 
   .toast-warn & {
-    color: #92400e;
+    color: #eab308;
   }
 
   .toast-info & {
-    color: #1e40af;
+    color: var(--jule-accent);
   }
 }
 
@@ -89,39 +91,25 @@
   margin-top: 4px;
   word-break: break-word;
   line-height: 1.4;
-  opacity: 0.8;
-
-  .toast-error & {
-    color: #7f1d1d;
-  }
-
-  .toast-success & {
-    color: #065f46;
-  }
-
-  .toast-warn & {
-    color: #78350f;
-  }
-
-  .toast-info & {
-    color: #0c4a6e;
-  }
+  color: var(--jule-muted);
 }
 
 .toast-close {
+  display: inline-flex;
+  align-items: center;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 1rem;
   padding: 0;
   margin-left: 8px;
   flex-shrink: 0;
   line-height: 1;
-  color: #9ca3af;
+  color: var(--jule-muted);
   transition: color 0.2s;
 
   &:hover {
-    color: #6b7280;
+    color: var(--jule-text);
   }
 }
 

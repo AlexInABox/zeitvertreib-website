@@ -5,25 +5,6 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { playerdata } from '../../db/schema.js';
 
-interface CedModPlayer {
-  id: string;
-  userId: string;
-  userName: string;
-  firstSeen: string;
-  lastSeen: string;
-  kills: number;
-  deaths: number;
-  colaDrink: number;
-  medkits: number;
-  adrenalineShots: number;
-  roundsPlayed: number;
-}
-
-interface CedModResponse {
-  players: CedModPlayer[];
-  total: number;
-}
-
 export class StatsCommand extends BaseCommand {
   override name = 'stats';
   override name_localizations = { de: 'statistiken' };
@@ -75,7 +56,7 @@ export class StatsCommand extends BaseCommand {
       if (!discordId) throw new Error('Missing Discord user ID');
 
       // Query the database directly
-      let [playerData] = await db.select().from(playerdata).where(eq(playerdata.discordId, discordId)).limit(1);
+      const [playerData] = await db.select().from(playerdata).where(eq(playerdata.discordId, discordId)).limit(1);
 
       if (!playerData) {
         const notFoundEmbed = new EmbedBuilder()
@@ -106,105 +87,6 @@ export class StatsCommand extends BaseCommand {
         return;
       }
 
-      // Auto-migration logic: Check if user hasn't migrated yet
-      let migrationMessage: string | null = null;
-      if (playerData.migratedCedmod === null) {
-        console.log(`User ${discordId} hasn't migrated yet, attempting auto-migration...`);
-
-        try {
-          const steamId = playerData.id;
-          const cedmodUrl = `https://cedmod.zeitvertreib.vip/Api/Player/Query?q=${encodeURIComponent(steamId)}&create=true&moderationData=true&basicStats=true&staffOnly=False&max=1&page=0&sortLabel=id_field&sortDirection=Descending&activityMin=1826`;
-
-          const cedmodResponse = await fetch(cedmodUrl, {
-            headers: {
-              Authorization: `Bearer ${env.CEDMOD_API_KEY}`,
-            },
-          });
-
-          if (cedmodResponse.ok) {
-            const cedmodData: CedModResponse = await cedmodResponse.json();
-
-            if (cedmodData.players && cedmodData.players.length > 0) {
-              const cedmodPlayer = cedmodData.players[0];
-
-              if (!cedmodPlayer) {
-                console.log('CedMod player data is undefined, skipping migration');
-              } else {
-                // Store old values for comparison
-                const oldStats = {
-                  kills: playerData.killcount ?? 0,
-                  deaths: playerData.deathcount ?? 0,
-                  colas: playerData.usedcolas ?? 0,
-                  medkits: playerData.usedmedkits ?? 0,
-                  adrenaline: playerData.usedadrenaline ?? 0,
-                  rounds: playerData.roundsplayed ?? 0,
-                };
-
-                // Prepare update data
-                const updateData: any = {
-                  killcount: cedmodPlayer.kills,
-                  deathcount: cedmodPlayer.deaths,
-                  usedcolas: cedmodPlayer.colaDrink,
-                  usedmedkits: cedmodPlayer.medkits,
-                  usedadrenaline: cedmodPlayer.adrenalineShots,
-                  roundsplayed: cedmodPlayer.roundsPlayed,
-                  migratedCedmod: new Date(Date.now()),
-                };
-
-                // Add firstSeen if available and not already set
-                if (cedmodPlayer.firstSeen) {
-                  updateData.firstSeen = new Date(cedmodPlayer.firstSeen);
-                }
-
-                // Update database
-                await db.update(playerdata).set(updateData).where(eq(playerdata.discordId, discordId));
-
-                // Refresh playerData with updated values
-                const updatedPlayerData = await db
-                  .select()
-                  .from(playerdata)
-                  .where(eq(playerdata.discordId, discordId))
-                  .limit(1);
-
-                if (updatedPlayerData[0]) {
-                  playerData = updatedPlayerData[0];
-                }
-
-                // Create comparison strings for migration message
-                const createComparisonLine = (label: string, oldValue: number, newValue: number | undefined) => {
-                  if (newValue === undefined || newValue === null) {
-                    return `${label}: ${oldValue} → ❌`;
-                  }
-                  return `${label}: ${oldValue} → **${newValue}** ✅`;
-                };
-
-                const comparisons = [
-                  createComparisonLine('Kills', oldStats.kills, cedmodPlayer.kills),
-                  createComparisonLine('Deaths', oldStats.deaths, cedmodPlayer.deaths),
-                  createComparisonLine('Colas', oldStats.colas, cedmodPlayer.colaDrink),
-                  createComparisonLine('Medkits', oldStats.medkits, cedmodPlayer.medkits),
-                  createComparisonLine('Adrenalin', oldStats.adrenaline, cedmodPlayer.adrenalineShots),
-                  createComparisonLine('Runden', oldStats.rounds, cedmodPlayer.roundsPlayed),
-                ];
-
-                migrationMessage =
-                  '🎉 **CedMod-Daten erfolgreich migriert!**\n' +
-                  'Deine alten Statistiken wurden automatisch importiert:\n' +
-                  comparisons.join('\n') +
-                  '\n\n';
-              }
-            } else {
-              console.log('No CedMod data found for user, skipping migration');
-            }
-          } else {
-            console.log(`CedMod API returned status ${cedmodResponse.status}, skipping migration`);
-          }
-        } catch (migrationError) {
-          console.error('Auto-migration error (non-fatal):', migrationError);
-          // Continue to show stats even if migration fails
-        }
-      }
-
       const stats = playerData;
 
       const kd =
@@ -218,7 +100,7 @@ export class StatsCommand extends BaseCommand {
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
         .setTitle(`📊 Statistiken für ${displayName}`)
-        .setDescription((migrationMessage || '') + 'Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮');
+        .setDescription('Deine aktuellen Spielstatistiken auf **Zeitvertreib** 🎮');
 
       // Set user avatar as thumbnail if available
       if (avatarUrl) {

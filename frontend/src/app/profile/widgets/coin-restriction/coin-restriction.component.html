@@ -1,29 +1,30 @@
-<div class="dense-card card-warning-border">
-  <div class="card-header">
-    <div class="card-title">
-      <i class="pi pi-ban card-icon icon-danger"></i>
-      <div>
-        <h2>Coin-Beschränkung</h2>
-        <span class="card-subtitle">Senden von Coins deaktiviert</span>
+<section class="jule-panel">
+  <div class="jule-panel-head">
+    <div class="pf-head">
+      <app-icon name="ban" />
+      <div class="pf-head-copy">
+        <h2 class="pf-title">Coin-Beschränkung</h2>
+        <span class="pf-sub">Senden von Coins deaktiviert</span>
       </div>
     </div>
   </div>
-  <div class="dense-body">
-    <div class="info-row">
-      <span class="info-label">Grund</span>
-      <span class="info-value text-warning">{{ coinRestriction()?.reason }}</span>
+
+  <dl class="jule-gear jule-panel-body">
+    <div class="jule-gear-row">
+      <dt>Grund</dt>
+      <dd class="cr-warn">{{ coinRestriction()?.reason }}</dd>
     </div>
     @if (!coinRestriction()?.isPermanent) {
-      <div class="info-row">
-        <span class="info-label">Gültig bis</span>
-        <span class="info-value">{{ getDateDisplay(coinRestriction()?.restrictedUntil) }}</span>
+      <div class="jule-gear-row">
+        <dt>Gültig bis</dt>
+        <dd>{{ getDateDisplay(coinRestriction()?.restrictedUntil) }}</dd>
       </div>
     }
     @if (coinRestriction()?.isPermanent) {
-      <div class="info-row">
-        <span class="info-label">Dauer</span>
-        <span class="info-value text-danger font-semibold">Dauerhaft</span>
+      <div class="jule-gear-row">
+        <dt>Dauer</dt>
+        <dd class="cr-danger">Dauerhaft</dd>
       </div>
     }
-  </div>
-</div>
+  </dl>
+</section>

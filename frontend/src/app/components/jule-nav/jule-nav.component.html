@@ -1,0 +1,55 @@
+<header class="jule-nav">
+  <div class="jule-nav-box">
+    <a class="jule-logo" routerLink="/" aria-label="Zeitvertreib Startseite">
+      <img class="jule-logo-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
+      <span class="jule-logo-name">Zeitvertreib</span>
+    </a>
+
+    <nav class="jule-nav-links" aria-label="Hauptnavigation">
+      <a
+        class="jule-navlink"
+        routerLink="/dashboard"
+        [attr.aria-current]="currentUrl.startsWith('/dashboard') ? 'page' : null"
+        ><span class="jule-navlabel">Dashboard</span></a
+      >
+      <a
+        class="jule-navlink"
+        routerLink="/reporting"
+        [attr.aria-current]="currentUrl.startsWith('/reporting') ? 'page' : null"
+        ><span class="jule-navlabel">Reports</span></a
+      >
+      <a class="jule-navlink" routerLink="/cases" [attr.aria-current]="currentUrl.startsWith('/cases') ? 'page' : null"
+        ><span class="jule-navlabel">Fallverwaltung</span></a
+      >
+      <a class="jule-navlink" routerLink="/zeit" [attr.aria-current]="currentUrl.startsWith('/zeit') ? 'page' : null"
+        ><span class="jule-navlabel">Z.E.I.T.</span></a
+      >
+      <a
+        class="jule-navlink"
+        routerLink="/permissions"
+        [attr.aria-current]="currentUrl.startsWith('/permissions') ? 'page' : null"
+        ><span class="jule-navlabel">Berechtigungen</span></a
+      >
+      @if (showAdvent) {
+        <a
+          class="jule-navlink"
+          routerLink="/advent"
+          [attr.aria-current]="currentUrl.startsWith('/advent') ? 'page' : null"
+          ><span class="jule-navlabel">Adventskalender 🎄🎁</span></a
+        >
+      }
+    </nav>
+
+    <div class="jule-nav-actions">
+      @if (user) {
+        <a class="jule-navlink jule-nav-user" routerLink="/profile">
+          <span class="jule-navlabel">{{ user.username || 'Konto' }}</span>
+        </a>
+      } @else {
+        <a class="jule-navlink jule-nav-user" routerLink="/login">
+          <span class="jule-navlabel">Login</span>
+        </a>
+      }
+    </div>
+  </div>
+</header>

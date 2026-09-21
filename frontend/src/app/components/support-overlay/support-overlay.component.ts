@@ -17,11 +17,12 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { SupportService } from '../../services/support.service';
 import { environment } from '../../../environments/environment';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-support-overlay',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './support-overlay.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./support-overlay.component.css'],

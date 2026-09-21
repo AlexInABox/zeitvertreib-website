@@ -27,12 +27,20 @@
         "name": "PLAYERLIST_STORAGE",
         "class_name": "PlayerlistStorage",
       },
+      {
+        "name": "REINSTALL_MANAGER",
+        "class_name": "ReinstallManager",
+      },
     ],
   },
   "migrations": [
     {
       "tag": "v1",
       "new_classes": ["PlayerlistStorage"],
+    },
+    {
+      "tag": "v2",
+      "new_classes": ["ReinstallManager"],
     },
   ],
   "kv_namespaces": [
@@ -92,12 +100,20 @@
             "name": "PLAYERLIST_STORAGE",
             "class_name": "PlayerlistStorage",
           },
+          {
+            "name": "REINSTALL_MANAGER",
+            "class_name": "ReinstallManager",
+          },
         ],
       },
       "migrations": [
         {
           "tag": "v1",
           "new_classes": ["PlayerlistStorage"],
+        },
+        {
+          "tag": "v2",
+          "new_classes": ["ReinstallManager"],
         },
       ],
       "kv_namespaces": [
@@ -165,12 +181,20 @@
             "name": "PLAYERLIST_STORAGE",
             "class_name": "PlayerlistStorage",
           },
+          {
+            "name": "REINSTALL_MANAGER",
+            "class_name": "ReinstallManager",
+          },
         ],
       },
       "migrations": [
         {
           "tag": "v1",
           "new_classes": ["PlayerlistStorage"],
+        },
+        {
+          "tag": "v2",
+          "new_classes": ["ReinstallManager"],
         },
       ],
       "kv_namespaces": [

@@ -1,488 +1,440 @@
-<div class="case-management-container">
-  <div class="content-wrapper">
-    <!-- Public Case Lookup (when not team member) -->
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
+
+  <main class="jule-page">
+    <!-- ===== PUBLIC LOOKUP (non-team) ===== -->
     @if (!isLoading && !isTeam) {
-      <div class="public-lookup-container">
-        <div class="lookup-card">
-          <div class="lookup-header">
-            <i class="pi pi-search lookup-icon"></i>
-            <h1 class="lookup-title">Fall suchen</h1>
-            <p class="lookup-subtitle">
-              Gib bis zu 10 alphanumerische Zeichen ein — kürzere Eingaben werden mit Nullen aufgefüllt
-            </p>
-          </div>
-          <div class="lookup-body">
-            <div class="lookup-input-wrapper">
+      <header class="jule-page-head">
+        <span class="jule-eyebrow">Transparenz</span>
+        <h1 class="jule-page-title">Fälle.</h1>
+        <p class="jule-page-lead">
+          Fallakten der Zeitvertreib-Moderation sind öffentlich. Gib eine Fall-ID ein, um den Eintrag zu öffnen.
+        </p>
+      </header>
+
+      <section class="jule-panel cases-lookup">
+        <div class="jule-panel-head">
+          <span class="jule-panel-title">Fall suchen</span>
+        </div>
+        <div class="jule-panel-body jule-stack">
+          <p class="cases-hint">Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt.</p>
+
+          <div class="cases-lookup-row">
+            <div class="jule-field cases-lookup-field">
+              <app-icon name="search" />
               <input
                 type="text"
-                pInputText
+                class="jule-input"
                 [(ngModel)]="lookupCaseId"
                 placeholder="z.B. abc123456z"
-                class="lookup-input"
                 maxlength="10"
                 (keypress)="onLookupKeyPress($event)"
                 [disabled]="isLookingUp"
               />
-              <button
-                pButton
-                label="Suchen"
-                icon="pi pi-arrow-right"
-                class="lookup-button"
-                (click)="lookupCase()"
-                [disabled]="isLookingUp"
-                [loading]="isLookingUp"
-              ></button>
             </div>
-            @if (lookupError) {
-              <div class="lookup-error">
-                <i class="pi pi-exclamation-circle"></i>
-                <span>{{ lookupError }}</span>
-              </div>
-            }
+            <button type="button" class="jule-btn" (click)="lookupCase()" [disabled]="isLookingUp">
+              <app-icon name="arrow-right" />
+              Suchen
+            </button>
           </div>
+
+          @if (lookupError) {
+            <div class="jule-notice jule-notice--error">
+              <app-icon name="exclamation-circle" />
+              <span>{{ lookupError }}</span>
+            </div>
+          }
         </div>
-      </div>
+      </section>
     }
 
     <!-- Loading State -->
     @if (isLoading) {
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">Fälle werden geladen...</p>
-        <div class="loading-dots">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+      <div class="jule-state">
+        <span class="jule-spinner" aria-hidden="true"></span>
+        <span>Fälle werden geladen…</span>
       </div>
     }
 
     <!-- Error State -->
     @if (hasError && !isLoading) {
-      <div class="error-state">
-        <div class="error-icon-wrapper">
-          <i class="pi pi-exclamation-triangle"></i>
-        </div>
-        <h3 class="error-title">Ein Fehler ist aufgetreten</h3>
-        <p class="error-message">{{ errorMessage }}</p>
-        <button
-          pButton
-          label="Erneut versuchen"
-          icon="pi pi-refresh"
-          class="retry-button"
-          (click)="loadCases()"
-        ></button>
+      <div class="jule-state">
+        <app-icon class="jule-state-icon jule-state-icon--danger" name="exclamation-triangle" />
+        <h2>Ein Fehler ist aufgetreten</h2>
+        <p>{{ errorMessage }}</p>
+        <button type="button" class="jule-btn jule-btn--ghost" (click)="loadCases()">
+          <app-icon name="refresh" />
+          Erneut versuchen
+        </button>
       </div>
     }
 
-    <!-- Main Content -->
+    <!-- ===== TEAM VIEW ===== -->
     @if (!isLoading && !hasError && isTeam) {
-      <div class="main-content">
-        <!-- Header Section -->
-        <div class="header-section">
-          <div class="header-content">
-            <div class="title-area">
-              <div class="title-wrapper">
-                <i class="pi pi-briefcase header-icon"></i>
-                <h1 class="page-title">Fallverwaltung</h1>
-              </div>
-              <div class="header-meta-row">
-                <span class="header-meta-item">
-                  <i class="pi pi-folder"></i>
-                  {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }}
-                </span>
-                <span class="header-meta-sep">·</span>
-                <span class="header-meta-item">
-                  <i class="pi pi-clock"></i>
-                  {{ getRecentCasesCount() }} kürzlich erstellt
-                </span>
-              </div>
-            </div>
-            <div class="header-actions">
-              <button
-                pButton
-                label="Aktualisieren"
-                icon="pi pi-refresh"
-                class="refresh-btn"
-                (click)="loadCases()"
-                [disabled]="isLoading"
-              ></button>
-              <button
-                pButton
-                label="Neuer Fall"
-                icon="pi pi-plus"
-                class="create-btn"
-                (click)="createNewCase()"
-              ></button>
-            </div>
-          </div>
-        </div>
-        <!-- Search Section -->
-        <div class="search-section">
-          <!-- Search Mode Selector -->
-          <div class="search-mode-row">
-            <div class="search-mode-pills">
-              <button
-                class="mode-pill"
-                [class.active]="searchMode === 'all'"
-                (click)="setSearchMode('all')"
-                type="button"
-              >
-                <i class="pi pi-list"></i>
-                <span>Alle Fälle</span>
-              </button>
-              <button
-                class="mode-pill"
-                [class.active]="searchMode === 'steamId'"
-                (click)="setSearchMode('steamId')"
-                type="button"
-              >
-                <i class="pi pi-id-card"></i>
-                <span>Steam-ID</span>
-              </button>
-              <button
-                class="mode-pill"
-                [class.active]="searchMode === 'discordId'"
-                (click)="setSearchMode('discordId')"
-                type="button"
-              >
-                <i class="pi pi-discord"></i>
-                <span>Discord-ID</span>
-              </button>
-              <button
-                class="mode-pill"
-                [class.active]="searchMode === 'caseId'"
-                (click)="setSearchMode('caseId')"
-                type="button"
-              >
-                <i class="pi pi-folder-open"></i>
-                <span>Fall-ID</span>
-              </button>
-            </div>
-            <div class="search-mode-pills">
-              <!-- Sort Dropdown (only in 'all' mode) -->
-              @if (searchMode === 'all') {
-                <div class="custom-dropdown">
-                  <button class="dropdown-trigger" (click)="toggleSortDropdown()" type="button">
-                    <i class="pi pi-sort-alt"></i>
-                    <span class="dropdown-label">{{ getSortLabel() }}</span>
-                    <i class="pi" [ngClass]="sortDropdownOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-                  </button>
-                  @if (sortDropdownOpen) {
-                    <div class="dropdown-menu">
-                      @for (option of sortOptions; track option.sortBy + option.sortOrder) {
-                        <button
-                          class="dropdown-item"
-                          [class.active]="sortBy === option.sortBy && sortOrder === option.sortOrder"
-                          (click)="changeSortOrder(option.sortBy, option.sortOrder)"
-                          type="button"
-                        >
-                          <span>{{ option.label }}</span>
-                          @if (sortBy === option.sortBy && sortOrder === option.sortOrder) {
-                            <i class="pi pi-check"></i>
-                          }
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-              <!-- Category Filter (only in 'all' mode) -->
-              @if (searchMode === 'all') {
-                <div class="rule-filter-wrapper">
-                  <select [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()" class="rule-filter-select">
-                    <option [ngValue]="null">Alle Kategorien</option>
-                    @for (category of availableCategories; track category) {
-                      <option [ngValue]="category">{{ category }}</option>
-                    }
-                  </select>
-                </div>
-              }
-            </div>
-          </div>
-          <!-- "Alle Fälle" — local text filter -->
-          @if (searchMode === 'all') {
-            <div class="search-input-row">
-              <div class="search-wrapper">
-                <i class="pi pi-search search-icon"></i>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="searchQuery"
-                  (input)="filterCases()"
-                  placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
-                  class="search-input"
-                />
-                @if (searchQuery) {
-                  <button pButton icon="pi pi-times" class="clear-btn" (click)="clearSearch()" [text]="true"></button>
-                }
-              </div>
-              @if (!searchQuery) {
-                <div class="search-hint">
-                  <i class="pi pi-info-circle"></i>
-                  Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
-                </div>
-              }
-              @if (searchQuery) {
-                <div class="search-results-info">
-                  <i class="pi pi-filter"></i>
-                  <span
-                    >{{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser
-                    Seite</span
-                  >
-                </div>
-              }
-            </div>
-          }
-          <!-- "Steam-ID" — server-side search across all cases -->
-          @if (searchMode === 'steamId') {
-            <div class="search-input-row">
-              <div class="search-wrapper">
-                <i class="pi pi-id-card search-icon"></i>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="steamIdQuery"
-                  (input)="onSteamIdQueryChange()"
-                  placeholder="Steam-ID eingeben (z.B. 76561198…)"
-                  class="search-input"
-                />
-                @if (isSearching) {
-                  <i class="pi pi-spin pi-spinner search-spinner"></i>
-                }
-                @if (steamIdQuery && !isSearching) {
-                  <button
-                    pButton
-                    icon="pi pi-times"
-                    class="clear-btn"
-                    (click)="clearSteamIdSearch()"
-                    [text]="true"
-                  ></button>
-                }
-              </div>
-              @if (!steamIdQuery) {
-                <div class="search-hint">
-                  <i class="pi pi-info-circle"></i>
-                  Durchsucht <strong>alle</strong> Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse
-                  erscheinen automatisch nach 600 ms.
-                </div>
-              }
-              @if (searchError) {
-                <div class="search-error">
-                  <i class="pi pi-exclamation-circle"></i>
-                  {{ searchError }}
-                </div>
-              }
-              @if (steamIdResults !== null && !isSearching && !searchError) {
-                <div class="search-results-info">
-                  <i class="pi pi-server"></i>
-                  <span
-                    >{{ steamIdResultCount }}
-                    {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite Suche)</span
-                  >
-                </div>
-              }
-            </div>
-          }
-          <!-- "Discord-ID" — server-side search by creator Discord ID (paginated) -->
-          @if (searchMode === 'discordId') {
-            <div class="search-input-row">
-              <div class="search-wrapper">
-                <i class="pi pi-discord search-icon"></i>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="discordIdQuery"
-                  (input)="onDiscordIdQueryChange()"
-                  placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
-                  class="search-input"
-                />
-                @if (isSearching && discordIdQuery) {
-                  <i class="pi pi-spin pi-spinner search-spinner"></i>
-                }
-                @if (discordIdQuery && !isSearching) {
-                  <button
-                    pButton
-                    icon="pi pi-times"
-                    class="clear-btn"
-                    (click)="clearDiscordIdSearch()"
-                    [text]="true"
-                  ></button>
-                }
-              </div>
-              @if (!discordIdQuery) {
-                <div class="search-hint">
-                  <i class="pi pi-info-circle"></i>
-                  Filtert <strong>alle</strong> Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch
-                  nach 600 ms.
-                </div>
-              }
-              @if (searchError) {
-                <div class="search-error">
-                  <i class="pi pi-exclamation-circle"></i>
-                  {{ searchError }}
-                </div>
-              }
-              @if (discordIdQuery && !isSearching && !searchError && discordIdResults !== null) {
-                <div class="search-results-info">
-                  <i class="pi pi-server"></i>
-                  <span
-                    >{{ discordIdResultCount }}
-                    {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }} (serverweite Suche)</span
-                  >
-                </div>
-              }
-            </div>
-          }
-          <!-- "Fall-ID" — direct navigation to case detail -->
-          @if (searchMode === 'caseId') {
-            <div class="search-input-row">
-              <div class="search-wrapper">
-                <i class="pi pi-folder-open search-icon"></i>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="caseIdQuery"
-                  (keypress)="onCaseIdKeyPress($event)"
-                  (input)="caseIdError = ''"
-                  placeholder="Fall-ID eingeben (z.B. abc1230000)"
-                  class="search-input search-input--with-btn"
-                  maxlength="10"
-                />
+      <header class="jule-page-head">
+        <span class="jule-eyebrow">Moderation</span>
+        <h1 class="jule-page-title">Fallverwaltung.</h1>
+        <p class="jule-page-lead">
+          {{ totalCount }} {{ totalCount === 1 ? 'Fall' : 'Fälle' }} · {{ getRecentCasesCount() }} kürzlich erstellt
+        </p>
+      </header>
+
+      <div class="cases-stack">
+        <!-- Toolbar -->
+        <section class="jule-panel">
+          <div class="jule-panel-body jule-stack">
+            <div class="cases-toolbar-row">
+              <div class="jule-pills cases-modes">
                 <button
-                  pButton
-                  icon="pi pi-arrow-right"
-                  class="search-submit-btn"
-                  (click)="submitCaseIdSearch()"
-                  [disabled]="!caseIdQuery"
-                ></button>
+                  type="button"
+                  class="jule-pill"
+                  [class.jule-pill--on]="searchMode === 'all'"
+                  (click)="setSearchMode('all')"
+                >
+                  <app-icon name="list" />
+                  <span>Alle Fälle</span>
+                </button>
+                <button
+                  type="button"
+                  class="jule-pill"
+                  [class.jule-pill--on]="searchMode === 'steamId'"
+                  (click)="setSearchMode('steamId')"
+                >
+                  <app-icon name="id-card" />
+                  <span>Steam-ID</span>
+                </button>
+                <button
+                  type="button"
+                  class="jule-pill"
+                  [class.jule-pill--on]="searchMode === 'discordId'"
+                  (click)="setSearchMode('discordId')"
+                >
+                  <app-icon name="discord" />
+                  <span>Discord-ID</span>
+                </button>
+                <button
+                  type="button"
+                  class="jule-pill"
+                  [class.jule-pill--on]="searchMode === 'caseId'"
+                  (click)="setSearchMode('caseId')"
+                >
+                  <app-icon name="folder-open" />
+                  <span>Fall-ID</span>
+                </button>
               </div>
-              @if (!caseIdQuery && !caseIdError) {
-                <div class="search-hint">
-                  <i class="pi pi-info-circle"></i>
-                  Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil
-                  drücken zum Öffnen.
-                </div>
-              }
-              @if (caseIdError) {
-                <div class="search-error">
-                  <i class="pi pi-exclamation-circle"></i>
-                  {{ caseIdError }}
+
+              @if (searchMode === 'all') {
+                <div class="cases-filters">
+                  <div class="cases-select">
+                    <select
+                      class="jule-select"
+                      [ngModel]="sortBy + ':' + sortOrder"
+                      (ngModelChange)="onSortChange($event)"
+                    >
+                      @for (option of sortOptions; track option.sortBy + option.sortOrder) {
+                        <option [value]="option.sortBy + ':' + option.sortOrder">{{ option.label }}</option>
+                      }
+                    </select>
+                    <app-icon class="cases-select-chevron" name="chevron-down" />
+                  </div>
+
+                  <div class="cases-select">
+                    <select class="jule-select" [(ngModel)]="categoryFilter" (change)="onCategoryFilterChange()">
+                      <option [ngValue]="null">Alle Kategorien</option>
+                      @for (category of availableCategories; track category) {
+                        <option [ngValue]="category">{{ category }}</option>
+                      }
+                    </select>
+                    <app-icon class="cases-select-chevron" name="chevron-down" />
+                  </div>
                 </div>
               }
             </div>
-          }
-        </div>
-        <!-- Cases Grid -->
-        @if (displayedCases.length > 0) {
-          <div class="cases-grid">
-            @for (item of displayedCases; track item.caseId; let i = $index) {
-              <div class="case-card" (click)="openCase(item)" [style.animation-delay]="i * 0.05 + 's'">
-                <div class="case-card-header">
-                  <div class="case-icon-wrapper">
-                    <i class="pi pi-folder-open"></i>
-                  </div>
-                  @if (item.linkedSteamIds.length > 0) {
-                    <div class="case-linked-users">
-                      <i class="pi pi-users"></i>
-                      <span>{{ item.linkedSteamIds.length }}</span>
-                    </div>
+
+            <!-- "Alle Fälle" — local text filter -->
+            @if (searchMode === 'all') {
+              <div class="cases-search">
+                <div class="jule-field cases-search-field">
+                  <app-icon name="search" />
+                  <input
+                    type="text"
+                    class="jule-input"
+                    [(ngModel)]="searchQuery"
+                    (input)="filterCases()"
+                    placeholder="Suche auf dieser Seite: Fall-ID, Titel, Beschreibung…"
+                  />
+                  @if (searchQuery) {
+                    <button
+                      type="button"
+                      class="jule-btn jule-btn--icon cases-clear"
+                      (click)="clearSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
                   }
                 </div>
-                <div class="case-card-body">
-                  <h3 class="case-title">
-                    {{ item.title || formatCaseName(item.caseId) }}
-                  </h3>
-                  <p class="case-id">ID: {{ item.caseId }}</p>
-                  @if (item.description) {
-                    <p class="case-description">{{ item.description }}</p>
+
+                @if (!searchQuery) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Filtert die aktuelle Seite. Für serverweite Suche: Steam-ID, Discord-ID oder Fall-ID auswählen.
+                  </span>
+                } @else {
+                  <span class="cases-hint cases-hint--active">
+                    <app-icon name="filter" />
+                    {{ filteredCases.length }} {{ filteredCases.length === 1 ? 'Fall' : 'Fälle' }} auf dieser Seite
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- "Steam-ID" — server-side search across all cases -->
+            @if (searchMode === 'steamId') {
+              <div class="cases-search">
+                <div class="jule-field cases-search-field">
+                  <app-icon name="id-card" />
+                  <input
+                    type="text"
+                    class="jule-input"
+                    [(ngModel)]="steamIdQuery"
+                    (input)="onSteamIdQueryChange()"
+                    placeholder="Steam-ID eingeben (z.B. 76561198…)"
+                  />
+                  @if (isSearching) {
+                    <app-icon class="cases-trail cases-trail--spin spin" name="loader" />
                   }
-                  @if (item.category) {
-                    <div class="case-rule-badge">
-                      <i class="pi pi-shield"></i>
-                      <span>{{ item.category }}</span>
-                    </div>
+                  @if (steamIdQuery && !isSearching) {
+                    <button
+                      type="button"
+                      class="jule-btn jule-btn--icon cases-clear"
+                      (click)="clearSteamIdSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
                   }
                 </div>
-                <div class="case-card-footer">
-                  <div class="footer-left">
-                    <!-- Creator Chip -->
-                    @if (item.createdBy) {
-                      <div class="case-creator-section">
-                        <div
-                          class="creator-chip"
-                          (click)="navigateToCreatorProfile(item.createdBy.discordId)"
-                          [style.cursor]="isTeam ? 'pointer' : 'default'"
-                          [style.opacity]="isTeam ? '1' : '0.6'"
-                          [title]="'Erstellt von ' + item.createdBy.username + (isTeam ? ' (klickbar)' : '')"
-                        >
-                          <img
-                            [src]="item.createdBy.avatarUrl"
-                            [alt]="item.createdBy.username"
-                            class="creator-avatar"
-                          />
-                          <span class="creator-name">
-                            {{ item.createdBy.username }}
-                          </span>
-                        </div>
-                      </div>
-                    }
-                    <!-- Meta Items -->
-                    <div class="case-meta">
-                      <span class="meta-item" [title]="'Erstellt: ' + formatDate(item.createdAt)">
-                        <i class="pi pi-calendar-plus"></i>
-                        {{ formatDate(item.createdAt) }}
-                      </span>
-                      @if (item.lastUpdatedAt !== item.createdAt) {
-                        <span class="meta-item" [title]="'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)">
-                          <i class="pi pi-history"></i>
-                          {{ formatDate(item.lastUpdatedAt) }}
-                        </span>
-                      }
-                    </div>
-                  </div>
-                  <div class="case-action">
-                    <i class="pi pi-arrow-right"></i>
-                  </div>
+
+                @if (!steamIdQuery) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Durchsucht alle Fälle serverseitig nach verknüpften Steam-Accounts. Ergebnisse erscheinen
+                    automatisch nach 600 ms.
+                  </span>
+                }
+                @if (searchError) {
+                  <span class="cases-hint cases-hint--error">
+                    <app-icon name="exclamation-circle" />
+                    {{ searchError }}
+                  </span>
+                }
+                @if (steamIdResults !== null && !isSearching && !searchError && steamIdQuery) {
+                  <span class="cases-hint cases-hint--active">
+                    <app-icon name="server" />
+                    {{ steamIdResultCount }} {{ steamIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
+                    (serverweite Suche)
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- "Discord-ID" — server-side search by creator Discord ID -->
+            @if (searchMode === 'discordId') {
+              <div class="cases-search">
+                <div class="jule-field cases-search-field">
+                  <app-icon name="discord" />
+                  <input
+                    type="text"
+                    class="jule-input"
+                    [(ngModel)]="discordIdQuery"
+                    (input)="onDiscordIdQueryChange()"
+                    placeholder="Discord-ID eingeben (z.B. 123456789012345678)"
+                  />
+                  @if (isSearching && discordIdQuery) {
+                    <app-icon class="cases-trail cases-trail--spin spin" name="loader" />
+                  }
+                  @if (discordIdQuery && !isSearching) {
+                    <button
+                      type="button"
+                      class="jule-btn jule-btn--icon cases-clear"
+                      (click)="clearDiscordIdSearch()"
+                      aria-label="Suche löschen"
+                    >
+                      <app-icon name="times" />
+                    </button>
+                  }
                 </div>
-                <!-- Hover Effect Overlay -->
-                <div class="card-overlay"></div>
+
+                @if (!discordIdQuery) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Filtert alle Fälle nach dem Ersteller (Discord-ID). Ergebnisse erscheinen automatisch nach 600 ms.
+                  </span>
+                }
+                @if (searchError) {
+                  <span class="cases-hint cases-hint--error">
+                    <app-icon name="exclamation-circle" />
+                    {{ searchError }}
+                  </span>
+                }
+                @if (discordIdQuery && !isSearching && !searchError && discordIdResults !== null) {
+                  <span class="cases-hint cases-hint--active">
+                    <app-icon name="server" />
+                    {{ discordIdResultCount }} {{ discordIdResultCount === 1 ? 'Fall gefunden' : 'Fälle gefunden' }}
+                    (serverweite Suche)
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- "Fall-ID" — direct navigation to case detail -->
+            @if (searchMode === 'caseId') {
+              <div class="cases-search">
+                <div class="jule-field cases-search-field">
+                  <app-icon name="folder-open" />
+                  <input
+                    type="text"
+                    class="jule-input"
+                    [(ngModel)]="caseIdQuery"
+                    (keypress)="onCaseIdKeyPress($event)"
+                    (input)="caseIdError = ''"
+                    placeholder="Fall-ID eingeben (z.B. abc1230000)"
+                    maxlength="10"
+                  />
+                  @if (caseIdQuery) {
+                    <button
+                      type="button"
+                      class="jule-btn jule-btn--icon cases-clear"
+                      (click)="submitCaseIdSearch()"
+                      [disabled]="!caseIdQuery"
+                      aria-label="Fall öffnen"
+                    >
+                      <app-icon name="arrow-right" />
+                    </button>
+                  }
+                </div>
+
+                @if (!caseIdQuery && !caseIdError) {
+                  <span class="cases-hint">
+                    <app-icon name="info" />
+                    Bis zu 10 alphanumerische Zeichen — kürzere Eingaben werden mit Nullen aufgefüllt. Enter oder Pfeil
+                    drücken zum Öffnen.
+                  </span>
+                }
+                @if (caseIdError) {
+                  <span class="cases-hint cases-hint--error">
+                    <app-icon name="exclamation-circle" />
+                    {{ caseIdError }}
+                  </span>
+                }
               </div>
             }
           </div>
+        </section>
+
+        <!-- Create case -->
+        <button type="button" class="cases-create" (click)="createNewCase()">
+          <app-icon name="plus" />
+          Neuen Fall erstellen
+        </button>
+
+        <!-- Cases list -->
+        @if (displayedCases.length > 0) {
+          <section class="jule-panel">
+            <div class="jule-rows">
+              @for (item of displayedCases; track item.caseId) {
+                <div
+                  class="jule-item jule-item--action case-row"
+                  role="button"
+                  tabindex="0"
+                  (click)="openCase(item)"
+                  (keydown.enter)="openCase(item)"
+                >
+                  <span class="case-id jule-mono">#{{ item.caseId }}</span>
+
+                  <span class="case-main">
+                    <span class="case-title">{{ item.title || formatCaseName(item.caseId) }}</span>
+                    @if (item.description) {
+                      <span class="case-desc">{{ item.description }}</span>
+                    }
+                  </span>
+
+                  <span class="case-meta">
+                    @if (item.category) {
+                      <span class="jule-chip">{{ item.category }}</span>
+                    }
+                    @if (item.linkedSteamIds.length > 0) {
+                      <span class="jule-chip" [title]="item.linkedSteamIds.length + ' verknüpfte Nutzer'">
+                        <app-icon name="users" />
+                        {{ item.linkedSteamIds.length }}
+                      </span>
+                    }
+                    @if (item.createdBy) {
+                      <button
+                        type="button"
+                        class="case-creator"
+                        (click)="navigateToCreatorProfile(item.createdBy.discordId, $event)"
+                        [title]="'Erstellt von ' + item.createdBy.username"
+                      >
+                        <img
+                          [src]="item.createdBy.avatarUrl"
+                          [alt]="item.createdBy.username"
+                          class="case-creator-avatar"
+                        />
+                        <span class="case-creator-name">{{ item.createdBy.username }}</span>
+                      </button>
+                    }
+                    <span
+                      class="case-date jule-mono"
+                      [title]="
+                        item.lastUpdatedAt !== item.createdAt
+                          ? 'Zuletzt geändert: ' + formatDate(item.lastUpdatedAt)
+                          : 'Erstellt: ' + formatDate(item.createdAt)
+                      "
+                    >
+                      {{ formatDate(item.createdAt) }}
+                    </span>
+                    <app-icon class="case-arrow" name="chevron-right" />
+                  </span>
+                </div>
+              }
+            </div>
+          </section>
         }
+
         <!-- Pagination -->
         @if (showPagination) {
-          <div class="pagination-section">
+          <div class="cases-pagination">
             <button
-              pButton
-              icon="pi pi-chevron-left"
-              class="page-btn"
+              type="button"
+              class="jule-btn jule-btn--icon"
               (click)="prevPage()"
               [disabled]="!hasPreviousPage"
-            ></button>
-            <span class="page-info">Seite {{ page }} von {{ totalPages }}</span>
+              aria-label="Vorherige Seite"
+            >
+              <app-icon name="chevron-left" />
+            </button>
+            <span class="cases-page-info">Seite {{ page }} von {{ totalPages }}</span>
             <button
-              pButton
-              icon="pi pi-chevron-right"
-              class="page-btn"
+              type="button"
+              class="jule-btn jule-btn--icon"
               (click)="nextPage()"
               [disabled]="!hasNextPage"
-            ></button>
+              aria-label="Nächste Seite"
+            >
+              <app-icon name="chevron-right" />
+            </button>
           </div>
         }
-        <!-- Empty State -->
-        <!-- discordId mode: no query entered yet -->
+
+        <!-- Empty states -->
         @if (searchMode === 'discordId' && !discordIdQuery && !isLoading) {
-          <div class="empty-state empty-state-hint">
-            <div class="empty-icon-wrapper"><i class="pi pi-discord"></i></div>
-            <h3 class="empty-title">Discord-ID eingeben</h3>
-            <p class="empty-description">
-              Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.
-            </p>
+          <div class="jule-state">
+            <app-icon class="jule-state-icon" name="discord" />
+            <p>Gib oben eine Discord-ID ein, um alle von diesem Nutzer erstellten Fälle zu finden.</p>
           </div>
         }
-        <!-- discordId mode: searched but nothing found -->
         @if (
           searchMode === 'discordId' &&
           discordIdQuery &&
@@ -491,30 +443,24 @@
           discordIdResults.length === 0 &&
           !searchError
         ) {
-          <div class="empty-state">
-            <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
-            <h3 class="empty-title">Keine Fälle gefunden</h3>
-            <p class="empty-description">
+          <div class="jule-state">
+            <app-icon class="jule-state-icon" name="search" />
+            <h3>Keine Fälle gefunden</h3>
+            <p>
               Für die Discord-ID <strong>{{ discordIdQuery }}</strong> wurden keine Fälle erstellt.
             </p>
-            <button
-              pButton
-              label="Suche zurücksetzen"
-              icon="pi pi-times"
-              class="empty-action-btn"
-              (click)="clearDiscordIdSearch()"
-            ></button>
+            <button type="button" class="jule-btn jule-btn--ghost" (click)="clearDiscordIdSearch()">
+              <app-icon name="times" />
+              Suche zurücksetzen
+            </button>
           </div>
         }
-        <!-- steamId mode: no query entered yet -->
         @if (searchMode === 'steamId' && !steamIdQuery && !isSearching) {
-          <div class="empty-state empty-state-hint">
-            <div class="empty-icon-wrapper"><i class="pi pi-id-card"></i></div>
-            <h3 class="empty-title">Steam-ID eingeben</h3>
-            <p class="empty-description">Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
+          <div class="jule-state">
+            <app-icon class="jule-state-icon" name="id-card" />
+            <p>Gib oben eine Steam-ID ein, um alle verknüpften Fälle zu finden.</p>
           </div>
         }
-        <!-- steamId mode: searched but nothing found -->
         @if (
           searchMode === 'steamId' &&
           steamIdResults !== null &&
@@ -522,52 +468,32 @@
           !isSearching &&
           !searchError
         ) {
-          <div class="empty-state">
-            <div class="empty-icon-wrapper"><i class="pi pi-search"></i></div>
-            <h3 class="empty-title">Keine Fälle gefunden</h3>
-            <p class="empty-description">
+          <div class="jule-state">
+            <app-icon class="jule-state-icon" name="search" />
+            <h3>Keine Fälle gefunden</h3>
+            <p>
               Für die Steam-ID <strong>{{ steamIdQuery }}</strong> sind keine Fälle verknüpft.
             </p>
-            <button
-              pButton
-              label="Suche zurücksetzen"
-              icon="pi pi-times"
-              class="empty-action-btn"
-              (click)="clearSteamIdSearch()"
-            ></button>
+            <button type="button" class="jule-btn jule-btn--ghost" (click)="clearSteamIdSearch()">
+              <app-icon name="times" />
+              Suche zurücksetzen
+            </button>
           </div>
         }
-        <!-- all mode: no cases at all -->
         @if (searchMode === 'all' && cases.length === 0 && !isLoading) {
-          <div class="empty-state">
-            <div class="empty-illustration">
-              <div class="empty-icon-wrapper">
-                <i class="pi pi-inbox"></i>
-              </div>
-              <div class="empty-circles">
-                <div class="circle circle-1"></div>
-                <div class="circle circle-2"></div>
-                <div class="circle circle-3"></div>
-              </div>
-            </div>
-            <h3 class="empty-title">Noch keine Fälle vorhanden</h3>
-            <p class="empty-description">
-              Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.
-            </p>
-            <button
-              pButton
-              label="Ersten Fall erstellen"
-              icon="pi pi-plus-circle"
-              class="empty-action-btn"
-              (click)="createNewCase()"
-            ></button>
-            <div class="empty-tips">
-              <p class="tip-title">💡 Tipp:</p>
-              <p class="tip-text">Fälle helfen dir, deine Dokumente und Informationen strukturiert zu verwalten.</p>
-            </div>
+          <div class="jule-state">
+            <app-icon class="jule-state-icon" name="inbox" />
+            <h3>Noch keine Fälle vorhanden</h3>
+            <p>Erstelle deinen ersten Fall, um loszulegen und deine Arbeit zu organisieren.</p>
+            <button type="button" class="jule-btn" (click)="createNewCase()">
+              <app-icon name="plus" />
+              Ersten Fall erstellen
+            </button>
           </div>
         }
       </div>
     }
-  </div>
+  </main>
+
+  <app-jule-footer />
 </div>

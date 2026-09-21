@@ -1,6 +1,8 @@
 using System;
 using CommandSystem;
 using LabApi.Features.Console;
+using System.Globalization;
+using System.Text;
 
 namespace Eventim.Commands;
 
@@ -78,10 +80,23 @@ public class CommandHandler : ICommand
 
         return response;
     }
-
+    
     private static string Normalize(string s)
     {
-        return s.ToLowerInvariant().Replace(" ", "");
+        string normalized = s.Normalize(NormalizationForm.FormD);
+
+        StringBuilder result = new();
+
+        foreach (char c in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                result.Append(c);
+        }
+
+        return result
+            .ToString()
+            .ToLowerInvariant()
+            .Replace(" ", "");
     }
 
     private static string QueueEvent(string eventName)

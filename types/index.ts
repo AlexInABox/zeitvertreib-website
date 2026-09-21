@@ -54,6 +54,8 @@ export interface PlayerData {
   luckyWheelWins?: number;
   luckyWheelLosses?: number;
   username?: string;
+  firstSeen?: number;
+  lastSeen?: number;
 }
 
 // ============================================================================
@@ -130,6 +132,8 @@ export interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
+  firstSeen?: number;
+  lastSeen?: number;
   fakerank_until?: number;
   fakerankadmin_until?: number;
   fakerankoverride_until?: number;
@@ -636,29 +640,6 @@ export interface SprayGetResponseItem {
 export interface SprayRulesGetResponse {
   rules_en: string[];
   rules_de: string[];
-}
-
-// ============================================================================
-// Paysafe Card Submission Types
-// ============================================================================
-
-export type PaysafeCardSubmissionStatus = 'pending' | 'approved' | 'rejected';
-
-/** POST /paysafe request */
-export interface PaysafeCardPostRequest {
-  cardCode: string;
-}
-
-/** GET /paysafe response */
-export interface PaysafeCardGetResponse {
-  submissions: {
-    id: number;
-    cardCodeTruncated: string;
-    submittedAt: number;
-    processedAt: number;
-    status: PaysafeCardSubmissionStatus;
-    amount: number;
-  }[];
 }
 
 // ============================================================================

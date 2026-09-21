@@ -41,6 +41,15 @@ function parseColor(value: string): number {
 }
 
 function readRelease(): { tag_name: string; body?: string; html_url?: string } {
+  const tag = (Deno.env.get('RELEASE_TAG') ?? '').trim();
+  if (tag) {
+    return {
+      tag_name: tag,
+      body: Deno.env.get('RELEASE_BODY'),
+      html_url: Deno.env.get('RELEASE_URL') || undefined,
+    };
+  }
+
   const path = Deno.env.get('GITHUB_EVENT_PATH');
   if (!path) throw new Error('Missing GITHUB_EVENT_PATH');
   const event = JSON.parse(Deno.readTextFileSync(path)) as {

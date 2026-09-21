@@ -1,198 +1,164 @@
-<div class="dense-card">
-  <div class="card-header">
-    <div class="card-title">
-      <i class="pi pi-shield-check card-icon icon-purple"></i>
-      <div>
-        <h2>Daten & Datenschutz</h2>
-        <span class="card-subtitle">DSGVO-Verwaltung & Export</span>
+<section class="jule-panel">
+  <div class="jule-panel-head">
+    <div class="pf-head">
+      <app-icon name="database" />
+      <div class="pf-head-copy">
+        <h2 class="pf-title">Daten & Datenschutz</h2>
+        <span class="pf-sub">DSGVO-Verwaltung & Export</span>
       </div>
     </div>
   </div>
-  <div class="dense-body privacy-body">
-    <!-- EXPORT DATA BUTTON ITEM -->
-    <button class="action-item-button" [disabled]="isTakeoutDisabled()" (click)="openTakeoutModal()">
-      <div class="action-item-icon icon-blue-bg">
-        <i class="pi pi-download"></i>
-      </div>
-      <div class="action-item-text">
-        <span class="action-title">Daten exportieren</span>
+
+  <div class="jule-panel-body jule-stack">
+    <!-- EXPORT DATA -->
+    <button type="button" class="dm-item" [disabled]="isTakeoutDisabled()" (click)="openTakeoutModal()">
+      <span class="dm-item-icon"><app-icon name="download" /></span>
+      <span class="dm-item-text">
+        <span class="dm-item-title">Daten exportieren</span>
         @if (!isTakeoutDisabled()) {
-          <span class="action-desc">Sämtliche Account-Daten als JSON anfordern</span>
+          <span class="dm-item-desc">Sämtliche Account-Daten als JSON anfordern</span>
         }
         @if (isTakeoutDisabled() && lastTakeoutAt > 0) {
-          <span class="action-desc">Zuletzt angefordert: {{ formatDate(lastTakeoutAt) }}</span>
+          <span class="dm-item-desc">Zuletzt angefordert: {{ formatDate(lastTakeoutAt) }}</span>
         }
-      </div>
+      </span>
       @if (isTakeoutDisabled() && lastTakeoutAt > 0) {
-        <span class="badge badge-warning">{{ getDaysUntilNextTakeout() }}d Cooldown</span>
+        <span class="jule-chip jule-chip--warn">{{ getDaysUntilNextTakeout() }}d Cooldown</span>
       }
       @if (!isTakeoutDisabled()) {
-        <i class="pi pi-chevron-right action-arrow"></i>
+        <app-icon class="dm-arrow" name="chevron-right" />
       }
     </button>
 
-    <!-- ACCOUNT DELETION TOGGLE ITEM -->
+    <!-- ACCOUNT DELETION TOGGLE -->
     <div
-      class="action-item-toggle"
-      [class.is-enabled]="isDeletionEnabled()"
-      [class.is-disabled]="deletionLoading"
+      class="dm-item dm-item--toggle"
+      [class.dm-item--enabled]="isDeletionEnabled()"
+      [class.dm-item--busy]="deletionLoading"
       (click)="!deletionLoading && (isDeletionEnabled() ? disableDeletion() : openDeletionModal())"
     >
-      <div class="action-item-icon icon-danger-bg">
-        <i class="pi pi-trash"></i>
-      </div>
-      <div class="action-item-text">
-        <span class="action-title text-danger">Account löschen</span>
+      <span class="dm-item-icon dm-item-icon--danger"><app-icon name="trash" /></span>
+      <span class="dm-item-text">
+        <span class="dm-item-title dm-danger">Account löschen</span>
         @if (!isDeletionEnabled()) {
-          <span class="action-desc">Account für die Löschung freigeben</span>
+          <span class="dm-item-desc">Account für die Löschung freigeben</span>
         }
         @if (isDeletionEnabled()) {
-          <span class="action-desc">Freigegeben am {{ formatDate(deletionEnabledAt) }}</span>
+          <span class="dm-item-desc">Freigegeben am {{ formatDate(deletionEnabledAt) }}</span>
         }
-      </div>
-      <div class="toggle-switch-ui">
+      </span>
+      <span class="dm-toggle">
         <input type="checkbox" [checked]="isDeletionEnabled()" [disabled]="deletionLoading" tabindex="-1" />
-        <span class="toggle-slider-ui"></span>
-      </div>
+        <span class="dm-toggle-slider"></span>
+      </span>
     </div>
 
-    <!-- DELETION INSTRUCTIONS BOX -->
+    <!-- DELETION INSTRUCTIONS -->
     @if (isDeletionEnabled()) {
-      <div class="deletion-guide-box">
-        <div class="guide-header">
-          <i class="pi pi-envelope"></i>
-          <span>Löschanfrage abschließen</span>
+      <div class="jule-notice jule-notice--error dm-guide">
+        <app-icon name="mail" />
+        <div class="dm-guide-body">
+          <span>
+            Löschanfrage abschließen: Sende eine E-Mail an
+            <a
+              [href]="
+                'mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20' + userId()
+              "
+              >support&#64;zeitvertreib.vip</a
+            >
+            mit deiner User-ID:
+          </span>
+          <span class="dm-id-row">
+            <code class="dm-id jule-mono">{{ userId() }}</code>
+            <button type="button" class="jule-btn jule-btn--icon" (click)="copyUserId()" title="User-ID kopieren">
+              <app-icon [name]="copiedUserId ? 'check' : 'copy'" />
+            </button>
+          </span>
+          <span class="dm-guide-sub">Unser Team bearbeitet die Löschung innerhalb von 30 Tagen.</span>
         </div>
-        <p class="guide-text">
-          Sende eine E-Mail an
-          <a
-            [href]="
-              'mailto:support@zeitvertreib.vip?subject=Account%20Deletion%20Request&body=User%20ID:%20' + userId()
-            "
-            class="support-link"
-          >
-            support&#64;zeitvertreib.vip
-          </a>
-          mit deiner User-ID:
-        </p>
-        <div class="userid-copy-row">
-          <code class="userid-code">{{ userId() }}</code>
-          <button class="btn-icon btn-icon-secondary" (click)="copyUserId()" title="User-ID kopieren">
-            <i class="pi" [class.pi-copy]="!copiedUserId" [class.pi-check]="copiedUserId"></i>
-          </button>
-        </div>
-        <p class="guide-subtext">Unser Team bearbeitet die Löschung innerhalb von 30 Tagen.</p>
       </div>
     }
   </div>
-</div>
+</section>
 
 <!-- TAKEOUT MODAL -->
-@if (showTakeoutModal) {
-  <div class="modal-backdrop" (click)="closeTakeoutModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()">
-      <div class="modal-card-header">
-        <div class="modal-card-title">
-          <i class="pi pi-download icon-blue"></i>
-          <h3>Daten exportieren</h3>
-        </div>
-        <button class="btn-modal-close" (click)="closeTakeoutModal()"><i class="pi pi-times"></i></button>
+<jule-dialog [(open)]="showTakeoutModal" title="Daten exportieren" (close)="closeTakeoutModal()">
+  <div class="dm-modal-body">
+    @if (takeoutSuccess) {
+      <div class="dm-success">
+        <app-icon class="dm-success-icon" name="check-circle" />
+        <h4>Export angefordert!</h4>
+        <p>Du erhältst in Kürze eine E-Mail mit all deinen gespeicherten Daten als JSON-Datei.</p>
       </div>
-
-      <div class="modal-card-body">
-        @if (takeoutSuccess) {
-          <div class="modal-success-box">
-            <i class="pi pi-check-circle success-big-icon"></i>
-            <h4>Export angefordert!</h4>
-            <p>Du erhältst in Kürze eine E-Mail mit all deinen gespeicherten Daten als JSON-Datei.</p>
-          </div>
-        }
-        @if (!takeoutSuccess) {
-          <div class="modal-body-stack">
-            <p class="modal-intro-text">
-              Wir senden dir eine vollständige Kopie deiner Nutzerdaten (Spielstatistiken, Sitzungen, Uploads).
-            </p>
-            <div class="form-field">
-              <label for="takeout-email">E-Mail-Adresse für den Empfang</label>
-              <input
-                type="email"
-                id="takeout-email"
-                class="dense-input"
-                [(ngModel)]="takeoutEmail"
-                placeholder="deine@email.de"
-                [disabled]="takeoutLoading"
-                (keyup.enter)="submitTakeout()"
-                autofocus
-              />
-            </div>
-            @if (takeoutError) {
-              <div class="dense-notice notice-error">
-                {{ takeoutError }}
-              </div>
-            }
-            <div class="modal-note-box">
-              <i class="pi pi-info-circle note-icon"></i>
-              <span>Ein Daten-Export kann alle 30 Tage angefordert werden.</span>
-            </div>
-          </div>
-        }
+    } @else {
+      <p class="dm-modal-intro">
+        Wir senden dir eine vollständige Kopie deiner Nutzerdaten (Spielstatistiken, Sitzungen, Uploads).
+      </p>
+      <div class="dm-field">
+        <label for="takeout-email">E-Mail-Adresse für den Empfang</label>
+        <input
+          id="takeout-email"
+          type="email"
+          class="jule-input"
+          [(ngModel)]="takeoutEmail"
+          placeholder="deine@email.de"
+          [disabled]="takeoutLoading"
+          (keyup.enter)="submitTakeout()"
+        />
       </div>
-
-      @if (!takeoutSuccess) {
-        <div class="modal-card-footer">
-          <button class="btn btn-secondary-soft" (click)="closeTakeoutModal()" [disabled]="takeoutLoading">
-            Abbrechen
-          </button>
-          <button
-            class="btn btn-secondary-soft btn-confirm"
-            (click)="submitTakeout()"
-            [disabled]="takeoutLoading || !takeoutEmail"
-          >
-            {{ takeoutLoading ? 'Wird gesendet...' : 'Export anfordern' }}
-          </button>
+      @if (takeoutError) {
+        <div class="jule-notice jule-notice--error">
+          <app-icon name="exclamation-circle" />
+          <span>{{ takeoutError }}</span>
         </div>
       }
-    </div>
+      <div class="jule-notice">
+        <app-icon name="info" />
+        <span>Ein Daten-Export kann alle 30 Tage angefordert werden.</span>
+      </div>
+    }
   </div>
-}
+
+  @if (!takeoutSuccess) {
+    <div juleDialogFooter class="dm-modal-footer">
+      <button type="button" class="jule-btn jule-btn--ghost" (click)="closeTakeoutModal()" [disabled]="takeoutLoading">
+        Abbrechen
+      </button>
+      <button type="button" class="jule-btn" (click)="submitTakeout()" [disabled]="takeoutLoading || !takeoutEmail">
+        {{ takeoutLoading ? 'Wird gesendet…' : 'Export anfordern' }}
+      </button>
+    </div>
+  }
+</jule-dialog>
 
 <!-- DELETION MODAL -->
-@if (showDeletionModal) {
-  <div class="modal-backdrop" (click)="closeDeletionModal()">
-    <div class="modal-card modal-card-danger" (click)="$event.stopPropagation()">
-      <div class="modal-card-header header-danger">
-        <div class="modal-card-title text-danger">
-          <i class="pi pi-exclamation-triangle"></i>
-          <h3>Account zur Löschung markieren</h3>
-        </div>
-        <button class="btn-modal-close" (click)="closeDeletionModal()"><i class="pi pi-times"></i></button>
-      </div>
-
-      <div class="modal-card-body">
-        <div class="danger-warning-box">
-          <h4>Achtung! Unwiderrufliche Aktion</h4>
-          <p>
-            Sobald du den Toggle aktivierst und eine E-Mail an den Support sendest, werden alle Accountdaten
-            <strong>unwiderruflich gelöscht</strong>.
-          </p>
-        </div>
-        <p class="modal-intro-text">Gelöscht werden unter anderem:</p>
-        <ul class="danger-list">
-          <li>Spielstatistiken, Level & Ränge</li>
-          <li>ZVCoins Guthaben & Transaktionen</li>
-          <li>Hochgeladene Sprays & Profil-Anpassungen</li>
-          <li>Sitzungsprotokolle & Discord-Verknüpfung</li>
-        </ul>
-      </div>
-
-      <div class="modal-card-footer">
-        <button class="btn btn-secondary-soft" (click)="closeDeletionModal()" [disabled]="deletionLoading">
-          Abbrechen
-        </button>
-        <button class="btn btn-danger" (click)="confirmEnableDeletion()" [disabled]="deletionLoading">
-          {{ deletionLoading ? 'Wird aktiviert...' : 'Zur Löschung freigeben' }}
-        </button>
-      </div>
-    </div>
+<jule-dialog [(open)]="showDeletionModal" title="Account zur Löschung markieren" (close)="closeDeletionModal()">
+  <div class="jule-notice jule-notice--error">
+    <app-icon name="exclamation-triangle" />
+    <span>
+      <strong>Achtung! Unwiderrufliche Aktion.</strong> Sobald du den Toggle aktivierst und eine E-Mail an den Support
+      sendest, werden alle Accountdaten unwiderruflich gelöscht.
+    </span>
   </div>
-}
+  <p class="dm-modal-intro">Gelöscht werden unter anderem:</p>
+  <ul class="dm-danger-list">
+    <li>Spielstatistiken, Level & Ränge</li>
+    <li>ZVCoins Guthaben & Transaktionen</li>
+    <li>Hochgeladene Sprays & Profil-Anpassungen</li>
+    <li>Sitzungsprotokolle & Discord-Verknüpfung</li>
+  </ul>
+
+  <div juleDialogFooter class="dm-modal-footer">
+    <button type="button" class="jule-btn jule-btn--ghost" (click)="closeDeletionModal()" [disabled]="deletionLoading">
+      Abbrechen
+    </button>
+    <button
+      type="button"
+      class="jule-btn jule-btn--danger"
+      (click)="confirmEnableDeletion()"
+      [disabled]="deletionLoading"
+    >
+      {{ deletionLoading ? 'Wird aktiviert…' : 'Zur Löschung freigeben' }}
+    </button>
+  </div>
+</jule-dialog>

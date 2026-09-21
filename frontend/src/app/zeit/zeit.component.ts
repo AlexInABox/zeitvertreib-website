@@ -5,12 +5,15 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ZeitService } from '../services/zeit.service';
+import { IconComponent } from '../components/icon/icon.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import type { ZeitGetResponse, FakerankColor, CaseCategory } from '@zeitvertreib/types';
 
 @Component({
   standalone: true,
   selector: 'app-zeit',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './zeit.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./zeit.component.css'],

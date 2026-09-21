@@ -1,169 +1,150 @@
-<div class="advent-page">
-  <!-- Snow -->
+<div class="jule-canvas jule-canvas--fill advent-canvas">
   <div class="snowfall" aria-hidden="true">
     @for (flake of snowflakes; track $index) {
-      <div
+      <span
         class="snowflake"
         [style.left.%]="flake.left"
         [style.animation-delay.s]="flake.delay"
         [style.font-size.px]="flake.size"
+        >❄</span
       >
-        ❄
-      </div>
     }
   </div>
 
-  <div class="advent-shell">
-    <!-- Loading / Error States -->
+  <app-jule-nav />
+
+  <main class="jule-page">
     @if (isLoading) {
-      <div class="loading-state">
-        <div class="advent-card">
-          <div class="loading-spinner"></div>
-          <p class="muted">Lade Adventskalender...</p>
-        </div>
+      <div class="jule-state">
+        <span class="jule-spinner" aria-hidden="true"></span>
+        <span>Adventskalender wird geladen…</span>
       </div>
     }
 
     @if (hasError && !isLoading) {
-      <div class="error-state">
-        <div class="advent-card">
-          <p class="eyebrow">Hoppla</p>
-          <h3>Fehler beim Laden</h3>
-          <p class="muted">{{ errorMessage }}</p>
-          <button class="pill-btn" (click)="loadCalendar()">Erneut versuchen</button>
-        </div>
+      <div class="jule-state">
+        <app-icon class="jule-state-icon jule-state-icon--danger" name="exclamation-triangle" />
+        <h2>Fehler beim Laden</h2>
+        <p>{{ errorMessage }}</p>
+        <button type="button" class="jule-btn" (click)="loadCalendar()">
+          <app-icon name="refresh" />
+          Erneut versuchen
+        </button>
       </div>
     }
 
-    <!-- Not December -->
     @if (!isLoading && !hasError && !isDecember) {
-      <div class="not-december">
-        <div class="advent-card">
-          <div class="badge-row">
-            <span class="chip chip-ice">🎄 Außerhalb des Dezembers</span>
-            <span class="chip chip-soft">Komm im Dezember zurück</span>
-          </div>
-          <h1>Zeitvertreib Adventskalender</h1>
-          <p class="lede">Der Kalender erwacht jedes Jahr im Dezember. Komm zurück, um täglich ZVC zu sammeln.</p>
-        </div>
+      <div class="jule-state jule-state--plain">
+        <app-icon class="jule-state-icon" name="calendar" />
+        <h2>Noch nicht Dezember</h2>
+        <p>Der Kalender erwacht jedes Jahr im Dezember. Komm zurück, um täglich ZVC zu sammeln.</p>
       </div>
     }
 
-    <!-- Main Content -->
     @if (!isLoading && !hasError && isDecember) {
-      <div class="content-grid">
-        <div class="advent-card">
-          <div class="advent-card-header">
-            <div class="header-left">
-              <h1 class="title">🎄 Zeitvertreib Adventskalender</h1>
-              <p class="subtitle">Öffne jeden Tag ein Türchen und sammle ZVC.</p>
-            </div>
-            <div class="header-stats">
-              <div class="stat-badge">
-                <span class="stat-value">{{ openedCount }}</span>
-                <span class="stat-label">Geöffnet</span>
-              </div>
-              <div class="stat-badge">
-                <span class="stat-value">{{ currentDay }}</span>
-                <span class="stat-label">Dez</span>
-              </div>
-            </div>
+      <header class="jule-page-head">
+        <span class="jule-eyebrow">{{ currentDay }}. Dezember</span>
+        <h1 class="jule-page-title">Adventskalender.</h1>
+        <p class="jule-page-lead">
+          Öffne jeden Tag ein Türchen und sammle ZVC. Verpasste Türchen lassen sich mit Unterstützung nachholen.
+        </p>
+      </header>
+
+      <div class="advent-stack">
+        <section class="jule-panel">
+          <div class="jule-panel-head">
+            <span class="jule-panel-title">Fortschritt</span>
+            <span class="jule-chip jule-chip--brand">{{ openedCount }} / 24 geöffnet</span>
           </div>
-          <div class="advent-card-body hero-body">
-            <div class="badge-row">
-              <span class="chip chip-christmas">🎁 {{ openedCount }} / 24</span>
-              <span class="chip chip-ice">📅 {{ currentDay }}. Dezember</span>
-            </div>
-            <div class="progress-track segmented" aria-label="Fortschritt pro Tag (24 Segmente inkl. heute)">
+          <div class="jule-panel-body jule-stack">
+            <div
+              class="advent-progress"
+              role="img"
+              [attr.aria-label]="'Fortschritt: ' + openedCount + ' von 24 Türchen geöffnet'"
+            >
               @for (door of doors; track door.day) {
-                <div
-                  class="progress-segment"
-                  [class.segment-opened]="door.opened && door.day !== currentDay"
-                  [class.segment-past]="!door.opened && door.day < currentDay"
-                  [class.segment-locked]="door.day > currentDay"
-                  [class.segment-today]="door.day === currentDay"
-                ></div>
+                <span
+                  class="advent-seg"
+                  [class.advent-seg--opened]="door.opened && door.day !== currentDay"
+                  [class.advent-seg--today]="!door.opened && door.day === currentDay"
+                  [class.advent-seg--past]="!door.opened && door.day < currentDay"
+                ></span>
               }
             </div>
-            <div class="status-legend">
-              <span><span class="legend-dot status-open"></span> Geöffnet</span>
-              <span><span class="legend-dot status-available"></span> Heute</span>
-              <span><span class="legend-dot status-locked"></span> Gesperrt</span>
-              <span><span class="legend-dot status-past"></span> Verpasst</span>
+
+            <div class="advent-legend">
+              <span><i class="advent-dot advent-dot--opened"></i>Geöffnet</span>
+              <span><i class="advent-dot advent-dot--today"></i>Heute</span>
+              <span><i class="advent-dot advent-dot--locked"></i>Gesperrt</span>
+              <span><i class="advent-dot advent-dot--past"></i>Verpasst</span>
             </div>
-            <div class="stats-grid">
-              <div class="stat-panel">
-                <p class="stat-kicker">Geöffnet</p>
-                <p class="stat-value">{{ openedCount }}</p>
-                <p class="stat-desc">Geschaffte Türchen</p>
+
+            <div class="jule-stats">
+              <div class="jule-stat">
+                <span>Geöffnet</span>
+                <strong>{{ openedCount }}</strong>
               </div>
-              @if (isDonator) {
-                <div class="stat-panel donator-hint">
-                  <p class="hint-title">Danke — du bist großartig! ❤️</p>
-                  <p class="hint-text">Als Dank kannst du verpasste Türchen öffnen!!</p>
-                </div>
-              } @else {
-                @if (missedCount > 0) {
-                  <div class="stat-panel donator-hint">
-                    <p class="hint-title">Türchen verpasst? 🎁</p>
-                    <p class="hint-text">Unterstütze Zeitvertreib und hol sie nach.</p>
-                    <a class="donator-btn compact" routerLink="/support">❤️ Jetzt unterstützen</a>
-                  </div>
-                }
-              }
-              <div class="stat-panel">
-                <p class="stat-kicker">Zukünftig</p>
-                <p class="stat-value">{{ lockedCount }}</p>
-                <p class="stat-desc">Noch gesperrte Türchen</p>
+              <div class="jule-stat">
+                <span>Tag</span>
+                <strong>{{ currentDay }}</strong>
+              </div>
+              <div class="jule-stat">
+                <span>Zukünftig</span>
+                <strong>{{ lockedCount }}</strong>
               </div>
             </div>
+
+            @if (isDonator) {
+              <div class="jule-notice">
+                <app-icon name="check-circle" />
+                <span>Danke für deine Unterstützung — als Donator kannst du verpasste Türchen nachholen.</span>
+              </div>
+            } @else if (missedCount > 0) {
+              <div class="jule-notice jule-notice--warn">
+                <app-icon name="exclamation-triangle" />
+                <span>{{ missedCount }} Türchen verpasst. Mit einer Unterstützung kannst du sie nachholen.</span>
+              </div>
+              <a class="jule-btn advent-support" routerLink="/support">Jetzt unterstützen</a>
+            }
           </div>
-        </div>
-        <div class="advent-card">
-          <div class="advent-card-header">
-            <div class="header-left">
-              <h3 class="title-sm">🎄 24 Türchen</h3>
-              <p class="subtitle">❤️ Spendenlegenden können auch verpasste Türchen öffnen!</p>
-            </div>
+        </section>
+
+        <section class="jule-panel">
+          <div class="jule-panel-head">
+            <span class="jule-panel-title">24 Türchen</span>
+            <span class="jule-chip">Ein Türchen pro Tag</span>
           </div>
-          <div class="advent-card-body">
-            <div class="door-grid">
+          <div class="jule-panel-body">
+            <div class="advent-doors">
               @for (door of doors; track door.day) {
-                <div
-                  class="door-tile"
-                  [class.opened]="door.opened"
-                  [class.available]="getDoorState(door) === 'available'"
-                  [class.locked]="getDoorState(door) === 'locked'"
-                  [class.past]="getDoorState(door) === 'past'"
-                  [class.openable-past]="isDonator && !door.opened && door.day < currentDay"
+                <button
+                  type="button"
+                  class="advent-door"
+                  [class.advent-door--opened]="door.opened"
+                  [class.advent-door--today]="getDoorState(door) === 'available'"
+                  [class.advent-door--past]="getDoorState(door) === 'past'"
+                  [class.advent-door--openable]="isDonator && !door.opened && door.day < currentDay"
+                  [disabled]="!canOpenDoor(door)"
                   (click)="openDoor(door)"
                 >
-                  <div class="door-face">
-                    <div class="door-meta">
-                      @if (getDoorState(door) === 'available') {
-                        <span class="pill today-pill">🎁 Heute</span>
-                      }
-                      @if (getDoorState(door) === 'locked') {
-                        <span class="pill locked-pill">🔒 Gesperrt</span>
-                      }
-                      @if (getDoorState(door) === 'past') {
-                        <span class="pill past-pill">⏰ Verpasst</span>
-                      }
-                      @if (door.opened) {
-                        <span class="pill opened-pill">✅ Geöffnet</span>
-                      }
-                    </div>
-                    <div class="door-number">{{ door.day }}</div>
-                    @if (door.opened) {
-                      <div class="door-reward">+{{ door.reward }} ZVC</div>
-                    }
-                  </div>
-                </div>
+                  <span class="advent-door-day">{{ door.day }}</span>
+                  @if (door.opened) {
+                    <span class="advent-door-tag advent-door-tag--opened">+{{ door.reward }} ZVC</span>
+                  } @else if (getDoorState(door) === 'available') {
+                    <span class="advent-door-tag advent-door-tag--today">Heute</span>
+                  } @else if (getDoorState(door) === 'past') {
+                    <span class="advent-door-tag advent-door-tag--past">Verpasst</span>
+                  } @else {
+                    <span class="advent-door-tag">Gesperrt</span>
+                  }
+                </button>
               }
             </div>
           </div>
-        </div>
+        </section>
       </div>
     }
-  </div>
+  </main>
+
+  <app-jule-footer />
 </div>

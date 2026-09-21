@@ -3,7 +3,7 @@ import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { AwsClient } from 'aws4fetch';
-import { eq, count, lt, sql, and, gt } from 'drizzle-orm';
+import { eq, count, lt, sql, and, gt, desc } from 'drizzle-orm';
 import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, discordCache } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
 import { Context } from 'vm';
@@ -353,6 +353,11 @@ async function refreshDiscordCache(discordId: string, env: Env): Promise<void> {
 }
 
 // Database helpers
+function toEpochMs(value: Date | number | null | undefined): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  return value instanceof Date ? value.getTime() : value;
+}
+
 export async function getPlayerData(
   steamId: string,
   db: ReturnType<typeof drizzle>,
@@ -386,6 +391,8 @@ export async function getPlayerData(
         fakerankadmin_until: result.fakerankadminUntil ?? undefined,
         fakerankoverride_until: result.fakerankoverrideUntil ?? undefined,
         redeemed_codes: result.redeemedCodes ?? undefined,
+        firstSeen: toEpochMs(result.firstSeen),
+        lastSeen: toEpochMs(result.lastSeen),
       } as PlayerData;
     }
 
@@ -399,7 +406,7 @@ export async function getPlayerData(
 // New kills table helpers
 export async function getPlayerKillsCount(steamId: string, db: ReturnType<typeof drizzle>, _env: Env): Promise<number> {
   try {
-    const playerId = `${steamId}@steam`;
+    const playerId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
     const result = await db.select({ count: count() }).from(kills).where(eq(kills.attacker, playerId)).get();
 
     return result?.count || 0;
@@ -415,7 +422,7 @@ export async function getPlayerDeathsCount(
   _env: Env,
 ): Promise<number> {
   try {
-    const playerId = `${steamId}@steam`;
+    const playerId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
     const result = await db.select({ count: count() }).from(kills).where(eq(kills.target, playerId)).get();
 
     return result?.count || 0;
@@ -432,12 +439,12 @@ export async function getPlayerLastKillers(
   ctx: ExecutionContext,
 ): Promise<Array<{ displayname: string; avatarmedium: string }>> {
   try {
-    const playerId = `${steamId}@steam`;
+    const playerId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
     const results = await db
       .select({ attacker: kills.attacker })
       .from(kills)
       .where(eq(kills.target, playerId))
-      .orderBy(kills.timestamp)
+      .orderBy(desc(kills.timestamp))
       .limit(5);
 
     if (!results || results.length === 0) {
@@ -485,12 +492,12 @@ export async function getPlayerLastKills(
   ctx: ExecutionContext,
 ): Promise<Array<{ displayname: string; avatarmedium: string }>> {
   try {
-    const playerId = `${steamId}@steam`;
+    const playerId = steamId.endsWith('@steam') ? steamId : `${steamId}@steam`;
     const results = await db
       .select({ target: kills.target })
       .from(kills)
       .where(eq(kills.attacker, playerId))
-      .orderBy(kills.timestamp)
+      .orderBy(desc(kills.timestamp))
       .limit(5);
 
     if (!results || results.length === 0) {
@@ -566,6 +573,8 @@ export async function mapPlayerDataToStats(
       fakerank_until: 0,
       fakerankadmin_until: 0,
       fakerankoverride_until: 0,
+      firstSeen: 0,
+      lastSeen: 0,
       lastkillers: lastKillers,
       lastkills: lastKills,
     };
@@ -593,6 +602,8 @@ export async function mapPlayerDataToStats(
     fakerank_until: fakerankUntil,
     fakerankadmin_until: fakerankAdminUntil,
     fakerankoverride_until: fakerankOverrideUntil,
+    firstSeen: playerData.firstSeen,
+    lastSeen: playerData.lastSeen,
     lastkillers: lastKillers,
     lastkills: lastKills,
   };
@@ -691,6 +702,14 @@ export async function isTeam(steamId: string, env: Env): Promise<boolean> {
     .from(discordInfo)
     .where(eq(discordInfo.discordId, playerdataResult.discordId))
     .get();
+  if (!discordInfoResult) return false;
+
+  return discordInfoResult.teamSince > 0;
+}
+
+export async function isTeamByDiscordId(discordId: string, env: Env): Promise<boolean> {
+  const db = drizzle(env.ZEITVERTREIB_DATA);
+  const discordInfoResult = await db.select().from(discordInfo).where(eq(discordInfo.discordId, discordId)).get();
   if (!discordInfoResult) return false;
 
   return discordInfoResult.teamSince > 0;

@@ -1,20 +1,23 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
-
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AdventCalendarService } from '../services/advent-calendar.service';
 import { AuthService } from '../services/auth.service';
 import type { UserData } from '../services/auth.service';
 import type { AdventCalendarDoor, GetAdventCalendarResponse, RedeemAdventDoorResponse } from '@zeitvertreib/types';
+import { IconComponent } from '../components/icon/icon.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
+/** Seasonal advent calendar: one ZVC reward per day through December. */
 @Component({
   selector: 'app-advent-calendar',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './advent-calendar.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./advent-calendar.component.css'],
 })
-export class AdventCalendarComponent implements OnInit {
+export class AdventCalendarComponent implements OnInit, OnDestroy {
   private adventCalendarService = inject(AdventCalendarService);
   private authService = inject(AuthService);
 
@@ -30,13 +33,8 @@ export class AdventCalendarComponent implements OnInit {
   // Snowfall animation
   snowflakes: { left: number; delay: number; size: number }[] = [];
 
-  // Randomized door tilt/offset for a handcrafted feel
-  private doorTilts: Map<number, number> = new Map();
-  private doorOffsets: Map<number, number> = new Map();
-
   constructor() {
     this.generateSnowflakes();
-    this.generateDoorStyles();
     this.authService.currentUserData$.subscribe((data: UserData | null) => {
       this.isDonator = data?.isDonator ?? false;
     });
@@ -44,15 +42,6 @@ export class AdventCalendarComponent implements OnInit {
 
   get openedCount(): number {
     return this.doors.filter((item) => item.opened).length;
-  }
-
-  get progressPercent(): number {
-    const percent = (this.openedCount / 24) * 100;
-    return Math.min(100, Math.max(0, Math.round(percent)));
-  }
-
-  get todayDoor(): AdventCalendarDoor | undefined {
-    return this.doors.find((item) => item.day === this.currentDay);
   }
 
   get missedCount(): number {
@@ -66,6 +55,8 @@ export class AdventCalendarComponent implements OnInit {
   ngOnInit(): void {
     this.loadCalendar();
   }
+
+  ngOnDestroy(): void {}
 
   loadCalendar(): void {
     this.isLoading = true;
@@ -143,16 +134,6 @@ export class AdventCalendarComponent implements OnInit {
     });
   }
 
-  getDoorTilt(day: number): string {
-    const value = this.doorTilts.get(day) ?? 0;
-    return `${value}deg`;
-  }
-
-  getDoorOffset(day: number): string {
-    const value = this.doorOffsets.get(day) ?? 0;
-    return `${value}px`;
-  }
-
   private generateSnowflakes(): void {
     for (let index = 0; index < 50; index++) {
       this.snowflakes.push({
@@ -160,15 +141,6 @@ export class AdventCalendarComponent implements OnInit {
         delay: Math.random() * 10,
         size: 10 + Math.random() * 20,
       });
-    }
-  }
-
-  private generateDoorStyles(): void {
-    for (let day = 1; day <= 24; day++) {
-      const tilt = -6 + Math.random() * 12; // -6deg to 6deg
-      const offset = -8 + Math.random() * 16; // -8px to 8px
-      this.doorTilts.set(day, tilt);
-      this.doorOffsets.set(day, offset);
     }
   }
 }

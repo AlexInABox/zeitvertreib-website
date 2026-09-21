@@ -1,26 +1,17 @@
-import { Component, OnInit, OnDestroy, inject, ElementRef, ChangeDetectionStrategy } from '@angular/core';
-import { AudioService } from '../services/audio.service';
-import { HttpClient } from '@angular/common/http';
-import { ButtonModule } from 'primeng/button';
+import { Component, OnDestroy, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { CardModule } from 'primeng/card';
-import { ChartModule } from 'primeng/chart';
-import { AvatarModule } from 'primeng/avatar';
 
-import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { NotificationCenterService } from '../services/notification-center.service';
-import { ThemeService } from '../services/theme.service';
-import { EasterEggService } from '../services/easter-egg.service';
-import { QuestsComponent } from '../components/quests/quests.component';
-import { ZvcService } from '../services/zvc.service';
-
-// New Widgets
-import { StatsOverviewComponent } from './widgets/stats-overview/stats-overview';
-import { SprayManagementComponent } from './widgets/spray-management/spray-management';
-import { LootboxComponent } from './widgets/lootbox/lootbox';
+import { SupportService } from '../services/support.service';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import { FakerankComponent } from './widgets/fakerank/fakerank';
-import { PlayerInfoCardComponent } from './widgets/player-info-card/player-info-card';
+import { SprayManagementComponent } from './widgets/spray-management/spray-management';
+import { BirthdayCardComponent } from './user-sidebar/birthday-card/birthday-card.component';
+import { SHOWCASE_IMAGES } from '../utils/showcase';
+import { retry, timeout } from 'rxjs';
+import type { ClaimQuestRewardResponse, GetQuestsResponse, QuestProgress } from '@zeitvertreib/types';
 
 interface Statistics {
   username: string;
@@ -36,6 +27,8 @@ interface Statistics {
   pocketescapes: number;
   usedadrenaline: number;
   snakehighscore: number;
+  firstSeen?: number;
+  lastSeen?: number;
   lastkillers: Array<{ displayname: string; avatarmedium: string }>;
   lastkills: Array<{ displayname: string; avatarmedium: string }>;
 }
@@ -43,25 +36,18 @@ interface Statistics {
 @Component({
   selector: 'app-dashboard',
   imports: [
-    ButtonModule,
-    CardModule,
-    ChartModule,
-    AvatarModule,
-    FormsModule,
-    QuestsComponent,
-    StatsOverviewComponent,
-    SprayManagementComponent,
-    LootboxComponent,
+    RouterModule,
+    JuleNavComponent,
+    JuleFooterComponent,
     FakerankComponent,
-    PlayerInfoCardComponent,
+    SprayManagementComponent,
+    BirthdayCardComponent,
   ],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  authService = inject(AuthService);
-
   userStatistics: Statistics = {
     username: 'LÄDT...',
     kills: 0,
@@ -76,6 +62,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     pocketescapes: 0,
     usedadrenaline: 0,
     snakehighscore: 0,
+    firstSeen: 0,
+    lastSeen: 0,
     lastkillers: [],
     lastkills: [],
   };
@@ -83,83 +71,258 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoading = true;
   hasError = false;
   errorMessage = '';
-  randomColors: string[] = [];
   isDonator = false;
 
-  private http = inject(HttpClient);
-  private themeService = inject(ThemeService);
-  private easterEggService = inject(EasterEggService);
-  private notificationCenter = inject(NotificationCenterService);
-  private zvcService = inject(ZvcService);
+  dailyQuests: QuestProgress[] = [];
+  weeklyQuests: QuestProgress[] = [];
+  questsLoading = true;
+  claimingQuestId: number | null = null;
+
+  /** Ticks for the quest reset countdowns; refreshed twice a minute. */
+  private readonly questClock = signal(Date.now());
+  private questClockInterval: ReturnType<typeof setInterval> | null = null;
+
+  private authService = inject(AuthService);
+  private supportService = inject(SupportService);
 
   constructor() {
-    this.generateRandomColors();
     this.loadUserStats();
+    this.loadQuests();
   }
 
   ngOnInit(): void {
     this.isDonator = this.authService.isDonator();
+    // Immersive dashboard: hides the global header/site chrome while mounted.
+    this.questClockInterval = setInterval(() => this.questClock.set(Date.now()), 30_000);
   }
 
-  generateRandomColors(): void {
-    this.randomColors = [this.getRandomColor(), this.getRandomColor(), this.getRandomColor()];
-    this.applyRandomColors();
-  }
-
-  private getRandomColor(): string {
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = Math.floor(Math.random() * 40) + 60;
-    const lightness = Math.floor(Math.random() * 30) + 45;
-    return this.hslToHex(hue, saturation, lightness);
-  }
-
-  private hslToHex(h: number, s: number, l: number): string {
-    l /= 100;
-    const a = (s * Math.min(l, 1 - l)) / 100;
-    const f = (n: number) => {
-      const k = (n + h / 30) % 12;
-      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(255 * color)
-        .toString(16)
-        .padStart(2, '0');
-    };
-    return `#${f(0)}${f(8)}${f(4)}`;
-  }
-
-  private applyRandomColors(): void {
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      root.style.setProperty('--random-color-1', this.randomColors[0] ?? '#000000');
-      root.style.setProperty('--random-color-2', this.randomColors[1] ?? '#000000');
-      root.style.setProperty('--random-color-3', this.randomColors[2] ?? '#000000');
+  ngOnDestroy(): void {
+    if (this.questClockInterval !== null) {
+      clearInterval(this.questClockInterval);
+      this.questClockInterval = null;
     }
   }
 
-  private loadUserStats(): void {
-    this.isLoading = true;
-    this.hasError = false;
-    this.authService.authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`).subscribe({
+  // ---- derived stats ------------------------------------------------------
+
+  get kdRatio(): string {
+    const kills = this.userStatistics.kills || 0;
+    const deaths = this.userStatistics.deaths || 0;
+    if (!deaths) return kills > 0 ? '∞' : '0.00';
+    return (kills / deaths).toFixed(2);
+  }
+
+  /** Leaderboard rank for the console badge ('—' when unranked). */
+  get rank(): string {
+    const pos = this.userStatistics.leaderboardposition;
+    return pos && pos > 0 ? `#${pos}` : '—';
+  }
+
+  /** Compact playtime for the big stat number (avoids overlong "Xh Ym" strings). */
+  get playtimeBig(): string {
+    const seconds = this.userStatistics.playtime || 0;
+    const hours = seconds / 3600;
+    if (hours >= 100) return `${Math.round(hours)}h`;
+    if (hours >= 1) return `${(Math.round(hours * 10) / 10).toString().replace('.', ',')}h`;
+    return `${Math.max(1, Math.round(seconds / 60))}m`;
+  }
+
+  /** German thousands separator for mono readouts. */
+  num(value: number | null | undefined): string {
+    return (value ?? 0).toLocaleString('de-DE');
+  }
+
+  /** German date readout for the "first seen / last seen" footer. */
+  seenDate(value: number | null | undefined): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  get recentKills(): Statistics['lastkills'] {
+    return this.userStatistics.lastkills.slice(0, 6);
+  }
+
+  get recentDeaths(): Statistics['lastkillers'] {
+    return this.userStatistics.lastkillers.slice(0, 6);
+  }
+
+  readonly fallbackImg = '/assets/logos/logo_full_color_1to1.avif';
+
+  onImgFallback(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img && img.src !== this.fallbackImg) {
+      img.src = this.fallbackImg;
+    }
+  }
+
+  // ---- quests -------------------------------------------------------------
+
+  /** Daily quests reset at midnight UTC (cron '0 0 * * *' wipes progress). */
+  dailyResetCountdown(): string {
+    const now = new Date(this.questClock());
+    const reset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    return this.formatCountdown(reset - now.getTime());
+  }
+
+  /** Weekly quests reset Monday 00:00 UTC (ISO weeks, cron '0 0 * * MON'). */
+  weeklyResetCountdown(): string {
+    const now = new Date(this.questClock());
+    const daysUntilMonday = (8 - now.getUTCDay()) % 7 || 7;
+    const reset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilMonday);
+    return this.formatCountdown(reset - now.getTime());
+  }
+
+  private formatCountdown(ms: number): string {
+    const totalMinutes = Math.max(0, Math.floor(ms / 60_000));
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    if (days > 0) return `noch ${days}T ${hours}h`;
+    if (hours > 0) return minutes > 0 ? `noch ${hours}h ${minutes}m` : `noch ${hours}h`;
+    return `noch ${minutes}m`;
+  }
+
+  questPercent(quest: QuestProgress): number {
+    if (quest.targetValue === 0) return 0;
+    return Math.min((quest.currentProgress / quest.targetValue) * 100, 100);
+  }
+
+  /** Progress readout; playtime quests count in minutes instead of seconds. */
+  questProgressText(quest: QuestProgress): string {
+    if (quest.category.includes('playtime')) {
+      return `${Math.floor(quest.currentProgress / 60)} / ${Math.floor(quest.targetValue / 60)}`;
+    }
+    return `${quest.currentProgress} / ${quest.targetValue}`;
+  }
+
+  claimReward(quest: QuestProgress): void {
+    if (this.claimingQuestId !== null) return;
+
+    this.claimingQuestId = quest.id;
+    this.authService
+      .authenticatedPost<ClaimQuestRewardResponse>(`${environment.apiUrl}/quests/claim-reward`, {
+        questId: quest.id,
+      })
+      .subscribe({
+        next: () => {
+          quest.claimedAt = Math.floor(Date.now() / 1000);
+          this.claimingQuestId = null;
+        },
+        error: (error) => {
+          console.error('Fehler beim Abholen der Quest-Belohnung:', error);
+          this.claimingQuestId = null;
+        },
+      });
+  }
+
+  private loadQuests(): void {
+    this.questsLoading = true;
+    this.authService.authenticatedGet<GetQuestsResponse>(`${environment.apiUrl}/quests`).subscribe({
       next: (response) => {
-        if (response?.stats) this.userStatistics = { ...this.userStatistics, ...response.stats };
-        this.isLoading = false;
+        this.dailyQuests = response?.dailyQuests ?? [];
+        this.weeklyQuests = response?.weeklyQuests ?? [];
+        this.questsLoading = false;
       },
       error: (error) => {
-        console.error('Fehler beim Laden:', error);
-        this.hasError = true;
-        this.errorMessage = 'Statistiken konnten nicht geladen werden';
-        this.isLoading = false;
+        console.error('Fehler beim Laden der Quests:', error);
+        this.questsLoading = false;
       },
     });
   }
 
+  // ---- gallery ------------------------------------------------------------
+
+  galleryImages = SHOWCASE_IMAGES;
+
+  activeImageIndex = 0;
+
+  get activeImage(): string {
+    return `/assets/showcase/full/${this.galleryImages[this.activeImageIndex]}`;
+  }
+
+  pickImage(index: number): void {
+    this.activeImageIndex =
+      ((index % this.galleryImages.length) + this.galleryImages.length) % this.galleryImages.length;
+  }
+
+  nextImage(): void {
+    this.pickImage(this.activeImageIndex + 1);
+  }
+
+  prevImage(): void {
+    this.pickImage(this.activeImageIndex - 1);
+  }
+
+  // ---- stats loading ------------------------------------------------------
+
+  private loadUserStats(): void {
+    this.isLoading = true;
+    this.hasError = false;
+
+    // Serve a short-lived cached copy instantly if we have one, so navigating
+    // back to the dashboard doesn't wait on a slow /stats request again.
+    const token = this.authService.getSessionToken();
+    const cacheKey = token ? `zv_dash_stats_v1:${token}` : null;
+    if (cacheKey) {
+      const cached = this.readStatsCache(cacheKey);
+      if (cached) {
+        this.userStatistics = { ...this.userStatistics, ...cached };
+        this.isLoading = false;
+        return;
+      }
+    }
+
+    this.authService
+      .authenticatedGet<{ stats: Statistics }>(`${environment.apiUrl}/stats`)
+      .pipe(timeout(25000), retry(1))
+      .subscribe({
+        next: (response) => {
+          if (response?.stats) {
+            this.userStatistics = { ...this.userStatistics, ...response.stats };
+            if (cacheKey) this.writeStatsCache(cacheKey, response.stats);
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Fehler beim Laden:', error);
+          this.hasError = true;
+          this.errorMessage = 'Statistiken konnten nicht geladen werden';
+          this.isLoading = false;
+        },
+      });
+  }
+
+  private readStatsCache(key: string): Statistics | null {
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { ts: number; data: Statistics };
+      if (!parsed?.data || Date.now() - parsed.ts > 60_000) {
+        sessionStorage.removeItem(key);
+        return null;
+      }
+      return parsed.data;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStatsCache(key: string, data: Statistics): void {
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
   refreshStats(): void {
-    this.generateRandomColors();
     this.loadUserStats();
   }
 
-  onBalanceChange(newBalance: number): void {
-    this.userStatistics.experience = newBalance;
+  /** Expand the support/donation panel (same as the navbar “Unterstützen”). */
+  openSupport(): void {
+    this.supportService.expand(true);
   }
-
-  ngOnDestroy(): void {}
 }

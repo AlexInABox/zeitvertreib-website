@@ -10,6 +10,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
+## [31]
+
+### Added
+
+- Team members can now restart or reinstall the game server right from Discord (`/restart` and `/reinstall`), helping the team get the server back up quickly after crashes or lag outbreaks.
+- New "Piñata Fieber" event that drops a pile of SCP-330 candy wherever a player dies.
+
+### Changed
+
+- The entire website has been redesigned and reworked in accordance with the new "JULE" Design Specification of Zeitvertreib.
+
+### Removed
+
+- The web games section (slot machine, lucky wheel, chicken cross, roulette and lootbox) has been removed from the website
+- Paysafecard donations have been removed from the website and the Discord bot
+
+### Fixed
+
+- The dashboard feed for recent kills and deaths shows data again
+- Data exports now cover every stored record linked to your Steam or Discord account, instead of a fixed set of tables
+
 ## [30]
 
 ### Added

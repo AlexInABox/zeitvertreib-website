@@ -57,7 +57,6 @@ export const playerdata = sqliteTable('playerdata', {
   rouletteWins: integer('rouletteWins').notNull().default(0),
   rouletteLosses: integer('rouletteLosses').notNull().default(0),
   lootboxVouchers: integer('lootbox_vouchers').notNull().default(0),
-  migratedCedmod: integer('migrated_cedmod', { mode: 'timestamp_ms' }),
   firstSeen: integer('first_seen', { mode: 'timestamp_ms' }),
   lastSeen: integer('last_seen', { mode: 'timestamp_ms' }),
 });
@@ -155,18 +154,6 @@ export const discordCache = sqliteTable('discord_cache', {
   username: text('username').notNull(),
   avatarUrl: text('avatar_url').notNull(),
   lastUpdated: integer('last_updated').notNull().default(0),
-});
-
-export const paysafeCardSubmissions = sqliteTable('paysafe_card_submissions', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  discordId: text('discord_id').notNull(),
-  cardCode: text('card_code').notNull(),
-  submittedAt: integer('submitted_at').notNull().default(0),
-  processedAt: integer('processed_at').notNull().default(0),
-  status: text('status', { enum: ['pending', 'approved', 'rejected'] })
-    .notNull()
-    .default('pending'),
-  amount: numeric('amount').notNull(),
 });
 
 export const fakeranks = sqliteTable('fakeranks', {

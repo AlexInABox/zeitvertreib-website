@@ -1,13 +1,15 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 
-import { ButtonModule } from 'primeng/button';
 import { AuthService, SteamUser } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { IconComponent } from '../components/icon/icon.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
 @Component({
   selector: 'app-login',
-  imports: [ButtonModule],
+  imports: [IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./login.component.css'],

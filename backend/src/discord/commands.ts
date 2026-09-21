@@ -5,6 +5,8 @@ import { PlayerlistCommand } from './commands/playerlist.js';
 import { CoinflipCommand } from './commands/coinflip.js';
 import { ZvcCommand } from './commands/zvc.js';
 import { BirthdayCommand } from './commands/birthday.js';
+import { RestartCommand } from './commands/restart.js';
+import { ReinstallCommand } from './commands/reinstall.js';
 // Create command manager instance
 export const commandManager = new CommandManager();
 
@@ -15,6 +17,8 @@ commandManager.register(new StatsCommand());
 commandManager.register(new CoinflipCommand());
 commandManager.register(new ZvcCommand());
 commandManager.register(new BirthdayCommand());
+commandManager.register(new RestartCommand());
+commandManager.register(new ReinstallCommand());
 
 // Export commands for backwards compatibility and registration
 export const COMMANDS = commandManager.getAll();

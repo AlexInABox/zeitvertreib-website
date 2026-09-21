@@ -1,14 +1,15 @@
 import { Component, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
+import { IconComponent } from '../../../components/icon/icon.component';
 
+/** Lists a user's uploaded sprays, with inline rename and delete for moderators. */
 @Component({
   selector: 'app-sprays-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './sprays-list.component.html',
   styleUrls: ['./sprays-list.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,

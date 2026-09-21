@@ -1,0 +1,318 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Hero: full-bleed profile picture backdrop (spans the whole sidebar width) */
+.identity-hero {
+  position: relative;
+  display: block;
+  height: clamp(110px, 13vw, 160px);
+  margin: -1.25rem -1.25rem 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.identity-hero:focus-visible {
+  outline: 2px solid var(--jule-accent);
+  outline-offset: 2px;
+}
+
+.identity-hero-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.identity-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--jule-bg) 85%, transparent) 100%);
+}
+
+.identity-hero-name {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.75rem;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Stat tiles */
+.stat-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.stat-tile {
+  position: relative;
+  padding: 0.75rem 0.875rem;
+  background: var(--jule-panel);
+  border: 1px solid var(--jule-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 3px;
+  background: var(--stat-color, var(--jule-accent));
+}
+
+.stat-tile-value {
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.2;
+  color: var(--jule-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-tile-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  line-height: 1.3;
+  color: var(--jule-muted);
+}
+
+/* Info rows */
+.info-section {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--jule-line);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.125rem;
+  border-bottom: 1px solid var(--jule-line);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row-label {
+  font-size: 0.8125rem;
+  color: var(--jule-muted);
+}
+
+.info-row-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--jule-text);
+}
+
+/* Discord — compact CTA card */
+:host ::ng-deep .discord-stats-card {
+  padding: 0.625rem 0.875rem;
+  gap: 0.625rem;
+}
+
+:host ::ng-deep .discord-stats-card .discord-icon {
+  width: 34px;
+  height: 34px;
+  font-size: 1.25rem;
+}
+
+:host ::ng-deep .discord-stats-card .discord-info {
+  gap: 0.125rem;
+}
+
+:host ::ng-deep .discord-stats-card .discord-title {
+  font-size: 0.85rem;
+}
+
+:host ::ng-deep .discord-stats-card .discord-counts {
+  gap: 0.75rem;
+}
+
+:host ::ng-deep .discord-stats-card .discord-stat {
+  font-size: 0.75rem;
+}
+
+:host ::ng-deep .discord-stats-card .discord-join {
+  font-size: 0.75rem;
+}
+
+/* Links */
+.sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--jule-line);
+}
+
+.sidebar-link {
+  color: var(--jule-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--jule-line);
+  text-underline-offset: 4px;
+  width: fit-content;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  color: var(--jule-text);
+  text-decoration-color: currentColor;
+}
+
+/* Experimental UI (body.testui): larger, friendlier sidebar */
+:host-context(body.testui) .sidebar-inner {
+  gap: 1.75rem;
+}
+
+:host-context(body.testui) .identity-hero {
+  height: 224px;
+  margin: 0;
+}
+
+:host-context(body.testui) .identity-hero-name {
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 1rem;
+  font-size: 1.7rem;
+}
+
+:host-context(body.testui) .stat-tiles {
+  gap: 0.75rem;
+}
+
+:host-context(body.testui) .stat-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 1.2rem 1.15rem 1.35rem;
+  overflow: hidden;
+  background: var(--jule-panel);
+  border: 1px solid var(--jule-line);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+:host-context(body.testui) .stat-tile:hover {
+  border-color: var(--stat-color, var(--jule-accent));
+  background: var(--jule-soft);
+}
+
+/* Thin top accent bar instead of the old colored side bar */
+:host-context(body.testui) .stat-tile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: auto;
+  width: auto;
+  height: 2px;
+  background: var(--stat-color, var(--jule-accent));
+}
+
+:host-context(body.testui) .stat-tile-value {
+  order: 2;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--jule-text);
+}
+
+:host-context(body.testui) .stat-tile-label {
+  order: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--jule-muted);
+}
+
+:host-context(body.testui) .stat-tile-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--stat-color, var(--jule-accent));
+}
+
+:host-context(body.testui) .info-row {
+  padding: 1rem 0.25rem;
+}
+
+:host-context(body.testui) .info-row-label {
+  font-size: 1.05rem;
+}
+
+:host-context(body.testui) .info-row-value {
+  font-size: 1.15rem;
+}
+
+:host-context(body.testui) .sidebar-links {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+:host-context(body.testui) .sidebar-link {
+  font-size: 1rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card {
+  padding: 1rem 1.1rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card .discord-icon {
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card .discord-title {
+  font-size: 1.05rem;
+}
+
+:host-context(body.testui) ::ng-deep .discord-stats-card .discord-stat {
+  font-size: 0.95rem;
+}

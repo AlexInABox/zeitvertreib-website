@@ -4,8 +4,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--jule-bg) 78%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,17 +22,14 @@
 }
 
 .warning-modal {
-  background: rgba(255, 255, 255, 0.85);
-  color: #111827;
-  border: 1px solid rgba(180, 27, 133, 0.12);
-  border-radius: 14px;
+  background: var(--jule-panel);
+  color: var(--jule-text);
+  border: 1px solid var(--jule-line);
   padding: 1.75rem;
   max-width: 560px;
   width: 92%;
-  box-shadow: 0 8px 36px rgba(15, 23, 42, 0.12);
   animation: slideUp 0.32s cubic-bezier(0.2, 0.9, 0.4, 1);
   text-align: left;
-  backdrop-filter: blur(8px) saturate(120%);
 }
 
 @keyframes slideUp {
@@ -47,30 +43,24 @@
   }
 }
 
-.warning-icon {
-  font-size: 2.25rem;
-  color: var(--primary);
-  margin-bottom: 0.75rem;
-}
-
 .warning-title {
-  font-family: 'BerlinTypeWeb', sans-serif;
-  font-weight: 700;
+  font-family: var(--jule-font-display);
+  font-weight: 400;
   font-size: 1.5rem;
-  color: #0f1724;
+  color: var(--jule-text);
   margin: 0 0 0.5rem 0;
 }
 
 .warning-message {
-  font-family: 'BerlinTypeWeb', sans-serif;
+  font-family: var(--jule-font-text);
   font-size: 1rem;
-  color: #1f2937;
+  color: var(--jule-text);
   line-height: 1.5;
   margin: 0 0 1.25rem 0;
 }
 
 .warning-message strong {
-  color: var(--primary);
+  color: var(--jule-accent);
   font-weight: 700;
 }
 
@@ -81,29 +71,30 @@
 }
 
 .btn {
-  font-family: 'BerlinTypeWeb', sans-serif;
+  font-family: var(--jule-font-text);
   font-weight: 700;
   padding: 0.6rem 1rem;
-  border-radius: 10px;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease-in-out;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    filter 0.2s ease;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, #8a1565 100%);
-  color: var(--primary-contrast);
-  box-shadow: 0 8px 28px rgba(180, 27, 133, 0.12);
+  background: var(--jule-accent);
+  color: #fff;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(180, 27, 133, 0.18);
+  filter: brightness(1.15);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #9ca3af;
+  color: var(--jule-muted);
   border: 1px solid transparent;
   font-size: 0.8rem;
   opacity: 0.25;
@@ -117,8 +108,6 @@
 .btn-secondary:disabled {
   opacity: 0.1;
   cursor: not-allowed;
-  filter: grayscale(80%);
-  transform: none;
 }
 
 @media (max-width: 640px) {

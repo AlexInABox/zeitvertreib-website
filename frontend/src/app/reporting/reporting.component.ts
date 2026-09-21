@@ -1,12 +1,14 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
 import { environment } from '../../environments/environment';
 import { FileUploader, FileUploadModule } from 'ng2-file-upload';
 import type { GetReportsResponse, ReportFileUploadGetResponse } from '@zeitvertreib/types';
 import { MedalIntegrityError, isValidUrl, calculateETA } from '../utils/medal.utils';
 import { MedalService } from '../services/medal.service';
+import { IconComponent, type IconName } from '../components/icon/icon.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 
 type Report = GetReportsResponse['reports'][number];
 
@@ -20,12 +22,12 @@ interface FileUploadItem {
 @Component({
   selector: 'app-reporting',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, FileUploadModule],
+  imports: [CommonModule, FormsModule, FileUploadModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './reporting.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./reporting.component.css'],
 })
-export class ReportingComponent implements OnInit {
+export class ReportingComponent implements OnInit, OnDestroy {
   reports: Report[] = [];
   isLoading = true;
   loadError = '';
@@ -58,6 +60,8 @@ export class ReportingComponent implements OnInit {
   ngOnInit(): void {
     void this.loadReports();
   }
+
+  ngOnDestroy(): void {}
 
   async loadReports(): Promise<void> {
     this.isLoading = true;
@@ -333,11 +337,11 @@ export class ReportingComponent implements OnInit {
     });
   }
 
-  getFileIcon(filename: string): string {
+  fileIcon(filename: string): IconName {
     const ext = filename.split('.').pop()?.toLowerCase() || '';
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'pi pi-image';
-    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'pi pi-video';
-    return 'pi pi-file';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
+    if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+    return 'file';
   }
 
   formatFileSize(bytes: number): string {

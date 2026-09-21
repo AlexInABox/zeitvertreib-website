@@ -10,7 +10,7 @@ Monorepo for the Zeitvertreib SCP:SL server: web platform + SCP:SL plugins. See 
 ## Repo Layout
 
 - `backend/` — Cloudflare Worker API (TypeScript). Drizzle ORM + D1 (SQLite), KV, Durable Objects. Entrypoint `src/index.ts`.
-- `frontend/` — Angular 22 SPA (PrimeNG, no Tailwind). Entrypoint `src/main.ts`.
+- `frontend/` — Angular 22 SPA (JULE design spec, no Tailwind, no PrimeNG). Entrypoint `src/main.ts`.
 - `types/` — `@zeitvertreib/types` (`file:../types`). Consumed via direct `.ts` source. `npm run build` generates C# API bindings (`dist/csharp/Api.cs`, `dist/csharp/DiscordTracker.cs`).
 - `overwatch/` — Discord moderation bot (Node, Docker image).
 - `proxied/` — Express CORS proxy for Medal clips (Docker image).
@@ -23,6 +23,11 @@ Monorepo for the Zeitvertreib SCP:SL server: web platform + SCP:SL plugins. See 
 - **NO MOSTLY AI-WRITTEN CODE IN C# PLUGINS.** The EXILED / SCP:SL framework and game logic are insufficiently indexed by LLMs, complex, fuzzy, and dangerously prone to hallucinations.
 - **Humans must write all C# game logic.**
 - AI is permitted only to review existing C# code for obvious logic errors, inconsistencies, and style.
+
+## Writing Quality Policy
+
+- **NO AI-SOUNDING PROSE IN USER-FACING COPY.** Load the `avoid-ai-writing` skill (`.agents/skills/avoid-ai-writing/`) before writing or editing any user-facing prose: UI copy, landing/dashboard text, `documentation/`, `CHANGELOG.md`, Discord bot messages.
+- Audit the draft against the skill's pattern catalog (`references/patterns.md`) and rewrite until clean. Prose only — code, tables, and quoted material are exempt.
 
 ## Build Order
 

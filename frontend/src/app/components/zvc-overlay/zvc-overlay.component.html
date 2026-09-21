@@ -8,7 +8,7 @@
     <div class="zvc-hud-inner" [class.expanded]="expanded">
       <!-- Balance row -->
       <div class="zvc-balance-row" (click)="togglePersist()">
-        <span class="zvc-hud-icon">🪙</span>
+        <span class="zvc-hud-icon"><app-icon name="dollar" /></span>
         <div class="zvc-odometer" #odometerContainer>
           @for (col of columns; track col.key) {
             @if (col.type === 'separator') {
@@ -26,7 +26,7 @@
           }
         </div>
         <span class="zvc-hud-label">ZVC</span>
-        <span class="zvc-expand-chevron" [class.open]="expanded">&#x25B2;</span>
+        <span class="zvc-expand-chevron" [class.open]="expanded"><app-icon name="chevron-down" /></span>
       </div>
       <!-- Expandable content (inside the same glass container) -->
       <div class="zvc-expand-body" [class.open]="expanded">
@@ -68,7 +68,10 @@
           <!-- Transfer -->
           <div class="zvc-section">
             <div class="zvc-section-label">💸 ZVC senden</div>
-            <div class="zvc-tax-badge">{{ isWeekendInBerlin() ? '🎉 0% Steuer' : '⚠️ 5% Steuer' }}</div>
+            <div class="zvc-tax-badge">
+              <app-icon [name]="isWeekendInBerlin() ? 'check' : 'exclamation-triangle'" />
+              {{ isWeekendInBerlin() ? '0% Steuer' : '5% Steuer' }}
+            </div>
             <div class="zvc-input-row">
               <input
                 type="text"

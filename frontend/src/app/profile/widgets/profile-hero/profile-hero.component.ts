@@ -1,10 +1,11 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../components/icon/icon.component';
 
+/** Identity banner at the top of the profile: avatar, name, IDs and key stats. */
 @Component({
   selector: 'app-profile-hero',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './profile-hero.component.html',
   styleUrls: ['./profile-hero.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,

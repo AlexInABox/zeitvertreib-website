@@ -1,7 +1,10 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { IconComponent } from '../components/icon/icon.component';
+import { JuleNavComponent } from '../components/jule-nav/jule-nav.component';
+import { JuleFooterComponent } from '../components/jule-footer/jule-footer.component';
 import { IngamePermission, INGAME_PERMISSIONS, DEFAULT_ROLE_GRANTS } from './permission-matrix.data';
 
 export interface Role {
@@ -13,12 +16,12 @@ export interface Role {
 @Component({
   standalone: true,
   selector: 'app-permission-matrix',
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent, JuleNavComponent, JuleFooterComponent],
   templateUrl: './permission-matrix.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./permission-matrix.component.css'],
 })
-export class PermissionMatrixComponent implements OnInit {
+export class PermissionMatrixComponent implements OnInit, OnDestroy {
   private sanitizer = inject(DomSanitizer);
 
   roles: Role[] = [
@@ -57,6 +60,8 @@ export class PermissionMatrixComponent implements OnInit {
       role.count = this.permissions.filter((p) => this.assignments[p.code][role.id]).length;
     });
   }
+
+  ngOnDestroy() {}
 
   get visiblePermissions(): IngamePermission[] {
     let list = [...this.permissions];
@@ -158,11 +163,10 @@ export class PermissionMatrixComponent implements OnInit {
     clone.style.overflow = 'visible';
     clone.style.display = 'table';
 
-    // Enforce theme background styles for the capture
-    const isDark =
-      document.documentElement.classList.contains('my-app-dark') || document.body.classList.contains('my-app-dark');
-    clone.style.background = isDark ? '#18181b' : '#ffffff';
-    clone.style.color = isDark ? '#f3f4f6' : '#1f2937';
+    // Enforce the JULE canvas colours for the capture (dark only)
+    const isDark = true;
+    clone.style.background = isDark ? '#0d0b12' : '#ffffff';
+    clone.style.color = isDark ? '#f1edf9' : '#1f2937';
 
     // Strip sticky layout so cells render inline on the canvas/SVG grid
     const stickyCells = clone.querySelectorAll('.sticky-col');
@@ -175,8 +179,8 @@ export class PermissionMatrixComponent implements OnInit {
     const headers = clone.querySelectorAll('thead th');
     headers.forEach((h: any) => {
       h.style.position = 'static';
-      h.style.background = isDark ? '#18181b' : '#f1f5f9';
-      h.style.color = isDark ? '#f3f4f6' : '#1f2937';
+      h.style.background = isDark ? '#15121e' : '#f1f5f9';
+      h.style.color = isDark ? '#f1edf9' : '#1f2937';
     });
 
     hostEl.appendChild(clone);

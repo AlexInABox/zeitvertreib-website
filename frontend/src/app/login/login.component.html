@@ -1,40 +1,65 @@
-<div class="login-container">
-  <div class="login-card-wrapper">
-    <div class="login-card">
-      <div class="card-header">
-        <div class="logo-container">
-          <img src="/assets/logos/logo_full_1to1.svg" alt="Zeitvertreib Logo" class="logo-image" />
-          <div class="logo-glow"></div>
-        </div>
-        <h1 class="welcome-title">
-          <span class="brand-name">Zeitvertreib</span>
-        </h1>
-      </div>
+<div class="jule-canvas jule-canvas--fill">
+  <app-jule-nav />
 
-      <div class="card-content">
-        <p class="description-text">
-          Melde dich mit deinem Discord-Account an, um dein Zeitvertreib-Konto zu verknüpfen.
+  <main class="jule-page login-page">
+    <div class="login-layout">
+      <!-- Copy -->
+      <div class="login-copy">
+        <img class="login-star" src="/assets/logos/inverted/logo_full_1to1.svg" alt="" aria-hidden="true" />
+        <span class="jule-eyebrow">Anmeldung</span>
+        <h1 class="jule-page-title">Zeitvertreib.</h1>
+        <p class="jule-page-lead">
+          Melde dich über Discord an und sieh, was der Server über dich weiß. Danach stellst du ein, wie du im Spiel
+          auftauchst.
         </p>
 
-        <div class="info-box">
-          <i class="pi pi-info-circle info-icon"></i>
-          <p class="info-text">
-            Dein Discord-Account muss mit Steam verknüpft sein, um Zugriff auf deine Statistiken und Features zu
-            erhalten.
-          </p>
+        <ul class="login-perks">
+          <li>
+            <span class="login-perk-name">Stats</span>
+            <span class="login-perk-text">Kills, Tode, K/D, Spielzeit und dein Platz im Ranking.</span>
+          </li>
+          <li>
+            <span class="login-perk-name">Missionen</span>
+            <span class="login-perk-text">Täglich und wöchentlich Aufgaben erledigen und ZVC kassieren.</span>
+          </li>
+          <li>
+            <span class="login-perk-name">Sprays</span>
+            <span class="login-perk-text">Eigene Bilder hochladen und im Spiel als Spray benutzen.</span>
+          </li>
+          <li>
+            <span class="login-perk-name">Fakerank</span>
+            <span class="login-perk-text">Eine eigene Rolle mit Rangname und Farbe.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Login panel -->
+      <section class="jule-panel login-panel">
+        <div class="jule-panel-head">
+          <span class="jule-panel-title">Konto verknüpfen</span>
+          <span class="jule-chip jule-chip--brand">
+            <app-icon name="discord" />
+            Discord
+          </span>
         </div>
 
-        <div class="button-container">
-          <p-button
-            label="Mit Discord anmelden"
-            icon="pi pi-discord"
-            size="large"
-            styleClass="discord-login-btn"
-            (onClick)="login()"
-          ></p-button>
-          <div class="button-glow"></div>
+        <div class="jule-panel-body jule-stack">
+          <div class="jule-notice">
+            <app-icon name="info" />
+            <span>
+              Dein Discord-Account muss mit Steam verknüpft sein, um Zugriff auf deine Statistiken und Features zu
+              erhalten.
+            </span>
+          </div>
+
+          <button type="button" class="jule-btn jule-btn--wide" (click)="login()">
+            <app-icon name="discord" />
+            Mit Discord anmelden
+          </button>
         </div>
-      </div>
+      </section>
     </div>
-  </div>
+  </main>
+
+  <app-jule-footer />
 </div>

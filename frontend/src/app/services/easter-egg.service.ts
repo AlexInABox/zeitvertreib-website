@@ -21,7 +21,7 @@ export class EasterEggService {
       this.applyChiikawaMode();
     }
 
-    // Listen for storage events (e.g., when theme service disables chiikawa)
+    // Listen for storage events (e.g., when chiikawa is disabled elsewhere)
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', (event) => {
         if (event.key === this.CHIIKAWA_STORAGE_KEY) {
@@ -68,15 +68,6 @@ export class EasterEggService {
       this.applyChiikawaMode();
       this.chiikawaActivated$.next();
     } else {
-      this.removeChiikawaMode();
-    }
-  }
-
-  /** Force disable chiikawa mode (used when theme is manually changed) */
-  disableChiikawa(): void {
-    if (this.chiikawaState$.value) {
-      this.chiikawaState$.next(false);
-      this.saveChiikawaState(false);
       this.removeChiikawaMode();
     }
   }

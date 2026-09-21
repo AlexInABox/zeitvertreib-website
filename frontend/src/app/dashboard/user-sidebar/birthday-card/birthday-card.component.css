@@ -1,0 +1,207 @@
+:host {
+  display: block;
+}
+
+.birthday {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.birthday-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.birthday-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.birthday-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--jule-muted, rgba(255, 255, 255, 0.65));
+}
+
+.birthday-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--jule-text, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.birthday-none {
+  font-weight: 400;
+  color: var(--jule-muted, rgba(255, 255, 255, 0.55));
+}
+
+.birthday-loading {
+  font-size: 0.8125rem;
+  color: var(--jule-muted, rgba(255, 255, 255, 0.55));
+}
+
+.birthday-edit {
+  background: none;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--jule-muted, rgba(255, 255, 255, 0.75));
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--jule-line, rgba(255, 255, 255, 0.2));
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+
+.birthday-edit:hover:not(:disabled) {
+  color: var(--jule-text, #fff);
+  text-decoration-color: currentColor;
+}
+
+.birthday-edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.birthday-cooldown {
+  font-size: 0.75rem;
+  color: var(--jule-muted, rgba(255, 255, 255, 0.55));
+}
+
+/* Edit form */
+.birthday-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.birthday-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.375rem;
+}
+
+.birthday-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.birthday-field label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--jule-muted, rgba(255, 255, 255, 0.55));
+}
+
+.birthday-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.4rem;
+  border-radius: 0;
+  border: 1px solid var(--jule-line, rgba(255, 255, 255, 0.2));
+  background: var(--jule-soft, rgba(255, 255, 255, 0.05));
+  color: var(--jule-text, #fff);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s ease;
+}
+
+.birthday-input:focus {
+  outline: none;
+  border-color: var(--jule-accent, #a13de6);
+}
+
+.birthday-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.birthday-note {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  padding: 0.4rem 0.625rem;
+  border-radius: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+.birthday-note--error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.birthday-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.birthday-spacer {
+  flex: 1;
+}
+
+.birthday-confirm {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #fca5a5;
+}
+
+.birthday-btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0;
+  border: 1px solid var(--jule-line, rgba(255, 255, 255, 0.2));
+  background: var(--jule-soft, rgba(255, 255, 255, 0.05));
+  color: var(--jule-muted, rgba(255, 255, 255, 0.75));
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.birthday-btn:hover:not(:disabled) {
+  background: var(--jule-panel, rgba(255, 255, 255, 0.1));
+  color: var(--jule-text, #fff);
+}
+
+.birthday-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.birthday-btn--primary {
+  background: var(--jule-accent, #a13de6);
+  color: #ffffff;
+  border-color: var(--jule-accent, #a13de6);
+}
+
+.birthday-btn--primary:hover:not(:disabled) {
+  background: #b45cf0;
+  border-color: #b45cf0;
+  color: #ffffff;
+}
+
+.birthday-btn--danger {
+  color: #fca5a5;
+}

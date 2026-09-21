@@ -1,10 +1,11 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../components/icon/icon.component';
 
+/** Compact moderation counters for a viewed account. */
 @Component({
   selector: 'app-moderation-summary',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './moderation-summary.component.html',
   styleUrls: ['./moderation-summary.component.css'],
   changeDetection: ChangeDetectionStrategy.Eager,

@@ -2,6 +2,8 @@ import { Component, OnInit, inject, ChangeDetectionStrategy, input } from '@angu
 
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { IconComponent } from '../../../components/icon/icon.component';
+import { JuleDialogComponent } from '../../../components/jule-dialog/jule-dialog.component';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationCenterService } from '../../../services/notification-center.service';
@@ -16,7 +18,7 @@ import type {
 @Component({
   selector: 'app-fakerank',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent, JuleDialogComponent],
   templateUrl: './fakerank.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./fakerank.css'],
@@ -39,6 +41,16 @@ export class FakerankComponent implements OnInit {
   acceptedFakerankRules = false;
   showFakerankPrivacyText = false;
   showFakerankRulesText = false;
+
+  // Inline editor state (part of the dashboard design)
+  testUiActive = true;
+  frEditing = false;
+  frText = '';
+  frColor: FakerankColor = 'default';
+  frHover = false;
+  frCostOpen = false;
+  frDeleteOpen = false;
+  frColorOpen = false;
 
   fakerankColorsByRole: any = { teamColors: [], vipColors: [], donatorColors: [], boosterColors: [], otherColors: [] };
   allowedFakerankColors: FakerankColor[] = [];
@@ -173,12 +185,10 @@ export class FakerankComponent implements OnInit {
     this.fakerankModalColor = this.currentFakerankColor;
     this.fakerankModalOpen = true;
     this.acceptedFakerankPrivacy = this.acceptedFakerankRules = false;
-    document.body.classList.add('modal-open');
   }
 
   closeFakerankModal(): void {
     this.fakerankModalOpen = false;
-    document.body.classList.remove('modal-open');
   }
 
   selectColor(key: FakerankColor): void {
@@ -217,6 +227,115 @@ export class FakerankComponent implements OnInit {
         .delete(`${environment.apiUrl}/fakerank`, { body: { id: this.currentFakerankId }, withCredentials: true })
         .toPromise();
       this.fakerankLoading = false;
+      this.fakerankSuccess = 'Erfolgreich gelöscht!';
+      this.loadFakerank();
+      setTimeout(() => (this.fakerankSuccess = ''), 3000);
+    } catch (e: any) {
+      this.fakerankLoading = false;
+      this.fakerankError = e?.error?.error || 'Fehler beim Löschen';
+    }
+  }
+
+  // ---------- Experimental inline editor (body.testui) ----------
+
+  get frCostPerWeek(): string {
+    return this.isDonator() ? '10' : '100';
+  }
+
+  private clearFrMessages(): void {
+    this.fakerankError = '';
+    this.fakerankSuccess = '';
+  }
+
+  frBeginCreate(): void {
+    this.clearFrMessages();
+    this.frEditing = true;
+    this.frText = '';
+    this.frColor = this.allowedFakerankColors.includes('default')
+      ? 'default'
+      : (this.allowedFakerankColors[0] ?? 'default');
+  }
+
+  frStartEdit(): void {
+    this.clearFrMessages();
+    this.frEditing = true;
+    this.frText = this.currentFakerank ?? '';
+    this.frColor = this.currentFakerankColor;
+  }
+
+  frCancel(): void {
+    this.frEditing = false;
+    this.frHover = false;
+    this.clearFrMessages();
+  }
+
+  frOpenColors(): void {
+    this.frColorOpen = true;
+  }
+
+  frPickColor(key: FakerankColor): void {
+    if (this.isColorAllowed(key)) this.frColor = key;
+  }
+
+  frAskDelete(): void {
+    this.frDeleteOpen = true;
+  }
+
+  frRequestSave(): void {
+    const text = this.frText.trim();
+    if (!text) {
+      this.fakerankError = 'Bitte gib einen Rangnamen ein';
+      return;
+    }
+    if (text.length > 50) {
+      this.fakerankError = 'Dein Rangname darf maximal 50 Zeichen lang sein';
+      return;
+    }
+    // Only a brand-new fakerank costs ZVC; editing an existing one is free.
+    if (!this.currentFakerank) {
+      this.frCostOpen = true;
+      return;
+    }
+    void this.frSaveConfirmed();
+  }
+
+  frConfirmCreate(): void {
+    this.frCostOpen = false;
+    void this.frSaveConfirmed();
+  }
+
+  async frSaveConfirmed(): Promise<void> {
+    const text = this.frText.trim();
+    if (!text || text.length > 50) return;
+    this.fakerankLoading = true;
+    try {
+      await this.authService
+        .authenticatedPost(`${environment.apiUrl}/fakerank`, { text, color: this.frColor })
+        .toPromise();
+      this.fakerankLoading = false;
+      this.frEditing = false;
+      this.frHover = false;
+      this.fakerankSuccess = 'Erfolgreich gespeichert!';
+      this.loadFakerank();
+      this.notificationCenter.refreshAfterAction();
+      setTimeout(() => (this.fakerankSuccess = ''), 3000);
+    } catch (e: any) {
+      this.fakerankLoading = false;
+      this.fakerankError = e?.error?.error || 'Fehler beim Speichern';
+    }
+  }
+
+  async frConfirmDelete(): Promise<void> {
+    this.frDeleteOpen = false;
+    if (!this.currentFakerankId) return;
+    this.fakerankLoading = true;
+    try {
+      await this.http
+        .delete(`${environment.apiUrl}/fakerank`, { body: { id: this.currentFakerankId }, withCredentials: true })
+        .toPromise();
+      this.fakerankLoading = false;
+      this.frEditing = false;
+      this.frHover = false;
       this.fakerankSuccess = 'Erfolgreich gelöscht!';
       this.loadFakerank();
       setTimeout(() => (this.fakerankSuccess = ''), 3000);
