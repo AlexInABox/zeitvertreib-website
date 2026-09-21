@@ -15,14 +15,11 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 ### Added
 
 - Team members can now restart or reinstall the game server right from Discord (`/restart` and `/reinstall`), helping the team get the server back up quickly after crashes or lag outbreaks.
+- New "Piñata Fieber" event that drops a pile of SCP-330 candy wherever a player dies.
 
 ### Changed
 
-- The website dashboard has been redesigned: live server stats, kills and playtime at a glance, and a Steam launch button
-- New landing page; the website is now dark-mode only
-- The Reports, Cases, Z.E.I.T., Permissions and Advent calendar pages now use the same design as the landing page and dashboard
-- The login flow, including the missing-Steam-link notice, now matches the new design as well
-- The profile page, including its data export and account deletion controls, now matches the new design as well
+- The entire website has been redesigned and reworked in accordance with the new "JULE" Design Specification of Zeitvertreib.
 
 ### Removed
 
