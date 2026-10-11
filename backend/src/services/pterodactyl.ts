@@ -1,7 +1,7 @@
 import { proxyFetch } from '../proxy.js';
 
 const PTERODACTYL_PANEL_URL = 'https://panel.zeitvertreib.vip';
-const PTERODACTYL_SERVER_ID = '1bdda3e6';
+const PTERODACTYL_SERVER_ID = 'd79e8d0c';
 
 export interface PterodactylServerState {
   currentState: string | null;
