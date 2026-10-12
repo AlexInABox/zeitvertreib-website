@@ -807,10 +807,13 @@ export async function handleLinkCaseToReport(request: Request, env: Env): Promis
         const fileName = key.replace(`${reportId}/`, '');
 
         // Copy from reports bucket to cases bucket
-        const copyRequest = await createS3Client(env).sign(`${getS3Endpoint(env)}/${BUCKET}/${caseIdParam}/${fileName}`, {
-          method: 'PUT',
-          headers: { 'x-amz-copy-source': `/${REPORTS_BUCKET}/${key}` },
-        });
+        const copyRequest = await createS3Client(env).sign(
+          `${getS3Endpoint(env)}/${BUCKET}/${caseIdParam}/${fileName}`,
+          {
+            method: 'PUT',
+            headers: { 'x-amz-copy-source': `/${REPORTS_BUCKET}/${key}` },
+          },
+        );
         await fetch(copyRequest);
 
         // Delete original from reports bucket
