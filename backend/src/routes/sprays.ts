@@ -1,9 +1,9 @@
-import { AwsClient } from 'aws4fetch';
 import { createResponse, validateSession, isDonator, computeSpraySha256 } from '../utils.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { sprays, playerdata, sprayBans, deletedSprays } from '../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import { getZvc, decreaseZvc } from '../db/zvc.js';
+import { SPRAY_BUCKET, createS3Client, getS3ObjectUrl, getSprayObjectKey } from '../s3.js';
 
 import { proxyFetch } from '../proxy.js';
 import type {
@@ -13,9 +13,6 @@ import type {
   SprayRulesGetResponse,
 } from '@zeitvertreib/types';
 
-const BUCKET = 'test';
-const SPRAY_FOLDER = 'sprays';
-const SPRAY_FOLDER_LOCALHOST = 'sprays_localhost';
 const MODERATION_CHANNEL_ID = '1401609093633933324';
 
 const SPRAY_RULES = [
@@ -36,24 +33,6 @@ const SPRAY_RULES_DE = [
 
 const SPRAY_SLOT_COST = 100;
 const SPRAY_SLOT_DURATION = 7 * 24 * 60 * 60; // 7 days in seconds
-
-const aws = (env: Env): AwsClient =>
-  new AwsClient({
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
-    service: 's3',
-    region: 'us-east-1',
-  });
-
-/**
- * Determine the spray folder based on the request origin
- */
-function getSprayFolder(origin: string | null): string {
-  if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-    return SPRAY_FOLDER_LOCALHOST;
-  }
-  return SPRAY_FOLDER;
-}
 
 /**
  * Send spray moderation notification to Discord
@@ -353,15 +332,14 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
       return createResponse({ error: 'Fehler beim Erstellen des Spray-Eintrags' }, 500, origin);
     }
 
-    // Upload to S3 (use environment-specific folder)
-    const folder = getSprayFolder(origin);
-    const basePath = `${folder}/${sprayId}`;
+    // Upload to S3 (production at bucket root, localhost in its own folder)
+    const basePath = getSprayObjectKey(sprayId, origin);
     const txtPath = `${basePath}.txt`;
     const base64Path = `${basePath}.base64`;
 
     // Upload .txt file
-    const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
-    const txtRequest = await aws(env).sign(txtUrl, {
+    const txtUrl = getS3ObjectUrl(env, SPRAY_BUCKET, txtPath);
+    const txtRequest = await createS3Client(env).sign(txtUrl, {
       method: 'PUT',
       body: text_toy,
       headers: {
@@ -375,8 +353,8 @@ export async function handlePostSpray(request: Request, env: Env, ctx: Execution
     }
 
     // Upload .base64 file
-    const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
-    const base64Request = await aws(env).sign(base64Url, {
+    const base64Url = getS3ObjectUrl(env, SPRAY_BUCKET, base64Path);
+    const base64Request = await createS3Client(env).sign(base64Url, {
       method: 'PUT',
       body: full_res,
       headers: {
@@ -465,23 +443,22 @@ export async function handleDeleteSpray(request: Request, env: Env, ctx: Executi
       return createResponse({ error: 'Spray nicht gefunden oder Zugriff verweigert' }, 404, origin);
     }
 
-    // Delete from S3 (use environment-specific folder)
-    const folder = getSprayFolder(origin);
-    const basePath = `${folder}/${id}`;
+    // Delete from S3 (production at bucket root, localhost in its own folder)
+    const basePath = getSprayObjectKey(id, origin);
     const txtPath = `${basePath}.txt`;
     const base64Path = `${basePath}.base64`;
 
     // Delete .txt file
-    const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
-    const txtRequest = await aws(env).sign(txtUrl, { method: 'DELETE' });
+    const txtUrl = getS3ObjectUrl(env, SPRAY_BUCKET, txtPath);
+    const txtRequest = await createS3Client(env).sign(txtUrl, { method: 'DELETE' });
     const txtResponse = await fetch(txtRequest);
     if (!txtResponse.ok) {
       console.warn(`Failed to delete .txt file for spray ${id}:`, await txtResponse.text());
     }
 
     // Delete .base64 file
-    const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
-    const base64Request = await aws(env).sign(base64Url, { method: 'DELETE' });
+    const base64Url = getS3ObjectUrl(env, SPRAY_BUCKET, base64Path);
+    const base64Request = await createS3Client(env).sign(base64Url, { method: 'DELETE' });
     const base64Response = await fetch(base64Request);
     if (!base64Response.ok) {
       console.warn(`Failed to delete .base64 file for spray ${id}:`, await base64Response.text());
@@ -561,7 +538,6 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
     let allSprays = await db.select().from(sprays).where(inArray(sprays.userid, useridsToFetch));
 
     // Build response
-    const folder = getSprayFolder(origin);
     const sprayItems = await Promise.all(
       allSprays.map(async (spray) => {
         const item: {
@@ -576,13 +552,13 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
           name: spray.name,
         };
 
-        // Conditionally fetch from S3 (use environment-specific folder)
-        const basePath = `${folder}/${spray.id}`;
+        // Conditionally fetch from S3 (production at bucket root, localhost in its own folder)
+        const basePath = getSprayObjectKey(spray.id, origin);
 
         if (includeFull) {
           const base64Path = `${basePath}.base64`;
-          const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
-          const base64Request = await aws(env).sign(base64Url, { method: 'GET' });
+          const base64Url = getS3ObjectUrl(env, SPRAY_BUCKET, base64Path);
+          const base64Request = await createS3Client(env).sign(base64Url, { method: 'GET' });
           const base64Response = await fetch(base64Request);
           if (base64Response.ok) {
             item.full_res = await base64Response.text();
@@ -593,8 +569,8 @@ export async function handleGetSpray(request: Request, env: Env, ctx: ExecutionC
 
         if (includeText) {
           const txtPath = `${basePath}.txt`;
-          const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
-          const txtRequest = await aws(env).sign(txtUrl, { method: 'GET' });
+          const txtUrl = getS3ObjectUrl(env, SPRAY_BUCKET, txtPath);
+          const txtRequest = await createS3Client(env).sign(txtUrl, { method: 'GET' });
           const txtResponse = await fetch(txtRequest);
           if (txtResponse.ok) {
             item.text_toy = await txtResponse.text();

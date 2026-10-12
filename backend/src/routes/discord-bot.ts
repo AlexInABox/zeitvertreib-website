@@ -7,8 +7,8 @@ import { REST } from '@discordjs/rest';
 import { Routes, InteractionType } from 'discord-api-types/v10';
 import { commandManager } from '../discord/commands.js';
 import { proxyFetch } from '../proxy.js';
-import { AwsClient } from 'aws4fetch';
 import { createResponse, isTeamByDiscordId } from '../utils.js';
+import { SPRAY_BUCKET, CSAM_FOLDER, createS3Client, getS3ObjectUrl } from '../s3.js';
 import { appendNotification } from '../notifications.js';
 import type { APIInteraction } from 'discord-api-types/v10';
 import { drizzle } from 'drizzle-orm/d1';
@@ -927,27 +927,21 @@ export async function handleDiscordBotInteractions(
 
                 // Delete spray(s) matching the hash (hard delete) and remove their S3 files
                 const sprayRows = await db.select().from(sprays).where(eq(sprays.sha256, sha256Hash));
-                const aws = new AwsClient({
-                  accessKeyId: env.MINIO_ACCESS_KEY,
-                  secretAccessKey: env.MINIO_SECRET_KEY,
-                  service: 's3',
-                  region: 'us-east-1',
-                });
-                const BUCKET = 'test';
-                const SPRAY_FOLDER = 'sprays';
+                const aws = createS3Client(env);
+                const BUCKET = SPRAY_BUCKET;
 
                 if (sprayRows.length === 0) {
                   console.log(`ℹ️ No spray rows found for hash ${sha256Hash}, skipping S3 deletions`);
                 } else {
                   for (const row of sprayRows) {
                     const idToDelete = row.id;
-                    const basePath = `${SPRAY_FOLDER}/${idToDelete}`;
+                    const basePath = `${idToDelete}`;
                     const txtPath = `${basePath}.txt`;
                     const base64Path = `${basePath}.base64`;
 
                     // Delete .txt file
                     try {
-                      const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
+                      const txtUrl = getS3ObjectUrl(env, BUCKET, txtPath);
                       const txtRequest = await aws.sign(txtUrl, { method: 'DELETE' });
                       const txtResponse = await fetch(txtRequest);
                       if (!txtResponse.ok) {
@@ -959,7 +953,7 @@ export async function handleDiscordBotInteractions(
 
                     // Delete .base64 file
                     try {
-                      const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
+                      const base64Url = getS3ObjectUrl(env, BUCKET, base64Path);
                       const base64Request = await aws.sign(base64Url, { method: 'DELETE' });
                       const base64Response = await fetch(base64Request);
                       if (!base64Response.ok) {
@@ -1240,29 +1234,23 @@ export async function handleDiscordBotInteractions(
                 // Delete any sprays matching the hash (hard delete)
                 const sprayRows = await db.select().from(sprays).where(eq(sprays.sha256, sha256Hash));
 
-                const aws = new AwsClient({
-                  accessKeyId: env.MINIO_ACCESS_KEY,
-                  secretAccessKey: env.MINIO_SECRET_KEY,
-                  service: 's3',
-                  region: 'us-east-1',
-                });
-                const BUCKET = 'test';
-                const SPRAY_FOLDER = 'sprays';
+                const aws = createS3Client(env);
+                const BUCKET = SPRAY_BUCKET;
 
                 for (const row of sprayRows) {
                   const idToDelete = row.id;
-                  const basePath = `${SPRAY_FOLDER}/${idToDelete}`;
+                  const basePath = `${idToDelete}`;
                   const txtPath = `${basePath}.txt`;
                   const base64Path = `${basePath}.base64`;
                   try {
-                    const txtUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${txtPath}`;
+                    const txtUrl = getS3ObjectUrl(env, BUCKET, txtPath);
                     const txtRequest = await aws.sign(txtUrl, { method: 'DELETE' });
                     await fetch(txtRequest);
                   } catch (e) {
                     console.warn('Failed deleting txt', e);
                   }
                   try {
-                    const base64Url = `https://s3.zeitvertreib.vip/${BUCKET}/${base64Path}`;
+                    const base64Url = getS3ObjectUrl(env, BUCKET, base64Path);
                     const base64Request = await aws.sign(base64Url, { method: 'DELETE' });
                     await fetch(base64Request);
                   } catch (e) {
@@ -2113,14 +2101,8 @@ export async function handleDiscordBotInteractions(
                 const imageData = new Uint8Array(imageBuffer);
 
                 // Setup S3 client
-                const aws = new AwsClient({
-                  accessKeyId: env.MINIO_ACCESS_KEY,
-                  secretAccessKey: env.MINIO_SECRET_KEY,
-                  service: 's3',
-                  region: 'us-east-1',
-                });
-                const BUCKET = 'test';
-                const CSAM_FOLDER = 'CSAM_REPORT';
+                const aws = createS3Client(env);
+                const BUCKET = SPRAY_BUCKET;
 
                 // Create timestamp-based filename
                 const timestamp = Date.now();
@@ -2178,7 +2160,7 @@ export async function handleDiscordBotInteractions(
 
                 // Upload image to S3
                 console.log('📤 Uploading image to S3:', s3ImageKey);
-                const imageUploadUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${encodeURIComponent(s3ImageKey)}`;
+                const imageUploadUrl = getS3ObjectUrl(env, BUCKET, encodeURIComponent(s3ImageKey));
                 const signedImageRequest = await aws.sign(imageUploadUrl, {
                   method: 'PUT',
                   headers: {
@@ -2196,7 +2178,7 @@ export async function handleDiscordBotInteractions(
                 // Upload metadata to S3
                 console.log('📤 Uploading metadata to S3:', s3MetadataKey);
                 const metadataJson = JSON.stringify(metadata, null, 2);
-                const metadataUploadUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${encodeURIComponent(s3MetadataKey)}`;
+                const metadataUploadUrl = getS3ObjectUrl(env, BUCKET, encodeURIComponent(s3MetadataKey));
                 const signedMetadataRequest = await aws.sign(metadataUploadUrl, {
                   method: 'PUT',
                   headers: {

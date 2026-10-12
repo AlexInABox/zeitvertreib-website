@@ -1,4 +1,3 @@
-import { AwsClient } from 'aws4fetch';
 import {
   createResponse,
   getCedModLastReports,
@@ -8,6 +7,7 @@ import {
   isTeam,
   validateSteamId,
 } from '../utils.js';
+import { CASES_BUCKET, REPORTS_BUCKET, createS3Client, getS3Endpoint } from '../s3.js';
 import type {
   GetReportsResponse,
   ReportFileUploadGetRequest,
@@ -17,9 +17,6 @@ import type {
 import { caseToCedModReportLinks } from '../db/schema.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-
-const REPORTS_BUCKET = 'zeitvertreib-reports';
-const CASES_BUCKET = 'zeitvertreib-tickets';
 
 const ALLOWED_EXTENSIONS = [
   // Images
@@ -35,14 +32,6 @@ const ALLOWED_EXTENSIONS = [
   'avi',
   'mkv',
 ];
-
-const aws = (env: Env): AwsClient =>
-  new AwsClient({
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
-    service: 's3',
-    region: 'us-east-1',
-  });
 
 /// GET /reports/upload?reportId={reportId}&extension={ext}
 export async function handleReportFileUpload(request: Request, env: Env): Promise<Response> {
@@ -94,10 +83,13 @@ export async function handleReportFileUpload(request: Request, env: Env): Promis
   const uploadBucket = linkedCaseId ? CASES_BUCKET : REPORTS_BUCKET;
   const uploadFolder = linkedCaseId ?? reportId.toString();
 
-  const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${uploadBucket}/${uploadFolder}/${filename}`, {
-    method: 'PUT',
-    aws: { signQuery: true },
-  });
+  const presignedUrl = await createS3Client(env).sign(
+    `${getS3Endpoint(env)}/${uploadBucket}/${uploadFolder}/${filename}`,
+    {
+      method: 'PUT',
+      aws: { signQuery: true },
+    },
+  );
 
   const responseBody: ReportFileUploadGetResponse = { url: presignedUrl.url, method: 'PUT' };
   return createResponse(responseBody, 200, origin);

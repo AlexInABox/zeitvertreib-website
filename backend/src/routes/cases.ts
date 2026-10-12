@@ -1,4 +1,3 @@
-import { AwsClient } from 'aws4fetch';
 import {
   createResponse,
   validateSession,
@@ -7,6 +6,7 @@ import {
   validateSteamId,
   fetchDiscordUserData,
 } from '../utils.js';
+import { CASES_BUCKET as BUCKET, REPORTS_BUCKET, createS3Client, getS3Endpoint } from '../s3.js';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, asc, inArray, sql, and } from 'drizzle-orm';
 import { cases, casesRelatedUsers, discordInfo, playerdata, caseToCedModReportLinks } from '../db/schema.js';
@@ -22,9 +22,6 @@ import {
   UpdateCaseMetadataPutResponse,
   CaseCategory,
 } from '@zeitvertreib/types';
-
-const BUCKET = 'zeitvertreib-tickets';
-const REPORTS_BUCKET = 'zeitvertreib-reports';
 
 // Allowed file extensions
 const ALLOWED_EXTENSIONS = [
@@ -56,17 +53,9 @@ const ALLOWED_EXTENSIONS = [
   'gz',
 ];
 
-const aws = (env: Env): AwsClient =>
-  new AwsClient({
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
-    service: 's3',
-    region: 'us-east-1',
-  });
-
 async function caseExists(caseId: string, env: Env): Promise<boolean> {
-  const checkUrl = `https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/`;
-  const checkRequest = await aws(env).sign(checkUrl, {
+  const checkUrl = `${getS3Endpoint(env)}/${BUCKET}/${caseId}/`;
+  const checkRequest = await createS3Client(env).sign(checkUrl, {
     method: 'HEAD',
   });
   const checkResponse = await fetch(checkRequest);
@@ -127,7 +116,7 @@ export async function handleCaseFileUpload(request: Request, env: Env): Promise<
     const filename = `${randomName}.${extension}`;
 
     // Create presigned PUT URL with 1 hour expiry
-    const presignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/${filename}`, {
+    const presignedUrl = await createS3Client(env).sign(`${getS3Endpoint(env)}/${BUCKET}/${caseId}/${filename}`, {
       method: 'PUT',
       aws: { signQuery: true },
     });
@@ -460,8 +449,8 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
     );
 
     // List all files in the S3 folder
-    const listUrl = `https://s3.zeitvertreib.vip/${BUCKET}/?list-type=2&prefix=${caseId}/`;
-    const listRequest = await aws(env).sign(listUrl, {
+    const listUrl = `${getS3Endpoint(env)}/${BUCKET}/?list-type=2&prefix=${caseId}/`;
+    const listRequest = await createS3Client(env).sign(listUrl, {
       method: 'GET',
     });
     const listResponse = await fetch(listRequest);
@@ -497,7 +486,7 @@ export async function handleGetCaseMetadata(request: Request, env: Env, ctx: Exe
       const fileName = key.replace(`${caseId}/`, '');
 
       // Generate presigned GET URL with 20-minute expiry
-      const getPresignedUrl = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/${fileName}`, {
+      const getPresignedUrl = await createS3Client(env).sign(`${getS3Endpoint(env)}/${BUCKET}/${caseId}/${fileName}`, {
         method: 'GET',
         aws: { signQuery: true },
       });
@@ -593,8 +582,8 @@ export async function handleCreateCase(request: Request, env: Env): Promise<Resp
     });
 
     // Create a folder by uploading an empty object with trailing slash
-    const url = `https://s3.zeitvertreib.vip/${BUCKET}/${caseId}/`;
-    const signedRequest = await aws(env).sign(url, {
+    const url = `${getS3Endpoint(env)}/${BUCKET}/${caseId}/`;
+    const signedRequest = await createS3Client(env).sign(url, {
       method: 'PUT',
       body: new Uint8Array(0),
     });
@@ -798,8 +787,8 @@ export async function handleLinkCaseToReport(request: Request, env: Env): Promis
     });
 
     // After linking, move all files from the reports folder to the root of the cases folder using the S3 copy and delete methods
-    const listReportUrl = `https://s3.zeitvertreib.vip/${REPORTS_BUCKET}/?list-type=2&prefix=${reportId}/`;
-    const listReportRequest = await aws(env).sign(listReportUrl, { method: 'GET' });
+    const listReportUrl = `${getS3Endpoint(env)}/${REPORTS_BUCKET}/?list-type=2&prefix=${reportId}/`;
+    const listReportRequest = await createS3Client(env).sign(listReportUrl, { method: 'GET' });
     const listReportResponse = await fetch(listReportRequest);
 
     if (listReportResponse.ok) {
@@ -818,14 +807,14 @@ export async function handleLinkCaseToReport(request: Request, env: Env): Promis
         const fileName = key.replace(`${reportId}/`, '');
 
         // Copy from reports bucket to cases bucket
-        const copyRequest = await aws(env).sign(`https://s3.zeitvertreib.vip/${BUCKET}/${caseIdParam}/${fileName}`, {
+        const copyRequest = await createS3Client(env).sign(`${getS3Endpoint(env)}/${BUCKET}/${caseIdParam}/${fileName}`, {
           method: 'PUT',
           headers: { 'x-amz-copy-source': `/${REPORTS_BUCKET}/${key}` },
         });
         await fetch(copyRequest);
 
         // Delete original from reports bucket
-        const deleteRequest = await aws(env).sign(`https://s3.zeitvertreib.vip/${REPORTS_BUCKET}/${key}`, {
+        const deleteRequest = await createS3Client(env).sign(`${getS3Endpoint(env)}/${REPORTS_BUCKET}/${key}`, {
           method: 'DELETE',
         });
         await fetch(deleteRequest);
