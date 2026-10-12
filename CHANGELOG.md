@@ -10,6 +10,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
+## [35]
+
+### Changed
+
+- Sprays, case files and report uploads now use a new storage backend.
+
 ## [34]
 
 ### Fixed
@@ -206,7 +212,12 @@ and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spe
 - Improved dark mode appearance site-wide, especially on the dashboard.
 - Chicken Cross game payout adjusted to compound each step for larger payouts.
 
-[30]: https://github.com/alexinabox/zeitvertreib-website/compare/build-29...dev
+[35]: https://github.com/alexinabox/zeitvertreib-website/compare/build-34...dev
+[34]: https://github.com/alexinabox/zeitvertreib-website/compare/build-33...build-34
+[33]: https://github.com/alexinabox/zeitvertreib-website/compare/build-32...build-33
+[32]: https://github.com/alexinabox/zeitvertreib-website/compare/build-31...build-32
+[31]: https://github.com/alexinabox/zeitvertreib-website/compare/build-30...build-31
+[30]: https://github.com/alexinabox/zeitvertreib-website/compare/build-29...build-30
 [29]: https://github.com/alexinabox/zeitvertreib-website/compare/build-28...build-29
 [28]: https://github.com/alexinabox/zeitvertreib-website/compare/build-27...build-28
 [27]: https://github.com/alexinabox/zeitvertreib-website/compare/build-26...build-27
