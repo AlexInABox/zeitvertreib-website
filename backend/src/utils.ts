@@ -2,7 +2,7 @@
 import type { SteamUser, Statistics, PlayerData } from '@zeitvertreib/types';
 import { proxyFetch } from './proxy.js';
 import { drizzle } from 'drizzle-orm/d1';
-import { AwsClient } from 'aws4fetch';
+import { SPRAY_BUCKET, createS3Client, getS3ObjectUrl } from './s3.js';
 import { eq, count, lt, sql, and, gt, desc } from 'drizzle-orm';
 import { playerdata, kills, loginSecrets, discordInfo, steamCache, sessions, discordCache } from './db/schema.js';
 import { AnyColumn } from 'drizzle-orm';
@@ -773,20 +773,12 @@ export async function isVip(steamId: string, env: Env): Promise<boolean> {
  * @returns The base64 encoded image string or null if not found
  */
 export async function getSprayImage(sprayId: number, env: Env): Promise<string | null> {
-  // Initialize AWS client
-  const aws = new AwsClient({
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
-    service: 's3',
-    region: 'us-east-1',
-  });
-
-  // Construct S3 path and URL
-  const base64Url = `https://s3.zeitvertreib.vip/test/sprays/${sprayId}.base64`;
+  // Sprays are stored at the root of the sprays bucket
+  const base64Url = getS3ObjectUrl(env, SPRAY_BUCKET, `${sprayId}.base64`);
 
   try {
     // Sign and fetch the request
-    const base64Request = await aws.sign(base64Url, { method: 'GET' });
+    const base64Request = await createS3Client(env).sign(base64Url, { method: 'GET' });
     const base64Response = await fetch(base64Request);
 
     if (base64Response.ok) {
