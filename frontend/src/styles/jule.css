@@ -295,24 +295,22 @@
   }
 }
 
+/* Transform-only on purpose: a starting opacity of 0 keeps the hero text out
+   of the first paint and pushes LCP to whatever text renders below it. */
 @keyframes jule-line-in {
   from {
-    opacity: 0;
     transform: translate3d(0, 2.2rem, 0);
   }
   to {
-    opacity: 1;
     transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes jule-in-up {
   from {
-    opacity: 0;
     transform: translate3d(0, 1rem, 0);
   }
   to {
-    opacity: 1;
     transform: translate3d(0, 0, 0);
   }
 }

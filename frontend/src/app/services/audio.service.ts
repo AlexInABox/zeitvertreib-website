@@ -26,11 +26,12 @@ export class AudioService {
       this.unregister(name);
     }
 
-    const el = new Audio(url);
+    const el = new Audio();
+    el.preload = options.preload === false ? 'none' : 'auto';
+    // Assign src only after preload so a "none" element never starts fetching.
+    el.src = url;
     el.loop = !!options.loop;
     el.volume = options.volume ?? this.defaultVolume;
-    // Use preload attribute for better browser behavior
-    el.preload = options.preload === false ? 'none' : 'auto';
     try {
       if (el.preload !== 'none') {
         void el.load();

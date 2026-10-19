@@ -31,7 +31,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Register chiikawa sound (quieter!!!)
     try {
-      this.audioService.register('uwa', '/assets/sounds/uwa.mp3', { volume: 0.1 });
+      // Only fetched when the easter egg actually fires, not on every page load.
+      this.audioService.register('uwa', '/assets/sounds/uwa.mp3', { volume: 0.1, preload: false });
     } catch (e) {
       console.warn('Failed to register chiikawa sound', e);
     }
