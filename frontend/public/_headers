@@ -6,3 +6,18 @@
 
 /*.txt
   Content-Type: text/plain; charset=utf-8
+
+# Build output is content-hashed, so it can be cached indefinitely.
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Media and download files keep their names across deploys, cache for 30 days.
+/assets/*
+  Cache-Control: public, max-age=2592000
+
+# The HTML shell has to be revalidated so new deploys are picked up.
+/
+  Cache-Control: public, max-age=0, must-revalidate
