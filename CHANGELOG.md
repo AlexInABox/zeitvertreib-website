@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html), but uses monotonically increasing integers as version numbers.
 
+## [37]
+
+### Changed
+
+- Die Datenschutzerklärungen für Website und Discord-Bot wurden überarbeitet und beschreiben jetzt alle Daten, die Website, Discord-Bots und Spielserver verarbeiten, sowie Empfänger, Speicherdauer und deine Rechte.
+- Schriftarten werden jetzt direkt von Zeitvertreib geladen. Beim Seitenaufruf werden keine Daten mehr an Google Fonts übertragen.
+
 ## [36]
 
 ### Added

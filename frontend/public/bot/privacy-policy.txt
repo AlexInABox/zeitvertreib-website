@@ -1,37 +1,54 @@
-Datenschutzerklärung für Zeitvertreib
+Datenschutzerklärung für den Zeitvertreib Discord-Bot
+
+Stand: 23.10.2026
+
+Diese Erklärung ergänzt die Datenschutzerklärung für die Website unter https://zeitvertreib.vip/privacy-policy.txt. Dort stehen alle Details zu Empfängern, Drittländern, Speicherdauer und deinen Rechten. Hier steht, was der Bot verarbeitet.
 
 1. Verantwortlicher
-Verantwortlich für die Verarbeitung personenbezogener Daten im Rahmen der Nutzung der Dienste von Zeitvertreib (Website, Discord-Server, SCP:SL-Community) ist:
-Name: Alexander (alexinabox)
-Website/GitHub: alexinabox.de / github.com/alexinabox
+
+Zeitvertreib – Alexander Betke
+c/o Online-Impressum.de #6455
+Europaring 90
+53757 Sankt Augustin
 E-Mail: webmaster@zeitvertreib.vip
 
-2. Erhobene Daten
-Im Rahmen der Nutzung der Dienste von Zeitvertreib können folgende Daten erfasst werden:
-- Discord-ID
-- Steam-ID
-- Weitere Daten, die im Zusammenhang mit der Nutzung des Discord-Bots oder der Plattform entstehen
+2. Welche Daten der Bot verarbeitet
 
-3. Zweck der Datenerhebung
-Die erfassten Daten werden ausschließlich verwendet, um:
-- Nutzer über Discord oder andere Dienste zu verifizieren
-- Discord- und Steam-Accounts in unserer Datenbank zu verknüpfen, um Statistiken einfacher und persönlicher anzuzeigen
-- Die Funktionen und Services von Zeitvertreib bereitzustellen
+- Discord-ID, Benutzername, Anzeigename, Avatar, Rollen und Rollenzeitpunkte (Booster, Donator, VIP, Team) aller Mitglieder des Zeitvertreib-Servers.
+- Steam-ID, wenn du dein Discord-Konto über die Website mit Steam verknüpfst.
+- Spielstatistiken, ZVC-Guthaben, Fakerank, Sprays und Moderationsdaten, soweit sie zu deinem Konto gehören.
+- Nachrichteninhalte und Anhänge im Discord-Server, die der Bot zur Moderation liest. Sie werden nicht dauerhaft in unserer Datenbank gespeichert; Protokolle können einzelne Inhalte kurzzeitig enthalten.
+- Die Mitgliederliste deines Sprachkanals. Audio zeichnet der Bot nicht auf.
+- Geburtstag (Tag und Monat, optional Jahr), wenn du ihn im Profil angibst.
+- Bei Spenden: Betrag, Datum, Discord-ID und ein freiwilliger Grußtext.
 
-4. Rechtsgrundlage
-Die Verarbeitung der Daten erfolgt auf Grundlage der Einwilligung der Nutzer (Art. 6 Abs. 1 lit. a DSGVO). Mit der Nutzung der Dienste stimmen die Nutzer der Verarbeitung ihrer Daten zu.
+3. Zwecke und Rechtsgrundlagen
+
+- Login, Verknüpfung, Statistiken, ZVC und Geburtstag: Art. 6 Abs. 1 lit. b DSGVO, bei freiwilligen Angaben Art. 6 Abs. 1 lit. a DSGVO.
+- Moderation, Rollenabgleich, Sicherheit und Missbrauchsabwehr: Art. 6 Abs. 1 lit. f DSGVO.
+- Spenden und steuerliche Pflichten: Art. 6 Abs. 1 lit. b und c DSGVO.
+
+4. Empfänger
+
+Discord für die Bot-API, OpenAI für die automatisierte Prüfung von Nachrichten und Medien, Cloudflare für Hosting und Datenbank des Backends sowie Steam für Profildaten. Die vollständige Liste und die Garantien für Übermittlungen in die USA stehen in der Website-Erklärung.
 
 5. Speicherung und Löschung
-Daten werden nur so lange gespeichert, wie es für die Bereitstellung der Services notwendig ist. Die Löschung der Daten kann ausschließlich über die Website nach Login beantragt werden, um die Validität der Anfrage sicherzustellen.
 
-6. Weitergabe von Daten
-Eine Weitergabe an Dritte findet nicht statt. Die Daten werden ausschließlich für die internen Funktionen von Zeitvertreib verwendet.
+Daten bleiben gespeichert, bis du dein Konto löschst oder uns per E-Mail um Löschung bittest. Moderationsdaten können länger aufbewahrt werden, wenn dies für Moderation, Rechtsverteidigung oder gesetzliche Pflichten erforderlich ist. Export und Löschung beantragst du im Profil auf der Website oder per E-Mail an webmaster@zeitvertreib.vip. Die Löschung bearbeiten wir innerhalb von 30 Tagen.
 
-7. Rechte der Nutzer
-Nutzer haben jederzeit das Recht auf:
-- Auskunft über gespeicherte Daten
-- Berichtigung fehlerhafter Daten
-- Löschung ihrer Daten über die Website nach Login
+6. Deine Rechte
 
-8. Kontakt
-Fragen zur Datenschutzerklärung oder zur Ausübung der Rechte können per E-Mail an webmaster@zeitvertreib.vip gestellt werden.
+Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Eine erteilte Einwilligung kannst du jederzeit für die Zukunft widerrufen. Wende dich dafür an webmaster@zeitvertreib.vip.
+
+Du kannst dich bei der zuständigen Aufsichtsbehörde beschweren:
+
+Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen
+Kavalleriestraße 2–4, 40213 Düsseldorf
+
+7. Kontakt
+
+Zeitvertreib – Alexander Betke
+c/o Online-Impressum.de #6455
+Europaring 90
+53757 Sankt Augustin
+E-Mail: webmaster@zeitvertreib.vip

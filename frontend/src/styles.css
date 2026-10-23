@@ -3,6 +3,7 @@
    Every token and primitive lives in styles/jule.css, which is
    the single design spec for this app. Do not add another one.
    ============================================================ */
+@import './styles/fonts.css';
 @import './styles/jule.css';
 
 /* Embedded chat widget (external) is hidden in portrait. */
